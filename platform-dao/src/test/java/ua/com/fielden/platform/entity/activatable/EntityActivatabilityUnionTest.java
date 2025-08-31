@@ -9,9 +9,7 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataUtils;
 
-import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
@@ -196,7 +194,7 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
         var a = save(new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion2(new_(Union.class).setMember2(b)));
 
         a = a.setActive(true);
-        assertNull(a.getProperty(ACTIVE).getFirstFailure());
+        assertTrue(a.getProperty(ACTIVE).isValid());
         final var savedA = save(a);
         assertTrue(savedA.isActive());
     }
@@ -207,7 +205,7 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
         var owner = save(new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion2(new_(Union.class).setMember2(member)));
 
         owner = owner.setActive(true);
-        assertNull(owner.getProperty(ACTIVE).getFirstFailure());
+        assertTrue(owner.getProperty(ACTIVE).isValid());
     }
 
     @Test
@@ -216,7 +214,7 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
         var owner = save(new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion4(new_(Union.class).setMember4(member)));
 
         owner = owner.setActive(true);
-        assertNull(owner.getProperty(ACTIVE).getFirstFailure());
+        assertTrue(owner.getProperty(ACTIVE).isValid());
     }
 
     @Test
@@ -226,7 +224,7 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
 
         owner = owner.setActive(true);
         assertThat(owner.getProperty(ACTIVE).getFirstFailure())
-                .hasMessage(format(ERR_INACTIVE_REFERENCES,
+                .hasMessage(ERR_INACTIVE_REFERENCES.formatted(
                                    getTitleAndDesc("union2", ActivatableUnionOwner.class).getKey(),
                                    getEntityTitleAndDesc(owner).getKey(),
                                    owner,
@@ -241,7 +239,7 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
 
         owner = owner.setActive(true);
         assertThat(owner.getProperty(ACTIVE).getFirstFailure())
-                .hasMessage(format(ERR_INACTIVE_REFERENCES,
+                .hasMessage(ERR_INACTIVE_REFERENCES.formatted(
                                    getTitleAndDesc("union", ActivatableUnionOwner.class).getKey(),
                                    getEntityTitleAndDesc(owner).getKey(),
                                    owner,
@@ -256,7 +254,7 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
 
         owner = owner.setActive(true);
         assertThat(owner.getProperty(ACTIVE).getFirstFailure())
-                .hasMessage(format(ERR_INACTIVE_REFERENCES,
+                .hasMessage(ERR_INACTIVE_REFERENCES.formatted(
                                    getTitleAndDesc("union4", ActivatableUnionOwner.class).getKey(),
                                    getEntityTitleAndDesc(owner).getKey(),
                                    owner,
@@ -271,7 +269,7 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
 
         owner = owner.setActive(true);
         assertThat(owner.getProperty(ACTIVE).getFirstFailure())
-                .hasMessage(format(ERR_INACTIVE_REFERENCES,
+                .hasMessage(ERR_INACTIVE_REFERENCES.formatted(
                                    getTitleAndDesc("union", ActivatableUnionOwner.class).getKey(),
                                    getEntityTitleAndDesc(owner).getKey(),
                                    owner,

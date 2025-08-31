@@ -60,7 +60,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -71,14 +70,14 @@ import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ER
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableReference;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
-import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.MiscUtilities.optional;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
@@ -455,24 +454,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
     }
 
-    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
-    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
-    ///
-    /// This method is a utility to perform instrumentation for uninstrumented values.
-    ///
-    /// TODO Instrumentation will no longer be necessary after #2466.
-    ///
-    private static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityDao<U> co) {
-        final U instrumentedUnion;
-        if (unionEntity.isInstrumented()) {
-            instrumentedUnion = unionEntity;
-        }
-        else {
-            copy(unionEntity, instrumentedUnion = co.new_(), ID, VERSION);
-        }
-        return instrumentedUnion;
-    }
-
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
         return switch (entity) {
             case ActivatableAbstractEntity<?> it -> it;
@@ -625,7 +606,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     .filter(mp -> mp.isProxy() || !mp.isDirty())
                     .<RefCountInstruction>map(mp -> {
                         final var propName = mp.getName();
-                        if (isActivatableReference(entityType, propName, persistedEntity.get(propName))) {
+                        if (isActivatableReference(entityType, propName, persistedEntity.get(propName), coFinder)) {
                             // If the property is proxied, its value will be retrieved lazily by Hibernate.
                             final var activatableValue = extractActivatable(persistedEntity.get(propName));
                             if (activatableValue != null) {
@@ -692,7 +673,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                             ? (persistedEntity.isActive() && prop.getOriginalValue().equals(persistedEntity.get(prop.getName())))
                             // Proceed if `refCount` for the original value was incremented previously.
                             : persistedEntity.isActive())
-                        && isActivatableReference(entityType, prop.getName(), prop.getOriginalValue()))
+                        && isActivatableReference(entityType, prop.getName(), prop.getOriginalValue(), coFinder))
                     {
                         // `refCount` is decremented iff:
                         // * the persisted version of the original value is active;
@@ -711,7 +692,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     if (willBeActive
                         && prop.getValue() != null
                         && (!wasConcurrentlyModified || !(persistedEntity.isActive() && prop.getValue().equals(persistedEntity.get(prop.getName()))))
-                        && isActivatableReference(entityType, prop.getName(), prop.getValue()))
+                        && isActivatableReference(entityType, prop.getName(), prop.getValue(), coFinder))
                     {
                         final var activatableValue = extractActivatable(prop.getValue());
                         // `entity` began referencing `activatableValue`.
@@ -749,41 +730,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         return Stream.concat(instructionsForNonDirty, instructionsForDirty);
     }
 
-    /// This predicate is true if a property value represents an activatable reference.
-    ///
-    /// @param entityType  the entity type that declares the property
-    /// @param propName  the name of the property
-    /// @param value  the value assigned to the property
-    ///
-    @SuppressWarnings("unchecked")
-    private boolean isActivatableReference(final Class<? extends ActivatableAbstractEntity<?>> entityType, final String propName, final Object value) {
-        if (value == null) {
-            return false;
-        }
-
-        final var prop = findFieldByName(entityType, propName);
-        if (!isEntityType(prop.getType())) {
-            return false;
-        }
-        else if (isDeactivatableDependencyBackref(entityType, propName)) {
-            return false;
-        }
-        // If the property is not union-typed, it is enough to check the property itself.
-        // Otherwise, the active union member may need to be considered as well.
-        else if (isActivatablePersistentProperty(entityType, propName) && !isSpecialActivatableToBeSkipped(entityType, propName)) {
-            return true;
-        }
-        else if (isUnionEntityType(prop.getType())) {
-            final var union = (AbstractUnionEntity) value;
-            final var unionCo = (IEntityDao<AbstractUnionEntity>) coFinder.find(union.getType());
-            final var activePropName = instrument(union, unionCo).activePropertyName();
-            return isActivatableProperty(union.getType(), activePropName)
-                   && !isSpecialActivatableToBeSkipped(union.getType(), activePropName);
-        }
-        else {
-            return false;
-        }
-    }
 
     /// Instruction that operates on `refCount`.
     ///
@@ -844,7 +790,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // if the entity is activatable and the only dirty property is refCount than there is no need to update the last-updated-by info
         if (entity instanceof ActivatableAbstractEntity) {
             final List<MetaProperty<?>> dirty = entity.getDirtyProperties();
-            if (dirty.size() == 1 && ActivatableAbstractEntity.REF_COUNT.equals(dirty.get(0).getName())) {
+            if (dirty.size() == 1 && ActivatableAbstractEntity.REF_COUNT.equals(dirty.getFirst().getName())) {
                 return;
             }
         }

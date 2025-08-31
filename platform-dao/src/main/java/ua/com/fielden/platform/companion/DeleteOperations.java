@@ -34,12 +34,10 @@ import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /// Various delete operations that are used by entity companions.
@@ -155,63 +153,10 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         return domainMetadata.forEntity(entityType)
                 .properties()
                 .stream()
-                .filter(prop -> isActivatableReference(entityType, prop.name(), persistedEntity.get(prop.name())))
+                .filter(prop -> isActivatableReference(entityType, prop.name(), persistedEntity.get(prop.name()), coFinder))
                 .map(PropertyMetadata::name);
     }
 
-    /// This predicate is true if a property value represents an activatable reference.
-    ///
-    /// @param entityType  the entity type that declares the property
-    /// @param propName  the name of the property
-    /// @param value  the value assigned to the property
-    ///
-    @SuppressWarnings("unchecked")
-    private boolean isActivatableReference(final Class<? extends ActivatableAbstractEntity<?>> entityType, final String propName, final Object value) {
-        if (value == null) {
-            return false;
-        }
-
-        final var prop = findFieldByName(entityType, propName);
-        if (!isEntityType(prop.getType())) {
-            return false;
-        }
-        else if (isDeactivatableDependencyBackref(entityType, propName)) {
-            return false;
-        }
-        // If the property is not union-typed, it is enough to check the property itself.
-        // Otherwise, the active union member may need to be considered as well.
-        else if (isActivatablePersistentProperty(entityType, propName) && !isSpecialActivatableToBeSkipped(entityType, propName)) {
-            return true;
-        }
-        else if (isUnionEntityType(prop.getType())) {
-            final var union = (AbstractUnionEntity) value;
-            final var unionCo = (IEntityDao<AbstractUnionEntity>) coFinder.find(union.getType());
-            final var activePropName = instrument(union, unionCo).activePropertyName();
-            return isActivatableProperty(union.getType(), activePropName)
-                   && !isSpecialActivatableToBeSkipped(union.getType(), activePropName);
-        }
-        else {
-            return false;
-        }
-    }
-
-    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
-    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
-    ///
-    /// This method is a utility to perform instrumentation for uninstrumented values.
-    ///
-    /// TODO Instrumentation will no longer be necessary after #2466.
-    ///
-    private static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityDao<U> co) {
-        final U instrumentedUnion;
-        if (unionEntity.isInstrumented()) {
-            instrumentedUnion = unionEntity;
-        }
-        else {
-            copy(unionEntity, instrumentedUnion = co.new_(), ID, VERSION);
-        }
-        return instrumentedUnion;
-    }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
         return switch (entity) {

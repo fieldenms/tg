@@ -110,7 +110,7 @@ public class ActivatableEntityDeletionAndRefCountStandardTest extends AbstractAc
     }
 
     @Test
-    public void deletion_of_active_A_that_references_active_B_not_affect_refCount_of_B_if_skipActiveOnly_is_true() {
+    public void deletion_of_active_A_that_references_active_B_does_not_affect_refCount_of_B_if_skipActiveOnly_is_true() {
         final var b = save(new_(TgCategory.class, "CAT1").setActive(true).setRefCount(10));
         final var a = save(new_(TgSystem.class, "SYS1").setActive(true).setThirdCategory(b));
 
