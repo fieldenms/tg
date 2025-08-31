@@ -76,7 +76,8 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
-import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.MiscUtilities.optional;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
@@ -650,24 +651,33 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             instructionsForNonDirty = Stream.of();
         }
 
+        // If the persisted version of `entity` is active, then any active entity it references must have had its `refCount` incremented.
+        // Otherwise, the persisted version of `entity` is inactive and any active entity it references must have either had
+        // its `refCount` decremented or its `refCount` was not changed at all (if it was referenced after deactivation of `entity`).
+
+        final var wasConcurrentlyModified = persistedEntity != null && persistedEntity.getVersion() > entity.getVersion();
+        final var willBeActive = (persistedEntity == null || entity.getProperty(ACTIVE).isDirty()) ? entity.isActive() : persistedEntity.isActive();
+
         final Stream<RefCountInstruction> instructionsForDirty = entity.getDirtyProperties()
                 .stream()
                 .filter(prop -> isEntityType(prop.getType()))
                 .map(prop -> (MetaProperty<AbstractEntity<?>>) prop)
-                // If the current and persisted property values are the same, nothing needs to be done.
-                // At this stage, these values can only be the same iff a non-conflicting concurrent modification occurred.
-                // In such case, recalculation of `refCount` for the referenced entity has already been performed, and double-dipping should be avoided.
-                .filter(prop -> persistedEntity == null || !equalsEx(prop.getValue(), persistedEntity.get(prop.getName())))
                 .mapMulti((prop, sink) -> {
                     // Process the original property value, which makes sense only for persisted entities.
-                    if (persistedEntity != null && persistedEntity.isActive() && isActivatableReference(entityType, prop.getName(), prop.getOriginalValue(), coFinder
-                    )) {
-                        // If `entity` is persisted, the original value of `prop`, if not null, was dereferenced, and its `refCount` must be decremented.
-                        // Original property value should not be null, otherwise property would not become dirty by assigning null.
-                        // `refCount` is decremented if and only if:
-                        // * `persistedEntity` is active (otherwise, a concurrent update deactivated it and took care of decrementing `refCount`);
-                        // * and the persisted version of the original value is active;
-                        // * and the original value is not equal to the entity being saved (is not a self-reference).
+                    // `refCount` must be decremented if it was incremented previously AND was not decremented by a concurrent modification.
+                    if (persistedEntity != null
+                        && prop.getOriginalValue() != null
+                        && (wasConcurrentlyModified
+                            // In case of a concurrent modification, we decrement `refCount` iff `persistedEntity` is still active
+                            // and references the original value.
+                            ? (persistedEntity.isActive() && prop.getOriginalValue().equals(persistedEntity.get(prop.getName())))
+                            // Proceed if `refCount` for the original value was incremented previously.
+                            : persistedEntity.isActive())
+                        && isActivatableReference(entityType, prop.getName(), prop.getOriginalValue(), coFinder))
+                    {
+                        // `refCount` is decremented iff:
+                        // * the persisted version of the original value is active;
+                        // * AND the original value is not a self-reference to `entity`.
                         final var originalActivatableValue = extractActivatable(prop.getOriginalValue());
                         if (originalActivatableValue != null) {
                             final var persistedOriginalValue = (ActivatableAbstractEntity<?>) session.load(originalActivatableValue.getType(), originalActivatableValue.getId(), UPGRADE);
@@ -677,7 +687,13 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                         }
                     }
 
-                    if (isActivatableReference(entityType, prop.getName(), prop.getValue(), coFinder)) {
+                    // For the new value, `refCount` must be incremented if the result of saving `entity` is an active entity
+                    // AND the new value's `refCount` was not incremented already by a concurrent assignment.
+                    if (willBeActive
+                        && prop.getValue() != null
+                        && (!wasConcurrentlyModified || !(persistedEntity.isActive() && prop.getValue().equals(persistedEntity.get(prop.getName()))))
+                        && isActivatableReference(entityType, prop.getName(), prop.getValue(), coFinder))
+                    {
                         final var activatableValue = extractActivatable(prop.getValue());
                         // `entity` began referencing `activatableValue`.
                         if (activatableValue != null) {
@@ -697,23 +713,14 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                             // We prefer using `UPGRADE` in this context to reduce the likelihood of rollbacks in potentially complex transactions caused by concurrent updates to `refCount`.
                             final var persistedActivatableValue = (ActivatableAbstractEntity<?>) session.load(activatableValue.getType(), activatableValue.getId(), UPGRADE);
 
-                            // The newly referenced activatable `activatableValue` needs to have its `refCount` incremented if:
-                            // * `entity` is active and was not concurrently deactivated OR `entity` is inactive and was concurrently activated;
-                            // * and `activatableValue` is not a self-reference to `entity`;
-                            // * and the persisted version of `activatableValue` is active.
-                            //   If `activatableValue` is concurrently deactivated, then we are in error -- active `entity` cannot reference inactive `activatableValue`.
+                            // Ignore self-references.
                             if (!areEqual(entity, persistedActivatableValue)) {
-                                if (persistedEntity == null || entity.getVersion() >= persistedEntity.getVersion()
-                                        ? entity.isActive()
-                                        : persistedEntity.isActive())
-                                {
-                                    if (!persistedActivatableValue.isActive()) {
-                                        session.detach(persistedActivatableValue);
-                                        throw mkInactiveReferenceFailure(prop, persistedActivatableValue);
-                                    }
-                                    else {
-                                        sink.accept(new RefCountInstruction.Inc(activatableValue));
-                                    }
+                                if (!persistedActivatableValue.isActive()) {
+                                    session.detach(persistedActivatableValue);
+                                    throw mkInactiveReferenceFailure(prop, persistedActivatableValue);
+                                }
+                                else {
+                                    sink.accept(new RefCountInstruction.Inc(activatableValue));
                                 }
                             }
                         }
