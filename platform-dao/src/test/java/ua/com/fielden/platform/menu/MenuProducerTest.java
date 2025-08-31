@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.menu;
 
 import org.junit.Test;
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUser;
@@ -69,7 +70,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
                         "module2/module2group2/module2group2item2",
                         "module2/module2group2/module2group2item3")));
 
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), "", "183");
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class), "", "183");
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);
@@ -142,7 +143,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
     private void checkMenuVisibilityForUser(final String user, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(user));
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), "", "183");
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class), "", "183");
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);
@@ -187,7 +188,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         up.setUser(co(User.class).findByKey("USER_2"));
 
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), "", "183");
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class), "", "183");
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);
@@ -267,7 +268,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
     private void assertMenuInvisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey("USER_1"));
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), "", "183");
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class), "", "183");
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);
@@ -302,7 +303,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
     private void assertMenuVisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(userName));
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), "", "183");
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class), "", "183");
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);
