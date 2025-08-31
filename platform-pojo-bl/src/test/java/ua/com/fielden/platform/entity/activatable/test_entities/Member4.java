@@ -8,19 +8,19 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 @MapEntityTo
 @KeyType(String.class)
-@CompanionObject(Member2Co.class)
-public class Member2 extends ActivatableAbstractEntity<String> {
+@CompanionObject(Member4Co.class)
+public class Member4 extends ActivatableAbstractEntity<String> {
 
     @Observable
     @Override
-    public Member2 setActive(final boolean active) {
+    public Member4 setActive(final boolean active) {
         super.setActive(active);
         return this;
     }
 
     @Observable
     @Override
-    public Member2 setRefCount(final Integer refCount) {
+    public Member4 setRefCount(final Integer refCount) {
         super.setRefCount(refCount);
         return this;
     }
