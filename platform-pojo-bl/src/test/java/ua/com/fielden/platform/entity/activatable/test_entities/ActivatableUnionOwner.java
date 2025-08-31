@@ -26,6 +26,21 @@ public class ActivatableUnionOwner extends ActivatableAbstractEntity<String> {
     @SkipEntityExistsValidation(skipActiveOnly = false)
     private Union union3;
 
+    @IsProperty
+    @MapTo
+    @SkipActivatableTracking
+    private Union union4;
+
+    public Union getUnion4() {
+        return union4;
+    }
+
+    @Observable
+    public ActivatableUnionOwner setUnion4(final Union union4) {
+        this.union4 = union4;
+        return this;
+    }
+
     public Union getUnion3() {
         return union3;
     }
