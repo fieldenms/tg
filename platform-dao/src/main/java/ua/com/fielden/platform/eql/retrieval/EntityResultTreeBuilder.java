@@ -21,8 +21,7 @@ import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.persistence.HibernateConstants.*;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 public final class EntityResultTreeBuilder {
 
@@ -125,7 +124,7 @@ public final class EntityResultTreeBuilder {
                 currentGroup = yc.name();
 
                 // can be either ET prop, or primitive prop
-                if (yc.propType().isNotNull() && isPersistentEntityType(yc.propType().javaType())) {
+                if (yc.propType().isNotNull() && (isPersistentEntityType(yc.propType().javaType()) || isSyntheticEntityType(yc.propType().javaType()))) {
                     currentResultType = (Class<? extends AbstractEntity<?>>) yc.propType().javaType();
                     currentGroupDetails.add(new YieldedColumn(ID, LONG_PROP_TYPE, yc.column()));
                 } else {
