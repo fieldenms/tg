@@ -28,7 +28,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
@@ -77,7 +76,7 @@ public class EntityQueryCriteriaUtils {
             try {
                 final ICalculatedProperty calcProperty = enhancer.getCalculatedProperty(root, property);
                 if (calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION && calcProperty.getOriginationProperty() != null) {
-                    final String originProperty = Reflector.fromRelative2AbsotulePath(calcProperty.getContextPath(), calcProperty.getOriginationProperty());
+                    final String originProperty = Reflector.fromRelative2AbsolutePath(calcProperty.getContextPath(), calcProperty.getOriginationProperty());
                     if (checkedProperties.contains(originProperty)) {
                         List<String> totalList = totals.get(originProperty);
                         if (totalList == null) {

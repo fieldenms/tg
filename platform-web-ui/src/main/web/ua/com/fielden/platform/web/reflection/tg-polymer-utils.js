@@ -11,8 +11,9 @@ export function generateUUID () {
  * Returns the first entity type and it's property path that lies on path of property name and entity
  */
 export function getFirstEntityTypeAndProperty (entity, propertyName) {
+    const reflector = new TgReflector();
     if (entity && propertyName) {
-        const reflector = new TgReflector();
+        //The type might have been overriden that's why it should be called using prototype
         const entityType = entity.constructor.prototype.type.call(entity);
         let currentProperty = propertyName;
         let currentType = entityType.prop(propertyName).type();
@@ -25,11 +26,23 @@ export function getFirstEntityTypeAndProperty (entity, propertyName) {
             currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
             currentType = currentProperty ? entityType.prop(currentProperty).type() : entityType;
         }
-        return [currentType, currentProperty]; 
+        return [calculateEntityType(entity.get(currentProperty), reflector) || currentType, currentProperty]; 
     } else if (entity) {
-        return [entity.constructor.prototype.type.call(entity), propertyName];
+        return [calculateEntityType(entity, reflector), propertyName];
     }
 };
+
+/**
+ * Local function that calculates the actual type of given entity. It returns the type that was carried by property in synthetic entity or exact type of given entity.
+ * 
+ * @param {Object} entity - the entity which type should calcualted
+ * @param {Object} reflector - type reflection object that contains the information about the entity types in tg application
+ * @returns The object that represents the type of given entity
+ */
+function calculateEntityType(entity, reflector) {
+    const entityType = entity && entity.constructor.prototype.type.call(entity);
+    return (entityType && entityType.entityTypeCarrierName() && reflector.getType(entity.get(entityType.entityTypeCarrierName()))) || entityType;
+}
 
 /**
  * Returns the first entity type that lies on path of property name and entity.

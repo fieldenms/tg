@@ -2182,7 +2182,7 @@ Polymer({
     },
 
     _generateActionTooltip: function (action) {
-        const shortDesc = "<b>" + action.shortDesc + "</b>";
+        const shortDesc = action.shortDesc ? "<b>" + action.shortDesc + "</b>" : "";
         let longDesc;
         if (shortDesc) {
             longDesc = action.longDesc ? "<br>" + action.longDesc : "";
@@ -2192,7 +2192,7 @@ Polymer({
         const tooltip  = shortDesc + longDesc;
         
         return tooltip && `<div style='display:flex;'>
-            <div style='margin-right:10px;'>With action: </div> 
+            <div style='margin-right:10px;'>With action:</div>
             <div style='flex-grow:1;'>${tooltip}</div> 
             </div>`
     },
