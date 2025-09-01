@@ -48,6 +48,7 @@ import static ua.com.fielden.platform.audit.AnnotationSpecs.*;
 import static ua.com.fielden.platform.audit.AuditUtils.*;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.requirePropertyAnnotation;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.nonBlankPropertyTitle;
@@ -223,7 +224,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
         final var newAuditedProperties = auditedEntityMetadata.properties()
                 .stream()
-                .filter(AuditEntityGenerator::isAudited)
+                .filter(prop -> isAudited(auditedType, prop.name()))
                 .filter(p -> findAuditPropertyFor(prevAuditEntityType, p).isEmpty())
                 .collect(toSet());
 
@@ -306,7 +307,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         // Audited properties
         final var auditedEntityMetadata = domainMetadata.forEntity(auditedType);
         auditedEntityMetadata.properties().stream()
-                .filter(AuditEntityGenerator::isAudited)
+                .filter(prop -> isAudited(auditedType, prop.name()))
                 .map(pm -> {
                     final var propBuilder = propertyBuilder(auditPropertyName(pm.name()),
                                                             pm.type().genericJavaType())
@@ -325,6 +326,13 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
         return a3tBuilder.build(addSkipEntityExistsValidation)
                 .map2(typeSpec -> JavaFile.builder(auditPkg, typeSpec).build());
+    }
+
+    private boolean isAudited(final Class<? extends AbstractEntity<?>> auditedType, final String propName) {
+        final var pm = domainMetadata.forProperty(auditedType, propName);
+        return !IAuditEntityGenerator.NON_AUDITED_PROPERTIES.contains(propName)
+               && pm.isPersistent()
+               && !isPropertyAnnotationPresent(DisableAuditing.class, auditedType, propName);
     }
 
     /// Builds an {@link IsProperty} annotation for an audit-property from the specified annotation for a corresponding audited property.
@@ -372,10 +380,6 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                     : propSpec;
         }
     };
-
-    private static boolean isAudited(final PropertyMetadata property) {
-        return property.isPersistent() && !IAuditEntityGenerator.NON_AUDITED_PROPERTIES.contains(property.name());
-    }
 
     /**
      * Combines properties following the rules of Java: declared properties hide inherited properties with the same name.
