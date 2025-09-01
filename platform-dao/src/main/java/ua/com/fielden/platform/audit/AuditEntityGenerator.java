@@ -220,20 +220,25 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
         final var a3tBuilder = new AuditEntitySpecBuilder(auditTypeClassName, auditedType, auditTypeVersion);
 
-        final var auditedEntityMetadata = domainMetadata.forEntity(auditedType);
-
-        final var newAuditedProperties = auditedEntityMetadata.properties()
+        final var auditedProperties = domainMetadata.forEntity(auditedType).properties()
                 .stream()
                 .filter(prop -> isAudited(auditedType, prop.name()))
-                .filter(p -> findAuditPropertyFor(prevAuditEntityType, p).isEmpty())
                 .collect(toSet());
 
-        // If an audited property was removed, then it must still be among the active audit-properties.
-        final var inactiveAuditProperties = domainMetadata.forEntity(prevAuditEntityType)
+        final var activeAuditProperties = domainMetadata.forEntity(prevAuditEntityType)
                 .properties()
                 .stream()
                 .filter(p -> p.get(AUDIT_PROPERTY).filter(KAuditProperty.Data::active).isPresent())
-                .filter(p -> auditedEntityMetadata.propertyOpt(auditedPropertyName(p.name())).isEmpty())
+                .collect(toSet());
+
+        // New audited properties -- auditable properties of the audited type that are not audited by the latest audit-entity type.
+        final var newAuditedProperties = auditedProperties.stream()
+                .filter(auditedProp -> activeAuditProperties.stream().noneMatch(auditProp -> isAuditPropertyFor(auditProp, auditedProp)))
+                .collect(toSet());
+
+        // Find audit-properties whose corresponding properties of the audited type are no longer auditable.
+        final var auditPropertiesToDeactivate = activeAuditProperties.stream()
+                .filter(auditProp -> auditedProperties.stream().noneMatch(auditedProp -> isAuditPropertyFor(auditProp, auditedProp)))
                 .collect(toSet());
 
         newAuditedProperties.stream()
@@ -253,7 +258,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                 })
                 .forEach(a3tBuilder::addProperty);
 
-        inactiveAuditProperties.stream()
+        auditPropertiesToDeactivate.stream()
                 .map(pm -> {
                     final var propBuilder = propertyBuilder(pm.name(), pm.type().genericJavaType())
                             .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, prevAuditEntityType, pm.name())))
@@ -272,14 +277,9 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                 .map2(typeSpec -> JavaFile.builder(auditPkg, typeSpec).build());
     }
 
-    /// Finds an audit-property for `auditedProperty` in `auditEntityType`.
-    private Optional<PropertyMetadata> findAuditPropertyFor(
-            final Class<? extends AbstractAuditEntity<?>> auditEntityType,
-            final PropertyMetadata auditedProperty)
-    {
-       return domainMetadata.forEntity(auditEntityType)
-               .propertyOpt(auditPropertyName(auditedProperty.name()))
-               .filter(p -> p.type().genericJavaType().equals(auditedProperty.type().genericJavaType()));
+    private static boolean isAuditPropertyFor(final PropertyMetadata auditProp, final PropertyMetadata auditedProp) {
+        return auditPropertyName(auditedProp.name()).equals(auditProp.name())
+               && auditedProp.type().genericJavaType().equals(auditProp.type().genericJavaType());
     }
 
     private T2<AuditEntitySpec, JavaFile> generateAuditEntity1(
