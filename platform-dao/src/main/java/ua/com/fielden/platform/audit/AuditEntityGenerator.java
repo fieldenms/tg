@@ -471,6 +471,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                     .addAnnotation(javaPoet.getAnnotation(DenyIntrospection.class))
                     .addAnnotations(annotations);
             properties.stream()
+                    .sorted(comparing(PropertySpec::name))
                     .map(prop -> processor.processProperty(this, prop))
                     .forEach(propSpec -> {
                         builder.addField(propSpec.toFieldSpec(environment));
@@ -733,6 +734,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                     }
                     return propBuilder.build();
                 })
+                .sorted(comparing(PropertySpec::name))
                 .forEach(prop -> addPropertyTo(prop, builder, synAuditEntityClassName));
 
         final var modelsField = FieldSpec.builder(ParameterizedTypeName.get(javaPoet.getClassName(List.class),
