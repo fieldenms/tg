@@ -12,16 +12,21 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.RichText;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Set;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY;
 import static ua.com.fielden.platform.audit.AuditUtils.auditPropertyName;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.meta.PropertyNature.*;
+import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
+import static ua.com.fielden.platform.reflection.Finder.streamProperties;
 import static ua.com.fielden.platform.reflection.Reflector.newParameterizedType;
 
 public class AuditEntityStructureTest extends AbstractDaoTestCase {
@@ -47,6 +52,16 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
         assertNotNull(auditPropType);
         assertTrue(AbstractAuditProp.class.isAssignableFrom(auditPropType));
         assertEquals(AuditedEntity.class, auditTypeFinder.navigateAuditProp(auditPropType).auditedType());
+    }
+
+    @Test
+    public void properties_annotated_with_DisableAuditing_are_excluded_from_audit_entities() {
+        final var propsWithDisableAuditing = streamProperties(AuditedEntity.class, DisableAuditing.class)
+                .map(Field::getName)
+                .collect(toSet());
+        assertEquals(Set.of(AuditedEntity.Property.str3.toPath()), propsWithDisableAuditing);
+        assertFalse(isPropertyPresent(auditType, auditPropertyName(AuditedEntity.Property.str3)));
+        assertFalse(isPropertyPresent(synAuditType, auditPropertyName(AuditedEntity.Property.str3)));
     }
 
     /**
