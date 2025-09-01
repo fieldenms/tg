@@ -1,3 +1,4 @@
+// Generation timestamp: 2025-09-01 15:29:15 EEST
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -28,13 +29,49 @@ import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 )
 @MapEntityTo
 @CompanionIsGenerated
-@EntityTitle("Audited Entity Audit")
+@EntityTitle("Audited Entity Audit 1")
 @SkipVerification
 @SkipEntityRegistration
 @WithoutMetaModel
 @KeyType(DynamicEntityKey.class)
 @DenyIntrospection
 public class AuditedEntity_a3t_1 extends AbstractAuditEntity<AuditedEntity> {
+  @IsProperty
+  @MapTo("A3T_BOOL1")
+  @Final
+  @Title(
+      value = "Bool 1",
+      desc = "[Bool 1] at the time of the audited event."
+  )
+  private boolean a3t_bool1;
+
+  @IsProperty
+  @MapTo("A3T_DATE1")
+  @Final
+  @Title(
+      value = "Date 1",
+      desc = "[Date 1] at the time of the audited event."
+  )
+  private Date a3t_date1;
+
+  @IsProperty
+  @MapTo("A3T_KEY")
+  @Final
+  @Title(
+      value = "Key",
+      desc = "[Key] at the time of the audited event."
+  )
+  private String a3t_key;
+
+  @IsProperty
+  @MapTo("A3T_STR1")
+  @Final
+  @Title(
+      value = "Str 1",
+      desc = "[Str 1] at the time of the audited event."
+  )
+  private String a3t_str1;
+
   @CompositeKeyMember(1)
   @MapTo
   @Required
@@ -47,59 +84,13 @@ public class AuditedEntity_a3t_1 extends AbstractAuditEntity<AuditedEntity> {
   @IsProperty
   private AuditedEntity auditedEntity;
 
-  @IsProperty
-  @MapTo("A3T_KEY")
-  @Final
-  @Title(
-      value = "Key",
-      desc = "[Key] at the time of the audited event."
-  )
-  private String a3t_key;
-
-  @IsProperty
-  @MapTo("A3T_DATE1")
-  @Final
-  @Title(
-      value = "Date 1",
-      desc = "[Date 1] at the time of the audited event."
-  )
-  private Date a3t_date1;
-
-  @IsProperty
-  @MapTo("A3T_BOOL1")
-  @Final
-  @Title(
-      value = "Bool 1",
-      desc = "[Bool 1] at the time of the audited event."
-  )
-  private boolean a3t_bool1;
-
-  @IsProperty
-  @MapTo("A3T_STR1")
-  @Final
-  @Title(
-      value = "Str 1",
-      desc = "[Str 1] at the time of the audited event."
-  )
-  private String a3t_str1;
-
-  public AuditedEntity getAuditedEntity() {
-    return this.auditedEntity;
+  public boolean isA3t_bool1() {
+    return this.a3t_bool1;
   }
 
   @Observable
-  public AuditedEntity_a3t_1 setAuditedEntity(final AuditedEntity auditedEntity) {
-    this.auditedEntity = auditedEntity;
-    return this;
-  }
-
-  public String getA3t_key() {
-    return this.a3t_key;
-  }
-
-  @Observable
-  public AuditedEntity_a3t_1 setA3t_key(final String a3t_key) {
-    this.a3t_key = a3t_key;
+  public AuditedEntity_a3t_1 setA3t_bool1(final boolean a3t_bool1) {
+    this.a3t_bool1 = a3t_bool1;
     return this;
   }
 
@@ -113,13 +104,13 @@ public class AuditedEntity_a3t_1 extends AbstractAuditEntity<AuditedEntity> {
     return this;
   }
 
-  public boolean isA3t_bool1() {
-    return this.a3t_bool1;
+  public String getA3t_key() {
+    return this.a3t_key;
   }
 
   @Observable
-  public AuditedEntity_a3t_1 setA3t_bool1(final boolean a3t_bool1) {
-    this.a3t_bool1 = a3t_bool1;
+  public AuditedEntity_a3t_1 setA3t_key(final String a3t_key) {
+    this.a3t_key = a3t_key;
     return this;
   }
 
@@ -130,6 +121,16 @@ public class AuditedEntity_a3t_1 extends AbstractAuditEntity<AuditedEntity> {
   @Observable
   public AuditedEntity_a3t_1 setA3t_str1(final String a3t_str1) {
     this.a3t_str1 = a3t_str1;
+    return this;
+  }
+
+  public AuditedEntity getAuditedEntity() {
+    return this.auditedEntity;
+  }
+
+  @Observable
+  public AuditedEntity_a3t_1 setAuditedEntity(final AuditedEntity auditedEntity) {
+    this.auditedEntity = auditedEntity;
     return this;
   }
 }

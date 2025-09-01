@@ -1,3 +1,4 @@
+// Generation timestamp: 2025-09-01 15:29:15 EEST
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
@@ -21,12 +22,12 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 
-@EntityTitle("Audited Entity Audit Changed Property")
+@EntityTitle("Audited Entity Audit 1 Changed Property")
 @KeyTitle("Audited Entity Audit and Changed Property")
 @MapEntityTo
 @AuditFor(
-        value = AuditedEntity.class,
-        version = 1
+    value = AuditedEntity.class,
+    version = 1
 )
 @CompanionIsGenerated
 @SkipVerification
@@ -63,9 +64,9 @@ public class AuditedEntity_a3t_1_Prop extends AbstractAuditProp<AuditedEntity> {
     return this;
   }
 
-  @Override
-  public AuditedEntity_a3t_1_Prop setAuditEntity(final AbstractAuditEntity<AuditedEntity> entity) {
-    return setAuditEntity((AuditedEntity_a3t_1) entity);
+  public AuditedEntity_a3t_1_Prop setAuditEntity(
+      final AbstractAuditEntity<AuditedEntity> auditEntity) {
+    return setAuditEntity((AuditedEntity_a3t_1) auditEntity);
   }
 
   public PropertyDescriptor<AbstractSynAuditEntity<AuditedEntity>> getProperty() {
