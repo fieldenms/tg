@@ -19,7 +19,6 @@ import ua.com.fielden.platform.utils.Pair;
 @DescTitle("Description")
 @DescRequired
 public class EntityWithDescTitleWithoutMetaModel extends AbstractEntity<String> {
-    //
 
     private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(EntityWithDescTitleWithoutMetaModel.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
