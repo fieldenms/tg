@@ -87,8 +87,7 @@ public class ProcessorListener<P extends Processor> extends AbstractProcessor {
             if (!invalidMethods.isEmpty()) {
                 throw new TestCaseConfigException("""
                       Mismatch between the actual number of processing rounds and the definition of %s. \
-                      The last round number is %s. \
-                      Invalid methods: %s"""
+                      The last round number was %s, hence these methods could not be executed: %s"""
                       .formatted(roundListener.getClass().getTypeName(), roundNumber, String.join(", ", invalidMethods)));
             }
         }
