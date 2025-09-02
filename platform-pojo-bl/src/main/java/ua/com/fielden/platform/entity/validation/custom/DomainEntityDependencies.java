@@ -4,7 +4,8 @@ import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
+import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
+import ua.com.fielden.platform.reflection.Finder;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;
@@ -13,32 +14,39 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatablePersistentProperty;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
-/**
- * Identifies activatable dependencies for an entity of the specified type.
- */
+/// Represents an entity type and its dependencies.
+///
+/// For an entity type A, its dependency D is a persistent property typed with A and declared in entity type B.
+/// A and B may be the same type.
+///
 public class DomainEntityDependencies {
-    public final Class<? extends AbstractEntity<?>> entityType;
-    public final boolean activatable;
-    private final Set<Class<? extends ActivatableAbstractEntity<?>>> automaticallyDeactivatedDependencies;
+
+    private final Class<? extends AbstractEntity<?>> entityType;
+    private final Set<Class<? extends ActivatableAbstractEntity<?>>> deactivatableDependencies;
     private final Set<DomainEntityDependency> dependencies = new HashSet<>();
 
-    public DomainEntityDependencies(final Class<? extends AbstractEntity<?>> entityType) {
+    DomainEntityDependencies(final Class<? extends AbstractEntity<?>> entityType) {
         this.entityType = entityType;
-        this.activatable = isActivatableEntityType(entityType);
 
-        if (activatable && entityType.isAnnotationPresent(DeactivatableDependencies.class)) {
-            final DeactivatableDependencies annotation = ((Class<? extends ActivatableAbstractEntity<?>>) entityType).getAnnotation(DeactivatableDependencies.class);
-            automaticallyDeactivatedDependencies = ImmutableSet.copyOf(annotation.value());
+        final DeactivatableDependencies annot;
+        if (isActivatablePersistentEntityType(entityType) && (annot = getAnnotation(entityType, DeactivatableDependencies.class)) != null) {
+            deactivatableDependencies = ImmutableSet.copyOf(annot.value());
         }
         else {
-            automaticallyDeactivatedDependencies = ImmutableSet.of();
+            deactivatableDependencies = ImmutableSet.of();
         }
+    }
+
+    public Class<? extends AbstractEntity<?>> entityType() {
+        return entityType;
     }
 
     /**
@@ -46,7 +54,7 @@ public class DomainEntityDependencies {
      */
     public Set<DomainEntityDependency> getActivatableDependencies() {
         return dependencies.stream()
-               .filter(dep -> dep.shouldBeCheckedDuringDeactivation && !(automaticallyDeactivatedDependencies.contains(dep.entityType) && dep.belongsToEntityKey))
+               .filter(dep -> dep.shouldBeCheckedDuringDeactivation && !(deactivatableDependencies.contains(dep.entityType) && dep.belongsToEntityKey))
                .collect(toSet());
     }
 
@@ -56,11 +64,11 @@ public class DomainEntityDependencies {
      */
     private Stream<DomainEntityDependency> getImmediateDeactivatableDependencies() {
         return dependencies.stream()
-                .filter(dep -> dep.shouldBeCheckedDuringDeactivation && automaticallyDeactivatedDependencies.contains(dep.entityType));
+                .filter(dep -> dep.shouldBeCheckedDuringDeactivation && deactivatableDependencies.contains(dep.entityType));
     }
 
     /**
-     * Returns a subset of all deactivatable dependencies, including those stemming from immediate and transitive declarations of @link DeactivatableDependencies}.
+     * Returns a subset of all deactivatable dependencies, including those stemming from immediate and transitive declarations of {@link DeactivatableDependencies}.
      */
     public Stream<DomainEntityDependency> getAllDeactivatableDependencies(final Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> domainDependencies) {
         return getAllDeactivatableDependencies(getImmediateDeactivatableDependencies(), domainDependencies);
@@ -98,77 +106,77 @@ public class DomainEntityDependencies {
         return Stream.concat(directActivatableDependenciesForEntity.stream(), deactivatableActivatableDependenciesForEntity);
     }
 
-    public void addDependency(final Class<? extends AbstractEntity<?>> entityType, final Field propField) {
-        dependencies.add(new DomainEntityDependency(entityType, propField));
+    public void addDependency(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propPath) {
+        dependencies.add(new DomainEntityDependency(entityType, propPath.toString()));
     }
 
-    /**
-     * A convenient struct to represent a single property as a dependency.
-     */
-    public static class DomainEntityDependency {
-        public final Class<? extends AbstractEntity<?>> entityType;
-        public final String entityTitle;
-        public final String propName;
-        public final String propPath;
-        public final String propTitle;
-        public final boolean shouldBeCheckedDuringDeactivation;
-        public final boolean belongsToEntityKey;
+    /// A convenient struct to represent a single property as a dependency.
+    ///
+    /// @param entityType  type of the property
+    ///
+    public record DomainEntityDependency(
+            Class<? extends AbstractEntity<?>> entityType,
+            String entityTitle,
+            String propPath,
+            String propTitle,
+            boolean shouldBeCheckedDuringDeactivation,
+            boolean belongsToEntityKey)
+    {
 
-        private DomainEntityDependency(
-                Class<? extends AbstractEntity<?>> entityType,
-                String entityTitle,
-                String propName,
-                String propPath,
-                String propTitle,
-                boolean shouldBeCheckedDuringDeactivation,
-                boolean belongsToEntityKey)
-        {
-            this.entityType = entityType;
-            this.entityTitle = entityTitle;
-            this.propName = propName;
-            this.propPath = propPath;
-            this.propTitle = propTitle;
-            this.shouldBeCheckedDuringDeactivation = shouldBeCheckedDuringDeactivation;
-            this.belongsToEntityKey = belongsToEntityKey;
-
-
-        }
-
-        public Class<? extends AbstractEntity<?>> entityType() {
-            return entityType;
-        }
-
-        public String propPath() {
-            return propPath;
-        }
-
-        private DomainEntityDependency(final Class<? extends AbstractEntity<?>> entityType, final Field propField) {
+        private DomainEntityDependency(final Class<? extends AbstractEntity<?>> entityType, final String propPath) {
             this(entityType,
                  getEntityTitleAndDesc(entityType).getKey(),
-                 propField.getName(),
-                 propField.getName(),
-                 getTitleAndDesc(propField.getName(), entityType).getKey(),
-                 checkDuringDeactivation(entityType, propField),
-                 getKeyMembers(entityType).contains(propField));
-
+                 propPath,
+                 getTitleAndDesc(propPath, entityType).getKey(),
+                 checkDuringDeactivation(entityType, propPath),
+                 getKeyMembers(entityType).stream().map(Field::getName).anyMatch(propPath::equals));
         }
 
         public DomainEntityDependency updatePropPath(final CharSequence propPathSuffix) {
-            return  new DomainEntityDependency(entityType, entityTitle, propName, propPath + "." + propPathSuffix, propTitle, belongsToEntityKey, shouldBeCheckedDuringDeactivation);
+            return new DomainEntityDependency(entityType, entityTitle, propPath + "." + propPathSuffix, propTitle, belongsToEntityKey, shouldBeCheckedDuringDeactivation);
         }
 
-        private static boolean checkDuringDeactivation(final Class<? extends AbstractEntity<?>> entityType, final Field propField) {
-            final SkipEntityExistsValidation seevAnnotation = propField.getAnnotation(SkipEntityExistsValidation.class);
-            final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();
-            return isActivatableEntityType(entityType) && isNotSpecialActivatableToBeSkipped(propField) && !skipActiveOnly;
+        /// Determines if `propPath` represents a property that should be checked during the analysis of active dependencies.
+        ///
+        /// The value of `propPath` is a dot-expression only when it represents a union-typed property with a specific union member property.
+        /// The case of union entities follows the two-level approach, consistent with how it is for [EntityExistsValidator]:
+        ///
+        /// 1. If for union-typed property (top level) check is `false`, then return the check result for the union member property (lower level).
+        /// 2. If for union-typed property (top level) check is `true`, then return `true` (there is no need to check the union member property (lower level)).
+        ///
+        private static boolean checkDuringDeactivation(final Class<? extends AbstractEntity<?>> entityType, final String propPath) {
+            final String[] props = splitPropPathToArray(propPath);
+            final var prop0Name = props[0];
+            final var prop0 = Finder.getFieldByName(entityType, prop0Name);
 
+            // If entityType is not persistent activatable, then no need to check anything else -- activatable nature is not applicable.
+            if (!isActivatablePersistentEntityType(entityType)) {
+                return false;
+            }
+
+            // Otherwise, need to check the property itself, and perhaps even a union member property in case of a union entity.
+            final var checkDuringDeactivationProp0 = !isSpecialActivatableToBeSkipped(prop0)
+                                                     && isActivatablePersistentProperty(entityType, prop0Name);
+            if (checkDuringDeactivationProp0) {
+                return true;
+            }
+            final Class<?> prop0Type = prop0.getType();
+            if (isUnionEntityType(prop0Type) && props.length == 2) {
+                final var prop1Name = props[1];
+                final var unionMemberProp = Finder.getFieldByName(prop0Type, prop1Name);
+                final var checkDuringDeactivationProp1 = !isSpecialActivatableToBeSkipped(unionMemberProp)
+                                                         && isActivatablePersistentProperty((Class<? extends AbstractEntity<?>>) prop0Type, prop1Name);
+                return checkDuringDeactivationProp1;
+            }
+
+            return false;
         }
 
-        public static final String INFO_ENTITY_DEPENDENCIES = "Entity [%s] has dependency in entity [%s] as property [%s] (full path [%s], checked during deactivation [%s], belongs to entity key [%s].";
+        public static final String INFO_ENTITY_DEPENDENCIES = "Entity [%s] has dependency in entity [%s] as property [%s] (checked during deactivation [%s], belongs to entity key [%s]).";
         @Override
         public String toString() {
-            return INFO_ENTITY_DEPENDENCIES.formatted(entityType.getName(), entityType.getName(), propName, propPath, shouldBeCheckedDuringDeactivation, belongsToEntityKey);
+            return INFO_ENTITY_DEPENDENCIES.formatted(entityType.getName(), entityType.getName(), propPath, shouldBeCheckedDuringDeactivation, belongsToEntityKey);
         }
-
     }
+
 }

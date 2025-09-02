@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Boolean.TRUE;
 import static java.lang.reflect.Modifier.isAbstract;
 import static java.lang.reflect.Modifier.isInterface;
 import static java.util.Collections.unmodifiableList;
@@ -33,6 +34,7 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonPropertie
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
@@ -180,11 +182,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (!isIgnoreDefault(ignore)) {
                     entityTypeProp.set_ignore(ignore);
                 }
-                if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, type, name)) {
-                    entityTypeProp.set_date(Boolean.TRUE);
+                if (isPropertyAnnotationPresent(DateOnly.class, type, name)) {
+                    entityTypeProp.set_date(TRUE);
                 }
-                if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
-                    entityTypeProp.set_time(Boolean.TRUE);
+                if (isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
+                    entityTypeProp.set_time(TRUE);
                 }
                 final IsProperty isPropertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, name);
                 if (isPropertyAnnotation != null) {
@@ -218,6 +220,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (isShortCollection(type, name)) {
                     entityTypeProp.set_shortCollectionKey(shortCollectionKey(type, name));
                 }
+
+                if (isPropertyAnnotationPresent(EntityTypeCarrier.class, type, name)) {
+                    entityTypeProp.set_entityTypeCarrier(TRUE);
+                }
+
                 props.put(name, entityTypeProp);
             }
             entityTypeInfo.set_props(props);

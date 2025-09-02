@@ -894,16 +894,20 @@ const TgEntityMasterBehaviorImpl = {
         this.tgOpenMasterAction.attrs.centreUuid = this.uuid;
         this.titleAction.attrs.centreUuid = this.uuid;
         this._resetState(); // existing state may cause problems for cached masters: for example previous entity was new and valid and next one invalid -- blocks closing of dialog with error
-        this._cachedParentNode = this.parentNode;
-        this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
+        this._cachedParentNode = getParentAnd(this.parentElement, element => element.matches('tg-custom-action-dialog'));
+        if (this._cachedParentNode) {
+            this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on dialog where this master is.
+        }
     },
 
     detached: function () {
         while (this._subscriptions.length !== 0) {
             this._subscriptions.pop().unsubscribe();
         }
-        this.fire('tg-entity-master-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
-        delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
+        if (this._cachedParentNode) {
+            this.fire('tg-entity-master-detached', this, { node: this._cachedParentNode }); // start event bubbling on dialog from which this entity master has already been detached
+            delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of dialog from memory
+        }
     },
 
     /**

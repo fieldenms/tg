@@ -1,19 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api.compound.impl;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
-import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
-
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -26,6 +13,18 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionEle
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
 /**
  * A compound entity master that has a menu, that extends {@link IMaster} contract.
@@ -87,7 +86,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                     .attr("section-title", el.getShortDesc()));
             menuItemsDom.add(new DomElement("paper-item")
                     .attr("slot", "menu-item").attr("data-route", el.getDataRoute())
-                    .attr("tooltip-text", el.conf().longDesc.orElse("NOT SPECIFIED"))
+                    .attr("tooltip-text", el.conf().longDesc.orElse(""))
                     .attr("item-title", el.getShortDesc())
                     .clazz(el.numberOfAction == 0 ? "notDraggable" : "")
                     .style("padding-right: 16px")
