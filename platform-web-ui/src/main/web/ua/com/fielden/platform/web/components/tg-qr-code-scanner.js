@@ -49,7 +49,7 @@ const template = html`
         on-iron-overlay-opened="_qrCodeScannerOpened"
         on-iron-overlay-closed="_qrCodeScannerClosed">
         <slot id="scannerSlot" name="scanner"></slot>
-        <tg-singleline-text-editor id="textEditor" entity='[[_entity]]' property-name='scannedValue' prop-title='Scanned text' 
+        <tg-singleline-text-editor id="textEditor" entity='[[_entity]]' property-name='scannedValue' prop-title='Scanned value' 
                 prop-desc='Contains text scanned from Bar or QR code' current-state='EDIT' 
                 validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-singleline-text-editor>
         <div class="buttons">
