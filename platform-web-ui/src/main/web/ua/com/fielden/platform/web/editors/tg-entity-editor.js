@@ -82,7 +82,7 @@ const customLabelTemplate = html`
         <span class="label-title" on-down="_labelDownEventHandler">[[_editorPropTitle]]</span>
         <iron-icon id="actionAvailability" class="label-action" icon="[[_actionIcon(actionAvailable, entity, propertyName)]]" action-available$="[[actionAvailable]]" on-tap="_editNewTap"></iron-icon>
         <iron-icon id="copyIcon" class="label-action" hidden$="[[noLabelFloat]]" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
-        <iron-icon id="scanIcon" class="label-action" hidden$="[[noLabelFloat]]" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
+        <iron-icon id="scanIcon" class="label-action" hidden$="[[!_canScan(noLabelFloat, entity, propertyName)]]" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
     </label>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">

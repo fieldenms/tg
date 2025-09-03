@@ -65,7 +65,7 @@ const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
         <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
         <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
-        <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
+        <iron-icon class="label-action" hidden$="[[!_canScan(noLabelFloat, entity, propertyName)]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
     </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
@@ -948,6 +948,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         }
     }
 
+    /*************************QR Code Scanner related methods****************************************/
     _scanTap () {
         if (qrCodeScanner === null) {
             qrCodeScanner = document.getElementById("qrScanner");
@@ -973,6 +974,17 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         this._checkBuiltInValidation();
         this.commitIfChanged();
     }
+
+    _canScan (noLabelFloat, entity, propertyName) {
+        if (allDefined(arguments)) {
+            const metaPropEditable = this.reflector().isEntity(entity) && !this.reflector().isDotNotated(propertyName)
+                                 ? entity["@" + propertyName + "_editable"]
+                                 : false;
+            return !noLabelFloat && metaPropEditable
+        }
+        return false;
+    }
+    /*********************************** QR Code Scanner related methods end******************************/
 
     _showCheckIconAndToast (text) {
         if (this.toaster) {
