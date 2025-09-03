@@ -19,8 +19,14 @@ const template = html`
              @apply --layout-vertical;
         }
         .buttons {
+            padding: 20px;
             @apply --layout-horizontal;
             @apply --layout-center-justified;
+        }
+        paper-button {
+            margin-top: 20px;
+            margin-left: 20px;
+            width: 80px;
         }
         paper-button.blue {
             color: var(--paper-light-blue-500);
