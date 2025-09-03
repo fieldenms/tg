@@ -47,8 +47,8 @@ const template = html`
                 prop-desc='Contains text scanned from Bar or QR code' current-state='EDIT' 
                 validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-singleline-text-editor>
         <div class="buttons">
-            <paper-button raised roll="button" on-tap="_scanAgain">SCAN AGAIN</paper-button>
-            <paper-button raised roll="button" on-tap="_cancelScan">CANCEL</paper-button>
+            <paper-button raised roll="button" on-tap="_cancelScan">CLOSE</paper-button>
+            <paper-button raised roll="button" on-tap="_scanAgain">SCAN</paper-button>
             <paper-button raised roll="button" class="blue" on-tap="_applyScane">APPLY</paper-button>
         </div>
     </paper-dialog>`; 
