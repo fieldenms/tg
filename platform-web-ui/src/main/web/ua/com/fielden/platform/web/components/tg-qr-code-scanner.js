@@ -35,9 +35,9 @@ const template = html`
         paper-button:hover {
             background: var(--paper-light-blue-50);
         }
-        tg-singleline-text-editor {
+       .editor {
             margin-top: 0;
-            padding: 0 20px 20px 20px;
+            padding: 0 20px;
         }
     </style>
     <paper-dialog id="qrCodeScanner"
@@ -49,9 +49,12 @@ const template = html`
         on-iron-overlay-opened="_qrCodeScannerOpened"
         on-iron-overlay-closed="_qrCodeScannerClosed">
         <slot id="scannerSlot" name="scanner"></slot>
-        <tg-singleline-text-editor id="textEditor" entity='[[_entity]]' property-name='scannedValue' prop-title='Scanned value' 
+        <tg-singleline-text-editor id="textEditor" class ="editor" entity='[[_entity]]' property-name='scannedValue' prop-title='Scanned value' 
                 prop-desc='Contains text scanned from Bar or QR code' current-state='EDIT' 
                 validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-singleline-text-editor>
+        <tg-boolean-editor id='scanAndApplyEditor' class ="editor" entity='[[_entity]]' property-name='scanAndApply' prop-title='Scan & apply?' 
+                    prop-desc='Determines whether the scanned value should be applied immediately or not.' current-state='EDIT' 
+                    validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-boolean-editor>
         <div class="buttons">
             <paper-button raised roll="button" on-tap="_cancelScan">CLOSE</paper-button>
             <paper-button raised roll="button" on-tap="_scanAgain">SCAN</paper-button>
@@ -88,10 +91,11 @@ class TgQrCodeScanner extends PolymerElement {
         super();
         this._reflector = new TgReflector();
         this._entity = createDummyBindingEntity(
-            {'scannedValue': {value: '', editable: true}},
-            (name) => {
+            {'scannedValue': {value: '', editable: true},
+             'scanAndApply': {value: false, editable: true}},
+             (name) => {
                 return {
-                    type: () => 'string'
+                    type: () => name === 'scannedValue' ? 'string' : 'boolean'
                 }
             }
         );
@@ -144,12 +148,18 @@ class TgQrCodeScanner extends PolymerElement {
     _successfulScan (decodedText, decodedResult) {
         this.$.textEditor.assignConcreteValue(decodedText, this._reflector.tg_convert.bind(this._reflector));
         this.$.textEditor.commitIfChanged();
-        this._scanner.pause(true);
+        if (this._entity['scanAndApply']) {
+            this._applyScane();
+        } else {
+            this._scanner.pause(true);
+        }
     }
 
     _resetState() {
         this.$.textEditor.assignConcreteValue('', this._reflector.tg_convert.bind(this._reflector));
         this.$.textEditor.commitIfChanged();
+        this.$.scanAndApplyEditor.assignConcreteValue(false, this._reflector.tg_convert.bind(this._reflector));
+        this.$.scanAndApplyEditor.commitIfChanged();
     }
 
     _scanAgain(e) {
