@@ -63,6 +63,10 @@ class TgQrCodeScanner extends PolymerElement {
         return {
             toaster: Object,
 
+            closeCallback: Function,
+
+            applyCallback: Function,
+
             //private properties
             _scanner: Object,
 
@@ -121,6 +125,16 @@ class TgQrCodeScanner extends PolymerElement {
         this._scanner.render(this._successfulScan.bind(this), this._faildScan.bind(this));
     }
 
+    _qrCodeScannerClosed() {
+        if (this.closeCallback) {
+            this.closeCallback();
+        }
+    }
+
+    _rejectQrScanner() {
+
+    }
+
     _successfulScan (decodedText, decodedResult) {
         this.$.textEditor.assignConcreteValue(decodedText, this._reflector.tg_convert.bind(this._reflector));
         this.$.textEditor.commitIfChanged();
@@ -147,6 +161,9 @@ class TgQrCodeScanner extends PolymerElement {
         this._scanner.html5Qrcode.stop().finally(() => {
             this.$.textEditor.commitIfChanged();
             this.$.qrCodeScanner.close();
+            if (this.applyCallback) {
+                this.applyCallback(this.scannedText);
+            }
         });
     }
 

@@ -8,6 +8,7 @@ import '/resources/polymer/@polymer/paper-input/paper-input-error.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js';
 
 import '/resources/components/tg-confirmation-dialog.js';
+import '/resources/images/tg-icons.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
 
@@ -19,6 +20,8 @@ import { tearDownEvent, allDefined, resultMessages, deepestActiveElement, isInHi
 let checkIconTimer = null;
 
 let lastEditor = null;
+
+let qrCodeScanner = null;
 
 const timeoutCheckIcon = function (editor) {
     if (checkIconTimer) {
@@ -62,6 +65,7 @@ const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
         <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
         <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
     </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
@@ -942,6 +946,32 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         } else if (this.toaster) {
             this.toaster.openToastWithoutEntity("Nothing to copy", true, "There was nothing to copy.", false);
         }
+    }
+
+    _scanTap () {
+        if (qrCodeScanner === null) {
+            qrCodeScanner = document.getElementById("qrScanner");
+        }
+        if (qrCodeScanner) {
+            qrCodeScanner.closeCallback = this._closeScanner.bind(this);
+            qrCodeScanner.applyCallback = this._applyScannerValue.bind(this);
+            qrCodeScanner.open();
+        } else {
+            throw new Error("QR code scanner is not present in DOM. Please add it with 'qrScanner' id");
+        }
+    }
+
+    _closeScanner () {
+        if (qrCodeScanner) {
+            qrCodeScanner.closeCallback = null;
+            qrCodeScanner.applyCallback = null;
+        }
+    }
+
+    _applyScannerValue (value) {
+        this._editingValue = value;
+        this._checkBuiltInValidation();
+        this.commitIfChanged();
     }
 
     _showCheckIconAndToast (text) {
