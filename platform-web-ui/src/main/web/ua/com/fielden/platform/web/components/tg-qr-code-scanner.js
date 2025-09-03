@@ -8,10 +8,13 @@ import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 
 import '/resources/editors/tg-singleline-text-editor.js';
+import '/resources/editors/tg-boolean-editor.js';
 
-import { tearDownEvent, createDummyBindingEntity} from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, localStorageKey, createDummyBindingEntity} from '/resources/reflection/tg-polymer-utils.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
+
+const SCAN_AND_APPLY = "scanAndApply"
 
 const template = html`
     <style>
@@ -105,6 +108,12 @@ class TgQrCodeScanner extends PolymerElement {
 
     ready() {
         super.ready();
+        //Override onChange method on scanAndApply boolean editor to save value into localstorage after it was changed.
+        const oldOnChang = this.$.scanAndApplyEditor._onChange.bind(this.$.scanAndApplyEditor);
+        this.$.scanAndApplyEditor._onChange = (e) => {
+            oldOnChang(e);
+            localStorage.setItem(localStorageKey(SCAN_AND_APPLY), this.$.scanAndApplyEditor._editingValue);
+        }
         //Creates scanner if node in the light DOM of this element has id attribute
         //The node in the light DOM should be attributed with slot="scanner"
         const elements = this.$.scannerSlot.assignedNodes();
@@ -123,6 +132,8 @@ class TgQrCodeScanner extends PolymerElement {
     open() {
         if (this._scanner) {
             this._resetState();
+            this.$.scanAndApplyEditor._editingValue = localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) || 'false';
+            this.$.scanAndApplyEditor.commitIfChanged();
             this.$.qrCodeScanner.open();
         }
     }
@@ -158,8 +169,6 @@ class TgQrCodeScanner extends PolymerElement {
     _resetState() {
         this.$.textEditor.assignConcreteValue('', this._reflector.tg_convert.bind(this._reflector));
         this.$.textEditor.commitIfChanged();
-        this.$.scanAndApplyEditor.assignConcreteValue(false, this._reflector.tg_convert.bind(this._reflector));
-        this.$.scanAndApplyEditor.commitIfChanged();
     }
 
     _scanAgain(e) {
