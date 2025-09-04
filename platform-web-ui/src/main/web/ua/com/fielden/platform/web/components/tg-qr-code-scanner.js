@@ -1,6 +1,6 @@
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
-import { Html5QrcodeScanner } from '/resources/polymer/lib/html5-qrcode-lib.js';
+import { Html5Qrcode } from '/resources/polymer/lib/html5-qrcode-lib.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
@@ -10,16 +10,51 @@ import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/editors/tg-singleline-text-editor.js';
 import '/resources/editors/tg-boolean-editor.js';
 
-import { tearDownEvent, localStorageKey, createDummyBindingEntity} from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, localStorageKey, createDummyBindingEntity, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
 
-const SCAN_AND_APPLY = "scanAndApply"
+const SCAN_AND_APPLY = "scanAndApply";
+
+function calculatePrefferedVideoSize(scannerElement, mobile) {
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    const controlDimension = scannerElement.$.controls.getBoundingClientRect();
+
+    /*const dims =*/return mobile ? 
+        [windowWidth, windowHeight - controlDimension.height] :
+        [Math.min(windowWidth - windowWidth * 0.1, 600), Math.min(windowHeight - windowHeight * 0.1 - controlDimension.height, 600)];
+
+    let width = dims[0], height = dims[1];
+    if (height > width) {
+        height = width;
+    }
+    return [width, height]
+}
+
+
+function qrboxFunction(viewfinderWidth, viewfinderHeight) {
+    let minEdgePercentage = 0.7; // 70%
+    let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+    let qrboxSize = Math.min(Math.floor(minEdgeSize * minEdgePercentage), 250);
+    return {
+        width: qrboxSize,
+        height: qrboxSize
+    };
+}
 
 const template = html`
     <style>
         paper-dialog {
              @apply --layout-vertical;
+        }
+        #videoSlot {
+            @apply --layout-vertical;
+            @apply --layout-center
+        }
+        #controls {
+            @apply --layout-vertical;
         }
         .buttons {
             padding: 20px;
@@ -31,6 +66,9 @@ const template = html`
             margin-left: 20px;
             width: 80px;
         }
+        paper-button:first-child {
+            margin-left: 0;
+        }
         paper-button.blue {
             color: var(--paper-light-blue-500);
             --paper-button-flat-focus-color: var(--paper-light-blue-50);
@@ -38,9 +76,17 @@ const template = html`
         paper-button:hover {
             background: var(--paper-light-blue-50);
         }
-       .editor {
+        .editor {
             margin-top: 0;
             padding: 0 20px;
+        }
+        [mobile] {
+            position: fixed;
+            margin: 0;
+            top: 0;
+            left: 0;
+            min-width: 100%;
+            min-height: 100%;
         }
     </style>
     <paper-dialog id="qrCodeScanner"
@@ -50,18 +96,23 @@ const template = html`
         exit-animation="fade-out-animation"
         on-iron-overlay-canceled="_rejectQrScanner"
         on-iron-overlay-opened="_qrCodeScannerOpened"
-        on-iron-overlay-closed="_qrCodeScannerClosed">
-        <slot id="scannerSlot" name="scanner"></slot>
-        <tg-singleline-text-editor id="textEditor" class ="editor" entity='[[_entity]]' property-name='scannedValue' prop-title='Scanned value' 
-                prop-desc='Contains text scanned from Bar or QR code' current-state='EDIT' 
-                validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-singleline-text-editor>
-        <tg-boolean-editor id='scanAndApplyEditor' class ="editor" entity='[[_entity]]' property-name='scanAndApply' prop-title='Scan & apply?' 
-                    prop-desc='Determines whether the scanned value should be applied immediately or not.' current-state='EDIT' 
-                    validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-boolean-editor>
-        <div class="buttons">
-            <paper-button raised roll="button" on-tap="_cancelScan">CLOSE</paper-button>
-            <paper-button raised roll="button" on-tap="_scanAgain">SCAN</paper-button>
-            <paper-button raised roll="button" class="blue" on-tap="_applyScane">APPLY</paper-button>
+        on-iron-overlay-closed="_qrCodeScannerClosed"
+        mobile$="[[mobile]]">
+        <div id="videoSlot" class="no-padding">
+            <slot id="scannerSlot" name="scanner"></slot>
+        </div>
+        <div id="controls" class="no-padding">
+            <tg-singleline-text-editor id="textEditor" class ="editor" entity='[[_entity]]' property-name='scannedValue' prop-title='Scanned value' 
+                    prop-desc='Contains text scanned from Bar or QR code' current-state='EDIT' 
+                    validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-singleline-text-editor>
+            <tg-boolean-editor id='scanAndApplyEditor' class ="editor" entity='[[_entity]]' property-name='scanAndApply' prop-title='Scan & apply?' 
+                        prop-desc='Determines whether the scanned value should be applied immediately or not.' current-state='EDIT' 
+                        validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-boolean-editor>
+            <div class="buttons">
+                <paper-button raised roll="button" on-tap="_cancelScan">CLOSE</paper-button>
+                <paper-button raised roll="button" on-tap="_scanAgain">SCAN</paper-button>
+                <paper-button raised roll="button" class="blue" on-tap="_applyScane">APPLY</paper-button>
+            </div>
         </div>
     </paper-dialog>`; 
 
@@ -73,6 +124,12 @@ class TgQrCodeScanner extends PolymerElement {
 
     static get properties() {
         return {
+            mobile: {
+                type: Boolean,
+                value: isMobileApp(),
+                readOnly: true,
+                reflectToAttribute: true
+            },
             toaster: Object,
 
             closeCallback: Function,
@@ -80,6 +137,10 @@ class TgQrCodeScanner extends PolymerElement {
             applyCallback: Function,
 
             //private properties
+            _videoFeedElement: Object,
+
+            _cameras: Array,
+
             _scanner: Object,
 
             _validate: Function,
@@ -118,23 +179,36 @@ class TgQrCodeScanner extends PolymerElement {
         //The node in the light DOM should be attributed with slot="scanner"
         const elements = this.$.scannerSlot.assignedNodes();
         if (elements.length > 0) {
-            const scannerElement = elements[0];
-            const scannerId = scannerElement.getAttribute("id");
-            if (scannerId) {
-                this._scanner = new Html5QrcodeScanner(
-                    scannerId,
-                    { fps: 10, qrbox: {width: 250, height: 250} },
-                    /* verbose= */ false);
-            }
+            this._videoFeedElement = elements[0];
+            const scannerId = this._videoFeedElement.getAttribute("id");
+            this._scanner = scannerId && new Html5Qrcode(scannerId);
         }
     }
 
     open() {
         if (this._scanner) {
-            this._resetState();
-            this.$.scanAndApplyEditor._editingValue = localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) || 'false';
-            this.$.scanAndApplyEditor.commitIfChanged();
-            this.$.qrCodeScanner.open();
+            // This method will trigger user permissions
+            Html5Qrcode.getCameras().then(devices => {
+                /**
+                 * devices would be an array of objects of type:
+                 * { id: "id", label: "label" }
+                 */
+                if (devices && devices.length) {
+                    this._cameras = [...devices];
+                    //TODO remove next line after testing
+                    this._cameras.forEach(camera => console.log(`cameraId: ${camera.id}, camear label: ${camera.label}`));
+                    this._resetState();
+                    this.$.scanAndApplyEditor._editingValue = localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) || 'false';
+                    this.$.scanAndApplyEditor.commitIfChanged();
+                    this.$.qrCodeScanner.open();
+                } else {
+                    this.toaster && this.toaster.openToastForError('No cammera error', 'There is no cameras to scan QR or Bar code', true);
+                }
+            }).catch(err => {
+                this.toaster && this.toaster.openToastForError('Camera error', err, true);
+            });
+        } else {
+            this.toaster && this.toaster.openToastForError('Scanner error', 'Please specify element for camera feed inside tg-qr-code-scanner with attribute slot equal to "scanner"', true);
         }
     }
 
@@ -143,7 +217,16 @@ class TgQrCodeScanner extends PolymerElement {
     }
 
     _qrCodeScannerOpened() {
-        this._scanner.render(this._successfulScan.bind(this), this._faildScan.bind(this));
+        if (this._scanner) {
+            const dims = calculatePrefferedVideoSize(this);
+
+            this._videoFeedElement.style.width = dims[0] + "px";
+            this._videoFeedElement.style.height = dims[1] + "px";
+            this.$.qrCodeScanner.refit();
+            this._scanner.start(this.mobile ? this._cameras[1].id : this._cameras[0].id,  { aspectRatio: dims[0] < dims[1] ? dims[1] / dims[0] : dims[0] / dims[1], fps: 10, qrbox: qrboxFunction },
+                this._successfulScan.bind(this), this._faildScan.bind(this)
+            );
+        }
     }
 
     _qrCodeScannerClosed() {
@@ -177,13 +260,13 @@ class TgQrCodeScanner extends PolymerElement {
     }
             
     _cancelScan() {
-        this._scanner.html5Qrcode.stop().finally(() => {
+        this._scanner.stop().finally(() => {
             this.$.qrCodeScanner.cancel();
         });
     }
     
     _applyScane() {
-        this._scanner.html5Qrcode.stop().finally(() => {
+        this._scanner.stop().finally(() => {
             this.$.textEditor.commitIfChanged();
             this.$.qrCodeScanner.close();
             if (this.applyCallback) {
