@@ -279,8 +279,8 @@ class TgQrCodeScanner extends PolymerElement {
         }
     }
 
-    _qrCodeScannerClosed() {
-        if (this.closeCallback) {
+    _qrCodeScannerClosed(e) {
+        if (this.closeCallback && e.target === this.$.qrCodeScanner) {
             this.closeCallback();
         }
     }
