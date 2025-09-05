@@ -1,12 +1,13 @@
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
-import { Html5Qrcode } from '/resources/polymer/lib/html5-qrcode-lib.js';
+import { Html5Qrcode, Html5QrcodeScannerState } from '/resources/polymer/lib/html5-qrcode-lib.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
 import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 
+import '/resources/components/tg-dropdown-switch.js';
 import '/resources/editors/tg-singleline-text-editor.js';
 import '/resources/editors/tg-boolean-editor.js';
 
@@ -21,16 +22,17 @@ function calculatePrefferedVideoSize(scannerElement, mobile) {
     const windowHeight = window.innerHeight;
 
     const controlDimension = scannerElement.$.controls.getBoundingClientRect();
+    //TODO shaould take into account the maximum dimension of a window
+    const dims = mobile ? 
+            {width: windowWidth, height: windowHeight - controlDimension.height} :
+            {width: Math.min(windowWidth - windowWidth * 0.1, 600), height: Math.min(windowHeight - windowHeight * 0.1 - controlDimension.height, 600)};
+    dims.aspectRatio = calculateAspectRation(dims.width, dims.height);
 
-    /*const dims =*/return mobile ? 
-        [windowWidth, windowHeight - controlDimension.height] :
-        [Math.min(windowWidth - windowWidth * 0.1, 600), Math.min(windowHeight - windowHeight * 0.1 - controlDimension.height, 600)];
+    return dims;
+}
 
-    let width = dims[0], height = dims[1];
-    if (height > width) {
-        height = width;
-    }
-    return [width, height]
+function calculateAspectRation(width, height) {
+    return width < height ? height/width : width/height;
 }
 
 
@@ -55,6 +57,7 @@ const template = html`
         }
         #controls {
             @apply --layout-vertical;
+            padding: 0 20px;
         }
         .buttons {
             padding: 20px;
@@ -75,10 +78,6 @@ const template = html`
         }
         paper-button:hover {
             background: var(--paper-light-blue-50);
-        }
-        .editor {
-            margin-top: 0;
-            padding: 0 20px;
         }
         [mobile] {
             position: fixed;
@@ -102,6 +101,7 @@ const template = html`
             <slot id="scannerSlot" name="scanner"></slot>
         </div>
         <div id="controls" class="no-padding">
+            <tg-dropdown-switch id="camearSelector" class ="editor" views="[[_cameras]]" raised make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_changeCamera"></tg-dropdown-switch>
             <tg-singleline-text-editor id="textEditor" class ="editor" entity='[[_entity]]' property-name='scannedValue' prop-title='Scanned value' 
                     prop-desc='Contains text scanned from Bar or QR code' current-state='EDIT' 
                     validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-singleline-text-editor>
@@ -140,6 +140,11 @@ class TgQrCodeScanner extends PolymerElement {
             _videoFeedElement: Object,
 
             _cameras: Array,
+
+            _cameraIndex: {
+                type: Number,
+                value: 0
+            },
 
             _scanner: Object,
 
@@ -194,9 +199,10 @@ class TgQrCodeScanner extends PolymerElement {
                  * { id: "id", label: "label" }
                  */
                 if (devices && devices.length) {
-                    this._cameras = [...devices];
+                    this._cameras = devices.map((device, idx) => {return {index: idx, id: device.id, title: device.label, desc: device.label};});
+                    this.$.camearSelector.viewIndex = this._cameras[0].index;
                     //TODO remove next line after testing
-                    this._cameras.forEach(camera => console.log(`cameraId: ${camera.id}, camear label: ${camera.label}`));
+                    this._cameras.forEach(camera => console.log(`cameraId: ${camera.index}, camear label: ${camera.title}`));
                     this._resetState();
                     this.$.scanAndApplyEditor._editingValue = localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) || 'false';
                     this.$.scanAndApplyEditor.commitIfChanged();
@@ -216,16 +222,42 @@ class TgQrCodeScanner extends PolymerElement {
         return this._entity['scannedValue'] ? this._entity['scannedValue'] : '';
     }
 
-    _qrCodeScannerOpened() {
-        if (this._scanner) {
-            const dims = calculatePrefferedVideoSize(this);
+    _changeCamera(e) {
+        const cameraIdx = e.detail;
+        if (this._cameras && this._cameras[cameraIdx]) {
+            //this._saveActionIndex(itemIdx);
+            if (this._scanner) {
+                const width = parseInt(this._videoFeedElement.style.width);
+                const height = parseInt(this._videoFeedElement.style.height);
+                let stopPromise = null;
+                if (!this._scanner.stateManagerProxy.isScanning()) {
+                    stopPromise = Promise.resolve();
+                } else {
+                    stopPromise = this._scanner.stop();
+                }
+                stopPromise && stopPromise.then(() => {
+                    return this._scanner.start(this._cameras[cameraIdx].id,  { fps: 10, aspectRatio: calculateAspectRation(width, height), qrbox: qrboxFunction },
+                        this._successfulScan.bind(this), this._faildScan.bind(this)
+                    );
+                }).catch(err => {
+                    this.toaster && this.toaster.openToastForError('Camera error', err, true);
+                }) 
+                
+            }
+        }
+    }
 
-            this._videoFeedElement.style.width = dims[0] + "px";
-            this._videoFeedElement.style.height = dims[1] + "px";
+    _qrCodeScannerOpened(e) {
+        if (this._scanner && e.target === this.$.qrCodeScanner) {
+            const dims = calculatePrefferedVideoSize(this);
+            this._videoFeedElement.style.width = dims.width + "px";
+            this._videoFeedElement.style.height = dims.height + "px";
             this.$.qrCodeScanner.refit();
-            this._scanner.start(this.mobile ? this._cameras[1].id : this._cameras[0].id,  { aspectRatio: dims[0] < dims[1] ? dims[1] / dims[0] : dims[0] / dims[1], fps: 10, qrbox: qrboxFunction },
+            this._scanner.start(this._cameras[this.$.camearSelector.viewIndex].id,  { fps: 10, aspectRatio: dims.aspectRatio, qrbox: qrboxFunction },
                 this._successfulScan.bind(this), this._faildScan.bind(this)
-            );
+            ).catch((err) => {
+                this.toaster && this.toaster.openToastForError('Camera error', err, true);
+            });
         }
     }
 
