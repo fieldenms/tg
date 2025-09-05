@@ -1,6 +1,6 @@
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
-import { Html5Qrcode, Html5QrcodeScannerState } from '/resources/polymer/lib/html5-qrcode-lib.js';
+import { Html5Qrcode } from '/resources/polymer/lib/html5-qrcode-lib.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
@@ -16,6 +16,7 @@ import { tearDownEvent, localStorageKey, createDummyBindingEntity, isMobileApp} 
 import {TgReflector} from '/app/tg-reflector.js';
 
 const SCAN_AND_APPLY = "scanAndApply";
+const CAMERA_ID = "cameraId";
 
 function calculatePrefferedVideoSize(scannerElement, mobile) {
     const windowWidth = window.innerWidth;
@@ -44,6 +45,23 @@ function qrboxFunction(viewfinderWidth, viewfinderHeight) {
         width: qrboxSize,
         height: qrboxSize
     };
+}
+
+function getCameraIndex(cameras) {
+    if (cameras && cameras.length > 0) {
+        const savedCamera = localStorage.getItem(localStorageKey(CAMERA_ID));
+        if (savedCamera) {
+            const idx = cameras.findIndex(camera => camera.id === savedCamera);
+            return idx >= 0 ? idx : 0;
+        }
+        return 0;
+    }
+}
+
+function saveCamera(camera) {
+    if (camera) {
+        localStorage.setItem(localStorageKey(CAMERA_ID), camera.id);
+    }
 }
 
 const template = html`
@@ -200,7 +218,7 @@ class TgQrCodeScanner extends PolymerElement {
                  */
                 if (devices && devices.length) {
                     this._cameras = devices.map((device, idx) => {return {index: idx, id: device.id, title: device.label, desc: device.label};});
-                    this.$.camearSelector.viewIndex = this._cameras[0].index;
+                    this.$.camearSelector.viewIndex = getCameraIndex(this._cameras);
                     //TODO remove next line after testing
                     this._cameras.forEach(camera => console.log(`cameraId: ${camera.index}, camear label: ${camera.title}`));
                     this._resetState();
@@ -225,7 +243,7 @@ class TgQrCodeScanner extends PolymerElement {
     _changeCamera(e) {
         const cameraIdx = e.detail;
         if (this._cameras && this._cameras[cameraIdx]) {
-            //this._saveActionIndex(itemIdx);
+            saveCamera(this._cameras[cameraIdx]);
             if (this._scanner) {
                 const width = parseInt(this._videoFeedElement.style.width);
                 const height = parseInt(this._videoFeedElement.style.height);
