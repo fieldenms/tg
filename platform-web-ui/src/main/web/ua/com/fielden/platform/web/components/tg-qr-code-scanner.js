@@ -305,8 +305,10 @@ class TgQrCodeScanner extends PolymerElement {
     }
 
     _scanAgain(e) {
-        this._resetState();
-        this._scanner.resume();
+        if (this._scanner.stateManagerProxy.isPaused()) {
+            this._resetState();
+            this._scanner.resume();
+        }
     }
             
     _cancelScan() {
