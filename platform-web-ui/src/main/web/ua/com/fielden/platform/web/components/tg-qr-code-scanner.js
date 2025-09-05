@@ -252,14 +252,17 @@ class TgQrCodeScanner extends PolymerElement {
                 } else {
                     stopPromise = this._scanner.stop();
                 }
-                stopPromise && stopPromise.then(() => {
-                    return this._scanner.start(this._cameras[cameraIdx].id,  { fps: 10, aspectRatio: calculateAspectRation(width, height), qrbox: qrboxFunction },
-                        this._successfulScan.bind(this), this._faildScan.bind(this)
-                    );
-                }).catch(err => {
-                    this.toaster && this.toaster.openToastForError('Camera error', err, true);
-                }) 
-                
+                if (qrboxFunction(width, height).width < 50) {
+                    this.toaster && this.toaster.openToastForError('Camera error', "The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.", true);
+                } else {
+                    stopPromise && stopPromise.then(() => {
+                        return this._scanner.start(this._cameras[cameraIdx].id,  { fps: 10, aspectRatio: calculateAspectRation(width, height), qrbox: qrboxFunction },
+                            this._successfulScan.bind(this), this._faildScan.bind(this)
+                        );
+                    }).catch(err => {
+                        this.toaster && this.toaster.openToastForError('Camera error', err, true);
+                    });
+                }
             }
         }
     }
@@ -270,17 +273,23 @@ class TgQrCodeScanner extends PolymerElement {
             this._videoFeedElement.style.width = dims.width + "px";
             this._videoFeedElement.style.height = dims.height + "px";
             this.$.qrCodeScanner.refit();
-            this._scanner.start(this._cameras[this.$.camearSelector.viewIndex].id,  { fps: 10, aspectRatio: dims.aspectRatio, qrbox: qrboxFunction },
-                this._successfulScan.bind(this), this._faildScan.bind(this)
-            ).catch((err) => {
-                this.toaster && this.toaster.openToastForError('Camera error', err, true);
-            });
+            if (qrboxFunction(dims.width, dims.height).width < 50) {
+                this.toaster && this.toaster.openToastForError('Camera error', "The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.", true);
+            } else {
+                this._scanner.start(this._cameras[this.$.camearSelector.viewIndex].id,  { fps: 10, aspectRatio: dims.aspectRatio, qrbox: qrboxFunction },
+                    this._successfulScan.bind(this), this._faildScan.bind(this)
+                ).catch((err) => {
+                    this.toaster && this.toaster.openToastForError('Camera error', err, true);
+                });
+            }
         }
     }
 
     _qrCodeScannerClosed(e) {
         if (e.target === this.$.qrCodeScanner) {
-            this._scanner.stop();
+            if (this._scanner.stateManagerProxy.isScanning()) {
+                this._scanner.stop();
+            }
             if (this.closeCallback) {
                 this.closeCallback();
             } 
@@ -293,7 +302,9 @@ class TgQrCodeScanner extends PolymerElement {
         if (this._entity['scanAndApply']) {
             this._applyScane();
         } else {
-            this._scanner.pause(true);
+            if (this._scanner.stateManagerProxy.isScanning()) {
+                this._scanner.pause(true);
+            }
         }
     }
 

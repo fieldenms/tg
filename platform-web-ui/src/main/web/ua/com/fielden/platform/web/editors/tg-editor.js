@@ -954,6 +954,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
             qrCodeScanner = document.getElementById("qrScanner");
         }
         if (qrCodeScanner) {
+            qrCodeScanner.toaster = this.toaster;
             qrCodeScanner.closeCallback = this._closeScanner.bind(this);
             qrCodeScanner.applyCallback = this._applyScannerValue.bind(this);
             qrCodeScanner.open();
@@ -964,6 +965,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
 
     _closeScanner () {
         if (qrCodeScanner) {
+            qrCodeScanner.toaster = null;
             qrCodeScanner.closeCallback = null;
             qrCodeScanner.applyCallback = null;
         }
