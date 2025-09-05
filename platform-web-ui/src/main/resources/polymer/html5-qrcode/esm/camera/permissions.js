@@ -1,4 +1,4 @@
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+(undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -7,7 +7,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
+(undefined && undefined.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
@@ -34,29 +34,3 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var CameraPermissions = (function () {
-    function CameraPermissions() {
-    }
-    CameraPermissions.hasPermissions = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var devices, _i, devices_1, device;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4, navigator.mediaDevices.enumerateDevices()];
-                    case 1:
-                        devices = _a.sent();
-                        for (_i = 0, devices_1 = devices; _i < devices_1.length; _i++) {
-                            device = devices_1[_i];
-                            if (device.kind === "videoinput" && device.label) {
-                                return [2, true];
-                            }
-                        }
-                        return [2, false];
-                }
-            });
-        });
-    };
-    return CameraPermissions;
-}());
-
-export { CameraPermissions };

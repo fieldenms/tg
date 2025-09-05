@@ -148,14 +148,5 @@ var BaseLoggger = (function () {
 function isNullOrUndefined(obj) {
     return (typeof obj === "undefined") || obj === null;
 }
-function clip(value, minValue, maxValue) {
-    if (value > maxValue) {
-        return maxValue;
-    }
-    if (value < minValue) {
-        return minValue;
-    }
-    return value;
-}
 
-export { BaseLoggger, DecodedTextType, Html5QrcodeConstants, Html5QrcodeErrorFactory, Html5QrcodeErrorTypes, Html5QrcodeResultFactory, Html5QrcodeScanType, Html5QrcodeSupportedFormats, QrcodeResultFormat, clip, isNullOrUndefined, isValidHtml5QrcodeSupportedFormats };
+export { BaseLoggger, DecodedTextType, Html5QrcodeConstants, Html5QrcodeErrorFactory, Html5QrcodeErrorTypes, Html5QrcodeResultFactory, Html5QrcodeScanType, Html5QrcodeSupportedFormats, QrcodeResultFormat, isNullOrUndefined, isValidHtml5QrcodeSupportedFormats };
