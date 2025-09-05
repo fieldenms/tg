@@ -111,7 +111,6 @@ const template = html`
         always-on-top
         entry-animation="scale-up-animation"
         exit-animation="fade-out-animation"
-        on-iron-overlay-canceled="_rejectQrScanner"
         on-iron-overlay-opened="_qrCodeScannerOpened"
         on-iron-overlay-closed="_qrCodeScannerClosed"
         mobile$="[[mobile]]">
@@ -280,13 +279,12 @@ class TgQrCodeScanner extends PolymerElement {
     }
 
     _qrCodeScannerClosed(e) {
-        if (this.closeCallback && e.target === this.$.qrCodeScanner) {
-            this.closeCallback();
+        if (e.target === this.$.qrCodeScanner) {
+            this._scanner.stop();
+            if (this.closeCallback) {
+                this.closeCallback();
+            } 
         }
-    }
-
-    _rejectQrScanner() {
-
     }
 
     _successfulScan (decodedText, decodedResult) {
@@ -312,19 +310,15 @@ class TgQrCodeScanner extends PolymerElement {
     }
             
     _cancelScan() {
-        this._scanner.stop().finally(() => {
-            this.$.qrCodeScanner.cancel();
-        });
+        this.$.qrCodeScanner.cancel();
     }
     
     _applyScane() {
-        this._scanner.stop().finally(() => {
-            this.$.textEditor.commitIfChanged();
-            this.$.qrCodeScanner.close();
-            if (this.applyCallback) {
-                this.applyCallback(this.scannedText);
-            }
-        });
+        this.$.textEditor.commitIfChanged();
+        this.$.qrCodeScanner.close();
+        if (this.applyCallback) {
+            this.applyCallback(this.scannedText);
+        }
     }
 
     _onAddonAttached(e) {
