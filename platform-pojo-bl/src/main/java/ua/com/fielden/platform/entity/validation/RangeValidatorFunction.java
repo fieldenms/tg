@@ -2,19 +2,30 @@ package ua.com.fielden.platform.entity.validation;
 
 import com.google.inject.Injector;
 import jakarta.inject.Singleton;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
+import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 
-/**
- * A function used to implement {@link LePropertyValidator} and {@link GePropertyValidator}.
- * <p>
- * Range validation is supported only for some types.
- * Method {@link #forPropertyType(Class)} can be used to get a function type that is suitable for a given property type.
- * <p>
- * Most implementations should only override {@link #coreValidate(MetaProperty, Object, MetaProperty, Object)}},
- * but if more precise control over properties with {@code null} values is needed, then override {@link #validate(MetaProperty, Object, MetaProperty, Object)}}.
- */
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.Date;
+
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNotNullArgument;
+
+/// A function used to implement [LePropertyValidator] and [GePropertyValidator].
+///
+/// Range validation is supported only for some types.
+/// Method [#forPropertyType(Class)] can be used to get a function type that is suitable for a given property type.
+///
+/// Most implementations should only override [#coreValidate(MetaProperty,Object,MetaProperty,Object)]},
+/// but if more precise control over properties with `null` values is needed, then override [#validate(MetaProperty,Object,MetaProperty,Object)]}.
+///
 public abstract class RangeValidatorFunction<T> {
+
+    public static final String ERR_NOT_SUPPORTED_PROPERTY_TYPE = "Range validation is not supported for property type [%s].";
 
     public Result validate(final MetaProperty<T> startProperty, final T startValue,
                            final MetaProperty<T> endProperty, final T endValue)
@@ -58,7 +69,7 @@ public abstract class RangeValidatorFunction<T> {
         }
         // add more clauses if needed
         else {
-            throw new InvalidArgumentException("Range validation is not supported for property type [%s].".formatted(propertyType.getTypeName()));
+            throw new InvalidArgumentException(ERR_NOT_SUPPORTED_PROPERTY_TYPE.formatted(propertyType.getTypeName()));
         }
         return klass;
     }
@@ -70,8 +81,68 @@ public abstract class RangeValidatorFunction<T> {
         public Result coreValidate(final MetaProperty<X> startProperty, final X startValue,
                                    final MetaProperty<X> endProperty, final X endValue)
         {
-            return startValue.compareTo(endValue) > 0 ? Result.Failure : Result.Success;
+            requireNotNullArgument(startValue, "startValue");
+            requireNotNullArgument(endValue, "endValue");
+
+            final int cmp;
+            // Date properties may can be @TimeOnly or @DateOnly.
+            // Comparison needs to take this into account.
+            if (startValue instanceof Date fromDate && endValue instanceof Date toDate) {
+                final var entityType = startProperty.getEntity().getType();
+                if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, entityType, startProperty.getName())
+                    && AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, entityType, endProperty.getName()))
+                {
+                    cmp = compareTimeOnly(fromDate, toDate);
+                }
+                else if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, entityType, startProperty.getName())
+                        && AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, entityType, endProperty.getName()))
+                {
+                    cmp = compareDateOnly(fromDate, toDate);
+                }
+                else {
+                    cmp = startValue.compareTo(endValue);
+                }
+            }
+            else {
+                cmp = startValue.compareTo(endValue);
+            }
+
+            return cmp > 0 ? Result.Failure : Result.Success;
         }
+    }
+
+    /// Compares only the time portion using [LocalTime].
+    /// @return  Negative value if `time(from) < time(to)``, 0 if equal, positive if `time(from) > time(to)`.
+    ///
+    public static int compareTimeOnly(final Date from, final Date to) {
+        requireNotNullArgument(from, "from");
+        requireNotNullArgument(to, "to");
+
+        final LocalTime fromTime = from.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalTime();
+        final LocalTime toTime = to.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalTime();
+
+        return fromTime.compareTo(toTime);
+    }
+
+    /// Compares only the date portion using [LocalDate].
+    /// @return  Negative value if `date(from) < date(to)``, 0 if equal, positive if `date(from) > date(to)`.
+    ///
+    public static int compareDateOnly(final Date from, final Date to) {
+        requireNotNullArgument(from, "from");
+        requireNotNullArgument(to, "to");
+
+        final LocalDate fromDate = from.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        final LocalDate toDate = to.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        return fromDate.compareTo(toDate);
     }
 
 }
