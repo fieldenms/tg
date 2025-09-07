@@ -56,6 +56,9 @@ public class DateUtils {
 
     /// Creates a new date with the date part from `dateWithDatePart` and the time part from `dateWithTimePart`.
     ///
+    /// This method does not handle DST situations explicitly, relying on the Java Time API to do the right thing.
+    /// As the result, it possible that the resultant time would either jump forward or fall back.
+    ///
     public static Date mergeDateAndTime(final Date dateWithDatePart, final Date dateWithTimePart) {
         requireNotNullArgument(dateWithDatePart, "dateWithDatePart");
         requireNotNullArgument(dateWithTimePart, "dateWithTimePart");
