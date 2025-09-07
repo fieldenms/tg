@@ -53,7 +53,7 @@ public class DateUtils {
 
     /// Creates a new date with the date part from `dateWithDatePart` and the time part from `dateWithTimePart`.
     ///
-    public static Date mkDateWithDateAndTimeParts(final Date dateWithDatePart, final Date dateWithTimePart) {
+    public static Date mergeDateAndTime(final Date dateWithDatePart, final Date dateWithTimePart) {
         requireNotNullArgument(dateWithDatePart, "dateWithDatePart");
         requireNotNullArgument(dateWithTimePart, "dateWithTimePart");
 

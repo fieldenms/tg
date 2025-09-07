@@ -55,10 +55,10 @@ public class DateUtilsTest {
     }
 
     @Test
-    public void mkDateWithDateAndTimeParts_combines_the_date_and_time_parts_from_two_dates() {
+    public void mergeDateAndTime_combines_the_date_and_time_from_two_dates() {
         final var dateWithDatePart = new DateTime(2001, 1, 1, 23, 56).toDate();
         final var dateWithTimePart = new DateTime(2025, 1, 1, 14, 45).toDate();
-        final var date = DateUtils.mkDateWithDateAndTimeParts(dateWithDatePart, dateWithTimePart);
+        final var date = DateUtils.mergeDateAndTime(dateWithDatePart, dateWithTimePart);
         assertEquals(new DateTime(2001, 1, 1, 14, 45).toDate(), date);
     }
 
