@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.utils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNotNullArgument;
 
@@ -66,4 +69,15 @@ public class DateUtils {
                          .toInstant());
     }
 
+    /// Computes the difference between `from` and `to` as fractional hours.
+    /// The order of arguments is not important as an absolute value is returned.
+    ///
+    public static BigDecimal diffHours(final Date from, final Date to) {
+        requireNotNullArgument(from, "from");
+        requireNotNullArgument(to, "to");
+
+        final long diffInMillis = Math.abs(to.getTime() - from.getTime());
+        final double diffInHours = TimeUnit.MILLISECONDS.toMinutes(diffInMillis) / 60.0;
+        return new BigDecimal(diffInHours).setScale(2, RoundingMode.HALF_EVEN);
+    }
 }

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.utils;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
@@ -60,6 +61,21 @@ public class DateUtilsTest {
         final var dateWithTimePart = new DateTime(2025, 1, 1, 14, 45).toDate();
         final var date = DateUtils.mergeDateAndTime(dateWithDatePart, dateWithTimePart);
         assertEquals(new DateTime(2001, 1, 1, 14, 45).toDate(), date);
+    }
+
+    @Test
+    public void diffHours_calculates_fractional_hours_in_absolute_terms_and_scale_2() {
+        final var date1 = new DateTime(2025, 1, 1, 23, 10).toDate();
+        final var date2 = new DateTime(2025, 1, 1, 13, 10).toDate();
+
+        assertEquals(new BigDecimal("10.00"), DateUtils.diffHours(date1, date2));
+        assertEquals(new BigDecimal("10.00"), DateUtils.diffHours(date2, date1));
+
+        final var date3 = new DateTime(2025, 1, 1, 10, 0, 0).toDate();
+        final var date4 = new DateTime(2025, 1, 1, 11, 15, 10).toDate();
+
+        assertEquals(new BigDecimal("1.25"), DateUtils.diffHours(date3, date4));
+        assertEquals(new BigDecimal("1.25"), DateUtils.diffHours(date4, date3));
     }
 
 }
