@@ -46,21 +46,16 @@ public abstract class RangeValidatorFunction<T> {
 
     public enum Result {
         Success,
-        /**
-         * A failure condition, where the start value of the range is empty, while the end value is not.
-         */
+        /// A failure condition, where the start value of the range is empty, while the end value is not.
         EmptyStart,
-        /**
-         * A failure condition, where the start value of the range is greater than the end value.
-         */
+        /// A failure condition, where the start value of the range is greater than the end value.
         Failure;
     }
 
-    /**
-     * Returns a function type that supports range validation for properties of the given type.
-     * If the type is unsupported, an exception is thrown.
-     * Returned function type should be instantiated with an {@linkplain Injector#getInstance(Class) injector}.
-     */
+    /// Returns a function type that supports range validation for properties of the given type.
+    /// If the type is unsupported, an exception is thrown.
+    /// Returned function type should be instantiated with an {@linkplain Injector#getInstance(Class) injector}.
+    ///
     public static <T> Class<RangeValidatorFunction<T>> forPropertyType(final Class<T> propertyType) {
         // use a raw type to satisfy the compiler
         final Class klass;
@@ -112,7 +107,7 @@ public abstract class RangeValidatorFunction<T> {
     }
 
     /// Compares only the time portion using [LocalTime].
-    /// @return  Negative value if `time(from) < time(to)``, 0 if equal, positive if `time(from) > time(to)`.
+    /// @return  Negative value if `time(from) < time(to)`, 0 if equal, positive if `time(from) > time(to)`.
     ///
     public static int compareTimeOnly(final Date from, final Date to) {
         requireNotNullArgument(from, "from");
@@ -129,7 +124,7 @@ public abstract class RangeValidatorFunction<T> {
     }
 
     /// Compares only the date portion using [LocalDate].
-    /// @return  Negative value if `date(from) < date(to)``, 0 if equal, positive if `date(from) > date(to)`.
+    /// @return  Negative value if `date(from) < date(to)`, 0 if equal, positive if `date(from) > date(to)`.
     ///
     public static int compareDateOnly(final Date from, final Date to) {
         requireNotNullArgument(from, "from");
