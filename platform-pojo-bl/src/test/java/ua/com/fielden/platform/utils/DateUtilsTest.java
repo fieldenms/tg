@@ -1,14 +1,16 @@
 package ua.com.fielden.platform.utils;
 
+import org.joda.time.DateTime;
+import org.junit.Test;
+
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static ua.com.fielden.platform.utils.DateUtils.max;
 import static ua.com.fielden.platform.utils.DateUtils.min;
-
-import java.util.Date;
-
-import org.joda.time.DateTime;
-import org.junit.Test;
 
 public class DateUtilsTest {
     private final Date earlierDate = new DateTime("2001-01-01").toDate();
@@ -40,6 +42,24 @@ public class DateUtilsTest {
         assertEquals(earlierDate, max(earlierDate, null));
         assertEquals(laterDate, max(null, laterDate));
         assertNull(max(null, null));
+    }
+
+    @Test
+    public void time_has_today_as_date_part() {
+        final Date date = DateUtils.time(10, 35);
+
+        final var dateToCheck = date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        assertEquals(LocalDate.now(ZoneId.systemDefault()), dateToCheck);
+    }
+
+    @Test
+    public void mkDateWithDateAndTimeParts_combines_the_date_and_time_parts_from_two_dates() {
+        final var dateWithDatePart = new DateTime(2001, 1, 1, 23, 56).toDate();
+        final var dateWithTimePart = new DateTime(2025, 1, 1, 14, 45).toDate();
+        final var date = DateUtils.mkDateWithDateAndTimeParts(dateWithDatePart, dateWithTimePart);
+        assertEquals(new DateTime(2001, 1, 1, 14, 45).toDate(), date);
     }
 
 }
