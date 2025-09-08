@@ -20,22 +20,23 @@ import {TgReflector} from '/app/tg-reflector.js';
 const SCAN_AND_APPLY = "scanAndApply";
 const CAMERA_ID = "cameraId";
 
-function calculatePrefferedVideoSize(scannerElement, mobile) {
+function calculatePrefferedVideoSize(scannerElement) {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
 
     const controlDimension = scannerElement.$.controls.getBoundingClientRect();
-    //TODO shaould take into account the maximum dimension of a window
-    const dims = mobile ? 
+    const scannerStyles = window.getComputedStyle(scannerElement.$.qrCodeScanner);
+    const dims = isMobileApp() ? 
             {width: windowWidth, height: windowHeight - controlDimension.height} :
-            {width: Math.min(windowWidth - windowWidth * 0.1, 600), height: Math.min(windowHeight - windowHeight * 0.1 - controlDimension.height, 600)};
+            {width: Math.min(parseInt(scannerStyles.maxWidth), 600), height: Math.min(parseInt(scannerStyles.maxHeight) - controlDimension.height, 600)};
     dims.aspectRatio = calculateAspectRation(dims.width, dims.height);
 
     return dims;
 }
 
 function calculateAspectRation(width, height) {
-    return width < height ? height/width : width/height;
+    const portrait = window.matchMedia("(orientation: portrait)").matches;
+    return portrait && isMobileApp() ? height/width : width/height;
 }
 
 
@@ -77,7 +78,8 @@ const template = html`
         }
         #controls {
             @apply --layout-vertical;
-            padding: 0 20px;
+            margin: 0;
+            padding: 20px;
         }
         .buttons {
             padding: 20px;
