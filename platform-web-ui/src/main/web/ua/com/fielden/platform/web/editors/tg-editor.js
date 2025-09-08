@@ -65,7 +65,7 @@ const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
         <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
         <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
-        <iron-icon class="label-action" hidden$="[[!_canScan(noLabelFloat, entity, propertyName)]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
+        <iron-icon class="label-action" hidden$="[[!_canScan(hideQrCodeScanner, noLabelFloat, entity, propertyName)]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
     </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
@@ -258,9 +258,17 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
             },
 
             /**
-             * Determines whther label is floatable or not.
+             * Determines whether label is floatable or not.
              */
             noLabelFloat: {
+                type: Boolean,
+                value: false,
+            },
+
+            /**
+             * Determines whether the QR code scanner action in the title should be hidden. 
+             */
+            hideQrCodeScanner: {
                 type: Boolean,
                 value: false,
             },
@@ -977,12 +985,12 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         this.commitIfChanged();
     }
 
-    _canScan (noLabelFloat, entity, propertyName) {
+    _canScan (hideQrCodeScanner, noLabelFloat, entity, propertyName) {
         if (allDefined(arguments)) {
             const metaPropEditable = this.reflector().isEntity(entity) && !this.reflector().isDotNotated(propertyName)
                                  ? entity["@" + propertyName + "_editable"]
                                  : false;
-            return !noLabelFloat && metaPropEditable
+            return !hideQrCodeScanner && !noLabelFloat && metaPropEditable
         }
         return false;
     }

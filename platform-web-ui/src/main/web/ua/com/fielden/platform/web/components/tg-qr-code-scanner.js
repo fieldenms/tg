@@ -121,7 +121,7 @@ const template = html`
             <tg-dropdown-switch id="camearSelector" class ="editor" views="[[_cameras]]" raised make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_changeCamera"></tg-dropdown-switch>
             <tg-singleline-text-editor id="textEditor" class ="editor" entity='[[_entity]]' property-name='scannedValue' prop-title='Scanned value' 
                     prop-desc='Contains text scanned from Bar or QR code' current-state='EDIT' 
-                    validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-singleline-text-editor>
+                    validation-callback='[[_validate]]' toaster='[[toaster]]' hide-qr-code-scanner></tg-singleline-text-editor>
             <tg-boolean-editor id='scanAndApplyEditor' class ="editor" entity='[[_entity]]' property-name='scanAndApply' prop-title='Scan & apply?' 
                         prop-desc='Determines whether the scanned value should be applied immediately or not.' current-state='EDIT' 
                         validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-boolean-editor>
