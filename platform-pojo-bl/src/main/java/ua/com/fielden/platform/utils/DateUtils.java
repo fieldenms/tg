@@ -97,37 +97,37 @@ public class DateUtils {
     }
 
     /// Compares only the time portion using [LocalTime].
-    /// @return  Negative value if `time(from) < time(to)`, 0 if equal, positive if `time(from) > time(to)`.
+    /// @return  Negative value if `time(dt1) < time(dt2)`, 0 if equal, positive if `time(dt1) > time(dt2)`.
     ///
-    public static int compareTimeOnly(final Date from, final Date to) {
-        requireNotNullArgument(from, "from");
-        requireNotNullArgument(to, "to");
+    public static int compareTimeOnly(final Date dt1, final Date dt2) {
+        requireNotNullArgument(dt1, "dt1");
+        requireNotNullArgument(dt2, "dt2");
 
-        final LocalTime fromTime = from.toInstant()
+        final LocalTime time1 = dt1.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalTime();
-        final LocalTime toTime = to.toInstant()
+        final LocalTime time2 = dt2.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalTime();
 
-        return fromTime.compareTo(toTime);
+        return time1.compareTo(time2);
     }
 
     /// Compares only the date portion using [LocalDate].
-    /// @return  Negative value if `date(from) < date(to)`, 0 if equal, positive if `date(from) > date(to)`.
+    /// @return  Negative value if `date(dt1) < date(dt2)`, 0 if equal, positive if `date(dt1) > date(dt2)`.
     ///
-    public static int compareDateOnly(final Date from, final Date to) {
-        requireNotNullArgument(from, "from");
-        requireNotNullArgument(to, "to");
+    public static int compareDateOnly(final Date dt1, final Date dt2) {
+        requireNotNullArgument(dt1, "dt1");
+        requireNotNullArgument(dt2, "dt2");
 
-        final LocalDate fromDate = from.toInstant()
+        final LocalDate date1 = dt1.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate();
-        final LocalDate toDate = to.toInstant()
+        final LocalDate date2 = dt2.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate();
 
-        return fromDate.compareTo(toDate);
+        return date1.compareTo(date2);
     }
 
 }
