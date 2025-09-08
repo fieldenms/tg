@@ -95,4 +95,39 @@ public class DateUtils {
         final LocalDate date2 = dt2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         return date1.equals(date2);
     }
+
+    /// Compares only the time portion using [LocalTime].
+    /// @return  Negative value if `time(from) < time(to)`, 0 if equal, positive if `time(from) > time(to)`.
+    ///
+    public static int compareTimeOnly(final Date from, final Date to) {
+        requireNotNullArgument(from, "from");
+        requireNotNullArgument(to, "to");
+
+        final LocalTime fromTime = from.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalTime();
+        final LocalTime toTime = to.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalTime();
+
+        return fromTime.compareTo(toTime);
+    }
+
+    /// Compares only the date portion using [LocalDate].
+    /// @return  Negative value if `date(from) < date(to)`, 0 if equal, positive if `date(from) > date(to)`.
+    ///
+    public static int compareDateOnly(final Date from, final Date to) {
+        requireNotNullArgument(from, "from");
+        requireNotNullArgument(to, "to");
+
+        final LocalDate fromDate = from.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        final LocalDate toDate = to.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        return fromDate.compareTo(toDate);
+    }
+
 }

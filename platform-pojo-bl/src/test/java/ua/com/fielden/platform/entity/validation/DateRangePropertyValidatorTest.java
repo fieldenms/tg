@@ -10,6 +10,8 @@ import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory
 import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.utils.DateUtils.compareDateOnly;
+import static ua.com.fielden.platform.utils.DateUtils.compareTimeOnly;
 
 /// A test case for validation of range properties.
 ///
@@ -74,8 +76,8 @@ public class DateRangePropertyValidatorTest {
         final var laterDateWithEarlierTime = new DateTime(2025, 9, 8, 10, 30, 0, 0).toDate();
 
         assertTrue(earlierDateWithLaterTime.compareTo(laterDateWithEarlierTime) < 0);
-        assertTrue(RangeValidatorFunction.compareTimeOnly(laterDateWithEarlierTime, earlierDateWithLaterTime) < 0);
-        assertTrue(RangeValidatorFunction.compareDateOnly(earlierDateWithLaterTime, laterDateWithEarlierTime) < 0);
+        assertTrue(compareTimeOnly(laterDateWithEarlierTime, earlierDateWithLaterTime) < 0);
+        assertTrue(compareDateOnly(earlierDateWithLaterTime, laterDateWithEarlierTime) < 0);
 
         entity.setFromDateTimeOnly(earlierDateWithLaterTime);
         entity.setToDateTimeOnly(laterDateWithEarlierTime);
@@ -100,8 +102,8 @@ public class DateRangePropertyValidatorTest {
         final var sameDateWithEarlierTime = new DateTime(2025, 9, 7, 10, 30, 0, 0).toDate();
 
         assertTrue(sameDateWithEarlierTime.compareTo(sameDateWithLaterTime) < 0);
-        assertTrue(RangeValidatorFunction.compareDateOnly(sameDateWithEarlierTime, sameDateWithLaterTime) == 0);
-        assertTrue(RangeValidatorFunction.compareTimeOnly(sameDateWithEarlierTime, sameDateWithLaterTime) < 0);
+        assertTrue(compareDateOnly(sameDateWithEarlierTime, sameDateWithLaterTime) == 0);
+        assertTrue(compareTimeOnly(sameDateWithEarlierTime, sameDateWithLaterTime) < 0);
 
         entity.setFromDateDateOnly(sameDateWithLaterTime);
         entity.setToDateDateOnly(sameDateWithEarlierTime);

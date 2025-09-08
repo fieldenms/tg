@@ -6,14 +6,13 @@ import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.Date;
 
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNotNullArgument;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.utils.DateUtils.compareDateOnly;
+import static ua.com.fielden.platform.utils.DateUtils.compareTimeOnly;
 
 /// A function used to implement [LePropertyValidator] and [GePropertyValidator].
 ///
@@ -59,7 +58,11 @@ public abstract class RangeValidatorFunction<T> {
     public static <T> Class<RangeValidatorFunction<T>> forPropertyType(final Class<T> propertyType) {
         // use a raw type to satisfy the compiler
         final Class klass;
-        if (Comparable.class.isAssignableFrom(propertyType) || propertyType == int.class || propertyType == double.class) {
+
+        if (Date.class.isAssignableFrom(propertyType)) {
+            klass = DateValidator.class;
+        }
+        else if (Comparable.class.isAssignableFrom(propertyType) || propertyType == int.class || propertyType == double.class) {
             klass = ComparableValidator.class;
         }
         // add more clauses if needed
@@ -76,27 +79,32 @@ public abstract class RangeValidatorFunction<T> {
         public Result coreValidate(final MetaProperty<X> startProperty, final X startValue,
                                    final MetaProperty<X> endProperty, final X endValue)
         {
+            return startValue.compareTo(endValue) > 0 ? Result.Failure : Result.Success;
+        }
+    }
+
+    public static final class DateValidator extends RangeValidatorFunction<Date> {
+
+        @Override
+        protected Result coreValidate(final MetaProperty<Date> startProperty, final Date startValue,
+                                      final MetaProperty<Date> endProperty, final Date endValue)
+        {
             requireNotNullArgument(startValue, "startValue");
             requireNotNullArgument(endValue, "endValue");
 
             final int cmp;
             // Date properties may can be @TimeOnly or @DateOnly.
             // Comparison needs to take this into account.
-            if (startValue instanceof Date fromDate && endValue instanceof Date toDate) {
-                final var entityType = startProperty.getEntity().getType();
-                if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, entityType, startProperty.getName())
-                    && AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, entityType, endProperty.getName()))
-                {
-                    cmp = compareTimeOnly(fromDate, toDate);
-                }
-                else if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, entityType, startProperty.getName())
-                        && AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, entityType, endProperty.getName()))
-                {
-                    cmp = compareDateOnly(fromDate, toDate);
-                }
-                else {
-                    cmp = startValue.compareTo(endValue);
-                }
+            final var entityType = startProperty.getEntity().getType();
+            if (isPropertyAnnotationPresent(TimeOnly.class, entityType, startProperty.getName())
+                && isPropertyAnnotationPresent(TimeOnly.class, entityType, endProperty.getName()))
+            {
+                cmp = compareTimeOnly(startValue, endValue);
+            }
+            else if (isPropertyAnnotationPresent(DateOnly.class, entityType, startProperty.getName())
+                     && isPropertyAnnotationPresent(DateOnly.class, entityType, endProperty.getName()))
+            {
+                cmp = compareDateOnly(startValue, endValue);
             }
             else {
                 cmp = startValue.compareTo(endValue);
@@ -104,40 +112,7 @@ public abstract class RangeValidatorFunction<T> {
 
             return cmp > 0 ? Result.Failure : Result.Success;
         }
-    }
 
-    /// Compares only the time portion using [LocalTime].
-    /// @return  Negative value if `time(from) < time(to)`, 0 if equal, positive if `time(from) > time(to)`.
-    ///
-    public static int compareTimeOnly(final Date from, final Date to) {
-        requireNotNullArgument(from, "from");
-        requireNotNullArgument(to, "to");
-
-        final LocalTime fromTime = from.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalTime();
-        final LocalTime toTime = to.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalTime();
-
-        return fromTime.compareTo(toTime);
-    }
-
-    /// Compares only the date portion using [LocalDate].
-    /// @return  Negative value if `date(from) < date(to)`, 0 if equal, positive if `date(from) > date(to)`.
-    ///
-    public static int compareDateOnly(final Date from, final Date to) {
-        requireNotNullArgument(from, "from");
-        requireNotNullArgument(to, "to");
-
-        final LocalDate fromDate = from.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
-        final LocalDate toDate = to.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
-
-        return fromDate.compareTo(toDate);
     }
 
 }
