@@ -8,9 +8,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.utils.DateUtils.max;
-import static ua.com.fielden.platform.utils.DateUtils.min;
+import static ua.com.fielden.platform.utils.DateUtils.*;
 
 public class DateUtilsTest {
     private final Date earlierDate = new DateTime("2001-01-01").toDate();
@@ -84,6 +84,65 @@ public class DateUtilsTest {
         final var dt2 = new DateTime(2025, 9, 8, 10, 15).toDate();
         assertFalse(DateUtils.isSameDay(dt1, today));
         assertTrue((DateUtils.isSameDay(dt2, today)));
+    }
+
+    @Test
+    public void compareTimeOnly_returns_a_positive_number_if_the_first_date_has_later_time() {
+        assertThat(compareTimeOnly(new DateTime(2025, 9, 9, 12, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isPositive();
+        assertThat(compareTimeOnly(new DateTime(2025, 9, 9, 12, 0).toDate(), new DateTime(2025, 8, 9, 10, 0).toDate())).isPositive();
+        assertThat(compareTimeOnly(new DateTime(2025, 9, 9, 12, 0).toDate(), new DateTime(2025, 9, 8, 10, 0).toDate())).isPositive();
+        assertThat(compareTimeOnly(new DateTime(2025, 9, 9, 12, 0).toDate(), new DateTime(2024, 9, 9, 10, 0).toDate())).isPositive();
+        assertThat(compareTimeOnly(new DateTime(2025, 9, 9, 12, 0).toDate(), new DateTime(2026, 9, 9, 10, 0).toDate())).isPositive();
+        assertThat(compareTimeOnly(new DateTime(2025, 9, 9, 12, 0).toDate(), new DateTime(2025, 10, 10, 10, 0).toDate())).isPositive();
+        assertThat(compareTimeOnly(new DateTime(2025, 9, 9, 12, 0).toDate(), new DateTime(2025, 9, 9, 10, 30).toDate())).isPositive();
+    }
+
+    @Test
+    public void compareTimeOnly_returns_a_negative_number_if_the_first_date_has_earlier_time() {
+        assertThat(compareTimeOnly(new DateTime(2025, 9, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 12, 0).toDate())).isNegative();
+        assertThat(compareTimeOnly(new DateTime(2025, 8, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 12, 0).toDate())).isNegative();
+        assertThat(compareTimeOnly(new DateTime(2025, 9, 8, 10, 0).toDate(), new DateTime(2025, 9, 9, 12, 0).toDate())).isNegative();
+        assertThat(compareTimeOnly(new DateTime(2024, 9, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 12, 0).toDate())).isNegative();
+        assertThat(compareTimeOnly(new DateTime(2026, 9, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 12, 0).toDate())).isNegative();
+        assertThat(compareTimeOnly(new DateTime(2025, 10, 10, 10, 0).toDate(), new DateTime(2025, 9, 9, 12, 0).toDate())).isNegative();
+        assertThat(compareTimeOnly(new DateTime(2025, 9, 9, 10, 30).toDate(), new DateTime(2025, 9, 9, 12, 0).toDate())).isNegative();
+    }
+
+    @Test
+    public void compareTimeOnly_returns_zero_if_both_dates_have_equal_time() {
+        assertThat(compareTimeOnly(new DateTime(2025, 9, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isZero();
+        assertThat(compareTimeOnly(new DateTime(2025, 10, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isZero();
+        assertThat(compareTimeOnly(new DateTime(2025, 8, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isZero();
+        assertThat(compareTimeOnly(new DateTime(2024, 9, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isZero();
+        assertThat(compareTimeOnly(new DateTime(2026, 9, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isZero();
+    }
+
+    @Test
+    public void compareDateOnly_returns_a_positive_number_if_the_first_date_has_later_date() {
+        assertThat(compareDateOnly(new DateTime(2026, 9, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isPositive();
+        assertThat(compareDateOnly(new DateTime(2025, 10, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isPositive();
+        assertThat(compareDateOnly(new DateTime(2025, 9, 10, 10, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isPositive();
+        assertThat(compareDateOnly(new DateTime(2025, 10, 10, 10, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isPositive();
+        assertThat(compareDateOnly(new DateTime(2026, 10, 10, 10, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isPositive();
+        assertThat(compareDateOnly(new DateTime(2025, 10, 10, 2, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isPositive();
+    }
+
+    @Test
+    public void compareDateOnly_returns_a_negative_number_if_the_first_date_has_earlier_date() {
+        assertThat(compareDateOnly(new DateTime(2025, 9, 9, 10, 0).toDate(), new DateTime(2026, 9, 9, 10, 0).toDate())).isNegative();
+        assertThat(compareDateOnly(new DateTime(2025, 9, 9, 10, 0).toDate(), new DateTime(2025, 10, 9, 10, 0).toDate())).isNegative();
+        assertThat(compareDateOnly(new DateTime(2025, 9, 9, 10, 0).toDate(), new DateTime(2025, 9, 10, 10, 0).toDate())).isNegative();
+        assertThat(compareDateOnly(new DateTime(2025, 9, 9, 10, 0).toDate(), new DateTime(2025, 10, 10, 10, 0).toDate())).isNegative();
+        assertThat(compareDateOnly(new DateTime(2025, 9, 9, 10, 0).toDate(), new DateTime(2026, 10, 10, 10, 0).toDate())).isNegative();
+        assertThat(compareDateOnly(new DateTime(2025, 9, 9, 10, 0).toDate(), new DateTime(2025, 10, 10, 2, 0).toDate())).isNegative();
+    }
+
+    @Test
+    public void compareDateOnly_returns_zero_if_both_dates_have_equal_date() {
+        assertThat(compareDateOnly(new DateTime(2025, 9, 9, 10, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isZero();
+        assertThat(compareDateOnly(new DateTime(2025, 9, 9, 9, 0).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isZero();
+        assertThat(compareDateOnly(new DateTime(2025, 9, 9, 10, 9).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isZero();
+        assertThat(compareDateOnly(new DateTime(2025, 9, 9, 1, 2).toDate(), new DateTime(2025, 9, 9, 3, 4).toDate())).isZero();
     }
 
 }
