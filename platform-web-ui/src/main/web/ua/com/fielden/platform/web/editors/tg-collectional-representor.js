@@ -14,7 +14,7 @@ const additionalTemplate = html`
         }
     </style>`;
 const customLabelTemplate = html`
-    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity, _scanAvailable)]]" slot="label">
         <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
         <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
         <iron-icon class="label-action" hidden$="[[!_canScan(hideQrCodeScanner, noLabelFloat, entity, propertyName)]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
@@ -33,7 +33,7 @@ const customInputTemplate = html`
             on-focus="_onFocus"
             on-blur="_outFocus"
             disabled$="[[_disabled]]"
-            tooltip-text$="[[_getTooltip(_editingValue, entity)]]"
+            tooltip-text$="[[_getTooltip(_editingValue, entity, _scanAvailable)]]"
             autocomplete="off"/>
     </iron-input>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
@@ -68,7 +68,7 @@ export class TgCollectionalRepresentor extends TgEditor {
         return true;
     }
     
-    _getTooltip (_editingValue, entity) {
+    _getTooltip (_editingValue, entity, _scanAvailable) {
         if (!allDefined(arguments)) {
             return "";
         }
@@ -80,7 +80,7 @@ export class TgCollectionalRepresentor extends TgEditor {
             } else {
                 valueToFormat = fullEntity.get(this.propertyName);
             }
-            return super._getTooltip(valueToFormat);
+            return super._getTooltip(valueToFormat, _scanAvailable);
         }
         return "";
     }

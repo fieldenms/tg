@@ -62,10 +62,10 @@ const hideCheckIconOnMouseLeave = function () {
 }
 
 const defaultLabelTemplate = html`
-    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]" slot="label">
         <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
         <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
-        <iron-icon class="label-action" hidden$="[[!_canScan(hideQrCodeScanner, noLabelFloat, entity, propertyName)]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
+        <iron-icon class="label-action" hidden$="[[!_scanAvailable]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
     </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
@@ -400,6 +400,11 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                 type: Boolean,
                 computed: '_isDisabled(currentState, entity, propertyName)',
                 observer: '_disabledChanged'
+            },
+
+            _scanAvailable: {
+                type: Boolean,
+                computed: '_canScan(hideQrCodeScanner, noLabelFloat, entity, propertyName)'
             },
     
             _invalid: {
@@ -783,21 +788,33 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     /**
      * This function returns the tooltip for this editor.
      */
-    _getTooltip (value) {
+    _getTooltip (value, _scanAvailable) {
         var tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
-        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip();
+        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip(_scanAvailable);
         return tooltip;
     }
 
     /**
      * Returns tooltip for action
      */
-    _getActionTooltip () {
+    _getActionTooltip (_scanAvailable) {
+        const actionTooltips = [];
+        actionTooltips.push(this._getCopyActionTooltip());
+        actionTooltips.push(this._getScanActionTooltip(_scanAvailable));
+        const filteredActionTooltips = actionTooltips.filter(tooltip => !!tooltip);
         return `<div style='display:flex;'>
-            <div style='margin-right:10px;'>With action: </div>
-            <div style='flex-grow:1;'><b>Copy</b><br>Copy content</div>
+            <div style='margin-right:10px;'>${filteredActionTooltips.length > 1 ? "With actions:" : "With action:"} </div>
+            <div style='flex-grow:1;'>${filteredActionTooltips.join("<br><br>")}</div>
             </div>`
+    }
+
+    _getCopyActionTooltip() {
+        return "<b>Copy</b><br>Copy content"
+    }
+
+    _getScanActionTooltip(_scanAvailable) {
+        return _scanAvailable ? "<b>Scan</b><br>Scan QR or Bar code" : "";
     }
     
     /**

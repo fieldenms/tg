@@ -78,7 +78,7 @@ const customLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]"
            disabled$="[[_disabled]]" 
            slot="label"
-           tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
+           tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable, _scanAvailable)]]">
         <span class="label-title" on-down="_labelDownEventHandler">[[_editorPropTitle]]</span>
         <iron-icon id="actionAvailability" class="label-action" icon="[[_actionIcon(actionAvailable, entity, propertyName)]]" action-available$="[[actionAvailable]]" on-tap="_editNewTap"></iron-icon>
         <iron-icon id="copyIcon" class="label-action" hidden$="[[noLabelFloat]]" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
@@ -98,11 +98,11 @@ const customInputTemplate = html`
             on-mousedown="_onMouseDown" 
             on-focus="_onFocus"
             disabled$="[[_disabled]]" 
-            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]"
+            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable, _scanAvailable)]]"
             autocomplete="off"/>
     </iron-input>`;
 const inputLayerTemplate = html`
-    <div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
+    <div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable, _scanAvailable)]]">
         <template is="dom-repeat" items="[[_customPropTitle]]">
             <span hidden$="[[!item.separator]]" style="white-space: pre;">[[item.separator]]</span>
             <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; white-space: pre;"><span>[[item.title]]</span>: </span>
@@ -1284,7 +1284,7 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
-    _getTooltip (_editingValue, entity, focused, actionAvailable) {
+    _getTooltip (_editingValue, entity, focused, actionAvailable, _scanAvailable) {
         if (!allDefined(arguments)) {
             return;
         }
@@ -1296,15 +1296,15 @@ export class TgEntityEditor extends TgEditor {
             } else {
                 valueToFormat = fullEntity.get(this.propertyName);
             }
-            return this._generateTooltip(valueToFormat, actionAvailable);
+            return this._generateTooltip(valueToFormat, actionAvailable, _scanAvailable);
         }
-        return this._generateTooltip(null, actionAvailable);
+        return this._generateTooltip(null, actionAvailable, _scanAvailable);
     }
 
-    _generateTooltip (value, actionAvailable) {
+    _generateTooltip (value, actionAvailable, _scanAvailable) {
         let tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc ? (tooltip ? '<br><br>' : '') + this.propDesc : '';
-        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip(actionAvailable);
+        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip(actionAvailable, _scanAvailable);
         return tooltip;
     }
 
@@ -1326,7 +1326,7 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Calculates title action tooltip.
      */
-    _getActionTooltip (actionAvailable) {
+    _getActionTooltip (actionAvailable, _scanAvailable) {
         let editActionShortDesc = "", editActionLongDesc = "";
         if (actionAvailable) {
             const entityMaster = this._valueToEdit(this.entity, this.propertyName) ? this.entityMaster : this.newEntityMaster;
@@ -1337,13 +1337,14 @@ export class TgEntityEditor extends TgEditor {
                 editActionLongDesc = entityMaster.longDesc ? `<b>${entityMaster.longDesc}</b>` : "";
             }
         }
-        const editNewActionTooltip = editActionShortDesc + editActionLongDesc;
-        const copyActionTooltip = "<b>Copy</b><br>Copy content";
-        const withActionTitle = editNewActionTooltip ? "With actions: " : "With action: ";
-        const actionsTooltip = (editNewActionTooltip ? `${editNewActionTooltip}<br><br>` : "") + copyActionTooltip
+        const actionTooltips = [];
+        actionTooltips.push(editActionShortDesc + editActionLongDesc);
+        actionTooltips.push(this._getCopyActionTooltip());
+        actionTooltips.push(this._getScanActionTooltip(_scanAvailable));
+        const filteredActionTooltips = actionTooltips.filter(tooltip => !!tooltip);
         return `<div style='display:flex;'>
-            <div style='margin-right:10px;'>${withActionTitle}</div>
-            <div style='flex-grow:1;'>${actionsTooltip}</div>
+            <div style='margin-right:10px;'>${filteredActionTooltips.length > 1 ? "With actions:" : "With action:"} </div>
+            <div style='flex-grow:1;'>${filteredActionTooltips.join("<br><br>")}</div>
             </div>`
     }
 
