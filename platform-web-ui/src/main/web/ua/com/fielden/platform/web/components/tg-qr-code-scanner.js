@@ -1,5 +1,6 @@
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { Html5Qrcode } from '/resources/polymer/lib/html5-qrcode-lib.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
@@ -12,6 +13,7 @@ import '/resources/editors/tg-singleline-text-editor.js';
 import '/resources/editors/tg-boolean-editor.js';
 
 import { tearDownEvent, localStorageKey, createDummyBindingEntity, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
 
@@ -118,22 +120,22 @@ const template = html`
             <slot id="scannerSlot" name="scanner"></slot>
         </div>
         <div id="controls" class="no-padding">
-            <tg-dropdown-switch id="camearSelector" class ="editor" views="[[_cameras]]" raised make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_changeCamera"></tg-dropdown-switch>
-            <tg-singleline-text-editor id="textEditor" class ="editor" entity='[[_entity]]' property-name='scannedValue' prop-title='Scanned value' 
-                    prop-desc='Contains text scanned from Bar or QR code' current-state='EDIT' 
+            <tg-dropdown-switch id="camearSelector" class ="editor" views="[[_cameras]]" dropdown-button-tooltip-text="Select camera" raised make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_changeCamera"></tg-dropdown-switch>
+            <tg-singleline-text-editor id="textEditor" class ="editor" entity='[[_entity]]' property-name='scannedValue' prop-title='Scanned Value' 
+                    prop-desc='Contains text scanned from a QR or barcode' current-state='EDIT' 
                     validation-callback='[[_validate]]' toaster='[[toaster]]' hide-qr-code-scanner></tg-singleline-text-editor>
             <tg-boolean-editor id='scanAndApplyEditor' class ="editor" entity='[[_entity]]' property-name='scanAndApply' prop-title='Scan & apply?' 
-                        prop-desc='Determines whether the scanned value should be applied immediately or not.' current-state='EDIT' 
+                        prop-desc='Determines whether the scanned value should be applied immediately or not' current-state='EDIT' 
                         validation-callback='[[_validate]]' toaster='[[toaster]]'></tg-boolean-editor>
             <div class="buttons">
-                <paper-button raised roll="button" on-tap="_cancelScan">CLOSE</paper-button>
-                <paper-button raised roll="button" on-tap="_scanAgain">SCAN</paper-button>
-                <paper-button raised roll="button" class="blue" on-tap="_applyScane">APPLY</paper-button>
+                <paper-button raised roll="button" tooltip-text="Close dialog" on-tap="_cancelScan">CLOSE</paper-button>
+                <paper-button raised roll="button" tooltip-text="Auto-restart scanner" on-tap="_scanAgain">SCAN</paper-button>
+                <paper-button raised roll="button" tooltip-text="Accept scanned value" class="blue" on-tap="_applyScane">APPLY</paper-button>
             </div>
         </div>
     </paper-dialog>`; 
 
-class TgQrCodeScanner extends PolymerElement {
+class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement) {
 
     static get template() { 
         return template;
