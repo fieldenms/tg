@@ -83,4 +83,16 @@ public class DateUtils {
         final double diffInHours = TimeUnit.MILLISECONDS.toMinutes(diffInMillis) / 60.0;
         return new BigDecimal(diffInHours).setScale(2, RoundingMode.HALF_EVEN);
     }
+
+    /// Test if both `dt1` and `dt2` represent the same day, ignoring the time part.
+    /// Can be conveniently used for testing if `dt1` is "today" by passing `now()` as `dt2`.
+    ///
+    public static boolean isSameDay(final Date dt1, final Date dt2) {
+        requireNotNullArgument(dt1, "dt1");
+        requireNotNullArgument(dt2, "dt2");
+
+        final LocalDate date1 = dt1.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        final LocalDate date2 = dt2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return date1.equals(date2);
+    }
 }

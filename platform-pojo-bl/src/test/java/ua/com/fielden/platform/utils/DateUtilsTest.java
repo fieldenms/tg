@@ -8,8 +8,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.utils.DateUtils.max;
 import static ua.com.fielden.platform.utils.DateUtils.min;
 
@@ -76,6 +75,15 @@ public class DateUtilsTest {
 
         assertEquals(new BigDecimal("1.25"), DateUtils.diffHours(date3, date4));
         assertEquals(new BigDecimal("1.25"), DateUtils.diffHours(date4, date3));
+    }
+
+    @Test
+    public void isSameDay_can_be_used_to_check_isToday() {
+        final var today = new DateTime(2025, 9, 8, 14, 2).toDate();
+        final var dt1 = new DateTime(2025, 1, 1, 23, 10).toDate();
+        final var dt2 = new DateTime(2025, 9, 8, 10, 15).toDate();
+        assertFalse(DateUtils.isSameDay(dt1, today));
+        assertTrue((DateUtils.isSameDay(dt2, today)));
     }
 
 }
