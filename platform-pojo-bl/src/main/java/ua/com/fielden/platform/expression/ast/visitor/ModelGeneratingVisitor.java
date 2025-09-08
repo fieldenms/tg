@@ -42,6 +42,8 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
         case STRING:
         case DATE_CONST:
         case DATE:
+        case TRUE:
+        case FALSE:
             node.setModel(createLiteralModel(node));
             break;
         case NOW:
