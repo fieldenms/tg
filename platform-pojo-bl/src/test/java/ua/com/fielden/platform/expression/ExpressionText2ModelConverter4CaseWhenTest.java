@@ -158,7 +158,7 @@ public class ExpressionText2ModelConverter4CaseWhenTest {
     }
 
     @Test
-    public void model_generation_for_CASE_with_true_literals_is_supported() throws RecognitionException, SemanticException {
+    public void model_generation_for_CASE_with_true_literal_is_supported() throws RecognitionException, SemanticException {
         final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
         "CASE WHEN boolProperty = true THEN \"True\" ELSE \"False\" END");
         final AstNode root = ev.convert();

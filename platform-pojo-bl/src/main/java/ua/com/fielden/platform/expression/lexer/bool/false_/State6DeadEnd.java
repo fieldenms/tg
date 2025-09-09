@@ -3,7 +3,7 @@ package ua.com.fielden.platform.expression.lexer.bool.false_;
 import ua.com.fielden.platform.expression.automata.AbstractState;
 import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;
 
-/// Non-terminal and none-final state.
+/// Non-terminal and non-final state.
 ///
 public class State6DeadEnd extends AbstractState {
 
