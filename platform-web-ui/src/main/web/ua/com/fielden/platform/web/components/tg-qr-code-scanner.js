@@ -45,9 +45,17 @@ function calculateAspectRation(width, height) {
 
 
 function qrboxFunction(viewfinderWidth, viewfinderHeight) {
-    let minEdgePercentage = 0.7; // 70%
-    let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-    let qrboxSize = Math.min(Math.floor(minEdgeSize * minEdgePercentage), 250);
+    const width = parseInt(this._videoFeedElement.style.width);
+    const height = parseInt(this._videoFeedElement.style.height);
+    if (width !== viewfinderWidth || height !== viewfinderHeight) {
+        this._videoFeedElement.style.width = viewfinderWidth + 'px';
+        this._videoFeedElement.style.height = viewfinderHeight + 'px';
+        this.$.qrCodeScanner.refit();
+    }
+    const minEdgePercentage = 0.7; // 70%
+    const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+    const qrboxSize = Math.min(Math.floor(minEdgeSize * minEdgePercentage), 250);
+    
     return {
         width: qrboxSize,
         height: qrboxSize
@@ -133,9 +141,9 @@ const template = html`
                         prop-desc="Determines whether the scanned value should be applied immediately or not" current-state="EDIT" 
                         validation-callback="[[_validate]]" toaster="[[toaster]]"></tg-boolean-editor>
             <div class="buttons">
-                <paper-button raised roll="button" tooltip-text="Close dialog" on-tap="_cancelScan">CLOSE</paper-button>
-                <paper-button raised roll="button" tooltip-text="Auto-restart scanner" on-tap="_scanAgain">SCAN</paper-button>
-                <paper-button raised roll="button" tooltip-text="Accept scanned value" class="blue" on-tap="_applyScane">APPLY</paper-button>
+                <paper-button raised roll="button" tooltip-text="Close dialog" on-tap="_cancelScan"><span>CLOSE</span></paper-button>
+                <paper-button raised roll="button" tooltip-text="Auto-restart scanner" on-tap="_scanAgain"><span>SCAN</span></paper-button>
+                <paper-button raised roll="button" tooltip-text="Accept scanned value" class="blue" on-tap="_applyScane"><span>APPLY</span></paper-button>
             </div>
         </div>
     </paper-dialog>`; 
