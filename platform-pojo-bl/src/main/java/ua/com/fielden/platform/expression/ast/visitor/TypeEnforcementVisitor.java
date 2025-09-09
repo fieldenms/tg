@@ -1,6 +1,17 @@
 package ua.com.fielden.platform.expression.ast.visitor;
 
-import static java.lang.String.format;
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.expression.EgTokenCategory;
+import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
+import ua.com.fielden.platform.expression.ast.AstNode;
+import ua.com.fielden.platform.expression.exception.semantic.*;
+import ua.com.fielden.platform.expression.type.*;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.types.Money;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -9,28 +20,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.expression.EgTokenCategory;
-import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
-import ua.com.fielden.platform.expression.ast.AstNode;
-import ua.com.fielden.platform.expression.exception.semantic.CouldNotDetermineTypeException;
-import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
-import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
-import ua.com.fielden.platform.expression.exception.semantic.UnexpectedNumberOfOperandsException;
-import ua.com.fielden.platform.expression.exception.semantic.UnsupportedTypeException;
-import ua.com.fielden.platform.expression.type.AbstractDateLiteral;
-import ua.com.fielden.platform.expression.type.DateLiteral;
-import ua.com.fielden.platform.expression.type.Day;
-import ua.com.fielden.platform.expression.type.Month;
-import ua.com.fielden.platform.expression.type.Null;
-import ua.com.fielden.platform.expression.type.Year;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.types.Money;
+import static java.lang.String.format;
 
 /**
  * A visitor, which enforces type compatibility between AST nodes and identifies the type of the expression represented by the AST.
@@ -56,6 +46,14 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
         case INT:
             node.setType(Integer.class);
             node.setValue(Integer.parseInt(node.getToken().text));
+            break;
+        case TRUE:
+            node.setType(boolean.class);
+            node.setValue(true);
+            break;
+        case FALSE:
+            node.setType(boolean.class);
+            node.setValue(false);
             break;
         case DECIMAL:
             node.setType(BigDecimal.class);
@@ -173,6 +171,9 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
         // TODO more precise error reporting can be achieved here
         if (String.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)
                 || // strings are comparable
+                (boolean.class.isAssignableFrom(leftOperandType) || Boolean.class.isAssignableFrom(leftOperandType)) 
+                && (boolean.class.isAssignableFrom(rightOperandType) || Boolean.class.isAssignableFrom(rightOperandType))
+                || // booleans are comparable
                 Money.class.isAssignableFrom(leftOperandType) && (leftOperandType.isAssignableFrom(rightOperandType) || Number.class.isAssignableFrom(rightOperandType))
                 || // money are comparable with each other and numbers
                 Number.class.isAssignableFrom(leftOperandType) && (Number.class.isAssignableFrom(rightOperandType) || Money.class.isAssignableFrom(rightOperandType))
