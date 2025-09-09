@@ -82,7 +82,8 @@ function saveCamera(camera) {
 const template = html`
     <style>
         paper-dialog {
-             @apply --layout-vertical;
+            overflow: hidden;
+            @apply --layout-vertical;
         }
         #videoSlot {
             @apply --layout-vertical;
@@ -282,11 +283,11 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                 } else {
                     stopPromise = this._scanner.stop();
                 }
-                if (qrboxFunction(width, height).width < 50) {
+                if (qrboxFunction.bind(this)(width, height).width < 50) {
                     this.toaster && this.toaster.openToastForError('Camera error', 'The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.', true);
                 } else {
                     stopPromise && stopPromise.then(() => {
-                        return this._scanner.start(this._cameras[cameraIdx].id,  { fps: 10, aspectRatio: calculateAspectRation(width, height), qrbox: qrboxFunction },
+                        return this._scanner.start(this._cameras[cameraIdx].id,  { fps: 10, aspectRatio: calculateAspectRation(width, height), qrbox: qrboxFunction.bind(this) },
                             this._successfulScan.bind(this), this._faildScan.bind(this)
                         );
                     }).catch(err => {
@@ -303,10 +304,10 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             this._videoFeedElement.style.width = dims.width + 'px';
             this._videoFeedElement.style.height = dims.height + 'px';
             this.$.qrCodeScanner.refit();
-            if (qrboxFunction(dims.width, dims.height).width < 50) {
+            if (qrboxFunction.bind(this)(dims.width, dims.height).width < 50) {
                 this.toaster && this.toaster.openToastForError('Camera error', 'The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.', true);
             } else if (this._scanner && this._cameras && this._cameras.length > 0 && !this._scanner.stateManagerProxy.isScanning() && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState) {
-                this._scanner.start(this._cameras[this.$.camearSelector.viewIndex].id,  { fps: 10, aspectRatio: dims.aspectRatio, qrbox: qrboxFunction },
+                this._scanner.start(this._cameras[this.$.camearSelector.viewIndex].id,  { fps: 10, aspectRatio: dims.aspectRatio, qrbox: qrboxFunction.bind(this) },
                     this._successfulScan.bind(this), this._faildScan.bind(this)
                 ).catch((err) => {
                     this.toaster && this.toaster.openToastForError('Camera error', err, true);
