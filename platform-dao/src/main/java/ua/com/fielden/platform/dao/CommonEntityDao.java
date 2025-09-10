@@ -703,7 +703,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // If there is an open session, batch insertion cat be attempted.
         final var ops = batchInsertOpsFactory.create(() -> new TransactionalExecution(userProvider, this::getSession));
         final var saver = entitySaver.get();
-        return ops.batchInsert(newEntities.peek(entity -> {
+        return ops.batchInsert(newEntities.filter(Objects::nonNull).peek(entity -> {
             // Do not permit batch insertion for active activatbles.
             if (entity instanceof ActivatableAbstractEntity<?> ae && ae.isActive()) {
                 throw new InvalidArgumentException("Batch insertion of active activatable entities [%s] is not supported.".formatted(entity.getType().getSimpleName()));

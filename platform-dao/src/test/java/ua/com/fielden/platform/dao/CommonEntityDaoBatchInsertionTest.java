@@ -13,6 +13,7 @@ import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -35,6 +36,19 @@ public class CommonEntityDaoBatchInsertionTest extends AbstractDaoTestCase {
 
         assertEquals(newEntities.size(), count);
         assertEquals(newEntities.size(), co(TgTimesheet.class).count(select(TgTimesheet.class).where().prop("person").in().values("P1", "P2", "P3").model()));
+    }
+
+    @Test
+    public void batchInsert_skips_nulls() {
+        final var newEntities = new ArrayList<TgTimesheet>();
+        newEntities.add(new_(TgTimesheet.class).setPerson("P1").setStartDate(dateTime("2025-09-10 22:53:00").toDate()));
+        newEntities.add(null);
+        newEntities.add(new_(TgTimesheet.class).setPerson("P3").setStartDate(dateTime("2025-09-10 22:53:00").toDate()));
+
+        final var count = co$(TgTimesheet.class).batchInsert(newEntities.stream(), 10);
+
+        assertEquals(2, count);
+        assertEquals(2, co(TgTimesheet.class).count(select(TgTimesheet.class).where().prop("person").in().values("P1", "P2", "P3").model()));
     }
 
     @Test
