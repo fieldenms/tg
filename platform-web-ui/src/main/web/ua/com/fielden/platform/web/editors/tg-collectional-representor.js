@@ -67,7 +67,14 @@ export class TgCollectionalRepresentor extends TgEditor {
     _isDisabled (currentState, bindingEntity, propertyName) {
         return true;
     }
-    
+
+    /**
+     * This 'representor' is disabled for editing and therefore can't use QR / barcode scanning (see isDisabled).
+     */
+    _canScan (hideQrCodeScanner, noLabelFloat, entity, propertyName) {
+        return false;
+    }
+
     _getTooltip (_editingValue, entity, _scanAvailable) {
         if (!allDefined(arguments)) {
             return "";
