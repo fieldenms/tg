@@ -4,7 +4,9 @@ import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/c
 import { Html5Qrcode } from '/resources/polymer/lib/html5-qrcode-lib.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
+import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 
@@ -80,19 +82,35 @@ function saveCamera(camera) {
 }
 
 const template = html`
+    <style include="iron-positioning"></style>
     <style>
         paper-dialog {
             overflow: hidden;
             @apply --layout-vertical;
         }
         #videoSlot {
+            position: relative;
+            overflow: hidden;
             @apply --layout-vertical;
-            @apply --layout-center
+            @apply --layout-center;
         }
         #controls {
-            @apply --layout-vertical;
             margin: 0;
             padding: 20px;
+            @apply --layout-vertical;
+        }
+        #cameraLoadingView {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0; 
+            padding: 20px;
+            background-color: white;
+            font-size: 18px;
+            color: var(--paper-grey-400);
+            @apply --layout-horizontal;
+            @apply --layout-center-center;
         }
         .buttons {
             padding: 20px;
@@ -128,10 +146,12 @@ const template = html`
         always-on-top
         entry-animation="scale-up-animation"
         exit-animation="fade-out-animation"
+        on-iron-overlay-opened="_qrCodeScannerOpened"
         on-iron-overlay-closed="_qrCodeScannerClosed"
         mobile$="[[mobile]]">
         <div id="videoSlot" class="no-padding">
             <slot id="scannerSlot" name="scanner"></slot>
+            <div id="cameraLoadingView" hidden$="[[!_showCameraLoadingView]]">Tap SCAN, to start scanning</div>
         </div>
         <div id="controls" class="no-padding">
             <tg-dropdown-switch id="camearSelector" class ="editor" views="[[_cameras]]" dropdown-button-tooltip-text="Select camera" raised make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_changeCamera"></tg-dropdown-switch>
@@ -173,6 +193,12 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             _videoFeedElement: Object,
 
             _cameras: Array,
+
+            //Determines whether to show loading camera view after resize started
+            _showCameraLoadingView:{
+                type: Boolean,
+                value: false
+            },
 
             _cameraIndex: {
                 type: Number,
@@ -275,50 +301,72 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         if (this._cameras && this._cameras[cameraIdx]) {
             saveCamera(this._cameras[cameraIdx]);
             if (this._scanner) {
-                const width = parseInt(this._videoFeedElement.style.width);
-                const height = parseInt(this._videoFeedElement.style.height);
-                let stopPromise = null;
-                if (!this._scanner.stateManagerProxy.isScanning()) {
-                    stopPromise = Promise.resolve();
-                } else {
-                    stopPromise = this._scanner.stop();
-                }
-                if (qrboxFunction.bind(this)(width, height).width < 50) {
-                    this.toaster && this.toaster.openToastForError('Camera error', 'The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.', true);
-                } else {
+                if (!this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState) {
+                    let stopPromise = null;
+                    if (!this._scanner.isScanning) {
+                        stopPromise = Promise.resolve();
+                    } else {
+                        stopPromise = this._scanner.stop();
+                    }
+                    const width = parseInt(this._videoFeedElement.style.width);
+                    const height = parseInt(this._videoFeedElement.style.height);
                     stopPromise && stopPromise.then(() => {
-                        return this._scanner.start(this._cameras[cameraIdx].id,  { fps: 10, aspectRatio: calculateAspectRation(width, height), qrbox: qrboxFunction.bind(this) },
-                            this._successfulScan.bind(this), this._faildScan.bind(this)
-                        );
-                    }).catch(err => {
-                        this.toaster && this.toaster.openToastForError('Camera error', err, true);
+                        this._startCamera(width, height, calculateAspectRation(width, height));
                     });
+                } else {
+                    setTimeout(() => this._changeCamera(e), 100);
                 }
             }
+        }
+    }
+
+    _qrCodeScannerOpened(e) {
+        if (this._scanner && e.target === this.$.qrCodeScanner) {
+            const dims = calculatePrefferedVideoSize(this);
+            this._videoFeedElement.style.width = dims.width + 'px';
+            this._videoFeedElement.style.height = dims.height + 'px';
+            this.$.qrCodeScanner.refit();
+            this._startCamera(dims.width, dims.height, dims.aspectRatio);
         }
     }
 
     _qrCodeScannerResized(target) {
         if (target === this.$.qrCodeScanner && this.$.qrCodeScanner.opened) {
             const dims = calculatePrefferedVideoSize(this);
-            this._videoFeedElement.style.width = dims.width + 'px';
-            this._videoFeedElement.style.height = dims.height + 'px';
-            this.$.qrCodeScanner.refit();
-            if (qrboxFunction.bind(this)(dims.width, dims.height).width < 50) {
-                this.toaster && this.toaster.openToastForError('Camera error', 'The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.', true);
-            } else if (this._scanner && this._cameras && this._cameras.length > 0 && !this._scanner.stateManagerProxy.isScanning() && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState) {
-                this._scanner.start(this._cameras[this.$.camearSelector.viewIndex].id,  { fps: 10, aspectRatio: dims.aspectRatio, qrbox: qrboxFunction.bind(this) },
-                    this._successfulScan.bind(this), this._faildScan.bind(this)
-                ).catch((err) => {
-                    this.toaster && this.toaster.openToastForError('Camera error', err, true);
-                });
+            const sizeShouldbeChanged = parseInt(this._videoFeedElement.style.width) !== dims.width ||
+                                        parseInt(this._videoFeedElement.style.height) !== dims.height;
+            if (sizeShouldbeChanged) {
+                if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && this._scanner.isScanning) {
+                    this._scanner.stop().then(() => {
+                        this._showCameraLoadingView = true;
+                    });
+                }
+                this._videoFeedElement.style.width = dims.width + 'px';
+                this._videoFeedElement.style.height = dims.height + 'px';
+                this.$.qrCodeScanner.refit();
             }
+        }
+    }
+
+    _startCamera(width, height, aspectRatio) {
+        if (qrboxFunction.bind(this)(width, height).width < 50) {
+            this.toaster && this.toaster.openToastForError('Camera error', 'The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.', true);
+        } else if (this._scanner && this._cameras && this._cameras.length > 0 && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && !this._scanner.isScanning) {
+            this._startPromise = this._scanner.start(this._cameras[this.$.camearSelector.viewIndex].id,  { fps: 10, aspectRatio: aspectRatio, qrbox: qrboxFunction.bind(this) },
+                this._successfulScan.bind(this), this._faildScan.bind(this)
+            ).then(() => {
+                if (this._showCameraLoadingView) {
+                    this._showCameraLoadingView = false;
+                }
+            }).catch((err) => {
+                this.toaster && this.toaster.openToastForError('Camera error', err, true);
+            });
         }
     }
 
     _qrCodeScannerClosed(e) {
         if (e.target === this.$.qrCodeScanner) {
-            if (this._scanner.stateManagerProxy.isScanning()) {
+            if (this._scanner.isScanning) {
                 this._scanner.stop();
             }
             if (this.closeCallback) {
@@ -333,7 +381,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         if (this._entity['scanAndApply']) {
             this._applyScane();
         } else {
-            if (this._scanner.stateManagerProxy.isScanning()) {
+            if (this._scanner.isScanning) {
                 this._scanner.pause(true);
             }
         }
@@ -345,9 +393,14 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
     }
 
     _scanAgain(e) {
-        if (this._scanner.stateManagerProxy.isPaused()) {
-            this._resetState();
-            this._scanner.resume();
+        if (!this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState) {
+            if (!this._scanner.isScanning) {
+                const width = parseInt(this._videoFeedElement.style.width);
+                const height = parseInt(this._videoFeedElement.style.height);
+                this._startCamera(width, height, calculateAspectRation(width, height));
+            } else if (this._scanner.stateManagerProxy.isPaused()) {
+                this._scanner.resume();
+            }
         }
     }
             
