@@ -200,11 +200,6 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                 value: false
             },
 
-            _cameraIndex: {
-                type: Number,
-                value: 0
-            },
-
             _scanner: Object,
 
             _validate: Function,
@@ -267,16 +262,6 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                 if (devices && devices.length) {
                     this._cameras = devices.map((device, idx) => {return {index: idx, id: device.id, title: device.label, desc: device.label};});
                     this.$.camearSelector.viewIndex = getCameraIndex(this._cameras);
-                    //TODO remove next line after testing
-                    this._cameras.forEach(camera => console.log(`cameraId: ${camera.id}, camear label: ${camera.title}`));
-
-                    navigator.mediaDevices
-                        .getUserMedia({video: {deviceId: this._cameras[this.$.camearSelector.viewIndex].id}})
-                        .then((mediaStream) => {
-                            const videoTrack = mediaStream.getVideoTracks()[0];
-                            console.log(videoTrack.getCapabilities());
-                        })
-
                     this._resetState();
                     this.$.scanAndApplyEditor._editingValue = localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) || 'false';
                     this.$.scanAndApplyEditor.commitIfChanged();
@@ -288,7 +273,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                 this.toaster && this.toaster.openToastForError('Camera error', err, true);
             });
         } else {
-            this.toaster && this.toaster.openToastForError('Scanner error', 'Please specify element for camera feed inside tg-qr-code-scanner with attribute slot equal to "scanner"', true);
+            this.toaster && this.toaster.openToastForError('Scanner error', 'Please specify element for camera feed inside tg-qr-code-scanner with slot attribute equal to "scanner"', true);
         }
     }
 
@@ -380,10 +365,8 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         this.$.textEditor.commitIfChanged();
         if (this._entity['scanAndApply']) {
             this._applyScane();
-        } else {
-            if (this._scanner.isScanning) {
-                this._scanner.pause(true);
-            }
+        } else if (this._scanner.isScanning) {
+            this._scanner.pause(true);
         }
     }
 
@@ -420,9 +403,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         tearDownEvent(e);
     }
     
-    _faildScan(error) {
-        //console.error(error);
-    }
+    _faildScan(error) {}
 }
 
 customElements.define('tg-qr-code-scanner', TgQrCodeScanner);
