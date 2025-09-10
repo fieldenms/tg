@@ -706,7 +706,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return ops.batchInsert(newEntities.peek(entity -> {
             // Do not permit batch insertion for active activatbles.
             if (entity instanceof ActivatableAbstractEntity<?> ae && ae.isActive()) {
-                throw new InvalidArgumentException("Batch insertion of active activatable entities [%s] is not supported.".formatted(entity.getType()));
+                throw new InvalidArgumentException("Batch insertion of active activatable entities [%s] is not supported.".formatted(entity.getType().getSimpleName()));
             }
 
             // Autopopulated entity props.
