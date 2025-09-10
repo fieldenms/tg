@@ -1,19 +1,15 @@
-package ua.com.fielden.platform.expression.lexer.function.now;
+package ua.com.fielden.platform.expression.lexer.bool.true_;
 
 import ua.com.fielden.platform.expression.ExpressionLexer;
 import ua.com.fielden.platform.expression.automata.AbstractState;
 import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;
 
-/**
- * Final state.
- * 
- * @author TG Team
- * 
- */
-public class State3 extends AbstractState {
+/// Final terminal state.
+///
+public class State4 extends AbstractState {
 
-    public State3() {
-        super("S3", true);
+    public State4() {
+        super("S4", true);
     }
 
     @Override
@@ -21,9 +17,10 @@ public class State3 extends AbstractState {
         if (isWhiteSpace(symbol) || String.valueOf(symbol).matches("[^\\p{L}^\\d^.]") || symbol == ExpressionLexer.EOF) {
             throw new NoTransitionAvailable("Invalid symbol '" + symbol + "'", this, symbol);
         } else {
-            // this would happen only if string NOW would continue with some characters that is valid for name token e.g. NOWed, making it a valid name rather than keyword NOW
-            // thus move to non-final state representing a dead-end for this automata
-            return getAutomata().getState("S4");
+            // This would happen only if string "true" would continue with some characters that is valid for name token.
+            // For example, "truella", making it a valid name rather than keyword "true".
+            // Thus, move to non-final state representing a dead-end for this automata.
+            return getAutomata().getState("S5");
         }
     }
 
