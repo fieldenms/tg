@@ -65,7 +65,7 @@ const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]" slot="label">
         <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
         <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
-        <iron-icon class="label-action" hidden$="[[!_scanAvailable]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
+        <iron-icon class="label-action" hidden$="[[!_scanAvailable]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-down="_preventFocusOut" on-tap="_scanTap"></iron-icon>
     </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
@@ -974,13 +974,17 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     }
 
     /*************************QR Code Scanner related methods****************************************/
+    _preventFocusOut(e) {
+        tearDownEvent(e);
+    }
+
     _scanTap () {
         if (qrCodeScanner === null) {
             qrCodeScanner = document.getElementById("qrScanner");
         }
         if (qrCodeScanner) {
             qrCodeScanner.toaster = this.toaster;
-            qrCodeScanner.closeCallback = this._closeScanner.bind(this);
+            qrCodeScanner.closeCallback = this._closeScanner(this.focused);
             qrCodeScanner.applyCallback = this._applyScannerValue.bind(this);
             qrCodeScanner.open();
         } else {
@@ -988,11 +992,16 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         }
     }
 
-    _closeScanner () {
-        if (qrCodeScanner) {
-            qrCodeScanner.toaster = null;
-            qrCodeScanner.closeCallback = null;
-            qrCodeScanner.applyCallback = null;
+    _closeScanner (wasFocused) {
+        return () => {
+            if (qrCodeScanner) {
+                qrCodeScanner.toaster = null;
+                qrCodeScanner.closeCallback = null;
+                qrCodeScanner.applyCallback = null;
+                if (wasFocused) {
+                    this._labelDownEventHandler();
+                }
+            }
         }
     }
 
