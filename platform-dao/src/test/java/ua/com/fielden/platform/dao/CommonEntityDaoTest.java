@@ -972,4 +972,5 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         save(new_(EntityWithMoney.class, "KEY3", "desc").setMoney(new Money("40.00")));
         save(new_(EntityWithMoney.class, "KEY4", "desc").setMoney(new Money("50.00")).setDateTimeProperty(date("2009-03-01 10:00:00")));
     }
+
 }
