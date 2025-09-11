@@ -133,9 +133,9 @@ public class SessionInterceptor implements MethodInterceptor {
         } else {
             // assigned a transaction GUID, which should already be generated
             final String guid = transactionGuid.get();
-            if (StringUtils.isEmpty(guid)) {
-                throw new SessionScopingException("A nested session scope is missing a transaction GUID."); 
-            }
+            // if (StringUtils.isEmpty(guid)) {
+            //     throw new SessionScopingException("A nested session scope is missing a transaction GUID.");
+            // }
             
             invocationOwner.setTransactionGuid(guid);
         }
