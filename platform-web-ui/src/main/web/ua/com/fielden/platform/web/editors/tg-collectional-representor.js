@@ -17,7 +17,7 @@ const customLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity, _scanAvailable)]]" slot="label">
         <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
         <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
-        <iron-icon class="label-action" hidden$="[[!_canScan(hideQrCodeScanner, noLabelFloat, entity, propertyName)]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-tap="_scanTap"></iron-icon>
+        <iron-icon class="label-action" hidden$="[[!_canScan(hideQrCodeScanner, noLabelFloat, entity, propertyName)]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-down="_preventFocusOut" on-tap="_scanTap"></iron-icon>
     </label>`;
 
 const customInputTemplate = html`
