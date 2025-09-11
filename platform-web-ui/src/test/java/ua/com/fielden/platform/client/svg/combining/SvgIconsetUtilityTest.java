@@ -1,22 +1,18 @@
 package ua.com.fielden.platform.client.svg.combining;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.google.common.io.Files;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
+import ua.com.fielden.platform.svg.combining.IronIconsetUtility;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
-import ua.com.fielden.platform.svg.combining.IronIconsetUtility;
+import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.*;
 
 public class SvgIconsetUtilityTest {
 
@@ -25,14 +21,13 @@ public class SvgIconsetUtilityTest {
         final String srcFolder = "src/test/resources/icons";
         final Set<String> srcFiles = new HashSet<String>();
         srcFiles.add("src/test/resources/icons/icon.svg");
-        srcFiles.add("src/test/resources/icons/icon.svg");
         final String outputFile = "src/test/resources/combiningSvgResult.html";
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000, srcFolder);
         iconsetUtility.createSvgIconset(outputFile);
-        final String contentOutputFile = Files.asCharSource(new File(outputFile), Charsets.UTF_8).read();
+        final String contentOutputFile = Files.asCharSource(new File(outputFile), UTF_8).read();
 
         for (final String file : srcFiles) {
-            final String contentFile = Files.asCharSource(new File(file), Charsets.UTF_8).read();
+            final String contentFile = Files.asCharSource(new File(file), UTF_8).read();
             assertTrue(contentOutputFile.contains(contentFile));
         }
     }
@@ -45,7 +40,7 @@ public class SvgIconsetUtilityTest {
         final String fileEnd = IronIconsetUtility.FILE_END_TEMPLATE;
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000, srcFolder);
         iconsetUtility.createSvgIconset(outputFile);
-        final String contentOutputFile = Files.asCharSource(new File(outputFile), Charsets.UTF_8).read();
+        final String contentOutputFile = Files.asCharSource(new File(outputFile), UTF_8).read();
         assertTrue(contentOutputFile.startsWith(fileBegin) && contentOutputFile.endsWith(fileEnd));
     }
 
@@ -70,12 +65,14 @@ public class SvgIconsetUtilityTest {
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000, srcFolder);
         final String outputFile = "src/test/resources/fileNotForWriting.html";
         final File readOnly = new File(outputFile);
-        readOnly.setReadOnly();
+        if (!readOnly.setReadOnly()) {
+            fail("Could not make file readonly.");
+        }
 
         try {
             iconsetUtility.createSvgIconset(outputFile);
             fail();
-        } catch (final IOException ex) {
+        } catch (final IOException ignored) {
         }
     }
 
