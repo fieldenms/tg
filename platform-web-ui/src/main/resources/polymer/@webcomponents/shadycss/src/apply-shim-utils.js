@@ -1,3 +1,5 @@
+import templateMap from './template-map.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,10 +9,6 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-
-'use strict';
-import templateMap from './template-map.js';
-import {StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
 
 /*
  * Utilities for handling invalidating apply-shim mixins for a given template.
@@ -36,7 +34,7 @@ const promise = Promise.resolve();
 /**
  * @param {string} elementName
  */
-export function invalidate(elementName){
+function invalidate(elementName) {
   let template = templateMap[elementName];
   if (template) {
     invalidateTemplate(template);
@@ -52,7 +50,7 @@ export function invalidate(elementName){
  * be revalidated
  * @param {HTMLTemplateElement} template
  */
-export function invalidateTemplate(template) {
+function invalidateTemplate(template) {
   // default the current version to 0
   template[CURRENT_VERSION] = template[CURRENT_VERSION] || 0;
   // ensure the "validating for" flag exists
@@ -62,35 +60,11 @@ export function invalidateTemplate(template) {
 }
 
 /**
- * @param {string} elementName
- * @return {boolean}
- */
-export function isValid(elementName) {
-  let template = templateMap[elementName];
-  if (template) {
-    return templateIsValid(template);
-  }
-  return true;
-}
-
-/**
  * @param {HTMLTemplateElement} template
  * @return {boolean}
  */
-export function templateIsValid(template) {
+function templateIsValid(template) {
   return template[CURRENT_VERSION] === template[NEXT_VERSION];
-}
-
-/**
- * @param {string} elementName
- * @return {boolean}
- */
-export function isValidating(elementName) {
-  let template = templateMap[elementName];
-  if (template) {
-    return templateIsValidating(template);
-  }
-  return false;
 }
 
 /**
@@ -99,19 +73,11 @@ export function isValidating(elementName) {
  * @param {HTMLTemplateElement} template
  * @return {boolean}
  */
-export function templateIsValidating(template) {
-  return !templateIsValid(template) && template[VALIDATING_VERSION] === template[NEXT_VERSION];
-}
-
-/**
- * the template is marked as `validating` for one microtask so that all instances
- * found in the tree crawl of `applyStyle` will update themselves,
- * but the template will only be updated once.
- * @param {string} elementName
-*/
-export function startValidating(elementName) {
-  let template = templateMap[elementName];
-  startValidatingTemplate(template);
+function templateIsValidating(template) {
+  return (
+    !templateIsValid(template) &&
+    template[VALIDATING_VERSION] === template[NEXT_VERSION]
+  );
 }
 
 /**
@@ -121,13 +87,13 @@ export function startValidating(elementName) {
  * After one microtask, the template will be marked as valid until the next call to `invalidateTemplate`
  * @param {HTMLTemplateElement} template
  */
-export function startValidatingTemplate(template) {
+function startValidatingTemplate(template) {
   // remember that the current "next version" is the reason for this validation cycle
   template[VALIDATING_VERSION] = template[NEXT_VERSION];
   // however, there only needs to be one async task to clear the counters
   if (!template._validating) {
     template._validating = true;
-    promise.then(function() {
+    promise.then(function () {
       // sync the current version to let future invalidations cause a refresh cycle
       template[CURRENT_VERSION] = template[NEXT_VERSION];
       template._validating = false;
@@ -135,15 +101,4 @@ export function startValidatingTemplate(template) {
   }
 }
 
-/**
- * @return {boolean}
- */
-export function elementsAreInvalid() {
-  for (let elementName in templateMap) {
-    let template = templateMap[elementName];
-    if (!templateIsValid(template)) {
-      return true;
-    }
-  }
-  return false;
-}
+export { invalidate, invalidateTemplate, startValidatingTemplate, templateIsValid, templateIsValidating };

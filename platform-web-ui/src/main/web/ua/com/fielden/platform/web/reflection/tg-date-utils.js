@@ -1,4 +1,4 @@
-import '/resources/components/moment-lib.js';
+import moment from '/resources/polymer/lib/moment-lib.js';
 
 export const timeZoneFormats = {
     "UTC": {
@@ -58,4 +58,17 @@ export function _momentTz(input) {
 
 export function _timeZoneHeader () {
     return {"Time-Zone": moment.tz.guess(true)};
+};
+
+/**
+ * Returns time-zone mode-specific 'now' moment.
+ */
+export function now() {
+    // In independent time-zone mode we do the following trick:
+    // 1. create 'now' moment in current surrogate (equal to server one) time-zone;
+    // 2. convert it to real time-zone to be able to format it into our 'real' string;
+    // 3. convert it to string that defines moment in our 'real' time-zone;
+    // 4. then use that string to create moment in surrogate time-zone.
+    // In dependent time-zone mode this trick will return the same moment object as just moment().
+    return moment(moment().tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'));
 };

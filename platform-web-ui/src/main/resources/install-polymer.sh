@@ -1,13 +1,17 @@
-npm install
-git clone https://github.com/PolymerElements/iron-test-helpers node_modules/@polymer/iron-test-helpers
-polymer build
+rm -f package-lock.json
+npm install --no-bin-links
+node remove-symlinks.js node_modules
+cp -r lib node_modules/
+rollup --config
 rm -r -f polymer
 mv node_modules polymer
-rm -r -f polymer/@polymer
-rm -r -f polymer/wct-browser-legacy
-rm -r -f polymer/@google-web-components
-mv build/tg-custom-build/node_modules/@polymer polymer/
-mv build/tg-custom-build/node_modules/wct-browser-legacy polymer/
-mv build/tg-custom-build/node_modules/@google-web-components polymer/
+for dir in build/node_modules/*; do
+    name=$(basename "$dir")
+    rm -rf "polymer/$name"
+    mv "$dir" polymer/
+done
+rm -r -f _virtual
+mv build/_virtual ./
+find _virtual -type f -exec sed -i 's|node_modules|polymer|g' {} \;
 rm -r -f build
-rm -f package-lock.json
+find polymer -type f -name "package.json" -delete

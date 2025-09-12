@@ -1,15 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
@@ -49,6 +41,21 @@ public class TgCategory extends ActivatableAbstractEntity<String> {
     @Final(persistedOnly = false)
     @Title(value = "Immediately Final")
     private Integer immediatelyFinalProp;
+
+    @IsProperty
+    @MapTo(autoConflictResolution = false)
+    @Title(value = "Pseudo Aggregate", desc = "A property that acts as if it represents some aggregation and does not support auto conflict resolution.")
+    private Integer aggregate;
+
+    @Observable
+    public TgCategory setAggregate(final Integer aggregate) {
+        this.aggregate = aggregate;
+        return this;
+    }
+
+    public Integer getAggregate() {
+        return aggregate;
+    }
 
     @Observable
     public TgCategory setImmediatelyFinalProp(final Integer immediatelyFinalProp) {
@@ -108,6 +115,13 @@ public class TgCategory extends ActivatableAbstractEntity<String> {
     @Override
     public TgCategory setActive(final boolean active) {
         super.setActive(active);
+        return this;
+    }
+
+    @Observable
+    @Override
+    public TgCategory setRefCount(final Integer refCount) {
+        super.setRefCount(refCount);
         return this;
     }
 

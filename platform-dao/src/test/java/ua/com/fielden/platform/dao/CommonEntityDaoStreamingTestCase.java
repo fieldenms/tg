@@ -1,23 +1,6 @@
 package ua.com.fielden.platform.dao;
 
-import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
-
-import java.math.BigDecimal;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -29,8 +12,23 @@ import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
-import ua.com.fielden.platform.types.either.Left;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.StreamUtils;
+
+import java.math.BigDecimal;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import static java.util.stream.Collectors.toList;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 /**
  * This test case ensures correct implementation of the db-driven companion streaming functionality.
@@ -66,7 +64,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
 
     @Test
     @SessionRequired
-    public void streaming_based_on_ordered_qem_should_have_the_same_traversal_order() {
+    public void streaming_based_on_ordered_qem_has_the_intended_order_of_elements() {
         final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
         final OrderingModel orderBy = orderBy().prop("key").asc().model();
         final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(query).with(orderBy).model();
@@ -79,7 +77,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
 
     @Test
     @SessionRequired
-    public void streaming_based_on_conditional_qem_should_contain_only_matching_entities() {
+    public void streaming_based_on_conditional_qem_contain_only_matching_entities() {
         final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class)
                 .where().prop("money.amount").ge().val(new BigDecimal("30.00"))//
                 .model();
@@ -92,7 +90,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
 
     @Test
     @SessionRequired
-    public void stream_should_not_be_parallel() {
+    public void stream_is_not_parallel() {
         try (final Stream<EntityWithMoney> streamBy3 = co$(EntityWithMoney.class).stream(from(select(EntityWithMoney.class).model()).model(), 2)) {
             assertFalse("The stream should not be parallel", streamBy3.isParallel());
         }
@@ -100,24 +98,27 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
 
     @Test
     @SessionRequired
-    public void stream_should_not_be_accecible_once_traversed() {
+    public void stream_cannot_be_processed_again_after_a_terminal_operation() {
         final Either<Exception, Long> result = Try(() -> {
             try (final Stream<EntityWithMoney> stream = co$(EntityWithMoney.class).stream(from(select(EntityWithMoney.class).model()).model(), 2)) {
-                // consume the stream by traversing it
-                stream.forEach(e -> e.getMoney()/* basically do nothing*/);
-                // try to consume the stream again by counting the number of elements in it
+                // the first terminal operation
+                stream.forEach(e -> e.getMoney());
+                // try to run another terminal operation, which should throw
                 return stream.count();
             }});
         
-        assertTrue(result instanceof Left);
-        assertEquals("stream has already been operated upon or closed", ((Left<Exception, Long>) result).value.getMessage());
+        assertTrue(result.isLeft());
+        assertTrue(result.asLeft().value() instanceof IllegalStateException);
+        assertEquals("stream has already been operated upon or closed", result.asLeft().value().getMessage());
     }
 
     @Test
-    public void streams_that_are_used_outside_an_existing_db_session_are_responsible_for_its_closing() {
+    public void streams_created_outside_of_existing_db_session_are_responsible_for_opening_and_closing_their_own_session() {
         final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+        assertNull("No session is expected.", co.getSessionUnsafe());
         try (final Stream<EntityWithMoney> stream = co.stream(from(select(EntityWithMoney.class).model()).model())) {
-            assertTrue("Session should still be open.", co.getSessionUnsafe().isOpen());
+            assertNotNull("A new session is expected.", co.getSessionUnsafe());
+            assertTrue("Session should be open.", co.getSessionUnsafe().isOpen());
         }
         assertFalse("Session should already be closed", co.getSessionUnsafe().isOpen());
     }
@@ -136,7 +137,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void counting_data_in_stream_does_not_close_it() {
+    public void terminal_op_on_data_stream_with_its_own_session_performed_outside_try_with_resources_does_not_close_that_session() {
         final EntityWithMoneyDao co = co$(EntityWithMoney.class);
         final Stream<EntityWithMoney> dataStream = co.stream(from(select(EntityWithMoney.class).model()).model());
         
@@ -150,7 +151,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void collecting_data_from_stream_does_not_close_it() {
+    public void terminal_op_on_data_stream_with_its_own_session_performed_inside_try_with_resources_does_not_close_that_session() {
         final EntityWithMoneyDao co = co$(EntityWithMoney.class);
         
         final Map<Boolean, List<EntityWithMoney>> partition;
@@ -158,25 +159,31 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
             partition = dataStream.collect(Collectors.partitioningBy(e -> e.getMoney().getAmount().doubleValue() >= 30));
             assertTrue("Session should still be open.", co.getSessionUnsafe().isOpen());
         }
-        
+        assertFalse("Session should already be closed", co.getSessionUnsafe().isOpen());
+
         assertEquals(2, partition.size());
         assertEquals(3, partition.get(true).size());
         assertEquals(1, partition.get(false).size());
-        
-        assertFalse("Session should already be closed", co.getSessionUnsafe().isOpen());
     }
 
     @Test
-    public void streams_that_are_used_within_an_existing_db_session_should_not_close_it() {
+    @SessionRequired
+    public void streams_that_are_used_within_an_existing_db_session_should_not_close_that_session() {
+        assertTrue("The test should start with an open session.", getSession().isOpen());
+
         final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
         final EntityWithMoneyDao co = co$(EntityWithMoney.class);
         
-        // the following method uses a stream and make additional query after closing the stream
-        // if the stream does not close the current session then that query should succeed
-        final long result = co.streamProcessingWithinTransaction(query);
-        
+        // The following code uses a stream in try-with-resources and makes an additional query after the stream is closed, expecting that the current session remains open.
+        long result = 0;
+        try(final var stream = co.stream(from(query).model())) {
+            assertEquals("Stream should happen in the same session as the test itself.", getSession(), co.getSessionUnsafe());
+            result = result + stream.count();
+        }
+        assertTrue("Session should still be open.", co.getSessionUnsafe().isOpen());
+        result = result + co.count(query); // query in still in the scope of the same session
+
         assertEquals(co$(EntityWithMoney.class).count(query) * 2, result);
-        assertFalse("Session should already be closed", co.getSessionUnsafe().isOpen());
     }
 
     @Test
@@ -213,7 +220,35 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         assertEquals("desc Y", values.get(1).get("distinctDesc"));
         assertEquals(2, values.get(1).<Number>get("kount").intValue());
     }
-    
+
+    /**
+     * This test demonstrates a situation in which previously supported auto-closing of companion streams was leading to a JDBC runtime exception.
+     * The exception was happening at the time of invoking {@code results.next()} in {@link ua.com.fielden.platform.entity.query.stream.ScrollableResultStream} on already closed results.
+     * <p>
+     * As a result of this additional analysis was performed, and it was decided to remove support for auto-closing in case of terminal operations executed on the companion streams.
+     * Instead, a more conventional try-with-resources construct should always be used to correctly manage the resources associated with companion streams.
+     */
+    @Test
+    public void data_stream_does_not_get_closed_prematurely_in_case_of_head_and_tail() {
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+
+        final var count = co.count(query);
+        assertTrue("Expecting more than 0 records for this test.", count > 0);
+        try(final var stream = co.stream(from(query).model())) {
+            // The following code emulates the implementation of StreamUtils.head_and_tail as it was at the time of writing.
+            final var iter = stream.iterator();
+            final var head = iter.hasNext() ? Optional.of(iter.next()) : Optional.empty();
+            final Iterable<EntityWithMoney> iterable = () -> iter;
+            final Stream<EntityWithMoney> tail = StreamSupport.stream(iterable.spliterator(), false);
+
+            // The following call was throwing a JDBC exception.
+            final var tailLength = tail.count();
+            assertEquals(count - 1, tailLength);
+        }
+
+    }
+
     @Override
     @SessionRequired
     protected void populateDomain() {

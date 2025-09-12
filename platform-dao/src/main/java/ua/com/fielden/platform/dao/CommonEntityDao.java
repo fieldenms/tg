@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.dao;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -11,31 +13,37 @@ import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.handlers.IAfterSave;
+import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
+import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Optional.empty;
@@ -43,39 +51,37 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
+import static ua.com.fielden.platform.utils.Lazy.lazyProvider;
+import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 
-/**
- * This is a base class for db-aware implementations of entity companions.
- *
- * @author TG Team
- *
- * @param <T> entity type
- */
+/// Base class for database-aware implementations of entity companions.
+/// It is suitable for companions for both persistent and action entities.
+///
+/// Method injection is used to spare subclasses from declaring large constructors that merely delegate to `super`.
+/// This approach also improves evolvability, allowing changes in a backward-compatible manner.
+///
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityReader<T> implements IEntityDao<T>, ISessionEnabled, ICanReadUninstrumented {
 
-    private final Logger logger = getLogger(this.getClass());
+    private final Logger logger = getLogger();
 
-    private final PersistentEntitySaver<T> entitySaver;
-
-    private Session session;
-    private String transactionGuid;
-    private DomainMetadata domainMetadata;
-    private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
-
-    @Inject
+    // *** INJECTABLE FIELDS
+    private IDbVersionProvider dbVersionProvider;
     private ICompanionObjectFinder coFinder;
-    @Inject
     private Injector injector;
-
-    private final IFilter filter;
-    private final DeleteOperations<T> deleteOps;
-
-    @Inject
     private IUniversalConstants universalConstants;
-    @Inject
-    private IDates dates;
-    @Inject
-    private IUserProvider up;
+    private IUserProvider userProvider;
+    private EntityFactory entityFactory;
+    private IEntityFetcher entityFetcher;
+    private Supplier<DeleteOperations<T>> deleteOps;
+    private EntityBatchInsertOperation.Factory batchInsertOpsFactory;
+    private Supplier<PersistentEntitySaver<T>> entitySaver;
+    // ***
+
+    /** Session-scoped. Set by {@link SessionInterceptor} */
+    private Session session;
+
+    /** Session-scoped. Set by {@link SessionInterceptor} */
+    private String transactionGuid;
 
     /** A guard against an accidental use of quick save to prevent its use for companions with overridden method <code>save</code>.
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
@@ -87,85 +93,93 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private final Class<T> entityType;
     private IFetchProvider<T> fetchProvider;
 
-    @Inject
-    private EntityFactory entityFactory;
-
     /**
      * The default constructor, which looks for annotation {@link EntityType} to identify the entity type automatically.
      * An exception is thrown if the annotation is missing.
-     *
-     * @param filter
+     * <p>
+     * <b>Deprecated</b>: use the no-arg constructor (the {@code super} call is no longer necessary).
      */
+    @Deprecated(forRemoval = true)
     protected CommonEntityDao(final IFilter filter) {
+        this();
+    }
+
+    protected CommonEntityDao() {
         final EntityType annotation = AnnotationReflector.getAnnotation(getClass(), EntityType.class);
         if (annotation == null) {
             throw new EntityCompanionException(format("Companion object [%s] is missing @EntityType annotation.", getClass().getName()));
         }
         this.entityType = (Class<T>) annotation.value();
         this.keyType = AnnotationReflector.getKeyType(entityType);
+    }
 
-        this.filter = filter;
-        this.deleteOps = new DeleteOperations<>(
-                this,
-                this::getSession,
-                entityType,
-                this::newQueryExecutionContext,
-                () -> new EntityBatchDeleteByIdsOperation<>(getSession(), getDomainMetadata().eqlDomainMetadata.entityMetadataHolder.getTableForEntityType(entityType)));
+    @Inject
+    protected void setDeleteOpsFactory(final Provider<DeleteOperations.Factory> deleteOpsFactory) {
+        deleteOps = lazyProvider(() -> deleteOpsFactory.get().create(this, this::getSession, entityType));
+    }
 
-        entitySaver = new PersistentEntitySaver<>(
+    @Inject
+    protected void setBatchInsertOpsFactory(final EntityBatchInsertOperation.Factory batchInsertOpsFactory) {
+        this.batchInsertOpsFactory = batchInsertOpsFactory;
+    }
+
+    @Inject
+    protected void setPersistentEntitySaverFactory(final Provider<PersistentEntitySaver.IFactory> factory) {
+        entitySaver = lazySupplier(() -> factory.get().create(
                 this::getSession,
                 this::getTransactionGuid,
-                this::getDbVersion,
                 entityType,
                 keyType,
-                this::getUser,
-                () -> getUniversalConstants().now(),
-                this::getCoFinder,
-                this::newQueryExecutionContext,
                 this::processAfterSaveEvent,
                 this::assignBeforeSave,
                 this::findById,
                 this::exists,
-                logger);
-
+                logger));
     }
 
-    /**
-     * A helper method to create new instances of {@link QueryExecutionContext}.
-     * @return
-     */
-    @Override
-    protected QueryExecutionContext newQueryExecutionContext() {
-        return new QueryExecutionContext(
-                getSession(),
-                getEntityFactory(),
-                getCoFinder(),
-                getDomainMetadata(),
-                getDomainMetadata().eqlDomainMetadata,
-                getFilter(),
-                getUsername(),
-                dates,
-                getIdOnlyProxiedEntityTypeCache());
-    }
-
-    /**
-     * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
-     *
-     * @param domainMetadata
-     */
     @Inject
-    protected void setDomainMetadata(final DomainMetadata domainMetadata) {
-        this.domainMetadata = domainMetadata;
+    protected void setDbVersionProvider(final IDbVersionProvider dbVersionProvider) {
+        this.dbVersionProvider = dbVersionProvider;
+    }
+
+    @Inject
+    protected void setCoFinder(final ICompanionObjectFinder coFinder) {
+        this.coFinder = coFinder;
+    }
+
+    @Inject
+    protected void setInjector(final Injector injector) {
+        this.injector = injector;
+    }
+
+    @Inject
+    protected void setUniversalConstants(final IUniversalConstants universalConstants) {
+        this.universalConstants = universalConstants;
+    }
+
+    @Inject
+    protected void setUserProvider(final IUserProvider userProvider) {
+        this.userProvider = userProvider;
+    }
+
+    @Inject
+    protected void setEntityFactory(final EntityFactory entityFactory) {
+        this.entityFactory = entityFactory;
+    }
+
+    @Inject
+    protected void setEntityFetcher(final IEntityFetcher entityFetcher) {
+        this.entityFetcher = entityFetcher;
     }
 
     @Override
     public DbVersion getDbVersion() {
-        return domainMetadata.getDbVersion();
+        return dbVersionProvider.dbVersion();
     }
 
-    @Inject
-    protected void setIdOnlyProxiedEntityTypeCache(final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
+    @Override
+    protected IEntityFetcher entityFetcher() {
+        return entityFetcher;
     }
 
     /**
@@ -225,7 +239,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         } else if (!entity.isPersistent()) {
             throw new EntityCompanionException(format("Quick save is not supported for non-persistent entity [%s].", entityType.getName()));
         } else {
-            final Long id = entitySaver.coreSave(entity, true, empty())._1;
+            final Long id = entitySaver.get().coreSave(entity, true, empty())._1;
             if (id == null) {
                 throw new EntityCompanionException(format("Saving of entity [%s] did not return its ID.", entityType.getName()));
             }
@@ -241,7 +255,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         } else if (!entity.isPersistent()) {
             return entity;
         } else {
-            return entitySaver.save(entity);
+            return entitySaver.get().save(entity);
         }
     }
 
@@ -264,14 +278,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected Either<Long, T> save(final T entity, final Optional<fetch<T>> maybeFetch) {
         // if maybeFetch is empty then we skip re-fetching
         final boolean skipRefetching = !maybeFetch.isPresent();
-        final T2<Long, T> result = entitySaver.coreSave(entity, skipRefetching, maybeFetch);
+        final T2<Long, T> result = entitySaver.get().coreSave(entity, skipRefetching, maybeFetch);
         return skipRefetching ? left(result._1) : right(result._2);
     }
 
-    /**
-     * Returns an open session, if present. Otherwise, throws {@link EntityCompanionException} exception.
-     * @return
-     */
+    /// Returns an open session, if present.
+    /// Otherwise, throws [EntityCompanionException] exception.
+    ///
     @Override
     public Session getSession() {
         if (session == null) {
@@ -282,12 +295,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return session;
     }
 
-    /**
-     * Returns a session instances without any checks. It is intended mainly for testing purposes to ensure correct session state after various db operations.
-     *
-     * @return
-     */
-    public Session getSessionUnsafe() {
+    /// Returns a session instances without any checks.
+    /// It is intended mainly for testing purposes to ensure correctness of the session state after various db operations.
+    ///
+    public @Nullable Session getSessionUnsafe() {
         return session;
     }
 
@@ -329,21 +340,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(stream(query), propertyNames, propertyTitles));
     }
 
-    public DomainMetadata getDomainMetadata() {
-        return domainMetadata;
-    }
-
-    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
-        return idOnlyProxiedEntityTypeCache;
-    }
-
     @Override
     public User getUser() {
-        return up.getUser();
-    }
-
-    public IFilter getFilter() {
-        return filter;
+        return userProvider.getUser();
     }
 
     protected ICompanionObjectFinder getCoFinder() {
@@ -352,10 +351,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     public IUniversalConstants getUniversalConstants() {
         return universalConstants;
-    }
-
-    public IDates dates() {
-        return dates;
     }
 
     /**
@@ -508,7 +503,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     }
 
-    private void processAfterSaveEvent(final T entity, final List<String> dirtyProperties) {
+    private void processAfterSaveEvent(final T entity, final Set<String> dirtyProperties) {
         try {
             final AfterSave afterSave = AnnotationReflector.getAnnotation(getClass(), AfterSave.class);
             // if after save annotation is present then need to instantiate the declared event handler.
@@ -534,7 +529,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected void defaultDelete(final T entity) {
-        deleteOps.defaultDelete(entity);
+        deleteOps.get().defaultDelete(entity);
     }
 
     /**
@@ -545,7 +540,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        deleteOps.defaultDelete(model, paramValues);
+        deleteOps.get().defaultDelete(model, paramValues);
     }
 
     /**
@@ -555,7 +550,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model) {
-        deleteOps.defaultDelete(model);
+        deleteOps.get().defaultDelete(model);
     }
 
     /**
@@ -567,7 +562,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        return deleteOps.defaultBatchDelete(model, paramValues);
+        return deleteOps.get().defaultBatchDelete(model, paramValues);
     }
 
     /**
@@ -578,7 +573,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model) {
-        return deleteOps.defaultBatchDelete(model);
+        return deleteOps.get().defaultBatchDelete(model);
     }
 
     /**
@@ -600,7 +595,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
-        return deleteOps.defaultBatchDelete(entitiesIds);
+        return deleteOps.get().defaultBatchDelete(entitiesIds);
     }
 
     /**
@@ -613,7 +608,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
-        return deleteOps.defaultBatchDeleteByPropertyValues(propName, entitiesIds);
+        return deleteOps.get().defaultBatchDeleteByPropertyValues(propName, entitiesIds);
     }
 
     /**
@@ -625,7 +620,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected <E extends AbstractEntity<?>> int defaultBatchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
-        return deleteOps.defaultBatchDeleteByPropertyValues(propName, propEntities);
+        return deleteOps.get().defaultBatchDeleteByPropertyValues(propName, propEntities);
     }
 
     @Override
@@ -671,6 +666,58 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     public T new_() {
         return entityFactory.newEntity(getEntityType());
+    }
+
+    /// Provides the default implementation for batch insertion of new entities.
+    ///
+    /// This method serves as the standard implementation for batch insertion operations in entity companions.
+    /// It handles the common logic required for efficiently inserting multiple new entities into the database
+    /// while ensuring data integrity and applying necessary pre-save operations.
+    ///
+    /// The method performs the following operations for each entity:
+    /// - Auto-populates required properties for new entities (creation timestamps, user info, etc.).
+    /// - Validates each entity before insertion.
+    /// - Processes entities in batches according to the specified batch size.
+    ///
+    /// If validation fails for any entity, a runtime exception is thrown and the entire batch operation is rolled back.
+    ///
+    /// **Important:**
+    /// - Batch insertion is not suitable in many cases and should be used with care.
+    ///   Attempts to batch insert *active* activatable entities throws [InvalidArgumentException].
+    /// - This method should be called in the scope of an open session.
+    ///   Otherwise, [EntityCompanionException] is thrown.
+    ///
+    /// @param newEntities a stream of new entities to be inserted
+    /// @param batchSize   the number of entities to process in each database batch operation;
+    ///                    larger values improve throughput but increase memory usage
+    ///
+    /// @return the total count of successfully inserted entities
+    ///
+    /// @see EntityBatchInsertOperation#batchInsert for the underlying batch insertion mechanism
+    ///
+    protected int defaultBatchInsert(final Stream<T> newEntities, final int batchSize) {
+        // Call getSession() to make sure defaultBatchInsert is called in the scope of an open session.
+        // If not, this call throws exception.
+        getSession();
+
+        // If there is an open session, batch insertion cat be attempted.
+        final var ops = batchInsertOpsFactory.create(() -> new TransactionalExecution(userProvider, this::getSession));
+        final var saver = entitySaver.get();
+        return ops.batchInsert(newEntities.filter(Objects::nonNull).peek(entity -> {
+            // Do not permit batch insertion for active activatbles.
+            if (entity instanceof ActivatableAbstractEntity<?> ae && ae.isActive()) {
+                throw new InvalidArgumentException("Batch insertion of active activatable entities [%s] is not supported.".formatted(entity.getType().getSimpleName()));
+            }
+
+            // Autopopulated entity props.
+            if (entity instanceof AbstractPersistentEntity<?> persistentEntity) {
+                saver.assignCreationInfoForNew(persistentEntity);
+            }
+            saver.assignPropsBeforeSaveForNew(entity);
+
+            // Validate and throw if invalid.
+            entity.isValid().ifFailure(Result::throwRuntime);
+        }), batchSize);
     }
 
 }

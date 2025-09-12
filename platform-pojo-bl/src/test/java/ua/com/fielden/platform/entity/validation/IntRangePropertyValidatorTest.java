@@ -10,8 +10,8 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithRangeProperties;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 
 import com.google.inject.Injector;
 
@@ -23,7 +23,7 @@ import com.google.inject.Injector;
  */
 public class IntRangePropertyValidatorTest {
 
-    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
@@ -33,7 +33,7 @@ public class IntRangePropertyValidatorTest {
         entity.setFromInt(12);
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
     }
 
     @Test
@@ -51,8 +51,8 @@ public class IntRangePropertyValidatorTest {
         entity.setToInt(16);
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
         assertTrue("Should not be valid", entity.getProperty("toInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(16), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getToInt());
     }
 
     @Test
@@ -62,7 +62,7 @@ public class IntRangePropertyValidatorTest {
         entity.setToInt(12);
 
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
-        assertEquals("Incorrect value", new Integer(16), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getFromInt());
         assertFalse("Should not be valid", entity.getProperty("toInt").isValid());
         assertNull("Incorrect value", entity.getToInt());
 
@@ -71,8 +71,8 @@ public class IntRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
         assertTrue("Should not be valid", entity.getProperty("toInt").isValid());
 
-        assertEquals("Incorrect value", new Integer(6), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(12), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(6), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getToInt());
     }
 
 }

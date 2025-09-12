@@ -1,98 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
-import static java.lang.String.format;
-import static java.util.Arrays.stream;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.function.Function.identity;
-import static java.util.regex.Pattern.quote;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
-import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
-import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.valueOf;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.error.Result.failuref;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
-import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isDate;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isLink;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.AND_BEFORE;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.AUTOCOMPLETE_ACTIVE_ONLY;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_MNEMONIC;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_PREFIX;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.EXCLUSIVE;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.EXCLUSIVE2;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.GROW_FACTOR;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.NOT;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.OR_GROUP;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.OR_NULL;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VALUE;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VALUE2;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.WIDTH;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createDefaultCentre;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.modelFor;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.retrieveDiff;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveEntityCentreManager;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DESCRIPTOR_FROM_STRING;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DESCRIPTOR_TO_STRING;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createNotFoundMockString;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksFromString;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksToString;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.fetchForPropertyOrDefault;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Currency;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
@@ -100,7 +8,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -120,6 +27,44 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.Arrays.stream;
+import static java.util.Optional.*;
+import static java.util.function.Function.identity;
+import static java.util.regex.Pattern.quote;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.*;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.valueOf;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.error.Result.failuref;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isLink;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.*;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
 
 /**
  * Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
@@ -205,7 +150,7 @@ public class CentreUpdater {
             ? new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_INTEGER.apply((String) map.get("taxPercent")), STRING_TO_CURRENCY.apply((String) map.get("currency")))
             : new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_CURRENCY.apply((String) map.get("currency")));
     private static final Function<AbstractEntity<?>, String> ENTITY_TO_STRING = entity -> entityWithMocksToString((ent) -> {
-        if (isPersistedEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType()) || isUnionEntityType(ent.getType())) {
+        if (isPersistentEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType()) || isUnionEntityType(ent.getType())) {
             if (ent.getId() == null) {
                 // Usually persistent (or synthetic based on persistent) entities should have IDs when conversion to diff object is performed.
                 // However we have two edge-cases here.
@@ -630,7 +575,7 @@ public class CentreUpdater {
                     // find config creators not being equal to current user...
                     if (!notInheritedFromBaseUuids.isEmpty()) {
                         eccCompanion.getAllEntities(
-                            from(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME))
+                            from(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME)
                                 .and().prop("configUuid").in().values(notInheritedFromBaseUuids.toArray())
                                 .and().prop("owner").ne().val(user)
                                 .and().begin() // we look only for shared configs; base user could have changed the title of base config already loaded by current user; so we need to look for ...
@@ -667,7 +612,7 @@ public class CentreUpdater {
                     if (!ownSaveAsUuids.isEmpty()) {
                         // find config creators for that uuids
                         final List<EntityCentreConfig> savedConfigsWithCreators = eccCompanion.getAllEntities(
-                            from(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME))
+                            from(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME)
                                 .and().prop("configUuid").in().values(ownSaveAsUuids.toArray()).model()
                             )
                             .with(FETCH_CONFIG.with("configUuid").with("owner", fetch(User.class).with("key")))
@@ -704,7 +649,7 @@ public class CentreUpdater {
         return saveAsNameOpt -> {
             return saveAsNameOpt
                 .map(saveAsName -> modelFor(user, miType.getName(), NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device)))
-                .orElseGet(() -> eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)).model());
+                .orElseGet(() -> centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME).model());
         };
     }
     
@@ -721,7 +666,7 @@ public class CentreUpdater {
      */
     private static List<EntityCentreConfig> getAllPreferredConfigs(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME))
+        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)
             .and().prop("preferred").eq().val(true).model();
         final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").fetchModel();
         return eccCompanion.getAllEntities(from(queryForCurrentUser).with(fetch).model());
@@ -737,7 +682,7 @@ public class CentreUpdater {
      * @return
      */
     public static Optional<String> retrievePreferredConfigName(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder, final IWebUiConfig webUiConfig) {
-        if (webUiConfig.isEmbeddedCentre(miType)) {
+        if (webUiConfig.isEmbeddedCentreAndNotAllowCustomised(miType)) {
             return empty();
         }
         final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
@@ -757,7 +702,7 @@ public class CentreUpdater {
      * @return
      */
     public static void makePreferred(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder, final IWebUiConfig webUiConfig) {
-        if (!webUiConfig.isEmbeddedCentre(miType)) { // standalone centres only, not embedded
+        if (!webUiConfig.isEmbeddedCentreAndNotAllowCustomised(miType)) { // standalone centres only, not embedded
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final List<EntityCentreConfig> prefConfigs = getAllPreferredConfigs(user, miType, device, companionFinder);
             prefConfigs.stream().forEach(ecc -> eccCompanion.saveWithRetry(ecc.setPreferred(false)));
@@ -836,14 +781,11 @@ public class CentreUpdater {
      * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
      * @return
      */
-    static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
-        return dbVersion -> {
-            final String escapedOpeningBracket = DbVersion.MSSQL == dbVersion ? "[[]" : "["; // need to provide escaping for opening bracket to find records with [, see https://stackoverflow.com/questions/439495/how-can-i-escape-square-brackets-in-a-like-clause
-            return select(EntityCentreConfig.class).where()
-                .prop("title").like().val(deviceSpecific(surrogateName, device) + escapedOpeningBracket + "%")
-                .and().prop("title").notLike().val(deviceSpecific(surrogateName, opposite(device)) + escapedOpeningBracket + "%")
-                .and().prop("menuItem.key").eq().val(miType.getName());
-        };
+    static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+        return select(EntityCentreConfig.class).where()
+            .prop("title").like().val(deviceSpecific(surrogateName, device) + "[%")
+            .and().prop("title").notLike().val(deviceSpecific(surrogateName, opposite(device)) + "[%")
+            .and().prop("menuItem.key").eq().val(miType.getName());
     }
     
     /**
@@ -857,8 +799,8 @@ public class CentreUpdater {
      * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
      * @return
      */
-    static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
-        return dbVersion -> centreConfigQueryFor(miType, device, surrogateName).apply(dbVersion)
+    static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+        return centreConfigQueryFor(miType, device, surrogateName)
             .and().prop("owner").eq().val(user);
     }
     
@@ -1468,7 +1410,7 @@ public class CentreUpdater {
                 final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
                 final Class<?> propertyType = isEntityItself ? managedType(root, centre) : determinePropertyType(managedType(root, centre), property);
 
-                if (isString(propertyType)) {
+                if (isString(propertyType) || isRichText(propertyType)) {
                     centre.getRepresentation().getFirstTick().setValueByDefault(root, includedProperty, null);
                 }
             }

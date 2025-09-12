@@ -1,3 +1,11 @@
+import '../polymer/polymer-legacy.js';
+import '../paper-styles/default-theme.js';
+import '../iron-flex-layout/iron-flex-layout.js';
+import { PaperCheckedElementBehavior } from '../paper-behaviors/paper-checked-element-behavior.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+import { afterNextRender } from '../polymer/lib/utils/render-status.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -7,13 +15,7 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import "../paper-styles/default-theme.js";
-import "../iron-flex-layout/iron-flex-layout.js";
-import { PaperCheckedElementBehavior } from "../paper-behaviors/paper-checked-element-behavior.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
-import { afterNextRender } from "../polymer/lib/utils/render-status.js";
+
 const template = html`
 <style>
   :host {
@@ -144,6 +146,7 @@ const template = html`
 
 <div id="radioLabel"><slot></slot></div>`;
 template.setAttribute('strip-whitespace', '');
+
 /**
 Material design: [Radio button](https://www.google.com/design/spec/components/selection-controls.html#selection-controls-radio-button)
 
@@ -186,16 +189,15 @@ element, make sure you've imported `paper-styles/typography.html`.
 @element paper-radio-button
 @demo demo/index.html
 */
-
 Polymer({
   _template: template,
+
   is: 'paper-radio-button',
+
   behaviors: [PaperCheckedElementBehavior],
-  hostAttributes: {
-    role: 'radio',
-    'aria-checked': false,
-    tabindex: 0
-  },
+
+  hostAttributes: {role: 'radio', 'aria-checked': false, tabindex: 0},
+
   properties: {
     /**
      * Fired when the checked state changes due to user interaction.
@@ -208,33 +210,38 @@ Polymer({
      *
      * @event iron-change
      */
-    ariaActiveAttribute: {
-      type: String,
-      value: 'aria-checked'
-    }
+
+    ariaActiveAttribute: {type: String, value: 'aria-checked'}
   },
-  ready: function () {
+
+  ready: function() {
     this._rippleContainer = this.$.radioContainer;
   },
-  attached: function () {
+
+  attached: function() {
     // Wait until styles have resolved to check for the default sentinel.
     // See polymer#4009 for more details.
-    afterNextRender(this, function () {
-      var inkSize = this.getComputedStyleValue('--calculated-paper-radio-button-ink-size').trim(); // If unset, compute and set the default `--paper-radio-button-ink-size`.
-
+    afterNextRender(this, function() {
+      var inkSize =
+          this.getComputedStyleValue('--calculated-paper-radio-button-ink-size')
+              .trim();
+      // If unset, compute and set the default `--paper-radio-button-ink-size`.
       if (inkSize === '-1px') {
-        var size = parseFloat(this.getComputedStyleValue('--calculated-paper-radio-button-size').trim());
-        var defaultInkSize = Math.floor(3 * size); // The button and ripple need to have the same parity so that their
-        // centers align.
+        var size = parseFloat(
+            this.getComputedStyleValue('--calculated-paper-radio-button-size')
+                .trim());
+        var defaultInkSize = Math.floor(3 * size);
 
+        // The button and ripple need to have the same parity so that their
+        // centers align.
         if (defaultInkSize % 2 !== size % 2) {
           defaultInkSize++;
         }
 
         this.updateStyles({
-          '--paper-radio-button-ink-size': defaultInkSize + 'px'
+          '--paper-radio-button-ink-size': defaultInkSize + 'px',
         });
       }
     });
-  }
+  },
 });

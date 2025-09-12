@@ -5,53 +5,54 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateAddIntervalUnit;
 
 abstract class DateAddIntervalUnit<T, ET extends AbstractEntity<?>> //
-		extends AbstractQueryLink //
-		implements IDateAddIntervalUnit<T, ET> {
+        extends AbstractQueryLink //
+        implements IDateAddIntervalUnit<T, ET> {
 
-    protected DateAddIntervalUnit(final Tokens tokens) {
-        super(tokens);
+    protected DateAddIntervalUnit(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForDateAddIntervalUnit(final Tokens tokens);
 
-	@Override
-	public IDateAddIntervalFunctionTo<T, ET> seconds() {
-		return createDateAddIntervalFunctionTo(getTokens().secondsInterval());
-	}
-	
-	@Override
-	public IDateAddIntervalFunctionTo<T, ET> minutes() {
-		return createDateAddIntervalFunctionTo(getTokens().minutesInterval());
-	}
+    protected abstract T nextForDateAddIntervalUnit(final EqlSentenceBuilder builder);
 
-	@Override
-	public IDateAddIntervalFunctionTo<T, ET> hours() {
-		return createDateAddIntervalFunctionTo(getTokens().hoursInterval());
-	}
+    @Override
+    public IDateAddIntervalFunctionTo<T, ET> seconds() {
+        return createDateAddIntervalFunctionTo(builder.secondsInterval());
+    }
 
-	@Override
-	public IDateAddIntervalFunctionTo<T, ET> days() {
-		return createDateAddIntervalFunctionTo(getTokens().daysInterval());
-	}
+    @Override
+    public IDateAddIntervalFunctionTo<T, ET> minutes() {
+        return createDateAddIntervalFunctionTo(builder.minutesInterval());
+    }
 
-	@Override
-	public IDateAddIntervalFunctionTo<T, ET> months() {
-		return createDateAddIntervalFunctionTo(getTokens().monthsInterval());
-	}
+    @Override
+    public IDateAddIntervalFunctionTo<T, ET> hours() {
+        return createDateAddIntervalFunctionTo(builder.hoursInterval());
+    }
 
-	@Override
-	public IDateAddIntervalFunctionTo<T, ET> years() {
-		return createDateAddIntervalFunctionTo(getTokens().yearsInterval());
-	}
+    @Override
+    public IDateAddIntervalFunctionTo<T, ET> days() {
+        return createDateAddIntervalFunctionTo(builder.daysInterval());
+    }
 
-	private IDateAddIntervalFunctionTo<T, ET> createDateAddIntervalFunctionTo(final Tokens tokens) {
-		return new DateAddIntervalFunctionTo<T, ET>(tokens) {
+    @Override
+    public IDateAddIntervalFunctionTo<T, ET> months() {
+        return createDateAddIntervalFunctionTo(builder.monthsInterval());
+    }
 
-			@Override
-			protected T nextForDateAddIntervalFunctionTo(final Tokens tokens) {
-				return DateAddIntervalUnit.this.nextForDateAddIntervalUnit(tokens);
-			}
+    @Override
+    public IDateAddIntervalFunctionTo<T, ET> years() {
+        return createDateAddIntervalFunctionTo(builder.yearsInterval());
+    }
 
-		};
-	}
+    private IDateAddIntervalFunctionTo<T, ET> createDateAddIntervalFunctionTo(final EqlSentenceBuilder builder) {
+        return new DateAddIntervalFunctionTo<T, ET>(builder) {
+
+            @Override
+            protected T nextForDateAddIntervalFunctionTo(final EqlSentenceBuilder builder) {
+                return DateAddIntervalUnit.this.nextForDateAddIntervalUnit(builder);
+            }
+
+        };
+    }
+
 }

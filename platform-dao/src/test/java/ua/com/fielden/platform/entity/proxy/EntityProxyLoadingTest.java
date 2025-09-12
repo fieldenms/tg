@@ -1,51 +1,11 @@
 package ua.com.fielden.platform.entity.proxy;
 
-import static javassist.util.proxy.ProxyFactory.isProxyClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
-import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
-
-import java.math.BigDecimal;
-import java.util.stream.Stream;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.sample.domain.ITgBogie;
-import ua.com.fielden.platform.sample.domain.ITgVehicle;
-import ua.com.fielden.platform.sample.domain.TgAuthor;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.sample.domain.TgBogieLocation;
-import ua.com.fielden.platform.sample.domain.TgFuelType;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgPersonName;
-import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgTimesheet;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgWagon;
-import ua.com.fielden.platform.sample.domain.TgWagonSlot;
-import ua.com.fielden.platform.sample.domain.TgWorkshop;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -54,17 +14,28 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
 
+import java.math.BigDecimal;
+import java.util.stream.Stream;
+
+import static javassist.util.proxy.ProxyFactory.isProxyClass;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
+
 public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
-    private final ITgBogie coBogie = getInstance(ITgBogie.class);
-    private final ITgVehicle coVehicle = getInstance(ITgVehicle.class);
+    private final ITgBogie coBogie = co(TgBogie.class);
+    private final ITgVehicle coVehicle = co(TgVehicle.class);
+    private final ITgWagon coWagon = co(TgWagon.class);
 
     private static void shouldNotBeProxy(Class<? extends AbstractEntity<?>> entityClass) {
         assertFalse("Should not be proxy", isProxyClass(entityClass));
     }
 
     private static void shouldBeProxy(final AbstractEntity<?> entity, final String propName) {
-        assertTrue("Should be proxy", Reflector.isPropertyProxied(entity, propName));
+        assertTrue("Should be proxied: [%s.%s]".formatted(entity.getType().getSimpleName(), propName),
+                   Reflector.isPropertyProxied(entity, propName));
     }
 
     private static void shouldNotBeProxy(final AbstractEntity<?> entity, final String propName) {
@@ -247,7 +218,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void properties_with_id_only_proxy_values_cannot_be_updated_with_non_null_values() {
+    public void properties_with_id_only_proxy_values_can_be_updated_with_non_null_values() {
         final ITgVehicle coVehicle = co$(TgVehicle.class);
         final TgVehicle vehicle = coVehicle.findByKey("CAR2");
 
@@ -261,9 +232,8 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final TgOrgUnit5 station51 = co(TgOrgUnit5.class).getEntity(from(query).with(fetchAll(TgOrgUnit5.class)).model());
 
         final Either<Exception, TgVehicle> setStationResult = Try(() -> vehicle.setStation(station51));
-        assertTrue(setStationResult instanceof Left);
-        final Left<Exception, TgVehicle> setError = (Left<Exception, TgVehicle>) setStationResult;
-        assertTrue(setError.value instanceof StrictProxyException);
+        assertTrue(setStationResult.isRight());
+        assertEquals(station51, setStationResult.asRight().value().getStation());
     }
 
     @Test
@@ -298,12 +268,12 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final Either<Exception, TgOrgUnit5> getStationResult = Try(() -> vehicle.getStation());
         assertTrue(getStationResult instanceof Left);
         final Left<Exception, TgOrgUnit5> getError = (Left<Exception, TgOrgUnit5>) getStationResult;
-        assertTrue(getError.value instanceof StrictProxyException);
+        assertTrue(getError.value() instanceof StrictProxyException);
 
         final Either<Exception, TgVehicle> setStationResult = Try(() -> vehicle.setStation(null));
         assertTrue(setStationResult instanceof Left);
         final Left<Exception, TgVehicle> setError = (Left<Exception, TgVehicle>) setStationResult;
-        assertTrue(setError.value instanceof StrictProxyException);
+        assertTrue(setError.value() instanceof StrictProxyException);
     }
     
     @Test
@@ -327,6 +297,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
                 assertTrue("Not-feched and not-yielded props should be proxied", isPropertyProxied(vm, "noYieldIntProp"));
                 assertTrue("Not-fetched inherited @MapTo props should be proxied", isPropertyProxied(vm, "make"));
                 assertTrue("Even inherited, oridinary, not persistent props should become proxied in the context of a synthetic entity", isPropertyProxied(vm, "ordinaryIntProp"));
+                assertTrue("Calculated properties should be proxied", isPropertyProxied(vm, "makeModelsCount"));
                 assertFalse("@CritOnly props should not be proxied", isPropertyProxied(vm, "intCritProp"));
                 assertFalse("Fetched inherited @MapTo props should not be proxied.", isPropertyProxied(vm, "key"));
                 assertNull(vm.getIntCritProp());
@@ -347,13 +318,55 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         }
     }
 
-    @Override
-    public boolean useSavedDataPopulationScript() {
-        return false;
+    @Test
+    public void non_fetched_collectional_properties_are_not_proxied_returning_an_empty_collection() {
+        final EntityResultQueryModel<TgWagon> qry = select(TgWagon.class).where().prop("key").eq().val("WAGON1").model();
+        final var wagonWithSlotsNotFetched = coWagon.getEntity(from(qry).with(fetch(TgWagon.class)).model());
+        assertNotNull(wagonWithSlotsNotFetched);
+        assertFalse(Reflector.isPropertyProxied(wagonWithSlotsNotFetched, "slots"));
+        assertTrue(wagonWithSlotsNotFetched.getSlots().isEmpty());
+        final var wagonWithSlotsFetched = coWagon.getEntity(from(qry).with(fetch(TgWagon.class).with("slots")).model());
+        assertTrue(wagonWithSlotsFetched.getSlots().size() > 0);
+    }
+
+    @Test
+    public void isPropertyProxied_sub_props_of_proxied_prop_are_proxied() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        final var vehicle = coVehicle.getEntity(from(qry).with(fetch(TgVehicle.class)).model());
+        assertFalse("model is not proxied", isPropertyProxied(vehicle, "model"));
+        assertTrue("model.make is proxied", isPropertyProxied(vehicle, "model.make"));
+        assertTrue("sub-properties of a proxied property are proxied", isPropertyProxied(vehicle, "model.make.key"));
+    }
+
+    @Test
+    public void isPropertyProxied_sub_sub_sub_props_of_proxied_sub_sub_prop_are_proxied() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
+        final var vehicle = coVehicle.getEntity(from(qry).with(fetch(TgVehicle.class).with("replacedBy", fetch(TgVehicle.class))).model());
+        assertFalse("replacedBy is not proxied", isPropertyProxied(vehicle, "replacedBy"));
+        assertNotNull(vehicle.getReplacedBy());
+        assertFalse("replacedBy.model is not proxied", isPropertyProxied(vehicle, "replacedBy.model"));
+        assertNotNull(vehicle.getReplacedBy().getModel());
+        assertTrue("replacedBy.model.make is proxied", isPropertyProxied(vehicle, "replacedBy.model.make"));
+        assertTrue("sub-sub-sub-properties of a proxied sub-sub-property are proxied", isPropertyProxied(vehicle, "replacedBy.model.make.key"));
+    }
+
+    @Test
+    public void isPropertyProxied_sub_props_of_null_prop_are_not_proxied() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        final var vehicle = coVehicle.getEntity(from(qry).with(fetch(TgVehicle.class).with("replacedBy", fetch(TgVehicle.class))).model());
+        assertFalse(isPropertyProxied(vehicle, "replacedBy"));
+        assertNull(vehicle.getReplacedBy());
+        assertFalse("sub-properties of null are not proxied", isPropertyProxied(vehicle, "replacedBy.make"));
+        assertFalse("sub-sub-properties of null are not proxied", isPropertyProxied(vehicle, "replacedBy.make.model"));
     }
 
     @Override
     public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
         return false;
     }
 

@@ -1,19 +1,20 @@
 package ua.com.fielden.platform.eql.meta.query;
 
-import static java.util.Collections.unmodifiableSortedMap;
+import jakarta.annotation.Nullable;
+import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
+import static java.util.Collections.unmodifiableSortedMap;
 
 public class QuerySourceItemForComponentType<T> extends AbstractQuerySourceItem<T> {
     private final Class<T> javaType;
     private final SortedMap<String, AbstractQuerySourceItem<?>> subitems = new TreeMap<>(); // TODO why sorted?
 
-    public QuerySourceItemForComponentType(final String name, final Class<T> javaType, final Object hibType) {
+    public QuerySourceItemForComponentType(final String name, final Class<T> javaType, final @Nullable Object hibType) {
         super(name, hibType, null);
         this.javaType = javaType;
     }

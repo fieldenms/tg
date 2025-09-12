@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.processors.metamodel.models;
 
+import jakarta.annotation.Nonnull;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
- * A class representing a meta-model for an entity property with a type, which does not have its own meta-model.
+ * A class representing a metamodel for an entity property with a type, which does not have its own meta-model.
  * <p>
- * At the moment it only provides a way to convert context dependent property reference to a dot-noted string path.
- * However, it has a potential to be enhanced in future to provide access to more property-related information at both design- and runtime.
+ * At the moment, it only provides a way to convert context-dependent property reference to a dot-noted string path.
+ * However, it has the potential to be enhanced in future to provide access to more property-related information at both design time and runtime.
  *
  * @author TG Team
  *
@@ -19,12 +20,12 @@ public class PropertyMetaModel implements IConvertableToPath {
     }
     
     @Override
-    public String toPath() {
+    public @Nonnull String toPath() {
         return this.path;
     }
     
     @Override
-    public String toString() {
+    public @Nonnull String toString() {
         return toPath();
     }
 

@@ -7,6 +7,8 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 
+import { checkLinkAndOpen, MAILTO_PROTOCOL, SUPPORTED_PROTOCOLS, ERR_UNSUPPORTED_PROTOCOL } from '/resources/components/tg-link-opener.js';
+
 const additionalTemplate = html`
     <style>
         #input[disabled] {
@@ -29,6 +31,8 @@ const customInputTemplate = html`
             on-mouseup="_onMouseUp" 
             on-mousedown="_onMouseDown"
             on-keydown="_onKeydown"
+            on-focus="_onFocus"
+            on-blur="_outFocus"
             disabled$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off"/>
@@ -45,15 +49,12 @@ export class TgHyperlinkEditor extends TgEditor {
     /**
      * Converts the value from string representation into a JSON object that is used for representing value of Java type Hyperlink.
      */
-    convertFromString (value) {
-        var strValue = value.trim();
+    convertFromString (strValue) {
         if (strValue === '') {
             return null;
         } else {
-            if ((strValue.startsWith('https://') || strValue.startsWith('http://') ||
-                    strValue.startsWith('ftp://') || strValue.startsWith('ftps://') ||
-                    strValue.startsWith('mailto:')) === false) {
-                throw "One of http, https, ftp, ftps or mailto hyperlink protocols is expected.";
+            if (!strValue.startsWith(MAILTO_PROTOCOL) && SUPPORTED_PROTOCOLS.every(p => !strValue.startsWith(p + '//'))) {
+                throw ERR_UNSUPPORTED_PROTOCOL;
             }
 
             return {
@@ -67,10 +68,29 @@ export class TgHyperlinkEditor extends TgEditor {
      */
     _openLink () {
         if (this._acceptedValue) {
-            var win = window.open(this._acceptedValue.value, '_blank');
-            win.focus();
+            checkLinkAndOpen(this._acceptedValue.value);
         }
     }
+
+    /**
+     * Overridden to provide value approximations.
+     */
+    _commitForDescendants () {
+        const trimmedValWithProtocol = this._trimAndPrependProtocol(this._editingValue);
+        if (!this.reflector().equalsEx(trimmedValWithProtocol, this._editingValue)) {
+            this._editingValue = trimmedValWithProtocol;
+        }
+    }
+
+    _trimAndPrependProtocol (editingValue) {
+        const strValue = editingValue.trim();
+        if (strValue === '' || strValue.includes('://') || strValue.includes(MAILTO_PROTOCOL)) {
+            return strValue;
+        } else {
+            return `https://${strValue}`;
+        }
+    }
+
 }
 
 customElements.define('tg-hyperlink-editor', TgHyperlinkEditor);

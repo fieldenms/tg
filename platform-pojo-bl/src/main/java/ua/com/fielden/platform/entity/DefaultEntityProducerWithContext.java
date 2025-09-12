@@ -1,23 +1,17 @@
 package ua.com.fielden.platform.entity;
 
+import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
+
+import java.util.*;
+
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.findByIdWithFiltering;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-
-import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 
 /**
  * Provides default {@link EntityFactory} based implementation for creation of new entity instances.
@@ -27,6 +21,9 @@ import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
  * @param <T>
  */
 public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T>, IContextDecomposer {
+
+    public static final String ERR_UNEXPECTED_TYPE = "Unexpected type of property [%s.%s]. Expected: [%s] or supertype. Actual: [%s].";
+
     private final EntityFactory factory;
     protected final Class<T> entityType;
     /** Instrumented reader to be used for producing of {@link #new_()} editable entities and for re-fetching ({@link #refetchInstrumentedEntityById(Long)}) of persisted editable entities. */
@@ -187,49 +184,21 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     /**
      * Re-fetches entity (defined by {@code id} and {@code entityType}) using {@code property}'s fetch provider for the entity type behind this producer.
      * Returns uninstrumented instance.
-     *
-     * @param id
-     * @param entityType
-     * @return
      */
-    protected final <M extends AbstractEntity<?>> M refetch(final Long id, final Class<M> entityType, final String property) {
-        return findByIdWithFiltering(id, co(entityType), reader.get().getFetchProvider().<M>fetchFor(property).fetchModel());
-    }
-
-    /**
-     * The same as {@link #refetch(Long, Class, String), but accepting an argument of type {@link IConvertableToPath} to represent a property.
-     *
-     * @param <M>
-     * @param id
-     * @param entityType
-     * @param property
-     * @return
-     */
-    protected final <M extends AbstractEntity<?>> M refetch(final Long id, final Class<M> entityType, final IConvertableToPath property) {
-        return refetch(id, entityType, property.toPath());
+    protected final <M extends AbstractEntity<?>> M refetch(final Long id, final Class<M> entityType, final CharSequence property) {
+        final var fetch = reader.get().getFetchProvider().<M>fetchFor(property).fetchModel();
+        if (!fetch.getEntityType().isAssignableFrom(entityType)) {
+            throw new EntityProducingException(ERR_UNEXPECTED_TYPE.formatted(this.entityType.getSimpleName(), property, entityType.getSimpleName(), fetch.getEntityType().getSimpleName()));
+        }
+        return findByIdWithFiltering(id, co(entityType), fetch);
     }
 
     /**
      * Re-fetches {@code entity} using {@code property}'s fetch provider for the entity type behind this producer.
      * Returns uninstrumented instance.
-     *
-     * @param entity
-     * @return
      */
-    protected final <M extends AbstractEntity<?>> M refetch(final M entity, final String property) {
+    protected final <M extends AbstractEntity<?>> M refetch(final M entity, final CharSequence property) {
         return refetch(entity.getId(), (Class<M>) entity.getType(), property);
-    }
-
-    /**
-     * The same as {@link #refetch(AbstractEntity, String)}, but accepting an argument of type {@link IConvertableToPath} to represent a property.
-     *
-     * @param <M>
-     * @param entity
-     * @param property
-     * @return
-     */
-    protected final <M extends AbstractEntity<?>> M refetch(final M entity, final IConvertableToPath property) {
-        return refetch(entity, property.toPath());
     }
 
     /**

@@ -1,31 +1,13 @@
 package ua.com.fielden.platform.serialisation.api.impl;
 
-import static com.fasterxml.jackson.databind.type.SimpleType.constructUnsafe;
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.ResolvedType;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Charsets;
-
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -37,27 +19,26 @@ import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
-import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
-import ua.com.fielden.platform.serialisation.jackson.EntityType;
-import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
-import ua.com.fielden.platform.serialisation.jackson.EntityTypeProp;
-import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
-import ua.com.fielden.platform.serialisation.jackson.deserialisers.ArrayListJsonDeserialiser;
-import ua.com.fielden.platform.serialisation.jackson.deserialisers.ArraysArrayListJsonDeserialiser;
-import ua.com.fielden.platform.serialisation.jackson.deserialisers.ColourJsonDeserialiser;
-import ua.com.fielden.platform.serialisation.jackson.deserialisers.HyperlinkJsonDeserialiser;
-import ua.com.fielden.platform.serialisation.jackson.deserialisers.MoneyJsonDeserialiser;
-import ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser;
+import ua.com.fielden.platform.serialisation.jackson.*;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.*;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntitySerialisationException;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.ColourJsonSerialiser;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.HyperlinkJsonSerialiser;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.MoneyJsonSerialiser;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.ResultJsonSerialiser;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.serialisation.jackson.serialisers.*;
+import ua.com.fielden.platform.types.*;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+
+import static com.fasterxml.jackson.databind.type.SimpleType.constructUnsafe;
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  * The descendant of {@link ObjectMapper} with TG specific logic to correctly assign serialisers and recognise descendants of {@link AbstractEntity}. This covers correct
@@ -91,11 +72,19 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.serialisationTypeEncoder = serialisationTypeEncoder.setTgJackson(this);
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
 
+        // Gracefully serialise getters with self-references.
+        // This allows Result.ex serialisation with different types of causes potentially coming from external libs.
+        disable(SerializationFeature.FAIL_ON_SELF_REFERENCES);
+        enable(SerializationFeature.WRITE_SELF_REFERENCES_AS_NULL);
+
         // enable(SerializationFeature.INDENT_OUTPUT);
         // enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
         enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
 
         registerEntityTypes(provider, this.module);
+
+        // If a serializer is registered for a supertype, it will also be used for serialization of its subtypes,
+        // unless a more specific serializer is registered.
 
         this.module.addSerializer(Money.class, new MoneyJsonSerialiser());
         this.module.addDeserializer(Money.class, new MoneyJsonDeserialiser());
@@ -105,6 +94,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         
         this.module.addSerializer(Hyperlink.class, new HyperlinkJsonSerialiser());
         this.module.addDeserializer(Hyperlink.class, new HyperlinkJsonDeserialiser());
+
+        this.module.addSerializer(RichText.class, new RichTextJsonSerialiser());
+        this.module.addDeserializer(RichText.class, new RichTextJsonDeserialiser(this));
 
         this.module.addSerializer(Result.class, new ResultJsonSerialiser(this));
         this.module.addDeserializer(Result.class, new ResultJsonDeserialiser(this));
@@ -140,26 +132,15 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             }
         }
     }
-    
-    /**
-     * This is very much an experimental attempt to remedy accumulation of generated types inside Jackson caches.
-     */
-    private void clearCaches() {
-//        getTypeFactory().clearCache();
+
+    /// This is very much an experimental attempt to remedy accumulation of generated types inside Jackson caches.
+    ///
+    /// Note that the original name of this method was `clearCaches` (`s` at the end), but since the update to Jackson `2.19.2` it started clashing with the method [ObjectMapper#clearCaches()].
+    private void clearCache() {
         TypeFactory.defaultInstance().clearCache();
         // flushing cache is a synchronized operation
         final DefaultSerializerProvider defaultSerializerProvider = (DefaultSerializerProvider) getSerializerProvider();
         defaultSerializerProvider.flushCachedSerializers();
-        // EXPERIMENTAL
-//        synchronized (this) {
-//            try {
-//                if (cachedFCAsToClear != null) {
-//                    cachedFCAsToClear.clear();
-//                }
-//            } catch (final Exception ex) {
-//                logger.error("Could not clear _cachedFCA.", ex);
-//            }
-//        }
     }
     
     /**
@@ -169,7 +150,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * @return
      */
     public EntityType registerNewEntityType(final Class<AbstractEntity<?>> newType) {
-        clearCaches();
+        clearCache();
         return new EntitySerialiser<AbstractEntity<?>>(newType, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache).getEntityTypeInfo();
     }
     

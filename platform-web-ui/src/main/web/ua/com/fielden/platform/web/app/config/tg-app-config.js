@@ -3,7 +3,7 @@ import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn
 import {generateUUID} from '/resources/reflection/tg-polymer-utils.js';
 
 import '/resources/components/postal-lib.js';
-import '/resources/components/moment-lib.js';
+import moment from '/resources/polymer/lib/moment-lib.js';
 
 @independentTimeZoneSetting
 
@@ -14,6 +14,16 @@ moment.locale('custom-locale', {
         L: @dateFormat
     }
 });
+
+/**
+ * External site allowlist for hyperlinks that can be opened without a confirmation prompt.
+ */
+let siteAllowlist;
+
+/**
+ * A number of days for caching user-allowed sites/links that can be opened without a confirmation prompt.
+ */
+let daysUntilSitePermissionExpires;
 
 /**
  * Timer Id to reconnect via sse after an error.
@@ -170,11 +180,31 @@ export const TgAppConfig = Polymer({
             notify: true,
             readOnly: true,
             value: window.firstDayOfWeek
-        }
+        },
     },
     
     attached: function() {
         this.style.display = "none";
+    },
+
+    getSiteAllowlist: function () {
+        return siteAllowlist;
+    },
+
+    setSiteAllowlist: function (allowlist) {
+        if (!siteAllowlist) {
+            siteAllowlist = allowlist;
+        }
+    },
+
+    getDaysUntilSitePermissionExpires: function () {
+        return daysUntilSitePermissionExpires;
+    },
+
+    setDaysUntilSitePermissionExpires: function (expiryDays) {
+        if (!daysUntilSitePermissionExpires) {
+            daysUntilSitePermissionExpires = expiryDays;
+        }
     }
     
 });

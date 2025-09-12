@@ -1,17 +1,5 @@
 package ua.com.fielden.platform.web.view.master.api.actions.entity.impl;
 
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.join;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -21,6 +9,17 @@ import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang3.StringUtils.join;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 /**
  * The implementation box for default entity actions (like 'Refresh', 'Edit' etc.).
@@ -33,10 +32,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
     private final String postActionErrorFunction;
 
     /**
-     * Creates {@link DefaultEntityAction} from <code>functionalEntityType</code> type and other parameters.
-     *
-     * @param functionalEntityType
-     * @param propertyName
+     * Creates {@link DefaultEntityAction} from <code>entityType</code> type and other parameters.
      */
     public DefaultEntityAction(final String name, final Class<T> entityType, final String postActionFunction, final String postActionErrorFunction) {
         super(name, "master/actions/tg-action");
@@ -54,7 +50,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
     protected Map<String, Object> createCustomAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
-        if ("save".equals(this.name().toLowerCase())) {
+        if ("save".equalsIgnoreCase(this.name())) {
             attrs.put("id", "_saveAction");
         }
 
@@ -81,7 +77,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
     }
 
     private static <T extends AbstractEntity<?>> boolean isActionWithOptions (final String name, final Class<T> entityType) {
-        return ("save".equals(name.toLowerCase()) || "refresh".equals(name.toLowerCase())) && isPersistedEntityType(entityType) && !AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(entityType);
+        return ("save".equalsIgnoreCase(name) || "refresh".equalsIgnoreCase(name)) && isPersistentEntityType(entityType) && !AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(entityType);
     }
 
     private String postActionFunction() {
@@ -93,7 +89,7 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
     }
 
     private String augmentShortcutWith(final String shortcut, final String key) {
-        final List<List<String>> shortcuts = listOf(shortcut.split(" ")).stream().map(i -> listOf(i.split("\\+"))).collect(toList());
+        final List<List<String>> shortcuts = listOf(shortcut.split(" ")).stream().map(i -> listOf(i.split("\\+"))).toList();
         return shortcuts.stream().map(i -> {
             i.add(1, key);
             return join(i, "+");
@@ -123,9 +119,10 @@ public class DefaultEntityAction<T extends AbstractEntity<?>> extends AbstractAc
     @Override
     public JsCode code() {
         final String code =
-                wrap1("self.set('_actions." + name() + ".shortDesc', '%s');", shortDesc()) + //
-                wrap1("self.set('_actions." + name() + ".longDesc', '%s');", longDesc()) + //
+                wrap1("self.set('_actions." + name() + ".shortDesc', '%s');", shortDesc()) +
+                wrap1("self.set('_actions." + name() + ".longDesc', '%s');", longDesc()) +
                 wrap1("self.set('_actions." + name() + ".icon', '%s');", icon());
         return new JsCode(code);
     }
+
 }

@@ -1,27 +1,22 @@
 package ua.com.fielden.platform.web.test.server;
 
-import java.util.Properties;
-
-import org.restlet.Component;
-
 import com.google.inject.Injector;
-
+import org.restlet.Component;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.ioc.NewUserEmailNotifierBindingModule;
-import ua.com.fielden.platform.utils.DefaultDates;
-import ua.com.fielden.platform.utils.DefaultUniversalConstants;
+import ua.com.fielden.platform.ioc.NewUserEmailNotifierIocModule;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.LoginCompleteResetResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginInitiateResetResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LogoutResourceFactory;
-import ua.com.fielden.platform.web.resources.OldVersionResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.LoginCompleteResetResource;
 import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
 import ua.com.fielden.platform.web.resources.webui.LoginResource;
 import ua.com.fielden.platform.web.resources.webui.LogoutResource;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
+
+import java.util.Properties;
 
 /**
  * Configuration point for Web UI Testing Server.
@@ -38,9 +33,16 @@ public class TgTestApplicationConfiguration extends Component {
         // /////////////////////////////////////////////////////
         try {
             // create application IoC module and injector
-            final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
-            final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, DefaultUniversalConstants.class, DefaultDates.class, props);
-            injector = new ApplicationInjectorFactory().add(module).add(new NewUserEmailNotifierBindingModule()).getInjector();
+            final var appDomain = new ApplicationDomain();
+            final TgTestWebApplicationServerIocModule module = new TgTestWebApplicationServerIocModule(
+                    appDomain,
+                    appDomain.domainTypes(),
+                    props);
+            injector = new ApplicationInjectorFactory()
+                    .add(module)
+                    .add(new DataFilterTestIocModule())
+                    .add(new NewUserEmailNotifierIocModule())
+                    .getInjector();
 
             // create and configure REST server utility
             final RestServerUtil serverRestUtil = injector.getInstance(RestServerUtil.class);
@@ -49,9 +51,6 @@ public class TgTestApplicationConfiguration extends Component {
             // ///// Create a component with an HTTP server connector ///////
             // //////////////////////////////////////////////////////////////
             // Attach applications to the default host
-            final OldVersionResource oldVersionResource = new OldVersionResource(serverRestUtil);
-            getDefaultHost().attach("/v0", oldVersionResource);
-
             // application configuration
             final IWebUiConfig webApp = injector.getInstance(IWebUiConfig.class);
             // attach system resources, which should be beyond the version scope

@@ -15,6 +15,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import ua.com.fielden.platform.reflection.ClassesRetriever;
@@ -66,6 +67,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  * @author TG Team
  *
  */
+@Singleton
 public class SecurityTokenProvider implements ISecurityTokenProvider {
     public static final String ERR_DUPLICATE_SECURITY_TOKENS = "Not all security tokens are unique in their simple class name. This is required.";
 
@@ -180,7 +182,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
      * @param allTokens
      * @return
      */
-    private static SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
+    static SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
         final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
 
         allTokens.forEach(token -> {

@@ -40,15 +40,15 @@ public class DomainType extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Props count", desc = "The number of properties in this type.")
-    private int propsCount;
+    private Integer propsCount;
 
     @Observable
-    public DomainType setPropsCount(final int propsCount) {
+    public DomainType setPropsCount(final Integer propsCount) {
         this.propsCount = propsCount;
         return this;
     }
 
-    public int getPropsCount() {
+    public Integer getPropsCount() {
         return propsCount;
     }
 

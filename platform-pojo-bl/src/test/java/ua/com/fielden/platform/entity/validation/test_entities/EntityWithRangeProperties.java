@@ -3,18 +3,15 @@
  */
 package ua.com.fielden.platform.entity.validation.test_entities;
 
-import java.util.Date;
-
 import org.joda.time.DateTime;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Dependent;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
 import ua.com.fielden.platform.types.Money;
+
+import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * Entity for testing of range property validators.
@@ -26,45 +23,118 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
 
     @IsProperty
     @Dependent("toInt")
+    @LeProperty("toInt")
     private Integer fromInt;
     @IsProperty
     @Dependent("fromInt")
+    @GeProperty("fromInt")
     private Integer toInt;
 
     @IsProperty
-    @Dependent("toDouble")
-    private Double fromDouble;
+    @Dependent("toNumber")
+    @LeProperty("toNumber")
+    private BigDecimal fromNumber;
     @IsProperty
-    @Dependent("fromDouble")
-    private Double toDouble;
+    @Dependent("fromNumber")
+    @GeProperty("fromNumber")
+    private BigDecimal toNumber;
 
     @IsProperty
     @Dependent("toDate")
+    @LeProperty("toDate")
     private Date fromDate;
     @IsProperty
+    @GeProperty("fromDate")
     @Dependent("fromDate")
     private Date toDate;
 
     @IsProperty
     @Dependent("toDateTime")
+    @LeProperty("toDateTime")
     private DateTime fromDateTime;
     @IsProperty
     @Dependent("fromDateTime")
+    @GeProperty("fromDateTime")
     private DateTime toDateTime;
 
     @IsProperty
+    @LeProperty("toMoney")
     @Dependent("toMoney")
     private Money fromMoney;
     @IsProperty
+    @GeProperty("fromMoney")
     @Dependent("fromMoney")
     private Money toMoney;
+
+    @IsProperty
+    @TimeOnly
+    @Dependent("toDateTimeOnly")
+    @LeProperty("toDateTimeOnly")
+    private Date fromDateTimeOnly;
+
+    @IsProperty
+    @TimeOnly
+    @Dependent("fromDateTimeOnly")
+    @GeProperty("fromDateTimeOnly")
+    private Date toDateTimeOnly;
+
+    @IsProperty
+    @DateOnly
+    @Dependent("toDateDateOnly")
+    @LeProperty("toDateDateOnly")
+    private Date fromDateDateOnly;
+
+    @IsProperty
+    @DateOnly
+    @Dependent("fromDateDateOnly")
+    @GeProperty("fromDateDateOnly")
+    private Date toDateDateOnly;
+
+    @Observable
+    public EntityWithRangeProperties setFromDateDateOnly(final Date fromDateDateOnly) {
+        this.fromDateDateOnly = fromDateDateOnly;
+        return this;
+    }
+
+    public Date getFromDateDateOnly() {
+        return fromDateDateOnly;
+    }
+
+    @Observable
+    public EntityWithRangeProperties setToDateDateOnly(final Date toDateDateOnly) {
+        this.toDateDateOnly = toDateDateOnly;
+        return this;
+    }
+
+    public Date getToDateDateOnly() {
+        return toDateDateOnly;
+    }
+
+    @Observable
+    public EntityWithRangeProperties setFromDateTimeOnly(final Date fromDateTimeOnly) {
+        this.fromDateTimeOnly = fromDateTimeOnly;
+        return this;
+    }
+
+    public Date getFromDateTimeOnly() {
+        return fromDateTimeOnly;
+    }
+
+    @Observable
+    public EntityWithRangeProperties setToDateTimeOnly(final Date toDateTimeOnly) {
+        this.toDateTimeOnly = toDateTimeOnly;
+        return this;
+    }
+
+    public Date getToDateTimeOnly() {
+        return toDateTimeOnly;
+    }
 
     public Integer getFromInt() {
         return fromInt;
     }
 
     @Observable
-    @LeProperty("toInt")
     public void setFromInt(final Integer fromInt) {
         this.fromInt = fromInt;
     }
@@ -74,7 +144,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @GeProperty("fromInt")
     public void setToInt(final Integer toInt) {
         this.toInt = toInt;
     }
@@ -84,7 +153,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @LeProperty("toDate")
     public void setFromDate(final Date fromDate) {
         this.fromDate = fromDate;
     }
@@ -94,7 +162,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @GeProperty("fromDate")
     public void setToDate(final Date toDate) {
         this.toDate = toDate;
     }
@@ -104,7 +171,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @LeProperty("toMoney")
     public void setFromMoney(final Money fromMoney) {
         this.fromMoney = fromMoney;
     }
@@ -114,29 +180,26 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @GeProperty("fromMoney")
     public void setToMoney(final Money toMoney) {
         this.toMoney = toMoney;
     }
 
-    public Double getFromDouble() {
-        return fromDouble;
+    public BigDecimal getFromNumber() {
+        return fromNumber;
     }
 
     @Observable
-    @LeProperty("toDouble")
-    public void setFromDouble(final Double fromDouble) {
-        this.fromDouble = fromDouble;
+    public void setFromNumber(final BigDecimal fromNumber) {
+        this.fromNumber = fromNumber;
     }
 
-    public Double getToDouble() {
-        return toDouble;
+    public BigDecimal getToNumber() {
+        return toNumber;
     }
 
     @Observable
-    @GeProperty("fromDouble")
-    public void setToDouble(final Double toDouble) {
-        this.toDouble = toDouble;
+    public void setToNumber(final BigDecimal toNumber) {
+        this.toNumber = toNumber;
     }
 
     public DateTime getFromDateTime() {
@@ -144,7 +207,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @LeProperty("toDateTime")
     public void setFromDateTime(final DateTime fromDateTime) {
         this.fromDateTime = fromDateTime;
     }
@@ -154,7 +216,6 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @GeProperty("fromDateTime")
     public void setToDateTime(final DateTime toDateTime) {
         this.toDateTime = toDateTime;
     }

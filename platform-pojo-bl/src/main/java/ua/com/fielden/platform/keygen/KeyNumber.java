@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.keygen;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -39,4 +40,12 @@ public class KeyNumber extends AbstractPersistentEntity<String> {
         this.value = value.trim();
         return this;
     }
+
+    @Override
+    @Observable
+    public KeyNumber setKey(String key) {
+        super.setKey(key);
+        return this;
+    }
+
 }

@@ -1,5 +1,25 @@
 package ua.com.fielden.platform.web.vulcanizer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Injector;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.vulcanizer.exceptions.VulcanisationException;
+
+import java.io.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
 import static java.io.File.pathSeparator;
 import static java.lang.String.format;
 import static java.lang.System.arraycopy;
@@ -8,42 +28,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
-import static org.apache.commons.io.FileUtils.copyDirectory;
-import static org.apache.commons.io.FileUtils.copyFile;
-import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.apache.commons.io.FileUtils.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.cypher.Checksum.sha1;
+import static ua.com.fielden.platform.cypher.Checksum.sha256;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Injector;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.types.tuples.T3;
-import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.app.IWebResourceLoader;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.vulcanizer.exceptions.VulcanisationException;
 
 /**
  * A set of utilities to facilitate Web UI application vulcanization.
@@ -72,9 +61,16 @@ public class VulcanizingUtility {
                     "\t3nd and more should represent environment variables in a form of NAME=VALUE.\n");
         }
         final String propertyFile = args[0];
-        final String paths = args.length == 1 ? "" : args[1];
-        final String[] envVars = new String[args.length - 2];
-        arraycopy(args, 2, envVars, 0, args.length - 2);
+        final String paths;
+        final String[] envVars;
+        if (args.length == 1) {
+            paths = "";
+            envVars = new String[0];
+        } else {
+            paths = args[1];
+            envVars = new String[args.length - 2];
+            arraycopy(args, 2, envVars, 0, args.length - 2);
+        }
 
         try {
             final Properties props = retrieveApplicationPropertiesAndConfigureLogging(propertyFile);
@@ -214,7 +210,7 @@ public class VulcanizingUtility {
     }
 
     /**
-     * Generates SHA1 checksums for specified <code>paths</code>.
+     * Generates SHA256 checksums for specified <code>paths</code>.
      *
      * @param paths
      * @return
@@ -224,7 +220,7 @@ public class VulcanizingUtility {
         for (final String path: asList(paths)) {
             try {
                 final FileInputStream fileInputStream = new FileInputStream("vulcan" + path);
-                final String sha = sha1(fileInputStream).getKey();
+                final String sha = sha256(fileInputStream).getKey();
                 checksums.put(path, sha);
             } catch (final Exception ex) {
                 final String msg = format("Could not generate checksum for resource [%s].", path);
@@ -239,7 +235,6 @@ public class VulcanizingUtility {
      * Copies template for 'rollup.config.js' and adjusts it according to <code>profile</code>.
      *
      * @param webResourceLoader
-     * @param logger
      * @param profile
      */
     private static void adjustRootResources(final IWebResourceLoader webResourceLoader, final String profile) {

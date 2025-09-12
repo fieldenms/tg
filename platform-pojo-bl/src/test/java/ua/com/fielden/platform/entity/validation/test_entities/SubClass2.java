@@ -7,6 +7,8 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 
+import java.math.BigDecimal;
+
 /**
  * Class for testing of domain validators registration.
  * 
@@ -17,16 +19,16 @@ public class SubClass2 extends AbstractBaseClass {
     private static final long serialVersionUID = 8910516814682831599L;
 
     @IsProperty
-    private Double doubleProp;
+    private BigDecimal bigDecimalProp;
 
-    public Double getDoubleProp() {
-        return doubleProp;
+    public BigDecimal getBigDecimalProp() {
+        return bigDecimalProp;
     }
 
     @Observable
     @DomainValidation
-    public void setDoubleProp(final Double doubleProp) {
-        this.doubleProp = doubleProp;
+    public void setBigDecimalProp(final BigDecimal bigDecimalProp) {
+        this.bigDecimalProp = bigDecimalProp;
     }
 
 }

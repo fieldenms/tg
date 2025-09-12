@@ -29,8 +29,13 @@ const template = html`
         }
 
         .editor-container {
-            @apply --layout-vertical;
+            @apply --layout-horizontal;
             padding: 0 4px;
+        }
+
+        .editor-container ::slotted(.filter-element) {
+            margin-right: 20px;
+            @apply --layout-flex;
         }
 
         .reference-hierarchy-tree {
@@ -53,6 +58,7 @@ const template = html`
     <div class="hierarchy-container">
         <div class="editor-container">
             <slot name="filter-element"></slot>
+            <slot name="active-only-editor"></slot>
         </div>
         <tg-tree id="referenceHierarchyTree" class="reference-hierarchy-tree" model="[[treeModel]]" content-builder="[[_buildContent]]" tree-item-action="[[_loadMoreAction]]" additional-info-cb="[[_buildAdditionalInfo]]" action-builder="[[_buildActions]]" action-runner="[[_runAction]]" on-tg-load-subtree="_loadSubtree"></tg-tree>
     </div>
@@ -165,6 +171,20 @@ Polymer({
         },
 
         /**
+         * The entity type for which reference hiererchy is build.
+         */
+        refType: {
+            type: String,
+        },
+
+        /**
+         * The id of entity for which reference hiererchy is build.
+         */
+        refId: {
+            type: Number
+        },
+
+        /**
          * Need for locking reference hierarchy component during data loading.
          */
         lock: {
@@ -218,8 +238,7 @@ Polymer({
         }.bind(this);
         this._runAction = function (e) {
             e.stopPropagation();
-            const target = e.target || e.srcElement;
-            this._actions[target.getAttribute("action-attr")](e);
+            this._actions[e.target.getAttribute("action-attr")](e);
         }.bind(this);
     },
 
@@ -306,6 +325,11 @@ Polymer({
                     this.splice(path, parent.children.length - 1, 1, ...newEntity.generatedHierarchy);
                 }
             } else {
+                if (!parent) {
+                    // If parent is not present then it means that a complete tree is loading or reloading after the mode change.
+                    this.refType = newEntity.get('refEntityType');
+                    this.refId = newEntity.get('refEntityId');
+                }
                 this.set(path, newEntity.generatedHierarchy);
             }
             newEntity.set("generatedHierarchy", []);
@@ -334,8 +358,14 @@ Polymer({
         });
         this.entity.setAndRegisterPropertyTouch("loadedHierarchy", indexes);
         const lastEntity = parentsPath[parentsPath.length - 1];
-        this.entity.setAndRegisterPropertyTouch("loadedLevel", lastEntity.level);
-        if (lastEntity.level === referenceHierarchyLevel.TYPE) {
+        this.entity.setAndRegisterPropertyTouch("loadedLevel", lastEntity ? lastEntity.level : referenceHierarchyLevel.REFERENCE_INSTANCE);
+        if (!lastEntity) {
+            this.entity.setAndRegisterPropertyTouch("pageSize", 0);
+            this.entity.setAndRegisterPropertyTouch("pageNumber", 0);
+            this.entity.setAndRegisterPropertyTouch("entityType", null);
+            this.entity.setAndRegisterPropertyTouch("refEntityType", this.refType);
+            this.entity.setAndRegisterPropertyTouch("refEntityId", this.refId);
+        } else if (lastEntity.level === referenceHierarchyLevel.TYPE) {
             this.entity.setAndRegisterPropertyTouch("pageSize", lastEntity.pageSize);
             this.entity.setAndRegisterPropertyTouch("pageNumber", lastEntity.pageNumber);
             this.entity.setAndRegisterPropertyTouch("entityType", lastEntity.entityType);
@@ -358,4 +388,8 @@ Polymer({
     filterHierarchy: function(text) {
         this.$.referenceHierarchyTree.filter(text);
     },
+
+    reload: function () {
+        this.$.referenceHierarchyTree.fire("tg-load-subtree", {parentPath: [], loadAll: false});
+    }
 });

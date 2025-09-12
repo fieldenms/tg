@@ -1,111 +1,22 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
-import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.editAction;
-import static ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder.multiAction;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
-import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
-import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkVarGridForCentre;
-import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
-import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
-import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
-import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.noUiFunctionalMaster;
-
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.function.Function;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-
 import com.google.inject.Inject;
-
 import fielden.test_app.config.close_leave.TgCloseLeaveExampleWebUiConfig;
 import fielden.test_app.config.compound.TgCompoundEntityWebUiConfig;
 import fielden.test_app.main.menu.close_leave.MiTgCloseLeaveExample;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchPropertyDescriptorByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.EntityDeleteAction;
-import ua.com.fielden.platform.entity.EntityEditAction;
-import ua.com.fielden.platform.entity.EntityExportAction;
-import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.sample.domain.ExportAction;
-import ua.com.fielden.platform.sample.domain.ExportActionProducer;
-import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
-import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
-import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
-import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
-import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusActionProducer;
-import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
-import ua.com.fielden.platform.sample.domain.TgDeletionTestEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgDummyAction;
-import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependencyProducer;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptorExt;
-import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
-import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
-import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
-import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
-import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
-import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleActionProducer;
-import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityLocator;
 import ua.com.fielden.platform.sample.domain.ui_actions.MakeCompletedAction;
 import ua.com.fielden.platform.sample.domain.ui_actions.producers.MakeCompletedActionProducer;
@@ -113,22 +24,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.ui.menu.sample.MiDeletionTestEntity;
-import ua.com.fielden.platform.ui.menu.sample.MiDetailsCentre;
-import ua.com.fielden.platform.ui.menu.sample.MiEntityCentreNotGenerated;
-import ua.com.fielden.platform.ui.menu.sample.MiTgCollectionalSerialisationParent;
-import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDependency;
-import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptorExt;
-import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates;
-import ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity;
-import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntity;
-import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntityForTrippleDecAnalysis;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties5;
+import ua.com.fielden.platform.ui.menu.sample.*;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
@@ -165,17 +61,10 @@ import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.DashboardRefreshFrequencyWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.SecurityMatrixWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.*;
 import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
-import ua.com.fielden.platform.web.test.server.config.StandardActions;
-import ua.com.fielden.platform.web.test.server.config.TgEntityWithTimeZoneDatesWebUiConfig;
-import ua.com.fielden.platform.web.test.server.config.TgGeneratedEntityForTrippleDecAnalysisWebUiConfig;
-import ua.com.fielden.platform.web.test.server.config.TgGeneratedEntityWebUiConfig;
+import ua.com.fielden.platform.web.test.server.config.*;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -185,6 +74,44 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
+
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.function.Function;
+
+import static java.lang.String.format;
+import static java.util.Optional.*;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.editAction;
+import static ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder.multiAction;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
+import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
+import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
+import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
+import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
+import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.noUiFunctionalMaster;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -203,7 +130,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String envWatermarkCss;
 
     public WebUiConfig(final Properties props) {
-        super("TG Test and Demo Application", Workflows.valueOf(props.getProperty("workflow")), new String[0], Boolean.valueOf(props.getProperty("independent.time.zone")));
+        super("TG Test and Demo Application",
+                Workflows.valueOf(props.getProperty("workflow")),
+                new String[0],
+                Boolean.valueOf(props.getProperty("independent.time.zone")),
+                Optional.empty(),
+                Optional.of("https://www.google.com"));
         if (StringUtils.isEmpty(props.getProperty("web.domain")) || StringUtils.isEmpty(props.getProperty("web.path"))) {
             throw new IllegalArgumentException("Both the domain name and application binding path should be specified.");
         }
@@ -264,6 +196,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         // Add entity centres
         MoreDataForDeleteEntityWebUiConfig.register(injector(), configApp());
+        final TgEntityWithRichTextPropWebUiConfig tgEntityWithRichTextConfig = TgEntityWithRichTextPropWebUiConfig.register(injector(),configApp());
+        final TgEntityWithRichTextRefWebUiConfig tgEntityWithRichRefConfig = TgEntityWithRichTextRefWebUiConfig.register(injector(),configApp());
+        final var tgNoteConfig = TgNoteWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
 
@@ -480,6 +415,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 cell(cell(CELL_LAYOUT).repeat(5).withGapBetweenCells(MARGIN))
                 .subheaderOpen("Other components 1")
                 .cell(cell(CELL_LAYOUT), layout().flexAuto().end())
+                .cell(cell(CELL_LAYOUT).repeat(1).withGapBetweenCells(MARGIN))
                 .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
                 .subheaderOpen("Other components 2")
                 .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
@@ -597,6 +533,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .shortDesc("Dummy")
                         .longDesc("Dummy action, simply prints its result into console.")
                         .build())
+                .also()
+                .addProp("compProp").asAutocompleter()
                 .also()
                 .addProp("booleanProp").asCheckbox()
                     .withAction(
@@ -951,27 +889,128 @@ public class WebUiConfig extends AbstractWebUiConfig {
         // it has two purposes -- one is to provide a high level navigation structure for the application,
         // another is to bind entity centre (and potentially other views) to respective menu items
         configMobileMainMenu()
-                .addModule("Fleet Mobile")
-                .description("Fleet Mobile")
-                .icon("mobile-menu:fleet")
+                .addModule("Fleet")
+                .description("Fleet")
+                .icon("menu:fleet")
                 .detailIcon("menu-detailed:fleet")
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88")
-                .master(entityMaster)
-                //.centre(entityCentre)
-                // .view(null)
+                .view(null)
                 .done()
-
-                .addModule("DDS Mobile")
-                .description("DDS Mobile")
-                .icon("mobile-menu:divisional-daily-management")
+                .addModule("Import utilities")
+                .description("Import utilities")
+                .withAction(actionForMainMenu(TgGeneratedEntity.class, "copyright", "color: yellow", null))
+                .withAction(mkTgCompoundEntityLocator)
+                .withAction(tgCompoundEntityWebUiConfig.newTgCompoundEntityAction)
+                .icon("menu:import-utilities")
+                .detailIcon("menu-detailed:import-utilities")
+                .bgColor("#5FBCD3")
+                .captionBgColor("#2C89A0")
+                .menu().addMenuItem("First view").description("First view description").view(null).done()
+                /*  */.addMenuItem("Second view").description("Second view description").view(null).done()
+                /*  */.addMenuItem("Entity Centre 1").description("Entity centre description").centre(entityCentre1).done()
+                /*  */.addMenuItem("Entity Centre 2").description("Entity centre description").centre(entityCentre2).done()
+                /*  */.addMenuItem("Entity Centre 3").description("Entity centre description").centre(entityCentre3).done()
+                /*  */.addMenuItem("Entity Centre 4").description("Entity centre description").centre(entityCentre4).done()
+                /*  */.addMenuItem("Compound Entity Centre").description("Centre for compound entity.").centre(tgCompoundEntityWebUiConfig.centre).done()
+                /*  */.addMenuItem("Criteria Validation / Defining").description("Criteria Validation / Defining").centre(entityCentre5).done()
+                /*  */.addMenuItem("Collectional Serialisation Test").description("Collectional Serialisation Test description").centre(collectionalSerialisationTestCentre).done()
+                /*  */.addMenuItem("Third view").description("Third view description").view(null).done().done()
+                /*.menu()
+                    .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()*/
+                .done()
+                .addModule("Division daily management")
+                .description("Division daily management")
+                .withAction(actionForMainMenu(TgPersistentEntityWithProperties.class, "add-circle", "color: red", null))
+                .withAction(actionForMainMenu(TgEntityWithTimeZoneDates.class, "event", "color: green", null))
+                .icon("menu:divisional-daily-management")
                 .detailIcon("menu-detailed:divisional-daily-management")
+                .bgColor("#CFD8DC")
+                .captionBgColor("#78909C")
+                .menu()
+                /*  */.addMenuItem("Close Leave Example").description("Close Leave Example").icon("icons:close").centre(configApp().getCentre(MiTgCloseLeaveExample.class).get()).done()
+                /*  */.addMenuItem("Custom group").description("Custom group").icon("icons:group-work")
+                /*    */.addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
+                /*    */.addMenuItem("Not Generated Centre").description("Entity centre without calculated / custom properties, which type is strictly TgPersistentEntityWithProperties.class").centre(entityCentreNotGenerated).done()
+                /*  */.done()
+                /*  */.addMenuItem("Custom View").description("Custom view description").icon("icons:face").view(customView).done()
+                /*  */.addMenuItem("Tripple dec example").description("Tripple dec example").icon("icons:favorite-border").centre(configApp().getCentre(MiTgGeneratedEntityForTrippleDecAnalysis.class).get()).done()
+                /*  */.addMenuItem("Deletion Centre").description("Deletion centre description").icon("icons:find-in-page").centre(deletionTestCentre).done()
+                /*  */.addMenuItem("Rich Text Centre").description("Entity Centre with rich text property").icon("editor:text-fields").centre(tgEntityWithRichTextConfig.centre).done()
+                /*  */.addMenuItem("Rich Text Ref Example").description("Entity centre for entity that references entity with rich text property").icon("editor:text-fields").centre(tgEntityWithRichRefConfig.centre).done()
+                /*  */.addMenuItem("Last group").description("Last group").icon("icons:find-replace")
+                /*    */.addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
+                /*    */.addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()
+                /*    */.addMenuItem("TimeZones Example").description("TimeZone properties handling example").centre(configApp().getCentre(MiTgEntityWithTimeZoneDates.class).get()).done()
+                /*    */.addMenuItem("Generation Example").description("Centre entities generation example").centre(configApp().getCentre(MiTgGeneratedEntity.class).get()).done()
+                /*    */.addMenuItem("Fetch Provider Example").description("Fetch Provider example").centre(configApp().getCentre(MiTgFetchProviderTestEntity.class).get()).done()
+                /*  */.done()
+                .done().done()
+                .addModule("Accidents")
+                .description("Accidents")
+                .icon("menu:accidents")
+                .detailIcon("menu-detailed:accidents")
+                .bgColor("#FF9943")
+                .captionBgColor("#C87137")
+                .view(null)
+                .done()
+                .addModule("Maintenance")
+                .description("Maintenance")
+                .withAction(actionForMainMenu(TgPersistentEntityWithProperties.class, "add-circle", "color: red", null))
+                .icon("menu:maintenance")
+                .detailIcon("menu-detailed:maintenance")
+                .bgColor("#00AAD4")
+                .captionBgColor("#0088AA")
+                .view(null)
+                .done()
+                .addModule("User")
+                /*  */.description("User")
+                /*  */.icon("menu:user")
+                /*  */.detailIcon("menu-detailed:user")
+                /*  */.bgColor("#FFE680")
+                /*  */.captionBgColor("#FFD42A")
+                /*  */.menu()
+                /*      */.addMenuItem("Users").description("User centre").centre(userWebUiConfig.centre).done()
+                /*      */.addMenuItem("User Roles").description("User role centre").centre(userRoleWebUiConfig.centre).done()
+                /*      */.addMenuItem("Security Matrix").description("Security matrix").master(securityConfig.master).done()
+                /*      */.addMenuItem("Duration").description("Duration").centre(dashboardRefreshFrequencyConfig.centre).done()
+                /*  */.done()
+                /*  */.done()
+                .addModule("Online reports")
+                .description("Online reports")
+                .icon("menu:online-reports")
+                .detailIcon("menu-detailed:online-reports")
                 .bgColor("#00D4AA")
-                .captionBgColor("#00AA88")
-                //.master(entityMaster)
-                .centre(entityCentre)
-                //.view(null)
-                .done();
+                .captionBgColor("#00AA88").
+                view(null)
+                .done()
+                .addModule("Fuel")
+                .description("Fuel")
+                .icon("menu:fuel")
+                .detailIcon("menu-detailed:fuel")
+                .bgColor("#FFE680")
+                .captionBgColor("#FFD42A")
+                .view(null)
+                .done()
+                .addModule("Organisational")
+                .description("Organisational")
+                .icon("menu:organisational")
+                .detailIcon("menu-detailed:organisational")
+                .bgColor("#2AD4F6")
+                .captionBgColor("#00AAD4")
+                .view(null)
+                .done()
+                .addModule("Preventive maintenance")
+                .description("Preventive maintenance")
+                .icon("menu:preventive-maintenance")
+                .detailIcon("menu-detailed:preventive-maintenance")
+                .bgColor("#F6899A")
+                .captionBgColor("#D35F5F")
+                .view(null)
+                .done()
+                .setLayoutFor(Device.DESKTOP, null, "[[[{\"rowspan\": 2,\"colspan\": 2}], [], [], [{\"colspan\": 2}]],[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[], [], [{\"colspan\": 2}]]]")
+                .setLayoutFor(Device.TABLET, null, "[[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[{\"rowspan\": 2,\"colspan\": 2}]],[[], []],[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[{\"colspan\": 2}]]]")
+                .setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []]]").minCellWidth(100).minCellHeight(148).done();
 
         configDesktopMainMenu()
                 .addModule("Fleet")
@@ -1021,6 +1060,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*  */.addMenuItem("Custom View").description("Custom view description").icon("icons:face").view(customView).done()
                 /*  */.addMenuItem("Tripple dec example").description("Tripple dec example").icon("icons:favorite-border").centre(configApp().getCentre(MiTgGeneratedEntityForTrippleDecAnalysis.class).get()).done()
                 /*  */.addMenuItem("Deletion Centre").description("Deletion centre description").icon("icons:find-in-page").centre(deletionTestCentre).done()
+                /*  */.addMenuItem("Rich Text Centre").description("Entity Centre with rich text property").icon("editor:text-fields").centre(tgEntityWithRichTextConfig.centre).done()
+                /*  */.addMenuItem("Rich Text Ref Example").description("Entity centre for entity that references entity with rich text property").icon("editor:text-fields").centre(tgEntityWithRichRefConfig.centre).done()
+                /*  */.addMenuItem("Note Centre").description("Entity Centre with note").icon("editor:text-fields").centre(tgNoteConfig.centre).done()
                 /*  */.addMenuItem("Last group").description("Last group").icon("icons:find-replace")
                 /*    */.addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
                 /*    */.addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()

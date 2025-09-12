@@ -23,6 +23,8 @@ const customInputTemplate = html`
             on-mouseup="_onMouseUp" 
             on-mousedown="_onMouseDown"
             on-keydown="_onKeydown"
+            on-focus="_onFocus"
+            on-blur="_outFocus"
             disabled$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off"/>
@@ -75,7 +77,14 @@ export class TgSinglelineTextEditor extends TgEditor {
     convertFromString (strValue) {
         return strValue === '' ? null : strValue;
     }
-    
+
+    /**
+     * Overridden to avoid displaying the value, which may potentially contain unsafe HTML.
+     */
+    _formatTooltipText (value) {
+        return "";
+    }
+
 }
 
 customElements.define('tg-singleline-text-editor', TgSinglelineTextEditor);

@@ -19,17 +19,21 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
  * <p>
  * Result is considered successful if no exception {@code ex} was specified.
  * <p>
- * Result itself is an exception, and thus can not only be returned as a method result, but also thrown if appropriate.
+ * `Result` itself is an exception, and thus cannot only be returned as a method result, but also thrown if appropriate.
  *
  * @author TG Team
  *
  */
 public class Result extends RuntimeException {
-    private static final long serialVersionUID = 1L;
+
+    // Field names
+    public static final String MESSAGE = "message", INSTANCE = "instance", EX = "ex";
+
     private static final String SUCCESSFUL = "Successful";
     private static final String NULL_POINTER_EXCEPTION = "Null pointer exception";
     private static final String EXT_SEPARATOR = "<extended/>";
     private static final String EXT_SEPARATOR_PATTERN = quote(EXT_SEPARATOR);
+
     private final Exception ex;
     private final String message;
     private final Object instance;
@@ -245,7 +249,7 @@ public class Result extends RuntimeException {
         this.ex = null;
     }
 
-    /** Creates failed result. */
+    /** Creates a failed result. */
     public Result(final Object instance, final Exception ex) {
         super(ex);
         this.instance = instance;
@@ -253,7 +257,7 @@ public class Result extends RuntimeException {
         this.ex = ex;
     }
 
-    /** Creates failed result. */
+    /** Creates a failed result. */
     public Result(final Exception ex) {
         super(ex);
         this.instance = null;
@@ -308,7 +312,7 @@ public class Result extends RuntimeException {
     }
 
     /**
-     * Copies this result with overridden instance.
+     * Copy this result with an overridden instance.
      *
      * @param anotherInstance
      * @return
@@ -324,13 +328,17 @@ public class Result extends RuntimeException {
     /**
      * A convenient construct to perform some action for a result that represents a failure.
      * For example, it could be used to throw an exception as it often happens in case of unsuccessful validations.
+     * <p>
+     * If {@code consumer} does not throw an exception or the result is successful, then {@code this} itself is returned for further use.
      *
      * @param consumer
+     * @return {@code this}
      */
-    public void ifFailure(final Consumer<? super Exception> consumer) {
+    public Result ifFailure(final Consumer<? super Exception> consumer) {
         if (!isSuccessful()) {
             consumer.accept(ex);
         }
+        return this;
     }
 
     /**

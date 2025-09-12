@@ -1,42 +1,9 @@
 package ua.com.fielden.platform.web.centre.api;
 
-import static java.lang.String.format;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
-import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions.HIDE_ACTIVE_ONLY_ACTION;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.FRONT;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PROP;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.SECONDARY_RESULT_SET;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.SHARE;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.TOP_LEVEL;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
-
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
@@ -53,12 +20,7 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IMultiValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.ISingleValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritStringValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritDateValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.*;
 import ua.com.fielden.platform.web.centre.api.exceptions.CentreConfigException;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
@@ -72,6 +34,21 @@ import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+
+import static java.lang.String.format;
+import static java.util.Collections.*;
+import static java.util.Optional.*;
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions.HIDE_ACTIVE_ONLY_ACTION;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.*;
 
 /**
  *
@@ -223,15 +200,36 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     protected final FlexLayout resultsetSummaryCardLayout;
 
     /**
+     * Enumeration that contains options for auto-runnable centres.
+     */
+    public enum RunAutomaticallyOptions {
+        /**
+         * If specified for either standalone or embedded centre, any selection criteria changes would get preserved upon auto-running.
+         * <p>
+         * Also, this parameter preserves any loaded save-as configurations upon auto-run.
+         * For example, if a user loads some save-as configuration for an embedded centre, that configuration would be used for auto-run until such time as user changes it (loads the default or any other save-as configuration).
+         * <p>
+         * Without this parameter the default behaviour is applied. More specifically the default configuration is always loaded before auto-run is performed.
+         */
+        ALLOW_CUSTOMISED;
+    }
+
+    /**
      * Determines whether centre should run automatically or not.
      */
     private final boolean runAutomatically;
+    private final Set<RunAutomaticallyOptions> runAutomaticallyOptions;
 
     /**
      * Determines the position of left and right splitters.
      */
     private final Integer leftSplitterPosition;
     private final Integer rightSplitterPosition;
+
+    /**
+     * Determines whether insertion points can be rearranged.
+     */
+    private boolean insertionPointCustomLayoutEnabled;
 
     /**
      * Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).
@@ -293,12 +291,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return new ResultSetProp<>(null, presentByDefault, empty(), empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName, true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), of(renderingHintsProvider), 0, false, empty(), null, null, empty());
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final CharSequence collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
+            return new ResultSetProp<>(collectionalPropertyName.toString(), true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), of(renderingHintsProvider), 0, false, empty(), null, null, empty());
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName, true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), empty(), 0, false, empty(), null, null, empty());
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final CharSequence collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+            return new ResultSetProp<>(collectionalPropertyName.toString(), true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), empty(), 0, false, empty(), null, null, empty());
         }
 
         private ResultSetProp(
@@ -499,6 +497,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria,
 
             final boolean runAutomatically,
+            final Set<RunAutomaticallyOptions> runAutomaticallyOptions,
             final boolean enforcePostSaveRefresh,
 
             final Integer leftSplitterPosition,
@@ -521,7 +520,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final Pair<Class<?>, Class<?>> generatorTypes,
-            final IFetchProvider<T> fetchProvider) {
+            final IFetchProvider<T> fetchProvider,
+            final boolean insertionPointCustomLayoutEnabled) {
         this.egiHidden = egiHidden;
         this.gridViewIcon = gridViewIcon;
         this.gridViewIconStyle = gridViewIconStyle;
@@ -582,6 +582,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.resultsetSummaryCardLayout = resultsetSummaryCardLayout;
 
         this.runAutomatically = runAutomatically;
+        this.runAutomaticallyOptions = runAutomaticallyOptions;
         this.enforcePostSaveRefresh = enforcePostSaveRefresh;
         this.leftSplitterPosition = leftSplitterPosition;
         this.rightSplitterPosition = rightSplitterPosition;
@@ -599,6 +600,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.queryEnhancerConfig = queryEnhancerConfig;
         this.generatorTypes = generatorTypes;
         this.fetchProvider = fetchProvider;
+        this.insertionPointCustomLayoutEnabled = insertionPointCustomLayoutEnabled;
     }
 
     ///////////////////////////////////////////
@@ -639,6 +641,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return runAutomatically;
     }
 
+    public Set<RunAutomaticallyOptions> getRunAutomaticallyOptions() {
+        return unmodifiableSet(runAutomaticallyOptions);
+    }
+
     public Optional<Integer> getLeftSplitterPosition() {
         return ofNullable(leftSplitterPosition);
     }
@@ -661,6 +667,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public Optional<IFetchProvider<T>> getFetchProvider() {
         return Optional.ofNullable(fetchProvider);
+    }
+
+    public boolean isInsertionPointCustomLayoutEnabled() {
+        return insertionPointCustomLayoutEnabled;
     }
 
     public Optional<EntityMultiActionConfig> getResultSetPrimaryEntityAction() {

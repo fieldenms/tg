@@ -31,6 +31,7 @@ import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 const EGI_BOTTOM_MARGIN = "15px";
 const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
@@ -110,20 +111,6 @@ const template = html`
         }
         #bottom_left_egi, #bottom_egi, #bottom_right_egi {
             align-self: end;
-        }
-        .noselect {
-            -webkit-touch-callout: none;
-            /* iOS Safari */
-            -webkit-user-select: none;
-            /* Safari */
-            -khtml-user-select: none;
-            /* Konqueror HTML */
-            -moz-user-select: none;
-            /* Firefox */
-            -ms-user-select: none;
-            /* Internet Explorer/Edge */
-            user-select: none;
-            /* Non-prefixed version, currently supported by Chrome and Opera */
         }
         .resizing-box {
             position: absolute;
@@ -453,7 +440,7 @@ const template = html`
                             <!--Primary action stub header goes here-->
                         </div>
                         <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
-                            <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                            <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
@@ -476,7 +463,7 @@ const template = html`
                             <!--Primary action stub header goes here-->
                         </div>
                         <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                            <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
@@ -1058,8 +1045,7 @@ Polymer({
     selectEntity: function (entity, select) {
         const entityIndex = this._findEntity(entity, this.filteredEntities);
         if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
-            this.set("egiModel." + entityIndex + ".selected", select);
-            this._processEntitySelection(this.filteredEntities[entityIndex], select);
+            this._processModelSelection(entityIndex, select);
             this.fire("tg-entity-selected", {
                 shouldScrollToSelected: false,
                 entities: [{
@@ -1181,8 +1167,7 @@ Polymer({
             const selectionDetails = [];
             for (let i = 0; i < this.egiModel.length; i += 1) {
                 if (this.egiModel[i].selected !== checked) {
-                    this.set("egiModel." + i + ".selected", checked);
-                    this._processEntitySelection(this.filteredEntities[i], checked);
+                    this._processModelSelection(i, checked);
                     selectionDetails.push({
                         entity: this.filteredEntities[i],
                         select: checked
@@ -1231,10 +1216,33 @@ Polymer({
     },
 
     /**
-     * Clears the selection on current page.
+     * Unselects entities on current page, specified with entityIds. If entityIds is not specified then all entities will be unselected.
+     * 
+     * @param {Array} entityIds - ids of entities to unselect on current page
      */
-    clearPageSelection: function () {
-        this.selectAll(false);
+    clearPageSelection: function (entityIds) {
+        if (this.egiModel && entityIds) {
+            const selectionDetails = [];
+            entityIds.forEach(id => {
+                const entityIndex = this.filteredEntities.findIndex(entity => entity.get('id') === id);
+                if (entityIndex >= 0 && this.egiModel[entityIndex].selected === true) {
+                    this._processModelSelection(entityIndex, false);
+                    selectionDetails.push({
+                        entity: this.filteredEntities[entityIndex],
+                        select: false
+                    });
+                } 
+            });
+            updateSelectAll(this, this.egiModel);
+            if (selectionDetails.length > 0) {
+                this.fire("tg-entity-selected", {
+                    shouldScrollToSelected: false,
+                    entities: selectionDetails
+                });
+            }
+        } else {
+            this.selectAll(false);
+        }
     },
 
     /**
@@ -1337,7 +1345,9 @@ Polymer({
         });
     },
 
-    tap: function (entityIndex, entity, index, column) {
+    tap: function (entityIndex, entity, index, column, event) {
+        //Used to identify whether user clicked a link or not. This is needed to open link after user didn't make double click.
+        const clickedLink = event.detail.sourceEvent && event.detail.sourceEvent.composedPath && event.detail.sourceEvent.composedPath().find(n => n.tagName && n.tagName === 'A');
         if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
@@ -1350,41 +1360,39 @@ Polymer({
             this._tapOnce = true;
             this.async(() => {
                 if (this._tapOnce) {
-                    this._tapColumn(entity, column);
+                    this._tapColumn(entity, column, clickedLink);
                 }
                 delete this._tapOnce;
             }, 400);
         } else {
-            this._tapColumn(entity, column);
+            this._tapColumn(entity, column, clickedLink);
         }
+        tearDownEvent(event.detail.sourceEvent);
     },
 
     /**
      * Initiates corresponding 'tg-ui-action' (if present) with concrete function representing current entity.
      * Opens hyperlink or attachment if 'tg-ui-action' is not present.
      */
-    _tapColumn: function (entity, column) {
+    _tapColumn: function (entity, column, clickedLink) {
         // 'this._currentEntity(entity)' returns closure with 'entity' tapped.
         // This closure returns either 'entity' or the entity navigated to (EntityEditAction with EntityNavigationPreAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         const entityIndex = this.findEntityIndex(entity);
         const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
-        if (!column.runAction(this._currentEntity(entity), actionIndex)) {
-            // if the clicked property is a hyperlink and there was no custom action associted with it
-            // then let's open the linked resources
-            if (this.isHyperlinkProp(entity, column) === true) {
-                const url = this.getBindedValue(entity, column);
-                const win = window.open(url, '_blank');
-                win.focus();
-            } else {
+        if (clickedLink) {
+            const targetAttr = clickedLink.getAttribute("target");
+            checkLinkAndOpen(clickedLink.getAttribute("href"), targetAttr ? targetAttr : "_self");
+        } else if (!column.runAction(this._currentEntity(entity), actionIndex)) {
+            if (this.isHyperlinkProp(entity, column) === false) {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
                 } else if (this.hasDefaultAction(entity, column)) {
                     column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
-            } 
+            }
         }
     },
 
@@ -1477,20 +1485,18 @@ Polymer({
     },
 
     _allSelectionChanged: function (e) {
-        const target = e.target || e.srcElement;
-        this.selectAll(target.checked);
+        this.selectAll(e.target.checked);
     },
 
     _selectionChanged: function (e) {
         if (this.egiModel) {
             const index = e.model.entityIndex;
-            var target = e.target || e.srcElement;
+            const target = e.target;
             //Perform selection range selection or single selection.
             if (target.checked && this._rangeSelection && this._lastSelectedIndex >= 0) {
                 this._selectRange(this._lastSelectedIndex, index);
             } else {
-                this.set("egiModel." + index + ".selected", target.checked);
-                this._processEntitySelection(this.filteredEntities[index], target.checked);
+                this._processModelSelection(index, target.checked);
                 this.fire("tg-entity-selected", {
                     shouldScrollToSelected: false,
                     entities: [{
@@ -1515,11 +1521,11 @@ Polymer({
     },
 
     _tapFixedAction: function (e, detail) {
-        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index], e);
     },
 
     _tapAction: function (e, detail) {
-        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index], e);
     },
 
     _columnDomChanged: function (addedColumns, removedColumns) {
@@ -1759,27 +1765,26 @@ Polymer({
         this._columnResizingObject = null;
     },
 
-    _makeEgiUnselectable: function (e) {
+    _setUpCursor: function (e) {
+        tearDownEvent(e);
         if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", true);
             console.log("set resizing action");
         }
-        this.$.baseContainer.classList.toggle("noselect", true);
         document.body.style["cursor"] = "col-resize";
     },
 
-    _makeEgiSelectable: function (e) {
+    _resetCursor: function (e) {
         if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", false);
         }
-        this.$.baseContainer.classList.toggle("noselect", false);
         document.body.style["cursor"] = "";
     },
 
     //Style calculator
     _calcMaterialStyle: function (showMarginAround) {
         if (showMarginAround) {
-            return "margin:10px;";
+            return "margin:5px 10px;";
         }
         return "";
     },
@@ -2052,8 +2057,7 @@ Polymer({
         newSelection.entities.forEach(entitySelection => {
             const entityIndex = this._findEntity(entitySelection.entity, this.filteredEntities);
             if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== entitySelection.select) {
-                this.set("egiModel." + entityIndex + ".selected", entitySelection.select);
-                this._processEntitySelection(this.filteredEntities[entityIndex], entitySelection.select);
+                this._processModelSelection(entityIndex, entitySelection.select);
             } else {
                 const hiddenEntityIndex = this._findEntity(entitySelection.entity, this.entities);
                 if (hiddenEntityIndex >= 0) {
@@ -2130,11 +2134,13 @@ Polymer({
             return value && ("<b>" + value + "</b>");
         } else if (this._reflector.findTypeByName(column.type)) {
             return this._generateEntityTooltip(entity, column);
+        } else if (column.type === 'RichText') {
+            const value = this.getBindedValue(entity, column).toString();
+            return value && (`<div class="toastui-editor-contents" style="overflow:hidden;padding:8px;border-radius:2px;">${value}</div>`);
         } else {
             const value = this.getBindedValue(entity, column).toString();
             return value && ("<b>" + value + "</b>");
         }
-        return "";
     },
 
     getDescTooltip: function (entity, column) {
@@ -2231,14 +2237,24 @@ Polymer({
         }
     },
 
+    /**
+     * Updates selction model of egi and updates checkbox for specified entity. The selection process is based on visible entities (i.e. filteredEntities model)
+     * 
+     * @param {Number} entityIdx entity index to process selction for
+     * @param {Boolean} select determines whether entity should be selected or not
+     */
+    _processModelSelection: function (entityIdx, select) {
+        this.set(`egiModel.${entityIdx}.selected`, select);
+        this._processEntitySelection(this.filteredEntities[entityIdx], select);
+    },
+
     _selectRange: function (fromIndex, toIndex) {
         const from = fromIndex < toIndex ? fromIndex : toIndex;
         const to = fromIndex < toIndex ? toIndex : fromIndex;
         const selectionDetails = [];
         for (let i = from; i <= to; i++) {
             if (!this.egiModel[i].selected) {
-                this.set("egiModel." + i + ".selected", true);
-                this._processEntitySelection(this.filteredEntities[i], true);
+                this._processModelSelection(i, true);
                 selectionDetails.push({
                     entity: this.filteredEntities[i],
                     select: true

@@ -3,37 +3,38 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IArithmeticalOperator;
 
 abstract class ArithmeticalOperator<T> //
-		extends AbstractQueryLink //
-		implements IArithmeticalOperator<T> {
+        extends AbstractQueryLink //
+        implements IArithmeticalOperator<T> {
 
-    protected ArithmeticalOperator(final Tokens tokens) {
-        super(tokens);
+    protected ArithmeticalOperator(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForArithmeticalOperator(final Tokens tokens);
 
-	@Override
-	public T add() {
-		return nextForArithmeticalOperator(getTokens().add());
-	}
+    protected abstract T nextForArithmeticalOperator(final EqlSentenceBuilder builder);
 
-	@Override
-	public T sub() {
-		return nextForArithmeticalOperator(getTokens().subtract());
-	}
+    @Override
+    public T add() {
+        return nextForArithmeticalOperator(builder.add());
+    }
 
-	@Override
-	public T mult() {
-		return nextForArithmeticalOperator(getTokens().multiply());
-	}
+    @Override
+    public T sub() {
+        return nextForArithmeticalOperator(builder.subtract());
+    }
 
-	@Override
-	public T div() {
-		return nextForArithmeticalOperator(getTokens().divide());
-	}
+    @Override
+    public T mult() {
+        return nextForArithmeticalOperator(builder.multiply());
+    }
 
-	@Override
-	public T mod() {
-		return nextForArithmeticalOperator(getTokens().modulo());
-	}
+    @Override
+    public T div() {
+        return nextForArithmeticalOperator(builder.divide());
+    }
+
+    @Override
+    public T mod() {
+        return nextForArithmeticalOperator(builder.modulo());
+    }
+
 }

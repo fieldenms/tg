@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.eql.meta.query;
 
-import static java.util.Collections.unmodifiableSortedMap;
+import jakarta.annotation.Nullable;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
+import static java.util.Collections.unmodifiableSortedMap;
 
 /**
  * A structure that represents a query source item of union type {@code T}.
@@ -18,7 +19,12 @@ public class QuerySourceItemForUnionType<T extends AbstractUnionEntity> extends 
     private final Class<T> javaType;
     private final SortedMap<String, AbstractQuerySourceItem<?>> subitems = new TreeMap<>(); // TODO why sorted?
 
-    public QuerySourceItemForUnionType(final String name, final Class<T> javaType, final Object hibType, final SortedMap<String, AbstractQuerySourceItem<?>> props) {
+    public QuerySourceItemForUnionType(
+            final String name,
+            final Class<T> javaType,
+            final @Nullable Object hibType,
+            final SortedMap<String, AbstractQuerySourceItem<?>> props)
+    {
         super(name, hibType, null);
         this.javaType = javaType;
         this.subitems.putAll(props);

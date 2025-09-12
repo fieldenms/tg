@@ -39,15 +39,20 @@ public class ScrollableResultStream {
 
         @Override
         public boolean tryAdvance(Consumer<? super Object[]> action) {
-            final boolean advanced = results.next();
-            
-            if (!advanced) {
-                return false;
-            } else {
-                action.accept(results.get());
+            try {
+                final boolean advanced = results.next();
+
+                if (!advanced) {
+                    return false;
+                } else {
+                    action.accept(results.get());
+                }
+
+                return true;
+            } catch (final Throwable ex) {
+                results.close();
+                throw ex;
             }
-            
-            return true;
         }
 
         @Override
@@ -60,7 +65,7 @@ public class ScrollableResultStream {
         public long estimateSize() {
             // the requirement of this method is to be able to compute the size before stream traversal has started
             // in our case this means that we would need to execute a query to compute the count even before someone tried to access the data
-            // so, for now lets consider the size too expensive to compute by returning Long.MAX_VALUE.
+            // so, for now let's consider the size too expensive to compute by returning Long.MAX_VALUE.
             return Long.MAX_VALUE;
         }
 

@@ -6,6 +6,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.utils.TypeSet;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
@@ -21,6 +22,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 import java.util.List;
 import java.util.Optional;
+
+import static java.util.Optional.of;
 
 /**
  * Performs verification of a domain model with respect to the {@link KeyType} annotation.
@@ -64,8 +67,8 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
      */
     static class KeyTypePresence extends AbstractEntityVerifier {
 
-        static final String ENTITY_DEFINITION_IS_MISSING_KEY_TYPE = "Entity definition is missing @%s.".formatted(
-                AT_KEY_TYPE_CLASS.getSimpleName());
+        static final String ERR_ENTITY_DEFINITION_IS_MISSING_KEY_TYPE = "Entity definition is missing @%s.".formatted(AT_KEY_TYPE_CLASS.getSimpleName());
+        static final String ERR_KEY_TYPE_DEFINITION_REFERENCES_UNION_ENTITY = "Union entity types are not supported for @%s.".formatted(AT_KEY_TYPE_CLASS.getSimpleName());
 
         protected KeyTypePresence(ProcessingEnvironment processingEnv) {
             super(processingEnv);
@@ -76,7 +79,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             return roundEnv.findViolatingElements(new EntityVerifier(entityFinder));
         }
 
-        private class EntityVerifier extends AbstractEntityElementVerifier {
+        private static class EntityVerifier extends AbstractEntityElementVerifier {
 
             public EntityVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
@@ -84,9 +87,26 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
             @Override
             public Optional<ViolatingElement> verify(final EntityElement entity) {
+                // Concrete entity types must have @KeyType
                 if (!ElementFinder.isAbstract(entity) && entityFinder.findAnnotation(entity, AT_KEY_TYPE_CLASS).isEmpty()) {
-                    return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, ENTITY_DEFINITION_IS_MISSING_KEY_TYPE));
+                    return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, ERR_ENTITY_DEFINITION_IS_MISSING_KEY_TYPE));
                 }
+
+                // If @KeyType is present, then we need to verify that it is not of a Union Entity type.
+                final Optional<TypeMirror> maybeKeyType = entityFinder.determineKeyType(entity);
+                if (maybeKeyType.isEmpty()) {
+                    return Optional.empty();
+                }
+                final TypeMirror keyType = maybeKeyType.get();
+                if (keyType.getKind() == TypeKind.ERROR) {
+                    return Optional.empty();
+                }
+
+                // If the declared key type is of a Union Entity type, then report an error.
+                if (entityFinder.isUnionEntityType(keyType)) {
+                    return of(new ViolatingElement(entity.element(), Kind.ERROR, ERR_KEY_TYPE_DEFINITION_REFERENCES_UNION_ENTITY));
+                }
+
                 return Optional.empty();
             }
         }
@@ -103,7 +123,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         static final String SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE = "Supertype must be parameterized with entity key type.";
         static final String KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY = "Key type must match the supertype's type argument.";
 
-        static final List<Class<? extends AbstractEntity>> ABSTRACTS = List.of(
+        static final TypeSet ABSTRACTS = TypeSet.ofClasses(
                 AbstractEntity.class, AbstractPersistentEntity.class, ActivatableAbstractEntity.class,
                 AbstractFunctionalEntityWithCentreContext.class, AbstractEntityWithInputStream.class, AbstractTreeEntry.class,
                 AbstractFunEntityForDataExport.class);
@@ -113,7 +133,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         }
 
         private boolean isOneOfAbstracts(final TypeElement element) {
-            return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.isSameType(element.asType(), clazz));
+            return ABSTRACTS.contains(element.asType());
         }
 
         @Override
@@ -163,7 +183,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 }
                 // abstract entities accept a single type argument
                 else {
-                    final TypeMirror typeArg = parentTypeArgs.get(0);
+                    final TypeMirror typeArg = parentTypeArgs.getFirst();
                     if (typeArg.getKind() == TypeKind.ERROR) {
                         return Optional.empty();
                     }
@@ -283,6 +303,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 if (keyType.getKind() == TypeKind.ERROR) {
                     return Optional.empty();
                 }
+
                 // keyProp might have an unresolved type but we still let this verifier run because declaration of property
                 // key along with @KeyType(NoKey.class) is incorrect regardless of its type
                 if (elementFinder.isSameType(keyType, NoKey.class)) {

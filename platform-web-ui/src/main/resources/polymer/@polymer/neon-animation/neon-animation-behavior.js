@@ -1,3 +1,5 @@
+import '../polymer/polymer-legacy.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,27 +10,27 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
+
 /**
  * Use `NeonAnimationBehavior` to implement an animation.
  * @polymerBehavior
  */
+const NeonAnimationBehavior = {
 
-export const NeonAnimationBehavior = {
   properties: {
+
     /**
      * Defines the animation timing.
      */
     animationTiming: {
       type: Object,
-      value: function () {
+      value: function() {
         return {
-          duration: 500,
-          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-          fill: 'both'
-        };
+          duration: 500, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'both'
+        }
       }
     }
+
   },
 
   /**
@@ -41,9 +43,12 @@ export const NeonAnimationBehavior = {
    */
   // configure: function(config) {
   // },
-  created: function () {
+
+  created: function() {
     if (!document.body.animate) {
-      console.warn('No web animations detected. This element will not' + ' function without a web animations polyfill.');
+      console.warn(
+          'No web animations detected. This element will not' +
+          ' function without a web animations polyfill.');
     }
   },
 
@@ -51,13 +56,12 @@ export const NeonAnimationBehavior = {
    * Returns the animation timing by mixing in properties from `config` to the
    * defaults defined by the animation.
    */
-  timingFromConfig: function (config) {
+  timingFromConfig: function(config) {
     if (config.timing) {
       for (var property in config.timing) {
         this.animationTiming[property] = config.timing[property];
       }
     }
-
     return this.animationTiming;
   },
 
@@ -65,22 +69,23 @@ export const NeonAnimationBehavior = {
    * Sets `transform` and `transformOrigin` properties along with the prefixed
    * versions.
    */
-  setPrefixedProperty: function (node, property, value) {
+  setPrefixedProperty: function(node, property, value) {
     var map = {
       'transform': ['webkitTransform'],
       'transformOrigin': ['mozTransformOrigin', 'webkitTransformOrigin']
     };
     var prefixes = map[property];
-
     for (var prefix, index = 0; prefix = prefixes[index]; index++) {
       node.style[prefix] = value;
     }
-
     node.style[property] = value;
   },
 
   /**
    * Called when the animation finishes.
    */
-  complete: function (config) {}
+  complete: function(config) {}
+
 };
+
+export { NeonAnimationBehavior };

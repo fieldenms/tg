@@ -11,6 +11,66 @@ import { TgElementSelectorBehavior, queryElements } from '/resources/components/
 import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 
+/**
+ * A local insertion point manager for the entity centre to manage detached or maximized insertion points.
+ */
+class EntityCentreInsertionPointManager {
+
+    constructor() {
+        this._insertionPoints = [];
+    }
+
+    /**
+     * Adds a new insertion point to the manager and either assigns the specified z-index or brings the newly added insertion point to the front.
+     * 
+     * @param {Object} insertionPoint - insertion point to manage
+     */
+    add (insertionPoint, zIndex) {
+        if (this._insertionPoints.indexOf(insertionPoint) >= 0) {
+            if (typeof zIndex === 'undefined') {
+                this.bringToFront(insertionPoint);
+            }
+        } else {
+            this._insertionPoints.push(insertionPoint);
+            insertionPoint.setZOrder(typeof zIndex !== 'undefined'  ? zIndex : this._insertionPoints.length);
+        }
+    }
+
+    /**
+     * Removes the specified insertion point from the manager.
+     * 
+     * @param {Object} insertionPoint - insertion point to stop manage
+     */
+    remove (insertionPoint) {
+        const idx = this._insertionPoints.indexOf(insertionPoint);
+        if (idx >= 0) {
+            this.bringToFront(insertionPoint);
+            this._insertionPoints.splice(idx, 1);
+            insertionPoint.setZOrder(0);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Brings to front the specified insertion point. 
+     * 
+     * @param {Object} insertionPoint - insertion point to manage
+     */
+    bringToFront (insertionPoint) {
+        const zIndex = insertionPoint.getZOrder();
+        if (zIndex > 0) {
+            this._insertionPoints.forEach(p => {
+                const z = p.getZOrder();
+                if (z > zIndex) {
+                    p.setZOrder(z - 1);
+                }
+            });
+            insertionPoint.setZOrder(this._insertionPoints.length);
+        }
+    }
+}
+
 const generateCriteriaName = function (root, property, suffix) {
     const rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
     return rootName + (property === "this" ? "" : property.replace(/\./g, "_")) + (suffix ? "_" + suffix : "");
@@ -323,6 +383,19 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * Indicates whether this entity centre is runAutomatically and allows customisation.
+         *
+         * For standalone centre it means that no criteria clearing will be performed during auto-run for default configurations.
+         * For embedded centre it means that
+         *  1. no criteria clearing will be performed during auto-run -- for default configurations;
+         *  2. loaded config will be preserved as well as its criteria -- for save-as configurations.
+         */
+        allowCustomised: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Returns the context for insertion point
          */
         insertionPointContextRetriever: {
@@ -421,6 +494,14 @@ const TgEntityCentreBehaviorImpl = {
         enforcePostSaveRefresh: {
             type: Boolean,
             value: false
+        },
+
+        /**
+         * Insertion point manager for this entity centre.
+         */
+        insertionPointManager: {
+            type: Object,
+            value: null
         },
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -598,7 +679,15 @@ const TgEntityCentreBehaviorImpl = {
          * 
          * This function is intended to be bound to child elements.
          */
-        _resetAutocompleterState: Function
+        _resetAutocompleterState: Function,
+
+        /**
+         * Function that returns Promise that starts on validate() call and fulfils iff this validation attempt gets successfully resolved.
+         *
+         * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
+         * However, repeated invocation of this function will return new Promise in this case.
+         */
+        lastValidationAttemptPromise: Function
     },
 
     listeners: {
@@ -614,8 +703,10 @@ const TgEntityCentreBehaviorImpl = {
         // entity masters with their embedded centres can be cached and loaded save-as configurations will be used up until application will be refreshed;
         // this will not affect other places with the same masters -- e.g. Work Activity standalone centre has its own master cache with [WA => Details] embedded centre cached and [WA => Details] on other standalone centres will not be affected;
         // that's why resetting information about loaded configuration to default configuration is needed in these cached masters every time auto-running of embedded centre occurs
-        this.$.selection_criteria.saveAsName = '';
-        this.$.selection_criteria.configUuid = '';
+        if (!this.allowCustomised) {
+            this.$.selection_criteria.saveAsName = '';
+            this.$.selection_criteria.configUuid = '';
+        }
         if (this._selectedView === 0) {
             this.async(() => {
                 this._selectedView = this.preferredView;
@@ -757,6 +848,7 @@ const TgEntityCentreBehaviorImpl = {
 
     created: function () {
         this._reflector = new TgReflector();
+        this.insertionPointManager = new EntityCentreInsertionPointManager();
     },
 
     /**
@@ -770,7 +862,9 @@ const TgEntityCentreBehaviorImpl = {
         self._showProgress = false;
         // Configures the egi's margin.
         const egiInsertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])');
-        this.$.egi.showMarginAround = egiInsertionPoints.length > 0;
+        const showMarginAround = egiInsertionPoints.length > 0;
+        this.$.egi.showMarginAround = showMarginAround;
+        this._dom().showMarginAroundInsertionPoints = showMarginAround;
         // Configure all views to be able to switch between them
         const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[alternative-view]');
         this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];
@@ -795,7 +889,8 @@ const TgEntityCentreBehaviorImpl = {
             }
         };
         this._resetAutocompleterState = () => this.$.selection_criteria._resetAutocompleterState();
-        
+        this.lastValidationAttemptPromise = () => this.$.selection_criteria.lastValidationAttemptPromise;
+
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                 if (typeof result.summary !== 'undefined') {
@@ -1447,11 +1542,21 @@ const TgEntityCentreBehaviorImpl = {
         return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : isRunning; // Refresh button enabled even if pageCount === null i.e. where erroneous autorun occurred
     },
 
-    computeConfigButtonTooltip: function (staleCriteriaMessage) {
-        return (staleCriteriaMessage === null ? 'Show selection criteria' : staleCriteriaMessage) + ", Ctrl&nbsp+&nbspe";
+    computeConfigButtonTooltip: function (criteriaIndication) {
+        return criteriaIndication ? criteriaIndication.message : '';
     },
-    computeConfigButtonClasses: function (staleCriteriaMessage) {
-        return staleCriteriaMessage === null ? 'standart-action' : 'standart-action orange';
+    computeConfigButtonStyle: function (criteriaIndication) {
+        return criteriaIndication && criteriaIndication.style ? this._convertStyle(criteriaIndication.style) : '';
+    },
+
+    /**
+     * Converts StyleAttribute-based 'styleObject' to inline 'style' attribute.
+     * The object was serialised by Jackson as part of CriteriaIndication serialisation and sent to the client application.
+     */
+    _convertStyle: function (styleObject) {
+        return Object.keys(styleObject.value)
+            .map(key => `${key}:${styleObject.value[key].value.join(' ')}`)
+            .join(';')
     },
 
     currPageFeedback: function (pageNumberUpdated, pageCountUpdated) {

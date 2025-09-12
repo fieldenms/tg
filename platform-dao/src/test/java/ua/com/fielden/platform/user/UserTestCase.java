@@ -1,22 +1,6 @@
 package ua.com.fielden.platform.user;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRATION_IN_MUNUTES;
-import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
-
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -26,15 +10,22 @@ import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
-import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserSecret;
-import ua.com.fielden.platform.security.user.UserSecretCo;
+import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+
+import java.util.Date;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
+import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
 
 /**
  * A test case to cover basic user validations.
@@ -226,28 +217,28 @@ public class UserTestCase extends AbstractDaoTestCase {
     
     @Test 
     public void user_identified_by_username_can_have_correct_password_reset_UUID_generated() {
-        final Optional<UserSecret> secret = coUser.assignPasswordResetUuid("USER3");
+        final Optional<UserSecret> secret = coUser.assignPasswordResetUuid("USER3", expirationTime());
         assertTrue(secret.isPresent());
         assertNotNull(secret.get().getResetUuid());
     }
 
     @Test 
     public void locating_user_by_name_during_password_reset_UUID_generation_is_case_insensitive() {
-        final Optional<UserSecret> secret = coUser.assignPasswordResetUuid("user3");
+        final Optional<UserSecret> secret = coUser.assignPasswordResetUuid("user3", expirationTime());
         assertTrue(secret.isPresent());
         assertNotNull(secret.get().getResetUuid());
     }
     
     @Test
     public void user_identified_by_email_can_have_correct_password_reset_UUID_generated() {
-        final Optional<UserSecret> secret = coUser.assignPasswordResetUuid("user3@company.com");
+        final Optional<UserSecret> secret = coUser.assignPasswordResetUuid("user3@company.com", expirationTime());
         assertTrue(secret.isPresent());
         assertNotNull(secret.get().getResetUuid());
     }
     
     @Test
     public void password_reset_UUID_assignment_returns_empty_value_for_unidentified_user() {
-        final Optional<UserSecret> secret = coUser.assignPasswordResetUuid("invalid@company.com");
+        final Optional<UserSecret> secret = coUser.assignPasswordResetUuid("invalid@company.com", expirationTime());
         assertFalse(secret.isPresent());
     }
     
@@ -256,13 +247,13 @@ public class UserTestCase extends AbstractDaoTestCase {
         final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         consts.setNow(dateTime("2016-04-05 14:00:00"));
         
-        final Optional<UserSecret> secret = coUser.assignPasswordResetUuid("USER3");
+        final Optional<UserSecret> secret = coUser.assignPasswordResetUuid("USER3", expirationTime());
         assertTrue(secret.isPresent());
         
         final String[] uuidParts = secret.get().getResetUuid().split(SECRET_RESET_UUID_SEPERATOR);
         assertEquals(3, uuidParts.length);
         assertEquals(secret.get().getKey().getKey(), uuidParts[0]);
-        assertEquals(consts.now().plusMinutes(RESER_UUID_EXPIRATION_IN_MUNUTES).getMillis(), Long.valueOf(uuidParts[2]).longValue());
+        assertEquals(consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).getMillis(), Long.valueOf(uuidParts[2]).longValue());
     }
 
     @Test
@@ -270,14 +261,14 @@ public class UserTestCase extends AbstractDaoTestCase {
         final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         consts.setNow(dateTime("2016-04-05 14:00:00"));
         
-        final String uuid = coUser.assignPasswordResetUuid("USER3").get().getResetUuid();
+        final String uuid = coUser.assignPasswordResetUuid("USER3", expirationTime()).get().getResetUuid();
         final Optional<User> user = coUser.findUserByResetUuid(uuid);
         assertTrue(user.isPresent());
     }
 
     @Test
     public void resetting_user_password_removes_reset_UUID() {
-        final UserSecret secret = coUser.assignPasswordResetUuid("USER3").get();
+        final UserSecret secret = coUser.assignPasswordResetUuid("USER3", expirationTime()).get();
         final UserSecret updatedSecret = coUser.resetPasswd(secret.getKey(), "new and strong password!");
         assertNull(updatedSecret.getResetUuid());
     }
@@ -288,11 +279,11 @@ public class UserTestCase extends AbstractDaoTestCase {
         final String now = "2016-04-05 14:00:00";
         consts.setNow(dateTime(now));
         
-        final String uuid = coUser.assignPasswordResetUuid("USER3").get().getResetUuid();
-        assertTrue(coUser.isPasswordResetUuidValid(uuid));
+        final String uuid = coUser.assignPasswordResetUuid("USER3", expirationTime()).get().getResetUuid();
+        assertTrue(coUser.isPasswordResetUuidValid(uuid, consts.now().toDate()));
         // move the time forward
         consts.setNow(dateTime(now).plusDays(2));
-        assertFalse(coUser.isPasswordResetUuidValid(uuid));
+        assertFalse(coUser.isPasswordResetUuidValid(uuid, consts.now().toDate()));
     }
 
     @Test
@@ -301,11 +292,11 @@ public class UserTestCase extends AbstractDaoTestCase {
         final String now = "2016-04-05 14:00:00";
         consts.setNow(dateTime(now));
         
-        final UserSecret secret = coUser.assignPasswordResetUuid("USER3").get();
+        final UserSecret secret = coUser.assignPasswordResetUuid("USER3", expirationTime()).get();
         final String uuid = secret.getResetUuid();
         coUserSecret.save(secret.setResetUuid(null));
         
-        assertFalse(coUser.isPasswordResetUuidValid(uuid));
+        assertFalse(coUser.isPasswordResetUuidValid(uuid, consts.now().toDate()));
     }
 
     @Test
@@ -320,7 +311,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         
         final Optional<User> foundUser = coUser.findUserByResetUuid(uuid);
         assertFalse(foundUser.isPresent());
-        assertFalse(coUser.isPasswordResetUuidValid(uuid));
+        assertFalse(coUser.isPasswordResetUuidValid(uuid, consts.now().toDate()));
     }
 
     @Test
@@ -329,7 +320,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         final String now = "2016-05-19 11:02:00";
         consts.setNow(dateTime(now));
         
-        assertFalse(coUser.assignPasswordResetUuid("NON-EXISTING-USER").isPresent());
+        assertFalse(coUser.assignPasswordResetUuid("NON-EXISTING-USER", expirationTime()).isPresent());
     }
 
     @Test
@@ -339,7 +330,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         consts.setNow(dateTime(now));
         
         final User inactiveUser = coUser.findByKey("INACTIVE_USER");
-        assertFalse(coUser.assignPasswordResetUuid(inactiveUser.getKey()).isPresent());
+        assertFalse(coUser.assignPasswordResetUuid(inactiveUser.getKey(), expirationTime()).isPresent());
     }
 
     @Test 
@@ -599,7 +590,12 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertFalse(user.isSsoOnly());
         assertFalse(user.getProperty(User.SSO_ONLY).isEditable());
     }
-    
+
+    private Date expirationTime() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        return consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).toDate();
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();

@@ -1,3 +1,8 @@
+import '../polymer/polymer-legacy.js';
+import { IronScrollTargetBehavior } from '../iron-scroll-target-behavior/iron-scroll-target-behavior.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
@@ -8,10 +13,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import { IronScrollTargetBehavior } from "../iron-scroll-target-behavior/iron-scroll-target-behavior.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
+
 /**
 `iron-scroll-threshold` is a utility element that listens for `scroll` events
 from a scrollable region and fires events to indicate when the scroller has
@@ -77,7 +79,6 @@ value to disable events and clear the associated triggered property.
 @demo demo/scrolling-region.html Scrolling Region
 @demo demo/document.html Document Element
 */
-
 Polymer({
   _template: html`
     <style>
@@ -88,78 +89,66 @@ Polymer({
 
     <slot></slot>
 `,
+
   is: 'iron-scroll-threshold',
+
   properties: {
+
     /**
      * Distance from the top (or left, for horizontal) bound of the scroller
      * where the "upper trigger" will fire.
      */
-    upperThreshold: {
-      type: Number,
-      value: 100
-    },
+    upperThreshold: {type: Number, value: 100},
 
     /**
      * Distance from the bottom (or right, for horizontal) bound of the scroller
      * where the "lower trigger" will fire.
      */
-    lowerThreshold: {
-      type: Number,
-      value: 100
-    },
+    lowerThreshold: {type: Number, value: 100},
 
     /**
      * Read-only value that tracks the triggered state of the upper threshold.
      */
-    upperTriggered: {
-      type: Boolean,
-      value: false,
-      notify: true,
-      readOnly: true
-    },
+    upperTriggered: {type: Boolean, value: false, notify: true, readOnly: true},
 
     /**
      * Read-only value that tracks the triggered state of the lower threshold.
      */
-    lowerTriggered: {
-      type: Boolean,
-      value: false,
-      notify: true,
-      readOnly: true
-    },
+    lowerTriggered: {type: Boolean, value: false, notify: true, readOnly: true},
 
     /**
      * True if the orientation of the scroller is horizontal.
      */
-    horizontal: {
-      type: Boolean,
-      value: false
-    }
+    horizontal: {type: Boolean, value: false}
   },
+
   behaviors: [IronScrollTargetBehavior],
-  observers: ['_setOverflow(scrollTarget)', '_initCheck(horizontal, isAttached)'],
+
+  observers:
+      ['_setOverflow(scrollTarget)', '_initCheck(horizontal, isAttached)'],
 
   get _defaultScrollTarget() {
     return this;
   },
 
-  _setOverflow: function (scrollTarget) {
+  _setOverflow: function(scrollTarget) {
     this.style.overflow = scrollTarget === this ? 'auto' : '';
     this.style.webkitOverflowScrolling = scrollTarget === this ? 'touch' : '';
   },
-  _scrollHandler: function () {
+
+  _scrollHandler: function() {
     // throttle the work on the scroll event
     var THROTTLE_THRESHOLD = 200;
-
     if (!this.isDebouncerActive('_checkTheshold')) {
-      this.debounce('_checkTheshold', function () {
+      this.debounce('_checkTheshold', function() {
         this.checkScrollThresholds();
       }, THROTTLE_THRESHOLD);
     }
   },
-  _initCheck: function (horizontal, isAttached) {
+
+  _initCheck: function(horizontal, isAttached) {
     if (isAttached) {
-      this.debounce('_init', function () {
+      this.debounce('_init', function() {
         this.clearTriggers();
         this.checkScrollThresholds();
       });
@@ -172,28 +161,29 @@ Polymer({
    *
    * @method checkScrollThresholds
    */
-  checkScrollThresholds: function () {
-    if (!this.scrollTarget || this.lowerTriggered && this.upperTriggered) {
+  checkScrollThresholds: function() {
+    if (!this.scrollTarget || (this.lowerTriggered && this.upperTriggered)) {
       return;
     }
-
     var upperScrollValue = this.horizontal ? this._scrollLeft : this._scrollTop;
-    var lowerScrollValue = this.horizontal ? this.scrollTarget.scrollWidth - this._scrollTargetWidth - this._scrollLeft : this.scrollTarget.scrollHeight - this._scrollTargetHeight - this._scrollTop; // Detect upper threshold
+    var lowerScrollValue = this.horizontal ? this.scrollTarget.scrollWidth -
+            this._scrollTargetWidth - this._scrollLeft :
+                                             this.scrollTarget.scrollHeight -
+            this._scrollTargetHeight - this._scrollTop;
 
+    // Detect upper threshold
     if (upperScrollValue <= this.upperThreshold && !this.upperTriggered) {
       this._setUpperTriggered(true);
-
       this.fire('upper-threshold');
-    } // Detect lower threshold
-
-
+    }
+    // Detect lower threshold
     if (lowerScrollValue <= this.lowerThreshold && !this.lowerTriggered) {
       this._setLowerTriggered(true);
-
       this.fire('lower-threshold');
     }
   },
-  checkScrollThesholds: function () {
+
+  checkScrollThesholds: function() {
     // iron-scroll-threshold/issues/16
     this.checkScrollThresholds();
   },
@@ -203,11 +193,11 @@ Polymer({
    *
    * @method clearTriggers
    */
-  clearTriggers: function () {
+  clearTriggers: function() {
     this._setUpperTriggered(false);
-
     this._setLowerTriggered(false);
   }
+
   /**
    * Fires when the lower threshold has been reached.
    *
@@ -219,5 +209,4 @@ Polymer({
    *
    * @event upper-threshold
    */
-
 });

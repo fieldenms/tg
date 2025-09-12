@@ -1,19 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.Set;
-import java.util.function.Function;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -22,7 +10,6 @@ import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -38,14 +25,28 @@ import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource
 import ua.com.fielden.platform.web.sse.IEventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.Set;
+import java.util.function.Function;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+
 /**
- * This is a multi-purpose file-processing resource that can be used for uploading files to be processed with the specified functional entity.
+ * This is a multipurpose file-processing resource that can be used for uploading files to be processed with the specified functional entity.
  *
  * @author TG Team
  *
  */
 public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends AbstractWebResource {
 
+    private static final Logger LOGGER = LogManager.getLogger(FileProcessingResource.class);
     private static final String ERR_CLIENT_NOT_REGISTERED = "The client should have been registered for SSE communication.";
 
     protected final IEntityDao<T> companion;
@@ -96,11 +97,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             this.jobUid = request.getHeaders().getFirstValue("jobUid", /*ignore case*/ true);
             this.sseUid = request.getHeaders().getFirstValue("sseUid", /*ignore case*/ true);
             this.user = userProvider.getUser();
-            try {
-                this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName", /*ignore case*/ true), StandardCharsets.UTF_8.toString());
-            } catch (final UnsupportedEncodingException ex) {
-                throw new IllegalArgumentException("Could not decode the value for origFileName.", ex);
-            }
+            this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName", /*ignore case*/ true), StandardCharsets.UTF_8);
             this.mimeAsProvided = request.getHeaders().getFirstValue("mime", /*ignore case*/ true);
 
             final long lastModified = Long.parseLong(request.getHeaders().getFirstValue("lastModified", /*ignore case*/ true));
@@ -128,15 +125,12 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             } else if (isEmpty(origFileName)) {
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
                 rep =  restUtil.errorJsonRepresentation(msg = "origFileName is missing, but is required.");
-            } else if (isEmpty(this.mimeAsProvided)) {
-                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-                rep =  restUtil.errorJsonRepresentation(msg = "File MIME type is missing.");
             } else  if (input == null) {
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
                 rep = restUtil.errorJsonRepresentation(msg = "The file content is empty, which is prohibited.");
-            } else if (!isMediaTypeSupported(input.getMediaType())) {
+            } else if (input.getMediaType() != null && !isMediaTypeSupported(input.getMediaType())) {
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-                rep = restUtil.errorJsonRepresentation(msg = format("Unexpected media type [%s].", input.getMediaType()));
+                rep = restUtil.errorJsonRepresentation(msg = "Unexpected media type [%s].".formatted(input.getMediaType()));
             } else if (input.getSize() == -1) {
                 getResponse().setStatus(Status.CLIENT_ERROR_LENGTH_REQUIRED);
                 rep = restUtil.errorJsonRepresentation(msg = "File size is required.");
@@ -149,8 +143,8 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             }
             return rep;
         } finally {
-            final String logMsg = String.format("Processed file: %s, result: %s", this.origFileName, msg);
-            // TODO add logging
+            final String logMsg = "Processed file: %s, result: %s".formatted(this.origFileName, msg);
+            LOGGER.debug(logMsg);
             exhaustInputStream(input);
         }
     }
@@ -166,7 +160,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         try {
             input.exhaust();
         } catch (final Exception ex) {
-            // TODO There can be an IO or some other exceptions when exhausting the entity, so just in case let's log any exception if it occurs
+            LOGGER.error("Error while exhausting the input stream.", ex);
         }
     }
 
@@ -215,8 +209,6 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
 
             final T applied = saveRaw(entity);
             return restUtil.singleJsonRepresentation(applied);
-        } catch (final Exception e) {
-            throw new ResourceException(e);
         } finally {
             eventSource.disconnect();
         }

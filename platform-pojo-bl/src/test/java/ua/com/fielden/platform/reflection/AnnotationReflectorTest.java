@@ -1,30 +1,22 @@
 package ua.com.fielden.platform.reflection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationInHierarchy;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentInHierarchy;
-
-import java.util.Optional;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+
+import java.util.Optional;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 
 /**
  * Test case for {@link AnnotationReflector}.
@@ -99,19 +91,50 @@ public class AnnotationReflectorTest {
 
     @Test
     public void testPropertyAnnotationRetrieval() {
-        // ordinary property tests
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(Title.class, FirstLevelEntity.class, "property"));
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "property"));
-        assertEquals("Incorrect property annotation value", "Property", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "property").value());
-        // key property
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(KeyTitle.class, SecondLevelEntity.class, "key"));
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(KeyType.class, SecondLevelEntity.class, "key"));
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(IsProperty.class, SecondLevelEntity.class, "key"));
-        assertEquals("Incorrect property annotation value", "Leveled Entity No", AnnotationReflector.getPropertyAnnotation(KeyTitle.class, SecondLevelEntity.class, "key").value());
-        // dot-notated property
-        // ordinary property tests
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property"));
-        assertEquals("Incorrect property annotation value", "Property", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property").value());
+        // Ordinary property tests
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(Title.class, FirstLevelEntity.class, "property"));
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(Title.class, SecondLevelEntity.class, "property"));
+        assertEquals("Incorrect property annotation value", "Property", getPropertyAnnotation(Title.class, SecondLevelEntity.class, "property").value());
+
+        // Property path
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property"));
+        assertEquals("Incorrect property annotation value", "Property", getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property").value());
+    }
+
+    @Test
+    public void getPropertyAnnotation_for_property_key() {
+        // Property `key`
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(KeyTitle.class, SecondLevelEntity.class, KEY));
+        assertEquals(SecondLevelEntity.KEY_TITLE, getPropertyAnnotation(KeyTitle.class, SecondLevelEntity.class, KEY).value());
+
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(KeyType.class, SecondLevelEntity.class, KEY));
+        assertEquals(DynamicEntityKey.class, getPropertyAnnotation(KeyType.class, SecondLevelEntity.class, KEY).value());
+
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(IsProperty.class, SecondLevelEntity.class, KEY));
+
+        // Property path ends with `key`
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(KeyTitle.class, TgVehicle.class, "model.make.key"));
+        assertEquals(TgVehicleMake.KEY_TITLE, getPropertyAnnotation(KeyTitle.class, TgVehicle.class, "model.make.key").value());
+
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(KeyType.class, TgVehicle.class, "model.make.key"));
+        assertEquals(String.class, getPropertyAnnotation(KeyType.class, TgVehicle.class, "model.make.key").value());
+
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(IsProperty.class, TgVehicle.class, "model.make.key"));
+    }
+
+    @Test
+    public void getPropertyAnnotation_for_property_desc() {
+        // Property `desc`
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(DescTitle.class, SecondLevelEntity.class, DESC));
+        assertEquals(SecondLevelEntity.DESC_TITLE, getPropertyAnnotation(DescTitle.class, SecondLevelEntity.class, DESC).value());
+
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(IsProperty.class, SecondLevelEntity.class, DESC));
+
+        // Property path ends with `desc`
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(DescTitle.class, TgVehicle.class, "model.make.desc"));
+        assertEquals(TgVehicleMake.DESC_TITLE, getPropertyAnnotation(DescTitle.class, TgVehicle.class, "model.make.desc").value());
+
+        assertNotNull("Property annotation should have been determined", getPropertyAnnotation(IsProperty.class, TgVehicle.class, "model.make.desc"));
     }
 
     @Test
@@ -125,9 +148,10 @@ public class AnnotationReflectorTest {
     public void test_isClassHasMethodAnnotatedWith() {
         assertTrue("", AnnotationReflector.isClassHasMethodAnnotatedWith(UnionEntity.class, Observable.class));
         // 3 -- for common properties, 2 -- for union entity, 2 -- AbstractUnionEntity, 2 -- AbstractEntity
-        assertEquals("", 8, AnnotationReflector.getMethodsAnnotatedWith(UnionEntity.class, Optional.of(Observable.class)).size());
+        assertEquals("", 9, AnnotationReflector.getMethodsAnnotatedWith(UnionEntity.class, Optional.of(Observable.class)).size());
         assertTrue("", AnnotationReflector.isClassHasMethodAnnotatedWith(SecondLevelEntity.class, Observable.class));
         // 4 -- for SecondLevelEntity, 2 -- for FirstLevelEntity 2 - for AbstractEntity
         assertEquals("", 9, AnnotationReflector.getMethodsAnnotatedWith(SecondLevelEntity.class, Optional.of(Observable.class)).size());
     }
+
 }

@@ -1,3 +1,17 @@
+import '../polymer/polymer-legacy.js';
+import { IronResizableBehavior } from '../iron-resizable-behavior/iron-resizable-behavior.js';
+import { IronScrollTargetBehavior } from '../iron-scroll-target-behavior/iron-scroll-target-behavior.js';
+import { OptionalMutableDataBehavior } from '../polymer/lib/legacy/mutable-data-behavior.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { dom } from '../polymer/lib/legacy/polymer.dom.js';
+import { Templatizer } from '../polymer/lib/legacy/templatizer-behavior.js';
+import { animationFrame, microTask, idlePeriod } from '../polymer/lib/utils/async.js';
+import { Debouncer, enqueueDebouncer } from '../polymer/lib/utils/debounce.js';
+import { flush } from '../polymer/lib/utils/flush.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+import { matches, translate } from '../polymer/lib/utils/path.js';
+import '../polymer/lib/utils/templatize.js';
+
 /**
 @license
 Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
@@ -8,21 +22,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import "../iron-a11y-keys-behavior/iron-a11y-keys-behavior.js";
 
-import { IronResizableBehavior } from "../iron-resizable-behavior/iron-resizable-behavior.js";
-import { IronScrollTargetBehavior } from "../iron-scroll-target-behavior/iron-scroll-target-behavior.js";
-import { OptionalMutableDataBehavior } from "../polymer/lib/legacy/mutable-data-behavior.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { dom } from "../polymer/lib/legacy/polymer.dom.js";
-import { Templatizer } from "../polymer/lib/legacy/templatizer-behavior.js";
-import { animationFrame, idlePeriod, microTask } from "../polymer/lib/utils/async.js";
-import { Debouncer } from "../polymer/lib/utils/debounce.js";
-import { enqueueDebouncer, flush } from "../polymer/lib/utils/flush.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
-import { matches, translate } from "../polymer/lib/utils/path.js";
-import { TemplateInstanceBase } from "../polymer/lib/utils/templatize.js";
 var IOS = navigator.userAgent.match(/iP(?:hone|ad;(?: U;)? CPU) OS (\d+)/);
 var IOS_TOUCH_SCROLLING = IOS && IOS[1] >= 8;
 var DEFAULT_PHYSICAL_COUNT = 3;
@@ -839,7 +839,7 @@ Polymer({
    * @param {boolean} fromTop If the potential reusable items are above the scrolling region.
    */
   _getReusables: function(fromTop) {
-    var ith, lastIth, offsetContent, physicalItemHeight;
+    var ith, offsetContent, physicalItemHeight;
     var idxs = [];
     var protectedOffsetContent = this._hiddenContentSize * this._ratio;
     var virtualStart = this._virtualStart;
@@ -853,11 +853,11 @@ Polymer({
 
     if (fromTop) {
       ith = this._physicalStart;
-      lastIth = this._physicalEnd;
+      this._physicalEnd;
       offsetContent = scrollTop - top;
     } else {
       ith = this._physicalEnd;
-      lastIth = this._physicalStart;
+      this._physicalStart;
       offsetContent = bottom - scrollBottom;
     }
     while (true) {
@@ -993,9 +993,7 @@ Polymer({
     }
     // The upper bounds is not fixed when dealing with a grid that doesn't
     // fill it's last row with the exact number of items per row.
-    if (this._virtualEnd >= this._virtualCount - 1 || nextIncrease === 0) {
-      // Do nothing.
-    } else if (!this._isClientFull()) {
+    if (this._virtualEnd >= this._virtualCount - 1 || nextIncrease === 0) ; else if (!this._isClientFull()) {
       this._debounce(
           '_increasePoolIfNeeded',
           this._increasePoolIfNeeded.bind(this, nextIncrease),

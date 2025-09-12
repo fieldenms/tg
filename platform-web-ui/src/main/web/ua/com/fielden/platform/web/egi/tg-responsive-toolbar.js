@@ -5,6 +5,8 @@ import { isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
+import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 const template = html`
     <style>
@@ -27,6 +29,15 @@ const template = html`
             margin-left: 30px;
             @apply --layout-horizontal;
         }
+        :host {
+            cursor: default;
+        }
+        :host(.custom-responsive-toolbar) #expandToolbarButton {
+            @apply --tg-responsove-toolbar-expand-button;
+        }
+        :host(.custom-responsive-toolbar) .dropdown-content {
+            @apply --tg-responsove-toolbar-dropdown-content;
+        }
         #expandToolbarButton.invisible {
             display: none;
         }
@@ -47,8 +58,14 @@ const template = html`
         paper-icon-button.revers {
             transform: scale(-1, 1);
         }
+        div[disabled] {
+            pointer-events: none;
+        }
+        #expandToolbarButton {
+            pointer-events:all;
+        }
     </style>
-    <div id="toolbar" class="grid-toolbar">
+    <div id="toolbar" class="grid-toolbar" disabled$="[[disabled]]">
         <slot></slot>
         <div id="leftToolbarContainer" class="grid-toolbar-content">
             <slot id="top_action_selctor" name="entity-specific-action"></slot>
@@ -59,7 +76,7 @@ const template = html`
         </div>
     </div>
     <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="8" always-on-top>
-        <div id="hiddenToolbar" class="dropdown-content" slot="dropdown-content">
+        <div id="hiddenToolbar" class="dropdown-content" slot="dropdown-content" disabled$="[[disabled]]">
             <div id="specificActionContainer"></div>
             <div id="standartActionContainer"></div>
         </div>
@@ -79,8 +96,11 @@ class ToolbarElement {
     }
 
     get width() {
-        if (!this._width) {
-            this._width = this.element && this.element.offsetWidth;
+        if (!this._width && this.element) {
+            const style = this.element.currentStyle || window.getComputedStyle(this.element),
+                width = this.element.getBoundingClientRect().width,
+                margin = parseFloat(style.marginLeft) + parseFloat(style.marginRight);
+            this._width = width + margin;
         }
         return this._width;
     }
@@ -113,6 +133,12 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
 
     static get properties () {
         return {
+            disabled:  {
+                type: Boolean,
+                value: false,
+                reflectToAttribute: true
+
+            },
             //Points to last visible action on toolbar.
             _lastVisibleToolbarElement: Object
         };

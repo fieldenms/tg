@@ -1,13 +1,15 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
+
+import java.util.Objects;
+
+import static java.lang.String.format;
 
 public class AddDateInterval3 extends TwoOperandsFunction3 {
     private final DateIntervalUnit intervalUnit;
@@ -18,18 +20,18 @@ public class AddDateInterval3 extends TwoOperandsFunction3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         switch (dbVersion) {
         case POSTGRESQL:
             // Date operator needs to be explicitly typecasted to timestamp.
             // For more details, please refer to https://stackoverflow.com/questions/7475876/using-hibernate-query-colon-gets-treated-as-parameter-escaping-colon
-            return format("(INTERVAL '1 %s' * %s + %s \\:\\:timestamp)",  intervalUnit, operand1.sql(dbVersion), operand2.sql(dbVersion));
+            return format("(INTERVAL '1 %s' * %s + %s \\:\\:timestamp)", intervalUnit, operand1.sql(metadata, dbVersion), operand2.sql(metadata, dbVersion));
         case H2:
-            return format("DATEADD('%s', %s, %s)",  intervalUnit, operand1.sql(dbVersion), operand2.sql(dbVersion));
+            return format("DATEADD('%s', %s, %s)", intervalUnit, operand1.sql(metadata, dbVersion), operand2.sql(metadata, dbVersion));
         case MSSQL:
-            return format("DATEADD(%s, %s, %s)",  intervalUnit, operand1.sql(dbVersion), operand2.sql(dbVersion));
+            return format("DATEADD(%s, %s, %s)", intervalUnit, operand1.sql(metadata, dbVersion), operand2.sql(metadata, dbVersion));
         default:
-            return super.sql(dbVersion);
+            return super.sql(metadata, dbVersion);
         }
     }
 
@@ -42,20 +44,15 @@ public class AddDateInterval3 extends TwoOperandsFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof AddDateInterval3)) {
-            return false;
-        }
-        
-        final AddDateInterval3 other = (AddDateInterval3) obj;
-        
-        return Objects.equals(intervalUnit, other.intervalUnit);
+        return this == obj
+               || obj instanceof AddDateInterval3 that
+                  && Objects.equals(intervalUnit, that.intervalUnit)
+                  && super.equals(that);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("unit", intervalUnit);
+    }
+
 }

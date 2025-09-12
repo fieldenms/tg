@@ -4,6 +4,8 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
+import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
 const additionalTemplate = html`
     <style>
@@ -13,8 +15,8 @@ const additionalTemplate = html`
     </style>`;
 const customLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">
-        <span>[[propTitle]]</span>
-        <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
+        <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
 
 const customInputTemplate = html`
@@ -27,6 +29,8 @@ const customInputTemplate = html`
             on-mouseup="_onMouseUp" 
             on-mousedown="_onMouseDown"
             on-keydown="_onKeydown"
+            on-focus="_onFocus"
+            on-blur="_outFocus"
             disabled$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue, entity)]]"
             autocomplete="off"/>
@@ -90,6 +94,30 @@ export class TgCollectionalRepresentor extends TgEditor {
         }
         return '';
     }
+
+    /**
+     * Handler for converting original property value for this editor.
+     * Overridden to use `_currBindingEntity['@@origin']` as a source for original values.
+     */
+    _originalEntityChanged (newValue, oldValue) {
+        if (this.reflector().isEntity(newValue)) {
+            // Lazy conversion of original property value performs here.
+            // Previously it was done for all properties inside `tg-entity-binder-behavior`.
+
+            // However, as a source for original values we specify `@@origin` (full entity) from `this.entity`, not `originalEntity`.
+            // This is because collectional representer does not modify collections and is special.
+            // Converted values for it on server are List<String> and we can't set List<String> into entity-typed collection.
+            // The only case where modifHolder contains 'val' (and thus forced to be applied) is in:
+            //   1. conflicting situation (on non-collectional) prop,
+            //   2. coupled with actual collection change (with `This property has been recently changed.` message there).
+            // But this is only because `@@origin` (full entity) for `originalEntity` takes from `previousOriginalBindingEntity`.
+            // See `tg-entity-binder-behavior._extractOriginalBindingView` for more details.
+            // That's why we override this behaviour and take newest full entity (as if there were no conflicting errors).
+            // See also `tg-entity-binder-behavior._postEntityReceived` and how `isEntityStale` is calculated.
+            this._convertPropertyValue(newValue, this.propertyName, true /* original? */, this.reflector().tg_getFullEntity(this.entity));
+        }
+    }
+
 }
 
 customElements.define('tg-collectional-representor', TgCollectionalRepresentor);

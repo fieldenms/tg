@@ -1,46 +1,10 @@
 package ua.com.fielden.platform.security.user;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.security.user.User.EMAIL;
-import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRATION_IN_MUNUTES;
-import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.apache.logging.log4j.Logger;
-
+import com.google.common.net.UrlEscapers;
 import com.google.inject.Inject;
 import com.nulabinc.zxcvbn.Strength;
 import com.nulabinc.zxcvbn.Zxcvbn;
-
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
@@ -57,8 +21,8 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.menu.WebMenuItemInvisibilityCo;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
+import ua.com.fielden.platform.menu.WebMenuItemInvisibilityCo;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
@@ -72,6 +36,24 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.Optional.*;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.security.user.User.EMAIL;
+import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
+import static ua.com.fielden.platform.security.user.UserSecretCo.newUserPasswordRestExpirationTime;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
+
 /**
  * DAO implementation of {@link IUser}.
  *
@@ -82,6 +64,8 @@ import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 public class UserDao extends CommonEntityDao<User> implements IUser {
 
     private static final Logger logger = getLogger(UserDao.class);
+    public static final String ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE = "Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].";
+    public static final String ERR_INITIATING_PASSWORD_RESET = "Could not initiate password reset.";
 
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
@@ -124,7 +108,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             // which should be slim comparing to IUser.FETCH_PROVIDER
             return super.save(user);
         } else {
-            return save(user, of(FETCH_PROVIDER.fetchModel())).orElseThrow(id -> new EntityCompanionException(format("Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].", id, user)));
+            return save(user, of(FETCH_PROVIDER.fetchModel())).orElseThrow(id -> new EntityCompanionException(ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE.formatted(id, user)));
         }
 
     }
@@ -164,14 +148,14 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         if ((!user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user)) ||
             ( user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user) && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
             savedUser = super.save(user, maybeFetch);
-            final Function<Long, EntityCompanionException> error = (Long id) -> new EntityCompanionException(format("Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].", id, user));
-            newUserNotifier.notify(assignPasswordResetUuid(savedUser.orElseThrow(error).getKey()).orElseThrow(() -> new SecurityException("Could not initiate password reset.")));
+            final Function<Long, EntityCompanionException> error = (Long id) -> new EntityCompanionException(ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE.formatted(id, user));
+            newUserNotifier.notify(assignPasswordResetUuid(savedUser.orElseThrow(error).getKey(), newUserPasswordRestExpirationTime()).orElseThrow(() -> new SecurityException(ERR_INITIATING_PASSWORD_RESET)));
         } else {
             savedUser = super.save(user, maybeFetch);
         }
 
         // save menu item invisibility for a user, this may require fetching the user in case savedUser is only an ID (i.e. left).
-        final User menuOwner = savedUser.isLeft() ? co(User.class).findById(savedUser.asLeft().value, WebMenuItemInvisibilityCo.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel()) : savedUser.asRight().value;
+        final User menuOwner = savedUser.isLeft() ? co(User.class).findById(savedUser.asLeft().value(), WebMenuItemInvisibilityCo.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel()) : savedUser.asRight().value();
         saveMenuItemInvisibility(menuItemsToSave, menuOwner);
 
         return savedUser;
@@ -419,12 +403,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         if (uuidParts.length != 3) {
             return empty();
         }
-        final String userName = uuidParts[0];
 
         final EntityResultQueryModel<User> query = select(UserSecret.class)
-                .where()
-                    .prop("key.key").eq().val(userName).and()
-                    .prop("resetUuid").eq().val(uuid)
+                .where().prop("resetUuid").eq().val(uuid)
                 .yield().prop("key").modelAsEntity(User.class);
 
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
@@ -432,9 +413,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     }
 
     @Override
-    public Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail) {
-        // let's try to find a user by username or email
-        // in the SSO authentication mode, it is necessary to exclude those users, who are restricted to SSO only.
+    public Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail, final Date expirationTime) {
+        // Let's try to find a user by username or email.
+        // In the SSO authentication mode, it is necessary to exclude those users who are restricted to SSO only.
         final ICompoundCondition0<User> rsoCondition = select(User.class)
                 .where()
                 .prop(ACTIVE).eq().val(true)
@@ -452,9 +433,10 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         if (user != null) {
             final UserSecretCo co$UserSecret = co$(UserSecret.class);
             final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
-
-            final String uuid = format("%s%s%s%s%s", user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, getUniversalConstants().now().plusMinutes(RESER_UUID_EXPIRATION_IN_MUNUTES).getMillis());
-            return of(co$UserSecret.save(secret.setResetUuid(uuid)));
+            final long expirationTimeMillis = expirationTime.getTime();
+            final String uuid = "%s%s%s%s%s".formatted(user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, expirationTimeMillis);
+            final var encodedUuid = UrlEscapers.urlFragmentEscaper().escape(uuid);
+            return of(co$UserSecret.save(secret.setResetUuid(encodedUuid)));
         }
 
         return empty();
@@ -462,18 +444,19 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     @SessionRequired
-    public boolean isPasswordResetUuidValid(final String uuid) {
+    public boolean isPasswordResetUuidValid(final String uuid, final Date now) {
         final Optional<User> user = findUserByResetUuid(uuid);
-        // if there is no user associated with UUID then it cannot be valid
-        if (!user.isPresent()) {
+        // If there is no user associated with UUID then it cannot be valid.
+        if (user.isEmpty()) {
             return false;
         } else {
-            // if a corresponding user was found then UUID is valid if it is not expired
+            // If a corresponding user was found, then UUID needs to be checked for expiration.
             final String[] uuidParts = uuid.split(SECRET_RESET_UUID_SEPERATOR);
             final long expirationTime = Long.parseLong(uuidParts[2]);
-            final boolean expired = getUniversalConstants().now().getMillis() >= expirationTime;
-            // dissociation UUID form user if it has expired
+
+            final boolean expired = now.getTime() >= expirationTime;
             if (expired) {
+                // Remove expired UUID.
                 final UserSecretCo co$UserSecret = co$(UserSecret.class);
                 final UserSecret secret = findOrCreateNewSecret(user.get(), co$UserSecret);
                 co$UserSecret.save(secret.setResetUuid(null));

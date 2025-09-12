@@ -24,8 +24,8 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 
 @SuppressWarnings({ "unchecked", "serial" })
 public class DynamicFetchBuilderTest {
@@ -33,7 +33,7 @@ public class DynamicFetchBuilderTest {
     private final static EntityFactory factory = createFactory();
 
     private static EntityFactory createFactory() {
-        final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+        final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
         final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
         return injector.getInstance(EntityFactory.class);
     }
@@ -68,16 +68,9 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_fetch_first_level_properties_works() {
-        final Set<String> fetchProperties = new HashSet<>(Arrays.asList(new String[] { "integerProp", //
-        "doubleProp", //
-        "bigDecimalProp", //
-        "moneyProp", //
-        "dateProp", //
-        "booleanProp", //
-        "stringProp"//
-        }));
-        final fetch<? extends AbstractEntity<?>> fetchModel = fetchOnly(masterKlass).with("integerProp").with("doubleProp")//
-        .with("bigDecimalProp").with("moneyProp").with("dateProp").with("booleanProp").with("stringProp");
+        final var fetchProperties = Set.of("integerProp", "bigDecimalProp", "moneyProp", "dateProp", "booleanProp", "stringProp");
+        final fetch<? extends AbstractEntity<?>> fetchModel = fetchOnly(masterKlass)
+                .with("integerProp").with("bigDecimalProp").with("moneyProp").with("dateProp").with("booleanProp").with("stringProp");
         assertEquals("The fetch for first level property is incorrect", fetchModel, DynamicFetchBuilder.createFetchOnlyModel(masterKlass, fetchProperties));
     }
 

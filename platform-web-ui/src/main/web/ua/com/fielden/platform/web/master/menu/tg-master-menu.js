@@ -4,7 +4,6 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import '/resources/polymer/@polymer/iron-icons/maps-icons.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
-import '/resources/polymer/@polymer/iron-selector/iron-selector.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import { afterNextRender } from "/resources/polymer/@polymer/polymer/lib/utils/render-status.js";
@@ -17,10 +16,10 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
-import '/resources/polymer/@polymer/paper-toolbar/paper-toolbar.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
-import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
+import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 import '/resources/components/postal-lib.js';
@@ -106,7 +105,7 @@ const template = html`
 
     <app-drawer-layout id="drawerPanel" fullbleed on-app-drawer-transitioned="_appDrawerTransitioned">
         <app-drawer id="drawer" disable-swipe="[[!mobile]]" slot="drawer">
-            <paper-listbox id="menu" attr-for-selected="data-route" on-dragstart="startDrag" on-dragend="endDrag" on-dragenter="dragEntered" on-dragover="dragOver" selected="{{route}}" style="height: 100%; overflow: auto;">
+            <paper-listbox id="menu" attr-for-selected="data-route" selected="{{route}}" style="height: 100%; overflow: auto;">
                 <slot id="menuItems" name="menu-item"></slot>
             </paper-listbox>
         </app-drawer>
@@ -132,13 +131,6 @@ const _updateMenuOrder = function (menuOrder, container) {
             container.insertBefore(menuItems[menuItemIdxToAdd], nextSibling);
             nextSibling = menuItems[menuItemIdxToAdd];
         }
-    }
-};
-
-const hideTooltip = function () {
-    const tooltipElement = document.getElementsByTagName('tg-tooltip')[0];
-    if (tooltipElement) {
-        tooltipElement.hide();
     }
 };
 
@@ -356,6 +348,12 @@ Polymer({
                 this._menuScrolling = false;
             }
         }
+        if (!isTouchEnabled()) { // TODO remove this check in #2323
+            this.addEventListener('dragstart', this.startDrag.bind(this));
+            this.addEventListener('dragend', this.endDrag.bind(this));
+            this.addEventListener('dragenter', this.dragEntered.bind(this));
+            this.addEventListener('dragover', this.dragOver.bind(this));
+        }
     },
 
     attached: function () {
@@ -369,6 +367,20 @@ Polymer({
                     tgUiActions[index].showDialog = self._showMenuItemView.bind(self);
                     tgUiActions[index].attrs.centreUuid = self.uuid;
                     tgUiActions[index].style.display = 'none';
+                }
+            }
+
+            const touchEnabled = isTouchEnabled();
+            if (touchEnabled) {
+                const menuItems = self.$.menuItems.assignedNodes({ flatten: true });
+                if (menuItems && menuItems.length > 0) {
+                    for (let index = 0; index < menuItems.length; index++) {
+                        const dragAnchor = menuItems[index].querySelector('.drag-anchor');
+                        if (dragAnchor) {
+                            dragAnchor.style.visibility = 'hidden';
+                            dragAnchor.removeAttribute('draggable');
+                        }
+                    }
                 }
             }
 

@@ -6,6 +6,7 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
@@ -13,16 +14,22 @@ import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistr
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
-import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier;
+import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import java.util.*;
 import java.util.function.Function;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.compileWithTempStorage;
+import static ua.com.fielden.platform.processors.utils.CodeGenerationUtils.buildAtCompositeKeyMember;
 import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.setterBuilder;
@@ -31,6 +38,8 @@ import static ua.com.fielden.platform.processors.verify.verifiers.entity.Essenti
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.*;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errEntityTypeMustBeRegistered;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.RichTextPropertyVerifier.errKeyMemberRichText;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.UnionEntityTypedKeyVerifier.ERR_UNION_ENTITY_TYPED_SIMPLE_KEY;
 
 /**
  * Tests related to the composable verifier {@link EssentialPropertyVerifier} and its components.
@@ -498,7 +507,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
 
         @Test
         public void select_custom_platform_types_are_allowed() {
-            for (final Class<?> cls: PropertyTypeVerifier.PLATFORM_TYPES) {
+            for (final var cls: List.of(Money.class, Colour.class, Hyperlink.class, RichText.class)) {
                 assertTypeAllowed(ClassName.get(cls));
             }
         }
@@ -523,6 +532,65 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
             assertTypeAllowed(ParameterizedTypeName.get(List.class, PropertyDescriptor.class));
         }
 
+    }
+
+    // 5. union-typed simple key
+    public static class UnionEntityTypedKeyVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = EssentialPropertyVerifier.UnionEntityTypedKeyVerifier.class;
+
+        @Override
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
+            return new EssentialPropertyVerifier.UnionEntityTypedKeyVerifier(procEnv);
+        }
+
+        @Test
+        public void simple_key_typed_with_a_union_entity_is_disallowed() {
+            final var entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(UnionEntity.class, KEY).build())
+                    .build();
+
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), KEY),
+                    ERR_UNION_ENTITY_TYPED_SIMPLE_KEY);
+        }
+
+        @Test
+        public void key_member_typed_with_a_union_entity_is_allowed() {
+            final var entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(UnionEntity.class, "prop")
+                            .addAnnotation(buildAtCompositeKeyMember(1))
+                            .build())
+                    .build();
+
+            compileAndAssertSuccess(List.of(entity));
+        }
+
+    }
+
+    // 5. RichText
+    public static class RichTextPropertyVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = EssentialPropertyVerifier.RichTextPropertyVerifier.class;
+
+        @Override
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
+            return new EssentialPropertyVerifier.RichTextPropertyVerifier(procEnv);
+        }
+
+        @Test
+        public void RichText_property_cannot_be_part_of_entity_key() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(ClassName.get(RichText.class), "text")
+                                      .addAnnotation(AnnotationSpec.builder(CompositeKeyMember.class).addMember("value", "$L", 1).build())
+                                      .build())
+                    .build();
+
+            compileAndAssertErrors(List.of(entity),
+                                   errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "text"),
+                                   errKeyMemberRichText(entity.name, "text"));
+        }
     }
 
 }

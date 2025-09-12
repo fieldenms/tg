@@ -1,35 +1,10 @@
 package ua.com.fielden.platform.web.ioc;
 
-import static com.google.common.base.Charsets.UTF_8;
-import static java.lang.String.format;
-import static java.util.Collections.sort;
-import static java.util.Optional.empty;
-import static java.util.Optional.ofNullable;
-import static java.util.regex.Pattern.quote;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ua.com.fielden.platform.basic.config.Workflows.deployment;
-import static ua.com.fielden.platform.basic.config.Workflows.vulcanizing;
-import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
-import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
-import static ua.com.fielden.platform.utils.ResourceLoader.getText;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getCustomView;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityMaster;
-import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
+import com.google.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -47,12 +22,31 @@ import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 
+import java.io.InputStream;
+import java.util.*;
+
+import static com.google.common.base.Charsets.UTF_8;
+import static java.lang.String.format;
+import static java.util.Collections.sort;
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
+import static java.util.regex.Pattern.quote;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.basic.config.Workflows.deployment;
+import static ua.com.fielden.platform.basic.config.Workflows.vulcanizing;
+import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
+import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.utils.ResourceLoader.getText;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
+
 /**
  * {@link IWebResourceLoader} implementation.
  *
  * @author TG Team
  *
  */
+@Singleton
 public class WebResourceLoader implements IWebResourceLoader {
     private final IWebUiConfig webUiConfig;
     private final ISerialiser serialiser;

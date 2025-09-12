@@ -1,34 +1,31 @@
 package ua.com.fielden.platform.web.factories.webui;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-
-import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Annotation;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Optional;
-
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import org.apache.commons.lang3.StringUtils;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
-
-import com.google.inject.Injector;
-import com.google.inject.Key;
-
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.annotations.SsoRedirectUriSignOut;
+import ua.com.fielden.platform.security.session.ISsoSessionController;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
-import ua.com.fielden.platform.web.factories.webui.exceptions.LogoutResourceException;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.LogoutResource;
+
+import java.lang.annotation.Annotation;
+import java.net.URLEncoder;
+import java.util.Optional;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 /**
  * A factory for a logout web resource.
@@ -57,11 +54,7 @@ public class LogoutResourceFactory extends Restlet {
     }
 
     private static String encodeUrl(final String url) {
-        try {
-            return URLEncoder.encode(url, StandardCharsets.UTF_8.name());
-        } catch (final UnsupportedEncodingException ex) {
-            throw new LogoutResourceException("Could not encode logout URL for SLO.", ex);
-        }
+        return URLEncoder.encode(url, UTF_8);
     }
     
     /**
@@ -93,6 +86,7 @@ public class LogoutResourceFactory extends Restlet {
                     injector.getInstance(IUserProvider.class),
                     coUser,
                     injector.getInstance(IUserSession.class),
+                    injector.getInstance(ISsoSessionController.class),
                     domainName,
                     path,
                     injector.getInstance(IDeviceProvider.class),
@@ -104,4 +98,5 @@ public class LogoutResourceFactory extends Restlet {
             ).handle();
         }
     }
+
 }

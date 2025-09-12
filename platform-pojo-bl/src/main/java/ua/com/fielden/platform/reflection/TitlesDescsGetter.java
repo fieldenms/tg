@@ -1,47 +1,28 @@
 package ua.com.fielden.platform.reflection;
 
-import static java.util.Arrays.asList;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang3.StringUtils.capitalize;
-import static org.apache.commons.lang3.StringUtils.join;
-import static org.apache.commons.lang3.StringUtils.splitByCharacterTypeCamelCase;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
-import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
-import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
+import org.apache.commons.lang3.StringUtils;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
+import ua.com.fielden.platform.utils.Pair;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.EntityTitle;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+import static java.util.Arrays.asList;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang3.StringUtils.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
+import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPathToArray;
+import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 
 /**
  * This is a helper class to provide methods related to property/entity titles/descs determination.
@@ -67,7 +48,7 @@ public class TitlesDescsGetter {
      * @return
      */
     private static Pair<List<String>, List<String>> getPropertyTitlesAndDescriptionsPath(final Class<?> type, final String dotNotationExp) {
-        final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
+        final String[] properties = laxSplitPropPathToArray(dotNotationExp);
         Class<?> ownerType = type;
         final List<String> pathOfTitles = new ArrayList<>();
         final List<String> pathOfDescs = new ArrayList<>();
@@ -126,20 +107,10 @@ public class TitlesDescsGetter {
      * @param entityType -- a type that holds the first property in {@code propPath}
      * @return
      */
-    public static Pair<String, String> getTitleAndDesc(final String propPath, final Class<?> entityType) {
-            return processSubtitles(propPath, entityType).orElseGet(() -> processTitles(propPath, entityType));
+    public static Pair<String, String> getTitleAndDesc(final CharSequence propPath, final Class<?> entityType) {
+            return processSubtitles(propPath.toString(), entityType).orElseGet(() -> processTitles(propPath.toString(), entityType));
     }
 
-    /**
-     * The same as {@link #getTitleAndDesc(String, Class)}, but with {@link IConvertableToPath} {@code prop} argument.
-     *
-     * @param prop
-     * @param entityType
-     * @return
-     */
-    public static Pair<String, String> getTitleAndDesc(final IConvertableToPath prop, final Class<?> entityType) {
-        return getTitleAndDesc(prop.toPath(), entityType);
-    }
     /**
      * Determines property titles and desc without analysing {@link Subtitles}. Effectively this represents the logic before subtitles were introduced.
      * This method should not be used directly and therefore it is private.
@@ -178,7 +149,7 @@ public class TitlesDescsGetter {
      * @return
      */
     private static Optional<Pair<String, String>> processSubtitles(final String propPath, final Class<?> entityType) {
-        if (isDotNotation(propPath)) {
+        if (isDotExpression(propPath)) {
             final String propName = firstAndRest(propPath).getKey();
             final Optional<Subtitles> subtitles = getPropertyAnnotationOptionally(Subtitles.class, entityType, propName);
             return subtitles.flatMap(sub -> Stream.of(sub.value()).filter(pt -> (propName + "." + pt.path()).equals(propPath)).findFirst().map(pt -> Pair.pair(pt.title(), pt.desc())));
@@ -201,7 +172,7 @@ public class TitlesDescsGetter {
             final Class<? extends AbstractEntity<?>> type = (Class<? extends AbstractEntity<?>>) propertyType;
             return of(getEntityTitleAndDesc(type));
         }
-        final String propName = isDotNotation(dotNotationExp) ? penultAndLast(dotNotationExp).getValue() : dotNotationExp;
+        final String propName = isDotExpression(dotNotationExp) ? penultAndLast(dotNotationExp).getValue() : dotNotationExp;
         final String readablePropertyName = join(asList(splitByCharacterTypeCamelCase(capitalize(propName))), " ");
         return of(pair(readablePropertyName, readablePropertyName));
     }
@@ -289,25 +260,6 @@ public class TitlesDescsGetter {
             errorMsg = errorMsg.replace("{{prop-title}}", StringUtils.isEmpty(propTitle) ? propName : propTitle);
             errorMsg = errorMsg.replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey());
         }
-        return errorMsg;
-    }
-
-    public static String processEntityExistsErrorMsg(final String propName, final Object errouneousValue, final Class<? extends AbstractEntity<?>> entityType) {
-        String errorMsg = "";
-
-        try {
-            final Method setter = Reflector.obtainPropertySetter(entityType, propName);
-            if (AnnotationReflector.isAnnotationPresent(setter, EntityExists.class)) {
-                errorMsg = AnnotationReflector.getAnnotation(setter, EntityExists.class).errorMsg();
-                final String propTitle = TitlesDescsGetter.getTitleAndDesc(propName, entityType).getKey();
-                errorMsg = errorMsg.replace("{{prop-title}}", StringUtils.isEmpty(propTitle) ? propName : propTitle);
-                errorMsg = errorMsg.replace("{{prop-value}}", errouneousValue + "");
-                errorMsg = errorMsg.replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey());
-            }
-        } catch (final ReflectionException e) {
-            e.printStackTrace();
-        }
-
         return errorMsg;
     }
 

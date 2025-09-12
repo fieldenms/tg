@@ -8,6 +8,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
+
+import java.math.BigDecimal;
 
 @KeyType(String.class)
 @DescTitle("Description")
@@ -15,13 +18,19 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 @MapEntityTo
 public class EntityOne extends AbstractEntity<String> {
 
+    public enum Property implements IConvertableToPath {
+        stringProperty, bigDecimalProperty;
+
+        @Override public String toPath() { return name(); }
+    }
+
     @IsProperty
     @MapTo
     private String stringProperty;
 
     @IsProperty
     @MapTo
-    private Double doubleProperty;
+    private BigDecimal bigDecimalProperty;
 
     public String getStringProperty() {
         return stringProperty;
@@ -33,13 +42,13 @@ public class EntityOne extends AbstractEntity<String> {
         return this;
     }
 
-    public Double getDoubleProperty() {
-        return doubleProperty;
+    public BigDecimal getBigDecimalProperty() {
+        return bigDecimalProperty;
     }
 
     @Observable
-    public EntityOne setDoubleProperty(final Double doubleProperty) {
-        this.doubleProperty = doubleProperty;
+    public EntityOne setBigDecimalProperty(final BigDecimal bigDecimalProperty) {
+        this.bigDecimalProperty = bigDecimalProperty;
         return this;
     }
 

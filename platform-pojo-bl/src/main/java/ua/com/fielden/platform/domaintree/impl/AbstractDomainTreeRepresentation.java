@@ -1,37 +1,8 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.AbstractEntity.isStrictModelVerification;
-import static ua.com.fielden.platform.reflection.Finder.findProperties;
-import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
@@ -40,12 +11,7 @@ import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.Ignore;
-import ua.com.fielden.platform.entity.annotation.Invisible;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -56,6 +22,21 @@ import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.*;
+
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.reflection.Finder.*;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 /**
  * A base domain tree representation for all TG trees. Includes strict TG domain rules that should be used by all specific tree implementations. <br>
@@ -108,13 +89,13 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     }
 
     private int level(final String path) {
-        return !PropertyTypeDeterminator.isDotNotation(path) ? 0 : 1 + level(PropertyTypeDeterminator.penultAndLast(path).getKey());
+        return !PropertyTypeDeterminator.isDotExpression(path) ? 0 : 1 + level(PropertyTypeDeterminator.penultAndLast(path).getKey());
     }
 
     /**
      * Constructs recursively the list of properties using given list of fields.
      *
-     * @param rootType
+     * @param managedType
      * @param path
      * @param fieldsAndKeys
      * @return
@@ -225,16 +206,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     public static List<Field> constructKeysAndProperties(final Class<?> type, final boolean withIdAndVersion) {
         // logger().info("Started constructKeysAndProperties for [" + type.getSimpleName() + "].");
-        final List<Field> properties = findProperties(type);
-        // let's remove desc and key properties as they will be added separately a couple of lines below
-        for (final Iterator<Field> iter = properties.iterator(); iter.hasNext();) {
-            final Field prop = iter.next();
-            if (KEY.equals(prop.getName()) || DESC.equals(prop.getName())) {
-                iter.remove();
-            }
-        }
-        final List<Field> keys = getKeyMembers((Class<? extends AbstractEntity<?>>) type);
-        properties.removeAll(keys); // remove composite key members if any
+        final var keys = getKeyMembers((Class<? extends AbstractEntity<?>>) type);
+        final var properties = streamProperties(type)
+                // let's remove desc and key properties as they will be added separately a couple of lines below
+                .filter(prop -> !KEY.equals(prop.getName()) && !DESC.equals(prop.getName()))
+                .filter(prop -> !keys.contains(prop)) // remove composite key members if any
+                .collect(toImmutableList());
 
         // now let's ensure that that key related properties and desc are first in the list of properties
         final List<Field> fieldsAndKeys = new ArrayList<>();
@@ -426,7 +403,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         // logger().info("\t\t\ttransform.");
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(root, property);
         // logger().info("\t\t\tpenultAndLast.");
-        final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
+        final String penultPropertyName = PropertyTypeDeterminator.isDotExpression(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
         final Class<?> penultType = transformed.getKey();
         final String lastPropertyName = transformed.getValue();
         // logger().info("\t\t\tdetermineClass.");
@@ -444,7 +421,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 EntityUtils.isEnum(propertyType) || // exclude enumeration properties / entities
                 EntityUtils.isEntityType(propertyType) && Modifier.isAbstract(propertyType.getModifiers()) || // exclude properties / entities of entity type with 'abstract' modifier
                 EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresentForClass(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
-                EntityUtils.isEntityType(propertyType) && EntityUtils.isIntrospectionDenied((Class<? extends AbstractEntity<?>>) propertyType) || // exclude properties / entities of entity type with DenyIntrospection annotation
+                EntityUtils.isEntityType(propertyType) && EntityUtils.isIntrospectionDenied(propertyType) || // exclude properties / entities of entity type with DenyIntrospection annotation
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName) || // exclude invisible properties
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude ignored properties
                 // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.
@@ -455,7 +432,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 // Perhaps some "hybrid" of both can be used to achieve acceptable performance.
                 // 1. !isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
                 // 2. !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(DynamicEntityClassLoader.getOriginalType(root), penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(root), penultPropertyName)) || // exclude link properties in one2many and one2one associations
-                !isEntityItself && isExcluded(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : "", manuallyExcludedProperties, rootTypes, strictKeys, strictIsPropertyProps); // exclude property if it is an ascender (any level) of already excluded property
+                !isEntityItself && isExcluded(root, PropertyTypeDeterminator.isDotExpression(property) ? penultPropertyName : "", manuallyExcludedProperties, rootTypes, strictKeys, strictIsPropertyProps); // exclude property if it is an ascender (any level) of already excluded property
         // logger().info("\t\tEnded isExcludedImmutably for property [" + property + "].");
         return excl;
     }
@@ -476,11 +453,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param root
      * @param property
      * @param addCollectionalElementType
-     *            -- true => then correct element type of collectional property will be added to set, otherwise a {@link Collection.class} will be added.
+     *            if {@code true} then a correct element type of collectional property will be added to the result, otherwise – {@code Collection.class} will be added.
      * @return
      */
     protected static Set<Class<?>> typesInHierarchy(final Class<?> root, final String property, final boolean addCollectionalElementType) {
-        if (!PropertyTypeDeterminator.isDotNotation(property)) {
+        if (!PropertyTypeDeterminator.isDotExpression(property)) {
             return new HashSet<Class<?>>() {
                 private static final long serialVersionUID = 6314144790005942324L;
                 {
@@ -607,7 +584,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * Please note that you can only mutate this list with methods {@link List#add(Object)} and {@link List#remove(Object)} to correctly reflect the changes on depending objects.
      * (e.g. UI tree models, checked properties etc.)
      *
-     * @param root
+     * @param managedType
      * @return
      */
     @Override

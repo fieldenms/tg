@@ -10,6 +10,8 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.reflection.testannotation.ConstructorAnnotationRuntime;
 
+import java.math.BigDecimal;
+
 /**
  * A test entity type that declares constructors.
  *
@@ -29,7 +31,7 @@ public class EntityWithConstructors extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Number", desc = "A numeric property")
-    private Double number;
+    private BigDecimal number;
 
     private EntityWithConstructors() {};
 
@@ -38,12 +40,12 @@ public class EntityWithConstructors extends AbstractEntity<String> {
         super(null, key, "");
     }
     
-    private EntityWithConstructors(final Double number) {
+    private EntityWithConstructors(final BigDecimal number) {
         this.number = number;
     }
     
     @ConstructorAnnotationRuntime
-    public EntityWithConstructors(final String property, final Double number) {
+    public EntityWithConstructors(final String property, final BigDecimal number) {
         this.property = property;
         this.number = number;
     }
@@ -58,12 +60,12 @@ public class EntityWithConstructors extends AbstractEntity<String> {
     }
 
     @Observable
-    public EntityWithConstructors setName(final Double number) {
+    public EntityWithConstructors setName(final BigDecimal number) {
         this.number = number;
         return this;
     }
 
-    public Double getName() {
+    public BigDecimal getName() {
         return number;
     }
     

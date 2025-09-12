@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.sse;
 
-import static java.lang.String.format;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import static java.lang.String.format;
 
 /**
  * A structure to represent a HTTP request information for logging and other reporting purposes.

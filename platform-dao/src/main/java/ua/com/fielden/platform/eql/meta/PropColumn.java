@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.eql.meta;
 
+import jakarta.annotation.Nullable;
+
 import java.util.Objects;
 
 public class PropColumn {
     public final String name;
-    public final Integer length;
-    public final Integer precision;
-    public final Integer scale;
+    public final @Nullable Integer length;
+    public final @Nullable Integer precision;
+    public final @Nullable Integer scale;
 
     public PropColumn(final String name, final Integer length, final Integer precision, final Integer scale) {
         this.name = name.toUpperCase();

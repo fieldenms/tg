@@ -44,7 +44,6 @@ const template = html`
             color: black;
             padding: 0px;
             overflow: auto; /* this is to make host scorable when needed */
-            -webkit-overflow-scrolling: touch;
             box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
             position: fixed;
             @apply --layout-vertical;
@@ -54,11 +53,8 @@ const template = html`
             @apply --layout-vertical;
             @apply --layout-start;
             font-size: small;
-            padding: 6px;
             margin: 0px;
-            overflow: auto;
-            -webkit-overflow-scrolling: touch;
-            text-overflow: ellipsis;
+            overflow: hidden;
             border-top: 1px solid #e3e3e3;
             min-height: 24px;
         }
@@ -87,6 +83,16 @@ const template = html`
 
         paper-item:focus {
             background-color: #E1F5FE;
+        }
+
+        .item-scroll-container {
+            width: 100%;
+            overflow: auto;
+        }
+
+        .item-container {
+            padding: 6px;
+            width: fit-content;
         }
 
         .additional-prop {
@@ -122,7 +128,6 @@ const template = html`
             min-width: 250px;
             padding: 0px;
             overflow: auto;
-            -webkit-overflow-scrolling: touch;
             text-overflow: ellipsis;
         }
 
@@ -423,6 +428,9 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
      * Obtains a value of the specified by name property for the passed in entity.
      */
     _propValueByName (entity, propName) {
+        if (entity.get(propName) !== null && entity.get(propName).hasOwnProperty('coreText')) {
+            return entity.get(propName).coreText;
+        }
         return this.reflector.tg_toString(entity.get(propName), entity.type(), propName);
     }
 
@@ -498,7 +506,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 const id = this._makeId(index);
                 const paperItem = this.shadowRoot.querySelector("#" + id);
                 if (paperItem) {
-                    paperItem.innerHTML = html;
+                    paperItem.innerHTML = `<div class="item-scroll-container"><div class="item-container">${html}</div></div>`;
                 }
             }
         }.bind(this));

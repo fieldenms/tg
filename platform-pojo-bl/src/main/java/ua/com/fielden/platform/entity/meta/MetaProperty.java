@@ -1,17 +1,7 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static java.lang.String.format;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -21,6 +11,15 @@ import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import static java.lang.String.format;
 
 /**
  * A base class for a concept of meta-data about an entity property. Hence, meta-property.
@@ -49,7 +48,6 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     private final boolean isEntity;
     protected final boolean key;
     protected final boolean retrievable;
-    private final boolean activatable;
     private final boolean critOnly;
 
     private final String[] dependentPropertyNames;
@@ -84,18 +82,6 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.retrievable = Reflector.isPropertyRetrievable(entity, field);
         this.dependentPropertyNames = dependentPropertyNames != null ? Arrays.copyOf(dependentPropertyNames, dependentPropertyNames.length) : new String[] {};
         this.critOnly = field.isAnnotationPresent(CritOnly.class);
-
-        // let's identify whether property represents an activatable entity in the current context
-        // a property of an ativatable entity type is considered "activatable" only if annotation SkipEntityExistsValidation is not present or
-        // it is present with attribute skipActiveOnly == true
-        // There is also annotation SkipActivatableTracking, but it does not affect the activatable nature of the property -- only the counting of references.
-        if (!ActivatableAbstractEntity.class.isAssignableFrom(type)) {
-            this.activatable = false;
-        } else {
-            final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
-            final boolean skipActiveOnly = seevAnnotation != null ? seevAnnotation.skipActiveOnly() : false;
-            this.activatable = !skipActiveOnly;
-        }
     }
 
     public Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
@@ -162,6 +148,21 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [setDomainValidationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
+    /**
+     * Returns the first validation result from a validator associated with the specified annotation.
+     * Validation failures are considered first.
+     * If there are no validation results, an empty optional is returned.
+     * <p>
+     * Most validation annotations are associated with a single validator.
+     * But some, such as {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
+     */
+    public Optional<Result> findValidationResult(final ValidationAnnotation va) {
+        throw new StrictProxyException(format("Invalid call [findValidationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
+    /**
+     * Equivalent to {@link #findValidationResult(ValidationAnnotation)}, but fails if there are no validation results.
+     */
     public Result getValidationResult(final ValidationAnnotation va) {
         throw new StrictProxyException(format("Invalid call [getValidationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
@@ -372,6 +373,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [isRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
+    public boolean isRequiredByDefinition() {
+        throw new StrictProxyException(format("Invalid call [isRequiredByDefinition] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
     public MetaProperty<T> setRequired(final boolean required) {
         throw new StrictProxyException(format("Invalid call [setRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
@@ -532,10 +537,6 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public final boolean isEntity() {
         return isEntity;
-    }
-
-    public final boolean isActivatable() {
-        return activatable;
     }
 
     public final boolean isCritOnly() {

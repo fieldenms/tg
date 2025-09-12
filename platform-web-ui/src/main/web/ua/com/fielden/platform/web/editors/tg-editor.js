@@ -12,6 +12,7 @@ import '/resources/components/tg-confirmation-dialog.js';
 import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 
 import { tearDownEvent, allDefined, resultMessages, deepestActiveElement, isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
 
@@ -59,8 +60,8 @@ const hideCheckIconOnMouseLeave = function () {
 
 const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
-        <span>[[propTitle]]</span>
-        <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
+        <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
@@ -85,18 +86,17 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 @apply --layout-horizontal;
                 @apply --layout-center;
             }
-            #copyIcon {
-                display: none;
+            .label-title {
+                margin-right: 4px;
+            }
+            #decorator[focused]:not([disabled]) .label-title {
+                font-weight: 700;
+            }
+            .label-action {
                 width: 18px;
                 height: 18px;
-                margin-left: 4px;
-            }
-            label #copyIcon {
+                padding: 0 4px;
                 cursor: pointer;
-            }
-            :host(:hover) #copyIcon,
-            #decorator[focused]  #copyIcon {
-                display: unset;
             }
             .input-layer {
                 font-size: 16px;
@@ -194,7 +194,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             <div clss="editor-prefix" slot="prefix">
                 ${customPrefixAttribute}
             </div>
-            <div class="main-container" slot="input">
+            <div id="mainContainer" class="main-container" slot="input">
                 ${customInput}
                 ${inputLayer}
             </div>
@@ -218,7 +218,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
         </template>`;
 };
 
-export class TgEditor extends PolymerElement {
+export class TgEditor extends GestureEventListeners(PolymerElement) {
 
     static get properties() {
         return {
@@ -421,7 +421,8 @@ export class TgEditor extends PolymerElement {
              */
             _refreshCycleStarted: {
                 type: Boolean, 
-                value: false
+                value: false,
+                observer: '_refreshCycleStartedChanged'
             },
             
             /**
@@ -569,13 +570,12 @@ export class TgEditor extends PolymerElement {
                         if (event.keyCode === 13) { // 'Enter' has been pressed
                             this._checkBuiltInValidation();
                             this.commitIfChanged();
-                        } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
-                            this.commitIfChanged();
-                            this._copyTap();
                         } else if ((event.keyCode === 38 || event.keyCode === 40) 
                                     && (event.altKey || event.ctlKey || event.metaKey || event.shiftKey)) {
                             tearDownEvent(event);
                         }
+                        this._handleCopy(event);
+
                     }).bind(this);
                 }
             },
@@ -658,6 +658,13 @@ export class TgEditor extends PolymerElement {
     decorator () {
         return this.$.decorator;
     }
+
+    _handleCopy (event) {
+        if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
+            this.commitIfChanged();
+            this._copyTap();
+        }
+    }
     
     _isMultilineText (editorKind) {
         return 'MULTILINE_TEXT' === editorKind;
@@ -720,7 +727,7 @@ export class TgEditor extends PolymerElement {
                     newEditedProps[prop] = prevEditedProps[prop];
                 }
             }
-            if (!this.reflector().equalsEx(this._editingValue, _originalEditingValue)) {
+            if (!this._equalToOriginalValue(this._editingValue, _originalEditingValue)) {
                 newEditedProps[this.propertyName] = true;
             } else {
                 delete newEditedProps[this.propertyName];
@@ -729,7 +736,22 @@ export class TgEditor extends PolymerElement {
             // if ('some_name' === this.propertyName) { console.error('_identifyModification: prop [', this.propertyName, '] originalEditingValue = [', _originalEditingValue, '] editingValue = [', _editingValue, '] newEditedProps [', newEditedProps, ']'); }
         }
     }
-    
+
+    /**
+     * Returns 'true' in case if '_editingValue' is equal to original during typing (no validation request phase).
+     *   This method may be overridden in case if some fine tuning for SAVE disablement logic is needed.
+     *   E.g. some third party component (Toast UI in Rich Text editor) may provide some transformations to _editingValue ('hello world' => '<p>hello world</p>'), which we consider insignificant and don't want to show to the user.
+     */
+    _equalToOriginalValue (_editingValue, _originalEditingValue) {
+        return this.reflector().equalsEx(_editingValue, _originalEditingValue);
+    }
+
+    /**
+     * Observer for 'refresh cycle' stage changes.
+     *   This method may be overridden in case if some fine tuning is required to be performed when 'refresh cycle' started / completed.
+     */
+    _refreshCycleStartedChanged (newValue, oldValue) {}
+
     /**
      * Extracts 'original' version of editing value taking into account the erroneous properties.
      *
@@ -821,24 +843,29 @@ export class TgEditor extends PolymerElement {
     }
 
     /**
-     * Converts 'property' value (original if 'original' === true or current otherwise).
-     * 
+     * Converts the value of `property` and assigns the result to `bindingEntity[property]`.
+     *
      * All non-dot-notated properties are converted here.
      * 
-     * Also, the method converts root properties for dot-notated properties. This is necessary to guarantee that root property value, assigned in a definer of another property,
-     * would not get lost on subsequent validation/saving cycles. Such loss was happening in cases were a value, from which root property was defined, got removed as part of some domain logic (e.g., a definer).
-     * The method implements an automatic conversion to include cases where a root property is not on the master and not in 'isNecessaryForConversion' list.
+     * Also, this method converts root properties for dot-notated properties.
+     * This is necessary to guarantee that a root property value, assigned in a definer of another property,
+     * will not get lost on subsequent validation/saving cycles.
+     * Such loss was happening when a value, from which root property was defined, got removed as part of some domain logic (e.g., a definer).
+     * This method implements an automatic conversion to include cases where a root property is not on the master and not in the 'isNecessaryForConversion' list.
+     *
+     * @param original -- whether to use the original value of `property` or the current one
+     * @param customFullEntity -- if specified, then `property` is read from this entity
      */
-    _convertPropertyValue (bindingEntity, property, original) {
+    _convertPropertyValue (bindingEntity, property, original, customFullEntity) {
         if (!this.reflector().isDotNotated(property)) {
-            const fullEntity = this.reflector().tg_getFullEntity(bindingEntity);
+            const fullEntity = customFullEntity || this.reflector().tg_getFullEntity(bindingEntity);
             if (original) {
                 this.reflector().tg_convertOriginalPropertyValue(bindingEntity, property, fullEntity);
             } else {
                 this.reflector().tg_convertPropertyValue(bindingEntity, property, fullEntity, this.previousModifiedPropertiesHolder);
             }
         } else {
-            this._convertPropertyValue(bindingEntity, property.substring(0, property.lastIndexOf('.')), original);
+            this._convertPropertyValue(bindingEntity, property.substring(0, property.lastIndexOf('.')), original, customFullEntity);
         }
     }
 
@@ -894,6 +921,17 @@ export class TgEditor extends PolymerElement {
             this.commit();
         }
         this._tryFireErrorMsg(this._error);
+    }
+
+    _labelDownEventHandler (event) {
+        // Select text inside editor and focus it, if it is enabled and not yet focused.
+        // Selection of the text on-focus is consistent with on-tap action in the editor or focus gain logic when tabbing between editors.
+        if (this.shadowRoot.activeElement !== this.decoratedInput() && !this._disabled) {
+            this.decoratedInput().select();
+            this.decoratedInput().focus();
+        }
+        // Need to tear down the event for the editor to remain focused.
+        tearDownEvent(event);
     }
 
     _copyTap () {
@@ -1170,14 +1208,14 @@ export class TgEditor extends PolymerElement {
     }
 
     /**
-     * Overide this to provide custom formatting for entered text.
+     * Override this to provide custom formatting for entered text.
      */
     _formatText (value) {
         return value;
     }
     
-        /**
-     * Overide this to provide custom formatting for tooltip text.
+    /**
+     * Override this to provide custom formatting for tooltip text.
      */
     _formatTooltipText (value) {
         const formatedText = this._formatText(value);

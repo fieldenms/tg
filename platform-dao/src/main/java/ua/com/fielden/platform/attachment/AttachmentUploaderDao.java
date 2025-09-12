@@ -1,10 +1,31 @@
 package ua.com.fielden.platform.attachment;
 
-import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.logging.log4j.Logger;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.mime.MediaType;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.sax.BodyContentHandler;
+import org.xml.sax.SAXException;
+import ua.com.fielden.platform.attachment.IMalwareScanner.ScanResult.Found;
+import ua.com.fielden.platform.attachment.IMalwareScanner.ScanResult.Ok;
+import ua.com.fielden.platform.attachment.IMalwareScanner.ScanResult.ScannerError;
+import ua.com.fielden.platform.attachment.IMalwareScanner.ScanResult.ScannerNotAvailable;
+import ua.com.fielden.platform.cypher.HexString;
+import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
+import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.rx.AbstractSubjectKind;
+import ua.com.fielden.platform.security.user.User;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -15,30 +36,27 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.Random;
-import java.util.stream.Stream;
+import java.util.Set;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipInputStream;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.tika.detect.Detector;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.mime.MediaType;
-import org.apache.tika.parser.AutoDetectParser;
-
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
-import ua.com.fielden.platform.cypher.HexString;
-import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
-import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.rx.AbstractSubjectKind;
-import ua.com.fielden.platform.security.user.User;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toUnmodifiableSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.attachment.FileTypes.TAR;
+import static ua.com.fielden.platform.error.Result.*;
 
 /**
- * DAO implementation for companion object {@link IAttachmentUploader}.
+ * DAO implementation for companion object {@link AttachmentUploaderCo}.
  * <p>
  * It has two responsibilities:
  * <ul>
@@ -50,19 +68,38 @@ import ua.com.fielden.platform.security.user.User;
  *
  */
 @EntityType(AttachmentUploader.class)
-public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> implements IAttachmentUploader {
-
-    private static final int DEBUG_DELAY_PROCESSING_TIME_MILLIS = 0;
-    private static final Random RND = new Random(100);
+public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> implements AttachmentUploaderCo {
 
     private static final Logger LOGGER = getLogger(AttachmentUploaderDao.class);
+    private static final Random RND = new Random(100);
+    private static final int DEBUG_DELAY_PROCESSING_TIME_MILLIS = 0;
+
+    public static final String WARN_RESTRICTED_MIME = "An attempt to load file [%s] with a restricted mime type [%s] by user [%s].";
+    public static final String WARN_RESTRICTED_MIME_IN_ARCHIVE = "An attempt to load archive [%s] with entry [%s] of a restricted mime type [%s] by user [%s].";
+    public static final String ERR_RESTRICTED_MIME = "Files of type [%s] are not supported.";
+    public static final String ERR_RESTRICTED_MIME_IN_ARCHIVE = "Archives with files of type [%s] are not supported.";
+    public static final String ERR_MISSING_INPUT_STREAM = "Input stream was not provided.";
+    public static final String ERR_ATTACHMENT_NOT_FOUND = "Attachment [%s] could not be located.";
+    public static final String ERR_ENCRYPTED_ZIP = "Encrypted ZIP files are not supported.";
+    public static final String ERR_INFECTION_FOUND = "Infection found. This incident will be reported.";
+    public static final String ERR_MALWARE_SCANNING = "An error was encountered during malware scanning.";
 
     public final String attachmentsLocation;
+    public final Set<String> attachmentsAllowlist;
+
+    private final IMalwareScanner malwareScanner;
 
     @Inject
-    public AttachmentUploaderDao(final @Named("attachments.location") String attachmentsLocation, final IFilter filter) {
-        super(filter);
+    public AttachmentUploaderDao(
+            final @Named("attachments.location") String attachmentsLocation,
+            final @Named("attachments.allowlist") String attachmentsAllowlist,
+            final IMalwareScanner malwareScanner)
+    {
         this.attachmentsLocation = attachmentsLocation;
+        this.attachmentsAllowlist = isBlank(attachmentsAllowlist)
+                                    ? Set.of()
+                                    : Arrays.stream(attachmentsAllowlist.split(",")).map(String::trim).collect(toUnmodifiableSet());
+        this.malwareScanner = malwareScanner;
     }
 
     @Override
@@ -70,8 +107,8 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     public AttachmentUploader save(final AttachmentUploader uploader) {
         uploader.getEventSourceSubject().ifPresent(ess -> ess.publish(5));
         if (uploader.getInputStream() == null) {
-            LOGGER.fatal(format("Input stream is missing when attempting to upload [%s].", uploader.getOrigFileName()));
-            throw failure("Input stream was not provided.");
+            LOGGER.fatal(() -> "[%s] Input stream is missing when attempting to upload [%s].".formatted(getUser(), uploader.getOrigFileName()));
+            throw failure(ERR_MISSING_INPUT_STREAM);
         }
 
         final Path tmpPath = Paths.get(new File(tmpFileName()).toURI());
@@ -80,7 +117,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             final MessageDigest md = MessageDigest.getInstance("SHA1");
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 10));
 
-            LOGGER.debug(format("Saving uploaded [%s] to tmp file [%s].", uploader.getOrigFileName(), tmpPath));
+            LOGGER.debug(() -> "[%s] Saving uploaded [%s] to tmp file [%s].".formatted(getUser(), uploader.getOrigFileName(), tmpPath));
             try (final InputStream is = uploader.getInputStream();
                  final DigestInputStream dis = new DigestInputStream(is, md) /* digest decorator to compute SHA1 checksum while reading a stream */ ) {
 
@@ -95,15 +132,15 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 }
             }
 
-            // convert digest to string for target file creation
+            // Convert digest to string for target file creation
             final byte[] digest = md.digest();
             sha1 = HexString.bufferToHex(digest, 0, digest.length);
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 65));
 
-            // let's validate the file nature by analysing it's magic number
+            // Validate the file nature
             canAcceptFile(uploader, tmpPath, getUser()).ifFailure(Result::throwRuntime);
 
-            // if the target file already exist then need to create it by copying tmp file
+            // If the target file already exists, overwrite its contents
             final File targetFile = new File(targetFileName(sha1));
             if (!targetFile.exists()) {
                 final Path targetPath = Paths.get(targetFile.toURI());
@@ -112,20 +149,20 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             }
 
         } catch (final Exception ex) {
-            LOGGER.fatal(format("Failed to upload [%s].", uploader.getOrigFileName()), ex);
-            throw Result.failure(ex);
+            LOGGER.fatal(() -> "[%s] Failed to upload [%s].".formatted(getUser(), uploader.getOrigFileName()), ex);
+            throw failure(ex);
         } finally {
-            // remove tmp file, and simply log an error if it could not be removed
+            // Delete the tmp file, and log a warning if it could not be deleted
             try {
                 Files.deleteIfExists(tmpPath);
             } catch (final IOException ex) {
-                LOGGER.error(format("Could not remove tmp file [%s].", tmpPath), ex);
+                LOGGER.warn(() -> "[%s] Could not remove tmp file [%s].".formatted(getUser(), tmpPath), ex);
             }
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 85));
         }
 
-        // now we can create/retrieve a corresponding Attachment instance
-        LOGGER.debug(format("Creating an attachment for uploaded [%s].", uploader.getOrigFileName()));
+        // Now we can create/retrieve a corresponding Attachment instance
+        LOGGER.debug(()-> "[%s] Creating an attachment for uploaded [%s].".formatted(getUser(), uploader.getOrigFileName()));
         final Attachment attachment = co$(Attachment.class).new_()
                 .setSha1(sha1)
                 .setOrigFileName(uploader.getOrigFileName())
@@ -134,51 +171,250 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         try {
             final Attachment savedAttachment = co$(Attachment.class).save(attachment);
             uploader.setKey(savedAttachment);
-            LOGGER.debug(format("New attachment [%s] is created successfully.", attachment));
+            LOGGER.debug(() -> "[%s] New attachment [%s] is created successfully.".formatted(getUser(), attachment));
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 95));
         } catch (final EntityAlreadyExists ex) {
             uploader.getEventSourceSubject().ifPresent(ess -> ess.publish(90));
-            LOGGER.debug(format("Attachment [%s] already exists. Reusing existing.", attachment));
+            LOGGER.debug(() -> "[%s] Attachment [%s] already exists. Reusing existing.".formatted(getUser(), attachment));
             final Attachment existingAttachment = co(Attachment.class).findByEntityAndFetch(co(Attachment.class).getFetchProvider().fetchModel(), attachment);
             if (existingAttachment == null) {
-                final String errAttachmentNotFound = format("Attachment [%s] could not be located.", attachment);
+                final String errAttachmentNotFound = ERR_ATTACHMENT_NOT_FOUND.formatted(attachment);
                 LOGGER.error(errAttachmentNotFound);
                 throw failure(errAttachmentNotFound);
             }
             uploader.setKey(existingAttachment);
         }
 
-        // make sure we report 100% completion
-        LOGGER.debug(format("Completed attachment uploading of [%s] successfully.", uploader.getOrigFileName()));
+        // Make sure we report 100% completion
+        LOGGER.debug(() -> "[%s] Completed attachment uploading of [%s] successfully.".formatted(getUser(), uploader.getOrigFileName()));
         uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 100));
 
         return uploader;
     }
 
-    private static String[] restrictedFileTypes = new String[] {"application/x-msdownload", "application/octet-stream", "application/vnd.microsoft.portable-executable"};
-    private static Result canAcceptFile(final AttachmentUploader uploader, final Path tmpPath, final User user) throws IOException {
+    private Result canAcceptFile(final AttachmentUploader uploader, final Path tmpPath, final User user) throws IOException {
         try (final InputStream is = Files.newInputStream(tmpPath);
-             final BufferedInputStream bis = new BufferedInputStream(is)) {
+             final BufferedInputStream bis = new BufferedInputStream(is))
+        {
             final AutoDetectParser parser = new AutoDetectParser();
             final Detector detector = parser.getDetector();
             final Metadata meta = new Metadata();
+            meta.set(TikaCoreProperties.RESOURCE_NAME_KEY, uploader.getOrigFileName());
             final MediaType mediaType = detector.detect(bis, meta);
             // application/x-tika-ooxml     application/vnd.openxmlformats-officedocument.wordprocessingml.document
             // application/x-tika-ooxml     application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
             // application/x-tika-msoffice  application/vnd.ms-excel
             // application/x-tika-msoffice  application/msword
 
-            LOGGER.debug(format("Mime type for uploaded file [%s] identified as [%s], the provided is [%s].", uploader.getOrigFileName(), mediaType, uploader.getMime()));
-            if (Stream.of(restrictedFileTypes).anyMatch(rft -> mediaType.toString().contains(rft))) {
-                LOGGER.warn(format("An attempt to load file [%s] with a restricted mime type identified as [%s] (provided a [%s]) by user [%s].", uploader.getOrigFileName(), mediaType, uploader.getMime(), user));
-                return Result.failuref("Files of type [%s] are not supported.", mediaType);
+            LOGGER.debug(() -> "[%s] Mime type for uploaded file [%s] identified as [%s], and provided as [%s].".formatted(getUser(), uploader.getOrigFileName(), mediaType, uploader.getMime()));
+            // MediaType may contain other parameters in its toString, such as charset, which are not relevant for our purpose.
+            // This is why we need to extract MIME as type/subtype.
+            final var mime = mediaType.getType() + "/" + mediaType.getSubtype();
+            final var check = checkMimeType(uploader, empty(), mime, user, WARN_RESTRICTED_MIME, ERR_RESTRICTED_MIME);
+            if (!check.isSuccessful()) {
+                return check;
+            }
+            // It is possible that MIME for the uploader is already specified.
+            // Nevertheless, use Tika's MIME to ensure that the validated MIME is associated with the uploader.
+            uploader.setMime(mime);
+        }
+
+        // In the case of some archive files, we can inspect their contents.
+        final var res = switch (FileTypes.fromMime(uploader.getMime())) {
+            case ZIP -> inspectZipArchive(uploader, tmpPath, user);
+            case TAR -> inspectTarArchive(uploader, tmpPath, user);
+            case GZIP -> inspectGzipArchive(uploader, tmpPath, user);
+            case OTHER -> successful();
+        };
+        // If the MIME inspection result is not successful, return that result.
+        if (!res.isSuccessful()) {
+            return res;
+        }
+        // Otherwise, perform malware scanning and return the result of scanning.
+        return switch(malwareScanner.scan(tmpPath)) {
+            case Ok(String info) -> successful();
+            case Found(String info) -> {
+                LOGGER.error(() -> "[%s] Attempt to upload infected file [%s]: [%s].".formatted(getUser(), uploader.getOrigFileName(), info));
+                yield failure(ERR_INFECTION_FOUND);
+            }
+            case ScannerError(String info) -> {
+                LOGGER.error(() -> "[%s] Malware scanner reported an error while scanning file [%s]: %s%n".formatted(getUser(), uploader.getOrigFileName(), info));
+                yield failure(ERR_MALWARE_SCANNING);
+            }
+            case ScannerNotAvailable(String info) -> {
+                LOGGER.error(() -> "[%s] Malware scanner was not available to scan file [%s].".formatted(getUser(), uploader.getOrigFileName()));
+                yield failure(info);
+            }
+        };
+    }
+
+    private Result inspectZipArchive(final AttachmentUploader uploader, final Path tmpPath, final User user) {
+        try (final InputStream input = Files.newInputStream(tmpPath);
+             final ZipInputStream archiveStream = new ZipInputStream(input))
+        {
+
+            final AutoDetectParser parser = new AutoDetectParser();
+            final ParseContext context = new ParseContext();
+
+            ZipEntry entry;
+            while ((entry = archiveStream.getNextEntry()) != null) {
+                final var entryName =  entry.getName();
+                final Metadata metadata = new Metadata();
+                metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, entryName);
+
+                final BodyContentHandler handler = new BodyContentHandler();
+                parser.parse(archiveStream, handler, metadata, context);
+
+                final String mime = extractMimeType(metadata.get(Metadata.CONTENT_TYPE));
+
+                final Result check = checkMimeType(uploader, of(entryName), mime, user, WARN_RESTRICTED_MIME_IN_ARCHIVE, ERR_RESTRICTED_MIME_IN_ARCHIVE);
+                if (!check.isSuccessful()) {
+                    return check;
+                }
+            }
+        } catch (final Exception ex) {
+            if (ex instanceof ZipException && "encrypted ZIP entry not supported".equals(ex.getMessage())) {
+                LOGGER.error(() -> "[%s] Could not extract encrypted zip archive [%s]. Aborting the file upload.".formatted(user, uploader.getOrigFileName()), ex);
+                return failure(ERR_ENCRYPTED_ZIP);
+            }
+            else {
+                LOGGER.warn(() -> "[%s] Error while analysing archive [%s]. Aborting the analysis.".formatted(user, uploader.getOrigFileName()), ex);
             }
         }
-        return successful("OK");
+        return successful();
+    }
+
+    private Result inspectTarArchive(final AttachmentUploader uploader, final Path tmpPath, final User user) {
+        try (final InputStream input = Files.newInputStream(tmpPath);
+             final TarArchiveInputStream archiveStream = new TarArchiveInputStream(input))
+        {
+            final AutoDetectParser parser = new AutoDetectParser();
+            final ParseContext context = new ParseContext();
+
+            final var check = inspectTarEntries(uploader, user, archiveStream, parser, context);
+            if (!check.isSuccessful()) {
+                return check;
+            }
+        } catch (final Exception ex) {
+            LOGGER.warn(() -> "[%s] Error while analysing archive [%s]. Aborting the analysis.".formatted(user, uploader.getOrigFileName()), ex);
+        }
+        return successful();
+    }
+
+    private Result inspectGzipArchive(final AttachmentUploader uploader, final Path tmpPath, final User user) {
+        try (final InputStream input = Files.newInputStream(tmpPath);
+             final GZIPInputStream archiveStream = new GZIPInputStream(input))
+        {
+            final AutoDetectParser parser = new AutoDetectParser();
+            final ParseContext context = new ParseContext();
+
+            final Metadata metadata = new Metadata();
+            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, uploader.getOrigFileName());
+
+            final BodyContentHandler handler = new BodyContentHandler();
+            parser.parse(archiveStream, handler, metadata, context);
+
+            final String mime = extractMimeType(metadata.get(Metadata.CONTENT_TYPE));
+
+            // If .gzip is actual a .tar.gz then we need to inspect the tar file.
+            if (FileTypes.fromMime(mime) == TAR) {
+                return inspectGzipTarArchive(uploader, tmpPath, user);
+            }
+            // Gzip archive is just a single compressed file, as opposed to Zip, which may contain multiple files.
+            else {
+                final Result check = checkMimeType(uploader, of("N/A"), mime, user, WARN_RESTRICTED_MIME_IN_ARCHIVE, ERR_RESTRICTED_MIME_IN_ARCHIVE);
+                if (!check.isSuccessful()) {
+                    return check;
+                }
+            }
+        } catch (final Exception ex) {
+            LOGGER.warn(() -> "[%s] Error while analysing archive [%s]. Aborting the analysis.".formatted(user, uploader.getOrigFileName()), ex);
+        }
+        return successful();
+    }
+
+    private Result inspectGzipTarArchive(final AttachmentUploader uploader, final Path tmpPath, final User user) {
+        try (final InputStream input = Files.newInputStream(tmpPath);
+             final GZIPInputStream gzipStream = new GZIPInputStream(input);
+             final TarArchiveInputStream archiveStream = new TarArchiveInputStream(gzipStream))
+        {
+            final AutoDetectParser parser = new AutoDetectParser();
+            final ParseContext context = new ParseContext();
+
+            final var check = inspectTarEntries(uploader, user, archiveStream, parser, context);
+            if (!check.isSuccessful()) {
+                return check;
+            }
+        } catch (final Exception ex) {
+            LOGGER.warn(() -> "[%s] Error while analysing archive [%s]. Aborting the analysis.".formatted(user, uploader.getOrigFileName()), ex);
+        }
+        return successful();
+    }
+
+    private Result inspectTarEntries(
+            final AttachmentUploader uploader,
+            final User user,
+            final TarArchiveInputStream archiveStream,
+            final AutoDetectParser parser,
+            final ParseContext context)
+            throws IOException, SAXException, TikaException
+    {
+        TarArchiveEntry entry;
+        while ((entry = archiveStream.getNextEntry()) != null) {
+            final var entryName =  entry.getName();
+            final Metadata metadata = new Metadata();
+            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, entryName);
+
+            final BodyContentHandler handler = new BodyContentHandler();
+            parser.parse(archiveStream, handler, metadata, context);
+
+            final String mime = extractMimeType(metadata.get(Metadata.CONTENT_TYPE));
+
+            final Result check = checkMimeType(uploader, of(entryName), mime, user, WARN_RESTRICTED_MIME_IN_ARCHIVE, ERR_RESTRICTED_MIME_IN_ARCHIVE);
+            if (!check.isSuccessful()) {
+                return check;
+            }
+        }
+        return successful();
+    }
+
+    private static String extractMimeType(final String contentType) {
+        return isBlank(contentType) ? "" : substringBefore(contentType, ';').trim();
     }
 
     /**
-     * A convenient method for DEBUG purposes to mimic long running file uploads/processing.
+     * Checks `mime` against allowlist or denylist, if allowlist is empty.
+     * <p>
+     * If `mime` pertains to an archive entry, `maybeArchiveEntryName` should not be empty and should include the entry name.
+     * <p>
+     * If `mime` pertains to the whole file, `maybeArchiveEntryName` should be empty.
+     *
+     * @return  A successful result if `mime` is allowed.
+     */
+    private Result checkMimeType(
+            final AttachmentUploader uploader,
+            final Optional<String> maybeArchiveEntryName,
+            final String mime,
+            final User user,
+            final String logWarningTemplate,
+            final String errorTemplate) {
+        if (attachmentsAllowlist.isEmpty()) {
+            if (ATTACHMENTS_DENYLIST.contains(mime)) {
+                LOGGER.warn(() -> maybeArchiveEntryName.map(entryName -> logWarningTemplate.formatted(uploader.getOrigFileName(), entryName, mime, user))
+                                                       .orElseGet(() -> logWarningTemplate.formatted(uploader.getOrigFileName(), mime, user)));
+                return failuref(errorTemplate, mime);
+            }
+        }
+        else if (!attachmentsAllowlist.contains(mime)) {
+            LOGGER.warn(() -> maybeArchiveEntryName.map(entryName -> logWarningTemplate.formatted(uploader.getOrigFileName(), entryName, mime, user))
+                                                   .orElseGet(() -> logWarningTemplate.formatted(uploader.getOrigFileName(), mime, user)));
+            return failuref(errorTemplate, mime);
+        }
+        return successful();
+    }
+
+    /**
+     * A convenient method for DEBUG purposes to mimic long-running file uploads/processing.
      *
      * @param ess
      * @param prc

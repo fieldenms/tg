@@ -1,3 +1,10 @@
+import '../polymer/polymer-legacy.js';
+import '../iron-location/iron-location.js';
+import '../iron-location/iron-query-params.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+import { AppRouteConverterBehavior } from './app-route-converter-behavior.js';
+
 /**
 @license
 Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
@@ -8,12 +15,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import "../iron-location/iron-location.js";
-import "../iron-location/iron-query-params.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
-import { AppRouteConverterBehavior } from './app-route-converter-behavior.js';
+
 /**
 `app-location` is an element that provides synchronization between the
 browser location bar and the state of an app. When created, `app-location`
@@ -66,16 +68,19 @@ firing a `location-changed` event on `window`. i.e.
 @element app-location
 @demo demo/index.html
 */
-
 Polymer({
+  /*TG #2329*/ /* no-decode="[[noDecode]]" */
   _template: html`
     <iron-query-params params-string="{{__query}}" params-object="{{queryParams}}">
     </iron-query-params>
     <iron-location no-decode="[[noDecode]]" path="{{__path}}" query="{{__query}}" hash="{{__hash}}" url-space-regex="[[urlSpaceRegex]]" dwell-time="[[dwellTime]]">
     </iron-location>
   `,
+
   is: 'app-location',
+
   properties: {
+    /*TG #2329*/
     noDecode: {
       type: Boolean,
       value: false 
@@ -86,7 +91,7 @@ Polymer({
      */
     route: {
       type: Object,
-      notify: true
+      notify: true,
     },
 
     /**
@@ -97,11 +102,12 @@ Polymer({
      * to represent paths through one's app.
      *
      * When this property is set to true, the `hash` will be used in place of
-      * the `path` for generating a `route`.
+
+     * the `path` for generating a `route`.
      */
     useHashAsPath: {
       type: Boolean,
-      value: false
+      value: false,
     },
 
     /**
@@ -119,7 +125,7 @@ Polymer({
      */
     urlSpaceRegex: {
       type: String,
-      notify: true
+      notify: true,
     },
 
     /**
@@ -127,28 +133,28 @@ Polymer({
      * of the route tree.
      */
     __queryParams: {
-      type: Object
+      type: Object,
     },
 
     /**
      * The pathname component of the current URL.
      */
     __path: {
-      type: String
+      type: String,
     },
 
     /**
      * The query string portion of the current URL.
      */
     __query: {
-      type: String
+      type: String,
     },
 
     /**
      * The hash portion of the current URL.
      */
     __hash: {
-      type: String
+      type: String,
     },
 
     /**
@@ -157,14 +163,14 @@ Polymer({
      */
     path: {
       type: String,
-      observer: '__onPathChanged'
+      observer: '__onPathChanged',
     },
 
     /**
      * Whether or not the ready function has been called.
      */
     _isReady: {
-      type: Boolean
+      type: Boolean,
     },
 
     /**
@@ -178,18 +184,22 @@ Polymer({
      * See `iron-location` for more information.
      */
     dwellTime: {
-      type: Number
+      type: Number,
     }
   },
+
   behaviors: [AppRouteConverterBehavior],
   observers: ['__computeRoutePath(useHashAsPath, __hash, __path)'],
-  ready: function () {
+
+  ready: function() {
     this._isReady = true;
   },
-  __computeRoutePath: function () {
+
+  __computeRoutePath: function() {
     this.path = this.useHashAsPath ? this.__hash : this.__path;
   },
-  __onPathChanged: function () {
+
+  __onPathChanged: function() {
     if (!this._isReady) {
       return;
     }

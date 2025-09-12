@@ -18,9 +18,9 @@ public abstract class AbstractSearchPropertyDescriptorByKeyWithContext<CONTEXT e
     private CONTEXT context;
 
     /**
-     * Creates matcher for {@link PropertyDescriptor}s using enclosing entity type.
+     * Creates matcher for {@link PropertyDescriptor}s using an enclosing entity type.
      * 
-     * @param enclosingEntityType
+     * @param enclosingEntityType  an entity for which property definitions are obtained.
      */
     public AbstractSearchPropertyDescriptorByKeyWithContext(final Class<T> enclosingEntityType) {
         super(enclosingEntityType);

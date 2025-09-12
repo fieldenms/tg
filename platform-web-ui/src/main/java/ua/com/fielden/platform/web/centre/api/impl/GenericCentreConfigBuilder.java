@@ -1,20 +1,18 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.lang.String.format;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.RunAutomaticallyOptions;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
 import ua.com.fielden.platform.web.centre.api.front_actions.IAlsoFrontActions;
 import ua.com.fielden.platform.web.centre.api.front_actions.IFrontWithTopActions;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.IAlsoCentreTopLevelActions;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreSseWithPromptRefresh;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithSse;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.*;
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.sse.IEventSource;
+
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.utils.StreamUtils.of;
 
 public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements ICentreSseWithPromptRefresh<T>,  ICentreTopLevelActionsWithRunConfig<T>{
 
@@ -71,7 +69,7 @@ public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends Res
     }
 
     @Override
-    public ISelectionCritKindSelector<T> addCrit(final String propName) {
+    public ISelectionCritKindSelector<T> addCrit(final CharSequence propName) {
         return new TopLevelActionsBuilder<T>(builder).addCrit(propName);
     }
 
@@ -79,5 +77,11 @@ public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends Res
     public ICentreTopLevelActionsWithSse<T> runAutomatically() {
         builder.runAutomatically = true;
         return this;
+    }
+
+    @Override
+    public ICentreTopLevelActionsWithSse<T> runAutomatically(final RunAutomaticallyOptions option, final RunAutomaticallyOptions... additionalOptions) {
+        builder.runAutomaticallyOptions.addAll(of(option, additionalOptions).collect(toSet()));
+        return runAutomatically();
     }
 }

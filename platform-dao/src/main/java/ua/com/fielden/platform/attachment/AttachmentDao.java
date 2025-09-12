@@ -1,26 +1,23 @@
 package ua.com.fielden.platform.attachment;
 
-import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.attachment.Attachment.HYPERLINK;
-import static ua.com.fielden.platform.attachment.Attachment.pn_IS_LATEST_REV;
-import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_MODIFIED;
-import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_REVISION;
-import static ua.com.fielden.platform.attachment.Attachment.pn_MIME;
-import static ua.com.fielden.platform.attachment.Attachment.pn_ORIG_FILE_NAME;
-import static ua.com.fielden.platform.attachment.Attachment.pn_PREV_REVISION;
-import static ua.com.fielden.platform.attachment.Attachment.pn_REV_NO;
-import static ua.com.fielden.platform.attachment.Attachment.pn_SHA1;
-import static ua.com.fielden.platform.attachment.Attachment.pn_TITLE;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRev;
+import ua.com.fielden.platform.cypher.HexString;
+import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
+import ua.com.fielden.platform.types.Hyperlink;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,27 +34,18 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
-import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRev;
-import ua.com.fielden.platform.cypher.HexString;
-import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
-import ua.com.fielden.platform.types.Hyperlink;
+import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.attachment.Attachment.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 @EntityType(Attachment.class)
 public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttachment {
@@ -67,10 +55,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     private final String attachmentsLocation;
 
     @Inject
-    protected AttachmentDao(
-            final IFilter filter,
-            final @Named("attachments.location") String attachmentsLocation) {
-        super(filter);
+    protected AttachmentDao(final @Named("attachments.location") String attachmentsLocation) {
         this.attachmentsLocation = attachmentsLocation;
     }
 
@@ -153,7 +138,6 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
      * Ensures correct revision history, including revision numbering and references.
      * 
      * @param savedAttachment
-     * @param revNoIncBy 
      * @return
      */
     private Result updateAttachmentRevisionHistory(final Attachment savedAttachment) {

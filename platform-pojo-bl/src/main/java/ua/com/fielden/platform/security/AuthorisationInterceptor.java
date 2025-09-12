@@ -1,16 +1,14 @@
 package ua.com.fielden.platform.security;
 
-import static java.lang.ThreadLocal.withInitial;
-
-import java.lang.reflect.Method;
-
+import com.google.inject.Provider;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
-import com.google.inject.Injector;
+import java.lang.reflect.Method;
+
+import static java.lang.ThreadLocal.withInitial;
 
 /**
  * Method interceptor ensuring that all calls to methods annotated with Authorise are validated against an application authorisation model first. If authorisation does not succeed
@@ -24,10 +22,10 @@ import com.google.inject.Injector;
  */
 public class AuthorisationInterceptor implements MethodInterceptor {
 
-    private ThreadLocal<IAuthorisationModel> authModel;
+    private final ThreadLocal<IAuthorisationModel> authModel;
 
-    public void setInjector(final Injector injector) {
-        authModel = withInitial(() -> injector.getInstance(IAuthorisationModel.class));
+    public AuthorisationInterceptor(final Provider<IAuthorisationModel> authModelProvider) {
+        this.authModel = withInitial(authModelProvider::get);
     }
 
     public IAuthorisationModel getModel() {

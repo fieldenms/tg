@@ -28,27 +28,12 @@ const additionalTemplate = html`
         .main-container {
             @apply --layout-flex;
         }
-        .noselect {
-            -webkit-touch-callout: none;
-            /* iOS Safari */
-            -webkit-user-select: none;
-            /* Safari */
-            -khtml-user-select: none;
-            /* Konqueror HTML */
-            -moz-user-select: none;
-            /* Firefox */
-            -ms-user-select: none;
-            /* Internet Explorer/Edge */
-            user-select: none;
-            /* Non-prefixed version, currently supported by Chrome and Opera */
-        }
         .search-controls-wrapper {
             @apply --layout-horizontal;
             @apply --layout-center;
         }
         iron-list {
             overflow: auto;
-            -webkit-overflow-scrolling: touch;
         }
         .item-disabled {
             pointer-events: none;
@@ -126,9 +111,9 @@ const additionalTemplate = html`
         }
         .primary {
             font-size: 10pt;
-            padding-bottom: 3px;
         }
         .secondary {
+            padding-top: 3px;
             font-size: 8pt;
         }
         .shared {
@@ -136,7 +121,6 @@ const additionalTemplate = html`
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            flex: 1;
         }
         .inherited-primary {
             font-weight: bolder;
@@ -175,18 +159,18 @@ const customInputTemplate = html`
             <template>
                 <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
                     <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisible(item, _draggingItem)]]"></div>
-                    <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, _draggingItem, canReorderItems)]]">
-                        <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
+                    <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, _draggingItem, canReorderItems)]]" on-tap="_selectionHandler">
+                        <iron-icon class="resizing-box" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeItemOrder" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
                         <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]" style$="[[_computeTitleStyle(canReorderItems)]]">
                             <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
-                            <div class$="[[_computedDescriptionClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
+                            <div class$="[[_computedDescriptionClass(item)]]" hidden$="[[!_calcItemText(item, descriptionPropertyName)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
                         </div>
                         <div class="primary shared" inner-h-t-m-l="[[_calcSharedByText(item)]]" hidden$="[[_sharedByTextHidden(item)]]"></div>
                         <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                             <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                             <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
                         </div>
-                        <paper-checkbox style="padding-left:16px;" on-change="_selectionHandler" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
+                        <paper-checkbox style="padding-left:16px;" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
                     </div>
                     <div class="border"></div>
                 </div>
@@ -460,7 +444,14 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
     _selectionHandler (e) {
-        this.$.input.toggleSelectionForItem(e.model.item);
+        if (this._isSelectionEnabled(this._forReview)) {
+            this.$.input.toggleSelectionForItem(e.model.item);
+            tearDownEvent(e);
+        }
+    }
+
+    _preventSelection(e) {
+        tearDownEvent(e);
     }
 
     /**
@@ -583,7 +574,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         }
         return classes;
     }
-    
+
     _computedDescriptionClass (item) {
         let classes = 'secondary dim truncate';
         if (item.inherited) {
@@ -958,13 +949,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         return currentElement ? +currentElement.getAttribute("collectional-index") : -1;
     }
     
-    _makeListUnselectable () {
-        this.$.input.classList.toggle("noselect", true);
+    _setUpCursor (e) {
+        tearDownEvent(e);
         document.body.style["cursor"] = "-webkit-grabbing";
     }
     
-    _makeListSelectable () {
-        this.$.input.classList.toggle("noselect", false);
+    _resetCursor () {
         document.body.style["cursor"] = '';
     }
 
@@ -983,7 +973,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
      _allSelectionChanged (e) {
-        const target = e.target || e.srcElement;
+        const target = e.target;
         this.selectAll(target.checked);
         this._selectedAll = target.checked;            
     }

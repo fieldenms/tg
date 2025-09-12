@@ -1,18 +1,14 @@
 package ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl;
 
+import ua.com.fielden.platform.dom.*;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
+import ua.com.fielden.platform.web.minijs.JsCode;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import ua.com.fielden.platform.dom.CssElement;
-import ua.com.fielden.platform.dom.CssStyles;
-import ua.com.fielden.platform.dom.DomContainer;
-import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.dom.InnerTextElement;
-import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
-import ua.com.fielden.platform.web.minijs.JsCode;
 
 /**
  * Configuration for default toolbars available for entity centres and alternative views.
@@ -29,7 +25,6 @@ public class CentreToolbar implements IToolbarConfig {
     /**
      * Creates standard {@link CentreToolbar}. Standard switch view button width will be 60 (if present).
      *
-     * @param switchViewButtonWidth
      */
     public CentreToolbar() {
         this(DEFAULT_WIDTH_FOR_VIEW_SWITCH); //Default width of switch view button
@@ -74,8 +69,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     @Override
     public CssStyles styles() {
-        return new CssStyles()
-                .add(new CssElement("paper-icon-button.orange").setStyle("color", "var(--paper-orange-500)").setStyle("border-color", "var(--paper-orange-500)"));
+        return new CssStyles();
     }
 
     @Override
@@ -87,12 +81,12 @@ public class CentreToolbar implements IToolbarConfig {
         return new DomElement("paper-icon-button")
                 .attr("slot", "standart-action")
                 .attr("shortcut", "ctrl+e")
-                .attr("class$", "[[computeConfigButtonClasses(staleCriteriaMessage)]]")
+                .attr("style$", "[[computeConfigButtonStyle(criteriaIndication)]]")
                 .attr("icon", "icons:filter-list")
                 .attr("on-tap", "_activateSelectionCriteriaView")
                 .attr("disabled$", "[[isRunning]]")
                 .attr("hidden$", "[[isSelectionCriteriaEmpty]]")
-                .attr("tooltip-text$", "[[computeConfigButtonTooltip(staleCriteriaMessage)]]");
+                .attr("tooltip-text$", "[[computeConfigButtonTooltip(criteriaIndication)]]");
     }
 
     public static DomElement helpButton() {
@@ -123,7 +117,7 @@ public class CentreToolbar implements IToolbarConfig {
     public static DomElement pagination(final String slot) {
         return new DomContainer()
                 .add(new DomElement("paper-icon-button")
-                        .clazz("revers", "standart-action")
+                        .clazz("revers")
                         .attr("slot", slot)
                         .attr("shortcut", "ctrl+up")
                         .attr("icon", "hardware:keyboard-tab")
@@ -131,7 +125,6 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("disabled$", "[[canNotFirst(pageNumber, pageCount, isRunning)]]")
                         .attr("tooltip-text", "First page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8593</span>"))
                 .add(new DomElement("paper-icon-button")
-                        .clazz("standart-action")
                         .attr("slot", slot)
                         .attr("shortcut", "ctrl+left")
                         .attr("icon", "hardware:keyboard-backspace")
@@ -139,12 +132,12 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("disabled$", "[[canNotPrev(pageNumber, isRunning)]]")
                         .attr("tooltip-text", "Previous page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8592</span>"))
                 .add(new DomElement("span")
-                        .clazz("standart-action pagination-text")
+                        .clazz("pagination-text")
                         .style("white-space:nowrap")
                         .attr("slot", slot)
                         .add(new InnerTextElement("[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]")))
                 .add(new DomElement("paper-icon-button")
-                        .clazz("revers", "standart-action")
+                        .clazz("revers")
                         .attr("slot", slot)
                         .attr("shortcut", "ctrl+right")
                         .attr("icon", "hardware:keyboard-backspace")
@@ -152,7 +145,6 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("disabled$", "[[canNotNext(pageNumber, pageCount, isRunning)]]")
                         .attr("tooltip-text", "Next page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8594</span>"))
                 .add(new DomElement("paper-icon-button")
-                        .clazz("standart-action")
                         .attr("slot", slot)
                         .attr("shortcut", "ctrl+down")
                         .attr("icon", "hardware:keyboard-tab")
@@ -171,7 +163,6 @@ public class CentreToolbar implements IToolbarConfig {
 
     public static DomElement refreshButton() {
         return new DomElement("paper-icon-button")
-                .clazz("standart-action")
                 .attr("slot", "standart-action")
                 .attr("shortcut", "f5")
                 .attr("icon", "refresh")
@@ -214,17 +205,24 @@ public class CentreToolbar implements IToolbarConfig {
      *
      * @return
      */
-    public static IToolbarConfig withTopActionsViewSwitchPeginationAndRefresh() {
-        return withTopActionsViewSwitchPeginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
+    public static IToolbarConfig withTopActionsViewSwitchPaginationAndRefresh() {
+        return withTopActionsViewSwitchPaginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
+    }
+
+    ///
+    /// A convenient factory method to create a toolbar that includes top actions, a view switch button, config action, a pagination panel, a refresh action, and a help action.
+    ///
+    public static IToolbarConfig withTopActionsViewSwitchConfigPaginationRefreshAndHelp() {
+        return new CentreToolbar(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
     }
 
     /**
-     * The same as {link {@link #withTopActionsViewSwitchPeginationAndRefreshAction()}, but accepts a desired width for the alternative view switching button.
+     * The same as {link {@link #withTopActionsViewSwitchPaginationAndRefresh()}, but accepts a desired width for the alternative view switching button.
      *
      * @param switchViewButtonWidth
      * @return
      */
-    public static IToolbarConfig withTopActionsViewSwitchPeginationAndRefresh(final int switchViewButtonWidth) {
+    public static IToolbarConfig withTopActionsViewSwitchPaginationAndRefresh(final int switchViewButtonWidth) {
         return new CentreToolbar(switchViewButtonWidth) {
             @Override
             protected DomElement createToolbarElement() {
@@ -238,11 +236,11 @@ public class CentreToolbar implements IToolbarConfig {
      *
      * @return
      */
-    public static IToolbarConfig withTopActionsViewSwitchFilterPeginationAndRefresh() {
-        return withTopActionsViewSwitchFilterPeginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
+    public static IToolbarConfig withTopActionsViewSwitchFilterPaginationAndRefresh() {
+        return withTopActionsViewSwitchFilterPaginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
     }
 
-    public static IToolbarConfig withTopActionsViewSwitchFilterPeginationAndRefresh(final int switchViewButtonWidth) {
+    public static IToolbarConfig withTopActionsViewSwitchFilterPaginationAndRefresh(final int switchViewButtonWidth) {
         return new CentreToolbar(switchViewButtonWidth) {
             @Override
             protected DomElement createToolbarElement() {
