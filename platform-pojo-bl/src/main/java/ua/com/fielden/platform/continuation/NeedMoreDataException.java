@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.continuation;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IContinuationData;
+import ua.com.fielden.platform.error.Result;
 
 import java.util.Optional;
 
@@ -11,8 +13,10 @@ import java.util.Optional;
  * @author TG Team
  *
  */
-public class NeedMoreDataException extends RuntimeException {
+public class NeedMoreDataException extends Result {
     public static final String MSG_STANDARD = "Continuation for [%s] entity and property [%s].";
+    public static final String CONTINUATION_TYPE_STR = "continuationTypeStr";
+    public static final String CONTINUATION_PROPERTY = "continuationProperty";
 
     public final Class<? extends IContinuationData> continuationType;
     public final Optional<? extends IContinuationData> maybeContinuation;
@@ -29,7 +33,7 @@ public class NeedMoreDataException extends RuntimeException {
      * @param <T>
      */
     private <T extends IContinuationData> NeedMoreDataException(final String customMessage, final Class<? extends T> continuationType, final Optional<T> maybeContinuation, final String continuationProperty) {
-        super(customMessage);
+        super(maybeContinuation.orElse(null), customMessage);
         this.maybeContinuation = maybeContinuation;
         this.continuationType = continuationType;
         this.continuationTypeStr = continuationType.getName();
@@ -66,7 +70,7 @@ public class NeedMoreDataException extends RuntimeException {
      * @param continuationProperty  a field name of a companion object to which a continuation instance is going to be assigned to.
      */
     public <T extends IContinuationData> NeedMoreDataException(final String customMessage, final T continuation, final String continuationProperty) {
-        this(customMessage, continuation.getClass(), Optional.of(continuation), continuationProperty);
+        this(customMessage, getContinuationType(continuation), Optional.of(continuation), continuationProperty);
     }
 
     /**
@@ -76,7 +80,11 @@ public class NeedMoreDataException extends RuntimeException {
      * @param <T>
      */
     public <T extends IContinuationData> NeedMoreDataException(final T continuation, final String continuationProperty) {
-        this(MSG_STANDARD.formatted(continuation, continuationProperty), continuation.getClass(), Optional.of(continuation), continuationProperty);
+        this(MSG_STANDARD.formatted(continuation, continuationProperty), getContinuationType(continuation), Optional.of(continuation), continuationProperty);
+    }
+
+    static <T extends IContinuationData> Class<? extends T> getContinuationType(final T continuation) {
+        return (Class<? extends T>) ((AbstractEntity<?>) continuation).getType();
     }
 
 }
