@@ -664,7 +664,18 @@ const TgEntityMasterBehaviorImpl = {
                             _self.fire('continuation-completed-without-success', action);
                         }
                     }).bind(action);
+
+                    const contextCreator = action._createContextHolderForAction.bind(action);
+
+                    action._createContextHolderForAction = function () {
+                        const context = contextCreator();
+                        if (action.originallyProducedEntity) {
+                            context['originallyProducedEntity'] = action.originallyProducedEntity;
+                        }
+                        return context;
+                    };
                 }
+                action.originallyProducedEntity = _exceptionOccurred.ex.instance;
                 action._run();
             } else if (_exceptionOccurred !== null) {
                 this._postSavedDefaultPostExceptionHandler();

@@ -1,29 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
-import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.FIND_OR_NEW;
-import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.ID;
-import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
-import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForMaster;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
-import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.createValidationPrototype;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -35,16 +12,9 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.EntityResourceContinuationsHelper;
-import ua.com.fielden.platform.entity.IContinuationData;
-import ua.com.fielden.platform.entity.IEntityProducer;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -71,6 +41,19 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+
+import java.util.*;
+
+import static java.util.Optional.*;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.*;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForMaster;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
+import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.createValidationPrototype;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.*;
 
 /**
  * The web resource for entity serves as a back-end mechanism of entity retrieval, saving and deletion. It provides a base implementation for handling the following methods:
@@ -227,9 +210,12 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(true, webUiConfig, companionFinder, user, critGenerator, factory, centreContextHolder, 0, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
                     final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
 
+                    final T originallyProducedEntity = !centreContextHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (T) centreContextHolder.getOriginallyProducedEntity() : null;
+                    final Optional<T> continuationInstance = Optional.ofNullable(originallyProducedEntity).filter(entity -> IContinuationData.class.isAssignableFrom(entity.getClass()));
+
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null,
-                            emptyOriginallyProducedEntity,
+                            continuationInstance.orElse(emptyOriginallyProducedEntity),
                             createCentreContext(
                                     masterEntity, /* master context */
                                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),

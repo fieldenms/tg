@@ -1,29 +1,25 @@
 package ua.com.fielden.platform.web.utils;
 
-import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
-
-import java.util.Map;
-import java.util.function.Function;
-
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
-import ua.com.fielden.platform.entity.EntityProducingException;
-import ua.com.fielden.platform.entity.IEntityProducer;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
+
+import java.util.Map;
+import java.util.function.Function;
+
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
 
 /**
  * A set of utilities for creating a validation prototype by either:
@@ -112,7 +108,14 @@ public class EntityRestorationUtils {
         if (id != null) {
             entity = findByIdWithFiltering(id, companion);
         } else if (originallyProducedEntity != null) {
-            entity = originallyProducedEntity;
+            if (IContinuationData.class.isAssignableFrom(originallyProducedEntity.getClass())) {
+                final DefaultEntityProducerWithContext<T> defProducer = (DefaultEntityProducerWithContext<T>) producer;
+                defProducer.setOriginallyProducedEntity(originallyProducedEntity);
+                entity = producer.newEntity();
+            }
+            else {
+                entity = originallyProducedEntity;
+            }
         } else {
             entity = producer.newEntity();
         }
