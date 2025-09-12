@@ -253,25 +253,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
 
     open() {
         if (this._scanner) {
-            // This method will trigger user permissions
-            Html5Qrcode.getCameras().then(devices => {
-                /**
-                 * devices would be an array of objects of type:
-                 * { id: "id", label: "label" }
-                 */
-                if (devices && devices.length) {
-                    this._cameras = devices.map((device, idx) => {return {index: idx, id: device.id, title: device.label, desc: device.label};});
-                    this.$.camearSelector.viewIndex = getCameraIndex(this._cameras);
-                    this._resetState();
-                    this.$.scanAndApplyEditor._editingValue = localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) || 'false';
-                    this.$.scanAndApplyEditor.commitIfChanged();
-                    this.$.qrCodeScanner.open();
-                } else {
-                    this.toaster && this.toaster.openToastForError('No cammera error', 'There is no cameras to scan QR or Bar code', true);
-                }
-            }).catch(err => {
-                this.toaster && this.toaster.openToastForError('Camera error', err, true);
-            });
+            this.$.qrCodeScanner.open();
         } else {
             this.toaster && this.toaster.openToastForError('Scanner error', 'Please specify element for camera feed inside tg-qr-code-scanner with slot attribute equal to "scanner"', true);
         }
@@ -311,7 +293,26 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             this._videoFeedElement.style.width = dims.width + 'px';
             this._videoFeedElement.style.height = dims.height + 'px';
             this.$.qrCodeScanner.refit();
-            this._startCamera(dims.width, dims.height, dims.aspectRatio);
+            // This method will trigger user permissions
+            Html5Qrcode.getCameras().then(devices => {
+                /**
+                 * devices would be an array of objects of type:
+                 * { id: "id", label: "label" }
+                 */
+                if (devices && devices.length) {
+                    this._cameras = devices.map((device, idx) => {return {index: idx, id: device.id, title: device.label, desc: device.label};});
+                    this.$.camearSelector.viewIndex = getCameraIndex(this._cameras);
+                    this._resetState();
+                    this.$.scanAndApplyEditor._editingValue = localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) || 'false';
+                    this.$.scanAndApplyEditor.commitIfChanged();
+                    this._startCamera(dims.width, dims.height, dims.aspectRatio);
+                } else {
+                    this.toaster && this.toaster.openToastForError('No cammera error', 'There is no cameras to scan QR or Bar code', true);
+                }
+            }).catch(err => {
+                this.toaster && this.toaster.openToastForError('Camera error', err, true);
+            });
+            
         }
     }
 
@@ -388,14 +389,18 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
     }
             
     _cancelScan() {
-        this.$.qrCodeScanner.cancel();
+        if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && this._scanner.isScanning) {
+            this.$.qrCodeScanner.cancel();
+        }
     }
     
     _applyScane() {
-        this.$.textEditor.commitIfChanged();
-        this.$.qrCodeScanner.close();
-        if (this.applyCallback) {
-            this.applyCallback(this.scannedText);
+        if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && this._scanner.isScanning) {
+            this.$.textEditor.commitIfChanged();
+            this.$.qrCodeScanner.close();
+            if (this.applyCallback) {
+                this.applyCallback(this.scannedText);
+            }
         }
     }
 
