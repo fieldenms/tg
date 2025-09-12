@@ -21,6 +21,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 
 const SCAN_AND_APPLY = 'scanAndApply';
 const CAMERA_ID = 'cameraId';
+const SEPARATOR = 'scanSeparator';
 
 function calculatePrefferedVideoSize(scannerElement) {
     const windowWidth = window.innerWidth;
@@ -81,8 +82,20 @@ function saveCamera(camera) {
     }
 }
 
+function getSeparator() {
+    return localStorage.getItem(localStorageKey(SEPARATOR)) || '';
+}
+
+function saveSeparator(separator) {
+    if (separator) {
+        localStorage.setItem(localStorageKey(SEPARATOR), separator);
+    } else {
+        localStorage.removeItem(localStorageKey(SEPARATOR));
+    }
+}
+
 const template = html`
-    <style include="iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <style>
         paper-dialog {
             overflow: hidden;
@@ -158,9 +171,14 @@ const template = html`
             <tg-singleline-text-editor id="textEditor" class ="editor" entity="[[_entity]]" property-name="scannedValue" prop-title="Scanned Value" 
                     prop-desc="Contains text scanned from a QR or barcode" current-state="EDIT" 
                     validation-callback="[[_validate]]" toaster="[[toaster]]" hide-qr-code-scanner></tg-singleline-text-editor>
-            <tg-boolean-editor id="scanAndApplyEditor" class ="editor" entity="[[_entity]]" property-name="scanAndApply" prop-title="Scan & apply?" 
+            <div class="layout horizontal justified">
+                <tg-boolean-editor id="scanAndApplyEditor" class ="editor flex" style="margin-right:20px;" entity="[[_entity]]" property-name="scanAndApply" prop-title="Scan & apply?" 
                         prop-desc="Determines whether the scanned value should be applied immediately or not" current-state="EDIT" 
                         validation-callback="[[_validate]]" toaster="[[toaster]]"></tg-boolean-editor>
+                <tg-singleline-text-editor id="separatorEditor" class ="editor flex" entity="[[_entity]]" property-name="separator" prop-title="Append Value with Separator" 
+                        prop-desc="Separator to prepend to the scanned value" current-state="EDIT" 
+                        validation-callback="[[_validate]]" toaster="[[toaster]]" hide-qr-code-scanner></tg-singleline-text-editor>
+            </div>
             <div class="buttons">
                 <paper-button raised roll="button" tooltip-text="Close dialog" on-tap="_cancelScan"><span>CLOSE</span></paper-button>
                 <paper-button raised roll="button" tooltip-text="Auto-restart scanner" on-tap="_scanAgain"><span>SCAN</span></paper-button>
@@ -215,14 +233,19 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         this._reflector = new TgReflector();
         this._entity = createDummyBindingEntity(
             {'scannedValue': {value: '', editable: true},
-             'scanAndApply': {value: false, editable: true}},
+             'scanAndApply': {value: false, editable: true},
+             'separator': {value: '', editable: true}},
              (name) => {
                 return {
-                    type: () => name === 'scannedValue' ? 'string' : 'boolean'
+                    type: () => name === 'scanAndApply' ? 'boolean' : 'string'
                 }
             }
         );
-        this._validate = function () {};
+        this._validate = () => {
+            if (this.separator !== getSeparator()) {
+                saveSeparator(this.separator);
+            }
+        };
         this.addEventListener('addon-attached', this._onAddonAttached.bind(this));
     }
 
@@ -262,9 +285,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                 if (devices && devices.length) {
                     this._cameras = devices.map((device, idx) => {return {index: idx, id: device.id, title: device.label, desc: device.label};});
                     this.$.camearSelector.viewIndex = getCameraIndex(this._cameras);
-                    this._resetState();
-                    this.$.scanAndApplyEditor._editingValue = localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) || 'false';
-                    this.$.scanAndApplyEditor.commitIfChanged();
+                    this._resetEditorsState();
                     this.$.qrCodeScanner.open();
                 } else {
                     this.toaster && this.toaster.openToastForError('No cammera error', 'There is no cameras to scan QR or Bar code', true);
@@ -279,6 +300,10 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
 
     get scannedText() {
         return this._entity['scannedValue'] ? this._entity['scannedValue'] : '';
+    }
+
+    get separator() {
+        return this._entity['separator'] ? this._entity['separator'] : '';
     }
 
     _changeCamera(e) {
@@ -370,9 +395,13 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         }
     }
 
-    _resetState() {
+    _resetEditorsState() {
         this.$.textEditor.assignConcreteValue('', this._reflector.tg_convert.bind(this._reflector));
         this.$.textEditor.commitIfChanged();
+        this.$.scanAndApplyEditor._editingValue = localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) || 'false';
+        this.$.scanAndApplyEditor.commitIfChanged();
+        this.$.separatorEditor.assignConcreteValue(getSeparator(), this._reflector.tg_convert.bind(this._reflector));
+        this.$.separatorEditor.commitIfChanged();
     }
 
     _scanAgain(e) {
