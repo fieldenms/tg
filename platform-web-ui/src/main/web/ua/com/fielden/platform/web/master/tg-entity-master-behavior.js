@@ -667,6 +667,9 @@ const TgEntityMasterBehaviorImpl = {
 
                     const contextCreator = action._createContextHolderForAction.bind(action);
 
+                    // Override context creation to consider instance-based continuations.
+                    // `action.originallyProducedEntity` should be initialised before `action._run()`.
+                    // This is because such overridden context creator is only created once.
                     action._createContextHolderForAction = function () {
                         const context = contextCreator();
                         if (action.originallyProducedEntity) {
@@ -675,6 +678,8 @@ const TgEntityMasterBehaviorImpl = {
                         return context;
                     };
                 }
+                // Initialise `action.originallyProducedEntity` for the above context creator override.
+                // `_exceptionOccurred.ex.instance` will be empty (null) in case of type-based continuations.
                 action.originallyProducedEntity = _exceptionOccurred.ex.instance;
                 action._run();
             } else if (_exceptionOccurred !== null) {

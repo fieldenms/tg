@@ -19,6 +19,7 @@ import static java.util.Optional.ofNullable;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.utils.EntityUtils.isContinuationData;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
 
 /**
@@ -108,7 +109,9 @@ public class EntityRestorationUtils {
         if (id != null) {
             entity = findByIdWithFiltering(id, companion);
         } else if (originallyProducedEntity != null) {
-            if (IContinuationData.class.isAssignableFrom(originallyProducedEntity.getClass())) {
+            // If `originallyProducedEntity` is present, only consider continuation one and use it for validation prototype creation.
+            // It is important to do it through a producer to consider custom contextual domain logic.
+            if (isContinuationData(originallyProducedEntity.getClass())) {
                 final DefaultEntityProducerWithContext<T> defProducer = (DefaultEntityProducerWithContext<T>) producer;
                 defProducer.setOriginallyProducedEntity(originallyProducedEntity);
                 entity = producer.newEntity();

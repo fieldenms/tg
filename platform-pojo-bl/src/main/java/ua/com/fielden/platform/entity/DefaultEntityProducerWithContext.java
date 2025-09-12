@@ -26,10 +26,16 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
 
     private final EntityFactory factory;
     protected final Class<T> entityType;
-    /** Instrumented reader to be used for producing of {@link #new_()} editable entities and for re-fetching ({@link #refetchInstrumentedEntityById(Long)}) of persisted editable entities. */
+    /// Instrumented reader to be used for producing of [#new_()] editable entities.
+    /// And for re-fetching ([#refetchInstrumentedEntityById(Long)]) of persisted editable entities.
+    ///
     private final Optional<IEntityReader<T>> reader;
-    /** Optional context for context-dependent entity producing logic. */
+    /// Optional context for context-dependent entity producing logic.
+    ///
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context;
+    /// In some special cases (e.g. for continuations), we may use existing instance to produce resultant entity instead of new_().
+    /// This is only limited to entities not intended to be retrieved (e.g. persisted through edit action).
+    ///
     private T originallyProducedEntity;
     private final ICompanionObjectFinder coFinder;
     private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> coCache = new HashMap<>();
@@ -237,7 +243,9 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         return this;
     }
 
-    public void setOriginallyProducedEntity(T originallyProducedEntity) {
+    /// Provide [#originallyProducedEntity] for a producer.
+    ///
+    public void setOriginallyProducedEntity(final T originallyProducedEntity) {
         this.originallyProducedEntity = originallyProducedEntity;
     }
 

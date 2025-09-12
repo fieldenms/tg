@@ -96,7 +96,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             entityTypeInfo.set_persistentWithAudit(true);
         }
 
-        if (IContinuationData.class.isAssignableFrom(type)) {
+        if (isContinuationData(type)) {
             entityTypeInfo.set_continuation(true);
         }
 

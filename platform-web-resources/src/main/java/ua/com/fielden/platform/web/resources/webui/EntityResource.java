@@ -45,7 +45,9 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import java.util.*;
 
 import static java.util.Optional.*;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isContinuationData;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
@@ -210,12 +212,15 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(true, webUiConfig, companionFinder, user, critGenerator, factory, centreContextHolder, 0, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
                     final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
 
-                    final T originallyProducedEntity = !centreContextHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (T) centreContextHolder.getOriginallyProducedEntity() : null;
-                    final Optional<T> continuationInstance = Optional.ofNullable(originallyProducedEntity).filter(entity -> IContinuationData.class.isAssignableFrom(entity.getClass()));
+                    // Find `originallyProducedEntity` if it was present in a context.
+                    // Normally, it should not be present, because contextual retrieval actually produces such instance for next requests.
+                    final var originallyProducedEntity = !centreContextHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (T) centreContextHolder.getOriginallyProducedEntity() : null;
+                    // If it is present, only consider continuation one and use it for validation prototype creation.
+                    final var continuationOriginallyProducedEntityOpt = ofNullable(originallyProducedEntity).filter(entity -> isContinuationData(entity.getClass()));
 
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null,
-                            continuationInstance.orElse(emptyOriginallyProducedEntity),
+                            continuationOriginallyProducedEntityOpt.orElse(emptyOriginallyProducedEntity),
                             createCentreContext(
                                     masterEntity, /* master context */
                                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
