@@ -6,6 +6,9 @@ import ua.com.fielden.platform.error.Result;
 
 import java.util.Optional;
 
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+
 /// The exception type that is used as part of the continuation handling implementation.
 /// Its main purpose is to capture the data needed to continue the computation it was thrown from.
 ///
@@ -30,14 +33,14 @@ public class NeedMoreDataException extends Result {
     ///
     private <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreDataException(
         final String customMessage,
-        final Class<? extends T> continuationType,
+        final Class<T> continuationType,
         final Optional<T> maybeContinuation,
         final String continuationProperty
     ) {
         super(maybeContinuation.orElse(null), customMessage);
         this.maybeContinuation = maybeContinuation;
-        this.continuationType = continuationType;
-        this.continuationTypeStr = continuationType.getName();
+        this.continuationType = (Class<T>) stripIfNeeded(continuationType);
+        this.continuationTypeStr = this.continuationType.getName();
         this.continuationProperty = continuationProperty;
     }
 
@@ -82,7 +85,7 @@ public class NeedMoreDataException extends Result {
         final T continuation,
         final String continuationProperty
     ) {
-        this(customMessage, getContinuationType(continuation), Optional.of(continuation), continuationProperty);
+        this(customMessage, (Class<T>) continuation.getClass(), of(continuation), continuationProperty);
     }
 
     /// The same as [#NeedMoreDataException(String,IContinuationData,String)], but with a standard message.
@@ -93,15 +96,7 @@ public class NeedMoreDataException extends Result {
         final T continuation,
         final String continuationProperty
     ) {
-        this(MSG_STANDARD.formatted(continuation, continuationProperty), getContinuationType(continuation), Optional.of(continuation), continuationProperty);
-    }
-
-    /// Returns stripped `continuation`'s functional entity type.
-    ///
-    /// @param <T> the type of continuation functional entity
-    ///
-    private static <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> Class<? extends T> getContinuationType(final T continuation) {
-        return (Class<? extends T>) continuation.getType();
+        this(MSG_STANDARD.formatted(continuation, continuationProperty), (Class<T>) continuation.getClass(), of(continuation), continuationProperty);
     }
 
     /// Returns an instance of continuation functional entity in case of explicit usage of instance instead of a type.
