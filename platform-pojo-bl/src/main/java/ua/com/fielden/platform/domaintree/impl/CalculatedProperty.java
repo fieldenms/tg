@@ -679,7 +679,9 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         try {
             ast = cp.createAst(newContextualExpression);
         } catch (final Exception ex) {
-            throw new IncorrectCalcPropertyException(ex.getMessage());
+            throw new IncorrectCalcPropertyException(
+                    "Invalid expression for calculated property [%s] in [%s]: %s".formatted(cp.getCustomPropertyName(), cp.getRoot().getTypeName(), newContextualExpression),
+                    ex);
         }
 
         final int levelsToRaiseTheProperty = CalculatedProperty.levelsToRaiseTheProperty(cp.getRoot(), cp.getContextPath(), ast.getLevel());
