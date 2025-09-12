@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.dao.exceptions;
 
-/// Runtime exception that is can be thrown to indicate a database-related error.
+/// Runtime exception that indicates a database-related error.
 ///
 public class DbException extends EntityCompanionException {
 

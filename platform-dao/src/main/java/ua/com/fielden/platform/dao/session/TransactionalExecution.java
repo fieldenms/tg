@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 /// It is important to get a new instrumented instance of [TransactionalExecution] each time for each execution, as each time a new db transaction starts and completes.
 ///
 /// ```Java
-/// supplier.get(WithTransaction.class).call(action);
+/// supplier.get(TransactionalExecution.class).call(action);
 /// ```
 ///
 public class TransactionalExecution extends WithTransaction {

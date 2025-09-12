@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.migration;
 
 import com.google.inject.Injector;
+import jakarta.inject.Provider;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -37,7 +38,7 @@ public class DataMigrator {
     private static final TimeZone utcTz = TimeZone.getTimeZone("UTC");
     private static final Calendar utcCal = Calendar.getInstance(utcTz);
 
-    private final Injector injector;
+    private final Provider<TransactionalExecution> transactionalExecutionProvider;
     private final IdCache cache;
     private final MigrationUtils utils;
 
@@ -48,7 +49,7 @@ public class DataMigrator {
             final Class<? extends IRetriever<? extends AbstractEntity<?>>>... retrieverTypes) throws SQLException
     {
         final DateTime start = new DateTime();
-        this.injector = injector;
+        this.transactionalExecutionProvider = injector.getProvider(TransactionalExecution.class);
         this.utils = injector.getInstance(MigrationUtils.class);
         this.cache = new IdCache();
 
@@ -125,8 +126,7 @@ public class DataMigrator {
     }
 
     private void runSql(final List<String> statements) {
-        final TransactionalExecution trExec = injector.getInstance(TransactionalExecution.class);
-        trExec.exec(conn -> {
+        transactionalExecutionProvider.get().exec(conn -> {
             for (final var sql : statements) {
                 try (final var st = conn.createStatement()) {
                     st.execute(sql);
@@ -138,8 +138,8 @@ public class DataMigrator {
     }
 
     private long getNextId() {
-        final TransactionalExecution trExec = injector.getInstance(TransactionalExecution.class);
-        return trExec.execWithSession(sessionEnabled -> nextIdValue(ID_SEQUENCE_NAME, sessionEnabled.getSession()));
+        return transactionalExecutionProvider.get()
+                .execWithSession(sessionEnabled -> nextIdValue(ID_SEQUENCE_NAME, sessionEnabled.getSession()));
     }
 
     private long batchInsert(final List<CompiledRetriever> retrievers, final Connection legacyConn, final long firstId) throws SQLException {
@@ -172,8 +172,7 @@ public class DataMigrator {
         final var exceptions = new HashMap<String, List<List<Object>>>();
         final var typeCache = utils.cacheForType(cache, tdu.entityType());
 
-        final TransactionalExecution trExec = injector.getInstance(TransactionalExecution.class);
-        trExec.exec(targetConn -> {
+        transactionalExecutionProvider.get().exec(targetConn -> {
             try (final var insertStmt = targetConn.prepareStatement(tdu.updateStmt())) {
                 int batchId = 0;
                 final var batchValues = new ArrayList<List<Object>>();
@@ -223,9 +222,7 @@ public class DataMigrator {
         final var exceptions = new HashMap<String, List<List<Object>>>();
         final var typeCache = utils.cacheForType(cache, tdi.entityType());
 
-        final TransactionalExecution trExec = injector.getInstance(TransactionalExecution.class);
-
-        return trExec.execFn(targetConn -> {
+        return transactionalExecutionProvider.get().execFn(targetConn -> {
             try (final var insertStmt = targetConn.prepareStatement(tdi.insertStmt())) {
                 int batchId = 0;
                 final var batchValues = new ArrayList<List<Object>>();

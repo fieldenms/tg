@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import org.hibernate.Session;
 
 import ua.com.fielden.platform.dao.ISessionEnabled;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 
@@ -17,9 +18,10 @@ import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 ///
 public abstract class WithTransaction implements ISessionEnabled  {
 
-    public static final String ERR_SESSION_IS_MISSING = "Session is missing, most likely, due to missing @SessionRequired annotation.",
-                               ERR_SESSION_IS_CLOSED = "Session is closed, most likely, due to missing @SessionRequired annotation.",
-                               ERR_TRANSACTION_GUID_IS_MISSING = "Transaction GUID is missing.";
+    public static final String
+            ERR_SESSION_IS_MISSING = "Session is missing, most likely, due to missing @%s annotation.".formatted(SessionRequired.class.getSimpleName()),
+            ERR_SESSION_IS_CLOSED = "Session is closed, most likely, due to missing @%s annotation.".formatted(SessionRequired.class.getSimpleName()),
+            ERR_TRANSACTION_GUID_IS_MISSING = "Transaction GUID is missing.";
 
     private Session session;
     private String transactionGuid;
