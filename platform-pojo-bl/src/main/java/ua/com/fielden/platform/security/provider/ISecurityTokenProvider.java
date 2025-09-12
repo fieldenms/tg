@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.provider;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.SortedSet;
 
@@ -16,7 +17,9 @@ import ua.com.fielden.platform.security.ISecurityToken;
  */
 @ImplementedBy(SecurityTokenProvider.class)
 public interface ISecurityTokenProvider {
-    
+
+    String ERR_DUPLICATE_SECURITY_TOKENS = "Not all security tokens are unique in their simple class name. This is required.";
+
     /**
      * Returns a optional token class by its name. The result is empty if no token was found.
      *
@@ -30,4 +33,11 @@ public interface ISecurityTokenProvider {
      * @return
      */
     SortedSet<SecurityTokenNode> getTopLevelSecurityTokenNodes();
+
+    /**
+     * Returns all security token nodes.
+     * The result is equal to flattening the result of {@link #getTopLevelSecurityTokenNodes()}.
+     */
+    Collection<Class<? extends ISecurityToken>> allSecurityTokens();
+
 }

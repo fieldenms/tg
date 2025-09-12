@@ -1,43 +1,7 @@
 package ua.com.fielden.platform.processors.appdomain;
 
-import static java.util.stream.Collectors.toSet;
-import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
-import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.Function;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.element.TypeElement;
-
+import com.squareup.javapoet.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.WildcardTypeName;
-
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -51,6 +15,21 @@ import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationExce
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.TypeElement;
+import java.io.IOException;
+import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toSet;
+import static javax.lang.model.element.Modifier.*;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
 
 /**
  * An annotation processor that generates and maintains the {@code ApplicationDomain} class, which implements {@link IApplicationDomainProvider}.
@@ -141,6 +120,13 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
 
+    /// Populated in each round.
+    private final Set<EntityElement> allInputEntities = new HashSet<>();
+    /// Assigned only in the 1st round.
+    private Optional<ExtendApplicationDomainMirror> maybeInputExtension = Optional.empty();
+    /// Assigned only in the 1st round.
+    private Optional<ApplicationDomainElement> maybeAppDomainRootElt = Optional.empty();
+
     @Override
     public Set<String> getSupportedOptions() {
         return Stream.concat(super.getSupportedOptions().stream(),
@@ -165,43 +151,49 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     @Override
     protected boolean processRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        // if this is an incremental build, then any newly created entity types would be passed into the first round
-        // otherwise, it's a full build and all sources would also be passed into the first round
-        // therefore, there is no need for any processing in case of additional rounds beyond the first one
-        if (getRoundNumber() > 1) {
-            return false;
-        }
-
+        // Entities should be collected from the 1st round (initial inputs) and the 2nd round (generated entities).
         final var pair = registeredEntitiesCollector.scanRoundInputs(roundEnv);
-        final List<EntityElement> inputEntities = pair.getKey();
-        final Optional<ExtendApplicationDomainMirror> maybeInputExtension = pair.getValue();
+        allInputEntities.addAll(pair.getKey());
 
-        // removal of a registered entity will cause recompilation of ApplicationDomain
-        final Optional<ApplicationDomainElement> maybeAppDomainRootElt = registeredEntitiesCollector.findApplicationDomainInRound(roundEnv);
-
-        // this is an incremental build, but it doesn't affect us
-        if (inputEntities.isEmpty() && maybeAppDomainRootElt.isEmpty() && maybeInputExtension.isEmpty()) {
-            printNote("There is nothing to do.");
-            return false;
+        if (getRoundNumber() == 1) {
+            // The extension class can only appear among the inputs of the 1st round, it cannot be generated by other processors.
+            maybeInputExtension = pair.getValue();
+            // Removal of a registered entity will cause recompilation of ApplicationDomain.
+            maybeAppDomainRootElt = registeredEntitiesCollector.findApplicationDomainInRound(roundEnv);
         }
 
-        // if ApplicationDomain is not among root elements, then search through the whole environment
-        final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder))
-                .or(registeredEntitiesCollector::findApplicationDomain);
-        maybeAppDomainElt.ifPresentOrElse(elt -> {
-            // incremental build <=> regenerate
-            printNote("Found existing %s (%s registered entities)", elt.getSimpleName(), elt.entities().size() + elt.externalEntities().size());
-        }, /*else*/ () -> {
-            printNote("Generating %s from scratch.", APPLICATION_DOMAIN_SIMPLE_NAME);
-        });
+        if (getRoundNumber() == 2) {
+            // this is an incremental build, but it doesn't affect us
+            if (allInputEntities.isEmpty() && maybeAppDomainRootElt.isEmpty() && maybeInputExtension.isEmpty()) {
+                printNote("There is nothing to do.");
+                return false;
+            }
 
-        final var registerableEntities = new TreeSet<EntityElement>();
-        final var registerableExtEntities = new TreeSet<EntityElement>();
-        final boolean merged = registeredEntitiesCollector.mergeRegisteredEntities(inputEntities, maybeInputExtension, maybeAppDomainElt, registerableEntities::add, registerableExtEntities::add);
-        if (merged) {
-            writeApplicationDomain(registerableEntities, registerableExtEntities);
-        } else {
-            printNote("There is nothing to do.");
+            // if ApplicationDomain is not among root elements, then search through the whole environment
+            final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.map(
+                            elt -> new ApplicationDomainElement(elt, entityFinder))
+                    .or(registeredEntitiesCollector::findApplicationDomain);
+            maybeAppDomainElt.ifPresentOrElse(elt -> {
+                // incremental build <=> regenerate
+                printNote("Found existing %s (%s registered entities)", elt.getSimpleName(),
+                          elt.entities().size() + elt.externalEntities().size());
+            }, /*else*/ () -> {
+                printNote("Generating %s from scratch.", APPLICATION_DOMAIN_SIMPLE_NAME);
+            });
+
+            final var registerableEntities = new TreeSet<EntityElement>();
+            final var registerableExtEntities = new TreeSet<EntityElement>();
+            final boolean merged = registeredEntitiesCollector.mergeRegisteredEntities(allInputEntities,
+                                                                                       maybeInputExtension,
+                                                                                       maybeAppDomainElt,
+                                                                                       registerableEntities::add,
+                                                                                       registerableExtEntities::add);
+            if (merged) {
+                writeApplicationDomain(registerableEntities, registerableExtEntities);
+            }
+            else {
+                printNote("There is nothing to do.");
+            }
         }
 
         return false;

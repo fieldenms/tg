@@ -440,7 +440,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
-                if (!elementFinder.isSameType(property.getType(), RichText.class)) {
+                if (!isSameType(property.getType(), RichText.class)) {
                     return Optional.empty();
                 }
 

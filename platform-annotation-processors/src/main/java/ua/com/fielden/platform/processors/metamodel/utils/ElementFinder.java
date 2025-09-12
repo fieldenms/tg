@@ -431,7 +431,7 @@ public class ElementFinder {
     /**
      * Finds an annotation of the specified type that is directly present on the element.
      */
-    public Optional<? extends AnnotationMirror> findAnnotationMirror(final AnnotatedConstruct element, final Class<? extends Annotation> annotType) {
+    public static Optional<? extends AnnotationMirror> findAnnotationMirror(final AnnotatedConstruct element, final Class<? extends Annotation> annotType) {
         return element.getAnnotationMirrors().stream()
                 .filter(mirror -> isSameType(mirror.getAnnotationType(), annotType))
                 .findAny();
@@ -577,11 +577,11 @@ public class ElementFinder {
      * 
      * @throws ElementFinderException if no coresponding type element was found
      */
-    public boolean isSameType(final TypeMirror mirror, final Class<?> clazz) {
+    public static boolean isSameType(final TypeMirror mirror, final Class<?> clazz) {
         return mirror.accept(IS_SAME_TYPE_VISITOR, clazz);
     }
     // where
-    private final TypeKindVisitor14<Boolean, Class<?>> IS_SAME_TYPE_VISITOR = new TypeKindVisitor14<>() {
+    private static final TypeKindVisitor14<Boolean, Class<?>> IS_SAME_TYPE_VISITOR = new TypeKindVisitor14<>() {
         @Override
         protected Boolean defaultAction(TypeMirror e, Class<?> clazz) {
             return false;

@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
@@ -24,8 +23,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.TypeKindVisitor14;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
-import java.util.Optional;
 import java.util.*;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toCollection;
@@ -131,7 +130,8 @@ public class EntityFinder extends ElementFinder {
      * <p>
      * The following properties are processed:
      * <ul>
-     *  <li>{@code id} – included if this or any of the entities represented by supertypes, is persistent.
+     *  <li>{@code id} – included if this or any of the entities represented by supertypes, is persistent,
+     *                   or {@code entity} represents a synthetic type that declares {@code id}.
      *  <li>{@code desc} – included if this or any of the entities represented by supertypes, declares {@code desc} or is annotated
      *  with {@code @DescTitle}, excluded otherwise.
      * </ul>
@@ -141,37 +141,51 @@ public class EntityFinder extends ElementFinder {
      */
     public Set<PropertyElement> processProperties(final Collection<PropertyElement> properties, final EntityElement entity) {
         final Set<PropertyElement> processed = new LinkedHashSet<>(properties);
-        processPropertyId(processed, entity);
-        processPropertyDesc(processed, entity);
+        maybePropId(entity).ifPresent(processed::add);
+        maybePropDesc(entity).ifPresentOrElse(processed::add,
+                                              () -> processed.removeIf(elt -> elt.getSimpleName().toString().equals(AbstractEntity.DESC)));
         return Collections.unmodifiableSet(processed);
     }
-    // where
-    private void processPropertyId(final Set<PropertyElement> properties, final EntityElement entity) {
-        // include property "id" only for persistent entities
+
+    /// If property `id` is present in `entity`, returns an optional describing it.
+    /// Otherwise, returns an empty optional.
+    ///
+    /// `id` is considered to be present in persistent entity types and their subtypes, as well as synthetic entity types
+    /// that explicitly declare `id` or inherit `id` annotated with [IsProperty] (this annotation is absent on [AbstractEntity#id]).
+    ///
+    public Optional<PropertyElement> maybePropId(final EntityElement entity) {
         if (isPersistentEntityType(entity) || doesExtendPersistentEntity(entity)) {
-            // "id" must exist
-            final VariableElement idElt = findField(entity, AbstractEntity.ID)
+            // `id` must exist.
+            final var idElt = findField(entity, AbstractEntity.ID)
                     .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.ID, entity)));
-            properties.add(new PropertyElement(idElt));
+            return Optional.of(new PropertyElement(idElt));
         }
+        else if (isSyntheticEntityType(entity)) {
+            // Will be found iff annotated with `@IsProperty` (i.e., redeclared).
+            return findProperty(entity, AbstractEntity.ID);
+        }
+        else return Optional.empty();
     }
-    // and
-    private void processPropertyDesc(final Set<PropertyElement> properties, final EntityElement entity) {
-        // include property "desc" in the following cases:
-        // 1. property "desc" is declared by entity or one of its supertypes below AbstractEntity
-        // 2. entity or any of its supertypes is annotated with @DescTitle
-        final Optional<PropertyElement> maybeDesc = findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class);
-        if (maybeDesc.isPresent()) {
-            properties.add(maybeDesc.get());
-        }
-        else if (findAnnotation(entity, DescTitle.class).isPresent()) {
-            // "desc" must exist
-            final VariableElement descElt = findField(entity, AbstractEntity.DESC)
-                    .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.DESC, entity)));
-            properties.add(new PropertyElement(descElt));
-        }
-        // in other cases we need to exclude it
-        else properties.removeIf(elt -> elt.getSimpleName().toString().equals(AbstractEntity.DESC));
+
+    /// If property `desc` is present in `entity`, returns an optional describing it.
+    /// Otherwise, returns an empty optional.
+    ///
+    /// `desc` is considered to be present if [DescTitle] is present on the enclosing entity type (directly or indirectly),
+    /// or property `desc` is explicitly redeclared.
+    ///
+    public Optional<PropertyElement> maybePropDesc(final EntityElement entity) {
+        return findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class)
+                .or(() -> {
+                    if (findAnnotation(entity, DescTitle.class).isPresent()) {
+                        // `desc` must exist.
+                        final var descElt = findField(entity, AbstractEntity.DESC)
+                                .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.DESC, entity)));
+                        return Optional.of(new PropertyElement(descElt));
+                    }
+                    else {
+                        return Optional.empty();
+                    }
+                });
     }
 
     /**
@@ -443,6 +457,12 @@ public class EntityFinder extends ElementFinder {
      */
     public boolean isCollectionalProperty(final PropertyElement property) {
         return isSubtype(property.getType(), Collection.class);
+    }
+
+    /// Tests whether the property element represents a persistent property.
+    ///
+    public boolean isPersistentProperty(final PropertyElement prop) {
+        return prop.getAnnotation(MapTo.class) != null;
     }
 
     public boolean isKeyMember(final PropertyElement property) {

@@ -1,18 +1,19 @@
 package ua.com.fielden.platform.reflection;
 
-import static java.lang.String.format;
+import com.google.inject.Binder;
+import com.google.inject.binder.ScopedBindingBuilder;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-import com.google.inject.Binder;
-import com.google.inject.binder.ScopedBindingBuilder;
-
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
 
 /**
  * A convenience class that assists in automation of binding companion object implementations to its declarations. 
@@ -66,6 +67,11 @@ public class CompanionObjectAutobinder {
      * @param bindFunction
      */
     public static <T extends IEntityDao<E>, E extends AbstractEntity<?>> void bindCo(final Class<E> entityType, final BiFunction<Class<T>, Class<T>, ScopedBindingBuilder> bindFunction) {
+        // Companion type will be generated only after the IoC configuration is complete.
+        if (isAnnotationPresent(entityType, CompanionIsGenerated.class)) {
+            return;
+        }
+
         final Class<T> co = companionObjectType(entityType);
 
         if (co == null) { // check if the companion is declared

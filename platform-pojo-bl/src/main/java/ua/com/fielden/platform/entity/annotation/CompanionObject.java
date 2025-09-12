@@ -9,10 +9,10 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * Annotation for specify a default controller for an domain entity.
- * 
+ * Annotates an entity type to specify its companion object.
+ *
+ * @see CompanionIsGenerated
  * @author TG Team
- * 
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
