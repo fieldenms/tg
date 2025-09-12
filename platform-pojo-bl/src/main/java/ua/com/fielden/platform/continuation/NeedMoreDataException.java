@@ -1,18 +1,14 @@
 package ua.com.fielden.platform.continuation;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.error.Result;
 
 import java.util.Optional;
 
-/**
- * The exception type that is used as part of the continuation handling implementation.
- * Its main purpose is to capture the data needed to continue the computation is was thrown from.
- * 
- * @author TG Team
- *
- */
+/// The exception type that is used as part of the continuation handling implementation.
+/// Its main purpose is to capture the data needed to continue the computation it was thrown from.
+///
 public class NeedMoreDataException extends Result {
     public static final String MSG_STANDARD = "Continuation for [%s] entity and property [%s].";
     public static final String CONTINUATION_TYPE_STR = "continuationTypeStr";
@@ -23,16 +19,21 @@ public class NeedMoreDataException extends Result {
     public final String continuationTypeStr;
     public final String continuationProperty;
 
-    /**
-     * Creates an exception with an initialised instance of the data needed or its type, a field name that it should be associated with, and a custom error message.
-     *
-     * @param customMessage         a custom message to be displayed in Web UI as a toast.
-     * @param continuationType      an action-entity type that represents a continuation.
-     * @param maybeContinuation     an initialised action-entity instance that represent a continuation.
-     * @param continuationProperty  a field name of a companion object to which a continuation instance is going to be assigned to.
-     * @param <T>
-     */
-    private <T extends IContinuationData> NeedMoreDataException(final String customMessage, final Class<? extends T> continuationType, final Optional<T> maybeContinuation, final String continuationProperty) {
+    /// Creates an exception with an initialised instance of the data needed or its type, a field name that it should be associated with, and a custom error message.
+    ///
+    /// @param customMessage         a custom message to be displayed in Web UI as a toast.
+    /// @param continuationType      an action-entity type that represents a continuation.
+    /// @param maybeContinuation     an initialised action-entity instance that represent a continuation.
+    /// @param continuationProperty  a field name of a companion object to which a continuation instance is going to be assigned to.
+    ///
+    /// @param <T> the type of continuation functional entity
+    ///
+    private <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreDataException(
+        final String customMessage,
+        final Class<? extends T> continuationType,
+        final Optional<T> maybeContinuation,
+        final String continuationProperty
+    ) {
         super(maybeContinuation.orElse(null), customMessage);
         this.maybeContinuation = maybeContinuation;
         this.continuationType = continuationType;
@@ -40,51 +41,76 @@ public class NeedMoreDataException extends Result {
         this.continuationProperty = continuationProperty;
     }
 
-    /**
-     * Creates an exception with a type of continuation.
-     *
-     * @param customMessage         a custom message to be displayed in Web UI as a toast.
-     * @param continuationType      an action-entity type that represents a continuation.
-     * @param continuationProperty  a field name of a companion object to which a continuation instance is going to be assigned to.
-     */
-    public NeedMoreDataException(final String customMessage, final Class<? extends IContinuationData> continuationType, final String continuationProperty) {
+    /// Creates an exception with a type of continuation.
+    ///
+    /// @param customMessage         a custom message to be displayed in Web UI as a toast.
+    /// @param continuationType      an action-entity type that represents a continuation.
+    /// @param continuationProperty  a field name of a companion object to which a continuation instance is going to be assigned to.
+    ///
+    /// @param <T> the type of continuation functional entity
+    ///
+    <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreDataException(
+        final String customMessage,
+        final Class<T> continuationType,
+        final String continuationProperty
+    ) {
         this(customMessage, continuationType, Optional.empty(), continuationProperty);
     }
 
-    /**
-     * The same as {@link #NeedMoreDataException(String, Class, String)}, but with a standard message.
-     *
-     * @param continuationType
-     * @param continuationProperty
-     */
-    public NeedMoreDataException(final Class<? extends IContinuationData> continuationType, final String continuationProperty) {
+    /// The same as [#NeedMoreDataException(String,Class,String)], but with a standard message.
+    ///
+    /// @param <T> the type of continuation functional entity
+    ///
+    <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreDataException(
+        final Class<T> continuationType,
+        final String continuationProperty
+    ) {
         this(MSG_STANDARD.formatted(continuationType.getSimpleName(), continuationProperty), continuationType, Optional.empty(), continuationProperty);
     }
 
 
-    /**
-     * Creates an exception with an instance of {@code continuation}.
-     *
-     * @param customMessage         a custom message to be displayed in Web UI as a toast.
-     * @param continuation          an initialised action-entity instance that represents a continuation.
-     * @param continuationProperty  a field name of a companion object to which a continuation instance is going to be assigned to.
-     */
-    public <T extends IContinuationData> NeedMoreDataException(final String customMessage, final T continuation, final String continuationProperty) {
+    /// Creates an exception with an instance of `continuation`.
+    ///
+    /// @param customMessage         a custom message to be displayed in Web UI as a toast.
+    /// @param continuation          an initialised action-entity instance that represents a continuation.
+    /// @param continuationProperty  a field name of a companion object to which a continuation instance is going to be assigned to.
+    ///
+    /// @param <T> the type of continuation functional entity
+    ///
+    <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreDataException(
+        final String customMessage,
+        final T continuation,
+        final String continuationProperty
+    ) {
         this(customMessage, getContinuationType(continuation), Optional.of(continuation), continuationProperty);
     }
 
-    /**
-     * The same as {@link #NeedMoreDataException(String, IContinuationData, String)}, but with a standard message.
-     * @param continuation
-     * @param continuationProperty
-     * @param <T>
-     */
-    public <T extends IContinuationData> NeedMoreDataException(final T continuation, final String continuationProperty) {
+    /// The same as [#NeedMoreDataException(String,IContinuationData,String)], but with a standard message.
+    ///
+    /// @param <T> the type of continuation functional entity
+    ///
+    <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreDataException(
+        final T continuation,
+        final String continuationProperty
+    ) {
         this(MSG_STANDARD.formatted(continuation, continuationProperty), getContinuationType(continuation), Optional.of(continuation), continuationProperty);
     }
 
-    static <T extends IContinuationData> Class<? extends T> getContinuationType(final T continuation) {
-        return (Class<? extends T>) ((AbstractEntity<?>) continuation).getType();
+    /// Returns stripped `continuation`'s functional entity type.
+    ///
+    /// @param <T> the type of continuation functional entity
+    ///
+    private static <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> Class<? extends T> getContinuationType(final T continuation) {
+        return (Class<? extends T>) continuation.getType();
+    }
+
+    /// Returns an instance of continuation functional entity in case of explicit usage of instance instead of a type.
+    /// Returns empty [Optional] otherwise.
+    ///
+    /// @param <T> the type of continuation functional entity
+    ///
+    public <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> Optional<T> maybeContinuation() {
+        return (Optional<T>) maybeContinuation;
     }
 
 }
