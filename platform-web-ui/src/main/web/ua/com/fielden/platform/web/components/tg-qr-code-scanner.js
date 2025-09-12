@@ -214,7 +214,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         super();
         this._reflector = new TgReflector();
         this._entity = createDummyBindingEntity(
-            {'scannedValue': {value: '', editable: true},
+            {'scannedValue': {value: '', editable: false},
              'scanAndApply': {value: false, editable: true}},
              (name) => {
                 return {
