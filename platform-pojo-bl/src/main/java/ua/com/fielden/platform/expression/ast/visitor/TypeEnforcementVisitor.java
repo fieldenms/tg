@@ -22,19 +22,17 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 
-/**
- * A visitor, which enforces type compatibility between AST nodes and identifies the type of the expression represented by the AST.
- * 
- * @author TG Team
- * 
- */
+/// A visitor, which enforces type compatibility between AST nodes and identifies the type of the expression represented by the AST.
+///
 public class TypeEnforcementVisitor extends AbstractAstVisitor {
 
-    public TypeEnforcementVisitor(final Class<? extends AbstractEntity> higherOrderType, final String contextProperty) {
+    public static final String ERR_INCOMPATIBLE_OPERANDS = "Operands for operation %s should have compatible types [%s, %s].";
+
+    public TypeEnforcementVisitor(final Class<? extends AbstractEntity<?>> higherOrderType, final String contextProperty) {
         super(higherOrderType, contextProperty);
     }
 
-    public TypeEnforcementVisitor(final Class<? extends AbstractEntity> higherOrderType) {
+    public TypeEnforcementVisitor(final Class<? extends AbstractEntity<?>> higherOrderType) {
         super(higherOrderType, null);
     }
 
@@ -156,7 +154,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
             throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 2 operands, found " + node.getChildren().size(), node.getToken());
         }
         // check if the operands have type
-        final AstNode leftOperand = node.getChildren().get(0);
+        final AstNode leftOperand = node.getChildren().getFirst();
         final Class<?> leftOperandType = leftOperand.getType();
         if (leftOperandType == null) {
             throw new TypeCompatibilityException("Operand " + leftOperand + " is missing type.", leftOperand.getToken());
@@ -192,26 +190,29 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
                 && Null.class != rightOperandType) { // this basically checks whether some other types such as entities are being compared
             node.setType(boolean.class);
         } else if ((cat == EgTokenCategory.EQ || cat == EgTokenCategory.NE) && (Null.class == leftOperandType || Null.class == rightOperandType)) { // = and <> with NULL is possible, and needs to be validated further
-            if (Null.class == leftOperandType && (String.class.isAssignableFrom(rightOperandType) || //
-                    Money.class.isAssignableFrom(rightOperandType) || //
-                    Number.class.isAssignableFrom(rightOperandType) || //
-                    Date.class.isAssignableFrom(rightOperandType) || //
-                    DateTime.class.isAssignableFrom(rightOperandType) || //
-                    AbstractEntity.class.isAssignableFrom(rightOperandType) //
+            if (Null.class == leftOperandType && (String.class.isAssignableFrom(rightOperandType) ||
+                    Money.class.isAssignableFrom(rightOperandType) ||
+                    Number.class.isAssignableFrom(rightOperandType) ||
+                    Date.class.isAssignableFrom(rightOperandType) ||
+                    DateTime.class.isAssignableFrom(rightOperandType) ||
+                    AbstractEntity.class.isAssignableFrom(rightOperandType)
                     )) {
                 // the type of the comparison operation is always boolean
                 node.setType(boolean.class);
-            } else if (String.class.isAssignableFrom(leftOperandType) || //
-                    Money.class.isAssignableFrom(leftOperandType) || //
-                    Number.class.isAssignableFrom(leftOperandType) || //
-                    Date.class.isAssignableFrom(leftOperandType) || //
-                    DateTime.class.isAssignableFrom(leftOperandType) || //
-                    AbstractEntity.class.isAssignableFrom(leftOperandType)) { //
+            } else if (String.class.isAssignableFrom(leftOperandType) ||
+                    Money.class.isAssignableFrom(leftOperandType) ||
+                    Number.class.isAssignableFrom(leftOperandType) ||
+                    Date.class.isAssignableFrom(leftOperandType) ||
+                    DateTime.class.isAssignableFrom(leftOperandType) ||
+                    AbstractEntity.class.isAssignableFrom(leftOperandType)) {
                 // the type of the comparison operation is always boolean
                 node.setType(boolean.class);
+            } else {
+                // For example, comparing boolean with NULL is not supported.
+                throw new UnsupportedTypeException(ERR_INCOMPATIBLE_OPERANDS.formatted(cat, leftOperandType, rightOperandType), leftOperandType, node.getToken());
             }
         } else {
-            throw new UnsupportedTypeException("Operands for operation " + cat + " should have compatible types.", leftOperandType, node.getToken());
+            throw new UnsupportedTypeException(ERR_INCOMPATIBLE_OPERANDS.formatted(cat, leftOperandType, rightOperandType), leftOperandType, node.getToken());
         }
     }
 
@@ -221,7 +222,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
             throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 2 operands, found " + node.getChildren().size(), node.getToken());
         }
         // check if the operands have type
-        final AstNode leftOperand = node.getChildren().get(0);
+        final AstNode leftOperand = node.getChildren().getFirst();
         final Class<?> leftOperandType = leftOperand.getType();
         if (leftOperandType == null) {
             throw new TypeCompatibilityException("Operand " + leftOperand + " is missing type.", leftOperand.getToken());

@@ -188,7 +188,7 @@ public class MigrateDb {
                 LOGGER.info(ddlStmt);
             }
         } else {
-            new DataMigrator(injector, hibernateUtil, cmdParams.containsKey(CmdParams.SKIP_VALIDATIONS), cmdParams.containsKey(CmdParams.DETAILS), limitToRetrievers);
+            new DataMigrator(injector, cmdParams.containsKey(CmdParams.SKIP_VALIDATIONS), cmdParams.containsKey(CmdParams.DETAILS), limitToRetrievers);
         }
         // reset passwords
         if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {
