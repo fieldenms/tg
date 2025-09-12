@@ -4,10 +4,10 @@ import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.reflection.Finder;
 
-import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -17,7 +17,7 @@ import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatablePersistentProperty;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.Finder.isKeyOrKeyMember;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
@@ -129,7 +129,7 @@ public class DomainEntityDependencies {
                  propPath,
                  getTitleAndDesc(propPath, entityType).getKey(),
                  checkDuringDeactivation(entityType, propPath),
-                 getKeyMembers(entityType).stream().map(Field::getName).anyMatch(propPath::equals));
+                 belongsToEntityKey(entityType, propPath));
         }
 
         public DomainEntityDependency updatePropPath(final CharSequence propPathSuffix) {
@@ -170,6 +170,21 @@ public class DomainEntityDependencies {
             }
 
             return false;
+        }
+
+        private static boolean belongsToEntityKey(final Class<? extends AbstractEntity<?>> entityType, final String propPath) {
+            final String[] props = splitPropPathToArray(propPath);
+            final var prop0 = Finder.getFieldByName(entityType, props[0]);
+            if (props.length == 1) {
+                return isKeyOrKeyMember(prop0);
+            }
+            else if (props.length == 2 && isUnionEntityType(prop0.getType())) {
+                // The second property should always be one of the union members.
+                return isKeyOrKeyMember(prop0);
+            }
+            else {
+                throw new InvalidArgumentException("Unexpected dependency representation: entityType = [%s], propPath = [%s].".formatted(entityType.getTypeName(), propPath));
+            }
         }
 
         public static final String INFO_ENTITY_DEPENDENCIES = "Entity [%s] has dependency in entity [%s] as property [%s] (checked during deactivation [%s], belongs to entity key [%s]).";
