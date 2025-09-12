@@ -1,4 +1,4 @@
-import { x as createFormatter, E as isPropsEqual, be as DateComponent, z as memoize, cf as RefMap, ch as NowTimer, ba as PositionCache, t as addDays, bW as Slicer, bK as DayHeader, bO as DaySeriesModel, bV as DayTableModel, U as DateProfileGenerator, bh as addWeeks, bi as diffWeeks, cw as injectStyles, cc as getStickyHeaderDates, b$ as SimpleScrollGrid, ct as ViewContainer, cb as getStickyFooterScrollbar, ca as renderScrollShim, bR as sortEventSegs, bS as getSegMeta, cp as BgEvent, co as renderFill, bT as buildEventRangeKey, B as BaseComponent, cj as StandardEvent, bQ as buildSegTimeText, bU as getSegAnchorAttrs, cn as EventContainer, a5 as getUniqueDomId, Y as setRef, cq as WeekNumberContainer, b0 as buildNavLinkAttrs, cm as hasCustomDayCellContent, cl as DayCellContainer, bg as addMs, o as intersectRanges, bA as SegHierarchy, bB as buildEntryKey, bF as intersectSpans, bx as formatIsoMonthStr, bv as formatDayString, cr as MoreLinkContainer } from '../core/internal-common.js';
+import { x as createFormatter, E as isPropsEqual, bc as DateComponent, z as memoize, cd as RefMap, a6 as NowTimer, b8 as PositionCache, t as addDays, bU as Slicer, bI as DayHeader, bM as DaySeriesModel, bT as DayTableModel, R as DateProfileGenerator, bf as addWeeks, bg as diffWeeks, ct as injectStyles, ca as getStickyHeaderDates, bZ as SimpleScrollGrid, cq as ViewContainer, c9 as getStickyFooterScrollbar, c8 as renderScrollShim, bP as sortEventSegs, bQ as getSegMeta, cm as BgEvent, cl as renderFill, bR as buildEventRangeKey, B as BaseComponent, cg as StandardEvent, bO as buildSegTimeText, bS as getSegAnchorAttrs, ck as EventContainer, a3 as getUniqueDomId, W as setRef, cn as WeekNumberContainer, a_ as buildNavLinkAttrs, cj as hasCustomDayCellContent, ci as DayCellContainer, be as addMs, o as intersectRanges, by as SegHierarchy, bz as buildEntryKey, bD as intersectSpans, bv as formatIsoMonthStr, bt as formatDayString, co as MoreLinkContainer } from '../core/internal-common.js';
 import { createElement as y, Fragment as _, createRef as d } from '../../preact/dist/preact.module.js';
 
 /* An abstract class for the daygrid views, as well as month view. Renders one or more rows of day cells.
@@ -717,7 +717,7 @@ class TableRows extends DateComponent {
     constructor() {
         super(...arguments);
         this.splitBusinessHourSegs = memoize(splitSegsByRow);
-        this.splitBgEventSegs = memoize(splitSegsByRow);
+        this.splitBgEventSegs = memoize(splitAllDaySegsByRow);
         this.splitFgEventSegs = memoize(splitSegsByRow);
         this.splitDateSelectionSegs = memoize(splitSegsByRow);
         this.splitEventDrag = memoize(splitInteractionByRow);
@@ -741,7 +741,7 @@ class TableRows extends DateComponent {
         return (y(NowTimer, { unit: "day" }, (nowDate, todayRange) => (y(_, null, props.cells.map((cells, row) => (y(TableRow, { ref: this.rowRefs.createRef(row), key: cells.length
                 ? cells[0].date.toISOString() /* best? or put key on cell? or use diff formatter? */
                 : row // in case there are no cells (like when resource view is loading)
-            , showDayNumbers: rowCnt > 1, showWeekNumbers: props.showWeekNumbers, todayRange: todayRange, dateProfile: props.dateProfile, cells: cells, renderIntro: props.renderRowIntro, businessHourSegs: businessHourSegsByRow[row], eventSelection: props.eventSelection, bgEventSegs: bgEventSegsByRow[row].filter(isSegAllDay) /* hack */, fgEventSegs: fgEventSegsByRow[row], dateSelectionSegs: dateSelectionSegsByRow[row], eventDrag: eventDragByRow[row], eventResize: eventResizeByRow[row], dayMaxEvents: props.dayMaxEvents, dayMaxEventRows: props.dayMaxEventRows, clientWidth: props.clientWidth, clientHeight: props.clientHeight, cellMinHeight: cellMinHeight, forPrint: props.forPrint })))))));
+            , showDayNumbers: rowCnt > 1, showWeekNumbers: props.showWeekNumbers, todayRange: todayRange, dateProfile: props.dateProfile, cells: cells, renderIntro: props.renderRowIntro, businessHourSegs: businessHourSegsByRow[row], eventSelection: props.eventSelection, bgEventSegs: bgEventSegsByRow[row], fgEventSegs: fgEventSegsByRow[row], dateSelectionSegs: dateSelectionSegsByRow[row], eventDrag: eventDragByRow[row], eventResize: eventResizeByRow[row], dayMaxEvents: props.dayMaxEvents, dayMaxEventRows: props.dayMaxEventRows, clientWidth: props.clientWidth, clientHeight: props.clientHeight, cellMinHeight: cellMinHeight, forPrint: props.forPrint })))))));
     }
     componentDidMount() {
         this.registerInteractiveComponent();
@@ -809,6 +809,9 @@ class TableRows extends DateComponent {
         let end = addDays(start, 1);
         return { start, end };
     }
+}
+function splitAllDaySegsByRow(segs, rowCnt) {
+    return splitSegsByRow(segs.filter(isSegAllDay), rowCnt);
 }
 function isSegAllDay(seg) {
     return seg.eventRange.def.allDay;

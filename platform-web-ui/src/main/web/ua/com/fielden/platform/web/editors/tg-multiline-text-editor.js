@@ -49,7 +49,7 @@ const customInputTemplate = html`
             on-focus="_onFocus"
             on-blur="_outFocus"
             readonly$="[[_disabled]]"
-            tooltip-text$="[[_getTooltip(_editingValue)]]"
+            tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]"
             autocomplete="off"
             selectable-elements-container>
         </iron-autogrow-textarea>`;
