@@ -46,7 +46,14 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
     @Override
     public void serialize(final Result result, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
         generator.writeStartObject();
+        writeResultData(result, generator);
+        generator.writeEndObject();
+    }
 
+    /// Writes a [Result] data into already started object (see `generator.writeStartObject()`).
+    /// Override this method to serialise [Result] type descendants with additional data.
+    ///
+    protected void writeResultData(final Result result, final JsonGenerator generator) throws IOException {
         generator.writeFieldName("@resultType");
         generator.writeObject(result.getClass().getName());
         generator.writeFieldName(Result.MESSAGE);
@@ -119,8 +126,6 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
             generator.writeFieldName(Result.EX);
             generator.writeObject(result.getEx());
         }
-
-        generator.writeEndObject();
     }
     
     private EntityType toEntityType(final Class<?> type) {
