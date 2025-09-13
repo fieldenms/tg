@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -15,6 +14,7 @@ import org.restlet.resource.Put;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.*;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -45,7 +45,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import java.util.*;
 
 import static java.util.Optional.*;
-import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isContinuationData;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
@@ -57,20 +57,18 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
 import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.createValidationPrototype;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.*;
 
-/**
- * The web resource for entity serves as a back-end mechanism of entity retrieval, saving and deletion. It provides a base implementation for handling the following methods:
- * <ul>
- * <li>retrieve entity -- GET request;
- * <li>save new entity -- PUT request with an envelope containing an instance of an entity to be persisted;
- * <li>save already persisted entity -- POST request with an envelope containing an instance of an modified entity to be changed;
- * <li>delete entity -- DELETE request.
- * </ul>
- *
- * @author TG Team
- *
- */
+/// The web resource for entity serves as a back-end mechanism of entity retrieval, saving and deletion.
+/// It provides a base implementation for handling the following methods:
+///
+///   - retrieve entity -- GET request;
+///   - save new entity -- PUT request with an envelope containing an instance of an entity to be persisted;
+///   - save already persisted entity -- POST request with an envelope containing an instance of an modified entity to be changed;
+///   - delete entity -- DELETE request.
+///
 public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebResource {
-    private static final Logger LOGGER = LogManager.getLogger(EntityResource.class);
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    public static final String ERR_ENTITY_DELETION = "The entity with id [%s] and type [%s] can not be deleted due to existing dependencies.";
 
     private final RestServerUtil restUtil;
     private final Long entityId;
@@ -315,26 +313,15 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         return EntityResourceContinuationsHelper.saveWithContinuations(applied, continuations, companion);
     }
 
-    /**
-     * Restores the functional entity from the <code>savingInfoHolder</code>, that represents it. The <code>savingInfoHolder</code> could potentially contain
-     * <code>contreContextHolder</code> inside, which will be deserialised as well.
-     * <p>
-     * All parameters, except <code>savingInfoHolder</code> and <code>functionalEntityType</code>, could be taken from injector -- they are needed for centre context
-     * deserialisation.
-     *
-     * @param disregardOriginallyProducedEntities -- indicates whether it is necessary to disregard originallyProducedEntity while restoring this entity and its parent functional entities
-     * @param savingInfoHolder
-     *            -- the actual holder of information about functional entity
-     * @param functionalEntityType
-     *            -- the type of functional entity to be restored into
-     * @param entityFactory
-     * @param webUiConfig
-     * @param companionFinder
-     * @param serverGdtm
-     * @param critGenerator
-     * @param tabCount
-     * @return
-     */
+    /// Restores the functional entity from the `savingInfoHolder`, that represents it.
+    /// The `savingInfoHolder` could potentially contain `contreContextHolder` inside, which will also be deserialised.
+    ///
+    /// All parameters, except `savingInfoHolder` and `functionalEntityType`, could be taken from the injector -- they are needed for deserialising the centre context.
+    ///
+    /// @param disregardOriginallyProducedEntities indicates whether it is necessary to disregard originallyProducedEntity while restoring this entity and its parent functional entities
+    /// @param savingInfoHolder                    the actual holder of information about functional entity
+    /// @param functionalEntityType                the type of functional entity to be restored into
+    ///
     public static <T extends AbstractEntity<?>> T restoreEntityFrom(
             final boolean disregardOriginallyProducedEntities,
             final SavingInfoHolder savingInfoHolder,
@@ -407,7 +394,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
 
-        LOGGER.debug(tabs(tabCount) + "restoreMasterFunctionalEntity: duration: " + pd.getSeconds() + " s " + pd.getMillis() + " ms.");
+        LOGGER.debug(() -> tabs(tabCount) + "restoreMasterFunctionalEntity: duration: " + pd.getSeconds() + " s " + pd.getMillis() + " ms.");
         return entity;
     }
 
@@ -471,14 +458,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         return applied;
     }
 
-    /**
-     * In case where centreContextHolder represents the context of centre's action (top-level, primary, secondary or prop) -- this method determines the action configuration.
-     * Action configuration is necessary to be used for 'computation' part of the context.
-     *
-     * @param webUiConfig
-     * @param centreContextHolder
-     * @return
-     */
+    /// In case where `centreContextHolder` represents a context of centre's action (top-level, primary, secondary or prop) -- this method determines the action configuration.
+    /// Action configuration is necessary to be used for the "computation" part of the context.
+    ///
     public static <T extends AbstractEntity<?>> Optional<EntityActionConfig> restoreActionConfig(final IWebUiConfig webUiConfig, final CentreContextHolder centreContextHolder) {
         final Optional<EntityActionConfig> actionConfig;
         if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
@@ -511,23 +493,19 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         return actionConfig;
     }
 
-    /**
-     * Tries to delete the entity with <code>entityId</code> and returns result. If successful -- result instance is <code>null</code>, otherwise -- result instance is also
-     * <code>null</code> (not-deletable entity should exist at the client side, no need to send it many times).
-     *
-     * @param entityId
-     *
-     * @return
-     * @throws JsonProcessingException
-     */
+    /// Tries to delete the entity with `entityId`.
+    ///
+    /// @return a representation of a successful [Result].
+    ///
+    /// @throws InvalidStateException indicates an error during deletion.
+    ///
     private Representation delete(final Long entityId) {
         try {
             companion.delete(factory.newEntity(entityType, entityId));
-            return restUtil.resultJSONRepresentation(Result.successful(null));
-        } catch (final Exception e) {
-            final String message = String.format("The entity with id [%s] and type [%s] can not be deleted due to existing dependencies.", entityId, entityType.getSimpleName());
-            LOGGER.error(message, e);
-            throw new IllegalStateException(e);
+            return restUtil.resultJSONRepresentation(successful());
+        } catch (final Exception ex) {
+            throw new InvalidStateException(ERR_ENTITY_DELETION.formatted(entityId, entityType.getSimpleName()), ex);
         }
     }
+
 }

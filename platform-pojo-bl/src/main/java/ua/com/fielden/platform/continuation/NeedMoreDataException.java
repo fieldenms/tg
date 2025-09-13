@@ -35,8 +35,8 @@ public class NeedMoreDataException extends Result {
         final String customMessage,
         final Class<T> continuationType,
         final Optional<T> maybeContinuation,
-        final String continuationProperty
-    ) {
+        final String continuationProperty)
+    {
         super(maybeContinuation.orElse(null), customMessage);
         this.maybeContinuation = maybeContinuation;
         this.continuationType = (Class<T>) stripIfNeeded(continuationType);
@@ -55,8 +55,8 @@ public class NeedMoreDataException extends Result {
     <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreDataException(
         final String customMessage,
         final Class<T> continuationType,
-        final String continuationProperty
-    ) {
+        final String continuationProperty)
+    {
         this(customMessage, continuationType, Optional.empty(), continuationProperty);
     }
 
@@ -66,8 +66,8 @@ public class NeedMoreDataException extends Result {
     ///
     <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreDataException(
         final Class<T> continuationType,
-        final String continuationProperty
-    ) {
+        final String continuationProperty)
+    {
         this(MSG_STANDARD.formatted(continuationType.getSimpleName(), continuationProperty), continuationType, Optional.empty(), continuationProperty);
     }
 
@@ -83,8 +83,8 @@ public class NeedMoreDataException extends Result {
     <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreDataException(
         final String customMessage,
         final T continuation,
-        final String continuationProperty
-    ) {
+        final String continuationProperty)
+    {
         this(customMessage, (Class<T>) continuation.getClass(), of(continuation), continuationProperty);
     }
 
@@ -94,8 +94,8 @@ public class NeedMoreDataException extends Result {
     ///
     <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreDataException(
         final T continuation,
-        final String continuationProperty
-    ) {
+        final String continuationProperty)
+    {
         this(MSG_STANDARD.formatted(continuation, continuationProperty), (Class<T>) continuation.getClass(), of(continuation), continuationProperty);
     }
 
