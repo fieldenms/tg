@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -26,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -58,6 +58,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  */
 public class Finder {
     private static final Cache<Class<?>, List<Field>> ENTITY_KEY_MEMBERS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+    private static final Cache<Class<?>, Cache<String, Field>> CLASS_FIELDS = CacheBuilder.newBuilder().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
 
     public static long cleanUp() {
         ENTITY_KEY_MEMBERS.cleanUp();
@@ -373,6 +374,15 @@ public class Finder {
      * @throws NoSuchFieldException
      */
     public static Field getFieldByName(final Class<?> type, final String name) {
+        try {
+            return CLASS_FIELDS.get(type, () -> CacheBuilder.newBuilder().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build())
+                    .get(name, () -> getFieldByName_(type, name));
+        } catch (final ExecutionException e) {
+            throw new ReflectionException(e.getCause());
+        }
+    }
+
+    private static Field getFieldByName_(final Class<?> type, final String name) {
         Class<?> klass = type;
         if (AbstractUnionEntity.class.isAssignableFrom(klass)) {
             final Set<String> commonPropertiesList = AbstractUnionEntity.commonProperties((Class<AbstractUnionEntity>) type);

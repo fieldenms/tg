@@ -537,6 +537,7 @@ public class TypeMaker<T> {
                 final Field prop = Finder.getFieldByName(instrumentedInstance.getClass(), nameAndValue.getKey());
                 final boolean accessible = prop.canAccess(instrumentedInstance);
                 prop.setAccessible(true);
+                // FIXME IllegalAccessException: class ua.com.fielden.platform.reflection.asm.impl.TypeMaker$ConstructorInterceptor cannot access a member of class ua.com.fielden.platform.criteria.enhanced.CentreEntityQueryCriteriaToEnhance$$TgEntity_D14BAE81026394DBD4A5AF5FDFA03E993AA67527057CAFEC18F1A28E4A68532Efielden$$$work$$$ReWorkOrder$$TgEntity_5135170F8F66B91D1771B05F4908E8486B529F0818A8DB2279FB58EABA9DC724 with modifiers "private"
                 prop.set(instrumentedInstance, nameAndValue.getValue().get()); // supplier should never be null here (see collectionalInitValueSupplier)
                 prop.setAccessible(accessible);
             }

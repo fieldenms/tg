@@ -63,6 +63,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
             dtrField.set(this.secondTick, this.dtr);
             dtrField.setAccessible(isAccessible);
 
+            // FIXME Throws Can not set final ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation field ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager$TickManager.dtr to ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeRepresentation
             final Field trField = Finder.findFieldByName(TickManager.class, "tr");
             isAccessible = trField.isAccessible();
             trField.setAccessible(true);
