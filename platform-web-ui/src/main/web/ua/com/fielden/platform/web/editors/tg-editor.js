@@ -985,7 +985,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         if (qrCodeScanner) {
             qrCodeScanner.toaster = this.toaster;
             qrCodeScanner.closeCallback = this._closeScanner(this.focused);
-            qrCodeScanner.applyCallback = this._applyScannerValue.bind(this);
+            qrCodeScanner.applyCallback = this._applyScannerValue(this.focused).bind(this);
             qrCodeScanner.open();
         } else {
             throw new Error("QR code scanner is not present in DOM. Please add it with 'qrScanner' id");
@@ -998,17 +998,45 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                 qrCodeScanner.toaster = null;
                 qrCodeScanner.closeCallback = null;
                 qrCodeScanner.applyCallback = null;
-                if (wasFocused) {
-                    this._labelDownEventHandler();
-                }
+                // if (wasFocused) {
+                //     this._labelDownEventHandler();
+                // }
             }
         }
     }
 
-    _applyScannerValue (value) {
-        this._editingValue = value;
-        this._checkBuiltInValidation();
-        this.commitIfChanged();
+    _applyScannerValue(focused) {
+        return (value, separator) => {
+            if (!separator.trim() || !this._editingValue.trim()) {
+                this._editingValue = value;
+            } else if (!focused) {
+                this._editingValue += separator + value;
+            } else {
+                const selectionStart = this.decoratedInput().selectionStart;
+                const selectionEnd = this.decoratedInput().selectionEnd;
+                if (selectionStart === selectionEnd) {
+                    if (selectionStart === 0) {
+                        this._editingValue = value + this._editingValue;
+                        this.decoratedInput().selectionStart = value.length;
+                    } else {
+                        this._editingValue = this._editingValue.substring(0, selectionStart) + separator + value + this._editingValue.substring(selectionStart);
+                        this.decoratedInput().selectionStart = selectionStart + separator.length + value.length;
+                    }
+                } else {
+                    if (selectionStart === 0) {
+                        this._editingValue = value + this._editingValue.substring(selectionEnd);
+                        this.decoratedInput().selectionStart = value.length;
+                    } else {
+                        this._editingValue = this._editingValue.substring(0, selectionStart) + separator + value + this._editingValue.substring(selectionEnd);
+                        this.decoratedInput().selectionStart = selectionStart + separator.length + value.length;
+                    }
+                }
+                this.decoratedInput().selectionEnd = this.decoratedInput().selectionStart;
+                this.decoratedInput().focus();
+            }
+            this._checkBuiltInValidation();
+            this.commitIfChanged();
+        }
     }
 
     _canScan (hideQrCodeScanner, noLabelFloat, entity, propertyName) {

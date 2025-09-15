@@ -424,7 +424,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         this.$.textEditor.commitIfChanged();
         this.$.qrCodeScanner.close();
         if (this.applyCallback) {
-            this.applyCallback(this.scannedText);
+            this.applyCallback(this.scannedText, this.separator);
         }
     }
 
