@@ -163,6 +163,14 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
         this.decoratedInput().focusInput();
     }
 
+    replaceText(text, start, end) {
+        this.decoratedInput().replaceText(text, start, end);
+    }
+
+    insertText(text, where) {
+        this.decoratedInput().insertText(text, where);
+    }
+
      /**
      * Overridden to calculate union value type title on each arrival of binding entity.
      */

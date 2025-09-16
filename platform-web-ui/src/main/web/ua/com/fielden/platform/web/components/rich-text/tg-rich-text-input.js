@@ -437,7 +437,6 @@ function rgbToHex(rgbString) {
  * @param {Object} event keyboard event
  */
 function handleKeyEventsBeforeEditor(event) {
-    const docSize = this._editor.wwEditor.view.state.tr.doc.content.size;
     const selection = this._getSelection();
     if (event.keyCode === 13 /*Enter*/ && selection && selection[0] === 0 /*Text is selected from beginning*/) {
         this._editor.insertText("\n");
@@ -983,6 +982,41 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         const state = this._editor.wwEditor.createState();
         state.doc = this._editor.wwEditor.view.state.doc;
         this._editor.wwEditor.view.updateState(state);
+    }
+
+    replaceText(text, start, end) {
+        const refinedStart = start || 0;
+        const refinedEnd = end || this._editingValue.length;
+        this._editor.replaceSelection(text, refinedStart, refinedEnd);
+        const cursorPosition = refinedStart + text.length;
+        this._editor.setSelection(cursorPosition, cursorPosition);
+    }
+
+    insertText(text, where) {
+        if (typeof where === 'undefined') {
+            this._editor.moveCursorToEnd(false);
+        } else {
+            this._editor.setSelection(where, where);
+        }
+        this._editor.insertText(text);
+    }
+
+    get selectionStart() {
+        return this._editor.getSelection()[0];
+    }
+
+    set selectionStart(where) {
+        const selectionEnd = this._editor.getSelection()[1];
+        this._editor.setSelection(where, selectionEnd < where ? where : selectionEnd);
+    }
+
+    get selectionEnd() {
+        return this._editor.getSelection()[1];
+    }
+
+    set selectionEnd(where) {
+        const selectionStart = this._editor.getSelection()[0];
+        this._editor.setSelection(selectionStart > where ? where : selectionStart, where);
     }
 
     _editorScrolled(e) {
