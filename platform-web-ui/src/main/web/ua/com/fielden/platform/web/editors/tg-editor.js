@@ -676,6 +676,47 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         return this.$.decorator;
     }
 
+    focusDecoratedInput() {
+        this.decoratedInput().focus();
+    }
+
+    selectDecoratedInput() {
+        this.decoratedInput().select();
+    }
+
+    replaceText(text, start, end) {
+        const refinedStart = start || 0;
+        const refinedEnd = end || this._editingValue.length;
+        this._editingValue = this._editingValue.substring(0, refinedStart) + text + this._editingValue.substring(refinedEnd);
+        this.selectionStart = this.selectionEnd = refinedStart + text.length;
+    }
+
+    insertText(text, where) {
+        if (typeof where === 'undefined') {
+            this._editingValue += text;
+            this.selectionStart = this.selectionEnd = this._editingValue.length + text.length;
+        } else {
+            this._editingValue = this._editingValue.substring(0, where) + text + this._editingValue.substring(where);
+            this.selectionStart = this.selectionEnd = where + text.length;
+        }
+    }
+
+    get selectionStart() {
+        return this.decoratedInput().selectionStart;
+    }
+
+    set selectionStart(where) {
+        this.decoratedInput().selectionStart = where;
+    }
+
+    get selectionEnd() {
+        return this.decoratedInput().selectionEnd;
+    }
+
+    set selectionEnd(where) {
+        this.decoratedInput().selectionEnd = where;
+    }
+
     _handleCopy (event) {
         if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
             this.commitIfChanged();
@@ -956,8 +997,8 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         // Select text inside editor and focus it, if it is enabled and not yet focused.
         // Selection of the text on-focus is consistent with on-tap action in the editor or focus gain logic when tabbing between editors.
         if (this.shadowRoot.activeElement !== this.decoratedInput() && !this._disabled) {
-            this.decoratedInput().select();
-            this.decoratedInput().focus();
+            this.selectDecoratedInput();
+            this.focusDecoratedInput();
         }
         // Need to tear down the event for the editor to remain focused.
         tearDownEvent(event);
@@ -998,41 +1039,36 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                 qrCodeScanner.toaster = null;
                 qrCodeScanner.closeCallback = null;
                 qrCodeScanner.applyCallback = null;
-                // if (wasFocused) {
-                //     this._labelDownEventHandler();
-                // }
+                if (wasFocused) {
+                    this.focusDecoratedInput();
+                }
             }
         }
     }
 
     _applyScannerValue(focused) {
         return (value, separator) => {
-            if (!separator.trim() || !this._editingValue.trim()) {
-                this._editingValue = value;
+            const refinedSeparator = separator && separator.replace(/\\n/g, '\n').replace(/\\s/g, ' ').replace(/\\t/g, '\t');
+            if (!refinedSeparator || !this._editingValue.trim()) {
+                this.replaceText(value);
             } else if (!focused) {
-                this._editingValue += separator + value;
+                this.insertText(refinedSeparator + value);
             } else {
-                const selectionStart = this.decoratedInput().selectionStart;
-                const selectionEnd = this.decoratedInput().selectionEnd;
+                const selectionStart = this.selectionStart;
+                const selectionEnd = this.selectionEnd;
                 if (selectionStart === selectionEnd) {
                     if (selectionStart === 0) {
-                        this._editingValue = value + this._editingValue;
-                        this.decoratedInput().selectionStart = value.length;
+                        this.insertText(value, 0);
                     } else {
-                        this._editingValue = this._editingValue.substring(0, selectionStart) + separator + value + this._editingValue.substring(selectionStart);
-                        this.decoratedInput().selectionStart = selectionStart + separator.length + value.length;
+                        this.insertText(refinedSeparator + value, selectionStart);
                     }
                 } else {
                     if (selectionStart === 0) {
-                        this._editingValue = value + this._editingValue.substring(selectionEnd);
-                        this.decoratedInput().selectionStart = value.length;
+                        this.replaceText(value, 0, selectionEnd);
                     } else {
-                        this._editingValue = this._editingValue.substring(0, selectionStart) + separator + value + this._editingValue.substring(selectionEnd);
-                        this.decoratedInput().selectionStart = selectionStart + separator.length + value.length;
+                        this.replaceText(refinedSeparator + value, selectionStart, selectionEnd);
                     }
                 }
-                this.decoratedInput().selectionEnd = this.decoratedInput().selectionStart;
-                this.decoratedInput().focus();
             }
             this._checkBuiltInValidation();
             this.commitIfChanged();

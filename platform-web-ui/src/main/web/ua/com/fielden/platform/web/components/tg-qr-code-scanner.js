@@ -422,6 +422,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
     
     _applyScane() {
         this.$.textEditor.commitIfChanged();
+        this.$.separatorEditor.commitIfChanged();
         this.$.qrCodeScanner.close();
         if (this.applyCallback) {
             this.applyCallback(this.scannedText, this.separator);
