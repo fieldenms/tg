@@ -106,6 +106,9 @@ const template = html`
         .fixed-columns-container {
             @apply --layout-horizontal;
         }
+        .scrollable-columns-container {
+            @apply --layout-horizontal;
+        }
         .table-header-row {
             line-height: 1rem;
             font-size: 0.9rem;
@@ -184,6 +187,7 @@ const template = html`
             @apply --layout-horizontal;
         }
         .egi-master {
+            z-index: 0;
             height: 4.1rem;
             font-size: 1rem;
             font-weight: 400;
@@ -293,6 +297,9 @@ const template = html`
             @apply --layout-horizontal;
             @apply --layout-relative;
             padding: 0 ${EGI_CELL_PADDING_TEMPLATE};
+        }
+        .table-master-cell {
+            z-index: 0; /*This should be done to create new z-index container because some editors may have theit own z-index configured*/
         }
         .table-cell {
             @apply --layout-center;
@@ -468,31 +475,33 @@ const template = html`
                 </div>
             </template>
             <div id="egi_master_layout" style="display:none;" class="egi-master">
-                <div class="drag-anchor" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
-                <div class="table-master-cell" show-left-shadow$="[[_checkboxesShadowVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]">
+                <div class="drag-anchor cell" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
+                <div class="table-master-cell cell" show-left-shadow$="[[_checkboxesShadowVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]">
                     <!--Checkbox stub for master goes here-->
                 </div>
                 <div class="action-master-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
                     <!--Primary action stub for master goes here-->
                 </div>
-                <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
+                <div id="fixed_egi_master" class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                     <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                        <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
+                        <div class="table-master-cell cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
                             <slot name$="[[_getSlotNameFor(column.property)]]"></slot>
                         </div>
                     </template>
                 </div>
-                <template is="dom-repeat" items="[[columns]]" as="column">
-                    <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
-                        <slot name$="[[column.property]]"></slot>
-                    </div>
-                </template>
+                <div id="scrollable_egi_master" class="scrollable-columns-container">
+                    <template is="dom-repeat" items="[[columns]]" as="column">
+                        <div class="table-master-cell cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
+                            <slot name$="[[column.property]]"></slot>
+                        </div>
+                    </template>
+                </div>
                 <div class="action-master-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
                     <!--Secondary actions stub for master goes here-->
                 </div>
             </div>
             <!-- Table footer -->
-            <div class="footer" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcFooterStyle(summaryFixed, fitToHeight)]]">
+            <div id="bottom_egi" class="footer" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcFooterStyle(summaryFixed, fitToHeight)]]">
                 <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                     <div class="table-footer-row">
                         <div class="drag-anchor cell" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
@@ -574,6 +583,27 @@ function _insertMaster (container, egiMaster, entityIndex) {
     const row = container.querySelectorAll(".table-data-row")[entityIndex];
     container.insertBefore(egiMaster, row.nextSibling);
     egiMaster.style.display = null;
+};
+
+function _getFixedContainerLeftBound (egi) {
+    const columnElements = egi.$.baseContainer.querySelector(".table-header-row").querySelectorAll(".cell:not([hidden])");
+    let colIndexStart = -1;
+    colIndexStart += egi.canDragFrom && egi.dragAnchorFixed ? 1 : 0;
+    colIndexStart += egi.checkboxVisible && egi.checkboxesFixed ? 1 : 0;
+    colIndexStart += egi.primaryAction && egi.checkboxesWithPrimaryActionsFixed ? 1 : 0
+    colIndexStart += egi.numOfFixedCols;
+    if(colIndexStart >= 0 && colIndexStart < columnElements.length) {
+        return columnElements[colIndexStart].getBoundingClientRect().right;
+    }
+    return egi.$.baseContainer.getBoundingClientRect().left;
+};
+
+function _getFixedContainerRightBound (egi) {
+    const columnElements = egi.$.baseContainer.querySelector(".table-header-row").querySelectorAll(".cell:not([hidden])");
+    if (egi._isSecondaryActionPresent && egi.secondaryActionsFixed) {
+        return columnElements[columnElements.length - 1].getBoundingClientRect().left;
+    }
+    return egi.$.baseContainer.getBoundingClientRect().right;
 };
 
 Polymer({
@@ -878,7 +908,8 @@ Polymer({
         this._makeRowEditable = this._makeRowEditable.bind(this);
         this._acceptValuesFromMaster = this._acceptValuesFromMaster.bind(this);
         this._closeMaster = this._closeMaster.bind(this);
-        this.$.egi_master_layout.addEventListener('focusin', this._scrollToVisibleCentreMaster.bind(this));
+        this.$.fixed_egi_master.addEventListener('focusin', this._scrollToVisibleFixedMaster.bind(this));
+        this.$.scrollable_egi_master.addEventListener('focusin', this._scrollToVisibleScrollableMaster.bind(this));
 
         //Add event listener to know when egi has become visible
         this.addEventListener("tg-centre-page-was-selected", this._egiBecameSelected.bind(this))
@@ -2263,7 +2294,7 @@ Polymer({
         this.fire("tg-egi-finish-editing", this);
     },
 
-    _scrollToVisibleLeftMaster: function (e) {
+    _scrollToVisibleFixedMaster: function (e) {
         const topEgiBox = this.$.top_egi.getBoundingClientRect();
         const bottomEgiBox = this.$.bottom_egi.getBoundingClientRect();
         const targetBox = e.target.getBoundingClientRect();
@@ -2272,12 +2303,10 @@ Polymer({
         }
     },
 
-    _scrollToVisibleCentreMaster: function (e) {
-        const leftEgiBox = this.$.left_egi.getBoundingClientRect();
-        const rightEgiBox = this.$.right_egi.getBoundingClientRect();
+    _scrollToVisibleScrollableMaster: function (e) {
         const targetBox = e.target.getBoundingClientRect();
         let scrollHorizontally = false;
-        if (leftEgiBox.right >= targetBox.left || rightEgiBox.left <= targetBox.right) {
+        if (_getFixedContainerLeftBound(this) >= targetBox.left || _getFixedContainerRightBound(this) <= targetBox.right) {
             scrollHorizontally = true;
         }
         const topEgiBox = this.$.top_egi.getBoundingClientRect();
@@ -2315,10 +2344,8 @@ Polymer({
             if (entityIndex >= 0 && entityIndex < this.filteredEntities.length) {
                 this.master.resetMasterForNextEntity();
                 this.set("egiModel." + entityIndex + ".editing", true);
-                _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
-                _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
-                _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
-                const rowOffset = this.$.centre_egi.querySelectorAll(".table-data-row")[entityIndex].offsetTop;
+                _insertMaster(this.$.baseContainer, this.$.egi_master_layout, entityIndex);
+                const rowOffset = this.$.baseContainer.querySelectorAll(".table-data-row")[entityIndex].offsetTop;
                 this.$.master_actions.style.top = (rowOffset - 35/*The desired offset of master actions above the row*/) + "px";
                 this.$.master_actions.style.left = this.$.baseContainer.scrollLeft + 16/*Desired distance from left border of egi */ + "px";
                 this.$.master_actions.style.display = 'flex';
@@ -2340,9 +2367,7 @@ Polymer({
             delete this.master.editableRow;
         }
         this.$.master_actions.style.display = 'none';
-        this.$.left_egi_master.style.display = 'none';
-        this.$.centre_egi_master.style.display = 'none';
-        this.$.right_egi_master.style.display = 'none';
+        this.$.egi_master_layout.style.display = 'none';
     },
 
     _initMasterEditors: function () {
