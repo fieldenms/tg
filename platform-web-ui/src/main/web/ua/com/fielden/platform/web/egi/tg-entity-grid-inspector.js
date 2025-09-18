@@ -1219,10 +1219,9 @@ Polymer({
             // Reading the values of these attributes requires access to the template's elements, which may have not been initialised at this stage.
             // Therefore, async call is needed. See render() method invocations for this.fixedColumns and this.columns.
             this.async(() => {
-                const fixedHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
-                const scrollingHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
-                this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0"/*The index of fixed columns in summary row*/);
-                this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1"/*The index of scrollable columns in summary row*/);
+                const headers = [...this.$.top_egi.querySelectorAll(".table-header-column-title")];
+                this._setSortingFor(sortingConfig, this.fixedColumns, headers.slice(0, this.fixedColumns.length),"fixedColumns", "0"/*The index of fixed columns in summary row*/);
+                this._setSortingFor(sortingConfig, this.columns, headers.slice(this.fixedColumns.length), "columns", "1"/*The index of scrollable columns in summary row*/);
             });
         } else {
             this._postponedSortingConfig = sortingConfig;
