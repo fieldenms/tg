@@ -67,18 +67,6 @@ const template = html`
             z-index: 1;
             position: relative;
         }
-        tg-responsive-toolbar[show-top-shadow]:after {
-            content: "";
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            right: 0;
-            height:4px;
-            background: transparent;
-            background: -moz-linear-gradient(bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%); 
-            background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
-            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%);
-        }
         paper-progress {
             position: absolute;
             top: 0;
@@ -247,6 +235,15 @@ const template = html`
             padding-bottom: ${EGI_BOTTOM_MARGIN_TEMPLATE};
             @apply --layout-vertical;
         }
+        .cell[over] {
+            background-color: #EEEEEE !important;
+        }
+        .cell[selected] {
+            background-color: #F5F5F5;
+        }
+        .cell {
+            background-color: white;
+        }
         .drag-anchor {
             width: var(--egi-drag-anchor-width, 1.5rem);
             --iron-icon-width: var(--egi-drag-anchor-width, 1.5rem);
@@ -336,11 +333,7 @@ const template = html`
             display: initial;
             pointer-events: none;
         }
-        .grid-layout-container {
-            background-color: white;
-            @apply --layout-vertical;
-        }
-        .grid-layout-container[show-top-shadow]:before {
+        [show-top-shadow]:before {
             content: "";
             position: absolute;
             bottom: -4px;
@@ -352,7 +345,7 @@ const template = html`
             background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
         }
-        .grid-layout-container[show-bottom-shadow]:before {
+        [show-bottom-shadow]:before {
             content: "";
             position: absolute;
             top: -4px;
@@ -364,7 +357,7 @@ const template = html`
             background: -webkit-linear-gradient(top, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to top, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
         }
-        .grid-layout-container[show-left-shadow]:after {
+        [show-left-shadow]:after {
             content: "";
             position: absolute;
             bottom: 0;
@@ -376,7 +369,7 @@ const template = html`
             background: -webkit-linear-gradient(right, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to right, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
         }
-        .grid-layout-container[show-right-shadow]:after {
+        [show-right-shadow]:after {
             content: "";
             position: absolute;
             bottom: 0;
@@ -405,15 +398,15 @@ const template = html`
         </tg-responsive-toolbar>
         <div id="baseContainer" on-scroll="_handleScrollEvent" on-touchmove="_handleTouchMove">
             <!-- Table header -->
-            <div id="top_egi" class="table-header-row" style$="[[_calcHeaderStyle(headerFixed, _showTopShadow)]]">
-                <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
-                <div class="table-cell cell" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+            <div id="top_egi" class="table-header-row" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcHeaderStyle(headerFixed)]]">
+                <div class="drag-anchor cell" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
+                <div class="table-cell cell" show-left-shadow$="[[_checkboxesShadowVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                     <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" semi-checked$="[[semiSelectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                 </div>
-                <div class="action-cell cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
+                <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
                     <!--Primary action stub header goes here-->
                 </div>
-                <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
+                <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                     <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
                         <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                             <div class="table-header-column-content">
@@ -441,7 +434,7 @@ const template = html`
                         <div class="resizing-box"></div>
                     </div>
                 </template>
-                <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                <div class="action-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
                         <!--Secondary actions header goes here-->
                 </div>
             </div>
@@ -451,38 +444,38 @@ const template = html`
             </div>
             <!--Table body-->
             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
-                <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                    <div class="drag-anchor" draggable$="[[_isDraggable(egiEntity.selected)]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]">
+                <div class="table-data-row" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                    <div class="drag-anchor cell" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" draggable$="[[_isDraggable(egiEntity.selected)]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]">
                         <iron-icon icon="tg-icons:dragVertical"></iron-icon>
                     </div>
-                    <div class="table-cell" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
+                    <div class="table-cell cell" show-left-shadow$="[[_checkboxesShadowVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]" hidden$="[[!checkboxVisible]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                         <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                     </div>
-                    <div class="action-cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
+                    <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
                         <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
                     </div>
-                    <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
+                    <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                            <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
+                            <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
                         </template>
                     </div>
                     <template is="dom-repeat" items="[[columns]]" as="column">
-                        <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                        <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                     </template>
-                    <div class="action-cell" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                    <div class="action-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
                         <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
                     </div>
                 </div>
             </template>
             <div id="egi_master_layout" style="display:none;" class="egi-master">
-                <div class="drag-anchor" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
-                <div class="table-master-cell" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]">
+                <div class="drag-anchor" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
+                <div class="table-master-cell" show-left-shadow$="[[_checkboxesShadowVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]">
                     <!--Checkbox stub for master goes here-->
                 </div>
-                <div class="action-master-cell cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
+                <div class="action-master-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
                     <!--Primary action stub for master goes here-->
                 </div>
-                <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
+                <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                     <template is="dom-repeat" items="[[fixedColumns]]" as="column">
                         <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
                             <slot name$="[[_getSlotNameFor(column.property)]]"></slot>
@@ -494,30 +487,30 @@ const template = html`
                         <slot name$="[[column.property]]"></slot>
                     </div>
                 </template>
-                <div class="action-master-cell cell" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                <div class="action-master-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
                     <!--Secondary actions stub for master goes here-->
                 </div>
             </div>
             <!-- Table footer -->
-            <div class="footer">
+            <div class="footer" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcFooterStyle(summaryFixed, fitToHeight)]]">
                 <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                     <div class="table-footer-row">
-                        <div class="drag-anchor" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
-                        <div class="table-cell" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]">
+                        <div class="drag-anchor cell" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
+                        <div class="table-cell cell" show-left-shadow$="[[_checkboxesShadowVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]">
                             <!--Footer's select checkbox stub goes here-->
                         </div>
-                        <div class="action-cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
+                        <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Footer's primary action stub goes here-->
                         </div>
-                        <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
+                        <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                             <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
-                                <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                                <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                             </template>
                         </div>
                         <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
-                            <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                            <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                         </template>
-                        <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                        <div class="action-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
                             <!--Secondary actions footer goes here-->
                         </div>
                     </div>
@@ -1227,7 +1220,7 @@ Polymer({
             // Therefore, async call is needed. See render() method invocations for this.fixedColumns and this.columns.
             this.async(() => {
                 const fixedHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
-                const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
+                const scrollingHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
                 this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0"/*The index of fixed columns in summary row*/);
                 this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1"/*The index of scrollable columns in summary row*/);
             });
@@ -1705,12 +1698,8 @@ Polymer({
         return canDragFrom ? "padding-left: 8px;" : "";
     },
 
-    _calcHeaderStyle: function (headerFixed, _showTopShadow) {
-        let headerStyle = headerFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; top: 0;" : "";
-        if (_showTopShadow) {
-            headerStyle += "box-shadow: 0px 1px 6px -1px rgba(0,0,0,0.7);";
-        }
-        return headerStyle;
+    _calcHeaderStyle: function (headerFixed) {
+        return headerFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; top: 0;" : "";
     },
 
     _calcDragBoxStyle: function (dragAnchorFixed) {
@@ -1792,6 +1781,11 @@ Polymer({
         return secondaryActionsFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; right: 0;" : "";
     },
 
+    _calcFooterStyle: function (summaryFixed, fitToHeight) {
+        const style = summaryFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; bottom: 0;" : "";
+        return style + (fitToHeight ? "margin-top:auto;" : "");
+    },
+
     _isSortingVisible: function (sortable, sorting) {
         return sortable && typeof sorting !== 'undefined' && sorting !== null;
     },
@@ -1814,6 +1808,38 @@ Polymer({
             colStyle += "text-align: right;"
         }
         return colStyle;
+    },
+
+    _toolbarShadowVisible: function (_showTopShadow, headerFixed) {
+        return _showTopShadow && !headerFixed;
+    },
+
+    _topShadowVisible: function (_showTopShadow, headerFixed) {
+        return _showTopShadow && headerFixed;
+    },
+
+    _dragAnchorShadowVisible: function(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow) {
+        return _showLeftShadow && canDragFrom && dragAnchorFixed && !checkboxesFixed;
+    },
+
+    _checkboxesShadowVisible: function(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow) {
+        return _showLeftShadow && checkboxVisible && checkboxesFixed && !checkboxesWithPrimaryActionsFixed;
+    },
+
+    _primaryActionShadowVisible: function(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow) {
+        return _showLeftShadow && primaryAction && checkboxesWithPrimaryActionsFixed && !numOfFixedCols;
+    },
+
+    _fixedColsShadowVisible: function (numOfFixedCols, _showLeftShadow) {
+        return _showLeftShadow && numOfFixedCols;
+    },
+
+    _rightShadowVisible: function(_isSecondaryActionPresent, _showRightShadow) {
+        return _showRightShadow && _isSecondaryActionPresent;
+    },
+
+    _bottomShadowVisible: function (_showBottomShadow, summaryFixed) {
+        return _showBottomShadow && summaryFixed;
     },
 
     // Observers
