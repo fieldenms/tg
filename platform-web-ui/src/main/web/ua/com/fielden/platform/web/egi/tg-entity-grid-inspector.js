@@ -156,6 +156,7 @@ const template = html`
             font-weight: 400;
             color: #212121;
             height: var(--egi-row-height, 1.5rem);
+            min-height: var(--egi-row-min-height, 1.5rem);
             border-bottom: thin solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
@@ -177,6 +178,7 @@ const template = html`
             font-size: 0.9rem;
             color: #757575;
             height: var(--egi-row-height, 1.5rem);
+            min-height: var(--egi-row-min-height, 1.5rem);
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: -webkit-fit-content;
@@ -1388,6 +1390,7 @@ Polymer({
             }
             this.fire("tg-egi-column-change", parameters);
         }
+        this._rowHeightChanged(this.rowHeight);
         this._updateTableSizeAsync();
     },
 
@@ -1900,7 +1903,12 @@ Polymer({
     },
 
     _rowHeightChanged: function (newValue) {
-        this.updateStyles({"--egi-row-height": newValue});
+        this.updateStyles({"--egi-row-min-height": newValue});
+        if (this.fixedColumns.concat(this.columns).find(col => col.wordWrap)) {
+            this.updateStyles({"--egi-row-height": 'auto'});
+        } else {
+            this.updateStyles({"--egi-row-height": newValue});
+        }
     },
 
     _numberOfHeaderLinesChanged: function (newValue) {

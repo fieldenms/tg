@@ -33,6 +33,7 @@ import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.action.post.BindSavedPropertyPostActionError;
 import ua.com.fielden.platform.web.action.post.BindSavedPropertyPostActionSuccess;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
+import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -1802,7 +1803,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .withNoParentCentreRefresh()
                         .build())
                 .also()
-                .addEditableProp("desc")
+                .addEditableProp("desc").withWordWrap()
                     .withAction(
                         action(TgPersistentEntityWithProperties.class)
                         .withContext(context().withCurrentEntity().build())
