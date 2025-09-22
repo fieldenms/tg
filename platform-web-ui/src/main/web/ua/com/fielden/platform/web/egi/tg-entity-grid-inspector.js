@@ -108,6 +108,7 @@ const template = html`
         }
         .scrollable-columns-container {
             @apply --layout-horizontal;
+            @apply --layout-flex;
         }
         .table-header-row {
             line-height: 1rem;
@@ -166,12 +167,6 @@ const template = html`
             flex-grow: 0;
             flex-shrink: 0;
             @apply --layout-horizontal;
-        }
-        .table-data-row[selected] {
-            background-color: #F5F5F5;
-        }
-        .table-data-row[over] {
-            background-color: #EEEEEE;
         }
         .table-footer-row {
             z-index: 0;
@@ -259,7 +254,7 @@ const template = html`
             @apply --layout-center;
             @apply --layout-relative;
         }
-        .table-data-row[selected] .drag-anchor:hover {
+        .drag-anchor[selected]:hover {
             cursor: move;
             /* fallback if grab cursor is unsupported */
             cursor: grab;
@@ -267,7 +262,7 @@ const template = html`
             cursor: -webkit-grab;
             color: var(--paper-light-blue-700);
         }
-        .table-data-row[selected] .drag-anchor:active {
+        .drag-anchor[selected]:active {
             cursor: grabbing;
             cursor: -moz-grabbing;
             cursor: -webkit-grabbing;
