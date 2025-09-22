@@ -1412,6 +1412,8 @@ Polymer({
         this._showTopShadow = this.$.baseContainer.scrollTop > 0;
         this._showBottomShadow = Math.ceil(this.$.baseContainer.clientHeight + this.$.baseContainer.scrollTop) < this.$.baseContainer.scrollHeight;
         if (this.isEditing()) {
+            const rowOffset = this.$.baseContainer.querySelectorAll(".table-data-row")[this.master.editableRow].offsetTop;
+            this.$.master_actions.style.top = (rowOffset - 35/*The desired offset of master actions above the row*/) + "px";
             this.$.master_actions.style.left = this.$.baseContainer.scrollLeft + 16/* The desired distance of master actions from the left border */ + "px";
         }
     },
