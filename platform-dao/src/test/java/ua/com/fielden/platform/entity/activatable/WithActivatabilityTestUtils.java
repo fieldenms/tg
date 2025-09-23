@@ -38,6 +38,8 @@ interface WithActivatabilityTestUtils {
         return refetch$(entity, fetch.FetchCategory.DEFAULT);
     }
 
+    /// Refetches `entity` with property `refCount` and asserts that it is equal to the `expected` value.
+    ///
     default void assertRefCount(final int expected, final ActivatableAbstractEntity<?> entity) {
         assertRefCount(() -> "refCount for [%s] %s".formatted(getEntityTitleAndDesc(entity).getKey(), entity),
                        expected, entity);

@@ -2,6 +2,10 @@ package ua.com.fielden.platform.entity.activatable;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
+import ua.com.fielden.platform.entity.activatable.test_entities.Member5;
+import ua.com.fielden.platform.entity.activatable.test_entities.MemberDetails;
+import ua.com.fielden.platform.entity.activatable.test_entities.Union;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.sample.domain.*;
@@ -13,6 +17,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -40,6 +45,22 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
         save(auth.setActive(false));
 
         assertRefCount(1, person);
+    }
+
+    @Test
+    public void deactivating_B_that_is_a_deactivatable_dependency_of_A_and_references_active_A_via_union_does_not_change_refCount_of_A() {
+        final int expectedRefCount = 10;
+        final var member1 = save(new_(Member1.class, "Member1").setActive(true).setRefCount(expectedRefCount));
+        final var member1Det = save(new_(MemberDetails.class).setUnion(new_(Union.class).setMember1(member1)).setActive(true));
+
+        // A sanity check to ensure that `member1.refCount` did not increase after saving a new active details record.
+        assertRefCount(expectedRefCount, member1);
+
+        // Deactivate the details record.
+        save(member1Det.setActive(false));
+
+        // Assert that refCount did not change.
+        assertRefCount(expectedRefCount, member1);
     }
 
     @Test
@@ -94,6 +115,21 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
 
         assertRefCount("P1 was referenced by just deactivated originator as an assistant, and should have its refCount decremented.", 0, p1);
         assertRefCount("P3 was referenced by just deactivated originator as one of key members, and should not have its refCount affected.", 0, p3);
+    }
+
+    @Test
+    public void deactivating_B_that_is_a_deactivatable_dependency_of_A_and_references_active_A_via_a_key_member_and_a_non_key_member_decrements_refCount_of_A_once() {
+        final var member1 = save(new_(Member1.class, "Member1").setActive(true).setRefCount(10));
+        final var member1Det = save(new_(MemberDetails.class)
+                                            .setUnion(new_(Union.class).setMember1(member1))
+                                            .setUnion2(new_(Union.class).setMember1(member1))
+                                            .setActive(true));
+        // And this covers activation of B -- refCount of A is incremented once.
+        assertRefCount(11, member1);
+
+        save(member1Det.setActive(false));
+
+        assertRefCount(10, member1);
     }
 
     @Test
@@ -177,6 +213,19 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
         assertFalse(part1.isActive());
         final var inactivePart1 = save(part1);
         assertFalse(inactivePart1.isActive());
+    }
+
+    @Test
+    public void deactivation_of_an_entity_deactivates_its_active_deactivatable_dependencies_that_reference_it_via_union() {
+        final var member1 = save(new_(Member1.class, "Member1").setActive(true));
+        final var member1Det = save(new_(MemberDetails.class).setUnion(new_(Union.class).setMember1(member1)).setActive(true));
+        final var member5 = save(new_(Member5.class, "Member5").setActive(true));
+        final var member5Det = save(new_(MemberDetails.class).setUnion(new_(Union.class).setMember5(member5)).setActive(true));
+
+        // Refetch member1 after having used it (increment of its `refCount` and a concurrent deactivation is a conflicting change).
+        save(refetch$(member1).setActive(false));
+        assertFalse(co(MemberDetails.class).findByEntityAndFetch(fetch(MemberDetails.class), member1Det).isActive());
+        assertTrue(co(MemberDetails.class).findByEntityAndFetch(fetch(MemberDetails.class), member5Det).isActive());
     }
 
     @Override
