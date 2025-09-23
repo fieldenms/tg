@@ -7,6 +7,14 @@ import '/resources/polymer/@polymer/paper-toast/paper-toast.js';
  */
 class TgPaperToast extends customElements.get('paper-toast') {
 
+    static get properties() {
+        return {
+            _hasMore: {
+                type: Boolean
+            }
+        };
+    }
+
     _openedChanged () {
         if (this._autoClose !== null) {
             this.cancelAsync(this._autoClose);
