@@ -29,8 +29,8 @@ import java.lang.annotation.Target;
 ///
 /// When an `Equipment` instance is being deactivated, all active `PmTask` records that reference that `Equipment` via property `equipment` will be deactivated as well.
 ///
-/// The example above illustrates a _direct reference_, but _union references_ are supported as well, meaning that joint
-/// deactivation would still work if `PmTask.equipment` was replaced by `asset : Asset`, where `Asset` is a union entity type
+/// The example above illustrates a _direct reference_, but _union references_ are also supported, meaning that joint
+/// deactivation would still work if `PmTask.equipment` were replaced by `asset: Asset`, where `Asset` is a union entity type
 /// with an `Equipment` member.
 ///
 @Retention(RetentionPolicy.RUNTIME)
