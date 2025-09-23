@@ -105,17 +105,17 @@ public class ActivatableEntityRetrospectionHelper {
         }
     }
 
-    /// This predicate is true if the specified reference is a _backreference_ from a deactivatable dependency.
-    /// I.e., if one of the following holds:
+    /// This predicate is holds if the specified reference is a _backreference_ from a deactivatable dependency.
+    /// For example, if one of the following holds:
     /// 1. `prop` is a key member in `entityType`, and the type of `prop` has [deactivatable dependencies][DeactivatableDependencies]
-    ///    that include `entityType`.
+    ///    that include `entityType`, or
     /// 2. `prop` is a union-typed key member in `entityType`, and the type of the active entity (in the union `value`)
     ///    has [deactivatable dependencies][DeactivatableDependencies] that include `entityType`.
     ///
-    /// For an example of the first condition, consider activatable entity `Manager` that has a key member `person: Person`.
-    /// `Person` is activatable and includes `Manager` in its `@DeactivatableDependencies`.
+    /// As an example of the first condition, consider activatable entity `Manager` that has a key member `person: Person`.
+    /// Entity `Person` is activatable and includes `Manager` in its `@DeactivatableDependencies`.
     /// When a `Manager` is being deactivated, `Manager.person` will be a candidate for processing due to the activatable nature of `Person`.
-    /// However, `Manager` is a specialisation of `Person`, since `Manager.person` is a key member and `Person` includes `Manager` in its `@DeactivatableDependencies`.
+    /// However, `Manager` is a specialisation of `Person` because `Manager.person` is a key member and `Person` includes `Manager` in its `@DeactivatableDependencies`.
     /// Activation/deactivation of a `Manager` should not affect `refCount` for `Person`.
     /// That is why, property `Manager.person` needs to be excluded from activatable processing.
     ///
