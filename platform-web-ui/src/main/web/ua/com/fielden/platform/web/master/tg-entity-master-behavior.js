@@ -486,7 +486,7 @@ const TgEntityMasterBehaviorImpl = {
                     null, null, this.getMasterEntity ? this.getMasterEntity : null
                 );
                 this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
-                return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), masterTypeCarrier, this._continuations);
+                return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this.enhanceWithContinuationMarker(this._reset(holder)), masterTypeCarrier, this._continuations);
             }.bind(this);
 
             const contextHolder = this._reflector().createContextHolder(
@@ -570,7 +570,7 @@ const TgEntityMasterBehaviorImpl = {
                     this._createContextHolderForEmbeddedViews = (function () {
                         const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                         this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
-                        return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), this.savingContext, this._continuations);
+                        return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this.enhanceWithContinuationMarker(this._reset(holder)), this.savingContext, this._continuations);
                     }).bind(this);
                 }
             }
@@ -676,6 +676,9 @@ const TgEntityMasterBehaviorImpl = {
                             context['originallyProducedEntity'] = action.originallyProducedEntity;
                         }
                         return context;
+                    };
+                    action._masterReferenceForTestingChanged = function (master) {
+                        master['@continuationInstanceBased'] = action.originallyProducedEntity;
                     };
                 }
                 // Initialise `action.originallyProducedEntity` for the above context creator override.
@@ -948,6 +951,13 @@ const TgEntityMasterBehaviorImpl = {
         if (saveButton) {
             saveButton.outerEnabled = _editedPropsExist || _bindingEntityNotPersistentOrNotPersistedOrModified;
         }
+    },
+
+    enhanceWithContinuationMarker: function (modifHolder) {
+        if (this['@continuationInstanceBased']) {
+            modifHolder['@continuationInstanceBased'] = true;
+        }
+        return modifHolder;
     },
 
     /**
