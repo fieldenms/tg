@@ -5,20 +5,20 @@ import ua.com.fielden.platform.entity.annotation.*;
 
 @MapEntityTo
 @KeyType(String.class)
-@CompanionObject(Member1Co.class)
+@CompanionObject(Member5Co.class)
 @DeactivatableDependencies(MemberDetails.class)
-public class Member1 extends ActivatableAbstractEntity<String> {
+public class Member5 extends ActivatableAbstractEntity<String> {
 
     @Observable
     @Override
-    public Member1 setActive(final boolean active) {
+    public Member5 setActive(final boolean active) {
         super.setActive(active);
         return this;
     }
 
     @Observable
     @Override
-    public Member1 setRefCount(final Integer refCount) {
+    public Member5 setRefCount(final Integer refCount) {
         super.setRefCount(refCount);
         return this;
     }

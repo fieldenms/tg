@@ -3,6 +3,7 @@ package ua.com.fielden.platform.utils;
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -17,9 +18,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.isUnionMember;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.utils.EntityUtils.isDateOnly;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 public final class Validators {
     private Validators() {
@@ -139,9 +142,8 @@ public final class Validators {
         return findFirstOverlapping(entity, null, co, fromDateProperty, toDateProperty, matchProperties);
     }
 
-    /**
-     * Finds active deactivatable dependencies for `entity`.
-     */
+    /// Finds active deactivatable dependencies for `entity`, including indirect ones by virtual of being a union member.
+    ///
     public static <T extends ActivatableAbstractEntity<?>> List<? extends ActivatableAbstractEntity<?>> findActiveDeactivatableDependencies(
             final T entity,
             final ICompanionObjectFinder coFinder)
@@ -159,7 +161,9 @@ public final class Validators {
             final var props = new ArrayList<Field>();
             final var keyMembers = Finder.getKeyMembers(dependentType);
             for (final var keyMember : keyMembers) {
-                if (entityType.isAssignableFrom(keyMember.getType())) {
+                if (entityType.isAssignableFrom(keyMember.getType())
+                   || (isUnionEntityType(keyMember.getType()) && isUnionMember((Class<? extends AbstractUnionEntity>) keyMember.getType(), entityType)))
+                {
                     props.add(keyMember);
                 }
             }
