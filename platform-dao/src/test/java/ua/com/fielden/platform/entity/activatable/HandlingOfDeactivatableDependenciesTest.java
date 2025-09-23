@@ -49,12 +49,18 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
 
     @Test
     public void deactivating_B_that_is_a_deactivatable_dependency_of_A_and_references_active_A_via_union_does_not_change_refCount_of_A() {
-        final var member1 = save(new_(Member1.class, "Member1").setActive(true).setRefCount(10));
+        final int expectedRefCount = 10;
+        final var member1 = save(new_(Member1.class, "Member1").setActive(true).setRefCount(expectedRefCount));
         final var member1Det = save(new_(MemberDetails.class).setUnion(new_(Union.class).setMember1(member1)).setActive(true));
 
+        // A sanity check to ensure that `member1.refCount` did not increase after saving a new active details record.
+        assertRefCount(expectedRefCount, member1);
+
+        // Deactivate the details record.
         save(member1Det.setActive(false));
 
-        assertRefCount(10, member1);
+        // Assert that refCount did not change.
+        assertRefCount(expectedRefCount, member1);
     }
 
     @Test
