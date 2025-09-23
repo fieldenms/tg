@@ -1781,7 +1781,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         .setPageCapacity(20)
         //.setHeight("100%")
         //.setVisibleRowsCount(10)
-        //.fitToHeight()
+        .fitToHeight()
         .addProp("this")
             .order(2).asc()
             .width(60);
@@ -1795,7 +1795,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
                 withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
-                        //.preAction(new EntityNavigationPreAction("Cool entity"))
+                        .preAction(new EntityNavigationPreAction("Cool entity"))
                         .icon("editor:mode-edit")
                         .withStyle("color: green")
                         .shortDesc("Edit entity")
@@ -1915,7 +1915,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("compositeProp").minWidth(110)
                 .also()
-                .addProp("stringProp").minWidth(50).also()
+                .addProp("stringProp").minWidth(50).withWordWrap().also()
                 .addEditableProp("colourProp").width(40).also()
                 .addProp("numberOfAttachments").width(100).also()
                 .addEditableProp("hyperlinkProp").minWidth(500)

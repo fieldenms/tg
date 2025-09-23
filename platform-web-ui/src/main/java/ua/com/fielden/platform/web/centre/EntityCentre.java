@@ -761,7 +761,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.isRunAutomatically();
     }
 
-    /// Returns whether the centre should run automatically (by default; can be changed) and its behaviour is not customised: criteria should be cleared in the process (default configs) and config moved to empty default (save-as configs, embedded only)
+    /// Returns the value that indicates whether the centre should run automatically (by default; can be changed) and its behaviour is not customised: criteria should be cleared in the process (default configs) and config moved to empty default (save-as configs, embedded only)
     ///
     public boolean isRunAutomaticallyAndNotAllowCustomised() {
         return dslDefaultConfig.isRunAutomatically() && !allowCustomised();
