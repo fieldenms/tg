@@ -149,8 +149,11 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(UnionEntityDetails.class);
         add(Union.class);
         add(Member1.class);
+        add(MemberDetails.class);
         add(Member2.class);
         add(Member3.class);
+        add(Member4.class);
+        add(Member5.class);
         add(ActivatableUnionOwner.class);
         add(UnionOwner.class);
         add(TestExists_Union.class);

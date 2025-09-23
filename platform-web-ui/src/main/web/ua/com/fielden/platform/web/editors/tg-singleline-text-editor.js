@@ -26,7 +26,7 @@ const customInputTemplate = html`
             on-focus="_onFocus"
             on-blur="_outFocus"
             disabled$="[[_disabled]]"
-            tooltip-text$="[[_getTooltip(_editingValue)]]"
+            tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]"
             autocomplete="off"/>
     </iron-input>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;

@@ -452,6 +452,8 @@ public class ExpressionParser {
         case STRING:
         case DATE_CONST:
         case DATE:
+        case TRUE:
+        case FALSE:
             return match_literal(cat);
             // trying to match property rule
         case SELF:
