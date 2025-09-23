@@ -142,9 +142,8 @@ public final class Validators {
         return findFirstOverlapping(entity, null, co, fromDateProperty, toDateProperty, matchProperties);
     }
 
-    /**
-     * Finds active deactivatable dependencies for `entity`.
-     */
+    /// Finds active deactivatable dependencies for `entity`, including indirect ones by virtual of being a union member.
+    ///
     public static <T extends ActivatableAbstractEntity<?>> List<? extends ActivatableAbstractEntity<?>> findActiveDeactivatableDependencies(
             final T entity,
             final ICompanionObjectFinder coFinder)
@@ -163,7 +162,7 @@ public final class Validators {
             final var keyMembers = Finder.getKeyMembers(dependentType);
             for (final var keyMember : keyMembers) {
                 if (entityType.isAssignableFrom(keyMember.getType())
-                || (isUnionEntityType(keyMember.getType()) && isUnionMember((Class<? extends AbstractUnionEntity>) keyMember.getType(), entityType)))
+                   || (isUnionEntityType(keyMember.getType()) && isUnionMember((Class<? extends AbstractUnionEntity>) keyMember.getType(), entityType)))
                 {
                     props.add(keyMember);
                 }
