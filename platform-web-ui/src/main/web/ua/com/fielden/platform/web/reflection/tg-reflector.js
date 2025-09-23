@@ -53,7 +53,7 @@ const _simpleClassName = function (fullClassName) {
 };
 
 var _isContinuationError0 = function (result) {
-    return _isError0(result) && (typeof result.ex.continuationType !== 'undefined');
+    return _isError0(result) && (typeof result.ex.continuationTypeStr !== 'undefined');
 }
 
 /**
