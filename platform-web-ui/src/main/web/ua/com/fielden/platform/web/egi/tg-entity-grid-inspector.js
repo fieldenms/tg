@@ -36,6 +36,9 @@ import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 const EGI_BOTTOM_MARGIN = "15px";
 const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
 
+const LEFT_EGI_MASTER_ACTIONS_OFFSET = 16;
+const TOP_EGI_MASTER_ACTIONS_OFFSET = 35;
+
 const template = html`
     <style>
         :host {
@@ -296,7 +299,7 @@ const template = html`
             padding: 0 ${EGI_CELL_PADDING_TEMPLATE};
         }
         .table-master-cell {
-            z-index: 0; /*This should be done to create new z-index container because some editors may have theit own z-index configured*/
+            z-index: 0; /*This should be done to create new z-index container because some editors may have their own z-index configured*/
         }
         .table-cell {
             @apply --layout-center;
@@ -1408,8 +1411,8 @@ Polymer({
         this._showBottomShadow = Math.ceil(this.$.baseContainer.clientHeight + this.$.baseContainer.scrollTop) < this.$.baseContainer.scrollHeight;
         if (this.isEditing()) {
             const rowOffset = this.$.baseContainer.querySelectorAll(".table-data-row")[this.master.editableRow].offsetTop;
-            this.$.master_actions.style.top = (rowOffset - 35/*The desired offset of master actions above the row*/) + "px";
-            this.$.master_actions.style.left = this.$.baseContainer.scrollLeft + 16/* The desired distance of master actions from the left border */ + "px";
+            this.$.master_actions.style.top = (rowOffset - TOP_EGI_MASTER_ACTIONS_OFFSET) + "px";
+            this.$.master_actions.style.left = this.$.baseContainer.scrollLeft + LEFT_EGI_MASTER_ACTIONS_OFFSET+ "px";
         }
     },
 
@@ -2351,8 +2354,8 @@ Polymer({
                 this.set("egiModel." + entityIndex + ".editing", true);
                 _insertMaster(this.$.baseContainer, this.$.egi_master_layout, entityIndex);
                 const rowOffset = this.$.baseContainer.querySelectorAll(".table-data-row")[entityIndex].offsetTop;
-                this.$.master_actions.style.top = (rowOffset - 35/*The desired offset of master actions above the row*/) + "px";
-                this.$.master_actions.style.left = this.$.baseContainer.scrollLeft + 16/*Desired distance from left border of egi */ + "px";
+                this.$.master_actions.style.top = (rowOffset - TOP_EGI_MASTER_ACTIONS_OFFSET) + "px";
+                this.$.master_actions.style.left = this.$.baseContainer.scrollLeft + LEFT_EGI_MASTER_ACTIONS_OFFSET + "px";
                 this.$.master_actions.style.display = 'flex';
                 this.master.editableRow = entityIndex;
                 this.master.entityId = this.filteredEntities[entityIndex].get("id");

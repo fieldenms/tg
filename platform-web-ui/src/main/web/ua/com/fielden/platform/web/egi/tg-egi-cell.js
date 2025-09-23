@@ -24,7 +24,7 @@ const template = html`
             @apply --layout-relative;
             padding: 0 ${EGI_CELL_PADDING_TEMPLATE};
         }
-        .value-container{
+        .value-container {
             @apply --layout-relative;
             overflow: hidden;
             text-overflow: ellipsis;
