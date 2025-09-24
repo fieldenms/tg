@@ -30,6 +30,7 @@ const template = html`
             text-overflow: ellipsis;
             padding-top: 4px;
             padding-bottom: 4px;
+            white-space: pre-wrap;
         }
         .value-container:not([word-wrap]) {
             white-space: nowrap;
