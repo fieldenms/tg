@@ -54,6 +54,9 @@ Polymer({
             type: Boolean
         },
 
+        /**
+         * Indicates whether the toast has MORE button to show a dialog with expanded message.
+         */
         hasMore: {
             type: Boolean
         },
@@ -83,6 +86,10 @@ Polymer({
             type: Boolean
         },
 
+        /**
+         * Indicates whether the toast has MORE button to show a dialog with expanded message.
+         * This is already a committed value, actually used in UI ('hasMore' is only an intention, that may be discarded).
+         */
         _hasMore: {
             type: Boolean,
             observer: '_hasMoreChanged'

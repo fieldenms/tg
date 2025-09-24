@@ -9,6 +9,10 @@ class TgPaperToast extends customElements.get('paper-toast') {
 
     static get properties() {
         return {
+            /**
+             * Indicates whether the toast has MORE button to show a dialog with expanded message.
+             * This is already a committed value, actually used in UI ('hasMore' is only an intention, that may be discarded).
+             */
             _hasMore: {
                 type: Boolean
             }
