@@ -1025,7 +1025,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             }
             context.setChosenProperty(chosenProperty);
             context.setCustomObject(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>());
-            context.setInstanceBasedContinuation(!centreContextHolder.proxiedPropertyNames().contains(INSTANCEBASEDCONTINUATION_PROPERTY_NAME) ? centreContextHolder.getInstanceBasedContinuation() : null);
+            context.setInstanceBasedContinuation(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains(INSTANCEBASEDCONTINUATION_PROPERTY_NAME) ? centreContextHolder.getInstanceBasedContinuation() : null);
             return Optional.of(context);
         } else {
             return Optional.empty();
