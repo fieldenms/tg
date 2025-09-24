@@ -22,7 +22,6 @@ import static java.util.Optional.ofNullable;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.utils.EntityUtils.isContinuationData;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
 
 /// A set of utilities for creating a validation prototype by either:
@@ -117,16 +116,7 @@ public class EntityRestorationUtils {
         if (id != null) {
             entity = findByIdWithFiltering(id, companion);
         } else if (originallyProducedEntity != null) {
-            // If `originallyProducedEntity` is present, and it represents a continuation, then use it for validation prototype creation.
-            // It is important to do it through a producer to consider custom contextual domain logic.
-            if (isContinuationData(originallyProducedEntity.getClass())) {
-                final DefaultEntityProducerWithContext<T> defProducer = (DefaultEntityProducerWithContext<T>) producer;
-                defProducer.setOriginallyProducedEntity(originallyProducedEntity);
-                entity = producer.newEntity();
-            }
-            else {
-                entity = originallyProducedEntity;
-            }
+            entity = originallyProducedEntity;
         } else {
             entity = producer.newEntity();
         }

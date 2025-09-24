@@ -47,7 +47,6 @@ import java.util.*;
 import static java.util.Optional.*;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isContinuationData;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
@@ -197,7 +196,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     null,
                                     Optional.empty(),
                                     null,
-                                    new HashMap<>()
+                                    new HashMap<>(),
+                                    null
                             ),
                             companion,
                             producer
@@ -210,22 +210,17 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(true, webUiConfig, companionFinder, user, critGenerator, factory, centreContextHolder, 0, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
                     final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
 
-                    // Find `originallyProducedEntity` if it was present in a context.
-                    // Normally, it should not be present, because contextual retrieval actually produces such instance for next requests.
-                    final var originallyProducedEntity = !centreContextHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (T) centreContextHolder.getOriginallyProducedEntity() : null;
-                    // If it is present, only consider continuation one and use it for validation prototype creation.
-                    final var continuationOriginallyProducedEntityOpt = ofNullable(originallyProducedEntity).filter(entity -> isContinuationData(entity.getClass()));
-
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null,
-                            continuationOriginallyProducedEntityOpt.orElse(emptyOriginallyProducedEntity),
+                            emptyOriginallyProducedEntity,
                             createCentreContext(
                                     masterEntity, /* master context */
                                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
                                     createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, webUiConfig, factory, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel),
                                     actionConfig,
                                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
-                                    !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>()
+                                    !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>(),
+                                    !centreContextHolder.proxiedPropertyNames().contains("instanceBasedContinuation") ? centreContextHolder.getInstanceBasedContinuation() : null
                             ),
                             companion,
                             producer
@@ -439,7 +434,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     criteriaEntity,
                     actionConfig,
                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
-                    !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>()
+                    !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>(),
+                    !centreContextHolder.proxiedPropertyNames().contains("instanceBasedContinuation") ? centreContextHolder.getInstanceBasedContinuation() : null
                     );
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
 

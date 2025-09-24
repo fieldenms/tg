@@ -1,20 +1,15 @@
 package ua.com.fielden.platform.entity.functional.centre;
 
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * The entity holder for centre context and criteria entity's modified props.
@@ -58,6 +53,20 @@ public class CentreContextHolder extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Parent Centre Context", desc = "The context of the centre that owns this view as a insertion point")
     private CentreContextHolder parentCentreContext;
+
+    @IsProperty
+    @Title(value = "Instance-based Continuation", desc = "A custom instance of instance-based continuation in the context to facilitate direct usage in continuation Entity Master.")
+    private AbstractEntity<?> instanceBasedContinuation;
+
+    @Observable
+    public CentreContextHolder setInstanceBasedContinuation(final AbstractEntity<?> value) {
+        this.instanceBasedContinuation = value;
+        return this;
+    }
+
+    public AbstractEntity<?> getInstanceBasedContinuation() {
+        return instanceBasedContinuation;
+    }
 
     @Observable
     public CentreContextHolder setParentCentreContext(final CentreContextHolder parentCentreContext) {

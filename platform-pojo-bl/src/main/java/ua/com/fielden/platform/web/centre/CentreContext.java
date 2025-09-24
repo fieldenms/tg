@@ -1,16 +1,5 @@
 package ua.com.fielden.platform.web.centre;
 
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static java.lang.String.format;
-import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toSet;
-
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
-
-import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -18,6 +7,14 @@ import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
+
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.function.BiFunction;
+
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.lang.String.format;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * A structure that represents an execution context for functional entities. Not all of its properties should or need to be populated. Depending on specific needs actions may choose
@@ -77,6 +74,12 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      * Usually contains some technical properties to restore the context and may contain custom properties provided by the client-side or server-side logic.
      */
     private final Map<String, Object> customObject = new LinkedHashMap<>();
+
+    /// A custom instance of instance-based continuation in the context to facilitate direct usage in continuation Entity Master.
+    /// This is contrary to type-based continuations where `NeedMoreData` is thrown using type.
+    /// Please note, that `instanceBasedContinuation` still goes through its producer (for additional API flexibility).
+    ///
+    private AbstractEntity<?> instanceBasedContinuation;
 
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
@@ -177,6 +180,19 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      */
     public CentreContext<T, M> setCustomProperty(final String name, final Object value) {
         customObject.put(name, value);
+        return this;
+    }
+
+    /// Gets [#instanceBasedContinuation] from the context.
+    ///
+    public AbstractEntity<?> getInstanceBasedContinuation() {
+        return instanceBasedContinuation;
+    }
+
+    /// Sets [#instanceBasedContinuation] into the context.
+    ///
+    public CentreContext<T, M> setInstanceBasedContinuation(AbstractEntity<?> instanceBasedContinuation) {
+        this.instanceBasedContinuation = instanceBasedContinuation;
         return this;
     }
 

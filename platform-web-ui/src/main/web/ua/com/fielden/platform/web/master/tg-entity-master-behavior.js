@@ -498,6 +498,14 @@ const TgEntityMasterBehaviorImpl = {
             this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
             this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
 
+            // Provide last instance-based continuation to the context to be able to:
+            //  - retrieve continuation on its Entity Master for the first time;
+            //  - use it in deep contexts for downstream actions (property / entity / continuation),
+            //    which are always initialised through deep contextual restoration (disregardOriginallyProducedEntities = true).
+            if (this.instanceBasedContinuation) {
+                contextHolder['instanceBasedContinuation'] = this.instanceBasedContinuation;
+            }
+
             return contextHolder;
         }).bind(self);
 
@@ -571,6 +579,8 @@ const TgEntityMasterBehaviorImpl = {
                         const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                         this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
                         return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), this.savingContext, this._continuations);
+                        // No need to provide last instance-based continuation to the context,
+                        //   because master-with-master/menu/centre should never throw continuation (only embedded one may throw it).
                     }).bind(this);
                 }
             }
@@ -665,11 +675,24 @@ const TgEntityMasterBehaviorImpl = {
                         }
                     }).bind(action);
                 }
+                // Initialise `this.instanceBasedContinuation` for the context creator.
+                // `_exceptionOccurred.ex.instance` will be empty (null) in case of type-based continuations.
+                //
+                // This instanceBasedContinuation lives up until the next successful save completion.
+                // Surely, it would be better to end its lifecycle as soon as continuation master exists.
+                // However, it is only used for:
+                //   - initial continuation retrieval
+                //   - downstream property / entity / continuation actions under continuation.
+                // Other operations (validation / autocompletion / saving) uses originallyProducedEntity instead.
+                // That's why it is not harmful to leave the state up until the next successful save or when other continuation occurs.
+                this.instanceBasedContinuation = _exceptionOccurred.ex.instance;
                 action._run();
             } else if (_exceptionOccurred !== null) {
                 this._postSavedDefaultPostExceptionHandler();
+                this.instanceBasedContinuation = null;
             } else {
                 this.restoreAfterSave();
+                this.instanceBasedContinuation = null;
             }
 
             return potentiallySavedOrNewEntity.isValidWithoutException();
