@@ -418,7 +418,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final ICentreConfigSharingModel sharingModel) {
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): started.");
         final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
-        final T originallyProducedEntity = disregardOriginallyProducedEntities && !isContinuationData(companion.getEntityType()) ? null : // in case where full context should be used for entity restoration -- originallyProducedEntity will be disregarded
+        final T originallyProducedEntity = disregardOriginallyProducedEntities ? null : // in case where full context should be used for entity restoration -- originallyProducedEntity will be disregarded
             (!savingInfoHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (T) savingInfoHolder.getOriginallyProducedEntity() : null);
         final T applied;
         final CentreContextHolder centreContextHolder = !savingInfoHolder.proxiedPropertyNames().contains("centreContextHolder") ? savingInfoHolder.getCentreContextHolder() : null;
