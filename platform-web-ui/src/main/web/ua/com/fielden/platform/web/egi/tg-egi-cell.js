@@ -28,6 +28,8 @@ const template = html`
             @apply --layout-relative;
             overflow: hidden;
             text-overflow: ellipsis;
+            padding-top: 4px;
+            padding-bottom: 4px;
         }
         .value-container:not([word-wrap]) {
             white-space: nowrap;
