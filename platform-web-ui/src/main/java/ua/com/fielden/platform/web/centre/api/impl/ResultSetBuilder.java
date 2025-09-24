@@ -73,13 +73,8 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
 
-/**
- * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
- *
- * @author TG Team
- *
- * @param <T>
- */
+/// A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
+///
 class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointWithConfig<T> {
 
     private static final String ERR_SPLITTER_OVERLAPPING = "The left and right splitters are overlapping (i.e., left splitter position + right splitter position > 100).";
@@ -99,6 +94,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private Optional<EntityMultiActionConfig> entityActionConfig = empty();
     private Integer orderSeq;
     private int width = 80;
+    private boolean wordWrap = false;
     private boolean isFlexible = true;
 
     public ResultSetBuilder(final EntityCentreBuilder<T> builder) {
@@ -110,13 +106,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return addProp(propName, true);
     }
 
-    /**
-     * Implementation used by both {@link IResultSetBuilder2Properties#addProp(CharSequence, boolean)} and deprecated {@link IResultSetBuilder2Properties#addProp(CharSequence)}.
-     *
-     * @param propName
-     * @param presentByDefault
-     * @return
-     */
+    /// Implementation used by both [IResultSetBuilder2Properties#addProp(CharSequence, boolean)] and deprecated [IResultSetBuilder2Properties#addProp(CharSequence)].
+    ///
     public IResultSetBuilder3Ordering<T> addProp(final CharSequence propName, final boolean presentByDefault) {
         if (StringUtils.isEmpty(propName)) {
             throw new EntityCentreConfigurationException("Property name should not be null.");
@@ -215,16 +206,22 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IWithTooltip<T> width(final int width) {
+    public IResultSetBuilder4bWordWrap<T> width(final int width) {
         this.width = width;
         this.isFlexible = false;
         return this;
     }
 
     @Override
-    public IWithTooltip<T> minWidth(final int minWidth) {
+    public IResultSetBuilder4bWordWrap<T> minWidth(final int minWidth) {
         this.width = minWidth;
         this.isFlexible = true;
+        return this;
+    }
+
+    @Override
+    public IWithTooltip<T> withWordWrap() {
+        this.wordWrap = true;
         return this;
     }
 
@@ -439,16 +436,15 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return this.builder.build();
     }
 
-    /**
-     * Constructs an instance of {@link EntityCentreConfig.ResultSetProp} if possible and adds it the result set list.
-     */
+    /// Constructs an instance of [EntityCentreConfig.ResultSetProp] if possible and adds it the result set list.
+    ///
     private void completePropIfNeeded() {
         // construct and add property to the builder
         if (propName.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), presentByDefault, width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), presentByDefault, width, wordWrap, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.addToResultSet(prop);
         } else if (propDef.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), presentByDefault, width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), presentByDefault, width, wordWrap, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.addToResultSet(prop);
         }
 
@@ -460,6 +456,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.orderSeq = null;
         this.entityActionConfig = empty();
         this.widget = empty();
+        this.wordWrap = false;
     }
 
     @Override
@@ -478,9 +475,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return this;
     }
 
-    /**
-     * A helper class to assist in name collision resolution.
-     */
+    /// A helper class to assist in name collision resolution.
+    ///
     private class ResultSetSecondaryActionsBuilder implements IAlsoSecondaryAction<T>, IInsertionPointWithConfig<T> {
 
         @Override
