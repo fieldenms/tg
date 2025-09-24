@@ -36,9 +36,9 @@ import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory
 import ua.com.fielden.platform.utils.IDates;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
@@ -46,9 +46,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
 
-/**
- * A test for {@link DynamicQueryBuilder}.
- */
+/// A test for [DynamicQueryBuilder].
+///
 @SuppressWarnings({"unchecked"})
 public class DynamicQueryBuilderSqlTest {
 
@@ -105,8 +104,8 @@ public class DynamicQueryBuilderSqlTest {
                                                    dbVersionProvider,
                                                    new EqlTables(domainMetadata, domainMetadataUtils),
                                                    new PropertyInlinerImpl(domainMetadata))
-                            .generateMappings().getBytes("UTF8")));
-        } catch (final MappingException | UnsupportedEncodingException e) {
+                            .generateMappings().getBytes(UTF_8)));
+        } catch (final MappingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }
 
@@ -1341,7 +1340,7 @@ public class DynamicQueryBuilderSqlTest {
     }
 
     @Test
-    public void test_union_entity_query_composition() {
+    public void conditions_for_union_members_are_combined_with_logical_AND() {
         final List<String> propertyNames = List.of(
                 "",
                 "desc",
@@ -1386,7 +1385,7 @@ public class DynamicQueryBuilderSqlTest {
         property.setValue(3);
         property.setValue2(7);
 
-        final ICompleted<? extends AbstractEntity<?>> expected = //
+        final ICompleted<? extends AbstractEntity<?>> expected =
         /**/select(select(TgBogie.class).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).as(alias).where().condition(cond() //
         /*  */.condition(cond().prop(alias).isNotNull().and() //
            /*    */.condition(cond().prop(alias).in().model(select(TgBogie.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
@@ -1397,17 +1396,13 @@ public class DynamicQueryBuilderSqlTest {
         /*  */.condition(cond().prop(alias + ".location").isNotNull().and() //
         /*    */.condition(cond().prop(alias + ".location.id").in().model(select(TgBogieLocation.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
         /*  */.model()).and()//
-        /*    */.condition(cond()//
-        /*	*/.condition(cond()//
-        /*	  */.condition(cond().prop(alias + ".location.workshop").isNotNull().and()//
+        /*    */.condition(cond().prop(alias + ".location.workshop").isNotNull().and()//
         /*	    */.condition(cond().prop(alias + ".location.workshop").in().model(select(TgWorkshop.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
         /*	  */.model()).and()//
         /*	  */.condition(cond().prop(alias + ".location.workshop.desc").isNotNull().and()//
         /*	    */.condition(cond().prop(alias + ".location.workshop.desc").iLike().anyOfValues("%Some string value%").model())
                 /*	  */.model())//
-        /*	*/.model())//
-        /*    */.or()//
-        /*	*/.condition(cond()//
+        /*    */.and() // this used to be OR
         /*	  */.condition(cond().prop(alias + ".location.wagonSlot").isNotNull().and()//
         /*	    */.condition(cond().prop(alias + ".location.wagonSlot").in().model(select(TgWagonSlot.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
         /*	  */.model()).and()//
@@ -1417,10 +1412,9 @@ public class DynamicQueryBuilderSqlTest {
         /*	  */.condition(cond().prop(alias + ".location.wagonSlot.position").isNotNull().and()//
         /*	    */.condition(cond().prop(alias + ".location.wagonSlot.position").ge().iVal(3).and().prop(alias + ".location.wagonSlot.position").le().iVal(7).model())//
         /*	  */.model())//
-        /*	*/.model())//
-        /*    */.model())//
         /**/.model()); //
         final ICompleted<? extends AbstractEntity<?>> actual = createQuery(TgBogie.class, new ArrayList<>(unionProps.values()), dates);
         assertEquals("Incorrect query model for union entities has been built.", expected.model(), actual.model());
     }
+
 }

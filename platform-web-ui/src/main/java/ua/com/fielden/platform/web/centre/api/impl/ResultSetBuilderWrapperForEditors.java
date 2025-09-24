@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import java.util.Optional;
-import java.util.function.Supplier;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
@@ -19,20 +16,16 @@ import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointWi
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsWithCustomLayout;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
-import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
-import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
-import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
-import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4OrderingDirection;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
+import ua.com.fielden.platform.web.centre.api.resultset.*;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
+
+import java.util.Optional;
+import java.util.function.Supplier;
 
 public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> implements IResultSetBuilder3Ordering<T>, IInsertionPointWithConfig<T> {
 
@@ -48,13 +41,18 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     }
 
     @Override
-    public IWithTooltip<T> width(final int width) {
+    public IResultSetBuilder4bWordWrap<T> width(final int width) {
         return builder.width(width);
     }
 
     @Override
-    public IWithTooltip<T> minWidth(final int minWidth) {
+    public IResultSetBuilder4bWordWrap<T> minWidth(final int minWidth) {
         return builder.minWidth(minWidth);
+    }
+
+    @Override
+    public IWithTooltip<T> withWordWrap() {
+        return builder.withWordWrap();
     }
 
     @Override

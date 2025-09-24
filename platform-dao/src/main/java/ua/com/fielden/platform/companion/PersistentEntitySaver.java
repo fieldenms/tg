@@ -49,7 +49,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -94,6 +93,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     public static final String ERR_OPTIMISTIC_LOCK = "%s [%s] was updated or deleted by another user. Please try saving again.";
     public static final String ERR_CONFLICTING_CONCURRENT_CHANGE = "There was a conflicting change by another user. Please try saving again.";
     public static final String ERR_ALREADY_EXISTS = "%s [%s] already exists.";
+    public static final String ERR_NOW_CONSTANT_MISSING_VALUE = "The now() constant has not been assigned!";
+    public static final String ERR_NO_VALUE_FOR_AUTO_ASSIGNABLE_PROP = "Property %s@%s is marked as assignable before save, but no value could be determined.";
+    public static final String ERR_NO_CURRENT_USER = "The current user is not defined.";
 
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;
@@ -525,9 +527,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // Process transactional assignments.
         if (entity instanceof AbstractPersistentEntity) {
-            assignCreationInfo((AbstractPersistentEntity<?>) entity);
+            assignCreationInfoForNew((AbstractPersistentEntity<?>) entity);
         }
-        assignPropertiesBeforeSave(entity);
+        assignPropsBeforeSaveForNew(entity);
 
         // Reconstruct entity fetch model for future retrieval at the end of the method call.
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
@@ -774,68 +776,84 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         return result;
     }
 
-    private void assignCreationInfo(final AbstractPersistentEntity<?> entity) {
-        // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes
-        // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
-        // thus, a check for VIRTUAL_USER as a current user 
-        if (!User.system_users.VIRTUAL_USER.name().equals(currUserOrException().getKey())) {
-            entity.set(AbstractPersistentEntity.CREATED_BY, currUserOrException());
+    /// Assigns properties `entity.createdBy`, `entity.createdDate`, and `entity.createdTransactionGuid` for a new entity.
+    ///
+    /// @param entity an instance to be modified.
+    ///
+    public <A extends AbstractPersistentEntity<?>> PersistentEntitySaver<T> assignCreationInfoForNew(final A entity) {
+        // If `entity` has been already persisted, the creation info should not change.
+        if (entity.isPersisted()) {
+            return this;
         }
-        
+
+        // Unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes.
+        // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities.
+        // Thus, need to check if the current user is VIRTUAL_USER to skip the assignment.
+        if (!User.system_users.VIRTUAL_USER.name().equals(currUserOrThrow().getKey())) {
+            entity.set(AbstractPersistentEntity.CREATED_BY, currUserOrThrow());
+        }
+
         entity.set(AbstractPersistentEntity.CREATED_DATE, now.get().toDate());
         entity.set(AbstractPersistentEntity.CREATED_TRANSACTION_GUID, transactionGuid.get());
+        return this;
     }
 
+    /// Assigns properties `entity.lastUpdatedBy`, `entity.lastUpdatedDate`, and `entity.lastUpdatedTransactionGuid` for a persisted entity.
+    /// Specifically skips assignment if `entity` is activatable and there only modified property is `refCount`.
+    ///
     private void assignLastModificationInfo(final AbstractPersistentEntity<?> entity, final AbstractPersistentEntity<?> persistentEntity) {
-        // if the entity is activatable and the only dirty property is refCount than there is no need to update the last-updated-by info
+        // If `entity` is activatable and the only dirty property is `refCount` then there is no need to update the last-updated-by info.
         if (entity instanceof ActivatableAbstractEntity) {
             final List<MetaProperty<?>> dirty = entity.getDirtyProperties();
             if (dirty.size() == 1 && ActivatableAbstractEntity.REF_COUNT.equals(dirty.getFirst().getName())) {
                 return;
             }
         }
-        // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes.
+
+        // Unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes.
         // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities.
-        // thus, a check for VIRTUAL_USER as a current user.
-        if (!User.system_users.VIRTUAL_USER.name().equals(currUserOrException().getKey())) {
-            persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_BY, currUserOrException());
+        // Thus, need to check if the current user is VIRTUAL_USER to skip the assignment.
+        if (!User.system_users.VIRTUAL_USER.name().equals(currUserOrThrow().getKey())) {
+            persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_BY, currUserOrThrow());
             persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_DATE, now.get().toDate());
             persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID, transactionGuid.get());
         }
     }
 
-    /**
-     * Returns the current user if defined. Otherwise, it throws an exception.
-     * @return
-     */
-    private User currUserOrException() {
+    /// Returns the current user if defined. Otherwise, it throws an exception.
+    ///
+    public User currUserOrThrow() {
         final User currUser = userProvider.getUser();
         if (currUser == null) {
-            final String msg = "The current user is not defined.";
-            logger.error(msg);
-            throw new EntityCompanionException(msg);
+            throw new EntityCompanionException(ERR_NO_CURRENT_USER);
         }
         return currUser;
     }
-    /**
-     * Assigns values to all properties marked for assignment before save. This method should be used only during the saving of new entities.
-     *
-     * @param entity
-     */
-    private void assignPropertiesBeforeSave(final T entity) {
+
+    /// Assigns values to all properties marked for assignment before save.
+    /// This method should be used only during the saving of new entities.
+    ///
+    /// @param entity an instance to be modified.
+    ///
+    public PersistentEntitySaver<T> assignPropsBeforeSaveForNew(final T entity) {
+        // If `entity` has been already persisted, the creation info should not change.
+        if (entity.isPersisted()) {
+            return this;
+        }
+
         final List<MetaProperty<?>> props = entity.getProperties().values().stream().
-                filter(MetaProperty::shouldAssignBeforeSave).collect(Collectors.toList());
+                filter(MetaProperty::shouldAssignBeforeSave).toList();
         if (!props.isEmpty()) {
             final DateTime rightNow = now.get();
             if (rightNow == null) {
-                throw new EntityCompanionException("The now() constant has not been assigned!");
+                throw new EntityCompanionException(ERR_NOW_CONSTANT_MISSING_VALUE);
             }
 
             for (final MetaProperty<?> prop : props) {
                 final Object value = prop.getValue();
                 if (value == null) {
                     if (User.class.isAssignableFrom(prop.getType())) {
-                        prop.setValue(currUserOrException());
+                        prop.setValue(currUserOrThrow());
                     } else if (Date.class.isAssignableFrom(prop.getType())) {
                         prop.setValue(rightNow.toDate());
                     } else if (DateTime.class.isAssignableFrom(prop.getType())) {
@@ -845,11 +863,12 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     }
 
                     if (prop.getValue() == null) {
-                        throw new EntityCompanionException("Property %s@%s is marked as assignable before save, but no value could be determined.".formatted(prop.getName(), entity.getType().getName()));
+                        throw new EntityCompanionException(ERR_NO_VALUE_FOR_AUTO_ASSIGNABLE_PROP.formatted(prop.getName(), entity.getType().getName()));
                     }
                 }
             }
         }
+        return this;
     }
 
     // This factory must be implemented by hand since com.google.inject.assistedinject.FactoryModuleBuilder

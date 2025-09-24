@@ -28,6 +28,10 @@ Polymer({
         editable: {
             type: Boolean,
             value: false
+        },
+        wordWrap: {
+            type: Boolean,
+            value: false
         }
     },
 
