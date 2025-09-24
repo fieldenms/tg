@@ -281,7 +281,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
 
     open() {
         if (this._scanner) {
-                    this._resetEditorsState();
+            this._resetEditorsState();
             this.$.qrCodeScanner.open();
         } else {
             this.toaster && this.toaster.openToastForError('Scanner error', 'Please specify element for camera feed inside tg-qr-code-scanner with slot attribute equal to "scanner"', true);
@@ -341,7 +341,6 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             }).catch(err => {
                 this.toaster && this.toaster.openToastForError('Camera error', err, true);
             });
-            
         }
     }
 
@@ -429,10 +428,10 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
     _applyScane() {
         if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && this._scanner.isScanning) {
             this.$.textEditor.commitIfChanged();
-        this.$.separatorEditor.commitIfChanged();
+            this.$.separatorEditor.commitIfChanged();
             this.$.qrCodeScanner.close();
             if (this.applyCallback) {
-            this.applyCallback(this.scannedText, this.separator);
+                this.applyCallback(this.scannedText, this.separator);
             }
         }
     }
