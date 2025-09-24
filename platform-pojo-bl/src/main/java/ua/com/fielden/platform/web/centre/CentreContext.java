@@ -80,6 +80,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
     /// Please note, that `instanceBasedContinuation` still goes through its producer (for additional API flexibility).
     ///
     private AbstractEntity<?> instanceBasedContinuation;
+    public static final String INSTANCEBASEDCONTINUATION_PROPERTY_NAME = "instanceBasedContinuation";
 
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {

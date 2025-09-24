@@ -118,6 +118,8 @@ export const focusEnabledInputIfAny = function (preferredOnly, orElseFocus) {
     }
 };
 
+const INSTANCEBASEDCONTINUATION_PROPERTY_NAME = 'instanceBasedContinuation';
+
 const TgEntityMasterBehaviorImpl = {
     properties: {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -419,6 +421,15 @@ const TgEntityMasterBehaviorImpl = {
             }
         },
 
+        /**
+         * A custom instance of downstream instance-based continuation to facilitate direct usage in continuation Entity Master.
+         * This is contrary to type-based continuations where `NeedMoreData` is thrown using type.
+         * Please note, that `instanceBasedContinuation` still goes through its producer (for additional API flexibility).
+         */
+        instanceBasedContinuation: {
+            type: String
+        },
+
         focusViewBound: {
             type: Function
         },
@@ -502,8 +513,8 @@ const TgEntityMasterBehaviorImpl = {
             //  - retrieve continuation on its Entity Master for the first time;
             //  - use it in deep contexts for downstream actions (property / entity / continuation),
             //    which are always initialised through deep contextual restoration (disregardOriginallyProducedEntities = true).
-            if (this.instanceBasedContinuation) {
-                contextHolder['instanceBasedContinuation'] = this.instanceBasedContinuation;
+            if (this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME]) {
+                contextHolder[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME];
             }
 
             return contextHolder;
@@ -685,14 +696,14 @@ const TgEntityMasterBehaviorImpl = {
                 //   - downstream property / entity / continuation actions under continuation.
                 // Other operations (validation / autocompletion / saving) uses originallyProducedEntity instead.
                 // That's why it is not harmful to leave the state up until the next successful save or when other continuation occurs.
-                this.instanceBasedContinuation = _exceptionOccurred.ex.instance;
+                this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = _exceptionOccurred.ex.instance;
                 action._run();
             } else if (_exceptionOccurred !== null) {
                 this._postSavedDefaultPostExceptionHandler();
-                this.instanceBasedContinuation = null;
+                this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = null;
             } else {
                 this.restoreAfterSave();
-                this.instanceBasedContinuation = null;
+                this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = null;
             }
 
             return potentiallySavedOrNewEntity.isValidWithoutException();

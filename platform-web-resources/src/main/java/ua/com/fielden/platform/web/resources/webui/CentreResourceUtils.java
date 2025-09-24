@@ -81,6 +81,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.CHANGED;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.NONE;
@@ -1024,7 +1025,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             }
             context.setChosenProperty(chosenProperty);
             context.setCustomObject(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>());
-            context.setInstanceBasedContinuation(!centreContextHolder.proxiedPropertyNames().contains("instanceBasedContinuation") ? centreContextHolder.getInstanceBasedContinuation() : null);
+            context.setInstanceBasedContinuation(!centreContextHolder.proxiedPropertyNames().contains(INSTANCEBASEDCONTINUATION_PROPERTY_NAME) ? centreContextHolder.getInstanceBasedContinuation() : null);
             return Optional.of(context);
         } else {
             return Optional.empty();

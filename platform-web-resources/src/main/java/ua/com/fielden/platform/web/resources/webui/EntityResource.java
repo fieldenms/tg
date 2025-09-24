@@ -47,6 +47,7 @@ import java.util.*;
 import static java.util.Optional.*;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
@@ -220,7 +221,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     actionConfig,
                                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
                                     !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>(),
-                                    !centreContextHolder.proxiedPropertyNames().contains("instanceBasedContinuation") ? centreContextHolder.getInstanceBasedContinuation() : null
+                                    !centreContextHolder.proxiedPropertyNames().contains(INSTANCEBASEDCONTINUATION_PROPERTY_NAME) ? centreContextHolder.getInstanceBasedContinuation() : null
                             ),
                             companion,
                             producer
@@ -435,7 +436,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     actionConfig,
                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
                     !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>(),
-                    !centreContextHolder.proxiedPropertyNames().contains("instanceBasedContinuation") ? centreContextHolder.getInstanceBasedContinuation() : null
+                    !centreContextHolder.proxiedPropertyNames().contains(INSTANCEBASEDCONTINUATION_PROPERTY_NAME) ? centreContextHolder.getInstanceBasedContinuation() : null
                     );
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
 
