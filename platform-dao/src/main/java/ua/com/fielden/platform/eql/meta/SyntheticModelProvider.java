@@ -22,12 +22,11 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 @Singleton
 final class SyntheticModelProvider implements ISyntheticModelProvider {
 
-    private static final String ERR_NO_MODEL_FOR_SYNTHETIC_ENTITY = "Could not obtain model(s) for synthetic entity [%s].";
-    private static final String ERR_NON_SYNTHETIC_ENTITY_TYPE = "Cannot provide a synthetic model for non-synthetic entity type [%s].";
-    private static final String ERR_MISSING_MODEL_FIELD =
-            "Invalid synthetic entity [%s] definition: neither static field [model_] nor [models_] could be found.";
-    private static final String ERR_GENERATOR_NOT_CONFIGURED =
-            "Synthetic models for generated multi-inheritance entity types cannot be provided because the generator is not configured. The expected cause is EqlTestCase.";
+    private static final String
+            ERR_NO_MODEL_FOR_SYNTHETIC_ENTITY = "Could not obtain model(s) for synthetic entity [%s].",
+            ERR_NON_SYNTHETIC_ENTITY_TYPE = "Cannot provide a synthetic model for non-synthetic entity type [%s].",
+            ERR_MISSING_MODEL_FIELD = "Invalid synthetic entity [%s] definition: neither static field [model_] nor [models_] could be found.",
+            ERR_GENERATOR_NOT_CONFIGURED = "Synthetic models for generated multi-inheritance entity types cannot be provided because the generator is not configured. The expected cause is EqlTestCase.";
 
     // Nullable because of EqlTestCase that needs to be refactored to use IoC.
     // Meanwhile, EqlTestCase will not be able to use synthetic models for audit types (it does not currently use them).
@@ -70,9 +69,8 @@ final class SyntheticModelProvider implements ISyntheticModelProvider {
         }
     }
 
-    /**
-     * Returns a list of query models defined by a synthetic entity.
-     */
+    /// Returns a list of query models defined by a synthetic entity.
+    /// 
     @SuppressWarnings("unchecked")
     private static <E extends AbstractEntity<?>> List<EntityResultQueryModel<E>> modelsFromField(final Class<E> entityType) {
         final var modelField = requireNonNull(findSyntheticModelFieldFor(entityType),
