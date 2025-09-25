@@ -21,6 +21,8 @@ import java.sql.Types;
 @Singleton
 public class SecurityTokenType implements UserType, ISecurityTokenType {
 
+    public static final String ERR_SECURITY_TOKEN_NOT_FOUND = "Security token for value [%s] could not be found.";
+
     public static final SecurityTokenType INSTANCE = new SecurityTokenType();
 
     private static final int[] SQL_TYPES = { Types.VARCHAR };
@@ -46,14 +48,14 @@ public class SecurityTokenType implements UserType, ISecurityTokenType {
     public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor session, final Object owner) throws SQLException {
         final String name = resultSet.getString(names[0]);
         return securityTokenProvider.getTokenByName(name)
-                .orElseThrow(() -> new SecurityException("Security token for value '" + name + "' could not be found"));
+                .orElseThrow(() -> new SecurityException(ERR_SECURITY_TOKEN_NOT_FOUND.formatted(name)));
     }
 
     @Override
     public Object instantiate(final Object argument, final EntityFactory factory) {
         final var name = (String) argument;
         return securityTokenProvider.getTokenByName(name)
-                .orElseThrow(() -> new SecurityException("Security token for value '" + name + "' could not be found"));
+                .orElseThrow(() -> new SecurityException(ERR_SECURITY_TOKEN_NOT_FOUND.formatted(name)));
     }
 
     @Override
