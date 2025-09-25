@@ -43,6 +43,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 @Singleton
 public class MultiInheritanceEqlModelGenerator {
 
+    public static final String
+            ERR_NOT_MULTI_INHERITANCE_TYPE = "Argument [type] must be a generated multi-inheritance entity type: [%s]",
+            ERR_INVALID_SPEC = "Specification entity type [%s] is missing required annotation @%s";
+
     private final IDomainMetadata domainMetadata;
 
     @Inject
@@ -52,15 +56,13 @@ public class MultiInheritanceEqlModelGenerator {
 
     public <E extends AbstractEntity<?>> List<EntityResultQueryModel<E>> generate(final Class<E> type) {
         if (!isGeneratedMultiInheritanceEntityType(type)) {
-            throw new InvalidArgumentException("[type] must be a generated multi-inheritance entity type: [%s]".formatted(type));
+            throw new InvalidArgumentException(ERR_NOT_MULTI_INHERITANCE_TYPE.formatted(type));
         }
 
         final var specType = type.getSuperclass();
         final var atExtends = getAnnotation(specType, Extends.class);
         if (atExtends == null) {
-            throw new EntityDefinitionException(format(
-                    "Specification entity type [%s] is missing required annotation @%s",
-                    specType.getCanonicalName(), Extends.class.getCanonicalName()));
+            throw new EntityDefinitionException(ERR_INVALID_SPEC.formatted(specType.getCanonicalName(), Extends.class.getCanonicalName()));
         }
 
         final var supertypes = Arrays.stream(atExtends.value()).map(Extends.Entity::value).toList();
