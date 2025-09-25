@@ -24,20 +24,18 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotationOptionally;
 
-/**
- * This class represents a listener of annotation processors. It wraps a processor instance and provides the ability to insert
- * additional per-round logic on top of the existing one. Its key component is {@link AbstractRoundListener}.
- *
- * @param <P>   the type of the wrapped processor
- *
- * @author TG Team
- */
+/// This class represents a listener of annotation processors.
+/// It wraps a processor instance and provides the ability to insert additional per-round logic on top of the existing one.
+/// Its key component is [AbstractRoundListener].
+///
+/// @param <P>   the type of the wrapped processor
+///
 public class ProcessorListener<P extends Processor> extends AbstractProcessor {
 
-    /** The wrapped processor. */
+    /// The wrapped processor.
     private final P processor;
     private AbstractRoundListener<P> roundListener;
-    /** Round number counter. */
+    /// Round number counter.
     private int roundNumber = 0;
 
     ProcessorListener(P processor) {
@@ -117,17 +115,14 @@ public class ProcessorListener<P extends Processor> extends AbstractProcessor {
     }
 
 
-    /**
-     * A base type to implement round listeners.
-     * <p>
-     * Subtypes should declare instance methods with the same signature as {@link Processor#process(Set, RoundEnvironment)}.
-     * These are called <i>listening methods</i>. In order to tell the {@link ProcessorListener} when to run them, annotations
-     * {@link AfterRound} and {@link BeforeRound} should be used.
-     *
-     * @param <P>   the type of the wrapped processor
-     *
-     * @author TG Team
-     */
+    /// A base type to implement round listeners.
+    ///
+    /// Subtypes should declare instance methods with the same signature as [#process(Set,RoundEnvironment)].
+    /// These are called _listening methods_. In order to tell the [ProcessorListener] when to run them,
+    /// annotations [AfterRound] and [BeforeRound] should be used.
+    ///
+    /// @param <P>   the type of the wrapped processor
+    ///
     public static abstract class AbstractRoundListener<P extends Processor> {
         protected P processor;
 
@@ -175,32 +170,25 @@ public class ProcessorListener<P extends Processor> extends AbstractProcessor {
             return annot != null && annot.value() == roundNumber;
         }
 
-        /**
-         * Annotation that indicates a method should be run at the start of a processing round.
-         *
-         * @author TG Team
-         */
+        /// Annotation that indicates a method should be run at the start of a processing round.
+        ///
         @Retention(RUNTIME)
         @Target(METHOD)
         public static @interface BeforeRound {
-            /** Number of the round, at the start of which the annotated method should be run. */
+            /// Number of the round, at the start of which the annotated method should be run.
             int value();
         }
 
-        /**
-         * Annotation that indicates a method should be run at the end of a processing round.
-         *
-         * @author TG Team
-         */
+        /// Annotation that indicates a method should be run at the end of a processing round.
+        ///
         @Retention(RUNTIME)
         @Target(METHOD)
         public static @interface AfterRound {
-            /** Number of the round, at the end of which the annotated method should be run. */
+            /// Number of the round, at the end of which the annotated method should be run.
             int value();
         }
 
         protected static class RoundListenerException extends AbstractPlatformRuntimeException {
-            private static final long serialVersionUID = 1L;
 
             public RoundListenerException(final String msg) {
                 super(msg);
