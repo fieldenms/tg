@@ -23,9 +23,8 @@ import java.util.function.Predicate;
 
 import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
 
-/**
- * Module responsible for everything related to entity companion objects.
- */
+/// Module responsible for everything related to entity companion objects.
+///
 public class CompanionIocModule extends CommonFactoryIocModule {
 
     private final List<Class<? extends AbstractEntity<?>>> domainEntityTypes;
