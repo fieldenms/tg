@@ -31,45 +31,36 @@ import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.*;
 import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
 
-/**
- * An annotation processor that generates and maintains the {@code ApplicationDomain} class, which implements {@link IApplicationDomainProvider}.
- * <p>
- * The following sources of information are taken into account during processing:
- * <ol>
- *   <li>Set of input entities.</li>
- *   <li>Previously generated {@code ApplicationDomain}.</li>
- *   <li>Extensions, i.e., types annotated with {@link ExtendApplicationDomain}. Generally, there should be a single such type.</li>
- * </ol>
- *
- * <p>
- * The maintenance of the generated {@code ApplicationDomain} is carried out according to the following rules:
- * <ul>
- *  <li>New domain entity types are incrementally registered.</li>
- *  <li>Registered entity types that cannot be located any more (e.g., due to removal of the java source) are unregistered.</li>
- *  <li>Registered entity types that no longer wish to be registered or are structurally modified in such a way that they are no longer
- *      domain entity types are unregistered.</li>
- * </ul>
- *
- * Renaming of java sources by means of IDE refactoring capabilities should automatically lead to the adjustment of {@code ApplicationDomain}.
- * <p>
- * To exclude application-level entity types from registration, annotation {@link SkipEntityRegistration} should be used.
- *
- * <h3>Registration of 3rd-party entities</h3>
- * External, 3rd-party entities are those that come from dependencies. Their registration requires a specific application-level
- * class to be annotated with {@link ExtendApplicationDomain}, listing external entity types.
- * The established convention it to use class {@code fielden.config.ApplicationConfig} in the {@code pojo-bl} module,
- * although this can be customised with option {@linkplain #APP_DOMAIN_EXTENSION_OPT_DESC appDomainExtension}.
- * Any other annotated classes will be ignored.
- *
- * <h3>Supported options</h3>
- * <ul>
- *     <li>{@linkplain #APP_DOMAIN_PKG_OPT_DESC appDomainPkg} - destination package of a generated {@code ApplicationDomain}
- *     <li>{@linkplain #APP_DOMAIN_EXTENSION_OPT_DESC appDomainExtension} - fully-qualified name of the {@code ApplicationDomain}
- *     {@link ExtendApplicationDomain extension}.
- * </ul>
- *
- * @author TG Team
- */
+/// An annotation processor that generates and maintains the `ApplicationDomain` class, which implements [IApplicationDomainProvider].
+///
+/// The following sources of information are taken into account during processing:
+///
+/// - Set of input entities.
+/// - Previously generated `ApplicationDomain`.
+/// - Extensions, i.e., types annotated with [ExtendApplicationDomain]. Generally, there should be a single such type.
+///
+/// The maintenance of the generated `ApplicationDomain` is carried out according to the following rules:
+///
+/// - New domain entity types are incrementally registered.
+/// - Registered entity types that cannot be located any more (e.g., due to removal of the java source) are unregistered.
+/// - Registered entity types that no longer wish to be registered or are structurally modified in such a way that they are no longer domain entity types are unregistered.
+///
+/// Renaming of java sources by means of IDE refactoring capabilities should automatically lead to the adjustment of `ApplicationDomain`.
+///
+/// To exclude application-level entity types from registration, annotation [SkipEntityRegistration] should be used.
+///
+/// #### Registration of 3rd-party entities
+/// External, 3rd-party entities are those that come from dependencies.
+/// Their registration requires a specific application-level class to be annotated with [ExtendApplicationDomain], listing external entity types.
+/// The established convention it to use class `fielden.config.ApplicationConfig` in the `pojo-bl` module,
+/// although this can be customised with option {@linkplain #APP_DOMAIN_EXTENSION_OPT_DESC appDomainExtension}.
+/// Any other annotated classes will be ignored.
+///
+/// #### Supported options
+///
+/// - [appDomainPkg][#APP_DOMAIN_PKG_OPT_DESC] - destination package of a generated `ApplicationDomain`
+/// - [appDomainExtension][#APP_DOMAIN_EXTENSION_OPT_DESC] - fully-qualified name of the `ApplicationDomain` [extension][ExtendApplicationDomain].
+///
 @SupportedAnnotationTypes("*")
 public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProcessor {
 
@@ -106,9 +97,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         }
     };
 
-    /**
-     * Returns the fully-qualified name of the {@code ApplicationDomain} class determined by given processor options.
-     */
+    /// Returns the fully-qualified name of the `ApplicationDomain` class determined by given processor options.
+    ///
     public static String getApplicationDomainFqn(Map<String, String> procOptions) {
         return "%s.%s".formatted(parseOptionFrom(procOptions, ApplicationDomainProcessor.APP_DOMAIN_PKG_OPT_DESC), APPLICATION_DOMAIN_SIMPLE_NAME);
     }
@@ -173,13 +163,16 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.map(
                             elt -> new ApplicationDomainElement(elt, entityFinder))
                     .or(registeredEntitiesCollector::findApplicationDomain);
-            maybeAppDomainElt.ifPresentOrElse(elt -> {
-                // incremental build <=> regenerate
-                printNote("Found existing %s (%s registered entities)", elt.getSimpleName(),
-                          elt.entities().size() + elt.externalEntities().size());
-            }, /*else*/ () -> {
-                printNote("Generating %s from scratch.", APPLICATION_DOMAIN_SIMPLE_NAME);
-            });
+            maybeAppDomainElt.ifPresentOrElse(
+                    (elt) -> {
+                        // incremental build <=> regenerate
+                        printNote("Found existing %s (%s registered entities)", elt.getSimpleName(),
+                                elt.entities().size() + elt.externalEntities().size());
+                    },
+                    // or else
+                    () -> {
+                        printNote("Generating %s from scratch.", APPLICATION_DOMAIN_SIMPLE_NAME);
+                    });
 
             final var registerableEntities = new TreeSet<EntityElement>();
             final var registerableExtEntities = new TreeSet<EntityElement>();
