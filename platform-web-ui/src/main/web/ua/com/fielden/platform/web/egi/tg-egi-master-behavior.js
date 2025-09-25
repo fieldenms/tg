@@ -141,7 +141,7 @@ const TgEgiMasterBehaviorImpl = {
 
     getEditors: function () {
         const focusableElemnts = this._lastFocusedEditor ? [this._lastFocusedEditor] : 
-                                [...this.egi.$.left_egi_master.querySelectorAll("slot"), ...this.egi.$.centre_egi_master.querySelectorAll("slot")]
+                                [...this.egi.$.egi_master_layout.querySelectorAll("slot")]
                                 .filter(slot => slot.assignedNodes().length > 0)
                                 .map(slot => slot.assignedNodes()[0]).filter(element => element.nodeType !== Node.TEXT_NODE && element.hasAttribute("tg-editor"));
         if (this._focusLastOnRetrieve) {
@@ -190,8 +190,7 @@ const TgEgiMasterBehaviorImpl = {
     _egiChanged: function (newEgi, oldEgi) {
         this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
         this._onAlternateSwitching = this._onAlternateSwitching.bind(this);
-        this._masterContainerChanged(newEgi && newEgi.$.left_egi_master, oldEgi && oldEgi.$.left_egi_master);
-        this._masterContainerChanged(newEgi && newEgi.$.centre_egi_master, oldEgi && oldEgi.$.centre_egi_master);
+        this._masterContainerChanged(newEgi && newEgi.$.egi_master_layout, oldEgi && oldEgi.$.egi_master_layout);
     },
 
     _masterContainerChanged: function (newContainer, oldContainer) {
@@ -300,18 +299,9 @@ const TgEgiMasterBehaviorImpl = {
     _onTabDown: function (event) {
         const activeElement = deepestActiveElement();
         //Check whether active element is in hierarchy of the last fixed editor if it is then focus first editor in scrollable area.
-        const fixedEditors = this._getFixedEditors();
-        const scrollableEditors = this._getScrollableEditors();
-        const indexOfFixedEditor = fixedEditors.indexOf(activeElement);
-        const indexOfScrollableEditor = scrollableEditors.indexOf(activeElement);
-        if (indexOfFixedEditor >= 0 && indexOfFixedEditor === fixedEditors.length - 1 && scrollableEditors.length > 0) {
-                scrollableEditors[0].focus();
-                if (typeof scrollableEditors[0].select === 'function') {
-                    scrollableEditors[0].select();
-                }
-                tearDownEvent(event);
-        } else if ((indexOfScrollableEditor >= 0 && indexOfScrollableEditor === scrollableEditors.length - 1) 
-                    || (indexOfFixedEditor >= 0 && indexOfFixedEditor === fixedEditors.length - 1 && scrollableEditors.length === 0)) {
+        const editors = this._getEgiMasterEditors();
+        const indexOfEditor = editors.indexOf(activeElement);
+        if (indexOfEditor === editors.length - 1) {
             tearDownEvent(event);
             this._saveAndEditNextRow();
         }
@@ -320,18 +310,9 @@ const TgEgiMasterBehaviorImpl = {
     _onShiftTabDown: function (event) {
         const activeElement = deepestActiveElement();
         //Check whether active element is in hierarchy of the first scrollable editor if it is then focus last editor in fixed area.
-        const fixedEditors = this._getFixedEditors();
-        const scrollableEditors = this._getScrollableEditors();
-        const indexOfFixedEditor = fixedEditors.indexOf(activeElement);
-        const indexOfScrollableEditor = scrollableEditors.indexOf(activeElement);
-        if (indexOfScrollableEditor === 0 && fixedEditors.length > 0) {
-            fixedEditors[fixedEditors.length - 1].focus();
-            if (typeof fixedEditors[fixedEditors.length - 1].select === 'function') {
-                fixedEditors[fixedEditors.length - 1].select();
-            }
-            tearDownEvent(event);
-        //If the first editor in fixed area is focused then make previous row editable   
-        } else if ((indexOfScrollableEditor === 0 && fixedEditors.length === 0) || indexOfFixedEditor === 0) {
+        const editors = this._getEgiMasterEditors();
+        const indexOfEditor = editors.indexOf(activeElement);
+        if (indexOfEditor === 0) {
             tearDownEvent(event);
             this._focusLastOnRetrieve = true;
             this._saveAndEditPreviousRow();
@@ -354,15 +335,10 @@ const TgEgiMasterBehaviorImpl = {
         } else {
             this.fire("tg-last-item-focused", { forward: forward, event: e });
         }
-    }, 
-
-    _getFixedEditors: function () {
-        return queryElements(this.egi.$.left_egi_master, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null); 
-        
     },
-
-    _getScrollableEditors: function () {
-        return queryElements(this.egi.$.centre_egi_master, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null); 
+    
+    _getEgiMasterEditors: function () {
+        return queryElements(this.egi.$.egi_master_layout, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
     },
 
     _getEgiCurrentFocusableElements: function () {

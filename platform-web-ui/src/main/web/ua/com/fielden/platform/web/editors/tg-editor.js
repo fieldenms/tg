@@ -8,6 +8,7 @@ import '/resources/polymer/@polymer/paper-input/paper-input-error.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js';
 
 import '/resources/components/tg-confirmation-dialog.js';
+import '/resources/images/tg-icons.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
 
@@ -19,6 +20,8 @@ import { tearDownEvent, allDefined, resultMessages, deepestActiveElement, isInHi
 let checkIconTimer = null;
 
 let lastEditor = null;
+
+let qrCodeScanner = null;
 
 const timeoutCheckIcon = function (editor) {
     if (checkIconTimer) {
@@ -59,9 +62,10 @@ const hideCheckIconOnMouseLeave = function () {
 }
 
 const defaultLabelTemplate = html`
-    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]" slot="label">
         <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
         <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <iron-icon class="label-action" hidden$="[[!_scanAvailable]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-down="_preventFocusOut" on-tap="_scanTap"></iron-icon>
     </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
@@ -254,9 +258,17 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
             },
 
             /**
-             * Determines whther label is floatable or not.
+             * Determines whether label is floatable or not.
              */
             noLabelFloat: {
+                type: Boolean,
+                value: false,
+            },
+
+            /**
+             * Determines whether the QR code scanner action in the title should be hidden. 
+             */
+            hideQrCodeScanner: {
                 type: Boolean,
                 value: false,
             },
@@ -388,6 +400,11 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                 type: Boolean,
                 computed: '_isDisabled(currentState, entity, propertyName)',
                 observer: '_disabledChanged'
+            },
+
+            _scanAvailable: {
+                type: Boolean,
+                computed: '_canScan(hideQrCodeScanner, noLabelFloat, entity, propertyName)'
             },
     
             _invalid: {
@@ -771,21 +788,33 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     /**
      * This function returns the tooltip for this editor.
      */
-    _getTooltip (value) {
+    _getTooltip (value, _scanAvailable) {
         var tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
-        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip();
+        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip(_scanAvailable);
         return tooltip;
     }
 
     /**
      * Returns tooltip for action
      */
-    _getActionTooltip () {
+    _getActionTooltip (_scanAvailable) {
+        const actionTooltips = [];
+        actionTooltips.push(this._getCopyActionTooltip());
+        actionTooltips.push(this._getScanActionTooltip(_scanAvailable));
+        const filteredActionTooltips = actionTooltips.filter(tooltip => !!tooltip);
         return `<div style='display:flex;'>
-            <div style='margin-right:10px;'>With action: </div>
-            <div style='flex-grow:1;'><b>Copy</b><br>Copy content</div>
+            <div style='margin-right:10px;'>${filteredActionTooltips.length > 1 ? "With actions:" : "With action:"} </div>
+            <div style='flex-grow:1;'>${filteredActionTooltips.join("<br><br>")}</div>
             </div>`
+    }
+
+    _getCopyActionTooltip() {
+        return "<b>Copy</b><br>Copy content"
+    }
+
+    _getScanActionTooltip(_scanAvailable) {
+        return _scanAvailable ? "<b>Scan</b><br>Scan QR or Bar code" : "";
     }
     
     /**
@@ -943,6 +972,55 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
             this.toaster.openToastWithoutEntity("Nothing to copy", true, "There was nothing to copy.", false);
         }
     }
+
+    /*************************QR Code Scanner related methods****************************************/
+    _preventFocusOut(e) {
+        tearDownEvent(e);
+    }
+
+    _scanTap () {
+        if (qrCodeScanner === null) {
+            qrCodeScanner = document.getElementById("qrScanner");
+        }
+        if (qrCodeScanner) {
+            qrCodeScanner.toaster = this.toaster;
+            qrCodeScanner.closeCallback = this._closeScanner(this.focused);
+            qrCodeScanner.applyCallback = this._applyScannerValue.bind(this);
+            qrCodeScanner.open();
+        } else {
+            throw new Error("QR code scanner is not present in DOM. Please add it with 'qrScanner' id");
+        }
+    }
+
+    _closeScanner (wasFocused) {
+        return () => {
+            if (qrCodeScanner) {
+                qrCodeScanner.toaster = null;
+                qrCodeScanner.closeCallback = null;
+                qrCodeScanner.applyCallback = null;
+                if (wasFocused) {
+                    this._labelDownEventHandler();
+                }
+            }
+        }
+    }
+
+    _applyScannerValue (value) {
+        this._editingValue = value;
+        this._checkBuiltInValidation();
+        this.commitIfChanged();
+    }
+
+    _canScan (hideQrCodeScanner, noLabelFloat, entity, propertyName) {
+        if (allDefined(arguments)) {
+            const metaPropEditable = this.reflector().isEntity(entity) && !this.reflector().isDotNotated(propertyName)
+                                 ? entity["@" + propertyName + "_editable"]
+                                 : false;
+            return !hideQrCodeScanner && !noLabelFloat && metaPropEditable
+        }
+        return false;
+    }
+    /*********************************** QR Code Scanner related methods end******************************/
 
     _showCheckIconAndToast (text) {
         if (this.toaster) {

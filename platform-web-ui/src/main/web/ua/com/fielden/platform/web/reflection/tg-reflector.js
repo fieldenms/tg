@@ -75,9 +75,10 @@ var _isInformative0 = function (result) {
  */
 var _createEntityTypePropPrototype = function () {
     ////////////////////////////////////////// THE PROTOTYPE FOR EntityTypeProp ////////////////////////////////////////// 
-    var EntityTypeProp = function (rawObject) {
+    var EntityTypeProp = function (name, rawObject) {
         Object.call(this);
-
+        //Set the name of property
+        this._name = name;
         // copy all properties from rawObject after deserialisation
         for (var prop in rawObject) {
             this[prop] = rawObject[prop];
@@ -85,6 +86,13 @@ var _createEntityTypePropPrototype = function () {
     };
     EntityTypeProp.prototype = Object.create(Object.prototype);
     EntityTypeProp.prototype.constructor = EntityTypeProp;
+
+    /**
+     * Returns the name of a property in the entity type.
+     */
+    EntityTypeProp.prototype.name = function () {
+        return this._name;
+    }
 
     /**
      * Returns property type.
@@ -146,6 +154,15 @@ var _createEntityTypePropPrototype = function () {
      */
     EntityTypeProp.prototype.isTime = function () {
         return typeof this._time === 'undefined' ? false : this._time;
+    }
+
+    /**
+     * Returns 'true' when the property carries entity type information for the master to be opened.
+     *
+     * IMPORTANT: do not use '_entityTypeCarrier' field directly!
+     */
+    EntityTypeProp.prototype.isEntityTypeCarrier = function () {
+        return typeof this._entityTypeCarrier === 'undefined' ? false : this._entityTypeCarrier;
     }
 
     /**
@@ -758,7 +775,10 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
                 for (var p in _props) {
                     if (_props.hasOwnProperty(p)) {
                         var val = _props[p];
-                        _props[p] = new EntityTypeProp(val);
+                        _props[p] = new EntityTypeProp(p, val);
+                        if (_props[p].isEntityTypeCarrier() && !this["#entityTypeCarrirerPropName#"]) {
+                            this["#entityTypeCarrirerPropName#"] = p;
+                        }
                     }
                 }
 
@@ -770,6 +790,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     };
     EntityType.prototype = Object.create(Object.prototype);
     EntityType.prototype.constructor = EntityType;
+
+    /**
+     * Returns entity type carrier property name if exists. Otherwise returns null
+     *
+     */
+    EntityType.prototype.entityTypeCarrierName = function () {
+        return this["#entityTypeCarrirerPropName#"] || null;
+    }
 
     /**
      * Returns full Java class name for the entity type.
@@ -943,6 +971,13 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
             }
             return prop ? prop : null;
         }
+    }
+
+    /** 
+     * Returns an array of EntityTypeProp objects for this EntityType instance.
+     */
+    EntityType.prototype.props = function () {
+        return typeof this._props !== 'undefined' && this._props ? Object.values(this._props) : [];
     }
 
     /** 
