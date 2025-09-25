@@ -9,6 +9,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /// Annotates a property of a specification entity type (annotated with [ua.com.fielden.platform.entity.annotation.Extends])
 /// to indicate that the yields for the property should be inserted automatically when an EQL model is generated for the specification entity type.
 ///
+/// A typical use case for this, is to redeclare an inherited property with a custom title and description.
+///
 /// For example:
 ///
 /// ```java
@@ -54,8 +56,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /// ```
 ///
 /// Also, the generated `ReAsset` will not declare property `number`, inheriting it from `ReAsset_Spec` instead.
-///
-/// As this example illustrates, a typical use case is to redeclare an inherited property with a custom title and description.
 ///
 /// It is an error if the annotated property is not inherited from any of the types in `@Extends`, which could be due to
 /// the property being excluded or simply absent in the extended type.
