@@ -20,11 +20,11 @@ final class EntityCompanionGeneratorImpl implements IEntityCompanionGenerator {
     EntityCompanionGeneratorImpl() {}
 
     @Override
-    public Class<?> generateCompanion(final Class<? extends AbstractEntity> type) {
+    public Class<?> generateCompanion(final Class<? extends AbstractEntity<?>> type) {
         return generateSimpleCompanion(type);
     }
 
-    private Class<?> generateSimpleCompanion(final Class<? extends AbstractEntity> type) {
+    private Class<?> generateSimpleCompanion(final Class<? extends AbstractEntity<?>> type) {
         // Always use the base type.
         // * ByteBuddy will create a new class loader just for the generated companion type.
         // * The companion type does not need to reference `type`, only its base type.

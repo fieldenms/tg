@@ -11,6 +11,6 @@ public interface IEntityCompanionGenerator {
     ///
     /// The generated type will implement [IEntityDao].
     ///
-    Class<?> generateCompanion(Class<? extends AbstractEntity> type);
+    Class<?> generateCompanion(Class<? extends AbstractEntity<?>> type);
 
 }
