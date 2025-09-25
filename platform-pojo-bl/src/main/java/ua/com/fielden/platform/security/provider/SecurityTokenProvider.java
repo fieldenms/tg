@@ -42,22 +42,18 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.requireAnno
 @Singleton
 public class SecurityTokenProvider implements ISecurityTokenProvider {
 
-    /**
-     * A map between token classes and their names.
-     * Used as a cache for obtaining class by name.
-     */
+    /// A map between token classes and their names.
+    /// Used as a cache for obtaining class by name.
     private final Map<String, Class<? extends ISecurityToken>> tokenClassesByName = new HashMap<>();
     private final Map<String, Class<? extends ISecurityToken>> tokenClassesBySimpleName = new HashMap<>();
 
-    /**
-     * Contains top level security token nodes.
-     * Effectively final.
-     */
+    /// Contains top level security token nodes.
+    /// Effectively final.
+    ///
     private SortedSet<SecurityTokenNode> topLevelSecurityTokenNodes;
 
-    /**
-     * The "default" constructor that can be used by IoC.
-     */
+    /// The "default" constructor that can be used by IoC.
+    ///
     @Inject
     public SecurityTokenProvider(
             final @Named("tokens.path") String path,
@@ -66,21 +62,20 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         this(path, packageName, emptySet(), emptySet());
     }
 
-    /**
-     * Creates security provider by automatically determining all security tokens available on the path within the specified package.
-     * May throw an exception as a result of failure to loaded token classes.
-     *
-     * @param path -- a path to classes or a jar (requires jar file name too) where security tokens are located.
-     * @param packageName -- a package name containing security tokens (sub-packages are traversed automatically).
-     * @param extraTokens -- additional tokens that belong neither to the standard platform ones not to the application specific ones, loaded dynamically "tokens.path".
-     * @param redundantTokens -- tokens to be removed for consideration; in most cases this would only be relevant for some of the platform-level tokens that are not applicable for some applications.
-     */
+    /// Creates security provider by automatically determining all security tokens available on the path within the specified package.
+    /// May throw an exception as a result of failure to loaded token classes.
+    ///
+    /// @param path            a path to classes or a jar (requires jar file name too) where security tokens are located.
+    /// @param packageName     a package name containing security tokens (sub-packages are traversed automatically).
+    /// @param extraTokens     the additional tokens that belong neither to the standard platform ones not to the application specific ones, loaded dynamically "tokens.path".
+    /// @param redundantTokens the tokens to be removed for consideration; in most cases this would only be relevant for some of the platform-level tokens that are not applicable for some applications.
+    ///
     public SecurityTokenProvider(
             final String path,
             final String packageName,
             final Set<Class<? extends ISecurityToken>> extraTokens,
-            final Set<Class<? extends ISecurityToken>> redundantTokens
-    ) {
+            final Set<Class<? extends ISecurityToken>> redundantTokens)
+    {
         final Set<Class<? extends ISecurityToken>> platformLevelTokens = CollectionUtil.setOf(
                 User_CanSave_Token.class,
                 User_CanRead_Token.class,
@@ -128,10 +123,9 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         }
     }
 
-    /**
-     * Additional initialisation after the constructor.
-     * Called by the IoC framework.
-     */
+    /// Additional initialisation after the constructor.
+    /// Called by the IoC framework.
+    ///
     @Inject
     private void init(
             final IApplicationDomainProvider appDomain,
@@ -165,9 +159,9 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     /// Provides tokens for a generated multi-inheritance entity type.
     /// This method generates [Template#READ] and [Template#READ_MODEL] tokens for each type.
     ///
-    /// @param entityType  the generated multi-inheritance entity type
-    /// @param generator  token generator that should be used to generate tokens
-    /// @param tokensPkgName  the destination package for tokens
+    /// @param entityType     a generated multi-inheritance entity type
+    /// @param generator      a token generator that should be used to generate tokens
+    /// @param tokensPkgName  a destination package for tokens
     ///
     protected Stream<? extends Class<? extends ISecurityToken>> tokensForMultiInheritanceEntity(
             final Class<? extends AbstractEntity<?>> entityType,
@@ -193,11 +187,10 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         return unmodifiableCollection(tokenClassesByName.values());
     }
 
-    /**
-     * Returns a class representing a security token by its simple or full class name.
-     *
-     * @param tokenClassSimpleName -- a simple or a full class name for a security token.
-     */
+    /// Returns a class representing a security token by its simple or full class name.
+    ///
+    /// @param tokenClassSimpleName a simple or a full class name for a security token.
+    ///
     @SuppressWarnings("unchecked")
     @Override
     public <T extends ISecurityToken> Optional<Class<T>> getTokenByName(final String tokenClassSimpleName) {
@@ -205,15 +198,11 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         return ofNullable(classBySimpleName != null ? classBySimpleName : (Class<T>) tokenClassesByName.get(tokenClassSimpleName));
     }
 
-    /**
-     * Transforms a set of security tokens into a hierarchy of {@link SecurityTokenNode} nodes.
-     * <p>
-     * The result is a forest of trees (i.e., multiple trees), ordered according to the comparator, implemented by {@link SecurityTokenNode}.
-     * Roots for each trees represent one of the top most security tokens.
-     *
-     * @param allTokens
-     * @return
-     */
+    /// Transforms a set of security tokens into a hierarchy of [SecurityTokenNode] nodes.
+    ///
+    /// The result is a forest of trees (i.e. multiple trees), ordered according to the comparator, implemented by [SecurityTokenNode].
+    /// Roots for each tree represent one of the top most security tokens.
+    ///
     static SortedSet<SecurityTokenNode> buildTokenNodes(final Collection<Class<? extends ISecurityToken>> allTokens) {
         final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
 
@@ -241,12 +230,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         return new TreeSet<>(topTokenNodes.values());
     }
 
-    /**
-     * Linearises the class hierarchy of specified token starting from class that directly implements ISecurityToken to the class specified as token.
-     *
-     * @param token
-     * @return
-     */
+    /// Linearises the class hierarchy of specified token starting from class that directly implements [ISecurityToken] to the class specified as token.
+    ///
     @SuppressWarnings("unchecked")
     private static List<Class<? extends ISecurityToken>> genHierarchyPath(final Class<? extends ISecurityToken> token) {
         final List<Class<? extends ISecurityToken>> tokenHierarchyList = new ArrayList<>();
