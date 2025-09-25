@@ -1048,7 +1048,9 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
 
     _applyScannerValue(focused) {
         return (value, separator) => {
-            const refinedSeparator = separator && separator.replace(/\\n/g, '\n').replace(/\\s/g, ' ').replace(/\\t/g, '\t');
+            //console.log(`scanned value: ${value}`);
+
+            const refinedSeparator = (separator && separator.trim().replace(/\\n/g, '\n').replace(/\\s/g, ' ').replace(/\\t/g, '\t'));
             if (!refinedSeparator || !this._editingValue.trim()) {
                 this.replaceText(value);
             } else if (!focused) {

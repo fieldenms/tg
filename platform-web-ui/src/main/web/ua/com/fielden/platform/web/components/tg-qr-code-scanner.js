@@ -167,7 +167,7 @@ const template = html`
             <div class="buttons">
                 <paper-button raised roll="button" tooltip-text="Close dialog" on-tap="_cancelScan"><span>CLOSE</span></paper-button>
                 <paper-button raised roll="button" tooltip-text="Auto-restart scanner" on-tap="_scanAgain"><span>SCAN</span></paper-button>
-                <paper-button raised roll="button" tooltip-text="Accept scanned value" class="blue" on-tap="_applyScane"><span>APPLY</span></paper-button>
+                <paper-button raised roll="button" tooltip-text="Accept scanned value" class="blue" on-tap="_applyScan"><span>APPLY</span></paper-button>
             </div>
         </div>
     </paper-dialog>`; 
@@ -229,11 +229,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                 }
             }
         );
-        this._validate = () => {
-            if (this.separator !== getSeparator()) {
-                saveSeparator(this.separator);
-            }
-        };
+        this._validate = () => {};
         this.addEventListener('addon-attached', this._onAddonAttached.bind(this));
     }
 
@@ -391,17 +387,18 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
     _successfulScan (decodedText, decodedResult) {
         this.$.textEditor.assignConcreteValue(decodedText, this._reflector.tg_convert.bind(this._reflector));
         this.$.textEditor.commitIfChanged();
-        if (this._entity['scanAndApply']) {
-            this._applyScane();
-        } else if (this._scanner.isScanning) {
+        if (this._scanner.isScanning) {
             this._scanner.pause(true);
+            if (this._entity['scanAndApply']) {
+                this._applyScan();
+            }
         }
     }
 
     _resetEditorsState() {
         this.$.textEditor.assignConcreteValue('', this._reflector.tg_convert.bind(this._reflector));
         this.$.textEditor.commitIfChanged();
-        this.$.scanAndApplyEditor._editingValue = localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) || 'false';
+        this.$.scanAndApplyEditor.assignConcreteValue(localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) === 'true' || false, this._reflector.tg_convert.bind(this._reflector));
         this.$.scanAndApplyEditor.commitIfChanged();
         this.$.separatorEditor.assignConcreteValue(getSeparator(), this._reflector.tg_convert.bind(this._reflector));
         this.$.separatorEditor.commitIfChanged();
@@ -425,10 +422,11 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         }
     }
     
-    _applyScane() {
+    _applyScan() {
         if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && this._scanner.isScanning) {
             this.$.textEditor.commitIfChanged();
             this.$.separatorEditor.commitIfChanged();
+            saveSeparator(this.separator);
             this.$.qrCodeScanner.close();
             if (this.applyCallback) {
                 this.applyCallback(this.scannedText, this.separator);

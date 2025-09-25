@@ -122,7 +122,7 @@ export class TgMultilineTextEditor extends TgEditor {
         const _prevValueChanged = this.decoratedInput()._valueChanged.bind(this.decoratedInput());
         this.decoratedInput()._valueChanged = (newValue, oldValue) => {
             if (this.decoratedInput().bindValue === newValue) {
-                this.selectionStart = this.selectionEnd = 0;
+                this.decoratedInput().selectionStart = this.decoratedInput().selectionEnd = 0;
             }
             _prevValueChanged(newValue, oldValue);
         };

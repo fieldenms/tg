@@ -1002,20 +1002,20 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     get selectionStart() {
-        return this._editor.getSelection()[0];
+        return this._getSelection()[0];
     }
 
     set selectionStart(where) {
-        const selectionEnd = this._editor.getSelection()[1];
+        const selectionEnd = this._getSelection()[1];
         this._editor.setSelection(where, selectionEnd < where ? where : selectionEnd);
     }
 
     get selectionEnd() {
-        return this._editor.getSelection()[1];
+        return this._getSelection()[1];
     }
 
     set selectionEnd(where) {
-        const selectionStart = this._editor.getSelection()[0];
+        const selectionStart = this._getSelection()[0];
         this._editor.setSelection(selectionStart > where ? where : selectionStart, where);
     }
 
