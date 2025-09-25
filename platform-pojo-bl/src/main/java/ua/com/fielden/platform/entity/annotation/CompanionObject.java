@@ -8,14 +8,14 @@ import java.lang.annotation.Target;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-/**
- * Annotates an entity type to specify its companion object.
- *
- * @see CompanionIsGenerated
- * @author TG Team
- */
+/// Annotates an entity type to specify its companion object.
+///
+/// @see CompanionIsGenerated
+///
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
 public @interface CompanionObject {
+
     Class<? extends IEntityDao<? extends AbstractEntity<?>>> value();
+
 }
