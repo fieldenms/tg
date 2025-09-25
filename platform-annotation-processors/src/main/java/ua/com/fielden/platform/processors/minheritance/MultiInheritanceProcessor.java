@@ -46,6 +46,7 @@ import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 /// An annotation processor for the [Extends] annotation.
 ///
 /// #### Verification of generated entities
+///
 /// Generated entities are annotated with [ua.com.fielden.platform.processors.verify.annotation.SkipVerification],
 /// which disables their verification.
 ///
@@ -66,6 +67,7 @@ import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 /// The challenging part is the handling of different scenarios -- sometimes, the 2nd round may be the last one.
 ///
 /// #### Support for extending synthetic entity types
+///
 /// Currently, synthetic entity types cannot be specified in [Extends].
 /// This limitation stems from the objective of simplicity for the initial versions of the processor.
 ///

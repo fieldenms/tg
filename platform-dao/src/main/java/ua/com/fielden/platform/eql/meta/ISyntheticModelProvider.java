@@ -17,15 +17,14 @@ import java.util.List;
 @ImplementedBy(SyntheticModelProvider.class)
 public interface ISyntheticModelProvider {
 
-    /**
-     * Returns a list of synthetic models for the specified synthetic entity type.
-     * <p>
-     * For most synthetic entity types, models are declared explicitly in the type itself,
-     * using a static field {@code EntityResultQueryModel model_} or {@code List<EntityResultQueryModel> models_}.
-     * For synthetic audit-entity types, models are generated.
-     * <p>
-     * It is an error if the entity type is not of synthetic nature.
-     */
+    /// Returns a list of synthetic models for the specified synthetic entity type.
+    ///
+    /// For most synthetic entity types, models are declared explicitly in the type itself,
+    /// using a static field `EntityResultQueryModel model_` or `List<EntityResultQueryModel> models_`.
+    /// For synthetic audit-entity types, models are generated.
+    ///
+    /// It is an error if `entityType` is not of synthetic nature.
+    ///
     <E extends AbstractEntity<?>> List<EntityResultQueryModel<E>> getModels(Class<E> entityType);
 
 }
