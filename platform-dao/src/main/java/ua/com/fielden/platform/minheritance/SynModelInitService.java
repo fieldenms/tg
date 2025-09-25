@@ -9,7 +9,6 @@ import ua.com.fielden.platform.reflection.Reflector;
 
 import java.util.List;
 
-import static java.lang.String.format;
 import static javassist.Modifier.isFinal;
 import static ua.com.fielden.platform.utils.EntityUtils.findSyntheticModelFieldFor;
 import static ua.com.fielden.platform.utils.EntityUtils.isGeneratedMultiInheritanceEntityType;
@@ -45,7 +44,7 @@ public final class SynModelInitService {
                         Reflector.assignStatic(field, synModelProvider.getModels(entityType));
                     }
                     else {
-                        throw new EntityDefinitionException(format(ERR_MISSING_MODELS_FIELD, entityType.getSimpleName()));
+                        throw new EntityDefinitionException(ERR_MISSING_MODELS_FIELD.formatted(entityType.getSimpleName()));
                     }
                 });
     }
