@@ -160,8 +160,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             }
 
             // if ApplicationDomain is not among root elements, then search through the whole environment
-            final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.map(
-                            elt -> new ApplicationDomainElement(elt, entityFinder))
+            final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt
+                    .map(elt -> new ApplicationDomainElement(elt, entityFinder))
                     .or(registeredEntitiesCollector::findApplicationDomain);
             maybeAppDomainElt.ifPresentOrElse(
                     (elt) -> {
