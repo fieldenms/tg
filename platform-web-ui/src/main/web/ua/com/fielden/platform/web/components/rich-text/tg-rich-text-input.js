@@ -986,7 +986,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     replaceText(text, start, end) {
         const refinedStart = start || 0;
-        const refinedEnd = end || this._editingValue.length;
+        const refinedEnd = end || this._editor.wwEditor.view.state.tr.doc.content.size;
         this._editor.replaceSelection(text, refinedStart, refinedEnd);
         const cursorPosition = refinedStart + text.length;
         this._editor.setSelection(cursorPosition, cursorPosition);
