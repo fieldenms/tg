@@ -76,7 +76,7 @@ export class TgLinkDialog extends mixinBehaviors([TgTooltipBehavior], PolymerEle
     constructor() {
         super();
         this._reflector = new TgReflector();
-        this._entity = createDummyBindingEntity(
+        this._entity = createDummyBindingEntity('LinkDialogEntity',
             {'urlProp': {value: {value: ''}, editable: true}},
             (name) => {
                 return {

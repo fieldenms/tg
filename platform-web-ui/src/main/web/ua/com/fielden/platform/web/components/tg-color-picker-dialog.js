@@ -75,7 +75,7 @@ export class TgColorPickerDialog extends mixinBehaviors([TgTooltipBehavior], Pol
     constructor() {
         super();
         this._reflector = new TgReflector();
-        this._entity = createDummyBindingEntity(
+        this._entity = createDummyBindingEntity('ColorPickerDialogEntity',
             {'colorProp': {value: {hashlessUppercasedColourValue: ''}, editable: true}},
             (name) => {
                 return {
