@@ -23,12 +23,8 @@ import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
 import static ua.com.fielden.platform.security.provider.ISecurityTokenProvider.ERR_DUPLICATE_SECURITY_TOKENS;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
-/**
- * A test case to ensure correct configuration of security tokens as provided for security tooling (the tree structure).
- *
- * @author TG Team
- *
- */
+/// A test case to ensure correct configuration of security tokens as provided for security tooling (the tree structure).
+///
 public class SecurityTokenProviderAndNodeConstructionTest {
 
     private final Injector injector = new ApplicationInjectorFactory()
@@ -134,8 +130,8 @@ public class SecurityTokenProviderAndNodeConstructionTest {
         final var standardProvider = injector.getInstance(ISecurityTokenProvider.class);
         assertFalse(standardProvider.getTokenByName(SecurityTokenProviderWithExtra.EXTRA_TOKEN.getSimpleName()).isPresent());
 
-        final var providerWithExclution = injector.getInstance(SecurityTokenProviderWithExtra.class);
-        assertTrue(providerWithExclution.getTokenByName(SecurityTokenProviderWithExtra.EXTRA_TOKEN.getSimpleName()).isPresent());
+        final var providerWithExclusion = injector.getInstance(SecurityTokenProviderWithExtra.class);
+        assertTrue(providerWithExclusion.getTokenByName(SecurityTokenProviderWithExtra.EXTRA_TOKEN.getSimpleName()).isPresent());
     }
 
     private static class SecurityTokenProviderWithExtra extends SecurityTokenProvider {

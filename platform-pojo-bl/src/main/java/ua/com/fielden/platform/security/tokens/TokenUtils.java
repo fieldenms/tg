@@ -53,10 +53,9 @@ public class TokenUtils {
      */
     public static Result authoriseReading(final String entityTypeSimpleName, final Template readingKind, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
         return findToken(entityTypeSimpleName, readingKind, securityTokenProvider)
-            .map(Optional::of)
-            .orElseGet(() -> findDefaultToken(readingKind, securityTokenProvider))
-            .map(token -> authorisation.authorise(token))
-            .orElseGet(() -> failure(format("%s token has not been found for %s.", readingKind, entityTypeSimpleName)));
+               .or(() -> findDefaultToken(readingKind, securityTokenProvider))
+               .map(authorisation::authorise)
+               .orElseGet(() -> failure(format("%s token has not been found for %s.", readingKind, entityTypeSimpleName)));
     }
 
     /**
