@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.String.format;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -44,8 +43,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 public class MultiInheritanceEqlModelGenerator {
 
     public static final String
-            ERR_NOT_MULTI_INHERITANCE_TYPE = "Argument [type] must be a generated multi-inheritance entity type: [%s]",
-            ERR_INVALID_SPEC = "Specification entity type [%s] is missing required annotation @%s";
+            ERR_UNSUPPORTED_ENTITY_TYPE = "Argument [type] must be a generated multi-inheritance entity type: [%s]",
+            ERR_INVALID_SPEC = "Specification entity type [%s] is missing required annotation @%s",
+            ERR_DETERMINING_DEFAULT_VALUE_FOR_INHERITED_PROPERTY = "Cannot determine the default value for inherited property [%s.%s] with type [%s].";
 
     private final IDomainMetadata domainMetadata;
 
@@ -56,7 +56,7 @@ public class MultiInheritanceEqlModelGenerator {
 
     public <E extends AbstractEntity<?>> List<EntityResultQueryModel<E>> generate(final Class<E> type) {
         if (!isGeneratedMultiInheritanceEntityType(type)) {
-            throw new InvalidArgumentException(ERR_NOT_MULTI_INHERITANCE_TYPE.formatted(type));
+            throw new InvalidArgumentException(ERR_UNSUPPORTED_ENTITY_TYPE.formatted(type));
         }
 
         final var specType = type.getSuperclass();
@@ -66,7 +66,8 @@ public class MultiInheritanceEqlModelGenerator {
         }
 
         final var supertypes = Arrays.stream(atExtends.value()).map(Extends.Entity::value).toList();
-        // Key: property name. Value: list of entity types from which the property is inherited.
+        // Key: property name.
+        // Value: list of entity types from which the property is inherited.
         final Map<String, List<Class<? extends AbstractEntity<?>>>> propSourcesMap = allInheritedProperties(type, atExtends)
                 .collect(groupingBy(t2 -> t2._2, mapping(t2 -> t2._1, toList())));
 
@@ -75,7 +76,7 @@ public class MultiInheritanceEqlModelGenerator {
                 : Optional.empty();
 
         return supertypes.stream()
-                .map(ty -> {
+                .map(superType -> {
                     final var part1 = maybeMethod_modelFor
                             .<ISubsequentCompletedAndYielded<?>>map(modelFor -> {
                                 // It is an error if `initPart` yields into a property that is in `inheritedProperties`,
@@ -84,11 +85,11 @@ public class MultiInheritanceEqlModelGenerator {
                                 // Ideally, we would validate `initPart` here, but this is not possible at the moment,
                                 // because EqlQueryTransformer would be required, which would create a circular dependency:
                                 // MultiInheritanceEqlModelGenerator -> EqlQueryTransformer -> QuerySourceInfoProvider -> SyntheticModelProvider -> MultiInheritanceEqlModelGenerator
-                                final ISubsequentCompletedAndYielded<?> initPart = invokeStatic(modelFor, ty, select(ty));
-                                return yieldProperties(initPart, ty, propSourcesMap, propSourcesMap.keySet());
+                                final ISubsequentCompletedAndYielded<?> initPart = invokeStatic(modelFor, superType, select(superType));
+                                return yieldProperties(initPart, superType, propSourcesMap, propSourcesMap.keySet());
                             })
-                            .orElseGet(() -> yieldProperties(select(ty), ty, propSourcesMap, propSourcesMap.keySet()));
-                    final var part2 = part1.yield().val(ty.getCanonicalName()).as(atExtends.entityTypeCarrierProperty());
+                            .orElseGet(() -> yieldProperties(select(superType), superType, propSourcesMap, propSourcesMap.keySet()));
+                    final var part2 = part1.yield().val(superType.getCanonicalName()).as(atExtends.entityTypeCarrierProperty());
                     return part2.modelAsEntity(type);
                 })
                 .collect(toImmutableList());
@@ -157,9 +158,7 @@ public class MultiInheritanceEqlModelGenerator {
             case PropertyTypeMetadata.Component $ -> null;
             case PropertyTypeMetadata.Entity $ -> null;
             case PropertyTypeMetadata.Primitive it -> it.javaType().equals(boolean.class) ? false : null;
-            default -> throw new InvalidStateException(format(
-                    "Cannot determine the default value for inherited property [%s.%s] with type [%s].",
-                    ownerType.getCanonicalName(), prop, propTypeMetadata));
+            default -> throw new InvalidStateException(ERR_DETERMINING_DEFAULT_VALUE_FOR_INHERITED_PROPERTY.formatted(ownerType.getCanonicalName(), prop, propTypeMetadata));
         };
     }
 
