@@ -988,26 +988,28 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         const refinedStart = start || 0;
         const refinedEnd = end || this._editor.wwEditor.view.state.tr.doc.content.size;
         this._editor.replaceSelection(text, refinedStart, refinedEnd);
-        const cursorPosition = refinedStart + text.length;
-        this._editor.setSelection(cursorPosition, cursorPosition);
+        const increment = text.includes('\n') || refinedStart === 0 || refinedEnd === this._editor.wwEditor.view.state.tr.doc.content.size ? 1 : 0;
+        const cursorPosition = refinedStart + text.length + increment;
+        this._applySelection(cursorPosition, cursorPosition);
     }
 
     insertText(text, where) {
         if (typeof where === 'undefined') {
             this._editor.moveCursorToEnd(false);
-        } else {
-            this._editor.setSelection(where, where);
+        } else if (where) {
+            this._applySelection(where, where);
         }
         this._editor.insertText(text);
     }
 
     get selectionStart() {
-        return this._getSelection()[0];
+        const selection = this._getSelection();
+        return selection[0] === 1 ? 0 : selection[0];
     }
 
     set selectionStart(where) {
         const selectionEnd = this._getSelection()[1];
-        this._editor.setSelection(where, selectionEnd < where ? where : selectionEnd);
+        this._applySelection(where, selectionEnd < where ? where : selectionEnd);
     }
 
     get selectionEnd() {
@@ -1016,7 +1018,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     set selectionEnd(where) {
         const selectionStart = this._getSelection()[0];
-        this._editor.setSelection(selectionStart > where ? where : selectionStart, where);
+        this._applySelection(selectionStart > where ? where : selectionStart, where);
     }
 
     _editorScrolled(e) {
