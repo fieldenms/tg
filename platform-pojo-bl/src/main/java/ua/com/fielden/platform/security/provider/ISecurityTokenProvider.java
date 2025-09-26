@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.security.provider;
 
+import com.google.inject.ImplementedBy;
+import ua.com.fielden.platform.security.ISecurityToken;
+
 import java.util.Collection;
 import java.util.Optional;
 import java.util.SortedSet;
-
-import com.google.inject.ImplementedBy;
-import ua.com.fielden.platform.security.ISecurityToken;
 
 /// A contract for providing convenient access to security tokens and their representation as [SecurityTokenNode]s.
 ///
@@ -29,5 +29,15 @@ public interface ISecurityTokenProvider {
     /// The result is equal to flattening the result of [#getTopLevelSecurityTokenNodes()].
     ///
     Collection<Class<? extends ISecurityToken>> allSecurityTokens();
+
+    /// A security token that is used in place of a non-existing token, when trying to reconstruct a security token class from a string representation,
+    /// when reading data from a database.
+    ///
+    /// The placement of this class in [ISecurityTokenProvider] is deliberate to avoid its discovery during the process of automatic discovery of the application security tokens.
+    ///
+    class MissingSecurityTokenPlaceholder implements ISecurityToken {
+        public final static String TITLE = "MISSING SECURITY TOKEN PLACEHOLDER";
+        public final static String DESC = "Used to represent situations where no reals security token could be found.";
+    }
 
 }

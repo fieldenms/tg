@@ -6,8 +6,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider.MissingSecurityTokenPlaceholder;
 import ua.com.fielden.platform.types.markers.ISecurityTokenType;
 
 import java.io.Serializable;
@@ -20,8 +20,6 @@ import java.sql.Types;
 ///
 @Singleton
 public class SecurityTokenType implements UserType, ISecurityTokenType {
-
-    public static final String ERR_SECURITY_TOKEN_NOT_FOUND = "Security token for value [%s] could not be found.";
 
     public static final SecurityTokenType INSTANCE = new SecurityTokenType();
 
@@ -47,15 +45,15 @@ public class SecurityTokenType implements UserType, ISecurityTokenType {
     @Override
     public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor session, final Object owner) throws SQLException {
         final String name = resultSet.getString(names[0]);
-        return securityTokenProvider.getTokenByName(name)
-                .orElseThrow(() -> new SecurityException(ERR_SECURITY_TOKEN_NOT_FOUND.formatted(name)));
+        final var maybeSecurityToken = securityTokenProvider.getTokenByName(name);
+        return maybeSecurityToken.isPresent() ? maybeSecurityToken.get() : MissingSecurityTokenPlaceholder.class;
     }
 
     @Override
     public Object instantiate(final Object argument, final EntityFactory factory) {
         final var name = (String) argument;
-        return securityTokenProvider.getTokenByName(name)
-                .orElseThrow(() -> new SecurityException(ERR_SECURITY_TOKEN_NOT_FOUND.formatted(name)));
+        final var maybeSecurityToken = securityTokenProvider.getTokenByName(name);
+        return maybeSecurityToken.isPresent() ? maybeSecurityToken.get() : MissingSecurityTokenPlaceholder.class;
     }
 
     @Override
