@@ -203,6 +203,12 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                 value: false
             },
 
+            //Indicates whether this qr code scanner can be closed.
+            _canClose: {
+                type: Boolean,
+                value: false
+            },
+
             //Message displayed when _showCameraLoadingView property is true (i.e. when camera loading view is visible)
             _loadingMsg: String,
 
@@ -277,10 +283,10 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
 
     open() {
         if (this._scanner) {
-            this._resetEditorsState();
+            this._resetState();
             this.$.qrCodeScanner.open();
         } else {
-            this.toaster && this.toaster.openToastForError('Scanner error', 'Please specify element for camera feed inside tg-qr-code-scanner with slot attribute equal to "scanner"', true);
+            this._showError('Scanner error', 'Please specify element for camera feed inside tg-qr-code-scanner with slot attribute equal to "scanner"');
         }
     }
 
@@ -332,10 +338,10 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                     const height = parseInt(this._videoFeedElement.style.height);
                     this._startCamera(width, height, calculateAspectRation(width, height));
                 } else {
-                    this.toaster && this.toaster.openToastForError('No cammera error', 'There is no cameras to scan QR or Bar code', true);
+                    this._showError('No cammera error', 'There is no cameras to scan QR or Bar code');
                 }
             }).catch(err => {
-                this.toaster && this.toaster.openToastForError('Camera error', err, true);
+                this._showError('Camera error', err);
             });
         }
     }
@@ -345,13 +351,14 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && this._scanner.isScanning) {
                 this._scanner.stop().then(() => {
                     this._showBlockingPane("Tap SCAN, to start scanning");
+                    this._canClose = true;
                 });
         }
     }
 
     _startCamera(width, height, aspectRatio) {
         if (qrboxFunction.bind(this)(width, height).width < 50) {
-            this.toaster && this.toaster.openToastForError('Camera error', 'The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.', true);
+            this._showError('Camera error', 'The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.');
         } else if (this._scanner && this._cameras && this._cameras.length > 0 && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && !this._scanner.isScanning) {
             this._showBlockingPane("Loading...");
             this._scanner.start(this._cameras[this.$.camearSelector.viewIndex].id,  { fps: 10, aspectRatio: aspectRatio, qrbox: qrboxFunction.bind(this) },
@@ -359,8 +366,10 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             ).then(() => {
                 this._hideBlockingPane();
             }).catch((err) => {
-                this.toaster && this.toaster.openToastForError('Camera error', err, true);
+                this._showError('Camera error', err);
             });
+        } else {
+            this._showError("Camera error", "Could not start camera");
         }
     }
 
@@ -369,13 +378,19 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         this._showCameraLoadingView = true;
     }
 
+    _showError(shortMsg, extMsg) {
+        this.toaster && this.toaster.openToastForError(shortMsg, extMsg.message || extMsg, true);
+        this._canClose = true;
+        this._showBlockingPane(extMsg.message || extMsg);
+    } 
+
     _hideBlockingPane() {
         this._showCameraLoadingView = false;
     }
 
     _qrCodeScannerClosed(e) {
         if (e.target === this.$.qrCodeScanner) {
-            if (this._scanner.isScanning) {
+            if (this._scanner && this._scanner.isScanning) {
                 this._scanner.stop();
             }
             if (this.closeCallback) {
@@ -395,13 +410,15 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         }
     }
 
-    _resetEditorsState() {
+    _resetState() {
         this.$.textEditor.assignConcreteValue('', this._reflector.tg_convert.bind(this._reflector));
         this.$.textEditor.commitIfChanged();
         this.$.scanAndApplyEditor.assignConcreteValue(localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) === 'true' || false, this._reflector.tg_convert.bind(this._reflector));
         this.$.scanAndApplyEditor.commitIfChanged();
         this.$.separatorEditor.assignConcreteValue(getSeparator(), this._reflector.tg_convert.bind(this._reflector));
         this.$.separatorEditor.commitIfChanged();
+        this._canClose = false;
+        this._hideBlockingPane();
     }
 
     _scanAgain(e) {
@@ -409,21 +426,23 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             if (!this._scanner.isScanning) {
                 const width = parseInt(this._videoFeedElement.style.width);
                 const height = parseInt(this._videoFeedElement.style.height);
+                this._canClose = false;
                 this._startCamera(width, height, calculateAspectRation(width, height));
             } else if (this._scanner.stateManagerProxy.isPaused()) {
+                this._canClose = false;
                 this._scanner.resume();
             }
         }
     }
             
     _cancelScan() {
-        if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && this._scanner.isScanning) {
+        if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && (this._scanner.isScanning || this._canClose)) {
             this.$.qrCodeScanner.cancel();
         }
     }
     
     _applyScan() {
-        if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && this._scanner.isScanning) {
+        if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && (this._scanner.isScanning || this._canClose)) {
             this.$.textEditor.commitIfChanged();
             this.$.separatorEditor.commitIfChanged();
             saveSeparator(this.separator);
