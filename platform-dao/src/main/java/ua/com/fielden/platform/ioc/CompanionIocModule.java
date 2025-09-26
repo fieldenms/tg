@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.ioc;
 
+import ua.com.fielden.platform.companion.EntityCompanionGenerationIocModule;
 import ua.com.fielden.platform.dao.CommonEntityAggregatesDao;
 import ua.com.fielden.platform.dao.EntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
@@ -18,18 +19,18 @@ import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionDao;
 
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Predicate;
 
 import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
 
-/**
- * Module responsible for everything related to entity companion objects.
- */
+/// Module responsible for everything related to entity companion objects.
+///
 public class CompanionIocModule extends CommonFactoryIocModule {
 
     private final List<Class<? extends AbstractEntity<?>>> domainEntityTypes;
 
     public CompanionIocModule(final Properties props,
-                           final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
+                              final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
         super(props);
         this.domainEntityTypes = domainEntityTypes;
     }
@@ -47,6 +48,7 @@ public class CompanionIocModule extends CommonFactoryIocModule {
         bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
         bind(UserMenuInvisibilityAssociationBatchActionCo.class).to(UserMenuInvisibilityAssociationBatchActionDao.class);
         bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
+        install(new EntityCompanionGenerationIocModule());
     }
 
     protected void bindDomainCompanionObjects(final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {

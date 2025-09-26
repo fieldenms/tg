@@ -5,12 +5,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/// Marker for a property field used as the entity type carrier in synthetic entities.
-/// When an entity type is used as the type for an entity centre, the property annotated with this marker
-/// will serve as the carrier for the entity type of the master to be opened.
-/// Only one property field per class should be annotated with this marker.
+/// Marks a property field as the *entity type carrier* in synthetic entities.
 ///
-/// @author TG Team
+/// When an entity type is used as the type for an entity centre, the property annotated with this marker
+/// acts as the carrier for the master entity type to be opened.
+///
+/// Only one property per class should be annotated with this marker.
+///
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface EntityTypeCarrier {
