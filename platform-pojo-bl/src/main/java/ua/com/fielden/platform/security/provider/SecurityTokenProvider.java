@@ -149,10 +149,10 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         appDomain.entityTypes()
                 .stream()
                 .filter(EntityUtils::isGeneratedMultiInheritanceEntityType)
-                .flatMap(ty -> tokensForMultiInheritanceEntity(ty, generator, tokensPkgName))
-                .forEach(tok -> {
-                    tokenClassesByName.put(tok.getName(), tok);
-                    tokenClassesBySimpleName.put(tok.getSimpleName(), tok);
+                .flatMap(entityType -> tokensForMultiInheritanceEntity(entityType, generator, tokensPkgName))
+                .forEach(tokenType -> {
+                    tokenClassesByName.put(tokenType.getName(), tokenType);
+                    tokenClassesBySimpleName.put(tokenType.getSimpleName(), tokenType);
                 });
     }
 
