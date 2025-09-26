@@ -37,7 +37,7 @@ public interface ISecurityTokenProvider {
     ///
     class MissingSecurityTokenPlaceholder implements ISecurityToken {
         public final static String TITLE = "MISSING SECURITY TOKEN PLACEHOLDER";
-        public final static String DESC = "Used to represent situations where no reals security token could be found.";
+        public final static String DESC = "Used to represent situations where no real security token class could be found.";
     }
 
 }
