@@ -717,6 +717,11 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         this.decoratedInput().selectionEnd = where;
     }
 
+    get availableScanSeparators() {
+        return {' ': /\\s/g, '\t': /\\t/g};
+        
+    }
+
     _handleCopy (event) {
         if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
             this.commitIfChanged();
@@ -1048,9 +1053,11 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
 
     _applyScannerValue(focused) {
         return (value, separator) => {
-            //console.log(`scanned value: ${value}`);
-
-            const refinedSeparator = (separator && separator.trim().replace(/\\n/g, '\n').replace(/\\s/g, ' ').replace(/\\t/g, '\t'));
+            let refinedSeparator = separator && separator.trim();
+            const availableSepartors = this.availableScanSeparators;
+            Object.keys(availableSepartors).forEach(s => {
+                refinedSeparator = refinedSeparator.replace(availableSepartors[s], s);
+            });
             if (!refinedSeparator || !this._editingValue.trim()) {
                 this.replaceText(value);
             } else if (!focused) {

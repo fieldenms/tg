@@ -163,6 +163,11 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
         this.decoratedInput().focusInput();
     }
 
+    get availableScanSeparators() {
+        return {'\n': /\\n/g, ' ': /\\s/g, '\t': /\\t/g};
+        
+    }
+
     replaceText(text, start, end) {
         this.decoratedInput().replaceText(text, start, end);
     }

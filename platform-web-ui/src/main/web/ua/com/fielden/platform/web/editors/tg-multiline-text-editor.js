@@ -132,6 +132,11 @@ export class TgMultilineTextEditor extends TgEditor {
         this.decoratedInput().textarea.focus();
     }
 
+    get availableScanSeparators() {
+        return {'\n': /\\n/g, ' ': /\\s/g, '\t': /\\t/g};
+        
+    }
+
     get selectionStart() {
         return this.decoratedInput().selectionStart;
     }
