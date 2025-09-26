@@ -14,7 +14,7 @@ import '/resources/components/tg-dropdown-switch.js';
 import '/resources/editors/tg-singleline-text-editor.js';
 import '/resources/editors/tg-boolean-editor.js';
 
-import { tearDownEvent, localStorageKey, createDummyBindingEntity, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, localStorageKey, createStubBindingEntity, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
@@ -219,7 +219,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
     constructor() {
         super();
         this._reflector = new TgReflector();
-        this._entity = createDummyBindingEntity('QrCodeScannerEntity',
+        this._entity = createStubBindingEntity('QrCodeScannerEntity',
             {'scannedValue': {value: '', editable: false},
              'scanAndApply': {value: false, editable: true},
              'separator': {value: '', editable: true}},

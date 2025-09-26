@@ -384,7 +384,7 @@ export const localStorageKeyForCentre = function (miType, subject) {
 /**
  * Creates simple dummy entity to bind it to entity master
  */
-export const createDummyBindingEntity = function (typeName, customPropObject, propDefinition) {
+export const createStubBindingEntity = function (typeName, customPropObject, propDefinition) {
     const reflector = new TgReflector();
     const fullEntityType = reflector.getEntityPrototype();
     fullEntityType.compoundOpenerType = () => null;
