@@ -38,14 +38,11 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
 
-/**
- * A class implementing the Entity Centre DSL contracts.
- *
- * @author TG Team
- *
- * @param <T>
- */
+/// A class implementing the Entity Centre DSL contracts.
+///
 public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntityCentreBuilder<T> {
+
+    public static final String ERR_CUSTOM_PROPS_MISSING_DEFAULT_VALUES = "There are custom properties without default values, but the custom assignment handler is also missing.";
 
     private Class<T> entityType;
 
@@ -163,9 +160,10 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     public EntityCentreConfig<T> build() {
         // check if there are custom props without default values and no custom values assignment handler
-        if (resultSetCustomPropAssignmentHandlerType == null &&
-                resultSetProperties.stream().filter(v -> v.propDef.isPresent() && !v.propDef.get().value.isPresent()).count() > 0) {
-            throw new IllegalStateException("There are custom properties without default values, but the custom assignment handler is also missing.");
+        if (resultSetCustomPropAssignmentHandlerType == null
+            && resultSetProperties.stream().anyMatch(v -> v.propDef.isPresent() && v.propDef.get().value.isEmpty()))
+        {
+            throw new IllegalStateException(ERR_CUSTOM_PROPS_MISSING_DEFAULT_VALUES);
         }
 
         // compose a correct ordering structure before instantiating an EntityCentreConfig
