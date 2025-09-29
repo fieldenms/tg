@@ -985,11 +985,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     replaceText(text, start, end) {
-        const refinedStart = start || 0;
-        const refinedEnd = end || this._editor.wwEditor.view.state.tr.doc.content.size;
-        this._editor.replaceSelection(text, refinedStart, refinedEnd);
-        const increment = text.includes('\n') || refinedStart === 0 || refinedEnd === this._editor.wwEditor.view.state.tr.doc.content.size ? 1 : 0;
-        const cursorPosition = refinedStart + text.length + increment;
+        const adjustedStart = start || 0;
+        const adjustedEnd = end || this._editor.wwEditor.view.state.tr.doc.content.size;
+        this._editor.replaceSelection(text, adjustedStart, adjustedEnd);
+        const increment = text.includes('\n') || adjustedStart === 0 || adjustedEnd === this._editor.wwEditor.view.state.tr.doc.content.size ? 1 : 0;
+        const cursorPosition = adjustedStart + text.length + increment;
         this._applySelection(cursorPosition, cursorPosition);
     }
 

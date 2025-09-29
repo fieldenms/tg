@@ -23,6 +23,8 @@ let lastEditor = null;
 
 let qrCodeScanner = null;
 
+const separators = {' ': /\\s/g, '\t': /\\t/g, '\n': /\\n/g};
+
 const timeoutCheckIcon = function (editor) {
     if (checkIconTimer) {
         clearTimeout(checkIconTimer);
@@ -685,10 +687,10 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     }
 
     replaceText(text, start, end) {
-        const refinedStart = start || 0;
-        const refinedEnd = end || this._editingValue.length;
-        this._editingValue = this._editingValue.substring(0, refinedStart) + text + this._editingValue.substring(refinedEnd);
-        this.selectionStart = this.selectionEnd = refinedStart + text.length;
+        const adjustedStart = start || 0;
+        const adjustedEnd = end || this._editingValue.length;
+        this._editingValue = this._editingValue.substring(0, adjustedStart) + text + this._editingValue.substring(adjustedEnd);
+        this.selectionStart = this.selectionEnd = adjustedStart + text.length;
     }
 
     insertText(text, where) {
@@ -718,7 +720,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     }
 
     get availableScanSeparators() {
-        return {' ': /\\s/g, '\t': /\\t/g};
+        return [' ', '\t'];
         
     }
 
@@ -1053,29 +1055,29 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
 
     _applyScannerValue(focused) {
         return (value, separator) => {
-            let refinedSeparator = separator && separator.trim();
+            let adjustedSeparator = separator && separator.trim();
             const availableSepartors = this.availableScanSeparators;
-            Object.keys(availableSepartors).forEach(s => {
-                refinedSeparator = refinedSeparator.replace(availableSepartors[s], s);
+            availableSepartors.forEach(s => {
+                adjustedSeparator = adjustedSeparator.replace(separators[s], s);
             });
-            if (!refinedSeparator || !this._editingValue.trim()) {
-                this.replaceText(value);
-            } else if (!focused) {
-                this.insertText(refinedSeparator + value);
-            } else {
+            if (!adjustedSeparator || !this._editingValue.trim()) {
+                this.replaceText(value);//If there is no separator specified then just replace all text in editor
+            } else if (!focused) {// If separator was specified but editor wasn't focused then append separator with scanned text to the end of editor's text.
+                this.insertText(adjustedSeparator + value); 
+            } else { //If editor was focused
                 const selectionStart = this.selectionStart;
                 const selectionEnd = this.selectionEnd;
-                if (selectionStart === selectionEnd) {
-                    if (selectionStart === 0) {
+                if (selectionStart === selectionEnd) { //But there was no selection then insert text at the cursor position
+                    if (selectionStart === 0) {//If cursor was at the begining then do not prepend separator to the scanned text
                         this.insertText(value, 0);
-                    } else {
-                        this.insertText(refinedSeparator + value, selectionStart);
+                    } else { //Otherwise prepend separator to the scanned text and then insert text at cursor position.
+                        this.insertText(adjustedSeparator + value, selectionStart);
                     }
-                } else {
-                    if (selectionStart === 0) {
+                } else { //If some part of editor's text was selected
+                    if (selectionStart === 0) {//Then replace it with new scanned text, but without separator if selection starts from the begining of editr's text
                         this.replaceText(value, 0, selectionEnd);
-                    } else {
-                        this.replaceText(refinedSeparator + value, selectionStart, selectionEnd);
+                    } else {//Otherwise replace all selected text with prepended separator to the scanned text.
+                        this.replaceText(adjustedSeparator + value, selectionStart, selectionEnd);
                     }
                 }
             }

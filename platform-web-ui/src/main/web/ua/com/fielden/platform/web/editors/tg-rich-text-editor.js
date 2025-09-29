@@ -164,7 +164,7 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
     }
 
     get availableScanSeparators() {
-        return {'\n': /\\n/g, ' ': /\\s/g, '\t': /\\t/g};
+        return ['\n', ' ', '\t'];
         
     }
 

@@ -133,7 +133,7 @@ export class TgMultilineTextEditor extends TgEditor {
     }
 
     get availableScanSeparators() {
-        return {'\n': /\\n/g, ' ': /\\s/g, '\t': /\\t/g};
+        return ['\n', ' ', '\t'];
         
     }
 
