@@ -42,7 +42,6 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -576,23 +575,15 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return deleteOps.get().defaultBatchDelete(model);
     }
 
-    /**
-     * Batch deletion of entities in the provided list.
-     *
-     * @param entities
-     * @return
-     */
+    /// Batch deletion of entities in the provided list.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
-        return batchDelete(entities.stream().map(e -> e.getId()).collect(Collectors.toList()));
+        return batchDelete(entities.stream().map(AbstractEntity::getId).toList());
     }
 
-    /**
-     * Batch deletion of entities by their ID values.
-     *
-     * @param entitiesIds
-     * @return
-     */
+    /// Batch deletion of entities by their ID values.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
         return deleteOps.get().defaultBatchDelete(entitiesIds);

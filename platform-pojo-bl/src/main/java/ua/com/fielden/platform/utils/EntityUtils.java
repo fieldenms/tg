@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.processors.minheritance.SpecifiedBy;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -56,8 +57,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
@@ -862,6 +862,10 @@ public class EntityUtils {
         }
     }
 
+    public static boolean isGeneratedMultiInheritanceEntityType(final Class<?> type) {
+        return isAnnotationPresent(type, SpecifiedBy.class);
+    }
+
     /**
      * Returns {@code true} if domain introspection is denied for the specified element.
      *
@@ -1175,6 +1179,21 @@ public class EntityUtils {
         return baseTypeForSyntheticEntity.isPresent()
                ? baseTypeForSyntheticEntity
                : maybeSingleKeyMemberOfEntityType(type).map(t2 -> t2._1);
+    }
+
+    /// Given a generated multi-inheritance type, returns the specification type that was used to generate it.
+    /// [SpecifiedBy] is used to locate the specification type.
+    /// It is an error if [SpecifiedBy] is not present on the given type.
+    ///
+    @SuppressWarnings("unchecked")
+    public static Class<? extends AbstractEntity<?>> specTypeFor(final Class<? extends AbstractEntity<?>> multiInheritanceType) {
+        final var atSpecifiedBy = getAnnotationForClass(SpecifiedBy.class, multiInheritanceType);
+        if (atSpecifiedBy == null) {
+            throw new IllegalArgumentException(format(
+                    "[%s] is missing annotation @%s or is not a generated multi-inheritance type.",
+                    multiInheritanceType.getCanonicalName(), SpecifiedBy.class.getSimpleName()));
+        }
+        return (Class<? extends AbstractEntity<?>>) atSpecifiedBy.value();
     }
 
     public static class BigDecimalWithTwoPlaces {
