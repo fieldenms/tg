@@ -106,12 +106,16 @@ const _isElementInViewport = function (el) {
 export const focusEnabledInputIfAny = function (preferredOnly, orElseFocus) {
     const inputToFocus = findFirstInputToFocus(preferredOnly, this.getEditors());
     if (inputToFocus) {
-        inputToFocus.inputToFocus.focus();
-        if (!_isElementInViewport(inputToFocus.inputToFocus)) { // .focus() scrolls to view; however, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused); hence we scroll it manually
-            inputToFocus.inputToFocus.scrollIntoView(); // behavior: 'auto' -- no animation; block: 'start' (vertical alignment); inline: 'nearest' (horisontal alignment);
-        }
-        if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
-            inputToFocus.inputToFocus.select();
+        // Enforce focusing of preferred input regardless of any conditions.
+        // If found input is not preferred, skip focusing for new entities.
+        if (inputToFocus.preferred || this._currBindingEntity && !this._currBindingEntity.isPersisted()) {
+            inputToFocus.inputToFocus.focus();
+            if (!_isElementInViewport(inputToFocus.inputToFocus)) { // .focus() scrolls to view; however, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused); hence we scroll it manually
+                inputToFocus.inputToFocus.scrollIntoView(); // behavior: 'auto' -- no animation; block: 'start' (vertical alignment); inline: 'nearest' (horisontal alignment);
+            }
+            if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
+                inputToFocus.inputToFocus.select();
+            }
         }
     } else if (orElseFocus) {
         orElseFocus();
