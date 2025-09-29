@@ -13,10 +13,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ErrorType;
 import javax.tools.Diagnostic;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -88,7 +85,7 @@ public final class RegisteredEntitiesCollector {
      * @return {@code true} if merging was performed (i.e., there was meaningful information in round inputs),
      * {@code false} if there was no need for merging (collector arguments will not have been used in this case)
      */
-    public boolean mergeRegisteredEntities(final List<EntityElement> roundEntities,
+    public boolean mergeRegisteredEntities(final Collection<EntityElement> roundEntities,
                                            final Optional<ExtendApplicationDomainMirror> maybeRoundExtension,
                                            final Optional<ApplicationDomainElement> maybeAppDomainElt,
                                            final Consumer<? super EntityElement> entityCollector,

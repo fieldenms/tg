@@ -32,7 +32,6 @@ import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.unmodifiableList;
-import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElseGet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -107,7 +106,6 @@ final class DomainMetadataGenerator {
     Common property and union property share the same name [%s].\
     """;
     public static final String ERR_TABLE_NAME_NOT_DETERMINED = "Could not determine table name for entity [%s].";
-    public static final String ERR_NO_MODEL_FOR_SYNTHETIC_ENTITY = "Could not obtain model(s) for synthetic entity [%s].";
     public static final String ERR_SYNTHETIC_ENTITY_WITH_UNSUPPORTED_KEY_TYPE = "Entity [%s] is recognised as synthetic-based-on-persistent having an entity-typed key. This is not supported.";
 
     private final PropertyTypeMetadataGenerator propTypeMetadataGenerator = new PropertyTypeMetadataGenerator();
@@ -265,16 +263,7 @@ final class DomainMetadataGenerator {
                         metadataForParentOfGenerated(entityType).flatMap(EntityMetadata::asPersistent).map(EntityMetadata.Persistent::data)
                                 .orElseGet(() -> EntityNature.Persistent.data(mkTableName(entityType))));
             }
-            case EntityNature.Synthetic $ -> {
-                final var data = metadataForParentOfGenerated(entityType).flatMap(EntityMetadata::asSynthetic).map(EntityMetadata.Synthetic::data)
-                        .orElseGet(() -> {
-                            final var modelField = requireNonNull(
-                                    findSyntheticModelFieldFor(entityType),
-                                    () -> "Invalid synthetic entity [%s] definition: neither static field [model_] nor [models_] could be found.".formatted(entityType.getTypeName()));
-                            return EntityNature.Synthetic.data(getEntityModelsOfQueryBasedEntityType(entityType, modelField));
-                        });
-                entityBuilder = EntityMetadataBuilder.syntheticEntity(entityType, data);
-            }
+            case EntityNature.Synthetic $ -> entityBuilder = EntityMetadataBuilder.syntheticEntity(entityType);
             case EntityNature.Other $ -> entityBuilder = null;
         }
 
@@ -630,31 +619,6 @@ final class DomainMetadataGenerator {
             }
         } catch (final Exception ex) {
             throw new DomainMetadataGenerationException(ERR_TABLE_NAME_NOT_DETERMINED.formatted(entityType.getTypeName()), ex);
-        }
-    }
-
-    ///////////////////////////////////
-    /////// Synthetic Entity //////////
-    ///////////////////////////////////
-
-    /**
-     * Returns a list of query models defined by a synthetic entity.
-     */
-    static <T extends AbstractEntity<?>> List<EntityResultQueryModel<T>>
-    getEntityModelsOfQueryBasedEntityType(final Class<T> entityType, final Field modelField) {
-        try {
-            final var name = modelField.getName();
-            modelField.setAccessible(true);
-            final Object value = modelField.get(null);
-            if ("model_".equals(name)) {
-                return ImmutableList.of((EntityResultQueryModel<T>) value);
-            } else {
-                // this must be "models_"
-                return ImmutableList.copyOf((List<EntityResultQueryModel<T>>) modelField.get(null));
-            }
-        } catch (final Exception ex) {
-            throw new DomainMetadataGenerationException(ERR_NO_MODEL_FOR_SYNTHETIC_ENTITY.formatted(entityType.getSimpleName()), ex);
-
         }
     }
 

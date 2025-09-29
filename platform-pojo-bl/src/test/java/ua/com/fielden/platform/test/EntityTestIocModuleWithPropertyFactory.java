@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.test;
 
+import ua.com.fielden.platform.companion.IEntityCompanionGenerator;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.ioc.EntityIocModule;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
+import ua.com.fielden.platform.ioc.EntityIocModule;
 import ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy;
 import ua.com.fielden.platform.sample.domain.ReferenceHierarchyDaoStub;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
@@ -44,6 +45,8 @@ public class EntityTestIocModuleWithPropertyFactory extends EntityIocModule {
         bind(IReferenceHierarchy.class).to(ReferenceHierarchyDaoStub.class);
         bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
         bind(IDates.class).to(DatesForTesting.class);
+
+        bind(IEntityCompanionGenerator.class).to(EntityCompanionGeneratorStub.class);
     }
 
 }

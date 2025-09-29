@@ -14,20 +14,17 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
 
-/**
- * A base class for wrappers around {@link RoundEnvironment} that shall provide additional functionality, such as finding specific elements and
- * memoizing results to improve performance.
- * <p>
- * In the context of composable verifiers memoization can significanly improve performance, since a single instance is shared between
- * all components.
- * <p>
- * For convenience this class declares forwarding methods that replicate those declared by {@link RoundEnvironment} interface.
- *
- * @param <EV> the type of the element verifier accepted by this round environment
- * @param <EL> the type of the element verified by the accepted verifier
- *
- * @author TG Team
- */
+/// A base class for wrappers around [RoundEnvironment] that shall provide additional functionality,
+/// such as finding specific elements and memoizing results to improve performance.
+///
+/// In the context of composable verifiers memoization can significantly improve performance,
+/// because a single instance is shared between all components.
+///
+/// For convenience this class declares forwarding methods that replicate those declared by [RoundEnvironment] interface.
+///
+/// @param <EV> the type of the element verifier accepted by this round environment
+/// @param <EL> the type of the element verified by the accepted verifier
+///
 public abstract class AbstractRoundEnvironment<EL, EV extends IElementVerifier<EL>> {
     protected final RoundEnvironment roundEnv;
     protected final Messager messager;
@@ -37,36 +34,31 @@ public abstract class AbstractRoundEnvironment<EL, EV extends IElementVerifier<E
         this.messager = messager;
     }
 
-    /**
-     * Provides access to the underlying instance of {@link RoundEnvironment}.
-     * @return
-     */
+    /// Provides access to the underlying instance of [RoundEnvironment].
+    ///
     public RoundEnvironment getRoundEnvironment() {
         return roundEnv;
     }
 
-    /**
-     * Filters out elements annotated with {@link SkipVerifciation}.
-     *
-     * @param elements  stream of input elements
-     * @return          filtered stream of input elements
-     */
+    /// Filters out elements annotated with [SkipVerification].
+    ///
+    /// @param elements  stream of input elements
+    /// @return          filtered stream of input elements
+    ///
     private Stream<? extends Element> skipElements(final Stream<? extends Element> elements) {
         return elements.filter(elt -> !SkipVerification.Factory.shouldSkipVerification(elt));
     }
 
-    /**
-     * Streams the elements returned by {@link RoundEnvironment#getRootElements()} taking into account the {@link SkipVerification} annotation
-     * to possibly skip annotated elements.
-     */
+    /// Streams the elements returned by [#getRootElements()] taking into account the [SkipVerification] annotation
+    /// to possibly skip annotated elements.
+    ///
     public final Stream<? extends Element> streamRootElements() {
         return skipElements(roundEnv.getRootElements().stream());
     }
 
-    /**
-     * Collects the elements of {@link #streamRootElements()} into a set.
-     * There are no guarantees on the type, mutability, serializability, or thread-safety of the returned set.
-     */
+    /// Collects the elements of [#streamRootElements()] into a set.
+    /// There are no guarantees on the type, mutability, serializability, or thread-safety of the returned set.
+    ///
     public final Set<? extends Element> getRootElements() {
         return streamRootElements().collect(Collectors.toSet());
     }
@@ -87,28 +79,23 @@ public abstract class AbstractRoundEnvironment<EL, EV extends IElementVerifier<E
         return skipElements(roundEnv.getElementsAnnotatedWithAny(annotations).stream()).collect(toSet());
     }
 
-    /**
-     * Accepts a verifier and applies it to each root element in this round.
-     * Returns a list containing elements that did not pass verification.
-     * <b>
-     * Needs to be implemented by sub-types.
-     *
-     * @param verifier
-     * @return
-     */
+    /// Accepts a verifier and applies it to each root element in this round.
+    /// Returns a list containing elements that did not pass verification.
+    ///
+    /// **Needs to be implemented by sub-types.**
+    ///
     public abstract List<ViolatingElement> findViolatingElements(final EV verifier);
 
     // ==================== FORWARDING METHODS ====================
-    /**
-     * Forwards to {@link RoundEnvironment#processingOver()}.
-     */
+
+    /// Forwards to [#processingOver()].
+    ///
     public final boolean processingOver() {
         return roundEnv.processingOver();
     }
 
-    /**
-     * Forwards to {@link RoundEnvironment#errorRaised()}.
-     */
+    /// Forwards to [#errorRaised()].
+    ///
     public final boolean errorRaised() {
         return roundEnv.errorRaised();
     }

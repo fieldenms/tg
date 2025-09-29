@@ -490,7 +490,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider,
-            final boolean insertionPointCustomLayoutEnabled) {
+            final boolean insertionPointCustomLayoutEnabled)
+    {
         this.egiHidden = egiHidden;
         this.gridViewIcon = gridViewIcon;
         this.gridViewIconStyle = gridViewIconStyle;

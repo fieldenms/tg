@@ -6,8 +6,8 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.sample.domain.security_tokens.TgFuelType_CanDelete_Token;
-import ua.com.fielden.platform.sample.domain.security_tokens.TgFuelType_CanSaveNew_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgFuelType_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgFuelType_CanSaveNew_Token;
 import ua.com.fielden.platform.security.Authorise;
 
 @EntityType(TgFuelType.class)
