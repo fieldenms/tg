@@ -590,8 +590,8 @@ const TgEntityMasterBehaviorImpl = {
                         const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                         this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
                         return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), this.savingContext, this._continuations);
-                        // No need to provide last instance-based continuation to the context,
-                        //   because master-with-master/menu/centre should never throw continuation (only embedded one may throw it).
+                        // No need to provide the last instance-based continuation to the context,
+                        // because master-with-master/menu/centre should never throw a continuation (only embedded one may throw it).
                     }).bind(this);
                 }
             }
