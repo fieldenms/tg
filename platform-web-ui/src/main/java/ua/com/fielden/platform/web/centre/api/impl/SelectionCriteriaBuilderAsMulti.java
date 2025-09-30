@@ -1,16 +1,16 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.lang.String.format;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
-import ua.com.fielden.platform.web.centre.api.crit.IMultiValueCritSelector;
 import ua.com.fielden.platform.web.centre.api.crit.IMultiValueAutocompleterBuilder;
+import ua.com.fielden.platform.web.centre.api.crit.IMultiValueCritSelector;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiBooleanDefaultValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultValueAssigner;
+
+import static java.lang.String.format;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL.
@@ -40,7 +40,11 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
         // check if the specified property type is applicable to an autocompleter
         final String propPath = builder.currSelectionCrit.orElseThrow(() -> new WebUiBuilderException("Selection criteria is not defined."));
         final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(builder.getEntityType(), propPath);
-        if (!EntityUtils.isEntityType(propType)) {
+        if (EntityUtils.isString(propType)) {
+            if (!EntityUtils.isEntityType(type)) {
+                throw new WebUiBuilderException(format("Property '%s'@'%s' is of String type, but cannot be used for autocompletion as its autocompletion type is not of an entity type (%s).", propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName()));
+            }
+        } else if (!EntityUtils.isEntityType(propType)) {
             throw new WebUiBuilderException(format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName()));
         } else if (!type.isAssignableFrom(propType)) {
             throw new WebUiBuilderException(format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName(), type.getSimpleName()));

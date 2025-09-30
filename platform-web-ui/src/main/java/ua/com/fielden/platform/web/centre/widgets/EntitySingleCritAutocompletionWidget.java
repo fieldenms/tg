@@ -1,11 +1,11 @@
-package ua.com.fielden.platform.web.centre.api.crit.impl;
-
-import java.util.Map;
+package ua.com.fielden.platform.web.centre.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityCritAutocompletionWidget;
+
+import java.util.Map;
 
 /**
  *

@@ -1065,6 +1065,7 @@ export class TgEntityEditor extends TgEditor {
         if (
             this.entity
             && this.entity.type().prop(this.propertyName).type()
+            && this.entity.type().prop(this.propertyName).type() instanceof this.reflector()._getEntityTypePrototype()
             && this.entity.type().prop(this.propertyName).type().isUnionEntity()
             && !this.unionValueChosenFromAutocompleter
             && this._refreshCycleStarted !== true

@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl;
 
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
-import ua.com.fielden.platform.web.centre.api.crit.impl.EntitySingleCritAutocompletionWidget;
 import ua.com.fielden.platform.web.centre.widgets.EntityMultiCritAutocompletionWidget;
+import ua.com.fielden.platform.web.centre.widgets.EntitySingleCritAutocompletionWidget;
+
+import java.util.Map;
+
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 
 /**
  *
