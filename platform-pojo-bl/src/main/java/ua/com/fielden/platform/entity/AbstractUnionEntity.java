@@ -190,7 +190,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         throw new EntityException(ERR_NO_MATCHING_PROP_TYPE.formatted(value.getType().getSimpleName()));
     }
 
-    /// Provides the set of property names, which are common for entity types used in "polymorphic" association.
+    /// Returns a set of property names that are common to all members of the specified union type.
     ///
     public static SequencedSet<String> commonProperties(final Class<? extends AbstractUnionEntity> type) {
         return Finder.commonPropertiesForUnion(type);
@@ -200,9 +200,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         return activePropertyName;
     }
 
-    /// Finds all properties of [AbstractEntity] type that will form properties "union".
-    ///
-    /// Important: no other (non-union) properties should exist inside [AbstractUnionEntity] class.
+    /// Returns a list of properties that represent the members of the specified union type.
     ///
     public static List<Field> unionProperties(final Class<? extends AbstractUnionEntity> type) {
         return Finder.unionProperties(type);
