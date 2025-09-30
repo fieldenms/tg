@@ -216,7 +216,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         requireNotNullArgument(unionType, "unionType");
         requireNotNullArgument(propType, "propType");
 
-        return streamRealProperties(unionType).filter(field -> field.getType().equals(propType)).findFirst().map(Field::getName);
+        return unionProperties(unionType).stream().filter(prop -> prop.getType().equals(propType)).findFirst().map(Field::getName);
     }
 
     /// Returns getter and setter method names for all common properties.
