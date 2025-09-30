@@ -30,7 +30,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js';
-import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
@@ -177,7 +177,7 @@ const template = html`
     <slot id="menuItemAction" name="menuItemAction"></slot>
     <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
 
-        <app-drawer disable-swipe="[[!mobile]]" slot="drawer" on-app-drawer-transitioned="_appDrawerTransitioned">
+        <app-drawer disable-swipe="[[!touchEnabled]]" slot="drawer" on-app-drawer-transitioned="_appDrawerTransitioned">
             <div id="menuToolBar" class="tool-bar layout horizontal center">
                 <div class="flex">[[menuItem.key]]</div>
             </div>
@@ -348,6 +348,10 @@ Polymer({
         mobile: {
             type: Boolean,
             value: isMobileApp()
+        },
+        touchEnabled: {
+            type: Boolean,
+            value: isTouchEnabled()
         },
         menu: Array,
         menuItem: Object,
