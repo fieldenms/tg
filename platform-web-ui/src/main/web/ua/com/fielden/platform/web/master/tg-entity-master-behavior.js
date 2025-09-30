@@ -137,6 +137,8 @@ export const focusEnabledInputIfAny = function (preferredOnly, orElseFocus) {
     }
 };
 
+const INSTANCEBASEDCONTINUATION_PROPERTY_NAME = 'instanceBasedContinuation';
+
 const TgEntityMasterBehaviorImpl = {
     properties: {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -438,6 +440,15 @@ const TgEntityMasterBehaviorImpl = {
             }
         },
 
+        /**
+         * A custom instance of downstream instance-based continuation to facilitate direct usage in continuation Entity Master.
+         * This is contrary to type-based continuations where `NeedMoreData` is thrown using type.
+         * Please note, that `instanceBasedContinuation` still goes through its producer (for additional API flexibility).
+         */
+        instanceBasedContinuation: {
+            type: String
+        },
+
         focusViewBound: {
             type: Function
         },
@@ -517,6 +528,14 @@ const TgEntityMasterBehaviorImpl = {
             this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
             this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
 
+            // Provide last instance-based continuation to the context to be able to:
+            //  - retrieve continuation on its Entity Master for the first time;
+            //  - use it in deep contexts for downstream actions (property / entity / continuation),
+            //    which are always initialised through deep contextual restoration (disregardOriginallyProducedEntities = true).
+            if (this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME]) {
+                contextHolder[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME];
+            }
+
             return contextHolder;
         }).bind(self);
 
@@ -590,6 +609,8 @@ const TgEntityMasterBehaviorImpl = {
                         const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                         this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
                         return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), this.savingContext, this._continuations);
+                        // No need to provide the last instance-based continuation to the context,
+                        // because master-with-master/menu/centre should never throw a continuation (only embedded one may throw it).
                     }).bind(this);
                 }
             }
@@ -684,11 +705,24 @@ const TgEntityMasterBehaviorImpl = {
                         }
                     }).bind(action);
                 }
+                // Initialise `this.instanceBasedContinuation` for the context creator.
+                // `_exceptionOccurred.ex.instance` will be empty (null) in case of type-based continuations.
+                //
+                // This instanceBasedContinuation lives up until the next successful save completion.
+                // Surely, it would be better to end its lifecycle as soon as continuation master exists.
+                // However, it is only used for:
+                //   - initial continuation retrieval
+                //   - downstream property / entity / continuation actions under continuation.
+                // Other operations (validation / autocompletion / saving) uses originallyProducedEntity instead.
+                // That's why it is not harmful to leave the state up until the next successful save or when other continuation occurs.
+                this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = _exceptionOccurred.ex.instance;
                 action._run();
             } else if (_exceptionOccurred !== null) {
                 this._postSavedDefaultPostExceptionHandler();
+                this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = null;
             } else {
                 this.restoreAfterSave();
+                this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = null;
             }
 
             return potentiallySavedOrNewEntity.isValidWithoutException();
