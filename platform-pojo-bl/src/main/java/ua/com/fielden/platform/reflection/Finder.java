@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -26,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -59,9 +59,17 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 public class Finder {
     private static final Cache<Class<?>, List<Field>> ENTITY_KEY_MEMBERS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
 
+    /// A cache for common properties of union entity types.
+    /// * Key: canonical union entity type.
+    ///   It is not necessary to record enhanced union types in this cache, as the enhancements, if any, should not affect the set of common properties.
+    /// * Value: set of common property names.
+    ///
+    private static final Cache<Class<?>, SequencedSet<String>> UNION_COMMON_PROPERTIES = CacheBuilder.newBuilder().initialCapacity(50).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
     public static long cleanUp() {
         ENTITY_KEY_MEMBERS.cleanUp();
-        return ENTITY_KEY_MEMBERS.size();
+        UNION_COMMON_PROPERTIES.cleanUp();
+        return ENTITY_KEY_MEMBERS.size() + UNION_COMMON_PROPERTIES.size();
     }
 
     /**
@@ -802,6 +810,28 @@ public class Finder {
                             .filter(prop -> restPairs.stream().allMatch(pair -> isPropertyPresent(prop, fstType, pair._2, pair._1)));
                 }).orElseGet(Stream::of)
                 .map(Field::getName).collect(toCollection(LinkedHashSet::new));
+    }
+
+    /// Provides the set of property names, which are common for entity types used in "polymorphic" association.
+    ///
+    public static SequencedSet<String> commonPropertiesForUnion(final Class<? extends AbstractUnionEntity> unionType) {
+        try {
+            return UNION_COMMON_PROPERTIES.get(PropertyTypeDeterminator.baseEntityType(unionType), () -> commonPropertiesForUnion_(unionType));
+        } catch (final ExecutionException e) {
+            throw new ReflectionException(e.getCause());
+        }
+    }
+
+    private static SequencedSet<String> commonPropertiesForUnion_(final Class<? extends AbstractUnionEntity> unionType) {
+        final List<Class<? extends AbstractEntity<?>>> propertyTypes = new ArrayList<>();
+        final List<Field> fields = unionProperties(unionType);
+        for (final Field field : fields) {
+            if (AbstractEntity.class.isAssignableFrom(field.getType())) {
+                propertyTypes.add((Class<AbstractEntity<?>>) field.getType());
+            }
+        }
+        // return the list of common properties
+        return findCommonProperties(propertyTypes);
     }
 
     /**

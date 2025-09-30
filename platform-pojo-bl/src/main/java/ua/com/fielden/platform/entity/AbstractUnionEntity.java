@@ -193,16 +193,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     /// Provides the set of property names, which are common for entity types used in "polymorphic" association.
     ///
     public static SequencedSet<String> commonProperties(final Class<? extends AbstractUnionEntity> type) {
-        // collect all properties of entity type
-        final List<Class<? extends AbstractEntity<?>>> propertyTypes = new ArrayList<>();
-        final List<Field> fields = unionProperties(type);
-        for (final Field field : fields) {
-            if (AbstractEntity.class.isAssignableFrom(field.getType())) {
-                propertyTypes.add((Class<AbstractEntity<?>>) field.getType());
-            }
-        }
-        // return the list of common properties
-        return Finder.findCommonProperties(propertyTypes);
+        return Finder.commonPropertiesForUnion(type);
     }
 
     public String activePropertyName() {
