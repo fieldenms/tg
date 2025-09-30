@@ -28,12 +28,6 @@ const template = html`
             top: 0;
             left: 0;
         }
-        .help-button {
-            width: 22px;
-            height: 22px;
-            padding: 0px;
-            color: var(--paper-input-container-color, var(--secondary-text-color));
-        }
         #masterContainer {
             @apply --master-with-dimensions-mixin;
             overflow-x: hidden;
@@ -78,7 +72,7 @@ const template = html`
     <div id="masterContainer" class="layout vertical">
         <tg-scrollable-component id="scrollableContainer" class="layout vertical flex-auto relative">
             <div class="layout horizontal end-justified master-util-toolbar">
-                <paper-icon-button id="helpButton" class="help-button" icon="icons:help-outline" on-mousedown="_initiateHelpAction" on-touchstart="_initiateHelpAction" on-mouseup="_runHelpAction" on-touchend="_runHelpAction" tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link." hidden$="[[_hasEmbededView()]]"></paper-icon-button>
+                <slot name="help-button"></slot>
                 <slot name="persistent-entity-info-slot"></slot>
             </div>
             <slot name="property-editors"></slot>
@@ -115,10 +109,6 @@ Polymer({
         _processRetrieverError: Function,
         _processSaverResponse: Function,
         _processSaverError: Function,
-
-        _initiateHelpAction: Function,
-        _runHelpAction: Function,
-        _hasEmbededView: Function,
 
         _saverLoading: {
             type: Boolean,
