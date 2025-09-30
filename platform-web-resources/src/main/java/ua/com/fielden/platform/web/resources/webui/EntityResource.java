@@ -60,10 +60,10 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.*;
 /// The web resource for entity serves as a back-end mechanism of entity retrieval, saving and deletion.
 /// It provides a base implementation for handling the following methods:
 ///
-///   - retrieve entity -- GET request;
-///   - save new entity -- PUT request with an envelope containing an instance of an entity to be persisted;
-///   - save already persisted entity -- POST request with an envelope containing an instance of an modified entity to be changed;
-///   - delete entity -- DELETE request.
+/// - retrieve entity — GET request;
+/// - save new entity — PUT request with an envelope containing an instance of an entity to be persisted;
+/// - save already persisted entity — POST request with an envelope containing an instance of an modified entity to be changed;
+/// - delete entity — DELETE request.
 ///
 public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebResource {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -142,9 +142,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         }
     }
 
-    /**
-     * Handles POST requests resulting from tg-entity-master <code>save()</code> method (persisted entity).
-     */
+    /// Handles POST requests from `tg-entity-master` to `save()` a persisted entity.
+    ///
     @Post
     public Representation save(final Representation envelope) {
         LOGGER.debug("ENTITY_RESOURCE: save started.");
@@ -162,9 +161,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         return representation;
     }
 
-    /**
-     * Handles PUT requests resulting from tg-entity-master <code>retrieve(context)</code> method (new or persisted entity).
-     */
+    /// Handles PUT requests resulting from `tg-entity-master` to `retrieve(context)` new or persisted entity.
     @Put
     public Representation retrieve(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
@@ -236,23 +233,14 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         }, restUtil);
     }
 
-    /**
-     * Creates {@link Representation} for an entity.
-     * 
-     * @param entity
-     * @return
-     */
+    /// Creates [Representation] for an entity.
+    ///
     private Representation createRepresentation(final T entity) {
         return createRepresentation(entity, empty());
     }
 
-    /**
-     * Creates {@link Representation} for an entity and {@link Optional} {@code exceptionOpt}.
-     * 
-     * @param entity
-     * @param exceptionOpt
-     * @return
-     */
+    /// Creates [Representation] for an entity and [Optional] `exceptionOpt`.
+    ///
     private Representation createRepresentation(final T entity, final Optional<Exception> exceptionOpt) {
         final Result result = restUtil.singleEntityResult(entity, exceptionOpt);
         final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
@@ -273,19 +261,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         }, restUtil);
     }
 
-    /**
-     * Restores the entity from {@link SavingInfoHolder} and tries to save it.
-     *
-     * @param savingInfoHolder
-     * @param entityType
-     * @param entityFactory
-     * @param companionFinder
-     * @param critGenerator
-     * @param webUiConfig
-     * @param serverGdtm
-     * @param companion
-     * @return
-     */
+    /// Restores the entity from [SavingInfoHolder] and tries to save it.
+    ///
     public static <T extends AbstractEntity<?>> Pair<T, Optional<Exception>> tryToSave(
             final SavingInfoHolder savingInfoHolder,
             final Class<T> entityType,
@@ -366,7 +343,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
-        LOGGER.debug(tabs(tabCount) + "restoreMasterFunctionalEntity: started.");
+        LOGGER.debug(() -> tabs(tabCount) + "restoreMasterFunctionalEntity: started.");
         final DateTime start = new DateTime();
         AbstractEntity<?> entity = null;
         if (centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains("masterEntity") && centreContextHolder.getMasterEntity() instanceof SavingInfoHolder) {
