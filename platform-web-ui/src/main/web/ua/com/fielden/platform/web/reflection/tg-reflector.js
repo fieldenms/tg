@@ -53,7 +53,7 @@ const _simpleClassName = function (fullClassName) {
 };
 
 var _isContinuationError0 = function (result) {
-    return _isError0(result) && (typeof result.ex.continuationType !== 'undefined');
+    return _isError0(result) && (typeof result.ex.continuationTypeStr !== 'undefined');
 }
 
 /**
@@ -1678,7 +1678,9 @@ export const TgReflector = Polymer({
         if (ex) {
             let causes = "<b>" + resultMessages(ex).extended + "</b>";
             printStackTrace(ex);
-            if (ex.cause !== null) {
+            // Result 'cause' is not serialised and that's why it is 'undefined'.
+            // Allow proper stack traces (empty) for such Results (e.g. see NeedMoreDataException).
+            if (ex.cause) {
                 causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")
             }
             return causes;
