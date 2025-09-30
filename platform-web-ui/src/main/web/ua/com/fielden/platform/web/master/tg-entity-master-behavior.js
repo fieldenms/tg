@@ -1,7 +1,7 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
-import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
@@ -1108,7 +1108,7 @@ const TgEntityMasterBehaviorImpl = {
                     // Desktop app specific: focus first input when opening dialog.
                     // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
                     // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor).
-                    if (!isMobileApp()) {
+                    if (!isTouchEnabled()) {
                         this._focusFirstInput();
                     } else {
                         this._focusPreferredInput();

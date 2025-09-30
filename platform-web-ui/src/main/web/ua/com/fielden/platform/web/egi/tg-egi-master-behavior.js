@@ -4,7 +4,7 @@ import { TgEntityMasterBehavior, focusEnabledInputIfAny } from '/resources/maste
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEgiMasterBehaviorImpl = {
 
@@ -90,7 +90,7 @@ const TgEgiMasterBehaviorImpl = {
      */
     focusView: function () {
         this.async(() => {
-            if (!isMobileApp()) {
+            if (!isTouchEnabled()) {
                 this._focusFirstInput();
             } else {
                 this._focusPreferredInput();
