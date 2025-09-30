@@ -35,7 +35,6 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
-import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pd;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -66,10 +65,18 @@ public class Finder {
     ///
     private static final Cache<Class<?>, SequencedSet<String>> UNION_COMMON_PROPERTIES = CacheBuilder.newBuilder().initialCapacity(50).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
 
+    /// A cache for union member properties.
+    /// * Key: canonical union entity type.
+    ///   It is not necessary to record enhanced union types in this cache, as the enhancements, if any, should not affect the set of union members.
+    /// * Value: list of union member properties.
+    ///
+    private static final Cache<Class<?>, List<Field>> UNION_MEMBER_PROPERTIES = CacheBuilder.newBuilder().initialCapacity(50).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
     public static long cleanUp() {
         ENTITY_KEY_MEMBERS.cleanUp();
         UNION_COMMON_PROPERTIES.cleanUp();
-        return ENTITY_KEY_MEMBERS.size() + UNION_COMMON_PROPERTIES.size();
+        UNION_MEMBER_PROPERTIES.cleanUp();
+        return ENTITY_KEY_MEMBERS.size() + UNION_COMMON_PROPERTIES.size() + UNION_MEMBER_PROPERTIES.size();
     }
 
     /**
@@ -832,6 +839,31 @@ public class Finder {
         }
         // return the list of common properties
         return findCommonProperties(propertyTypes);
+    }
+
+    /// Finds all properties of [AbstractEntity] type that will form properties "union".
+    ///
+    /// Important: no other (non-union) properties should exist inside [AbstractUnionEntity] class.
+    ///
+    public static List<Field> unionProperties(final Class<? extends AbstractUnionEntity> unionType) {
+        try {
+            return UNION_MEMBER_PROPERTIES.get(PropertyTypeDeterminator.baseEntityType(unionType), () -> unionProperties_(unionType));
+        } catch (final ExecutionException e) {
+            throw new ReflectionException(e.getCause());
+        }
+    }
+
+    private static List<Field> unionProperties_(final Class<? extends AbstractUnionEntity> unionType) {
+        final List<Field> unionProperties = new ArrayList<>();
+        // Find all properties of AE type that will form properties "union".
+        // Note 1: no other properties should exist inside AUE class.
+        // Note 2: desc and key are ignored.
+        for (final Field field : Finder.findRealProperties(unionType)) {
+            if (AbstractEntity.class.isAssignableFrom(field.getType())) {
+                unionProperties.add(field);
+            }
+        }
+        return unionProperties;
     }
 
     /**

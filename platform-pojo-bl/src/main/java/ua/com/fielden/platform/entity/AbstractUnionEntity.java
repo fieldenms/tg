@@ -205,16 +205,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     /// Important: no other (non-union) properties should exist inside [AbstractUnionEntity] class.
     ///
     public static List<Field> unionProperties(final Class<? extends AbstractUnionEntity> type) {
-        final List<Field> unionProperties = new ArrayList<>();
-        // Find all properties of AE type that will form properties "union".
-        // Note 1: no other properties should exist inside AUE class.
-        // Note 2: desc and key are ignored.
-        for (final Field field : Finder.findRealProperties(type)) {
-            if (AbstractEntity.class.isAssignableFrom(field.getType())) {
-                unionProperties.add(field);
-            }
-        }
-        return unionProperties;
+        return Finder.unionProperties(type);
     }
 
     /// Returns the name of a union property of type `propType`, declared in union entity of type `unionEntityType`.
