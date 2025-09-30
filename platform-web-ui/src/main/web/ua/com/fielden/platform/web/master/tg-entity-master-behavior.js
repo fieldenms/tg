@@ -116,6 +116,21 @@ export const focusEnabledInputIfAny = function (preferredOnly, orElseFocus) {
             if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
                 inputToFocus.inputToFocus.select();
             }
+        } else {
+            // Take the first significant parent node, namely tg-custom-action-dialog, if it is present.
+            // Skip insertion points, because they will likely only have non-persisted instances in a master.
+            if (this._cachedParentNode) {
+                // Get all focusable elements of the taken parent node.
+                const parentFocusableElements = this._getCurrentFocusableElements.bind(this._cachedParentNode)();
+                // Find an index of inputToFocus in that focusable elements list.
+                const inputToFocusIndex = parentFocusableElements.indexOf(inputToFocus.inputToFocus);
+                // If there is such an element in that list and it is not a first element (unlikely) then...
+                if (inputToFocusIndex > 0) {
+                    // ...focus previous focusable element.
+                    // This is to make Tab action immediately focusing inputToFocus, if actioned by user.
+                    parentFocusableElements[inputToFocusIndex - 1].focus();
+                }
+            }
         }
     } else if (orElseFocus) {
         orElseFocus();
