@@ -160,8 +160,8 @@ const template = html`
                 <tg-boolean-editor id="scanAndApplyEditor" class ="editor flex" style="margin-right:20px;" entity="[[_entity]]" property-name="scanAndApply" prop-title="Scan & apply?" 
                         prop-desc="Determines whether the scanned value should be applied immediately or not" current-state="EDIT" 
                         validation-callback="[[_validate]]" toaster="[[toaster]]"></tg-boolean-editor>
-                <tg-singleline-text-editor id="separatorEditor" class ="editor flex" entity="[[_entity]]" property-name="separator" prop-title="Append Value with Separator"
-                        prop-desc="Separator to prepend to the scanned value.<br>Use \\s for a space, \\n for a new line, \\t for a tab." current-state="EDIT"
+                <tg-singleline-text-editor id="separatorEditor" class ="editor flex" entity="[[_entity]]" property-name="separator" prop-title="Append w/ Separator (\\s, \\n, \\t)"
+                        prop-desc="Separator to prepend to the scanned value.<br>A comma or a semicolon is good choice.<br>Use \\s for a space, \\n for a new line, \\t for a tab." current-state="EDIT"
                         validation-callback="[[_validate]]" toaster="[[toaster]]" hide-qr-code-scanner></tg-singleline-text-editor>
             </div>
             <div class="buttons">
