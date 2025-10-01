@@ -77,6 +77,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.CHANGED;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.NONE;
@@ -1020,6 +1021,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             }
             context.setChosenProperty(chosenProperty);
             context.setCustomObject(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>());
+            context.setInstanceBasedContinuation(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains(INSTANCEBASEDCONTINUATION_PROPERTY_NAME) ? centreContextHolder.getInstanceBasedContinuation() : null);
             return Optional.of(context);
         } else {
             return Optional.empty();
@@ -1028,25 +1030,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     //////////////////////////////////////////////////// CREATE CENTRE CONTEXT FOR CENTRE-DEPENDENT FUNCTIONAL ENTITIES ////////////////////////////////////////////////////
 
-    /**
-     * Creates centre context based on serialisation {@link CentreContextHolder} entity.
-     * <p>
-     * Note: the control of which centreContext's parts should be initialised is provided by the client (there are generated meta-information like 'requireSelectedEntities',
-     * 'requireMasterEntity').
-     *
-     * @param actionConfig - the configuration of action for which this context is restored (used to restore computation function). It is not mandatory to
-     *  specify this parameter as non-empty -- at this stage only centre actions are enabled with 'computation' part of the context.
-     * @param centreContextHolder
-     *
-     * @return
-     */
+    /// Creates centre context based on the assets from [CentreContextHolder] serialisation entity.
+    ///
+    /// Note: the control of which centreContext's parts should be initialised is provided by the client
+    /// (generated meta-information like 'requireSelectedEntities', 'requireMasterEntity' etc.).
+    ///
+    /// @param config the configuration of action for which this context is restored (used to restore computation function).
+    ///                 It is not mandatory to specify this parameter as non-empty -- at this stage only centre actions
+    ///                 are enabled with 'computation' part of the context.
+    /// @param instanceBasedContinuation see [CentreContext#instanceBasedContinuation]
+    ///
     public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(
             final AbstractEntity<?> masterContext,
             final List<AbstractEntity<?>> selectedEntities,
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
             final Optional<EntityActionConfig> config,
             final String chosenProperty,
-            final Map<String, Object> customObject
+            final Map<String, Object> customObject,
+            final AbstractEntity<?> instanceBasedContinuation
     ) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
@@ -1057,6 +1058,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         context.setChosenProperty(chosenProperty);
         context.setCustomObject(customObject);
+        context.setInstanceBasedContinuation(instanceBasedContinuation);
         return context;
     }
 

@@ -606,6 +606,11 @@ public class EntityUtils {
         return type != null && AbstractEntity.class.isAssignableFrom(type);
     }
 
+    /// Indicates whether type represents [IContinuationData]-typed values.
+    ///
+    public static boolean isContinuationData(final Class<?> type) {
+        return type != null && IContinuationData.class.isAssignableFrom(type);
+    }
 
     /// Indicates whether type represents [ActivatableAbstractEntity]-typed values.
     ///
