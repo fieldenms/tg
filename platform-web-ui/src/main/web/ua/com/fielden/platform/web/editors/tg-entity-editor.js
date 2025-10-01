@@ -198,7 +198,7 @@ export class TgEntityEditor extends TgEditor {
              */
             entityMaster: {
                 type: Object,
-                computed: '_computeEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat)'
+                computed: '_computeEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat)'
             },
 
             /**
@@ -206,7 +206,7 @@ export class TgEntityEditor extends TgEditor {
              */
             newEntityMaster: {
                 type: Object,
-                computed: '_computeNewEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat)'
+                computed: '_computeNewEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat)'
             },
 
             /**
@@ -599,7 +599,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _copyTap () {
-        if (this.multi) {
+        if (this.multi || this.bindToString) {
             super._copyTap();
         } else if (this.lastValidationAttemptPromise) {
             // Open master on title edit also for previously rejected 'lastValidationAttemptPromise'.
@@ -1381,23 +1381,23 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Computes entity master object for entity-typed property represented by this autocompleter (only for non-multi).
      */
-    _computeEntityMaster (multi, autocompletionType, entity, propertyName, noLabelFloat) {
-        return this._getEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat, true);
+    _computeEntityMaster (multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat) {
+        return this._getEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat, true);
     }
 
     /**
      * Computes new entity master object for entity-typed property represented by this autocompleter (only for non-multi).
      */
-    _computeNewEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat) {
-        return this._getEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat, false);
+    _computeNewEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat) {
+        return this._getEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat, false);
     }
 
-    _getEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat, edit) {
+    _getEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat, edit) {
         if (!allDefined(arguments) || !entity) {
             return null;
         }
         const type = this.reflector().findTypeByName(autocompletionType);
-        if (!multi && !noLabelFloat && type) {
+        if (!multi && !bindToString && !noLabelFloat && type) {
             const propertyType = type.prop(propertyName).type();
             if (propertyType.isUnionEntity()) {
                 const val = this._valueToEdit(entity, propertyName);
@@ -1432,9 +1432,10 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _computeBindToString (entity, propertyName) {
-        return entity 
-                && entity.type().prop(propertyName).type()
-                && entity.type().prop(propertyName).type() === "String";
+        if (entity) {
+            return entity.type().prop(propertyName).type()
+                    && entity.type().prop(propertyName).type() === "String";
+        }
     }
 
     _actionIcon (actionAvailable, entity, propertyName) {
@@ -1572,7 +1573,7 @@ export class TgEntityEditor extends TgEditor {
      * For empty values and for mocks (both not-found and more-than-one) there would be no type title.
      */
     _calculateTypeTitle (entity) {
-        if (!this.multi && this.reflector().isEntity(entity)) {
+        if (!this.multi && !this.bindToString && this.reflector().isEntity(entity)) {
             const fullEntity = this.reflector().tg_getFullEntity(entity);
             const value = this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())
                 ? fullEntity.prop(this.propertyName).lastInvalidValue()
