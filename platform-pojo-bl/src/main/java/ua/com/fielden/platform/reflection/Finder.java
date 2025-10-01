@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -26,16 +25,16 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
-import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pd;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -59,9 +58,25 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 public class Finder {
     private static final Cache<Class<?>, List<Field>> ENTITY_KEY_MEMBERS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
 
+    /// A cache for common properties of union entity types.
+    /// * Key: canonical union entity type.
+    ///   It is not necessary to record enhanced union types in this cache, as the enhancements, if any, should not affect the set of common properties.
+    /// * Value: set of common property names.
+    ///
+    private static final Cache<Class<?>, SequencedSet<String>> UNION_COMMON_PROPERTIES = CacheBuilder.newBuilder().initialCapacity(50).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
+    /// A cache for union member properties.
+    /// * Key: canonical union entity type.
+    ///   It is not necessary to record enhanced union types in this cache, as the enhancements, if any, should not affect the set of union members.
+    /// * Value: list of union member properties.
+    ///
+    private static final Cache<Class<?>, List<Field>> UNION_MEMBER_PROPERTIES = CacheBuilder.newBuilder().initialCapacity(50).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
     public static long cleanUp() {
         ENTITY_KEY_MEMBERS.cleanUp();
-        return ENTITY_KEY_MEMBERS.size();
+        UNION_COMMON_PROPERTIES.cleanUp();
+        UNION_MEMBER_PROPERTIES.cleanUp();
+        return ENTITY_KEY_MEMBERS.size() + UNION_COMMON_PROPERTIES.size() + UNION_MEMBER_PROPERTIES.size();
     }
 
     /**
@@ -362,52 +377,38 @@ public class Finder {
     // ======================================================================================================
     ///////////////////////////////////// Finding/getting fields and their values ///////////////////////////
 
-    /**
-     * Finds field (including private, protected and public) by name in the type's hierarchy.
-     * <p>
-     * Throws exception if field was not found.
-     *
-     * @param type
-     * @param name
-     * @return
-     * @throws NoSuchFieldException
-     */
+    /// Finds a field (including private, protected and public) by name in the type's hierarchy.
+    ///
+    /// Throws an exception if the field was not found.
+    ///
+    @SuppressWarnings("unchecked")
     public static Field getFieldByName(final Class<?> type, final String name) {
-        Class<?> klass = type;
-        if (AbstractUnionEntity.class.isAssignableFrom(klass)) {
-            final Set<String> commonPropertiesList = AbstractUnionEntity.commonProperties((Class<AbstractUnionEntity>) type);
-            if (commonPropertiesList.contains(name)) {
-                return getFieldByName(AbstractUnionEntity.unionProperties(((Class<AbstractUnionEntity>) type)).get(0).getType(), name);
+        if (AbstractUnionEntity.class.isAssignableFrom(type)) {
+            final var unionType = (Class<? extends AbstractUnionEntity>) type;
+            if (commonPropertiesForUnion(unionType).contains(name)) {
+                return getFieldByName(unionProperties(unionType).getFirst().getType(), name);
             }
         }
-        while (klass != Object.class) { // need to iterated thought hierarchy in
-            // order to retrieve fields from above
-            // the current instance
-            // iterate though the list of fields declared in the class
-            // represented by klass variable
-            for (final Field field : klass.getDeclaredFields()) {
+
+        Class<?> klass = type;
+        while (klass != Object.class) {
+            for (final var field : klass.getDeclaredFields()) {
                 if (name.equals(field.getName())) {
                     return field;
                 }
             }
-            // move to the upper class in the hierarchy in search for more
-            // fields
             klass = klass.getSuperclass();
         }
+
         throw new ReflectionException(format("Failed to locate field [%s] in type [%s]", name, type.getName()));
     }
 
-    /**
-     * The same as {@link #getFieldByName(Class, String)}, but side effect free.
-     *
-     * @param type
-     * @param name
-     * @return
-     */
+    /// The same as [#getFieldByName(Class,String)], but side effect free.
+    ///
     public static Optional<Field> getFieldByNameOptionally(final Class<?> type, final String name) {
         final Either<Exception, Field> result = Try(() -> getFieldByName(type, name));
-        if (result instanceof Right) {
-            return Optional.of(((Right<Exception, Field>) result).value());
+        if (result instanceof Right<?, Field>(var field)) {
+            return Optional.of(field);
         } else {
             return Optional.empty();
         }
@@ -780,52 +781,74 @@ public class Finder {
     // ========================================================================================================
     /////////////////////////////// Miscellaneous utilities ///////////////////////////////////////////////////
 
+    @SuppressWarnings("unchecked")
     public static Stream<Class<? extends AbstractEntity<?>>> streamUnionMembers(final Class<? extends AbstractUnionEntity> unionEntityType) {
         return unionProperties(unionEntityType).stream()
-                .map(field -> (Class<AbstractEntity<?>>) field.getType());
+                .map(field -> (Class<? extends AbstractEntity<?>>) field.getType());
     }
 
-    /**
-     * Returns a set of properties that are present in all of the types passed into the method.
-     *
-     * @param entityTypes
-     * @return
-     */
-    public static SequencedSet<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
+    /// Returns a set of properties that are present in all of the specified types.
+    ///
+    static SequencedSet<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
         // (EntityType, Properties)
         final var pairs = entityTypes.stream().map(t -> t2(t, findRealProperties(t))).toList();
 
         return first(pairs).map(fstPair -> {
                     final var restPairs = pairs.subList(1, pairs.size());
-                    final var fstType = fstPair._1;
-                    return fstPair._2.stream()
-                            .filter(prop -> restPairs.stream().allMatch(pair -> isPropertyPresent(prop, fstType, pair._2, pair._1)));
-                }).orElseGet(Stream::of)
-                .map(Field::getName).collect(toCollection(LinkedHashSet::new));
+                    return fstPair.map((fstType, fstProps) -> fstProps.stream()
+                                                                      .filter(fstProp -> restPairs.stream()
+                                                                                                  .allMatch(pair -> pair.map((otherType, otherProps) -> isPropertyPresent(fstProp, fstType, otherProps, otherType)))));
+                })
+                .orElseGet(Stream::of)
+                .map(Field::getName)
+                .collect(collectingAndThen(toCollection(LinkedHashSet::new), Collections::unmodifiableSequencedSet));
     }
 
-    /**
-     * Returns {@code true} if the {@code field} is present in the list of specified properties, which is determined by matching field names and types.
-     * In the case of property with the name "key", special care is taken to determine its type.
-     *
-     * @param field -- the field to check.
-     * @param fieldOwner -- the type where {@code field} is declared; this is required to overcome the problem with the absence of type reification in case of generic inherited properties.
-     * @param properties -- a list of fields to check the {@code field} against.
-     * @param propertyOwner -- the type on which the check is happening; this is the owner type for {@code properties}.
-     * @return
-     */
-    private static boolean isPropertyPresent(final Field field, final Class<? extends AbstractEntity<?>> fieldOwner, final List<Field> properties, final Class<? extends AbstractEntity<?>> propertyOwner) {
-        for (final Field property : properties) {
-            if (field.getName().equals(property.getName())) {
-                final boolean isKey = KEY.equals(field.getName()); // need special handling for property key
-                final Class<?> fieldType    = isKey ? getKeyType(fieldOwner)    : field.getType();
-                final Class<?> propertyType = isKey ? getKeyType(propertyOwner) : property.getType();
-                if (fieldType != null && propertyType != null && fieldType.equals(propertyType)) {
-                    return true;
-                }
-            }
+    /// Returns a set of property names that are common to all members of the specified union type.
+    ///
+    public static SequencedSet<String> commonPropertiesForUnion(final Class<? extends AbstractUnionEntity> unionType) {
+        try {
+            return UNION_COMMON_PROPERTIES.get(PropertyTypeDeterminator.baseEntityType(unionType), () -> commonPropertiesForUnion_(unionType));
+        } catch (final ExecutionException e) {
+            throw new ReflectionException(e.getCause());
         }
-        return false;
+    }
+
+    private static SequencedSet<String> commonPropertiesForUnion_(final Class<? extends AbstractUnionEntity> unionType) {
+        return findCommonProperties(streamUnionMembers(unionType).toList());
+    }
+
+    /// Returns a list of properties that represent the members of the specified union type.
+    ///
+    public static List<Field> unionProperties(final Class<? extends AbstractUnionEntity> unionType) {
+        try {
+            return UNION_MEMBER_PROPERTIES.get(PropertyTypeDeterminator.baseEntityType(unionType), () -> unionProperties_(unionType));
+        } catch (final ExecutionException e) {
+            throw new ReflectionException(e.getCause());
+        }
+    }
+
+    private static List<Field> unionProperties_(final Class<? extends AbstractUnionEntity> unionType) {
+        return streamRealProperties(unionType)
+                .filter(prop -> AbstractEntity.class.isAssignableFrom(prop.getType()))
+                .collect(toImmutableList());
+    }
+
+    /// Returns `true` if `prop` is present among `otherProps`.
+    /// In the case of property `key`, special care is taken to determine its type.
+    ///
+    /// @param propOwner  the type where `prop` is present, required to correctly identify the type of property `key`.
+    /// @param otherPropsOwner  the type where `otherProps` are present, required to correctly identify the type of property `key`.
+    ///
+    private static boolean isPropertyPresent(final Field prop, final Class<? extends AbstractEntity<?>> propOwner, final List<Field> otherProps, final Class<? extends AbstractEntity<?>> otherPropsOwner) {
+        return otherProps.stream()
+                .filter(otherProp -> prop.getName().equals(otherProp.getName()))
+                .anyMatch(otherProp -> {
+                    final boolean isKey = KEY.equals(prop.getName());
+                    final var propType = isKey ? getKeyType(propOwner) : prop.getType();
+                    final var otherPropType = isKey ? getKeyType(otherPropsOwner) : otherProp.getType();
+                    return propType != null && otherPropType != null && propType.equals(otherPropType);
+                });
     }
 
     /**

@@ -87,7 +87,7 @@ public class ColumnDefinitionExtractor {
         if (isUnionEntityType(propType)) {
             return unionProperties((Class<? extends AbstractUnionEntity>) propType).stream()
                     .collect(toImmutableMap(
-                            sField -> propName + '.' + sField,
+                            sField -> propName + '.' + sField.getName(),
                             sField -> {
                                 final MapTo sMapTo = getAnnotation(sField, MapTo.class);
                                 if (sMapTo == null) {
