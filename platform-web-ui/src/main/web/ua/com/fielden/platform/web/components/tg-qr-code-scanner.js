@@ -152,7 +152,7 @@ const template = html`
             <div id="cameraLoadingView" hidden$="[[!_showCameraLoadingView]]">[[_loadingMsg]]</div>
         </div>
         <div id="controls" class="no-padding">
-            <tg-dropdown-switch id="camearSelector" class ="editor" views="[[_cameras]]" dropdown-button-tooltip-text="Select camera" raised make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_changeCamera"></tg-dropdown-switch>
+            <tg-dropdown-switch id="cameraSelector" class ="editor" style="padding-bottom: 12px" views="[[_cameras]]" dropdown-button-tooltip-text="Select camera" raised make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_changeCamera"></tg-dropdown-switch>
             <tg-singleline-text-editor id="textEditor" class ="editor" entity="[[_entity]]" property-name="scannedValue" prop-title="Scanned Value" 
                     prop-desc="Contains text scanned from a QR or barcode" current-state="EDIT" 
                     validation-callback="[[_validate]]" toaster="[[toaster]]" hide-qr-code-scanner></tg-singleline-text-editor>
@@ -333,7 +333,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                  */
                 if (devices && devices.length) {
                     this._cameras = devices.map((device, idx) => {return {index: idx, id: device.id, title: device.label, desc: device.label};});
-                    this.$.camearSelector.viewIndex = getCameraIndex(this._cameras);
+                    this.$.cameraSelector.viewIndex = getCameraIndex(this._cameras);
                     const width = parseInt(this._videoFeedElement.style.width);
                     const height = parseInt(this._videoFeedElement.style.height);
                     this._startCamera(width, height, calculateAspectRation(width, height));
@@ -361,7 +361,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             this._showError('Camera error', 'The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.');
         } else if (this._scanner && this._cameras && this._cameras.length > 0 && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && !this._scanner.isScanning) {
             this._showBlockingPane("Loading...");
-            this._scanner.start(this._cameras[this.$.camearSelector.viewIndex].id,  { fps: 10, aspectRatio: aspectRatio, qrbox: qrboxFunction.bind(this) },
+            this._scanner.start(this._cameras[this.$.cameraSelector.viewIndex].id,  { fps: 10, aspectRatio: aspectRatio, qrbox: qrboxFunction.bind(this) },
                 this._successfulScan.bind(this), this._faildScan.bind(this)
             ).then(() => {
                 this._hideBlockingPane();
