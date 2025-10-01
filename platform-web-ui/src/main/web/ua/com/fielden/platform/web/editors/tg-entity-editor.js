@@ -236,6 +236,14 @@ export class TgEntityEditor extends TgEditor {
                 value: null
             },
 
+            /**
+             * Determines whether this entity editor is binded to string property instead of entity property as it is in case of multi==false or list property as it is in multi=true.
+             */
+            bindToString: {
+                type: Boolean,
+                computed: '_computeBindToString(entity, propertyName)'
+            },
+
            /**
             * Captures the state of a search query as it was used during the last invocation of _search.
             */
@@ -1220,9 +1228,13 @@ export class TgEntityEditor extends TgEditor {
         // this happens when a crit-only property changes from type SINGLE to MULTI;
         // joining on an empty array evaluates to an empty string;
         // null converts to '' in majority of cases (except boolean) in reflector.tg_toString... family of methods and this is the case for this editor (String or Array of Strings types)
-        return this.multi === true
-            ? this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, collection: true, separator: this.separator }) // custom ',' separator is needed here, otherwise tg-editor.convertToString would be sufficient
-            : super.convertToString(value);
+        if (this.bindToString) {
+            return value;
+        } else if (this.multi === true) {
+            return this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, collection: true, separator: this.separator }); // custom ',' separator is needed here, otherwise tg-editor.convertToString would be sufficient
+        } else {//if single entity value
+            return super.convertToString(value);
+        }
     }
 
     /**
@@ -1234,7 +1246,9 @@ export class TgEntityEditor extends TgEditor {
      * or converted to null due to the fact that there should be no empty string representing an entity key.
      */
     convertFromString (strValue) {
-        if (this.multi === true) {
+        if (this.bindToString) {
+            return strValue;
+        } else if (this.multi === true) {
             if (strValue === '') {
                 return []; // missing value for multi autocompliter is empty array []!
             } else {
@@ -1417,6 +1431,12 @@ export class TgEntityEditor extends TgEditor {
         return this._valueToEdit(entity, propertyName) ? !!entityMaster : (metaPropEditable && !!newEntityMaster);
     }
 
+    _computeBindToString (entity, propertyName) {
+        return entity 
+                && entity.type().prop(propertyName).type()
+                && entity.type().prop(propertyName).type() === "String";
+    }
+
     _actionIcon (actionAvailable, entity, propertyName) {
         if (actionAvailable) {
             if (this._valueToEdit(entity, propertyName)) {
@@ -1431,7 +1451,8 @@ export class TgEntityEditor extends TgEditor {
         if (entity !== null) {
             const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             const metaProp = this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(entity), this.propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
+            if (entityValue !== null && !Array.isArray(entityValue) 
+                    && entityValue instanceof this.reflector()._getEntityTypePrototype() && entityValue.type().shouldDisplayDescription()) {
                 try {
                     return composeEntityValue(entityValue, metaProp.displayAs());
                 } catch (e) {
@@ -1478,7 +1499,8 @@ export class TgEntityEditor extends TgEditor {
     _formatDesc (entity, propertyName) {
         if (entity && propertyName) {
             const entityValue = this.reflector().tg_getFullValue(entity, propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
+            if (entityValue !== null && !Array.isArray(entityValue) && entityValue instanceof this.reflector()._getEntityTypePrototype()
+                && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
                 return entityValue.get('desc');
             }
         }
@@ -1493,7 +1515,9 @@ export class TgEntityEditor extends TgEditor {
             const metaProperty = this.reflector().tg_getFullEntity(entity).prop(propertyName);
             const isMock = this.reflector().isError(metaProperty.validationResult()) && this.reflector().isMockNotFoundEntity(metaProperty.lastInvalidValue());
             const entityValue = this.reflector().tg_getFullValue(entity, propertyName);
-            this._hasLayer = entityValue !== null && !isMock && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
+            this._hasLayer = entityValue !== null && !isMock && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue 
+                    && !Array.isArray(entityValue) && entityValue instanceof this.reflector()._getEntityTypePrototype() 
+                    && entityValue.type().shouldDisplayDescription();
         } else {
             this._hasLayer = false;
         }
