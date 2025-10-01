@@ -1,10 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api.helpers.impl;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
@@ -30,12 +26,16 @@ import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.S
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
+
 public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelector<T> {
     private final String ERR_INVALID_DATEPICKER_CHOICE = "Invalid editor choice for [%s@%s] due to annotation @%s.";
     public final SimpleMasterBuilder<T> smBuilder;
     public final String propertyName;
 
     private AbstractWidget widget;
+    private Class<? extends AbstractEntity<?>> propertyType;
 
     private final SimpleMasterBuilder<T>.WithMatcherCallback withMatcherCallbank;
 
@@ -59,6 +59,12 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
         final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(propertyName) ? smBuilder.getEntityType()
                 : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(smBuilder.getEntityType(), propertyName);
         widget = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName, propType);
+        return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder, withMatcherCallbank);
+    }
+
+    @Override
+    public IAutocompleterConfig<T> asAutocompleter(final Class<? extends AbstractEntity<?>> entityType) {
+        widget = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName, entityType);
         return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder, withMatcherCallbank);
     }
 
