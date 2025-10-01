@@ -14,6 +14,11 @@ import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Set;
+
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
@@ -76,11 +81,23 @@ public class AbstractUnionEntityTest {
     }
 
     @Test
-    public void commonMethods_idenfities_getters_and_setters_for_all_common_properties() {
+    public void commonMethods_identifies_getters_and_setters_for_all_common_properties() {
         assertThat(AbstractUnionEntity.commonMethodNames(UnionEntity.class))
                 .containsExactlyInAnyOrder("getStringProperty", "setStringProperty",
                                            "getDesc", "setDesc",
                                            "getKey", "setKey");
+    }
+
+    @Test
+    public void commonProperties_identifies_all_common_properties_amongst_union_properties() {
+        final Set<String> commonProps = AbstractUnionEntity.commonProperties(UnionEntity.class);
+        assertEquals(Set.of("desc", "stringProperty", "key"), commonProps);
+    }
+
+    @Test
+    public void unionProperties_identifies_all_union_properties() {
+        final List<Field> unionProperties = AbstractUnionEntity.unionProperties(UnionEntity.class);
+        assertEquals(Set.of("propertyOne", "propertyTwo"), unionProperties.stream().map(Field::getName).collect(toSet()));
     }
 
     @Test
