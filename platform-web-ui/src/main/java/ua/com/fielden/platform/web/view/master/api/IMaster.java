@@ -15,58 +15,33 @@ import java.util.Set;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
-/**
- *
- * An contract for entity master UI. It should be implemented by classes that represent a specific entity master.
- *
- * @author TG Team
- *
- * @param <T>
- */
+/// An contract for entity master UI. It should be implemented by classes that represent a specific entity master.
+///
 public interface IMaster<T extends AbstractEntity<?>> {
 
 
-    /**
-     * Entity masters may or may not provide information about specific entity value matchers.
-     *
-     * @param propName
-     * @return
-     */
+    /// Entity masters may or may not provide information about specific entity value matchers.
+    ///
     Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName);
 
-    /**
-     * Should be implemented by concrete entity master, returning an instance of IRenderable that is capable of rendering a completer master view.
-     *
-     * @return
-     */
+    /// Should be implemented by concrete entity master, returning an instance of IRenderable that is capable of rendering a completer master view.
+    ///
     IRenderable render();
 
 
-    /**
-     * Returns action configuration for concrete action kind and its number in that kind's space.
-     *
-     * @param actionKind
-     * @param actionNumber
-     * @return
-     */
+    /// Returns action configuration for concrete action kind and its number in that kind's space.
+    ///
     EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber);
 
-    /**
-     * Returns <code>additionalProperties</code> for autocompleter configuration for property <code>propertyName</code>.
-     * Returns empty set if property is not entity-typed or if the property was not added to master configuration.
-     *
-     * @param propertyName
-     * @return
-     */
+    /// Returns `additionalProperties` for autocompleter configuration for property `propertyName`.
+    /// Returns empty set if property is not entity-typed or if the property was not added to master configuration.
+    ///
     default Set<String> additionalAutocompleterPropertiesFor(final String propertyName) {
         return setOf(); // empty by default
     }
 
-    /**
-     * Returns the map between property names and action selector for properties those have associated action.
-     *
-     * @return
-     */
+    /// Returns the map between property names and action selector for properties those have associated action.
+    ///
     default Map<String, Class<? extends IEntityMultiActionSelector>> propertyActionSelectors() {
         return new HashMap<>();
     }

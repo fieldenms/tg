@@ -64,7 +64,6 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.*;
 import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
-import ua.com.fielden.platform.web.test.matchers.CompositeEntityValueMatcher;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.test.server.config.*;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
@@ -686,7 +685,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("booleanProp").asCheckbox()
                 .also()
-                .addProp("stringProp").asSinglelineText().skipValidation()/*TODO add here autocompleter*/
+                .addProp("stringProp").asSinglelineText().skipValidation()
                 .also()
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
@@ -1538,7 +1537,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
                 //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
                 .also()
-                .addCrit("stringProp").asMulti().autocompleter(TgPersistentCompositeEntity.class)/*TODO add here autocompleter*/
+                .addCrit("stringProp").asMulti().autocompleter(TgPersistentCompositeEntity.class)
                 //*    */.setDefaultValue(multi().string().not().setValues("DE*", "ED*").canHaveNoValue().value())
                 .also()
                 .addCrit("integerProp").asRange().integer()

@@ -180,10 +180,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         return widget;
     }
 
-    /**
-     * A callback for recording custom matcher that are specified for property autocompletion.
-     *
-     */
+    /// A callback for recording custom matcher that are specified for property autocompletion.
+    ///
     public class WithMatcherCallback {
         public void assign(final String propName, final Class<? extends IValueMatcherWithContext<T, ?>> matcher) {
             valueMatcherForProps.put(propName, matcher);
@@ -327,12 +325,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         return "self.registerCentreRefreshRedirector();\n";
     }
 
-    /**
-     * Creates import statements from a list of paths.
-     *
-     * @param importPaths
-     * @return
-     */
+    /// Creates import statements from a list of paths.
+    ///
     public static String createImports(final LinkedHashSet<String> importPaths) {
         final StringBuilder sb = new StringBuilder();
         importPaths.forEach(path -> {
@@ -397,15 +391,10 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             return optionalPropType;
         }
 
-        /**
-         * Returns action configuration for concrete action kind and its number in that kind's space.
-         * <p>
-         * This method implementation is tightly coupled with SimpleMasterBuilder.done() method, where the numbering of actions during their generation appears.
-         *
-         * @param actionKind
-         * @param actionNumber
-         * @return
-         */
+        /// Returns action configuration for concrete action kind and its number in that kind's space.
+        ///
+        /// This method implementation is tightly coupled with SimpleMasterBuilder.done() method, where the numbering of actions during their generation appears.
+        ///
         @Override
         public  ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
             if (FunctionalActionKind.PRIMARY_RESULT_SET == actionKind) {
@@ -457,36 +446,24 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         return entityActions;
     }
 
-    /**
-     * Injects custom JavaScript code into respective master implementation. This code will be executed after
-     * master component creation.
-     *
-     * @param customCode
-     * @return
-     */
+    /// Injects custom JavaScript code into respective master implementation. This code will be executed after
+    /// master component creation.
+    ///
     public SimpleMasterBuilder<T> injectCustomCode(final JsCode customCode) {
         this.customCode = Optional.of(customCode);
         return this;
     }
 
-    /**
-     * Injects custom JavaScript code into respective master implementation. This code will be executed every time
-     * master component is attached to client application's DOM.
-     *
-     * @param customCode
-     * @return
-     */
+    /// Injects custom JavaScript code into respective master implementation. This code will be executed every time
+    /// master component is attached to client application's DOM.
+    ///
     public SimpleMasterBuilder<T> injectCustomCodeOnAttach(final JsCode customCode) {
         this.customCodeOnAttach = Optional.of(customCode);
         return this;
     }
 
-    /**
-     * Injects custom JavaScript imports into centre implementation.
-     *
-     * @param customImports
-     * @return
-     */
+    /// Injects custom JavaScript imports into centre implementation.
+    ///
     public SimpleMasterBuilder<T> injectCustomImports(final JsCode customImports) {
         this.customImports = of(customImports);
         return this;

@@ -9,19 +9,12 @@ import ua.com.fielden.platform.web.centre.widgets.EntitySingleCritAutocompletion
 
 import java.util.List;
 
-/**
- * An implementation for entity crit-only single criterion.
- *
- * @author TG Team
- *
- */
+/// An implementation for entity crit-only single criterion.
+///
 public class EntitySingleCriterionWidget extends AbstractSingleCriterionWidget {
 
-    /**
-     * Creates an instance of {@link EntitySingleCriterionWidget} for specified entity type and property name.
-     *
-     * @param propertyName
-     */
+    /// Creates an instance of [EntitySingleCriterionWidget] for specified entity type and property name.
+    ///
     public EntitySingleCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName, final List<Pair<String, Boolean>> additionalProps, final CentreContextConfig centreContextConfig) {
         super(root, propertyName,
                 new EntitySingleCritAutocompletionWidget(

@@ -5,13 +5,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 import java.util.Map;
 
-/**
- *
- * A wrapper for <code>tg-entity-editor</code> that represents a widget for specifying values of entity typed properties on Entity Master.
- *
- * @author TG Team
- *
- */
+/// A wrapper for `tg-entity-editor` that represents a widget for specifying values of entity typed properties on Entity Master.
+///
 public class EntityAutocompletionWidget extends AbstractEntityAutocompletionWidget {
 
     private final boolean multi;

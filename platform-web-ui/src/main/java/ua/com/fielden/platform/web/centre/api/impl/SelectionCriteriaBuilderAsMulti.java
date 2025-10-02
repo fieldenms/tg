@@ -22,6 +22,9 @@ import static java.lang.String.format;
  */
 class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IMultiValueCritSelector<T> {
 
+    private static final String ERR_PROP_TYPE_IS_STRING_BUT_AUTOCOMPLETER_TYPE_IS_NOT_ENTITY_TYPE = "Property '%s'@'%s' is of String type, but cannot be used for autocompletion as its autocompletion type is not of an entity type (%s).";
+    private static final String ERR_AUTOCOMPLETER_TYPE_IS_NOT_OF_ENTITY_TYPE = "Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).";
+    private static final String ERR_AUTOCOMPLETER_TYPE_IS_NOT_SUPER_TYPE_OF_PROP_TYPE = "Property '%s'@'%s' has type %s, but type %s has been specified instead.";
     private final EntityCentreBuilder<T> builder;
     private final ISelectionCriteriaBuilder<T> selectionCritBuilder;
 
@@ -42,12 +45,12 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
         final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(builder.getEntityType(), propPath);
         if (EntityUtils.isString(propType)) {
             if (!EntityUtils.isEntityType(type)) {
-                throw new WebUiBuilderException(format("Property '%s'@'%s' is of String type, but cannot be used for autocompletion as its autocompletion type is not of an entity type (%s).", propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName()));
+                throw new WebUiBuilderException(format(ERR_PROP_TYPE_IS_STRING_BUT_AUTOCOMPLETER_TYPE_IS_NOT_ENTITY_TYPE, propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName()));
             }
         } else if (!EntityUtils.isEntityType(propType)) {
-            throw new WebUiBuilderException(format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName()));
+            throw new WebUiBuilderException(format(ERR_AUTOCOMPLETER_TYPE_IS_NOT_OF_ENTITY_TYPE, propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName()));
         } else if (!type.isAssignableFrom(propType)) {
-            throw new WebUiBuilderException(format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName(), type.getSimpleName()));
+            throw new WebUiBuilderException(format(ERR_AUTOCOMPLETER_TYPE_IS_NOT_SUPER_TYPE_OF_PROP_TYPE, propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName(), type.getSimpleName()));
         }
 
         builder.providedTypesForAutocompletedSelectionCriteria.put(propPath, type);
