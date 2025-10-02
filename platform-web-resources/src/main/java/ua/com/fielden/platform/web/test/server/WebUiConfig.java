@@ -499,19 +499,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .addAction(dummyAction("color: yellow"))
                             .addAction(dummyAction("color: red")).build())
                 .also()
-                .addProp("stringProp").asAutocompleter(TgPersistentCompositeEntity.class)/*.withMatcher(CompositeEntityValueMatcher.class)*/
-                    .withAction(
-                        action(TgDummyAction.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                ))
-                        .icon("accessibility")
-                        .shortDesc("Dummy")
-                        .longDesc("Dummy action, simply prints its result into console.")
-                        .build())
-                .also()
-//                .addProp("stringProp").asMultilineText()
+//                .addProp("stringProp").asAutocompleter(TgPersistentCompositeEntity.class)/*.withMatcher(CompositeEntityValueMatcher.class)*/
 //                    .withAction(
 //                        action(TgDummyAction.class)
 //                        .withContext(context().withMasterEntity().build())
@@ -523,6 +511,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                        .longDesc("Dummy action, simply prints its result into console.")
 //                        .build())
 //                .also()
+                .addProp("stringProp").asMultilineText()
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
+                .also()
                 .addProp("dateProp").asDateTimePicker()
                     .withAction(
                         action(TgDummyAction.class)
