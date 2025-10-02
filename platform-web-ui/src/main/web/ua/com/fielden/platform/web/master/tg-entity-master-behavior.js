@@ -977,6 +977,9 @@ const TgEntityMasterBehaviorImpl = {
             this.fire('tg-entity-master-detached', this, { node: this._cachedParentNode }); // start event bubbling on dialog from which this entity master has already been detached
             delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of dialog from memory
         }
+        // Remove manuallyFocusedInput on master detach.
+        // This would cover master dialog closing or replacing dialog's master with different master.
+        this.manuallyFocusedInput = null;
     },
 
     /**
