@@ -1057,23 +1057,62 @@ const TgEntityMasterBehaviorImpl = {
         } else {
             const focusedElements = this._getCurrentFocusableElements();
             if (focusedElements.length > 0) {
+                // If there is no native focused element inside this master then we should enter the focus into it.
                 if (this.shadowRoot.activeElement === null) {
+                    // It would either be the first or last element focused.
                     const firstIndex = forward ? 0 : focusedElements.length - 1;
+                    // Do it manually and prevent default focusing behaviour.
                     focusedElements[firstIndex].focus();
-                    this.manuallyFocusedInput = focusedElements[firstIndex];
                     tearDownEvent(e);
+                    // This is a user-driven Tab/Shift+Tab action -- update `manuallyFocusedInput` accordingly.
+                    this._updateManuallyFocusedInputWith(focusedElements[firstIndex]);
                 } else {
+                    // If there is some native focused element inside this master then we should move the focus forward or backward.
                     const lastIndex = forward ? focusedElements.length - 1 : 0;
                     const activeElement = deepestActiveElement();
+                    // If native focused element is on the edges...
                     if (activeElement === focusedElements[lastIndex]) {
+                        // ... move the focus outside.
                         this.fire("tg-last-item-focused", { forward: forward, event: e });
+                        // This is a user-driven Tab/Shift+Tab action -- clear `manuallyFocusedInput`.
+                        this._updateManuallyFocusedInputWith(null);
+                    }
+                    // If native focused element is inside the edges...
+                    else {
+                        // ... move the focus between internal elements.
+                        // (This is done as a default browser behaviour, no tearDownEvent/preventDefault).
+                        const currentFocusedIndex = focusedElements.indexOf(activeElement);
+                        const elementToFocus = currentFocusedIndex >= 0 ? focusedElements[currentFocusedIndex + (forward ? 1 : -1)] : null;
+                        // This is a user-driven Tab/Shift+Tab action -- update `manuallyFocusedInput` accordingly.
+                        this._updateManuallyFocusedInputWith(elementToFocus);
                     }
                 }
             } else {
+                // This is a user-driven Tab/Shift+Tab action on inputless master.
+                // Even though it is unlikely that `manuallyFocusedInput` is set here, it is a good idea to clear it.
+                // This is to prevent some possible rogue states and to ensure evolvability.
+                this._updateManuallyFocusedInputWith(null);
                 this.fire("tg-last-item-focused", { forward: forward, event: e });
             }
-
         }
+    },
+
+    /**
+     * Updates `manuallyFocusedInput` based on next manually focused `elementToFocus`.
+     * We only consider real editor internal inputs and skip property actions or other elements (e.g. date picker button).
+     * Skipped elements would trigger `manuallyFocusedInput` clearing and would cause focusing of first element before first input.
+     */
+    _updateManuallyFocusedInputWith(elementToFocus) {
+        // Please note, that tg-multiline-text-editor is special and its <text-area> does not have 'custom-input' class.
+        // Only, <iron-autogrow-text-area> above has it.
+        this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
+    },
+
+    /**
+     * Checks whether `focusableElement` is actually an editable part of some `tg-editor`.
+     */
+    _isEditorElement(focusableElement) {
+        return focusableElement && focusableElement.classList.contains('custom-input');
     },
 
     /**
