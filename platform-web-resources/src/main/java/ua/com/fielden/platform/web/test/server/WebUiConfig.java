@@ -500,7 +500,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .addAction(dummyAction("color: yellow"))
                             .addAction(dummyAction("color: red")).build())
                 .also()
-                .addProp("stringProp").asAutocompleter(TgPersistentCompositeEntity.class).withMatcher(CompositeEntityValueMatcher.class)
+                .addProp("stringProp").asAutocompleter(TgPersistentCompositeEntity.class)/*.withMatcher(CompositeEntityValueMatcher.class)*/
                     .withAction(
                         action(TgDummyAction.class)
                         .withContext(context().withMasterEntity().build())
