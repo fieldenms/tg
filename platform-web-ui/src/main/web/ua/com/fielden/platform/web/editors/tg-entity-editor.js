@@ -1453,7 +1453,7 @@ export class TgEntityEditor extends TgEditor {
             const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             const metaProp = this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(entity), this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) 
-                    && entityValue instanceof this.reflector()._getEntityTypePrototype() && entityValue.type().shouldDisplayDescription()) {
+                    && this.reflector().isEntity(entityValue) && entityValue.type().shouldDisplayDescription()) {
                 try {
                     return composeEntityValue(entityValue, metaProp.displayAs());
                 } catch (e) {
@@ -1500,7 +1500,7 @@ export class TgEntityEditor extends TgEditor {
     _formatDesc (entity, propertyName) {
         if (entity && propertyName) {
             const entityValue = this.reflector().tg_getFullValue(entity, propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue) && entityValue instanceof this.reflector()._getEntityTypePrototype()
+            if (entityValue !== null && !Array.isArray(entityValue) && this.reflector().isEntity(entityValue)
                 && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
                 return entityValue.get('desc');
             }
@@ -1517,7 +1517,7 @@ export class TgEntityEditor extends TgEditor {
             const isMock = this.reflector().isError(metaProperty.validationResult()) && this.reflector().isMockNotFoundEntity(metaProperty.lastInvalidValue());
             const entityValue = this.reflector().tg_getFullValue(entity, propertyName);
             this._hasLayer = entityValue !== null && !isMock && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue 
-                    && !Array.isArray(entityValue) && entityValue instanceof this.reflector()._getEntityTypePrototype() 
+                    && !Array.isArray(entityValue) && this.reflector().isEntity(entityValue) 
                     && entityValue.type().shouldDisplayDescription();
         } else {
             this._hasLayer = false;
