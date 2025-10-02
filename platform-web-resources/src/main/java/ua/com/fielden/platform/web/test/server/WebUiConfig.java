@@ -64,6 +64,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.*;
 import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
+import ua.com.fielden.platform.web.test.matchers.CompositeEntityValueMatcher;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.test.server.config.*;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
@@ -499,19 +500,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .addAction(dummyAction("color: yellow"))
                             .addAction(dummyAction("color: red")).build())
                 .also()
-//                .addProp("stringProp").asSinglelineText().skipValidation()
-//                    .withAction(
-//                        action(TgDummyAction.class)
-//                        .withContext(context().withMasterEntity().build())
-//                        .postActionSuccess(new PostActionSuccess(""
-//                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-//                                ))
-//                        .icon("accessibility")
-//                        .shortDesc("Dummy")
-//                        .longDesc("Dummy action, simply prints its result into console.")
-//                        .build())
-//                .also()
-                .addProp("stringProp").asMultilineText()
+                .addProp("stringProp").asAutocompleter(TgPersistentCompositeEntity.class).withMatcher(CompositeEntityValueMatcher.class)
                     .withAction(
                         action(TgDummyAction.class)
                         .withContext(context().withMasterEntity().build())
@@ -523,6 +512,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .longDesc("Dummy action, simply prints its result into console.")
                         .build())
                 .also()
+//                .addProp("stringProp").asMultilineText()
+//                    .withAction(
+//                        action(TgDummyAction.class)
+//                        .withContext(context().withMasterEntity().build())
+//                        .postActionSuccess(new PostActionSuccess(""
+//                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+//                                ))
+//                        .icon("accessibility")
+//                        .shortDesc("Dummy")
+//                        .longDesc("Dummy action, simply prints its result into console.")
+//                        .build())
+//                .also()
                 .addProp("dateProp").asDateTimePicker()
                     .withAction(
                         action(TgDummyAction.class)
@@ -685,7 +686,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("booleanProp").asCheckbox()
                 .also()
-                .addProp("stringProp").asSinglelineText().skipValidation()
+                .addProp("stringProp").asSinglelineText().skipValidation()/*TODO add here autocompleter*/
                 .also()
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
@@ -1537,7 +1538,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
                 //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
                 .also()
-                .addCrit("stringProp").asMulti().text()
+                .addCrit("stringProp").asMulti().autocompleter(TgPersistentCompositeEntity.class)/*TODO add here autocompleter*/
                 //*    */.setDefaultValue(multi().string().not().setValues("DE*", "ED*").canHaveNoValue().value())
                 .also()
                 .addCrit("integerProp").asRange().integer()
@@ -1915,7 +1916,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("compositeProp").minWidth(110)
                 .also()
-                .addProp("stringProp").minWidth(50).withWordWrap().also()
+                .addEditableProp("stringProp").asAutocompleter(TgPersistentCompositeEntity.class).minWidth(50).withWordWrap().also()
                 .addEditableProp("colourProp").width(40).also()
                 .addProp("numberOfAttachments").width(100).also()
                 .addEditableProp("hyperlinkProp").minWidth(500)

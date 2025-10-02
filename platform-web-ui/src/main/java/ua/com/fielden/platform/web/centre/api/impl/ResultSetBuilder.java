@@ -41,6 +41,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
+import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.CheckboxWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalRepresentorWidget;
@@ -66,7 +67,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -143,7 +143,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
         final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
         if (isEntityType(propertyType)) {
-            return of(new EntityAutocompletionWidget(pair("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType));
+            return of(new EntityAutocompletionWidget(pair("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType, false));
         } else if (isString(propertyType)) {
             return of(new SinglelineTextWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (isInteger(propertyType)) {
@@ -671,12 +671,19 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @SuppressWarnings("unchecked")
     @Override
     public IResultSetAutocompleterConfig<T> asAutocompleter() {
+        return createAutocompleter(Optional.empty());
+    }
+
+    @Override
+    public IResultSetAutocompleterConfig<T> asAutocompleter(final Class<? extends AbstractEntity<?>> entityType) {
+        return createAutocompleter(Optional.ofNullable(entityType));
+    }
+
+    private IResultSetAutocompleterConfig<T> createAutocompleter(Optional<Class<? extends AbstractEntity<?>>> optPropertyType) {
         final Class<? extends AbstractEntity<?>> root = this.builder.getEntityType();
         final String resultPropName = treeName(this.propName.get());
-        final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
-        final Class<?> propType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
         final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
-        final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(pair("", getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propType);
+        final EntityAutocompletionWidget editor = WidgetSelector.createAutocompleter(root, widgetPropName, optPropertyType);
         this.widget = of(editor);
         return new ResultSetAutocompleterConfig<>(this, editor);
     }

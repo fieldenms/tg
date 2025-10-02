@@ -1,18 +1,19 @@
 package ua.com.fielden.platform.web.view.master.api;
 
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 /**
  *
@@ -68,5 +69,16 @@ public interface IMaster<T extends AbstractEntity<?>> {
      */
     default Map<String, Class<? extends IEntityMultiActionSelector>> propertyActionSelectors() {
         return new HashMap<>();
+    }
+
+    /// Returns the optional entity type of the autocompleter associated with the specified property name.
+    /// If the autocompleter is not of an entity type, an empty optional is returned.
+    ///
+    default <V extends AbstractEntity<?>> Optional<Class<V>> getAutocompleterAssociatedType(Class<T> entityType, String propertyName) {
+        Class<?> propertyType = determinePropertyType(entityType, propertyName);
+        if (AbstractEntity.class.isAssignableFrom(propertyType)) {
+            return Optional.of((Class<V>) propertyType);
+        }
+        return Optional.empty();
     }
 }

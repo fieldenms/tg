@@ -1,25 +1,5 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.toMap;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
-import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -46,17 +26,26 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfigWithoutNew;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
-import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
-import ua.com.fielden.platform.web.view.master.api.helpers.IComplete;
-import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfig;
-import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDimensionsAndDone;
-import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
-import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
+import ua.com.fielden.platform.web.view.master.api.helpers.*;
 import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T> {
 
@@ -392,6 +381,20 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 }
             }
             return setOf();
+        }
+
+        @Override
+        public <V extends AbstractEntity<?>> Optional<Class<V>> getAutocompleterAssociatedType(final Class<T> entityType, final String propertyName) {
+            final Optional<Class<V>> optionalPropType = IMaster.super.getAutocompleterAssociatedType(entityType, propertyName);
+            if (!optionalPropType.isPresent()) {
+                final Optional<AbstractEntityAutocompletionWidget> widget = widgets.stream()
+                        .filter(w -> w.propertyName != null && w.propertyName.equals(propertyName) && w.widget() instanceof AbstractEntityAutocompletionWidget)
+                        .findFirst().map(w -> (AbstractEntityAutocompletionWidget)w.widget());
+                if (widget.isPresent()) {
+                    return Optional.of((Class<V>)widget.get().propType);
+                }
+            }
+            return optionalPropType;
         }
 
         /**

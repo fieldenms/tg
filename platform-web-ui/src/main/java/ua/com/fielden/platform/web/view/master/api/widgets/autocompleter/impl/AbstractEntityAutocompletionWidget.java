@@ -29,11 +29,13 @@ import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
  *
  */
 public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget {
+
+    public final Class<? extends AbstractEntity<?>> propType;
+
     @SuppressWarnings("rawtypes")
     private Class<? extends IValueMatcher> matcherType;
     private boolean lightDesc = false;
 
-    protected final Class<? extends AbstractEntity<?>> propType;
     private final Map<String, Boolean> additionalProps = new LinkedHashMap<>();
     private final Map<String, Boolean> defaultAdditionalProps = new LinkedHashMap<>();
 

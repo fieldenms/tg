@@ -1,12 +1,5 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.impl;
 
-import static java.util.Optional.of;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -14,6 +7,13 @@ import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionCon
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 /**
  * The base implementation box for generic information for all widgets.
@@ -39,7 +39,6 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
     /**
      * Creates {@link AbstractWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
      *
-     * @param entityType
      * @param propertyName
      */
     public AbstractWidget(final String widgetPath, final Pair<String, String> titleDesc, final String propertyName) {

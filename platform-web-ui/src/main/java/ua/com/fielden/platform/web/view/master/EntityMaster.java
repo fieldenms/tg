@@ -1,34 +1,13 @@
 package ua.com.fielden.platform.web.view.master;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.toMap;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
-import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
-import static ua.com.fielden.platform.web.centre.EntityCentre.createFetchModelForAutocompleterFrom;
-
-import java.util.Map;
-import java.util.Optional;
-
 import com.google.inject.Injector;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackPropertyDescriptorMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.DefaultEntityProducerForCompoundMenuItem;
-import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
-import ua.com.fielden.platform.entity.IEntityProducer;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -43,6 +22,20 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentre;
+
+import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.EntityCentre.createFetchModelForAutocompleterFrom;
 
 /**
  * Represents entity master.
@@ -149,12 +142,8 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return entityType;
     }
 
-    /**
-     * Creates an entity producer instance.
-     *
-     * @param injector
-     * @return
-     */
+    /// Creates an entity producer instance.
+    ///
     public IEntityProducer<T> createEntityProducer() {
         return entityProducerType == null ? createDefaultEntityProducer(injector.getInstance(EntityFactory.class), this.entityType, this.coFinder)
                 : injector.getInstance(this.entityProducerType);
@@ -172,19 +161,24 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return new DefaultEntityProducerWithContext<>(factory, entityType, coFinder);
     }
 
-    /**
-     * Creates value matcher instance.
-     *
-     * @param injector
-     * @return
-     */
+    /// Creates value matcher instance.
+    ///
     public IValueMatcherWithContext<T, ?> createValueMatcher(final String propertyName) {
         final Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherType = masterConfig.matcherTypeFor(propertyName);
         if (matcherType.isPresent()) {
             return injector.getInstance(matcherType.get());
         }
+        final var associatedType = masterConfig.getAutocompleterAssociatedType(entityType, propertyName);
+        if(associatedType.isPresent()) {
+            return createDefaultValueMatcherForPropType(associatedType.get(), coFinder);
+        }
 
         return createDefaultValueMatcher(propertyName, entityType, coFinder);
+    }
+
+    private IValueMatcherWithContext<T, ?> createDefaultValueMatcherForPropType(final Class<? extends AbstractEntity<?>> propertyType, final ICompanionObjectFinder coFinder) {
+        final IEntityDao<?> co = coFinder.find(propertyType);
+        return new FallbackValueMatcherWithContext<>(co, false);
     }
 
     /**
@@ -195,6 +189,10 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
      * @return
      */
     public <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String propertyName, final Class<V> propType) {
+        final Optional<Class<V>> associatedType = masterConfig.getAutocompleterAssociatedType(entityType, propertyName);
+        if(associatedType.isPresent()) {
+            return createFetchModelForAutocompleterFrom(associatedType.get(), masterConfig.additionalAutocompleterPropertiesFor(propertyName));
+        }
         return createFetchModelForAutocompleterFrom(propType, masterConfig.additionalAutocompleterPropertiesFor(propertyName));
     }
 

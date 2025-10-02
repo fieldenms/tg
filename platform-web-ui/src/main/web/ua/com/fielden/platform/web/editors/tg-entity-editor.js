@@ -1229,7 +1229,7 @@ export class TgEntityEditor extends TgEditor {
         // joining on an empty array evaluates to an empty string;
         // null converts to '' in majority of cases (except boolean) in reflector.tg_toString... family of methods and this is the case for this editor (String or Array of Strings types)
         if (this.bindToString) {
-            return value;
+            return value || '';
         } else if (this.multi === true) {
             return this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, collection: true, separator: this.separator }); // custom ',' separator is needed here, otherwise tg-editor.convertToString would be sufficient
         } else {//if single entity value
@@ -1247,7 +1247,7 @@ export class TgEntityEditor extends TgEditor {
      */
     convertFromString (strValue) {
         if (this.bindToString) {
-            return strValue;
+            return strValue || null;
         } else if (this.multi === true) {
             if (strValue === '') {
                 return []; // missing value for multi autocompliter is empty array []!
