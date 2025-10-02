@@ -1,26 +1,10 @@
 package ua.com.fielden.platform.web.resources;
 
-import static java.lang.String.format;
-import static org.restlet.data.MediaType.APPLICATION_JSON;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentMap;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Message;
-import org.restlet.Request;
-import org.restlet.Response;
 import org.restlet.data.Encoding;
 import org.restlet.data.Header;
 import org.restlet.data.MediaType;
@@ -28,14 +12,11 @@ import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.util.Series;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.continuation.NeedMoreDataException;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -43,6 +24,17 @@ import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
 import ua.com.fielden.platform.web_api.IWebApi;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.concurrent.ConcurrentMap;
+
+import static org.restlet.data.MediaType.APPLICATION_JSON;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 
 /**
  * This is a convenience class providing some common routines used in the implementation of web-resources.
@@ -247,19 +239,19 @@ public class RestServerUtil {
             if (ex instanceof Result) {
                 final Result thrownResult = (Result) ex;
                 if (thrownResult.isSuccessful()) {
-                    throw failure(format("The successful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. This is most likely a programming error.", thrownResult, entity.getId(), entity.getClass().getSimpleName()));
+                    throw failure("The successful result [%s] was thrown during unsuccessful saving of entity with id [%s] of type [%s]. This is most likely a programming error.".formatted(thrownResult, entity.getId(), entity.getClass().getSimpleName()));
                 }
 
                 // we don't want continuation related exceptions to pollute the log with errors and stack traces – simply log an informative message
                 if (ex instanceof NeedMoreData continuationEx) {
                     if (continuationEx.getEx() instanceof NeedMoreDataException nmdEx) {
-                        logger.info(format("NMD Continuation: %s, %s, %s", nmdEx.getMessage(), nmdEx.continuationTypeStr, nmdEx.continuationProperty));
+                        logger.debug(() -> "NMD Continuation: %s, %s, %s".formatted(nmdEx.getMessage(), nmdEx.continuationTypeStr, nmdEx.continuationProperty));
                     } else { // just in case...
-                        logger.info(format("NMD Continuation: %s", continuationEx.getMessage()));
+                        logger.debug(() -> "NMD Continuation: %s".formatted(continuationEx.getMessage()));
                     }
                 } else {
                     // iterate over properties in search of the first invalid one (without required checks)
-                    final Optional<Result> firstFailure = entity.nonProxiedProperties().filter(mp -> mp.getFirstFailure() != null).findFirst().map(mp -> mp.getFirstFailure());
+                    final Optional<Result> firstFailure = entity.nonProxiedProperties().filter(mp -> mp.getFirstFailure() != null).findFirst().map(MetaProperty::getFirstFailure);
 
                     // returns first failure if exists or successful result if there was no failure.
                     final Result isValid = firstFailure.orElse(successful(entity));
@@ -273,9 +265,10 @@ public class RestServerUtil {
                     }
                 }
                 result = thrownResult.copyWith(entity);
-                logger.debug(format("The unsuccessful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. "
-                                  + "Its instance will be overridden by entity with id [%s] to be able to bind the entity to respective master.",
-                                    thrownResult, entity.getId(), entity.getClass().getSimpleName(), entity.getId()));
+                logger.debug(() -> """
+                                   The unsuccessful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. \
+                                   Its instance will be overridden by entity with id [%s] to be able to bind the entity to respective master."""
+                                .formatted(thrownResult, entity.getId(), entity.getClass().getSimpleName(), entity.getId()));
             } else {
                 logger.error(ex.getMessage(), ex);
                 result = failure(entity, ex);
