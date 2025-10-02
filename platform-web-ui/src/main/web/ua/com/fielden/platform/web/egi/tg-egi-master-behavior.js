@@ -131,7 +131,7 @@ const TgEgiMasterBehaviorImpl = {
      * In case of preferred input focusing, the contents of the input gets selected.
      */
     _focusFirstInput: function () {
-        focusEnabledInputIfAny.bind(this)(false, () => {
+        focusEnabledInputIfAny.bind(this)(false, this.manuallyFocusedInput, () => {
             const focusableParent = getParentAnd(this, parent => parent.matches(FOCUSABLE_ELEMENTS_SELECTOR));
             if (focusableParent) {
                 focusableParent.focus();

@@ -96,30 +96,46 @@ const _isElementInViewport = function (el) {
 };
 
 /**
+ * Focuses 'inputToFocus' taking into account that it can already be focused.
+ */
+const focusInput = function (inputToFocus) {
+    inputToFocus.focus();
+    // '.focus()' scrolls to view.
+    // However, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused).
+    // Hence we scroll it manually.
+    if (!_isElementInViewport(inputToFocus)) {
+        // Possible behavior: 'auto' -- no animation; block: 'start' (vertical alignment); inline: 'nearest' (horisontal alignment).
+        inputToFocus.scrollIntoView();
+    }
+};
+
+/**
  * Triggers focusing of invalid / preferred / first enabled input, if there is any (or preferred enabled input for 'preferredOnly' === true).
  * 
  * If preferred input is getting focus, the contents of the input gets selected.
  * 
  * @param preferredOnly -- consider only preferred inputs (independent from invalid)
+ * @param manuallyFocusedInput -- previous manually focused input to be focused only in the absence of invalid / preferred one
  * @param orElseFocus -- function for focusing in case if there is no enabled input to focus
  */
-export const focusEnabledInputIfAny = function (preferredOnly, orElseFocus) {
+export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedInput, orElseFocus) {
     const inputToFocus = findFirstInputToFocus(preferredOnly, this.getEditors());
     if (inputToFocus) {
         // Enforce focusing of preferred input regardless of any conditions.
         // If found input is not preferred, skip focusing for new entities.
         if (inputToFocus.preferred || this._currBindingEntity && !this._currBindingEntity.isPersisted()) {
-            inputToFocus.inputToFocus.focus();
-            if (!_isElementInViewport(inputToFocus.inputToFocus)) { // .focus() scrolls to view; however, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused); hence we scroll it manually
-                inputToFocus.inputToFocus.scrollIntoView(); // behavior: 'auto' -- no animation; block: 'start' (vertical alignment); inline: 'nearest' (horisontal alignment);
-            }
+            focusInput(inputToFocus.inputToFocus);
             if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
                 inputToFocus.inputToFocus.select();
             }
         } else {
-            // Take the first significant parent node, namely tg-custom-action-dialog, if it is present.
+            // If manuallyFocusedInput is present, focus it.
+            if (manuallyFocusedInput) {
+                focusInput(inputToFocus.inputToFocus);
+            }
+            // Otherwise, take the first significant parent node, namely tg-custom-action-dialog, if it is present.
             // Skip insertion points, because they will likely only have non-persisted instances in a master.
-            if (this._cachedParentNode) {
+            else if (this._cachedParentNode) {
                 // Get all focusable elements of the taken parent node.
                 const parentFocusableElements = this._getCurrentFocusableElements.bind(this._cachedParentNode)();
                 // Find an index of inputToFocus in that focusable elements list.
@@ -1041,6 +1057,7 @@ const TgEntityMasterBehaviorImpl = {
                 if (this.shadowRoot.activeElement === null) {
                     const firstIndex = forward ? 0 : focusedElements.length - 1;
                     focusedElements[firstIndex].focus();
+                    this.manuallyFocusedInput = focusedElements[firstIndex];
                     tearDownEvent(e);
                 } else {
                     const lastIndex = forward ? focusedElements.length - 1 : 0;
@@ -1062,7 +1079,7 @@ const TgEntityMasterBehaviorImpl = {
      * In case of preferred input focusing, the contents of the input gets selected.
      */
     _focusFirstInput: function () {
-        focusEnabledInputIfAny.bind(this)(false, () => {
+        focusEnabledInputIfAny.bind(this)(false, this.manuallyFocusedInput, () => {
             if (this.offsetParent !== null) {
                 // Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
                 //  it's ancestors to focus their first best element.
