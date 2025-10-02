@@ -979,7 +979,7 @@ const TgEntityMasterBehaviorImpl = {
         }
         // Remove manuallyFocusedInput on master detach.
         // This would cover master dialog closing or replacing dialog's master with different master.
-        this.manuallyFocusedInput = null;
+        this._updateManuallyFocusedInputWith(null);
     },
 
     /**
@@ -1103,9 +1103,13 @@ const TgEntityMasterBehaviorImpl = {
      * Skipped elements would trigger `manuallyFocusedInput` clearing and would cause focusing of first element before first input.
      */
     _updateManuallyFocusedInputWith(elementToFocus) {
-        // Please note, that tg-multiline-text-editor is special and its <text-area> does not have 'custom-input' class.
-        // Only, <iron-autogrow-text-area> above has it.
-        this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
+        // Only update `manuallyFocusedInput` state for non-touch devices.
+        // Even though touch devices should not use this state, this may change in future and we want to avoid regressions.
+        if (!isTouchEnabled()) {
+            // Please note, that tg-multiline-text-editor is special and its <text-area> does not have 'custom-input' class.
+            // Only, <iron-autogrow-text-area> above has it.
+            this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
+        }
     },
 
     /**
