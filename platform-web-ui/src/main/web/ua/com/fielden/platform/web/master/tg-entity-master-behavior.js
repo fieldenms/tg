@@ -11,6 +11,21 @@ import { queryElements } from '/resources/components/tg-element-selector-behavio
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 /**
+ * Finds internal enabled input from the `editor`, if there is one.
+ * Returns nothing in case if the editor is disabled.
+ */
+const selectEnabledEditor = editor => {
+    const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
+    if (selectedElement && selectedElement.shadowRoot) {
+        const textArea = selectedElement.shadowRoot.querySelector('textarea');
+        if (textArea && textArea.offsetParent !== null) {
+            return textArea;
+        }
+    }
+    return selectedElement;
+};
+
+/**
  * Returns enabled invalid input if there is one.
  * Otherwise returns enabled preferred input if there is one.
  * Otherwise returns first enabled input if there is one.
@@ -21,17 +36,6 @@ import { enhanceStateRestoration } from '/resources/components/tg-global-error-h
  * @param preferredOnly -- consider only preferred inputs (independent from invalid)
  */
 const findFirstInputToFocus = (preferredOnly, editors) => {
-    const selectEnabledEditor = editor => {
-        const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
-        if (selectedElement && selectedElement.shadowRoot) {
-            const textArea = selectedElement.shadowRoot.querySelector('textarea');
-            if (textArea && textArea.offsetParent !== null) {
-                return textArea;
-            }
-        }
-        return selectedElement;
-    };
-    
     let firstInput, firstPreferredInput, firstInvalidInput;
     for (let editorIndex = 0; editorIndex < editors.length; editorIndex++) {
         const currentEditor = editors[editorIndex];
@@ -939,6 +943,9 @@ const TgEntityMasterBehaviorImpl = {
             }
         });
 
+        // Bind `_manuallyFocusedInputTapHandler` to be able to use bound reference.
+        this._manuallyFocusedInputTapHandlerBound = this._manuallyFocusedInputTapHandler.bind(this);
+
         // Don't close this master on save action if it is a part of compound master.
         const menuSectionParent = getParentAnd(self, element => element.matches('tg-master-menu-item-section'));
         if (menuSectionParent) {
@@ -967,6 +974,11 @@ const TgEntityMasterBehaviorImpl = {
         if (this._cachedParentNode) {
             this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on dialog where this master is.
         }
+        // Only add tap focusing listener for non-touch devices.
+        if (!isTouchEnabled()) {
+            // Use `pointerdown` because it works for disabled <input/textarea> elements (`mousedown` doesn't).
+            this.addEventListener('pointerdown', this._manuallyFocusedInputTapHandlerBound, true);
+        }
     },
 
     detached: function () {
@@ -980,6 +992,63 @@ const TgEntityMasterBehaviorImpl = {
         // Remove manuallyFocusedInput on master detach.
         // This would cover master dialog closing or replacing dialog's master with different master.
         this._updateManuallyFocusedInputWith(null);
+        // Only remove tap focusing listener for non-touch devices.
+        if (!isTouchEnabled()) {
+            // Use `pointerdown` because it works for disabled <input/textarea> elements (`mousedown` doesn't).
+            this.removeEventListener('pointerdown', this._manuallyFocusedInputTapHandlerBound, true);
+        }
+    },
+
+    /**
+     * Listens to tap events on a master to track manually focused editor inputs.
+     */
+    _manuallyFocusedInputTapHandler: function (event) {
+        // First, filter out target path after reaching master boundary.
+        const masterTargetIndex = event.composedPath().findIndex(element => 'tg-entity-master'.toUpperCase() === element.tagName);
+        const pathUntilMasterElement = event.composedPath().slice(0, masterTargetIndex);
+
+        // Create a predicate function to find whether a target is on an element of concrete `tagName`.
+        const targetOn = tagName => pathUntilMasterElement.find(element => tagName.toUpperCase() === element.tagName);
+
+        // Find an editor on which a target may be located, if any.
+        const editor = pathUntilMasterElement.find(element => element.hasAttribute && element.hasAttribute('tg-editor'));
+
+        let internalEnabledInput;
+        // If a target is indeed on editor...
+        if (editor) {
+            // ... and it is enabled ...
+            if (internalEnabledInput = selectEnabledEditor(editor)) {
+                // ... and property action wasn't tapped...
+                if (!targetOn('tg-ui-action')) {
+                    // ... and label action was tapped then clear previous `manuallyFocusedInput`.
+                    if (targetOn('iron-icon') && targetOn('label')) {
+                        this._updateManuallyFocusedInputWith(null);
+                    }
+                    // ...then store `manuallyFocusedInput`.
+                    else {
+                        this._updateManuallyFocusedInputWith(internalEnabledInput);
+                    }
+                }
+                // ... and property action was tapped then clear previous `manuallyFocusedInput`.
+                else {
+                    this._updateManuallyFocusedInputWith(null);
+                }
+            }
+            // ... and it is disabled then clear previous `manuallyFocusedInput`.
+            else {
+                this._updateManuallyFocusedInputWith(null);
+            }
+        }
+        // If a target is outside of the editor...
+        else {
+            // ... and entity action or SAVE/CANCEL was tapped then `manuallyFocusedInput` must be preserved.
+            if (targetOn('tg-ui-action') || targetOn('tg-action')) {
+            }
+            // ... and outside "empty" area was tapped then clear previous `manuallyFocusedInput`.
+            else {
+                this._updateManuallyFocusedInputWith(null);
+            }
+        }
     },
 
     /**
