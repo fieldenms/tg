@@ -131,7 +131,7 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
         } else {
             // If manuallyFocusedInput is present, focus it.
             if (manuallyFocusedInput) {
-                focusInput(inputToFocus.inputToFocus);
+                focusInput(manuallyFocusedInput);
             }
             // Otherwise, take the first significant parent node, namely tg-custom-action-dialog, if it is present.
             // Skip insertion points, because they will likely only have non-persisted instances in a master.
