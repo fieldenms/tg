@@ -119,7 +119,20 @@ const focusInput = function (inputToFocus) {
  * @param orElseFocus -- function for focusing in case if there is no enabled input to focus
  */
 export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedInput, _updateManuallyFocusedInputWith, orElseFocus) {
-    const inputToFocus = findFirstInputToFocus(preferredOnly, this.getEditors());
+    const editors = this.getEditors();
+    for (const editor of editors) {
+        if (!editor._updateManuallyFocusedInputWith) {
+            editor._updateManuallyFocusedInputWith = _updateManuallyFocusedInputWith;
+        }
+    }
+
+    const saveButton = this.$.masterDom.querySelector("tg-action[role='save']");
+    if (saveButton) {
+        saveButton.addEventListener('pointerdown', () => this.previousManuallyFocusedInput = this.manuallyFocusedInput);
+        saveButton.addEventListener('pointerup', () => this.manuallyFocusedInput = this.previousManuallyFocusedInput);
+    }
+
+    const inputToFocus = findFirstInputToFocus(preferredOnly, editors);
     if (inputToFocus) {
         // Enforce focusing of invalid / preferred input regardless of any conditions.
         // If found input is not invalid / preferred, skip focusing for new entities.
@@ -129,10 +142,13 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
             // New input is likely to be edited further (invalid / preferred).
             // Even if new input is the first editable input for the case of non-persisted entity,
             //   manuallyFocusedInput can still be updated by it.
+            let previousManuallyFocusedInput = manuallyFocusedInput;
             if (_updateManuallyFocusedInputWith && manuallyFocusedInput && inputToFocus.inputToFocus !== manuallyFocusedInput) {
                 _updateManuallyFocusedInputWith(inputToFocus.inputToFocus);
+                previousManuallyFocusedInput = inputToFocus.inputToFocus;
             }
             focusInput(inputToFocus.inputToFocus);
+            _updateManuallyFocusedInputWith(previousManuallyFocusedInput);
             if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
                 inputToFocus.inputToFocus.select();
             }
@@ -1068,7 +1084,6 @@ const TgEntityMasterBehaviorImpl = {
                 if (this.shadowRoot.activeElement === null) {
                     const firstIndex = forward ? 0 : focusedElements.length - 1;
                     focusedElements[firstIndex].focus();
-                    this.manuallyFocusedInput = focusedElements[firstIndex];
                     tearDownEvent(e);
                 } else {
                     const lastIndex = forward ? focusedElements.length - 1 : 0;
@@ -1095,6 +1110,7 @@ const TgEntityMasterBehaviorImpl = {
             // Please note, that tg-multiline-text-editor is special and its <text-area> does not have 'custom-input' class.
             // Only, <iron-autogrow-text-area> above has it.
             this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
+            console.trace(`manuallyFocusedInput was set to:`, this.manuallyFocusedInput);
         }
     },
 
