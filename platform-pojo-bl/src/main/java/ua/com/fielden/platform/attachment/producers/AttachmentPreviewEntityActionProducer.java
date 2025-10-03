@@ -13,7 +13,10 @@ import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity_master.exceptions.SimpleMasterException;
 import ua.com.fielden.platform.types.Hyperlink;
+
+import java.util.function.Supplier;
 
 /**
  * Producer for {@link AttachmentPreviewEntityAction}.
@@ -22,6 +25,9 @@ import ua.com.fielden.platform.types.Hyperlink;
  *
  */
 public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducerWithContext<AttachmentPreviewEntityAction> {
+
+    private static final String NOTHING_TO_VIEW_MSG = "There is nothing to preview.";
+    private static final Supplier<? extends RuntimeException> NOTHING_TO_VIEW_EXCEPTION_SUPPLIER = () -> new SimpleMasterException(NOTHING_TO_VIEW_MSG);
 
     @Inject
     public AttachmentPreviewEntityActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -33,8 +39,11 @@ public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducer
         final Long attachmentId = getAttachmentId();
         if (attachmentId != null) {
             final IAttachment attachmentCo = co(Attachment.class);
-            findByIdWithMasterFetch(attachmentCo, attachmentId)
-                .ifPresent(attachment -> entity.setAttachmentUri(generateUri(attachment)));
+            final Attachment attachment = findByIdWithMasterFetch(attachmentCo, attachmentId)
+                    .orElseThrow(NOTHING_TO_VIEW_EXCEPTION_SUPPLIER);
+            entity.setAttachmentUri(generateUri(attachment));
+        } else {
+            throw new SimpleMasterException(NOTHING_TO_VIEW_MSG);
         }
         return entity;
     }
