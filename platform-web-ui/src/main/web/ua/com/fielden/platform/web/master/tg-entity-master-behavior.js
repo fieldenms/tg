@@ -58,9 +58,9 @@ const findFirstInputToFocus = (preferredOnly, editors) => {
                firstPreferredInput ? { inputToFocus: firstPreferredInput, preferred: true } :
                null
            ) :
-           firstInvalidInput ? { inputToFocus: firstInvalidInput, preferred: firstInvalidInput === firstPreferredInput } :
+           firstInvalidInput ? { inputToFocus: firstInvalidInput, preferred: firstInvalidInput === firstPreferredInput, invalid: true } :
            firstPreferredInput ? { inputToFocus: firstPreferredInput, preferred: true } :
-           firstInput ? { inputToFocus: firstInput, preferred: false } :
+           firstInput ? { inputToFocus: firstInput } :
            null;
 };
 
@@ -122,12 +122,20 @@ const focusInput = function (inputToFocus) {
  * @param manuallyFocusedInput -- previous manually focused input to be focused only in the absence of invalid / preferred one
  * @param orElseFocus -- function for focusing in case if there is no enabled input to focus
  */
-export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedInput, orElseFocus) {
+export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedInput, _updateManuallyFocusedInputWith, orElseFocus) {
     const inputToFocus = findFirstInputToFocus(preferredOnly, this.getEditors());
     if (inputToFocus) {
-        // Enforce focusing of preferred input regardless of any conditions.
-        // If found input is not preferred, skip focusing for new entities.
-        if (inputToFocus.preferred || this._currBindingEntity && !this._currBindingEntity.isPersisted()) {
+        // Enforce focusing of invalid / preferred input regardless of any conditions.
+        // If found input is not invalid / preferred, skip focusing for new entities.
+        if (inputToFocus.invalid || inputToFocus.preferred || this._currBindingEntity && !this._currBindingEntity.isPersisted()) {
+            // For the case where new intended input is different from non-empty manuallyFocusedInput,
+            //   update manuallyFocusedInput with that new input.
+            // New input is likely to be edited further (invalid / preferred).
+            // Even if new input is the first editable input for the case of non-persisted entity,
+            //   manuallyFocusedInput can still be updated by it.
+            if (_updateManuallyFocusedInputWith && manuallyFocusedInput && inputToFocus.inputToFocus !== manuallyFocusedInput) {
+                _updateManuallyFocusedInputWith(inputToFocus.inputToFocus);
+            }
             focusInput(inputToFocus.inputToFocus);
             if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
                 inputToFocus.inputToFocus.select();
@@ -1194,7 +1202,7 @@ const TgEntityMasterBehaviorImpl = {
      * In case of preferred input focusing, the contents of the input gets selected.
      */
     _focusFirstInput: function () {
-        focusEnabledInputIfAny.bind(this)(false, this.manuallyFocusedInput, () => {
+        focusEnabledInputIfAny.bind(this)(false, this.manuallyFocusedInput, this._updateManuallyFocusedInputWith.bind(this), () => {
             if (this.offsetParent !== null) {
                 // Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
                 //  it's ancestors to focus their first best element.
