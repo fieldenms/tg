@@ -190,40 +190,20 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         throw new EntityException(ERR_NO_MATCHING_PROP_TYPE.formatted(value.getType().getSimpleName()));
     }
 
-    /// Provides the set of property names, which are common for entity types used in "polymorphic" association.
+    /// Returns a set of property names that are common to all members of the specified union type.
     ///
     public static SequencedSet<String> commonProperties(final Class<? extends AbstractUnionEntity> type) {
-        // collect all properties of entity type
-        final List<Class<? extends AbstractEntity<?>>> propertyTypes = new ArrayList<>();
-        final List<Field> fields = unionProperties(type);
-        for (final Field field : fields) {
-            if (AbstractEntity.class.isAssignableFrom(field.getType())) {
-                propertyTypes.add((Class<AbstractEntity<?>>) field.getType());
-            }
-        }
-        // return the list of common properties
-        return Finder.findCommonProperties(propertyTypes);
+        return Finder.commonPropertiesForUnion(type);
     }
 
     public String activePropertyName() {
         return activePropertyName;
     }
 
-    /// Finds all properties of [AbstractEntity] type that will form properties "union".
-    ///
-    /// Important: no other (non-union) properties should exist inside [AbstractUnionEntity] class.
+    /// Returns a list of properties that represent the members of the specified union type.
     ///
     public static List<Field> unionProperties(final Class<? extends AbstractUnionEntity> type) {
-        final List<Field> unionProperties = new ArrayList<>();
-        // Find all properties of AE type that will form properties "union".
-        // Note 1: no other properties should exist inside AUE class.
-        // Note 2: desc and key are ignored.
-        for (final Field field : Finder.findRealProperties(type)) {
-            if (AbstractEntity.class.isAssignableFrom(field.getType())) {
-                unionProperties.add(field);
-            }
-        }
-        return unionProperties;
+        return Finder.unionProperties(type);
     }
 
     /// Returns the name of a union property of type `propType`, declared in union entity of type `unionEntityType`.
@@ -236,7 +216,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         requireNotNullArgument(unionType, "unionType");
         requireNotNullArgument(propType, "propType");
 
-        return streamRealProperties(unionType).filter(field -> field.getType().equals(propType)).findFirst().map(Field::getName);
+        return unionProperties(unionType).stream().filter(prop -> prop.getType().equals(propType)).findFirst().map(Field::getName);
     }
 
     /// Returns getter and setter method names for all common properties.

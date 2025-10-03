@@ -54,7 +54,7 @@ public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducer
             return currentEntity().getId();
         } else if (currentEntityInstanceOf(AbstractAttachment.class)) {
             return ((AbstractAttachment<?,?>)currentEntity()).getAttachment().getId();
-        } else if (chosenPropertyNotEmpty()) {
+        } else if (chosenPropertyNotEmpty() && currentEntity().get(chosenProperty()) != null) {
             if (Attachment.class.isAssignableFrom(currentEntity().get(chosenProperty()).getClass())) {
                 return ((Attachment)currentEntity().get(chosenProperty())).getId();
             } else if (Attachment.class.isAssignableFrom(transform(currentEntity().getType(), chosenProperty()).getKey())) {
