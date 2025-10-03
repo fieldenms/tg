@@ -60,6 +60,8 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
     @MapTo
     @Title(value = "String prop", desc = "String prop desc")
     @UpperCase
+    //@BeforeChange(@Handler(StringPropValidator.class))
+    //@AfterChange(TgPersistentEntityWithPropertiesStringPropDefiner.class)
     private String stringProp;
 
     @IsProperty
