@@ -307,8 +307,14 @@ const TgEntityCentreTemplateBehaviorImpl = {
                                 })
                             }
                         } else {
+                            if (master.masterWithMaster && master.$.loader.loadedElement) {
+                                master.$.loader.loadedElement.previousManuallyFocusedInput = master.$.loader.loadedElement.manuallyFocusedInput;
+                            }
                             master.savingContext = action._createContextHolderForAction();
                             master.retrieve(master.savingContext).then(function(ironRequest) {
+                                if (master.masterWithMaster && master.$.loader.loadedElement) {
+                                    master.$.loader.loadedElement.manuallyFocusedInput = master.$.loader.loadedElement.previousManuallyFocusedInput;
+                                }
                                 if (action.modifyFunctionalEntity) {
                                     action.modifyFunctionalEntity(master._currBindingEntity, master, action);
                                 }
