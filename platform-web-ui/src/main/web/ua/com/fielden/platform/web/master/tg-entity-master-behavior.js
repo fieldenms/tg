@@ -982,6 +982,9 @@ const TgEntityMasterBehaviorImpl = {
         self.titleAction.setAttribute("id", "titleAction");
         self.titleAction.setAttribute('title-action', '');
         self.shadowRoot.appendChild(self.titleAction);
+
+        self._storeFocus = self._storeFocus.bind(self);
+        self._restoreFocus = self._restoreFocus.bind(self);
     }, // end of ready callback
 
     attached: function () {
@@ -1105,7 +1108,7 @@ const TgEntityMasterBehaviorImpl = {
      * We only consider real editor internal inputs and skip property actions or other elements (e.g. date picker button).
      * Skipped elements would trigger `manuallyFocusedInput` clearing and would cause focusing of first element before first input.
      */
-    _updateManuallyFocusedInputWith(elementToFocus) {
+    _updateManuallyFocusedInputWith: function (elementToFocus) {
         // Only update `manuallyFocusedInput` state for non-touch devices.
         // Even though touch devices should not use this state, this may change in future and we want to avoid regressions.
         if (!isTouchEnabled()) {
@@ -1114,6 +1117,36 @@ const TgEntityMasterBehaviorImpl = {
             this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
             console.trace(`manuallyFocusedInput was set to:`, this.manuallyFocusedInput);
         }
+    },
+
+    /**
+     * Stores the focus of internal embedded master (simple / compound) for later restoration.
+     * Returns true if storing has actually happened.
+     */
+    _storeFocus: function () {
+        return this._manage(this, master => master.previousManuallyFocusedInput = master.manuallyFocusedInput);
+    },
+
+    /**
+     * Restores the focus of internal embedded master (simple / compound) from previously stored value.
+     */
+    _restoreFocus: function () {
+        return this._manage(this, master => master._updateManuallyFocusedInputWith(master.previousManuallyFocusedInput));
+    },
+
+    /**
+     * Applies an `action` against internal embedded master (simple / compound) taken from `master`.
+     */
+    _manage: function (master, action) {
+        let menu = null, currentSection = null, masterWithMaster = null;
+        if (
+            master.masterWithMaster && (masterWithMaster = master.$.loader.loadedElement)
+            || master.$ && (menu = master.$.menu) && menu.sectionRoute !== undefined && (currentSection = menu.currentSection()) && (masterWithMaster = menu.isMasterWithMaster(currentSection))
+        ) {
+            action(masterWithMaster);
+            return true;
+        }
+        return false;
     },
 
     /**

@@ -307,24 +307,10 @@ const TgEntityCentreTemplateBehaviorImpl = {
                                 })
                             }
                         } else {
-                            let menu = null, currentSection = null, masterWithMaster = null;
-                            if (master.masterWithMaster && master.$.loader.loadedElement) {
-                                master.$.loader.loadedElement.previousManuallyFocusedInput = master.$.loader.loadedElement.manuallyFocusedInput;
-                                deepestActiveElement().blur();
-                            }
-                            else if (master.$ && (menu = master.$.menu) && menu.sectionRoute !== undefined && (currentSection = menu.currentSection()) && (masterWithMaster = menu.isMasterWithMaster(currentSection))) {
-                                masterWithMaster.previousManuallyFocusedInput = masterWithMaster.manuallyFocusedInput;
-                                deepestActiveElement().blur();
-                            }
+                            master._storeFocus && master._storeFocus() && deepestActiveElement().blur();
                             master.savingContext = action._createContextHolderForAction();
                             master.retrieve(master.savingContext).then(function(ironRequest) {
-                                let menu = null, currentSection = null, masterWithMaster = null;
-                                if (master.masterWithMaster && master.$.loader.loadedElement) {
-                                    master.$.loader.loadedElement._updateManuallyFocusedInputWith(master.$.loader.loadedElement.previousManuallyFocusedInput);
-                                }
-                                else if (master.$ && (menu = master.$.menu) && menu.sectionRoute !== undefined && (currentSection = menu.currentSection()) && (masterWithMaster = menu.isMasterWithMaster(currentSection))) {
-                                    masterWithMaster._updateManuallyFocusedInputWith(masterWithMaster.previousManuallyFocusedInput);
-                                }
+                                master._restoreFocus && master._restoreFocus();
                                 if (action.modifyFunctionalEntity) {
                                     action.modifyFunctionalEntity(master._currBindingEntity, master, action);
                                 }
