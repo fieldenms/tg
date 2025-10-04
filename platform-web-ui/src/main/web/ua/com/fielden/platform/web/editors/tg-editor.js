@@ -536,7 +536,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                     return (function (event) {
                         this._setFocused(true);
                         if (this._updateManuallyFocusedInputWith) {
-                            this._updateManuallyFocusedInputWith(event.target);
+                            this._updateManuallyFocusedInputWith(this._focusTarget(event.target));
                         }
                     }).bind(this);
                 }
@@ -664,6 +664,10 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         this.propertyActions.forEach(action => {
             action.setAttribute('hidden', '');
         });
+    }
+
+    _focusTarget (target) {
+        return target;
     }
 
     isInWarning () {

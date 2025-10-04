@@ -162,6 +162,10 @@ export class TgMultilineTextEditor extends TgEditor {
         return "";
     }
 
+    _focusTarget (target) {
+        return target.textarea;
+    }
+
 }
 
 customElements.define('tg-multiline-text-editor', TgMultilineTextEditor);
