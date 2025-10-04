@@ -130,7 +130,7 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
     buttons.forEach(button => {
         if (!button.pointerDownListener) {
             button.addEventListener('pointerdown', button.pointerDownListener = () => this.previousManuallyFocusedInput = this.manuallyFocusedInput);
-            button.addEventListener('pointerup', () => this.manuallyFocusedInput = this.previousManuallyFocusedInput);
+            button.addEventListener('pointerup', () => this._updateManuallyFocusedInputWith(this.previousManuallyFocusedInput));
         }
     });
 

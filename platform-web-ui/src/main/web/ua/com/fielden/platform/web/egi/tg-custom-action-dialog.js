@@ -621,15 +621,27 @@ Polymer({
 
     _storePrevFocus: function (event) {
         let master = null;
-        if (this.$.elementLoader && (master = this.$.elementLoader.loadedElement) && master.masterWithMaster && master.$.loader.loadedElement) {
-            master.$.loader.loadedElement.previousManuallyFocusedInput = master.$.loader.loadedElement.manuallyFocusedInput;
+        if (this.$.elementLoader && (master = this.$.elementLoader.loadedElement)) {
+            let menu = null, currentSection = null, masterWithMaster = null;
+            if (master.masterWithMaster && master.$.loader.loadedElement) {
+                master.$.loader.loadedElement.previousManuallyFocusedInput = master.$.loader.loadedElement.manuallyFocusedInput;
+            }
+            else if (master.$ && (menu = master.$.menu) && menu.sectionRoute !== undefined && (currentSection = menu.currentSection()) && (masterWithMaster = menu.isMasterWithMaster(currentSection))) {
+                masterWithMaster.previousManuallyFocusedInput = masterWithMaster.manuallyFocusedInput;
+            }
         }
     },
 
     _restorePrevFocus: function (event) {
         let master = null;
-        if (this.$.elementLoader && (master = this.$.elementLoader.loadedElement) && master.masterWithMaster && master.$.loader.loadedElement) {
-            master.$.loader.loadedElement.manuallyFocusedInput = master.$.loader.loadedElement.previousManuallyFocusedInput;
+        if (this.$.elementLoader && (master = this.$.elementLoader.loadedElement)) {
+            let menu = null, currentSection = null, masterWithMaster = null;
+            if (master.masterWithMaster && master.$.loader.loadedElement) {
+                master.$.loader.loadedElement._updateManuallyFocusedInputWith(master.$.loader.loadedElement.previousManuallyFocusedInput);
+            }
+            else if (master.$ && (menu = master.$.menu) && menu.sectionRoute !== undefined && (currentSection = menu.currentSection()) && (masterWithMaster = menu.isMasterWithMaster(currentSection))) {
+                masterWithMaster._updateManuallyFocusedInputWith(masterWithMaster.previousManuallyFocusedInput);
+            }
         }
     },
 

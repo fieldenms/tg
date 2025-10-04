@@ -2,7 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
-import { getFirstEntityType, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { getFirstEntityType, getParentAnd, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
@@ -307,13 +307,23 @@ const TgEntityCentreTemplateBehaviorImpl = {
                                 })
                             }
                         } else {
+                            let menu = null, currentSection = null, masterWithMaster = null;
                             if (master.masterWithMaster && master.$.loader.loadedElement) {
                                 master.$.loader.loadedElement.previousManuallyFocusedInput = master.$.loader.loadedElement.manuallyFocusedInput;
+                                deepestActiveElement().blur();
+                            }
+                            else if (master.$ && (menu = master.$.menu) && menu.sectionRoute !== undefined && (currentSection = menu.currentSection()) && (masterWithMaster = menu.isMasterWithMaster(currentSection))) {
+                                masterWithMaster.previousManuallyFocusedInput = masterWithMaster.manuallyFocusedInput;
+                                deepestActiveElement().blur();
                             }
                             master.savingContext = action._createContextHolderForAction();
                             master.retrieve(master.savingContext).then(function(ironRequest) {
+                                let menu = null, currentSection = null, masterWithMaster = null;
                                 if (master.masterWithMaster && master.$.loader.loadedElement) {
-                                    master.$.loader.loadedElement.manuallyFocusedInput = master.$.loader.loadedElement.previousManuallyFocusedInput;
+                                    master.$.loader.loadedElement._updateManuallyFocusedInputWith(master.$.loader.loadedElement.previousManuallyFocusedInput);
+                                }
+                                else if (master.$ && (menu = master.$.menu) && menu.sectionRoute !== undefined && (currentSection = menu.currentSection()) && (masterWithMaster = menu.isMasterWithMaster(currentSection))) {
+                                    masterWithMaster._updateManuallyFocusedInputWith(masterWithMaster.previousManuallyFocusedInput);
                                 }
                                 if (action.modifyFunctionalEntity) {
                                     action.modifyFunctionalEntity(master._currBindingEntity, master, action);
