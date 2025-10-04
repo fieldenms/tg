@@ -126,11 +126,13 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
         }
     }
 
-    const saveButton = this.$.masterDom.querySelector("tg-action[role='save']");
-    if (saveButton) {
-        saveButton.addEventListener('pointerdown', () => this.previousManuallyFocusedInput = this.manuallyFocusedInput);
-        saveButton.addEventListener('pointerup', () => this.manuallyFocusedInput = this.previousManuallyFocusedInput);
-    }
+    const buttons = this.$.masterDom.querySelectorAll('tg-action');
+    buttons.forEach(button => {
+        if (!button.pointerDownListener) {
+            button.addEventListener('pointerdown', button.pointerDownListener = () => this.previousManuallyFocusedInput = this.manuallyFocusedInput);
+            button.addEventListener('pointerup', () => this.manuallyFocusedInput = this.previousManuallyFocusedInput);
+        }
+    });
 
     const inputToFocus = findFirstInputToFocus(preferredOnly, editors);
     if (inputToFocus) {
