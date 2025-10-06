@@ -41,6 +41,7 @@ public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducer
             final IAttachment attachmentCo = co(Attachment.class);
             final Attachment attachment = findByIdWithMasterFetch(attachmentCo, attachmentId)
                     .orElseThrow(NOTHING_TO_VIEW_EXCEPTION_SUPPLIER);
+            entity.setAttachment(attachment);
             entity.setAttachmentUri(generateUri(attachment));
         } else {
             throw new SimpleMasterException(NOTHING_TO_VIEW_MSG);
