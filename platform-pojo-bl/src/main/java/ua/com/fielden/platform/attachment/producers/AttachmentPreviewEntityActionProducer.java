@@ -26,7 +26,7 @@ import java.util.function.Supplier;
  */
 public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducerWithContext<AttachmentPreviewEntityAction> {
 
-    private static final String NOTHING_TO_VIEW_MSG = "There is nothing to preview.";
+    private static final String NOTHING_TO_VIEW_MSG = "There is nothing to view.";
     private static final Supplier<? extends RuntimeException> NOTHING_TO_VIEW_EXCEPTION_SUPPLIER = () -> new SimpleMasterException(NOTHING_TO_VIEW_MSG);
 
     @Inject

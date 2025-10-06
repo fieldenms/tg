@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.annotation.*;
 public class AttachmentPreviewEntityAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty
-    @Title(value = "Attachment", desc = "Attachment to review or download")
+    @Title("Attachment")
     private Attachment attachment;
 
     @IsProperty
