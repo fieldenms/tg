@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage2.sources.enhance;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
 import ua.com.fielden.platform.eql.antlr.EqlCompiler;
+import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
@@ -10,16 +11,19 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.*;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.*;
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.*;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 public class PathsToTreeTransformer {
 
@@ -171,7 +175,30 @@ public class PathsToTreeTransformer {
 
     private SourceNodeResult generateHelperNode(final List<PendingTail> tails, final PropChunk firstChunk, final Expression2 expression, final boolean isPartOfCalcProp) {
         final QuerySourceItemForEntityType<?> querySourceInfoItem = (QuerySourceItemForEntityType<?>) firstChunk.data();
-        final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(querySourceInfoItem.querySourceInfo, gen.nextSourceId(), false /*isExplicit*/, isPartOfCalcProp);
+
+        // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+        // Experimental code
+        final ISource2<?> implicitSource;
+        if (isPersistentEntityType(querySourceInfoItem.querySourceInfo.javaType())) {
+            implicitSource = new Source2BasedOnPersistentType(querySourceInfoItem.querySourceInfo, gen.nextSourceId(), false /*isExplicit*/, isPartOfCalcProp);
+        }
+        // TODO Cover union entity types.
+        //      Where to obtain their EQL models?
+        else if (isSyntheticEntityType(querySourceInfoItem.querySourceInfo.javaType()) || isSyntheticBasedOnPersistentEntityType(querySourceInfoItem.querySourceInfo.javaType())) {
+            final var models1 = querySourceInfoProvider.getSeModels(querySourceInfoItem.querySourceInfo.javaType());
+            // Not sure if creating a new empty context is OK.
+            final var context = isPartOfCalcProp
+                    ? TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider, domainMetadata)
+                    : TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider, domainMetadata);
+            final List<SourceQuery2> models2 = models1.stream().map(m -> m.transform(context)).collect(toImmutableList());
+            // TODO Generate a unique alias
+            implicitSource = new Source2BasedOnQueries(models2, "random_alias", gen.nextSourceId(), querySourceInfoItem.querySourceInfo, true, false, isPartOfCalcProp);
+        }
+        else {
+            throw new EqlStage2ProcessingException("Unexpected entity type used as query source: %s.".formatted(querySourceInfoItem.querySourceInfo.javaType().getName()));
+        }
+        // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
         final SourceNodesResult result = generateHelperNodesForSource(implicitSource, tails);
         final HelperNodeForImplicitJoins node = new HelperNodeForImplicitJoins(firstChunk.name(), expression, querySourceInfoItem.nonnullable, implicitSource, result.sourceNodes);
         return new SourceNodeResult(node, result.transformationResult);

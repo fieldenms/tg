@@ -419,7 +419,7 @@ public class QuerySourceInfoProvider {
         return generateModelledQuerySourceInfoForPersistentType(type);
     }
 
-    private List<SourceQuery1> getSeModels(final Class<? extends AbstractEntity<?>> entityType) {
+    public List<SourceQuery1> getSeModels(final Class<? extends AbstractEntity<?>> entityType) {
         final var models = seModels.get(getOriginalType(entityType));
         if (models != null) {
             return models;
