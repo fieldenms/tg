@@ -27,12 +27,22 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
         final DomElement img = new DomElement("img")
                 .clazz("relative")
                 .attr("src$", "[[_getImageUri(_currBindingEntity)]]")
-                .attr("hidden$", "[[!_isImageVisisble(_currBindingEntity)]]")
+                .attr("hidden$", "[[!_isImageVisible(_currBindingEntity)]]")
                 .style("width:100%", "height:100%", "object-fit:contain");
-        final DomElement altImage = new DomElement("div")
-                .clazz("fit", "layout horizontal center-center")
-                .style("font-size: 18px", "color: #bdbdbd", "background-color: white")
+        final DomElement messageElement =  new DomElement("span")
+                .style("font-size: 18px", "color: #BDBDBD", "margin: 24px")
                 .add(new InnerTextElement("[[_getAltImageText(_currBindingEntity)]]"));
+        final DomElement downloadAction = new DomElement("paper-button")
+                .style("font-size: 13.3333px", "color: #000000DE")
+                .attr("raised", true)
+                .attr("on-tap", "_downloadAttachment")
+                .attr("tooltip-text", "Downloads the attachment.")
+                .add(new DomElement("span").add(new InnerTextElement("DOWNLOAD")));
+        final DomElement altImage = new DomElement("div")
+                .style("background-color: white")
+                .clazz("fit", "layout vertical center-center")
+                .attr("hidden$", "[[_isImageVisible(_currBindingEntity)]]")
+                .add(messageElement, downloadAction);
         final DomElement container = new DomElement("div")
                 .attr("slot", "property-editors")
                 .clazz("relative")
@@ -57,29 +67,37 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
     }
 
     private String generateReadyCallback() {
-        return  "self._isNecessaryForConversion = function (propertyName) { \n"
-                + "    return ['attachmentUri'].indexOf(propertyName) >= 0; \n"
-                + "}; \n"
-                + "self._getImageUri = function (entity) {\n"
-                + "    const newEntity = entity ? entity['@@origin'] : null;\n"
-                + "    if (newEntity && newEntity.attachmentUri) {\n"
-                + "        return newEntity.attachmentUri;\n"
-                + "    }\n"
-                + "}.bind(self);\n"
-                + "self._isImageVisisble = function (entity) {\n"
-                + "    const newEntity = entity ? entity['@@origin'] : null;\n"
-                + "    if (newEntity && !newEntity.attachmentUri) {\n"
-                + "        return false;\n"
-                + "    }\n"
-                + "    return true;\n"
-                + "}.bind(self);\n"
-                + "self._getAltImageText = function (entity) {\n"
-                + "    const newEntity = entity ? entity['@@origin'] : null;\n"
-                + "    if (newEntity && !newEntity.attachmentUri) {\n"
-                + "        return 'Preview is not available for this file. Please download it instead.';\n"
-                + "    }\n"
-                + "    return '';\n"
-                + "}.bind(self);\n";
+        return  """
+                self._isNecessaryForConversion = function (propertyName) {
+                    return ['attachment', 'attachmentUri'].indexOf(propertyName) >= 0;
+                };
+                self._getImageUri = function (entity) {
+                    const newEntity = entity ? entity['@@origin'] : null;
+                    if (newEntity && newEntity.attachmentUri) {
+                        return newEntity.attachmentUri;
+                    }
+                }.bind(self);
+                self._isImageVisible = function (entity) {
+                    const newEntity = entity ? entity['@@origin'] : null;
+                    if (newEntity && !newEntity.attachmentUri) {
+                        return false;
+                    }
+                    return true;
+                }.bind(self);
+                self._getAltImageText = function (entity) {
+                    const newEntity = entity ? entity['@@origin'] : null;
+                    if (newEntity && !newEntity.attachmentUri) {
+                        return 'Preview is not available for this file. Please download it instead.';
+                    }
+                    return '';
+                }.bind(self);
+                self.downloadAttachment = self.mkDownloadAttachmentFunction();
+                self._downloadAttachment = function (e) {
+                    if (this._currEntity && this._currEntity.attachment) {
+                        this.downloadAttachment(this._currEntity.attachment);
+                    }
+                }.bind(self);
+                """;
     }
 
     @Override
