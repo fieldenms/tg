@@ -33,7 +33,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 .style("font-size: 18px", "color: #BDBDBD", "margin: 24px")
                 .add(new InnerTextElement("[[_getAltImageText(_currBindingEntity)]]"));
         final DomElement downloadAction = new DomElement("paper-button")
-                .style("font-size: 13.3333px", "color: #000000DE")
+                .style("font-size: 14px", "font-weight: 500", "color: #000000DE")
                 .attr("raised", true)
                 .attr("on-tap", "_downloadAttachment")
                 .attr("tooltip-text", "Downloads the attachment.")
