@@ -27,21 +27,21 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
         final DomElement img = new DomElement("img")
                 .clazz("relative")
                 .attr("src$", "[[_getImageUri(_currBindingEntity)]]")
-                .attr("hidden$", "[[!_isImageVisisble(_currBindingEntity)]]")
+                .attr("hidden$", "[[!_isImageVisible(_currBindingEntity)]]")
                 .style("width:100%", "height:100%", "object-fit:contain");
         final DomElement messageElement =  new DomElement("span")
-                .style("font-size: 18px", "color: #bdbdbd")
+                .style("font-size: 18px", "color: #BDBDBD", "margin: 24px")
                 .add(new InnerTextElement("[[_getAltImageText(_currBindingEntity)]]"));
         final DomElement downloadAction = new DomElement("paper-button")
-                .style("font-size: 16px", "margin-top: 24px")
+                .style("font-size: 13.3333px", "color: #000000DE")
                 .attr("raised", true)
                 .attr("on-tap", "_downloadAttachment")
-                .attr("tooltip-text$", "Downloads the attachment")
+                .attr("tooltip-text", "Downloads the attachment.")
                 .add(new DomElement("span").add(new InnerTextElement("DOWNLOAD")));
         final DomElement altImage = new DomElement("div")
                 .style("background-color: white")
                 .clazz("fit", "layout vertical center-center")
-                .attr("hidden$", "[[_isImageVisisble(_currBindingEntity)]]")
+                .attr("hidden$", "[[_isImageVisible(_currBindingEntity)]]")
                 .add(messageElement, downloadAction);
         final DomElement container = new DomElement("div")
                 .attr("slot", "property-editors")
@@ -77,7 +77,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                         return newEntity.attachmentUri;
                     }
                 }.bind(self);
-                self._isImageVisisble = function (entity) {
+                self._isImageVisible = function (entity) {
                     const newEntity = entity ? entity['@@origin'] : null;
                     if (newEntity && !newEntity.attachmentUri) {
                         return false;
