@@ -6,12 +6,8 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.*;
 
-/**
- * An entity representing an attachment preview action.
- *
- * @author TG Team
- *
- */
+/// An entity representing an attachment preview action.
+///
 @KeyType(NoKey.class)
 @CompanionObject(IAttachmentPreviewEntityAction.class)
 public class AttachmentPreviewEntityAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
