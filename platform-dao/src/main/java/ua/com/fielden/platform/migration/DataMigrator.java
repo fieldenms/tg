@@ -146,21 +146,19 @@ public class DataMigrator {
         final var id = new AtomicLong(firstId);
 
         for (final var ret : retrievers) {
+            final var retrieverName = ret.retriever().getClass().getSimpleName();
             try (final var legacyStmt = legacyConn.createStatement(); final var legacyRs = legacyStmt.executeQuery(ret.legacySql())) {
-                final var retrieverName = ret.retriever().getClass().getSimpleName();
                 LOGGER.info(() -> "Executing retriever [%s]".formatted(retrieverName));
-                try {
-                    final Function<TargetDataUpdate, Optional<Long>> updater = tdu -> {
-                        performBatchUpdates(tdu, legacyRs, retrieverName);
-                        return empty();
-                    };
-                    final Function<TargetDataInsert, Optional<Long>> inserter = tdi ->
-                        of(performBatchInserts(tdi, legacyRs, retrieverName, id.get()));
+                final Function<TargetDataUpdate, Optional<Long>> updater = tdu -> {
+                    performBatchUpdates(tdu, legacyRs, retrieverName);
+                    return empty();
+                };
+                final Function<TargetDataInsert, Optional<Long>> inserter = tdi ->
+                    of(performBatchInserts(tdi, legacyRs, retrieverName, id.get()));
 
-                    ret.exec(updater, inserter).ifPresent(id::set);
-                } catch (final Exception ex) {
-                    throw new DataMigrationException(ERR_WHILE_EXECUTING_RETRIEVERS.formatted(retrieverName), ex);
-                }
+                ret.exec(updater, inserter).ifPresent(id::set);
+            } catch (final Exception ex) {
+                throw new DataMigrationException(ERR_WHILE_EXECUTING_RETRIEVERS.formatted(retrieverName), ex);
             }
         }
 
