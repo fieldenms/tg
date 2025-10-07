@@ -608,8 +608,11 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         };
 
         final Set<PropertyElement> properties = new LinkedHashSet<>();
-        if (maybeMetaModelledSupertype.isPresent()) {
-            // declared properties + property key
+        if (entityFinder.isUnionEntityType(entity)) {
+            entityFinder.streamProperties(entity).forEach(properties::add);
+        }
+        else if (maybeMetaModelledSupertype.isPresent()) {
+            // declared properties + poperty key
             List<PropertyElement> declaredProps = entityFinder.streamDeclaredProperties(entity).filter(erroneousPropertyFilter).toList();
             properties.addAll(entityFinder.processProperties(declaredProps, entity));
             // "key" is guaranteed to exist
