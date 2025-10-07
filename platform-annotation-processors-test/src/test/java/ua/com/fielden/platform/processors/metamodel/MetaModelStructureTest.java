@@ -14,6 +14,8 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.processors.test_entities.*;
 import ua.com.fielden.platform.processors.test_entities.meta.EntityWithOrdinaryPropsMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.ExampleEntityMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.PersistentEntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModel;
 import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
@@ -405,6 +407,31 @@ public class MetaModelStructureTest {
         assertThat(metaModelFinder.findDeclaredPropertyMethod(mmExampleUnionEntity, "common2"))
                 .get()
                 .matches(it -> elementFinder.isSameType(it.getReturnType(), EntityWithOrdinaryPropsMetaModel.class));
+    }
+
+    @Test
+    public void meta_model_for_union_entity_does_not_include_properties_that_are_not_common() {
+        final var exampleUnionEntity = entityFinder.findEntity(ExampleUnionEntity.class);
+        final var mmExampleUnionEntity = findMetaModel(exampleUnionEntity);
+
+        assertThat(metaModelFinder.findDeclaredPropertyMethod(mmExampleUnionEntity, "flag"))
+                .isEmpty();
+        assertThat(metaModelFinder.findDeclaredPropertyMethod(mmExampleUnionEntity, "uncommon1"))
+                .isEmpty();
+    }
+
+    @Test
+    public void meta_model_for_union_entity_includes_member_properties() {
+        final var exampleUnionEntity = entityFinder.findEntity(ExampleUnionEntity.class);
+        final var mmExampleUnionEntity = findMetaModel(exampleUnionEntity);
+
+        assertThat(metaModelFinder.findDeclaredPropertyMethod(mmExampleUnionEntity, "prop1"))
+                .get()
+                .matches(it -> elementFinder.isSameType(it.getReturnType(), ExampleEntityMetaModel.class));
+
+        assertThat(metaModelFinder.findDeclaredPropertyMethod(mmExampleUnionEntity, "prop2"))
+                .get()
+                .matches(it -> elementFinder.isSameType(it.getReturnType(), PersistentEntityMetaModel.class));
     }
 
     // ============================ HELPER METHODS ============================

@@ -30,6 +30,10 @@ public class PersistentEntity extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
+    private String uncommon1;
+
+    @IsProperty
+    @MapTo
     @Title("A property that exists to manifest a common union property")
     private String common1;
 
@@ -37,6 +41,16 @@ public class PersistentEntity extends AbstractEntity<String> {
     @MapTo
     @Title("A property that exists to manifest a common union property")
     private EntityWithOrdinaryProps common2;
+
+    public String getUncommon1() {
+        return uncommon1;
+    }
+
+    @Observable
+    public PersistentEntity setUncommon1(final String uncommon1) {
+        this.uncommon1 = uncommon1;
+        return this;
+    }
 
     public EntityWithOrdinaryProps getCommon2() {
         return common2;
