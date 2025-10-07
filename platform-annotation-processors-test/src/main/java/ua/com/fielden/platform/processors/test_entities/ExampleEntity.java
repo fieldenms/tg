@@ -41,6 +41,36 @@ public class ExampleEntity extends AbstractEntity<String> {
     @Title(value = "Collection of entities of this type")
     private final Set<ExampleEntity> collection = new LinkedHashSet<ExampleEntity>();
 
+    @IsProperty
+    @MapTo
+    @Title("A property that exists to manifest a common union property")
+    private String common1;
+
+    @IsProperty
+    @MapTo
+    @Title("A property that exists to manifest a common union property")
+    private EntityWithOrdinaryProps common2;
+
+    public EntityWithOrdinaryProps getCommon2() {
+        return common2;
+    }
+
+    @Observable
+    public ExampleEntity setCommon2(final EntityWithOrdinaryProps common2) {
+        this.common2 = common2;
+        return this;
+    }
+
+    public String getCommon1() {
+        return common1;
+    }
+
+    @Observable
+    public ExampleEntity setCommon1(final String common1) {
+        this.common1 = common1;
+        return this;
+    }
+
     @Observable
     protected ExampleEntity setCollection(final Set<ExampleEntity> name) {
         this.collection.clear();

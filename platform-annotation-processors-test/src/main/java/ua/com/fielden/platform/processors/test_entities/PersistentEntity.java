@@ -28,6 +28,36 @@ public class PersistentEntity extends AbstractEntity<String> {
     @Title(value = "Prop1")
     private Integer prop1;
 
+    @IsProperty
+    @MapTo
+    @Title("A property that exists to manifest a common union property")
+    private String common1;
+
+    @IsProperty
+    @MapTo
+    @Title("A property that exists to manifest a common union property")
+    private EntityWithOrdinaryProps common2;
+
+    public EntityWithOrdinaryProps getCommon2() {
+        return common2;
+    }
+
+    @Observable
+    public PersistentEntity setCommon2(final EntityWithOrdinaryProps common2) {
+        this.common2 = common2;
+        return this;
+    }
+
+    public String getCommon1() {
+        return common1;
+    }
+
+    @Observable
+    public PersistentEntity setCommon1(final String common1) {
+        this.common1 = common1;
+        return this;
+    }
+
     @Observable
     public PersistentEntity setProp1(final Integer prop1) {
         this.prop1 = prop1;
