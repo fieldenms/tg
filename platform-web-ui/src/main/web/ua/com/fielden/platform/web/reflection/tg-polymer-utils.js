@@ -309,6 +309,27 @@ export const isIPhoneOs = function () {
 };
 
 /**
+ * Determines whether the client is running on an iPad device.
+ * Works for both pre-iPadOS 13 (UA contains "iPad") and iPadOS 13+ (desktop-class UA).
+ */
+export const isIPadOs = function () {
+    // iPad before iPadOS 13:
+    return window.navigator.userAgent.includes('iPad')
+        // iPadOS 13+ identifies as Mac but has touch support
+        || window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1;
+};
+
+/**
+ * Determines whether the browser is Safari running on macOS.
+ */
+export const isMacSafari = function () {
+    const ua = window.navigator.userAgent;
+    const isMac = window.navigator.platform === 'MacIntel';
+    const isSafari = /Safari/.test(ua) && !/(Chrome|CriOS|Chromium|Edg)/.test(ua);
+    return isMac && isSafari;
+};
+
+/**
  * Determines whether device's browser supports touch events.
  * This is different from whether the device has a touchscreen. However, if true, it means that device has touchscreen in most cases.
  *

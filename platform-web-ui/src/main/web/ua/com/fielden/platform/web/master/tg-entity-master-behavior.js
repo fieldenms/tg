@@ -1,7 +1,7 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
-import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, getParentAnd, isIPhoneOs, isIPadOs, isMacSafari } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
@@ -956,8 +956,10 @@ const TgEntityMasterBehaviorImpl = {
         self.addEventListener('binding-entity-appeared', function (event) {
             const target = event.composedPath()[0];
             if (target === this) {
-                //Need to reset scrolltop for entitity master's scrolling panel to prevent initial scrolling on macOS and iOS
-                this.$.masterDom.$.scrollableContainer.$.scrollablePanel.scrollTop = 0;
+                // Need to reset scrolltop for entity master's scrolling panel to prevent initial scrolling on macOS and iOS.
+                if (isIPhoneOs() || isIPadOs() || isMacSafari()) {
+                    this.$.masterDom.$.scrollableContainer.$.scrollablePanel.scrollTop = 0;
+                }
                 this.focusView();
                 if (!this._hasEmbededView()) {
                     this.async(function () {
