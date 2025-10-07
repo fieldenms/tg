@@ -161,7 +161,8 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
             }
         } else {
             // If manuallyFocusedInput is present, focus it.
-            if (_updateManuallyFocusedInputWith && manuallyFocusedInput) {
+            // If it is disabled (<input> / <textarea>), fallback to focus element before first enabled input.
+            if (_updateManuallyFocusedInputWith && manuallyFocusedInput && !manuallyFocusedInput.disabled) {
                 focusInput(manuallyFocusedInput);
             }
             // Otherwise, take the first significant parent node, namely tg-custom-action-dialog, if it is present.
@@ -1140,7 +1141,6 @@ const TgEntityMasterBehaviorImpl = {
             // Please note, that tg-multiline-text-editor is special and its <text-area> does not have 'custom-input' class.
             // Only, <iron-autogrow-text-area> above has it.
             this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
-            console.trace(`manuallyFocusedInput was set to:`, this.manuallyFocusedInput);
         }
     },
 
