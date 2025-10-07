@@ -162,6 +162,10 @@ export class TgMultilineTextEditor extends TgEditor {
         return "";
     }
 
+    /**
+     * Returns a concrete element in `_onFocus` `target` to be stored for further focusing.
+     * In our case, it is a `textarea` inside `iron-autogrow-textarea`.
+     */
     _focusTarget (target) {
         return target.textarea;
     }

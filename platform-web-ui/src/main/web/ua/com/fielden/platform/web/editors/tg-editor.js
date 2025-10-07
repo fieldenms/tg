@@ -669,6 +669,9 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         });
     }
 
+    /**
+     * Returns a concrete element in `_onFocus` `target` to be stored for further focusing.
+     */
     _focusTarget (target) {
         return target;
     }

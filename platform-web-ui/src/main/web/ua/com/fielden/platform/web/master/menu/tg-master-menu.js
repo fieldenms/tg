@@ -831,7 +831,7 @@ Polymer({
     },
     
     /**
-     * Returns 'true' if the specified 'section' represents a master with master; 'false' otherwise.
+     * Returns truthy value (actual embedded master) if the specified 'section' represents a master with master; falsy value otherwise.
      */
     isMasterWithMaster: function (section) {
         if (section && section._element && section._element.masterWithMaster && section._element.$.loader && section._element.$.loader.loadedElement) {

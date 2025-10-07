@@ -110,7 +110,11 @@ const focusInput = function (inputToFocus) {
 };
 
 /**
- * Triggers focusing of invalid / preferred / first enabled input, if there is any (or preferred enabled input for 'preferredOnly' === true).
+ * Triggers focusing of invalid / preferred / first enabled input, if there is any.
+ * (or preferred enabled input for 'preferredOnly' === true).
+ *
+ * Triggers focusing of previously focused input for persisted entities, if there is any.
+ * Otherwise, focuses the first available element before the first enabled input.
  * 
  * If preferred input is getting focus, the contents of the input gets selected.
  * 
@@ -122,19 +126,23 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
     const editors = this.getEditors();
 
     if (_updateManuallyFocusedInputWith) {
+        // Provide editors with ability to update `manuallyFocusedInput` of the master.
         for (const editor of editors) {
             if (!editor._updateManuallyFocusedInputWith) {
                 editor._updateManuallyFocusedInputWith = _updateManuallyFocusedInputWith;
             }
         }
 
-        const buttons = this.$.masterDom.querySelectorAll('tg-action');
-        buttons.forEach(button => {
-            if (!button.pointerDownListener) {
-                button.addEventListener('pointerdown', button.pointerDownListener = () => this.previousManuallyFocusedInput = this.manuallyFocusedInput);
-                button.addEventListener('pointerup', () => _updateManuallyFocusedInputWith(this.previousManuallyFocusedInput));
-            }
-        });
+        // Provide CANCEL/SAVE and other tg-actions with ability to preserve `manuallyFocusedInput`.
+        const buttons = this.$ && this.$.masterDom && this.$.masterDom.querySelectorAll('tg-action');
+        if (buttons) {
+            buttons.forEach(button => {
+                if (!button.pointerDownListener) {
+                    button.addEventListener('pointerdown', button.pointerDownListener = () => this.previousManuallyFocusedInput = this.manuallyFocusedInput);
+                    button.addEventListener('pointerup', () => _updateManuallyFocusedInputWith(this.previousManuallyFocusedInput));
+                }
+            });
+        }
     }
 
     const inputToFocus = findFirstInputToFocus(preferredOnly, editors);
@@ -142,30 +150,34 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
         // Enforce focusing of invalid / preferred input regardless of any conditions.
         // If found input is not invalid / preferred, skip focusing for new entities.
         if (inputToFocus.invalid || inputToFocus.preferred || this._currBindingEntity && this.shouldFocusEnabledInput()) {
-            // For the case where new intended input is different from non-empty manuallyFocusedInput,
-            //   update manuallyFocusedInput with that new input.
+            // For the case where new intended input is different from non-empty `manuallyFocusedInput`,
+            //   update `manuallyFocusedInput` with that new input.
             // New input is likely to be edited further (invalid / preferred).
             // Even if new input is the first editable input for the case of non-persisted entity,
-            //   manuallyFocusedInput can still be updated by it.
+            //   `manuallyFocusedInput` can still be updated by it.
+            // Store `manuallyFocusedInput` before changing the focus.
             let previousManuallyFocusedInput = manuallyFocusedInput;
             if (_updateManuallyFocusedInputWith && manuallyFocusedInput && inputToFocus.inputToFocus !== manuallyFocusedInput) {
                 _updateManuallyFocusedInputWith(inputToFocus.inputToFocus);
                 previousManuallyFocusedInput = inputToFocus.inputToFocus;
             }
+            // Actually perform focusing.
             focusInput(inputToFocus.inputToFocus);
+            // Restore `manuallyFocusedInput`.
             if (_updateManuallyFocusedInputWith) {
                 _updateManuallyFocusedInputWith(previousManuallyFocusedInput);
             }
+            // Perform selection for preferred input.
             if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
                 inputToFocus.inputToFocus.select();
             }
         } else {
             // If manuallyFocusedInput is present, focus it.
-            // If it is disabled (<input> / <textarea>), fallback to focus element before first enabled input.
+            // If it is disabled (<input> / <textarea>), fallback to focus element before first enabled input ('else' branch).
             if (_updateManuallyFocusedInputWith && manuallyFocusedInput && !manuallyFocusedInput.disabled) {
                 focusInput(manuallyFocusedInput);
             }
-            // Otherwise, take the first significant parent node, namely tg-custom-action-dialog, if it is present.
+            // Otherwise, take the first significant parent node, namely `tg-custom-action-dialog`, if it is present.
             // Skip insertion points, because they will likely only have non-persisted instances in a master.
             else if (this._cachedParentNode) {
                 // Get all focusable elements of the taken parent node.
@@ -1133,7 +1145,7 @@ const TgEntityMasterBehaviorImpl = {
 
     /**
      * Updates `manuallyFocusedInput` based on next manually focused `elementToFocus`.
-     * We only consider real editor internal inputs and skip property actions or other elements (e.g. date picker button).
+     * We only consider real editor internal inputs and skip property actions or other elements.
      * Skipped elements would trigger `manuallyFocusedInput` clearing and would cause focusing of first element before first input.
      */
     _updateManuallyFocusedInputWith: function (elementToFocus) {

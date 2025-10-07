@@ -619,6 +619,9 @@ Polymer({
         this._focusChange(e, false);
     },
 
+    /**
+     * Entity navigation: stores Entity Master focus on navigation button actions.
+     */
     _storePrevFocus: function (event) {
         let master = null;
         if (this.$.elementLoader && (master = this.$.elementLoader.loadedElement)) {
@@ -626,6 +629,9 @@ Polymer({
         }
     },
 
+    /**
+     * Entity navigation: restores Entity Master focus on navigation button actions.
+     */
     _restorePrevFocus: function (event) {
         let master = null;
         if (this.$.elementLoader && (master = this.$.elementLoader.loadedElement)) {

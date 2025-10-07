@@ -307,9 +307,13 @@ const TgEntityCentreTemplateBehaviorImpl = {
                                 })
                             }
                         } else {
+                            // Entity navigation: store Entity Master focus on Ctrl+arrow action.
+                            // Also force loosing of the focus to as early as possible to before actual transition starts.
                             master._storeFocus && master._storeFocus() && deepestActiveElement().blur();
                             master.savingContext = action._createContextHolderForAction();
                             master.retrieve(master.savingContext).then(function(ironRequest) {
+                                // Entity navigation: restore Entity Master focus on Ctrl+arrow action.
+                                // On async execution, `tg-editor._outFocus` has already been completed and we can restore focus back.
                                 master._restoreFocus && master._restoreFocus();
                                 if (action.modifyFunctionalEntity) {
                                     action.modifyFunctionalEntity(master._currBindingEntity, master, action);
