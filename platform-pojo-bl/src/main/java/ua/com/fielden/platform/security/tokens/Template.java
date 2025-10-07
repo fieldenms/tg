@@ -17,7 +17,8 @@ public enum Template {
     READ_MODEL ("%s_CanReadModel_Token", "%s Can Read Model", "Authorises reading of data model."),
     EXECUTE ("%s_CanExecute_Token", "%s Can Execute", "Authorises action execution."),
     MASTER_OPEN ("%s_CanOpen_Token", "%s Can Open", "Authorises opening of a master."),
-    MASTER_MENU_ITEM_ACCESS ("%s_CanAccess_Token", "%s Can Access", "Authorises access to a menu item of a compound master.");
+    MASTER_MENU_ITEM_ACCESS ("%s_CanAccess_Token", "%s Can Access", "Authorises access to a menu item of a compound master."),
+    READ_PROP ("%s_CanRead_%s_Token", "%s Can Read property [%s]", "Authorises reading of the specified property.");
     
     private final String forClassName;
     private final String forTitle;
