@@ -210,9 +210,7 @@ public class EntityFinder extends ElementFinder {
     public Optional<PropertyElement> maybePropId(final EntityElement entity) {
         if (isPersistentEntityType(entity) || doesExtendPersistentEntity(entity) || isUnionEntityType(entity)) {
             // `id` must exist.
-            final var idElt = findField(entity, AbstractEntity.ID)
-                    .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.ID, entity)));
-            return Optional.of(new PropertyElement(idElt));
+            return Optional.of(new PropertyElement(getField(entity, AbstractEntity.ID)));
         }
         else if (isSyntheticEntityType(entity)) {
             // Will be found iff annotated with `@IsProperty` (i.e., redeclared).
@@ -232,20 +230,14 @@ public class EntityFinder extends ElementFinder {
     public Optional<PropertyElement> maybePropDesc(final EntityElement entity) {
         if (isUnionEntityType(entity)) {
             // `desc` must exist.
-            final var descElt = findField(entity, AbstractEntity.DESC)
-                    .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.DESC, entity)));
-            return Optional.of(new PropertyElement(descElt));
+            return Optional.of(new PropertyElement(getField(entity, AbstractEntity.DESC)));
         }
         else {
             return findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class)
                     .or(() -> {
                         if (findAnnotation(entity, DescTitle.class).isPresent()) {
                             // `desc` must exist.
-                            final var descElt = findField(entity, AbstractEntity.DESC)
-                                    .orElseThrow(() -> new ElementFinderException(
-                                            "Field [%s] was not found in [%s].".formatted(AbstractEntity.DESC,
-                                                                                          entity)));
-                            return Optional.of(new PropertyElement(descElt));
+                            return Optional.of(new PropertyElement(getField(entity, AbstractEntity.DESC)));
                         }
                         else {
                             return Optional.empty();
@@ -267,9 +259,7 @@ public class EntityFinder extends ElementFinder {
     public Stream<PropertyElement> streamProperties(final EntityElement entityElement) {
         if (isUnionEntityType(entityElement)) {
             // AbstractUnionEntity.key : String
-            final var keyElt = findField(entityElement, AbstractEntity.KEY)
-                    .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.KEY, entityElement)));
-            final var keyPropElt = new PropertyElement(keyElt).changeType(asType(String.class));
+            final var keyPropElt = new PropertyElement(getField(entityElement, KEY)).changeType(asType(String.class));
             return StreamUtils.concat(streamDeclaredProperties(entityElement),
                                       streamCommonPropertiesForUnion(entityElement),
                                       maybePropId(entityElement).stream(),

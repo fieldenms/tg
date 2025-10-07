@@ -22,6 +22,7 @@ import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
+import ua.com.fielden.platform.utils.ImmutableSetUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -42,6 +43,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableCollection;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.*;
@@ -586,15 +588,11 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         return true;
     }
 
-    /**
-     * Collects entity properties for meta-modeling.
-     * @param entity
-     * @param maybeMetaModelledSupertype
-     * @return
-     * @throws EntitySourceDefinitionException
-     */
-    private LinkedHashSet<PropertyElement> collectProperties(
-            final EntityElement entity, final Optional<EntityElement> maybeMetaModelledSupertype)
+    /// Collects entity properties for meta-modeling.
+    ///
+    private Collection<PropertyElement> collectProperties(
+            final EntityElement entity,
+            final Optional<EntityElement> maybeMetaModelledSupertype)
             throws EntitySourceDefinitionException
     {
         final Predicate<PropertyElement> erroneousPropertyFilter = prop -> {
@@ -607,42 +605,34 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
             return true;
         };
 
-        final Set<PropertyElement> properties = new LinkedHashSet<>();
+        final Set<PropertyElement> properties;
         if (entityFinder.isUnionEntityType(entity)) {
-            entityFinder.streamProperties(entity).forEach(properties::add);
+            properties = entityFinder.findProperties(entity);
         }
         else if (maybeMetaModelledSupertype.isPresent()) {
             // declared properties + poperty key
-            List<PropertyElement> declaredProps = entityFinder.streamDeclaredProperties(entity).filter(erroneousPropertyFilter).toList();
-            properties.addAll(entityFinder.processProperties(declaredProps, entity));
+            final var declaredProps = entityFinder.streamDeclaredProperties(entity).filter(erroneousPropertyFilter).toList();
             // "key" is guaranteed to exist
-            final PropertyElement keyElt = entityFinder.findProperty(maybeMetaModelledSupertype.get(), AbstractEntity.KEY)
+            final var keyElt = entityFinder.findProperty(maybeMetaModelledSupertype.get(), AbstractEntity.KEY)
                     .orElseThrow(() -> new EntitySourceDefinitionException("Property [%s] was not found in [%s].".formatted(AbstractEntity.KEY, entity)));
-            properties.add(keyElt);
+            properties = ImmutableSetUtils.insert(entityFinder.processProperties(declaredProps, entity), keyElt);
         } else {
-            List<PropertyElement> allProps  = entityFinder.streamProperties(entity).filter(erroneousPropertyFilter).toList();
-            properties.addAll(entityFinder.processProperties(allProps, entity));
+            properties = entityFinder.processProperties(entityFinder.streamProperties(entity).filter(erroneousPropertyFilter).toList(), entity);
         }
 
-        // map of the following form: String propertyName -> PropertyElement property
-        final LinkedHashMap<String, PropertyElement> propertiesMap = new LinkedHashMap<>(
+        // { propertyName : property }
+        final var propertiesMap = new LinkedHashMap<String, PropertyElement>(
                 properties.stream().collect(Collectors.toMap(elt -> elt.getSimpleName().toString(), Function.identity())));
 
         // Need additional processing of property "key" to correctly identify its type or to remove it.
         // An exception is thrown in case of erroneous entity definition.
         processPropertyKey(propertiesMap, entity);
 
-        return new LinkedHashSet<>(propertiesMap.values());
+        return unmodifiableCollection(propertiesMap.values());
     }
 
-    /**
-     * Processes entity key type information, possibly modifying argument {@code properties} to update or remove the entry for property {@code key}.
-     *
-     * @see {@link AbstractEntity}, {@link KeyType}
-     *
-     * @param properties
-     * @param entity
-     */
+    /// Processes entity key type information, possibly modifying `properties` to update or remove the entry for property `key`.
+    ///
     private void processPropertyKey(final LinkedHashMap<String, PropertyElement> properties, final EntityElement entity) {
         // Child entity simply inherits "key" property meta-model from its parent, but only if that super meta-model contains a model for "key"...
         // This is why, in order to simplify processing the situations where super meta-model does not have "key", we shall simply regenerate a meta-model for "key" for sub entities.
