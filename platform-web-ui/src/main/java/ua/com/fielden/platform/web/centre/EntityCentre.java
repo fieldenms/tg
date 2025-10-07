@@ -1374,6 +1374,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     if (EntityUtils.isEntityType(propertyType)) {
                         final List<Pair<String, Boolean>> additionalProps = dslDefaultConfig.getAdditionalPropsForAutocompleter(critProp);
                         criterionWidget = new EntityCriterionWidget(root, managedType, critProp, additionalProps, getCentreContextConfigFor(critProp));
+                    } else if (EntityUtils.isString(propertyType) && dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(critProp).isPresent()) {
+                        final List<Pair<String, Boolean>> additionalProps = dslDefaultConfig.getAdditionalPropsForAutocompleter(critProp);
+                        criterionWidget = new EntityStringCriterionWidget(root, managedType, critProp, dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(critProp).get(), additionalProps, getCentreContextConfigFor(critProp));
                     } else if (EntityUtils.isString(propertyType) || EntityUtils.isRichText(propertyType)) {
                         criterionWidget = new StringCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isBoolean(propertyType)) {
