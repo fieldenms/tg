@@ -120,19 +120,22 @@ const focusInput = function (inputToFocus) {
  */
 export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedInput, _updateManuallyFocusedInputWith, orElseFocus) {
     const editors = this.getEditors();
-    for (const editor of editors) {
-        if (!editor._updateManuallyFocusedInputWith) {
-            editor._updateManuallyFocusedInputWith = _updateManuallyFocusedInputWith;
-        }
-    }
 
-    const buttons = this.$.masterDom.querySelectorAll('tg-action');
-    buttons.forEach(button => {
-        if (!button.pointerDownListener) {
-            button.addEventListener('pointerdown', button.pointerDownListener = () => this.previousManuallyFocusedInput = this.manuallyFocusedInput);
-            button.addEventListener('pointerup', () => this._updateManuallyFocusedInputWith(this.previousManuallyFocusedInput));
+    if (_updateManuallyFocusedInputWith) {
+        for (const editor of editors) {
+            if (!editor._updateManuallyFocusedInputWith) {
+                editor._updateManuallyFocusedInputWith = _updateManuallyFocusedInputWith;
+            }
         }
-    });
+
+        const buttons = this.$.masterDom.querySelectorAll('tg-action');
+        buttons.forEach(button => {
+            if (!button.pointerDownListener) {
+                button.addEventListener('pointerdown', button.pointerDownListener = () => this.previousManuallyFocusedInput = this.manuallyFocusedInput);
+                button.addEventListener('pointerup', () => _updateManuallyFocusedInputWith(this.previousManuallyFocusedInput));
+            }
+        });
+    }
 
     const inputToFocus = findFirstInputToFocus(preferredOnly, editors);
     if (inputToFocus) {
@@ -150,13 +153,15 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
                 previousManuallyFocusedInput = inputToFocus.inputToFocus;
             }
             focusInput(inputToFocus.inputToFocus);
-            _updateManuallyFocusedInputWith(previousManuallyFocusedInput);
+            if (_updateManuallyFocusedInputWith) {
+                _updateManuallyFocusedInputWith(previousManuallyFocusedInput);
+            }
             if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
                 inputToFocus.inputToFocus.select();
             }
         } else {
             // If manuallyFocusedInput is present, focus it.
-            if (manuallyFocusedInput) {
+            if (_updateManuallyFocusedInputWith && manuallyFocusedInput) {
                 focusInput(manuallyFocusedInput);
             }
             // Otherwise, take the first significant parent node, namely tg-custom-action-dialog, if it is present.
@@ -173,8 +178,12 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
                     parentFocusableElements[inputToFocusIndex - 1].focus();
                 }
             }
+            else if (orElseFocus) {
+                orElseFocus();
+            }
         }
-    } else if (orElseFocus) {
+    }
+    else if (orElseFocus) {
         orElseFocus();
     }
 };
