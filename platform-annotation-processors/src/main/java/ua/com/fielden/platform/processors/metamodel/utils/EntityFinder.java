@@ -70,12 +70,16 @@ public class EntityFinder extends ElementFinder {
         return newEntityElement(getTypeElement(name));
     }
 
-   /**
-    * Returns a stream of declared properties.
-    *
-    * @param entityElement
-    */
-    public Stream<PropertyElement> streamDeclaredProperties(final EntityElement entityElement) {
+   /// Returns a stream of declared properties.
+   ///
+   /// * If `entityElement` is a union entity, the stream will contain only the union members.
+   ///   In most cases, it makes more sense to use [#streamProperties(EntityElement)] for union entities.
+   /// * Otherwise, a property is defined simply as a field annotated with [IsProperty].
+   ///   For more detailed processing use [#processProperties(Collection,EntityElement)].
+   ///
+   /// @see #findDeclaredProperties(EntityElement)
+   ///
+   public Stream<PropertyElement> streamDeclaredProperties(final EntityElement entityElement) {
         return streamDeclaredFields(entityElement)
                 .filter(this::isProperty)
                 .map(PropertyElement::new);
@@ -131,12 +135,9 @@ public class EntityFinder extends ElementFinder {
     }
 
     // TODO possible optimisation: move this method to EntityElement and memoize its result
-   /**
-    * Collects the elements of {@link #streamDeclaredFields(TypeElement)} into a list.
-    *
-    * @param entityElement
-    */
-    public List<PropertyElement> findDeclaredProperties(final EntityElement entityElement) {
+   /// Collects the elements of [#streamDeclaredFields(TypeElement)] into a list.
+   ///
+   public List<PropertyElement> findDeclaredProperties(final EntityElement entityElement) {
         return streamDeclaredProperties(entityElement).toList();
     }
 
@@ -151,29 +152,28 @@ public class EntityFinder extends ElementFinder {
                 .findFirst();
     }
 
-    /**
-     * Returns a stream of all inherited properties with no guarantees on element uniqueness.
-     *
-     * @see PropertyElement#equals(Object)
-     * @param entityElement
-     * @return
-     */
+    /// Returns a stream of all properties inherited by `entityElement`.
+    /// The stream will include hidden properties if they are inherited by `entityElement`.
+    /// It is up to the caller to filter them out.
+    ///
+    /// * If `entityElement` is a union entity, the contents of the stream are unspecified.
+    ///   In most cases, it makes more sense to use [#streamProperties(EntityElement)] for union entities.
+    /// * Otherwise, a property is defined simply as a field annotated with [IsProperty].
+    ///   For more detailed processing use [#processProperties(Collection,EntityElement)].
+    /// 
+    /// @see #findInheritedProperties(EntityElement)
+    ///
     public Stream<PropertyElement> streamInheritedProperties(final EntityElement entityElement) {
         return streamInheritedFields(entityElement, ROOT_ENTITY_CLASS)
                 .filter(this::isProperty)
                 .map(PropertyElement::new);
     }
 
-    /**
-     * Returns an unmodifiable set of properties, which are inherited by an entity.
-     * <p>
-     * Property uniqueness is described by {@link PropertyElement#equals(Object)}.
-     * Entity hierarchy is traversed in natural order.
-     * <p>
-     * A property is defined simply as a field annotated with {@link IsProperty}. For more detailed processing use
-     * {@link #processProperties(Collection, EntityElement)}.
-     */
-    public Set<PropertyElement> findInheritedProperties(final EntityElement entity) {
+    /// Collects the results of [#streamProperties(EntityElement)] into a sequenced set.
+    /// Property uniqueness is based on [PropertyElement#equals(Object)].
+    /// Hidden properties will be excluded.
+    ///
+    public SequencedSet<PropertyElement> findInheritedProperties(final EntityElement entity) {
         return streamInheritedProperties(entity).collect(collectingAndThen(toCollection(LinkedHashSet::new), Collections::unmodifiableSequencedSet));
     }
 
@@ -254,12 +254,16 @@ public class EntityFinder extends ElementFinder {
         }
     }
 
-    /**
-     * Returns a stream of all properties (both declared and inherited) with no guarantees on element uniqueness.
-     *
-     * @see PropertyElement#equals(Object)
-     * @param entityElement
-     */
+    /// Returns a stream of all properties present in `entityElement`, starting from declared properties up to those inherited from [AbstractEntity].
+    /// The stream will include hidden properties if they exist in `entityElement`.
+    /// It is up to the caller to filter them out.
+    ///
+    /// * If `entityElement` is a union type, the result will include exactly: union members, common properties, `id`, `key`, `desc`.
+    /// * Otherwise, a property is defined simply as a field annotated with [IsProperty].
+    ///   For more detailed processing use [#processProperties(Collection,EntityElement)].
+    ///
+    /// @see #findProperties(EntityElement)
+    ///
     public Stream<PropertyElement> streamProperties(final EntityElement entityElement) {
         if (isUnionEntityType(entityElement)) {
             // AbstractUnionEntity.key : String
@@ -277,13 +281,11 @@ public class EntityFinder extends ElementFinder {
         }
     }
 
-    /**
-     * Returns an unmodifiable set of all unique properties of the entity element: both declared an inherited.
-     * <p>
-     * Property uniqueness is described by {@link PropertyElement#equals(Object)}.
-     * Entity hierarchy is traversed in natural order.
-     */
-    public Set<PropertyElement> findProperties(final EntityElement entityElement) {
+    /// Collects the results of [#streamProperties(EntityElement)] into a sequenced set.
+    /// Property uniqueness is based on [PropertyElement#equals(Object)].
+    /// Hidden properties will be excluded.
+    ///
+    public SequencedSet<PropertyElement> findProperties(final EntityElement entityElement) {
         return streamProperties(entityElement).distinct().collect(collectingAndThen(toCollection(LinkedHashSet::new), Collections::unmodifiableSequencedSet));
     }
 
