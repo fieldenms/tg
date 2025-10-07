@@ -28,15 +28,12 @@ import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 import ua.com.fielden.platform.utils.StreamUtils;
 
-/**
- * An interceptor used to ensure correct data population based on <code>populate*</code> methods in {@code IDomainData} and their annotation {@link EnsureData}, which specifies the dependency between the methods.
- * <p>
- * In addition it is also responsible for scripting the data populated by those methods.
- * The cached INSERT/UPDATE scripts provide a fast alternative for reusable data population.
- *
- * @author TG Team
- *
- */
+/// An interceptor used to ensure correct data population based on `populate*` methods in `IDomainData` and their annotation [EnsureData],
+/// which specifies the dependency between the methods.
+///
+/// In addition, it is also responsible for scripting the data populated by those methods.
+/// The cached INSERT/UPDATE scripts provide a fast alternative for reusable data population.
+///
 public class EnsureDataInterceptor implements MethodInterceptor {
     private static final Logger LOGGER = getLogger(EnsureDataInterceptor.class);
 
@@ -71,7 +68,7 @@ public class EnsureDataInterceptor implements MethodInterceptor {
         final String testCaseName = PropertyTypeDeterminator.stripIfNeeded(testCase.getClass()).getSimpleName();
         final String methodName = invocation.getMethod().getName();
 
-        LOGGER.debug(format("Intercepted [%s] in test case [%s].", methodName, testCaseName));
+        LOGGER.debug(() -> format("Intercepted [%s] in test case [%s].", methodName, testCaseName));
 
         if (!testCaseName.equals(runningTestCase)) {
             testCase.setCleanUpAfterPrepopulation(() -> { runningTestCase = ""; executedScripts.clear();});
@@ -79,16 +76,16 @@ public class EnsureDataInterceptor implements MethodInterceptor {
             executedScripts.clear();
         }
 
-        // first, let's run methods to populated the data that the invoked methods depends on
+        // First, let's run methods to populate the data that the invoked methods depends on.
         final String[] ensureDataMethods = invocation.getStaticPart().getAnnotation(EnsureData.class).value();
         for (final String depMethodName: ensureDataMethods) {
-            LOGGER.debug(format("Processing dependencies for [%s] in test case [%s].", depMethodName, testCaseName));
+            LOGGER.debug(() -> format("Processing dependencies for [%s] in test case [%s].", depMethodName, testCaseName));
             final Method method = testCase.getClass().getDeclaredMethod(depMethodName);
             method.invoke(testCase);
         }
 
-        // and now we can invoke the intercepted method... but with some smarts...
-        LOGGER.debug(format("Checking if there are applicable data scripts in cache for [%s] in test case [%s].", methodName, testCaseName));
+        // And now we can invoke the intercepted method... but with some smarts...
+        LOGGER.debug(() -> format("Checking if there are applicable data scripts in cache for [%s] in test case [%s].", methodName, testCaseName));
         // check if we have a script then run it before calling the method
         // we really need to know if we ought to call it... but for now let's simply call and ignore the errors
         final DbCreator dbCreator = testCase.getDbCreator();
@@ -98,41 +95,41 @@ public class EnsureDataInterceptor implements MethodInterceptor {
             final List<String> potentiallyLoadedScript = DbCreator.loadScriptFromFile(mkScriptFileName(methodName));
             if (!potentiallyLoadedScript.isEmpty()) {
                 scripts.put(methodName, potentiallyLoadedScript);
-                LOGGER.debug(format("Loaded [%s] scripts from file for [%s]", potentiallyLoadedScript.size(), methodName));
+                LOGGER.debug(() -> format("Loaded [%s] scripts from file for [%s]", potentiallyLoadedScript.size(), methodName));
             }
         }
 
-        // let's make a decision whether we can execute the script instead of invoking the method
+        // Let's make a decision whether we can execute the script instead of invoking the method.
         boolean useScript = executedScripts.contains(methodName);
         if (!testCase.skipCaching() && !executedScripts.contains(methodName) && scripts.containsKey(methodName)) {
             // we're in business -- there is already a script prepared for us
             // so. let's just run it
-            LOGGER.debug(format("There are applicable data scripts in cache for [%s] in test case [%s].", methodName, testCaseName));
+            LOGGER.debug(() -> format("There are applicable data scripts in cache for [%s] in test case [%s].", methodName, testCaseName));
             final Connection conn = dbCreator.connection();
             try {
                 final List<String> script = scripts.get(methodName);
-                LOGGER.debug(format("Executing [%s] data scripts from cache for [%s] in test case [%s].", script.size(), methodName, testCaseName));
+                LOGGER.debug(() -> format("Executing [%s] data scripts from cache for [%s] in test case [%s].", script.size(), methodName, testCaseName));
                 batchExecSql(script, conn, 100);
                 conn.commit();
                 executedScripts.add(methodName);
-                LOGGER.debug(format("Completed executing [%s] data scripts from cache for [%s] in test case [%s].", script.size(), methodName, testCaseName));
+                LOGGER.debug(() -> format("Completed executing [%s] data scripts from cache for [%s] in test case [%s].", script.size(), methodName, testCaseName));
                 useScript = true;
             } catch (final Exception ex) {
-                LOGGER.warn(format("Failed to execute data scripts from cache for [%s] in test case [%s] due to: %s", methodName, testCaseName, ex.getMessage()));
+                LOGGER.warn(() -> format("Failed to execute data scripts from cache for [%s] in test case [%s] due to: %s", methodName, testCaseName, ex.getMessage()));
                 conn.rollback();
             }
         }
 
         // if the cached script was used to populate the data then there is no need to actually call the method
         if (!useScript) {
-            LOGGER.debug(format("Invoking [%s] in test case [%s].", methodName, testCaseName));
+            LOGGER.debug(() -> format("Invoking [%s] in test case [%s].", methodName, testCaseName));
             final Object result = invocation.proceed();
-            LOGGER.debug(format("Completed invocation of [%s] in test case [%s].", methodName, testCaseName));
+            LOGGER.debug(() -> format("Completed invocation of [%s] in test case [%s].", methodName, testCaseName));
 
             // if there was no script to the intercepted method yet then surely we can now generate and cache it
-            LOGGER.debug(format("Making a decision about generating data scripts for [%s] in test case [%s].", methodName, testCaseName));
+            LOGGER.debug(() -> format("Making a decision about generating data scripts for [%s] in test case [%s].", methodName, testCaseName));
             if (!testCase.skipCaching() && !scripts.containsKey(methodName)) {
-                LOGGER.debug(format("Generating data scripts for [%s] in test case [%s].", methodName, testCaseName));
+                LOGGER.debug(() -> format("Generating data scripts for [%s] in test case [%s].", methodName, testCaseName));
                 // let's collect only those records that belong to the current transaction
                 final String transactionGuid = testCase.getTransactionGuid();
                 final Connection conn = testCase.getDbCreator().connection();
@@ -141,7 +138,7 @@ public class EnsureDataInterceptor implements MethodInterceptor {
                                             .filter(stmt -> stmt.contains(transactionGuid))
                                             .map(stmt -> transformToUpdateIfAppropriate(stmt, transactionGuid))
                                             .collect(toList());
-                LOGGER.debug(format("Caching [%s] data scripts for [%s] in test case [%s].", script.size(), methodName, testCaseName));
+                LOGGER.debug(() -> format("Caching [%s] data scripts for [%s] in test case [%s].", script.size(), methodName, testCaseName));
                 scripts.put(methodName, script);
                 conn.commit();
                 executedScripts.add(methodName);
@@ -149,28 +146,23 @@ public class EnsureDataInterceptor implements MethodInterceptor {
 
                 // and let's also save the script to a file if applicable
                 if (saveScriptsToFile) {
-                    LOGGER.debug(format("Saving [%s] script [%s] to file...", script.size(), methodName));
+                    LOGGER.debug(() -> format("Saving [%s] script [%s] to file...", script.size(), methodName));
                     DbCreator.saveScriptToFile(script, mkScriptFileName(methodName));
                 }
 
             } else {
-                LOGGER.debug(format("Avoid generation of data scripts for [%s] in test case [%s] due to [skipping: %s, already present: %s].", methodName, testCaseName, testCase.skipCaching(), scripts.containsKey(methodName)));
+                LOGGER.debug(() -> format("Avoid generation of data scripts for [%s] in test case [%s] due to [skipping: %s, already present: %s].", methodName, testCaseName, testCase.skipCaching(), scripts.containsKey(methodName)));
             }
 
             return result;
         } else {
-            LOGGER.debug(format("Data scripts were used for [%s] in test case [%s].", methodName, testCaseName));
+            LOGGER.debug(() -> format("Data scripts were used for [%s] in test case [%s].", methodName, testCaseName));
             return null;
         }
     }
 
-    /**
-     * Transforms generated INSERT statements to UPDATE statements if the current transaction was not creating the corresponding data, but modifyig it.
-     *
-     * @param insertStmt
-     * @param transGuid
-     * @return
-     */
+    /// Transforms generated INSERT statements to UPDATE statements if the current transaction was not creating the corresponding data, but modifying it.
+    ///
     private static String transformToUpdateIfAppropriate(final String insertStmt, final String transGuid) {
         // INSERT INTO [PERSON_]
         // ([_ID],[KEY_],[_VERSION],[USER_],[TIMESHEETTYPE_],[SUPERABLE_],[NORMALDAILYHOURS_],[NORMALWEEKLYHOURS_],[MONDAYREQUIRED_],[TUESDAYREQUIRED_],[WEDNESDAYREQUIRED_],[THURSDAYREQUIRED_],[FRIDAYREQUIRED_],[SATURDAYREQUIRED_],[SUNDAYREQUIRED_],[TIMESHEETALLOWED_],[COPYTIMESHEETALLOWED_],[REMOVEINITIALSONDEACTIVATE_],[PERSONTYPE_],[TITLE_],[EMPLOYEENO_],[CONTRACTOR_],[MISMANAGER_],[MISTEAMLEADER_],[COSTCENTRE_],[LOCATION_],[TEAM_],[CORERATE_],[CAPEXRATE_],[OSRATE_],[AGSRATE_],[AUTHORISER_],[BUYER_],[ISSUER_],[SUPPLYPERSON_],[SUPPLYSUPERVISOR_],[ORIGINATOR_],[PLANNER_],[TECHNICIAN_],[ENGINEER_],[REALMANAGER_],[REALTEAMLEADER_],[TECHNICALCOORDINATOR_],[RESTRICTEDWACREATOR_],[PHONE_],[FAX_],[MOBILE_],[EMAIL_],[WANOTIFICATIONEMAIL_],[DELIVERYLOCATION_],[ACTIVE_],[REFCOUNT_],[CREATEDBY_],[CREATEDDATE_],[CREATEDTRANSACTIONGUID_],[LASTUPDATEDBY_],[LASTUPDATEDDATE_],[LASTUPDATEDTRANSACTIONGUID_],[DESC_])
