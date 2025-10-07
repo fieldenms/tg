@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * @author TG Team
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.METHOD })
+@Target({ ElementType.METHOD, ElementType.FIELD})
 public @interface Authorise {
     Class<? extends ISecurityToken> value(); // represents a security token
 }
