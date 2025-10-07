@@ -131,12 +131,30 @@ const TgEgiMasterBehaviorImpl = {
      * In case of preferred input focusing, the contents of the input gets selected.
      */
     _focusFirstInput: function () {
-        focusEnabledInputIfAny.bind(this)(false, this.manuallyFocusedInput, this._updateManuallyFocusedInputWith.bind(this), () => {
+        focusEnabledInputIfAny.bind(this)(false, null, null, () => {
             const focusableParent = getParentAnd(this, parent => parent.matches(FOCUSABLE_ELEMENTS_SELECTOR));
             if (focusableParent) {
                 focusableParent.focus();
             }
         });
+    },
+
+    /**
+     * Avoid caching of parent node (dialog) for EGI masters.
+     */
+    _cacheParentNode: function () {},
+
+    /**
+     * Avoid removing of cached parent node (dialog) for EGI masters.
+     */
+    _removeParentNodeFromCache: function () {},
+
+    /**
+     * A custom condition of whether non-erroneous/preferred first enabled input should be focused on CANCEL/SAVE.
+     * In EGI master we always want to focus first enabled input, because editing is intended for persisted entities.
+     */
+    shouldFocusEnabledInput: function () {
+        return true;
     },
 
     getEditors: function () {

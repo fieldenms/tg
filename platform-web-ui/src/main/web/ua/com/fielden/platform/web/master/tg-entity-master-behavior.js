@@ -141,7 +141,7 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
     if (inputToFocus) {
         // Enforce focusing of invalid / preferred input regardless of any conditions.
         // If found input is not invalid / preferred, skip focusing for new entities.
-        if (inputToFocus.invalid || inputToFocus.preferred || this._currBindingEntity && !this._currBindingEntity.isPersisted()) {
+        if (inputToFocus.invalid || inputToFocus.preferred || this._currBindingEntity && this.shouldFocusEnabledInput()) {
             // For the case where new intended input is different from non-empty manuallyFocusedInput,
             //   update manuallyFocusedInput with that new input.
             // New input is likely to be edited further (invalid / preferred).
@@ -1001,10 +1001,17 @@ const TgEntityMasterBehaviorImpl = {
         this.tgOpenMasterAction.attrs.centreUuid = this.uuid;
         this.titleAction.attrs.centreUuid = this.uuid;
         this._resetState(); // existing state may cause problems for cached masters: for example previous entity was new and valid and next one invalid -- blocks closing of dialog with error
-        this._cachedParentNode = getParentAnd(this.parentElement, element => element.matches('tg-custom-action-dialog'));
-        if (this._cachedParentNode) {
+        if (this._cacheParentNode()) {
             this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on dialog where this master is.
         }
+    },
+
+    /**
+     * Caches parent node (dialog). Every master do that by default, except EGI master.
+     * Returns cached parent node (dialog), if any.
+     */
+    _cacheParentNode: function () {
+        return (this._cachedParentNode = getParentAnd(this.parentElement, element => element.matches('tg-custom-action-dialog')));
     },
 
     detached: function () {
@@ -1013,11 +1020,20 @@ const TgEntityMasterBehaviorImpl = {
         }
         if (this._cachedParentNode) {
             this.fire('tg-entity-master-detached', this, { node: this._cachedParentNode }); // start event bubbling on dialog from which this entity master has already been detached
-            delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of dialog from memory
         }
+        this._removeParentNodeFromCache();
         // Remove manuallyFocusedInput on master detach.
         // This would cover master dialog closing or replacing dialog's master with different master.
         this._updateManuallyFocusedInputWith(null);
+    },
+
+    /**
+     * Removes parent node (dialog) from cache. Every master do that by default, except EGI master.
+     */
+    _removeParentNodeFromCache: function () {
+        if (this._cachedParentNode) {
+            delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of dialog from memory
+        }
     },
 
     /**
@@ -1126,6 +1142,13 @@ const TgEntityMasterBehaviorImpl = {
             this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
             console.trace(`manuallyFocusedInput was set to:`, this.manuallyFocusedInput);
         }
+    },
+
+    /**
+     * A custom condition of whether non-erroneous/preferred first enabled input should be focused on CANCEL/SAVE.
+     */
+    shouldFocusEnabledInput: function () {
+        return !this._currBindingEntity.isPersisted();
     },
 
     /**
