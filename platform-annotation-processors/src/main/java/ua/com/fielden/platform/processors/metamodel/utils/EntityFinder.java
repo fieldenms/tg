@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
@@ -173,10 +174,7 @@ public class EntityFinder extends ElementFinder {
      * {@link #processProperties(Collection, EntityElement)}.
      */
     public Set<PropertyElement> findInheritedProperties(final EntityElement entity) {
-        return streamInheritedFields(entity, ROOT_ENTITY_CLASS)
-                .filter(this::isProperty)
-                .map(PropertyElement::new)
-                .collect(toCollection(LinkedHashSet::new));
+        return streamInheritedProperties(entity).collect(collectingAndThen(toCollection(LinkedHashSet::new), Collections::unmodifiableSequencedSet));
     }
 
     /**
@@ -286,9 +284,7 @@ public class EntityFinder extends ElementFinder {
      * Entity hierarchy is traversed in natural order.
      */
     public Set<PropertyElement> findProperties(final EntityElement entityElement) {
-        final Set<PropertyElement> properties = new LinkedHashSet<>(findDeclaredProperties(entityElement));
-        properties.addAll(findInheritedProperties(entityElement));
-        return Collections.unmodifiableSet(properties);
+        return streamProperties(entityElement).distinct().collect(collectingAndThen(toCollection(LinkedHashSet::new), Collections::unmodifiableSequencedSet));
     }
 
     /**
