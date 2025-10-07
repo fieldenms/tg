@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
@@ -14,6 +15,7 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderExce
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
@@ -28,7 +30,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
@@ -73,6 +78,55 @@ public class EntityFinder extends ElementFinder {
         return streamDeclaredFields(entityElement)
                 .filter(this::isProperty)
                 .map(PropertyElement::new);
+    }
+
+    /// Returns a stream of entity elements that form the union `entityElement`.
+    ///
+    public Stream<EntityElement> streamUnionMembers(final EntityElement entityElement) {
+        if (!isUnionEntityType(entityElement)) {
+            throw new InvalidArgumentException("Expected a union entity type: [%s].".formatted(entityElement.getQualifiedName()));
+        }
+
+        return streamDeclaredProperties(entityElement)
+                .filter(prop -> isEntityType(prop.getType()))
+                .map(prop -> asTypeElementOfTypeMirror(prop.getType()))
+                .map(this::newEntityElement);
+    }
+
+    public Stream<PropertyElement> streamCommonPropertiesForUnion(final EntityElement entityElement) {
+        if (!isUnionEntityType(entityElement)) {
+            throw new InvalidArgumentException("Expected a union entity type: [%s].".formatted(entityElement.getQualifiedName()));
+        }
+
+        final List<EntityElement> unionMembers = streamUnionMembers(entityElement).toList();
+
+        // (EntityElement, Properties)
+        final var pairs = unionMembers.stream().map(m -> t2(m, streamProperties(m).distinct().toList())).toList();
+
+        return first(pairs).map(fstPair -> {
+                    final var restPairs = pairs.subList(1, pairs.size());
+                    return fstPair.map((fstType, fstProps) -> fstProps.stream()
+                            .filter(fstProp -> restPairs.stream()
+                                    .allMatch(pair -> pair.map((otherType, otherProps) -> isPropertyPresent(fstProp, fstType, otherProps, otherType)))));
+                })
+                .orElseGet(Stream::of);
+    }
+
+    /// Returns `true` if `prop` is present among `otherProps`.
+    /// In the case of property `key`, special care is taken to determine its type.
+    ///
+    /// @param propOwner  the type where `prop` is present, required to correctly identify the type of property `key`.
+    /// @param otherPropsOwner  the type where `otherProps` are present, required to correctly identify the type of property `key`.
+    ///
+    private boolean isPropertyPresent(final PropertyElement prop, final EntityElement propOwner, final List<PropertyElement> otherProps, final EntityElement otherPropsOwner) {
+        return otherProps.stream()
+                .filter(otherProp -> prop.getSimpleName().contentEquals(otherProp.getSimpleName()))
+                .anyMatch(otherProp -> {
+                    final boolean isKey = KEY.contentEquals(prop.getSimpleName());
+                    final var propType = isKey ? determineKeyType(propOwner).orElse(null) : prop.getType();
+                    final var otherPropType = isKey ? determineKeyType(otherPropsOwner).orElse(null) : otherProp.getType();
+                    return propType != null && otherPropType != null && propType.equals(otherPropType);
+                });
     }
 
     // TODO possible optimisation: move this method to EntityElement and memoize its result
@@ -150,11 +204,13 @@ public class EntityFinder extends ElementFinder {
     /// If property `id` is present in `entity`, returns an optional describing it.
     /// Otherwise, returns an empty optional.
     ///
-    /// `id` is considered to be present in persistent entity types and their subtypes, as well as synthetic entity types
-    /// that explicitly declare `id` or inherit `id` annotated with [IsProperty] (this annotation is absent on [AbstractEntity#id]).
+    /// `id` is considered to be present in:
+    /// * persistent entity types and their subtypes;
+    /// * union entity types;
+    /// * synthetic entity types that explicitly declare `id` or inherit `id` annotated with [IsProperty] (this annotation is absent on [AbstractEntity#id]).
     ///
     public Optional<PropertyElement> maybePropId(final EntityElement entity) {
-        if (isPersistentEntityType(entity) || doesExtendPersistentEntity(entity)) {
+        if (isPersistentEntityType(entity) || doesExtendPersistentEntity(entity) || isUnionEntityType(entity)) {
             // `id` must exist.
             final var idElt = findField(entity, AbstractEntity.ID)
                     .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.ID, entity)));
@@ -170,22 +226,34 @@ public class EntityFinder extends ElementFinder {
     /// If property `desc` is present in `entity`, returns an optional describing it.
     /// Otherwise, returns an empty optional.
     ///
-    /// `desc` is considered to be present if [DescTitle] is present on the enclosing entity type (directly or indirectly),
-    /// or property `desc` is explicitly redeclared.
+    /// `desc` is considered to be present if:
+    /// * `entity` is a union type, or;
+    /// * [DescTitle] is present on the enclosing entity type (directly or indirectly), or;
+    /// * property `desc` is explicitly redeclared.
     ///
     public Optional<PropertyElement> maybePropDesc(final EntityElement entity) {
-        return findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class)
-                .or(() -> {
-                    if (findAnnotation(entity, DescTitle.class).isPresent()) {
-                        // `desc` must exist.
-                        final var descElt = findField(entity, AbstractEntity.DESC)
-                                .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.DESC, entity)));
-                        return Optional.of(new PropertyElement(descElt));
-                    }
-                    else {
-                        return Optional.empty();
-                    }
-                });
+        if (isUnionEntityType(entity)) {
+            // `desc` must exist.
+            final var descElt = findField(entity, AbstractEntity.DESC)
+                    .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.DESC, entity)));
+            return Optional.of(new PropertyElement(descElt));
+        }
+        else {
+            return findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class)
+                    .or(() -> {
+                        if (findAnnotation(entity, DescTitle.class).isPresent()) {
+                            // `desc` must exist.
+                            final var descElt = findField(entity, AbstractEntity.DESC)
+                                    .orElseThrow(() -> new ElementFinderException(
+                                            "Field [%s] was not found in [%s].".formatted(AbstractEntity.DESC,
+                                                                                          entity)));
+                            return Optional.of(new PropertyElement(descElt));
+                        }
+                        else {
+                            return Optional.empty();
+                        }
+                    });
+        }
     }
 
     /**
@@ -195,7 +263,20 @@ public class EntityFinder extends ElementFinder {
      * @param entityElement
      */
     public Stream<PropertyElement> streamProperties(final EntityElement entityElement) {
-        return Stream.concat(streamDeclaredProperties(entityElement), streamInheritedProperties(entityElement));
+        if (isUnionEntityType(entityElement)) {
+            // AbstractUnionEntity.key : String
+            final var keyElt = findField(entityElement, AbstractEntity.KEY)
+                    .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.KEY, entityElement)));
+            final var keyPropElt = new PropertyElement(keyElt).changeType(asType(String.class));
+            return StreamUtils.concat(streamDeclaredProperties(entityElement),
+                                      streamCommonPropertiesForUnion(entityElement),
+                                      maybePropId(entityElement).stream(),
+                                      maybePropDesc(entityElement).stream(),
+                                      Stream.of(keyPropElt));
+        }
+        else {
+            return Stream.concat(streamDeclaredProperties(entityElement), streamInheritedProperties(entityElement));
+        }
     }
 
     /**
@@ -376,6 +457,14 @@ public class EntityFinder extends ElementFinder {
      */
     public boolean isUnionEntityType(final TypeMirror type) {
         return isSubtype(type, UNION_ENTITY_CLASS);
+    }
+
+    /**
+     * Tests whether the entity element represents a union entity type, which is defined as any subtype of
+     * {@link AbstractUnionEntity} (itself included).
+     */
+    public boolean isUnionEntityType(final EntityElement element) {
+        return isUnionEntityType(element.asType());
     }
 
     public boolean isSyntheticEntityType(final EntityElement entity) {
