@@ -12,51 +12,45 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultV
 
 import static java.lang.String.format;
 
-/**
- * A package private helper class to decompose the task of implementing the Entity Centre DSL.
- * It has direct access to protected fields in {@link EntityCentreBuilder}.
- *
- * @author TG Team
- *
- * @param <T>
- */
+/// A package private helper class to decompose the task of implementing the Entity Centre DSL.
+/// It has direct access to protected fields in [EntityCentreBuilder].
+///
 class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IMultiValueCritSelector<T> {
 
-    private static final String ERR_PROP_TYPE_IS_STRING_BUT_AUTOCOMPLETER_TYPE_IS_NOT_ENTITY_TYPE = "Property '%s'@'%s' is of String type, but cannot be used for autocompletion as its autocompletion type is not of an entity type (%s).";
-    private static final String ERR_AUTOCOMPLETER_TYPE_IS_NOT_OF_ENTITY_TYPE = "Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).";
-    private static final String ERR_AUTOCOMPLETER_TYPE_IS_NOT_SUPER_TYPE_OF_PROP_TYPE = "Property '%s'@'%s' has type %s, but type %s has been specified instead.";
+    static final String
+            ERR_PROP_TYPE_IS_STRING_BUT_AUTOCOMPLETER_TYPE_IS_NOT_ENTITY_TYPE = "Type [%s] cannot be used for autocompletion of String-typed property [%s.%s]. Only entity types may be used.",
+            ERR_PROP_CANNOT_BE_AUTOCOMPLETED = "Property [%s.%s] cannot be used for autocompletion as it is not of an entity type: [%s].",
+            ERR_AUTOCOMPLETER_TYPE_DOES_NOT_MATCH_PROP_TYPE = "Type [%s] cannot be used for autocompletion of property [%s.%s] with type [%s].";
+
     private final EntityCentreBuilder<T> builder;
     private final ISelectionCriteriaBuilder<T> selectionCritBuilder;
-
 
     public SelectionCriteriaBuilderAsMulti(final EntityCentreBuilder<T> builder, final ISelectionCriteriaBuilder<T> selectionCritBuilder) {
         this.builder = builder;
         this.selectionCritBuilder = selectionCritBuilder;
     }
 
-
     @Override
     public <V extends AbstractEntity<?>> IMultiValueAutocompleterBuilder<T, V> autocompleter(final Class<V> type) {
         if (type == null) {
-            throw new WebUiBuilderException("Property type is a required argument and cannot be omitted.");
+            throw new WebUiBuilderException("[type] is a required argument and cannot be omitted.");
         }
         // check if the specified property type is applicable to an autocompleter
-        final String propPath = builder.currSelectionCrit.orElseThrow(() -> new WebUiBuilderException("Selection criteria is not defined."));
+        final String propPath = builder.currSelectionCrit.orElseThrow(() -> new WebUiBuilderException("Selection criteria are not defined."));
         final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(builder.getEntityType(), propPath);
         if (EntityUtils.isString(propType)) {
             if (!EntityUtils.isEntityType(type)) {
-                throw new WebUiBuilderException(format(ERR_PROP_TYPE_IS_STRING_BUT_AUTOCOMPLETER_TYPE_IS_NOT_ENTITY_TYPE, propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName()));
+                throw new WebUiBuilderException(format(ERR_PROP_TYPE_IS_STRING_BUT_AUTOCOMPLETER_TYPE_IS_NOT_ENTITY_TYPE, type.getTypeName(), builder.getEntityType().getSimpleName(), propPath));
             }
         } else if (!EntityUtils.isEntityType(propType)) {
-            throw new WebUiBuilderException(format(ERR_AUTOCOMPLETER_TYPE_IS_NOT_OF_ENTITY_TYPE, propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName()));
+            throw new WebUiBuilderException(format(ERR_PROP_CANNOT_BE_AUTOCOMPLETED, builder.getEntityType().getSimpleName(), propPath, propType.getTypeName()));
         } else if (!type.isAssignableFrom(propType)) {
-            throw new WebUiBuilderException(format(ERR_AUTOCOMPLETER_TYPE_IS_NOT_SUPER_TYPE_OF_PROP_TYPE, propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName(), type.getSimpleName()));
+            throw new WebUiBuilderException(format(ERR_AUTOCOMPLETER_TYPE_DOES_NOT_MATCH_PROP_TYPE, type.getName(), builder.getEntityType().getSimpleName(), propPath, propType.getTypeName()));
         }
 
         builder.providedTypesForAutocompletedSelectionCriteria.put(propPath, type);
         return new SelectionCriteriaBuilderAsMultiString<>(builder, selectionCritBuilder);
     }
-
 
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -69,7 +63,6 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
 
         return new SelectionCriteriaBuilderAsMultiString(builder, selectionCritBuilder);
     }
-
 
     @Override
     public IMultiBooleanDefaultValueAssigner<T> bool() {

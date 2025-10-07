@@ -49,8 +49,8 @@ public interface IMaster<T extends AbstractEntity<?>> {
     /// Returns the optional entity type of the autocompleter associated with the specified property name.
     /// If the autocompleter is not of an entity type, an empty optional is returned.
     ///
-    default <V extends AbstractEntity<?>> Optional<Class<V>> getAutocompleterAssociatedType(Class<T> entityType, String propertyName) {
-        Class<?> propertyType = determinePropertyType(entityType, propertyName);
+    default <V extends AbstractEntity<?>> Optional<Class<V>> getAutocompleterAssociatedType(final Class<T> entityType, final String propertyName) {
+        final var propertyType = determinePropertyType(entityType, propertyName);
         if (AbstractEntity.class.isAssignableFrom(propertyType)) {
             return Optional.of((Class<V>) propertyType);
         }

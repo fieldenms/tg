@@ -9,7 +9,7 @@ public interface IWidgetSelector<T extends AbstractEntity<?>> {
 
     /// An editor for entity-typed properties.
     IAutocompleterConfig<T> asAutocompleter();
-    /// An editor for string-typed properties but for specified entity type
+    /// An editor for String-typed properties with `entityType` used for autocompletion.
     IAutocompleterConfig<T> asAutocompleter(Class<? extends AbstractEntity<?>> entityType);
     /// An editor for properties of type String that have not too long values (i.e. can normally fit on a single line).
     ISinglelineTextConfig<T> asSinglelineText();

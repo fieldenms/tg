@@ -19,6 +19,8 @@ import static org.junit.Assert.*;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.*;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
+import static ua.com.fielden.platform.web.centre.api.impl.SelectionCriteriaBuilderAsMulti.ERR_AUTOCOMPLETER_TYPE_DOES_NOT_MATCH_PROP_TYPE;
+import static ua.com.fielden.platform.web.centre.api.impl.SelectionCriteriaBuilderAsMulti.ERR_PROP_CANNOT_BE_AUTOCOMPLETED;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Orientation.LANDSCAPE;
 
@@ -101,7 +103,12 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final WebUiBuilderException ex) {
-            assertEquals(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", "this", TgWorkOrder.class.getSimpleName(), TgWorkOrder.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());
+            assertEquals(format(ERR_AUTOCOMPLETER_TYPE_DOES_NOT_MATCH_PROP_TYPE,
+                                TgVehicle.class.getTypeName(),
+                                TgWorkOrder.class.getSimpleName(),
+                                "this",
+                                TgWorkOrder.class.getTypeName()),
+                         ex.getMessage());
         }
     }
 
@@ -145,7 +152,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used as a single-valued criterion due to missing @CritOnly(SINGLE) in its definition.", "vehicle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used as a single-valued criterion due to missing @CritOnly(SINGLE) in its definition.", "vehicle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -158,7 +166,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used as a single-valued criterion due to its definition as @CritOnly(RANGE).", "orgunitCritOnly", TgWorkOrder.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used as a single-valued criterion due to its definition as @CritOnly(RANGE).", "orgunitCritOnly", TgWorkOrder.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -171,7 +180,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used as a multi-valued criterion due to its definition as @CritOnly(SINGLE).", "orgunitCritOnlySingle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used as a multi-valued criterion due to its definition as @CritOnly(SINGLE).", "orgunitCritOnlySingle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -184,7 +194,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used as a range-valued criterion due to its definition as @CritOnly(SINGLE).", "intSingle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used as a range-valued criterion due to its definition as @CritOnly(SINGLE).", "intSingle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -219,7 +230,7 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final WebUiBuilderException ex) {
-            assertEquals("Property type is a required argument and cannot be omitted.", ex.getMessage());
+            assertEquals("[type] is a required argument and cannot be omitted.", ex.getMessage());
         }
     }
 
@@ -232,7 +243,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final WebUiBuilderException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", "intRange", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+            assertEquals(format(ERR_PROP_CANNOT_BE_AUTOCOMPLETED, TgWorkOrder.class.getSimpleName(), "intRange", Integer.class.getTypeName()),
+                         ex.getMessage());
         }
     }
 
@@ -257,7 +269,12 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final WebUiBuilderException ex) {
-            assertEquals(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", "orgunitCritOnly", TgWorkOrder.class.getSimpleName(), TgOrgUnit1.class.getSimpleName(), TgWorkOrder.class.getSimpleName()), ex.getMessage());
+            assertEquals(format(ERR_AUTOCOMPLETER_TYPE_DOES_NOT_MATCH_PROP_TYPE,
+                                TgWorkOrder.class.getTypeName(),
+                                TgWorkOrder.class.getSimpleName(),
+                                "orgunitCritOnly",
+                                TgOrgUnit1.class.getTypeName()),
+                         ex.getMessage());
         }
     }
 
@@ -270,7 +287,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for a text component as it is not of type String or RichText (%s).", "vehicle", TgWorkOrder.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used for a text component as it is not of type String or RichText (%s).", "vehicle", TgWorkOrder.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -283,7 +301,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for a boolean component as it is not of type boolean (%s).", "vehicle.key", TgWorkOrder.class.getSimpleName(), String.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used for a boolean component as it is not of type boolean (%s).", "vehicle.key", TgWorkOrder.class.getSimpleName(), String.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -344,7 +363,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for a boolean component as it is not of type boolean (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used for a boolean component as it is not of type boolean (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -357,7 +377,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for an integer component as it is not of type Integer (%s).", "boolSingle", TgWorkOrder.class.getSimpleName(), boolean.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used for an integer component as it is not of type Integer (%s).", "boolSingle", TgWorkOrder.class.getSimpleName(), boolean.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -370,7 +391,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for a decimal component as it is not of type BigDecimal or Money (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used for a decimal component as it is not of type BigDecimal or Money (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -383,7 +405,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for a text component as it is not of type String or RichText (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used for a text component as it is not of type String or RichText (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -396,7 +419,7 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for a date component as it is not of type Date (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+            assertEquals(format("Property '%s'@'%s' cannot be used for a date component as it is not of type Date (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -422,7 +445,7 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", "orgunitCritOnlySingle", TgWorkOrder.class.getSimpleName(), TgOrgUnit1.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());
+            assertEquals(format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", "orgunitCritOnlySingle", TgWorkOrder.class.getSimpleName(), TgOrgUnit1.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -435,7 +458,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -469,7 +493,7 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for a date component as it is not of type Date (%s).", "yearlyCost", TgWorkOrder.class.getSimpleName(), Money.class.getSimpleName()), ex.getMessage());
+            assertEquals(format("Property '%s'@'%s' cannot be used for a date component as it is not of type Date (%s).", "yearlyCost", TgWorkOrder.class.getSimpleName(), Money.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -482,7 +506,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for an integer component as it is not of type Integer (%s).", "yearlyCost", TgWorkOrder.class.getSimpleName(), Money.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used for an integer component as it is not of type Integer (%s).", "yearlyCost", TgWorkOrder.class.getSimpleName(), Money.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -495,7 +520,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for a decimal component as it is not of type BigDecimal or Money (%s).", "vehicle.initDate", TgWorkOrder.class.getSimpleName(), Date.class.getSimpleName()), ex.getMessage());
+            assertEquals(
+                    format("Property '%s'@'%s' cannot be used for a decimal component as it is not of type BigDecimal or Money (%s).", "vehicle.initDate", TgWorkOrder.class.getSimpleName(), Date.class.getSimpleName()), ex.getMessage());
         }
     }
 

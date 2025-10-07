@@ -128,16 +128,11 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     /// Creates value matcher instance.
     ///
     public IValueMatcherWithContext<T, ?> createValueMatcher(final String propertyName) {
-        final Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherType = masterConfig.matcherTypeFor(propertyName);
-        if (matcherType.isPresent()) {
-            return injector.getInstance(matcherType.get());
-        }
-        final var associatedType = masterConfig.getAutocompleterAssociatedType(entityType, propertyName);
-        if(associatedType.isPresent()) {
-            return createDefaultValueMatcherForPropType(associatedType.get(), coFinder);
-        }
-
-        return createDefaultValueMatcher(propertyName, entityType, coFinder);
+        return masterConfig.matcherTypeFor(propertyName)
+                .<IValueMatcherWithContext<T, ?>> map(injector::getInstance)
+                .or(() -> masterConfig.getAutocompleterAssociatedType(entityType, propertyName)
+                                      .map(it -> createDefaultValueMatcherForPropType(it, coFinder)))
+                .orElseGet(() -> createDefaultValueMatcher(propertyName, entityType, coFinder));
     }
 
     private IValueMatcherWithContext<T, ?> createDefaultValueMatcherForPropType(final Class<? extends AbstractEntity<?>> propertyType, final ICompanionObjectFinder coFinder) {
@@ -148,11 +143,9 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     /// Creates fetch model for entity-typed autocompleted values. Fetches only properties specified in Master DSL configuration.
     ///
     public <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String propertyName, final Class<V> propType) {
-        final Optional<Class<V>> associatedType = masterConfig.getAutocompleterAssociatedType(entityType, propertyName);
-        if(associatedType.isPresent()) {
-            return createFetchModelForAutocompleterFrom(associatedType.get(), masterConfig.additionalAutocompleterPropertiesFor(propertyName));
-        }
-        return createFetchModelForAutocompleterFrom(propType, masterConfig.additionalAutocompleterPropertiesFor(propertyName));
+        return createFetchModelForAutocompleterFrom(
+                masterConfig.<V>getAutocompleterAssociatedType(entityType, propertyName).orElse(propType),
+                masterConfig.additionalAutocompleterPropertiesFor(propertyName));
     }
 
     /// Creates default value matcher with context for the specified entity property.

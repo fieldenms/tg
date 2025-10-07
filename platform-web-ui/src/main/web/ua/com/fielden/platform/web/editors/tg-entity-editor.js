@@ -237,7 +237,7 @@ export class TgEntityEditor extends TgEditor {
             },
 
             /**
-             * Determines whether this entity editor is binded to string property instead of entity property as it is in case of multi==false or list property as it is in multi=true.
+             * Determines whether this entity editor is bound to a string property instead of an entity property as it is in case of multi==false or a list property as it is in case of multi=true.
              */
             bindToString: {
                 type: Boolean,

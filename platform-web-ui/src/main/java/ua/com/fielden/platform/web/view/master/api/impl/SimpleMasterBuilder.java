@@ -379,16 +379,12 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
         @Override
         public <V extends AbstractEntity<?>> Optional<Class<V>> getAutocompleterAssociatedType(final Class<T> entityType, final String propertyName) {
-            final Optional<Class<V>> optionalPropType = IMaster.super.getAutocompleterAssociatedType(entityType, propertyName);
-            if (!optionalPropType.isPresent()) {
-                final Optional<AbstractEntityAutocompletionWidget> widget = widgets.stream()
-                        .filter(w -> w.propertyName != null && w.propertyName.equals(propertyName) && w.widget() instanceof AbstractEntityAutocompletionWidget)
-                        .findFirst().map(w -> (AbstractEntityAutocompletionWidget)w.widget());
-                if (widget.isPresent()) {
-                    return Optional.of((Class<V>)widget.get().propType);
-                }
-            }
-            return optionalPropType;
+            return IMaster.super.<V>getAutocompleterAssociatedType(entityType, propertyName)
+                    .or(() -> widgets.stream()
+                            .filter(w -> w.propertyName != null && w.propertyName.equals(propertyName) && w.widget() instanceof AbstractEntityAutocompletionWidget)
+                            .findFirst()
+                            .map(w -> (AbstractEntityAutocompletionWidget) w.widget())
+                            .map(ww -> (Class<V>) ww.propType));
         }
 
         /// Returns action configuration for concrete action kind and its number in that kind's space.
