@@ -37,12 +37,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 
-/**
- * A test case for utility functions in {@link EntityFinder}.
- *
- * @author TG Team
- *
- */
+/// A test case for utility functions in [EntityFinder].
+///
 public class EntityFinderTest {
 
     @ClassRule

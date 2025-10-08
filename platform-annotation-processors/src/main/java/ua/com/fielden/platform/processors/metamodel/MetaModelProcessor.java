@@ -25,6 +25,7 @@ import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.utils.ImmutableSetUtils;
 import ua.com.fielden.platform.utils.Pair;
 
+import javax.annotation.processing.FilerException;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -50,11 +51,8 @@ import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.*;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isSameType;
 
-/**
- * Annotation processor that generates meta-models for domain entities.
- *
- * @author TG Team
- */
+/// Annotation processor that generates meta-models for domain entities.
+///
 @SupportedAnnotationTypes("*")
 public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
@@ -63,10 +61,9 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
     private EntityFinder entityFinder;
     private MetaModelFinder metaModelFinder;
 
-    /**
-     * This collection is used to track meta-models that were generated during one of the rounds of the current compilation cycle.
-     * This tracking helps avoiding attempts to regenerate already generated meta-models during the current compilation cycle, which otherwise results in FilerException.
-     */
+    /// This collection is used to track meta-models that were generated during one of the rounds of the current compilation cycle.
+    /// This tracking helps to avoid regenerating already generated meta-models during the current compilation cycle, which otherwise results in [FilerException].
+    ///
     private final Set<MetaModelConcept> allGeneratedMetaModels = new HashSet<>();
 
     @Override
@@ -123,12 +120,10 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         return false;
     }
 
-    /**
-     * Processes a round to collect entity classes for meta-model generation.
-     * Returns {@link MetaModelConcept}s representing entities that require a meta-model to be generated.
-     *
-     * @param maybeMetaModelsElement – the meta-models entry point class
-     */
+    /// Processes a round to collect entity classes for meta-model generation.
+    /// Returns [MetaModelConcept]s representing entities that require a meta-model to be generated.
+    ///
+    /// @param maybeMetaModelsElement – the meta-models entry point class
     private Stream<MetaModelConcept> collectEntitiesForMetaModelGeneration(final RoundEnvironment roundEnv, final Optional<MetaModelsElement> maybeMetaModelsElement) {
         final Set<TypeElement> metaModeledElements = roundEnv.getRootElements().stream()
                 .mapMulti(TYPE_ELEMENT_FILTER)
@@ -163,11 +158,10 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         return metaModelConcepts.stream();
     }
 
-    /**
-     * Analyses the structure of {@code entityElement} to identify other referenced entities that could be subject to meta-modelling.
-     * This is required to find those entity types that are not contained in the set of root elements of the round environment (e.g., platform entity types).
-     * This process proceeds recursively breadth-first with all the relevant meta-model concepts added to the {@code metaModelConcepts} collection.
-     */
+    /// Analyses the structure of `entityElement` to identify other referenced entities that could be subject to meta-modelling.
+    /// This is required to find those entity types that are not contained in the set of root elements of the round environment (e.g., platform entity types).
+    /// This process proceeds recursively breadth-first with all the relevant meta-model concepts added to the `metaModelConcepts` collection.
+    ///
     private void explore(final EntityElement entityElement, final Set<String> existingMetaModels, final Set<MetaModelConcept> metaModelConcepts) {
         final var mccs = Stream.concat(entityFinder.streamParents(entityElement),
                                        entityFinder.findProperties(entityElement)
@@ -189,13 +183,9 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         }
     }
 
-    /**
-     * Re-generates a meta-model class, represented by {@code mme}, as an interface with default visibility in order to make it unusable.
-     * This is necessary to invalidate meta-models for entities that have been removed or are no longer recognised as domain entities.
-     *
-     * @param mme
-     * @return
-     */
+    /// Re-generates a meta-model class, represented by `mme`, as an interface with default visibility in order to make it unusable.
+    /// This is necessary to invalidate meta-models for entities that have been removed or are no longer recognised as domain entities.
+    ///
     private boolean writeInactiveMetaModel(final MetaModelElement mme) {
         final TypeSpec.Builder emptyMetaModelBuilder = TypeSpec.interfaceBuilder(mme.getSimpleName().toString());
 
@@ -224,12 +214,8 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         return true;
     }
 
-    /**
-     * Check the content of {@code metaModelsElement} to identify fields that represent meta-models for entities, which do not exists or are not domain entities.
-     *
-     * @param metaModelsElement
-     * @return a set of inactive meta-models; could be empty
-     */
+    /// Check the content of `metaModelsElement` to identify fields that represent meta-models for entities, which do not exists or are not domain entities.
+    ///
     private Set<MetaModelElement> findInactiveMetaModels(final MetaModelsElement metaModelsElement) {
         printNote("Verifying [%s].", metaModelsElement.getSimpleName());
         final Set<MetaModelElement> inactive = new LinkedHashSet<>();
@@ -253,37 +239,30 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         return inactive;
     }
 
-    /**
-     * A convenient wrapper invoking {@link #writeMetaModel(MetaModelConcept, Predicate)} with predicate {@code EntityFinder::isPropertyOfDomainEntityType} to generate matching fields having the type of a corresponding meta-model.
-     *
-     * @param mmc
-     * @return
-     */
+    /// A convenient wrapper invoking [#writeMetaModel(MetaModelConcept,Predicate)] with predicate `EntityFinder::isPropertyOfDomainEntityType` to generate matching fields having the type of corresponding meta-model.
+    ///
     private boolean writeMetaModel(final MetaModelConcept mmc) {
         return writeMetaModel(mmc, entityFinder::isPropertyOfDomainEntityType);
     }
 
-    /**
-     * Generates and writes a meta-model source file for an entity, represented by {@code mmc}.
-     * <p>
-     * A meta-model is generated in 2 forms:
-     * <ol>
-     *  <li> A regular meta-model which extends {@link EntityMetaModel}, and
-     *  <li> An aliased meta-model which extends the first one and provides aliasing capabilities.
-     * </ol>
-     * Therefore, 2 meta-model source files are generated for every entity.
-     * <p>
-     * Properties, which test positive for COVID... {@code propertyTypeMetamodeledTest} are modelled with a respective
-     * meta-model type. All other properties, unless their type cannot be resovled, are modelled with {@link PropertyMetaModel},
-     * which are terminal and do not support property traversing.
-     * <p>
-     * If an entity extends another meta-modelled entity, then the meta-model for the latter will be used as a super class
-     * for the meta-model generated for the former.
-     *
-     * @param mmc
-     * @param propertyTypeMetamodeledTest
-     * @return {@code true} if the meta-model was successfully generated, {@code false} otherwise
-     */
+    /// Generates and writes a meta-model source file for an entity, represented by `mmc`.
+    ///
+    /// A meta-model is generated in 2 forms:
+    ///
+    /// -  A regular meta-model which extends [EntityMetaModel], and
+    /// -  An aliased meta-model which extends the first one and provides aliasing capabilities.
+    ///
+    /// Therefore, 2 meta-model source files are generated for every entity.
+    ///
+    /// Properties, which test positive for COVID... `propertyTypeMetamodeledTest` are modelled with a respective meta-model type.
+    /// All other properties, unless their type cannot be resovled, are modelled with [PropertyMetaModel],
+    /// which are terminal and do not support property traversing.
+    ///
+    /// If an entity extends another meta-modelled entity, then the meta-model for the latter will be used as a super class
+    /// for the meta-model generated for the former.
+    ///
+    /// @return `true` if the meta-model was successfully generated, `false` otherwise
+    ///
     private boolean writeMetaModel(final MetaModelConcept mmc, final Predicate<PropertyElement> propertyTypeMetamodeledTest) {
         final String thisMetaModelName = mmc.getSimpleName();
         final String thisMetaModelPkgName = mmc.getPackageName();
@@ -660,13 +639,8 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         }
     }
 
-    /**
-     * Determines appropriate super class for a meta-model to extend. It can either be the default meta-model super class or another meta-model class.
-     *
-     * @param entityParent
-     * @param isEntitySuperclassMetamodeled
-     * @return
-     */
+    /// Determines appropriate super class for a meta-model to extend. It can either be the default meta-model super class or another meta-model class.
+    ///
     private static ClassName determineMetaModelSuperClassName(final EntityElement entityParent, final boolean isEntitySuperclassMetamodeled) {
         if (isEntitySuperclassMetamodeled) {
             final MetaModelConcept parentMmc = new MetaModelConcept(entityParent);
@@ -676,14 +650,8 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         }
     }
 
-    /**
-     * Add Javadoc to {@code specBuilder}, which describes an entity property.
-     *
-     * @param prop
-     * @param specBuilder
-     * @param propTypeMmcClassName
-     * @return
-     */
+    /// Add Javadoc to `specBuilder`, which describes an entity property.
+    ///
     private void buildJavadoc(final PropertyElement prop, final MethodSpec.Builder specBuilder, final ClassName propTypeMmcClassName) {
         // javadoc: property title and description
         final Pair<String, String> propTitleAndDesc = entityFinder.getPropTitleAndDesc(prop);
@@ -733,13 +701,12 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         writeMetaModelsClass(metaModelConcepts, empty(), emptyList());
     }
 
-    /**
-     * Generates a meta-model collection class, which serves as an entry-point for accessing domain meta-models at design time.
-     *
-     * @param metaModelConcepts new meta-models that should be added
-     * @param maybeMetaModelsElement optionally provides an existing meta-models class, contents of which should be copied
-     * @param inactiveMetaModelElements inactive meta-models that should be excluded
-     */
+    /// Generates a meta-model collection class, which serves as an entry-point for accessing domain meta-models at design time.
+    ///
+    /// @param metaModelConcepts         the new meta-models that should be added
+    /// @param maybeMetaModelsElement    optionally provides an existing meta-models class, contents of which should be copied
+    /// @param inactiveMetaModelElements the inactive meta-models that should be excluded
+    ///
     private void writeMetaModelsClass(
             final Collection<MetaModelConcept> metaModelConcepts,
             final Optional<MetaModelsElement> maybeMetaModelsElement,
@@ -851,17 +818,12 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         printNote("Finished generating the meta-models entry point as [%s].", metaModelsTypeSpec.name);
     }
 
-    /**
-     * Creates a {@link FieldSpec} for field with name {@code fieldName} of type {@code metaModelClassName} in {@code MetaModels} for representing a reference to a domain meta-model.
-     * <p>
-     * <pre>
-     * public static final ${METAMODEL} ${NAME} = new ${METAMODEL}();
-     * </pre>
-     *
-     * @param metaModelClassName
-     * @param fieldName
-     * @return
-     */
+    /// Creates a [FieldSpec] for field with name `fieldName` of type `metaModelClassName` in `MetaModels` for representing a reference to a domain meta-model.
+    ///
+    /// ```Java
+    /// public static final ${METAMODEL} ${NAME} = new ${METAMODEL}();
+    /// ```
+    ///
     private static FieldSpec specFieldForMetaModel(final ClassName metaModelClassName, final String fieldName) {
         final var fieldSpec = FieldSpec.builder(metaModelClassName, fieldName)
                 .initializer("new $T()", metaModelClassName)
@@ -870,19 +832,17 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         return fieldSpec;
     }
 
-    /**
-     * Creates a {@link MethodSpec} for the <code>MetaModels</code> class to instantiate aliased meta-models.
-     * <pre>
-     * public static ${METAMODEL_ALIASED} ${NAME}(final String alias) {
-     *     final ${METAMODEL_ALIASED} aliased = new ${METAMODEL_ALIASED}(alias);
-     *     return aliased;
-     * }
-     *
-     * </pre>
-     * @param metaModelAliasedClassName name of the meta-model to be accessed
-     * @param methodName name to create the method with
-     * @return
-     */
+    /// Creates a [MethodSpec] for the <code>MetaModels</code> class to instantiate aliased meta-models.
+    /// ```Java
+    /// public static ${METAMODEL_ALIASED} ${NAME}(final String alias) {
+    ///     final ${METAMODEL_ALIASED} aliased = new ${METAMODEL_ALIASED}(alias);
+    ///     return aliased;
+    /// }
+    /// ```
+    ///
+    /// @param metaModelAliasedClassName name of the meta-model to be accessed
+    /// @param methodName                name to create the method with
+    ///
     private static MethodSpec aliasMethodForMetaModel(final ClassName metaModelAliasedClassName, final String methodName) {
         final MethodSpec method = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -894,22 +854,14 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         return method;
     }
 
-    /**
-     * A helper method for naming fields in {@code MetaModels} that represent access points to domain meta-models.
-     *
-     * @param simpleName
-     * @return
-     */
+    /// A helper method for naming fields in `MetaModels` that represent access points to domain meta-models.
+    ///
     private static String nameFieldForMetaModel(final String simpleName) {
         return simpleName + "_";
     }
 
-    /**
-     * Makes a field name to be used in a meta-model class to represent a entity property.
-     *
-     * @param propName
-     * @return
-     */
+    /// Makes a field name to be used in a meta-model class to represent a entity property.
+    ///
     private static String fieldNameForProp(String propName) {
         return propName + "_pn";
     }

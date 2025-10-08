@@ -37,11 +37,8 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
-/**
- * A collection of utility functions to finding various elements in application to an entity abstraction of type {@link EntityElement}.
- *
- * @author TG Team
- */
+/// A collection of utility functions to finding various elements in application to an entity abstraction of type [EntityElement].
+///
 public class EntityFinder extends ElementFinder {
     public static final Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
     public static final Class<?> UNION_ENTITY_CLASS = AbstractUnionEntity.class;
@@ -50,22 +47,20 @@ public class EntityFinder extends ElementFinder {
         super(procEnv);
     }
 
-    /**
-     * Returns the element representing the given entity type.
-     *
-     * @see ElementFinder#getTypeElement(Class)
-     * @throws ElementFinderException if no corresponding type element was found
-     */
+    /// Returns the element representing the given entity type.
+    ///
+    /// @see ElementFinder#getTypeElement(Class)
+    /// @throws ElementFinderException if no corresponding type element was found
+    ///
     public EntityElement findEntity(final Class<? extends AbstractEntity> clazz) {
         return newEntityElement(getTypeElement(clazz));
     }
 
-    /**
-     * Returns the element representing the entity type with the specified canonical name.
-     *
-     * @see ElementFinder#getTypeElement(Class)
-     * @throws ElementFinderException if no corresponding type element was found
-     */
+    /// Returns the element representing the entity type with the specified canonical name.
+    ///
+    /// @see ElementFinder#getTypeElement(Class)
+    /// @throws ElementFinderException if no corresponding type element was found
+    ///
     public EntityElement findEntity(final String name) {
         return newEntityElement(getTypeElement(name));
     }
