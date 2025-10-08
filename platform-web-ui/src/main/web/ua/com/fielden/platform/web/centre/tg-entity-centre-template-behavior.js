@@ -368,7 +368,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 }
                 return action._countActualEntities() > 0;
             }.bind(this);
-            action.hasNextEntry = function(entitiesCount, entityIndex) {
+            action.hasNextEntry = function () {
                 const thisPageInd = this.$.egi.findFilteredEntityIndex(action.currentEntity());
                 if (thisPageInd >= 0) {
                     const lastEntity = action._findLastEntity();
