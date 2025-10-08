@@ -1068,6 +1068,8 @@ Polymer({
             if (propertyType instanceof this._reflector._getEntityTypePrototype() && propertyType.isUnionEntity() && entity.get(column.getActualProperty())) {
                 //Should consider whether it is correct for dynamic columns.
                 return entity.get(column.getActualProperty())._activeEntity().type().entityMaster();
+            } else if (propertyType instanceof this._reflector._getEntityTypePrototype() && propertyType.isUnionEntity()) {
+                return true;
             } else if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
                 return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
             }

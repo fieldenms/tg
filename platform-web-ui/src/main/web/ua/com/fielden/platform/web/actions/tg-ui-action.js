@@ -716,7 +716,16 @@ Polymer({
         }
         // enhances it with information of what 'property' was chosen (property result-set actions)
         if (self.chosenProperty !== null) {
-            self._enhanceContextWithChosenProperty(context, self.chosenProperty);
+            let chosenProperty = null;
+            if (self.currentEntity()) {
+                const entity = self.currentEntity().get(self.chosenProperty);
+                const entityType = entity && entity.constructor.prototype.type.call(entity);
+                chosenProperty = self.chosenProperty + (entityType && entityType.isUnionEntity() && entity._activeProperty() ? '.' + entity._activeProperty() : '');
+            }
+            else {
+                chosenProperty = self.chosenProperty;
+            }
+            self._enhanceContextWithChosenProperty(context, chosenProperty);
         }
         if (self.rootEntityType) {
             this._reflector.setCustomProperty(context, '@@rootEntityType', self.rootEntityType);

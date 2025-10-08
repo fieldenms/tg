@@ -17,16 +17,12 @@ export function getFirstEntityTypeAndProperty (entity, propertyName) {
         const entityType = entity.constructor.prototype.type.call(entity);
         let currentProperty = propertyName;
         let currentType = entityType.prop(propertyName).type();
-        if (currentType instanceof reflector._getEntityTypePrototype() && currentType.isUnionEntity() && entity.get(propertyName)) {
-            currentProperty += "." + entity.get(propertyName)._activeProperty();
-            currentType = entityType.prop(currentProperty).type();
-        }
         while (!(currentType instanceof reflector._getEntityTypePrototype())) {
             const lastDotIndex = currentProperty.lastIndexOf(".");
             currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
             currentType = currentProperty ? entityType.prop(currentProperty).type() : entityType;
         }
-        return [calculateEntityType(entity.get(currentProperty), reflector) || currentType, currentProperty]; 
+        return [calculateEntityType(entity.get(currentProperty), reflector) || currentType.isUnionEntity() && currentType.prop(currentType.unionProps()[0]).type() || currentType, currentProperty];
     } else if (entity) {
         return [calculateEntityType(entity, reflector), propertyName];
     }
@@ -41,7 +37,12 @@ export function getFirstEntityTypeAndProperty (entity, propertyName) {
  */
 function calculateEntityType(entity, reflector) {
     const entityType = entity && entity.constructor.prototype.type.call(entity);
-    return (entityType && entityType.entityTypeCarrierName() && reflector.getType(entity.get(entityType.entityTypeCarrierName()))) || entityType;
+    return (entityType &&
+        (
+            entityType.entityTypeCarrierName() && reflector.getType(entity.get(entityType.entityTypeCarrierName()))
+            || entityType.isUnionEntity() && entity._activeEntity() && entity._activeEntity().constructor.prototype.type.call(entity._activeEntity())
+        )
+    ) || entityType;
 }
 
 /**
