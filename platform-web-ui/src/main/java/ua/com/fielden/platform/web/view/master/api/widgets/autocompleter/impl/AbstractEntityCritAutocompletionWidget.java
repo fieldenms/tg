@@ -1,22 +1,17 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl;
 
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
-import ua.com.fielden.platform.web.centre.api.crit.impl.EntitySingleCritAutocompletionWidget;
 import ua.com.fielden.platform.web.centre.widgets.EntityMultiCritAutocompletionWidget;
+import ua.com.fielden.platform.web.centre.widgets.EntitySingleCritAutocompletionWidget;
 
-/**
- *
- * A base class for selection criteria as autocompleters.
- *
- * @author TG Team
- *
- */
+import java.util.Map;
+
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
+
+/// A base class for selection criteria as autocompleters.
+///
 public abstract class AbstractEntityCritAutocompletionWidget extends AbstractEntityAutocompletionWidget {
 
     protected AbstractEntityCritAutocompletionWidget(
@@ -36,14 +31,10 @@ public abstract class AbstractEntityCritAutocompletionWidget extends AbstractEnt
         return attrs;
     }
 
-    /**
-     * Adds the bindings for centre context (if it is not empty).
-     *
-     * Applicable only for {@link EntityMultiCritAutocompletionWidget} and {@link EntitySingleCritAutocompletionWidget}.
-     *
-     * @param attrs
-     * @param centreContextConfig
-     */
+    /// Adds the bindings for centre context (if it is not empty).
+    ///
+    /// Applicable only for [EntityMultiCritAutocompletionWidget] and [EntitySingleCritAutocompletionWidget].
+    ///
     protected void addCentreContextBindings(final Map<String, Object> attrs, final CentreContextConfig centreContextConfig) {
         if (centreContextConfig != null) {
             attrs.put("create-modified-properties-holder", "[[_createModifiedPropertiesHolder]]");

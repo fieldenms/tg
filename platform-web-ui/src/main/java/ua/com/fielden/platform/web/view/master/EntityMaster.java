@@ -1,34 +1,13 @@
 package ua.com.fielden.platform.web.view.master;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.toMap;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
-import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
-import static ua.com.fielden.platform.web.centre.EntityCentre.createFetchModelForAutocompleterFrom;
-
-import java.util.Map;
-import java.util.Optional;
-
 import com.google.inject.Injector;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackPropertyDescriptorMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.DefaultEntityProducerForCompoundMenuItem;
-import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
-import ua.com.fielden.platform.entity.IEntityProducer;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -44,12 +23,22 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentre;
 
-/**
- * Represents entity master.
- *
- * @author TG Team
- *
- */
+import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.EntityCentre.createFetchModelForAutocompleterFrom;
+
+/// Represents entity master.
+///
 public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     public static final String ENTITY_TYPE = "@entity_type";
     private final Class<T> entityType;
@@ -58,14 +47,8 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     private final ICompanionObjectFinder coFinder;
     private final Injector injector;
 
-    /**
-     * Creates master for the specified <code>entityType</code>, <code>smConfig</code> and <code>entityProducerType</code>.
-     *
-     * @param entityType
-     * @param entityProducerType
-     * @param masterConfig
-     *
-     */
+    /// Creates master for the specified `entityType`, `smConfig` and `entityProducerType`.
+    ///
     public EntityMaster(
             final Class<T> entityType,
             final Class<? extends IEntityProducer<T>> entityProducerType,
@@ -78,18 +61,11 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         this.injector = injector;
     }
 
-    /**
-     * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
-     *
-     *
-     * @param entityType
-     * @param entityProducerType
-     * @param injector
-     * @param customCode -- custom JS code to be executed after master component creation.
-     * @param customCodeOnAttach -- custom JS code to be executed every time master component is attached to client application's DOM
-     *
-     * @return
-     */
+    /// A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
+    ///
+    /// @param customCode custom JS code to be executed after master component creation.
+    /// @param customCodeOnAttach custom JS code to be executed every time master component is attached to client application's DOM
+    ///
     public static <T extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<T> noUiFunctionalMaster(
             final Class<T> entityType,
             final Class<? extends IEntityProducer<T>> entityProducerType,
@@ -100,14 +76,8 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return new EntityMaster<>(entityType, entityProducerType, new NoUiMaster<>(entityType, customCode, customCodeOnAttach), injector);
     }
 
-    /**
-     * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
-     *
-     * @param entityType
-     * @param entityProducerType
-     * @param injector
-     * @return
-     */
+    /// A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
+    ///
     public static <T extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<T> noUiFunctionalMaster(
             final Class<T> entityType,
             final Class<? extends IEntityProducer<T>> entityProducerType,
@@ -115,15 +85,10 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return new EntityMaster<>(entityType, entityProducerType, null, injector);
     }
 
-    /**
-     * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
-     * <p>
-     * This version specifies no producer, which means that default one will be used.
-     *
-     * @param entityType
-     * @param injector
-     * @return
-     */
+    /// A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
+    ///
+    /// This version specifies no producer, which means that default one will be used.
+    ///
     public static <T extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<T> noUiFunctionalMaster(
             final Class<T> entityType,
             final Injector injector) {
@@ -134,13 +99,8 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return new NoUiMaster<>(entityType);
     }
 
-    /**
-     * Creates master for the specified <code>entityType</code> and <code>smConfig</code> (no producer).
-     *
-     * @param entityType
-     * @param config
-     *
-     */
+    /// Creates master for the specified `entityType` and `smConfig` (no producer).
+    ///
     public EntityMaster(final Class<T> entityType, final IMaster<T> config, final Injector injector) {
         this(entityType, null, config, injector);
     }
@@ -149,22 +109,15 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return entityType;
     }
 
-    /**
-     * Creates an entity producer instance.
-     *
-     * @param injector
-     * @return
-     */
+    /// Creates an entity producer instance.
+    ///
     public IEntityProducer<T> createEntityProducer() {
         return entityProducerType == null ? createDefaultEntityProducer(injector.getInstance(EntityFactory.class), this.entityType, this.coFinder)
                 : injector.getInstance(this.entityProducerType);
     }
 
-    /**
-     * Creates default entity producer instance.
-     *
-     * @return
-     */
+    /// Creates default entity producer instance.
+    ///
     public static <T extends AbstractEntity<?>> IEntityProducer<T> createDefaultEntityProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
         if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(entityType)) {
             return new DefaultEntityProducerForCompoundMenuItem(factory, entityType, coFinder);
@@ -172,40 +125,31 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return new DefaultEntityProducerWithContext<>(factory, entityType, coFinder);
     }
 
-    /**
-     * Creates value matcher instance.
-     *
-     * @param injector
-     * @return
-     */
+    /// Creates value matcher instance.
+    ///
     public IValueMatcherWithContext<T, ?> createValueMatcher(final String propertyName) {
-        final Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherType = masterConfig.matcherTypeFor(propertyName);
-        if (matcherType.isPresent()) {
-            return injector.getInstance(matcherType.get());
-        }
-
-        return createDefaultValueMatcher(propertyName, entityType, coFinder);
+        return masterConfig.matcherTypeFor(propertyName)
+                .<IValueMatcherWithContext<T, ?>> map(injector::getInstance)
+                .or(() -> masterConfig.getAutocompleterAssociatedType(entityType, propertyName)
+                                      .map(it -> createDefaultValueMatcherForPropType(it, coFinder)))
+                .orElseGet(() -> createDefaultValueMatcher(propertyName, entityType, coFinder));
     }
 
-    /**
-     * Creates fetch model for entity-typed autocompleted values. Fetches only properties specified in Master DSL configuration.
-     *
-     * @param propertyName
-     * @param propType
-     * @return
-     */
+    private IValueMatcherWithContext<T, ?> createDefaultValueMatcherForPropType(final Class<? extends AbstractEntity<?>> propertyType, final ICompanionObjectFinder coFinder) {
+        final IEntityDao<?> co = coFinder.find(propertyType);
+        return new FallbackValueMatcherWithContext<>(co, false);
+    }
+
+    /// Creates fetch model for entity-typed autocompleted values. Fetches only properties specified in Master DSL configuration.
+    ///
     public <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String propertyName, final Class<V> propType) {
-        return createFetchModelForAutocompleterFrom(propType, masterConfig.additionalAutocompleterPropertiesFor(propertyName));
+        return createFetchModelForAutocompleterFrom(
+                masterConfig.<V>getAutocompleterAssociatedType(entityType, propertyName).orElse(propType),
+                masterConfig.additionalAutocompleterPropertiesFor(propertyName));
     }
 
-    /**
-     * Creates default value matcher with context for the specified entity property.
-     *
-     * @param propertyName
-     * @param entityType
-     * @param coFinder
-     * @return
-     */
+    /// Creates default value matcher with context for the specified entity property.
+    ///
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createDefaultValueMatcher(
             final String propertyName,
             final Class<T> entityType,
@@ -234,13 +178,8 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return type.getSimpleName().toLowerCase();
     }
 
-    /**
-     * An entity master that has no UI. Its main purpose is to be used for functional entities that have no visual representation.
-     *
-     * @author TG Team
-     *
-     * @param <T>
-     */
+    /// An entity master that has no UI. Its main purpose is to be used for functional entities that have no visual representation.
+    ///
     private static class NoUiMaster<T extends AbstractEntity<?>> implements IMaster<T> {
 
         private final IRenderable renderable;
@@ -280,20 +219,14 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         }
     }
 
-    /**
-     * Returns action configuration for concrete action kind and its number in that kind's space.
-     *
-     * @param actionKind
-     * @param actionNumber
-     * @return
-     */
+    /// Returns action configuration for concrete action kind and its number in that kind's space.
+    ///
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         return masterConfig.actionConfig(actionKind, actionNumber);
     }
 
-    /**
-     * Returns embedded {@link EntityCentre} for this entity master, if any.
-     */
+    /// Returns embedded [EntityCentre] for this entity master, if any.
+    ///
     public Optional<EntityCentre<?>> getEmbeddedCentre() {
         if (masterConfig instanceof MasterWithCentre) {
             return of(((MasterWithCentre<?>) masterConfig).embeddedCentre);
@@ -301,11 +234,8 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return empty();
     }
 
-    /**
-     * Returns the map between property names and action selector for properties those have associated action.
-     *
-     * @return
-     */
+    /// Returns the map between property names and action selector for properties those have associated action.
+    ///
     public Map<String, ? extends IEntityMultiActionSelector> getPropertyActionSelectors() {
         return masterConfig.propertyActionSelectors().entrySet().stream()
                 .map(entry -> t2(entry.getKey(), injector.getInstance(entry.getValue())))
