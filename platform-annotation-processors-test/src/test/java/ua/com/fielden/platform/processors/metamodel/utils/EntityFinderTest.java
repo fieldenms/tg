@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
+import ua.com.fielden.platform.processors.test_entities.ExampleUnionEntity;
 import ua.com.fielden.platform.processors.test_entities.SubEntity;
 import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -29,16 +30,15 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 import static metamodels.MetaModels.ExampleEntity_;
 import static metamodels.MetaModels.SubEntity_;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
 
-/**
- * A test case for utility functions in {@link EntityFinder}.
- *
- * @author TG Team
- *
- */
+/// A test case for utility functions in [EntityFinder].
+///
 public class EntityFinderTest {
 
     @ClassRule
@@ -129,6 +129,39 @@ public class EntityFinderTest {
       final List<String> expectedProps = List.of("key", "roles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
               "createdDate", "createdTransactionGuid", "lastUpdatedBy", "lastUpdatedDate", "lastUpdatedTransactionGuid", "desc");
       assertEquals(expectedProps, entityFinder.findProperties(entity).stream().map(p -> p.getSimpleName().toString()).toList()); 
+    }
+
+    @Test
+    public void findProperties_for_a_union_entity_type_finds_exactly_union_members_and_common_properties_and_ID_and_KEY_and_DESC() {
+        final var entity = entityFinder.findEntity(ExampleUnionEntity.class);
+
+        assertEquals(Set.of("prop1", "prop2",
+                            "common1", "common2",
+                            ID, KEY, DESC),
+                     entityFinder.findProperties(entity).stream().map(p -> p.getSimpleName().toString()).collect(toSet()));
+    }
+
+    @Test
+    public void findDeclaredProperties_for_a_union_entity_type_finds_exactly_union_members() {
+        final var entity = entityFinder.findEntity(ExampleUnionEntity.class);
+
+        assertEquals(Set.of("prop1", "prop2"),
+                     entityFinder.findDeclaredProperties(entity).stream().map(p -> p.getSimpleName().toString()).collect(toSet()));
+    }
+
+    @Test
+    public void findInheritedProperties_for_a_union_entity_type_finds_exactly_KEY_and_DESC() {
+        final var entity = entityFinder.findEntity(ExampleUnionEntity.class);
+
+        assertEquals(Set.of(KEY, DESC),
+                     entityFinder.findInheritedProperties(entity).stream().map(p -> p.getSimpleName().toString()).collect(toSet()));
+    }
+
+    @Test
+    public void findProperty_finds_a_common_property_in_a_union_entity_type() {
+        final var entity = entityFinder.findEntity(ExampleUnionEntity.class);
+
+        assertThat(entityFinder.findProperty(entity, "common1")).isPresent();
     }
 
     @Test

@@ -274,6 +274,13 @@ public class ElementFinder {
         return findField(typeElement, fieldName, (varEl) -> true);
     }
 
+    /// Strict version of [#findField(TypeElement, String)].
+    ///
+    public VariableElement getField(final TypeElement typeElement, final String fieldName) {
+        return findField(typeElement, fieldName)
+                .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(fieldName, typeElement)));
+    }
+
     /**
      * Returns an optional describing a variable element that represents a declared field named {@code fieldName} and matching {@code predicate}.
      *
