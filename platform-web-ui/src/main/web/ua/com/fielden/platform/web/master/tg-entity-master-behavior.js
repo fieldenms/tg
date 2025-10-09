@@ -1150,8 +1150,12 @@ const TgEntityMasterBehaviorImpl = {
      */
     _updateManuallyFocusedInputWith: function (elementToFocus) {
         // Only update `manuallyFocusedInput` state for non-touch devices.
-        // Even though touch devices should not use this state, this may change in future and we want to avoid regressions.
-        if (!isTouchEnabled()) {
+        //   Even though touch devices should not use this state, this may change in future and we want to avoid regressions.
+        // Also, allow `manuallyFocusedInput` updating only in EDIT state of the master.
+        //   This is to avoid loosing this state during possible 'retrieve/validate' transitions, when all editors become disabled (VIEW).
+        //   Typically such loosing does not occur.
+        //   But on slow systems _focusFirstInput may occur earlier than retrieval, for example, of menu item action in compound masters.
+        if (!isTouchEnabled() && this.currentState === 'EDIT') {
             // Please note, that tg-multiline-text-editor is special and its <text-area> does not have 'custom-input' class.
             // Only, <iron-autogrow-text-area> above has it.
             this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
