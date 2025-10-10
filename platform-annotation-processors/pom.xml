@@ -93,7 +93,8 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>uber</shadedClassifierName>
-<!--                            <minimizeJar>true</minimizeJar>-->
+                            <!-- TODO: uncomment once maven-shade-plugin supports Java 25 (class file version 69) -->
+                            <!-- <minimizeJar>true</minimizeJar> -->
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
