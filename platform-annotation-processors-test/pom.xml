@@ -108,7 +108,7 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <configuration>
-            <release>21</release>
+            <release>25</release>
             <encoding>UTF-8</encoding>
             <showWarnings>true</showWarnings>
             <generatedSourcesDirectory>${project.build.directory}/generated-sources</generatedSourcesDirectory>

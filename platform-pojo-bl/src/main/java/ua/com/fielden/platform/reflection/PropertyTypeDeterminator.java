@@ -280,7 +280,9 @@ public class PropertyTypeDeterminator {
         }
     }
 
-    private static boolean isLoadedByHibernate(final Class<?> type) {
+    /// Identifies whether `type` represents proxy, loaded by Hibernate.
+    ///
+    public static boolean isLoadedByHibernate(final Class<?> type) {
         final String name = type.getSimpleName();
         return name.contains("$HibernateProxy") || name.contains("$$_javassist") || name.contains("_$$_");
     }

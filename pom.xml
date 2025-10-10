@@ -21,7 +21,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>4.13.2</junit.version>
         <assertj.version>3.27.3</assertj.version>
-        <hibernate.version>5.4.33.Final</hibernate.version>
+        <hibernate.version>5.6.15.Final</hibernate.version>
         <postgresql.version>42.7.5</postgresql.version>
         <mssql.version>12.10.0.jre11</mssql.version>
         <HikariCP.version>6.3.0</HikariCP.version>
@@ -59,7 +59,7 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.14.0</version>
                     <configuration>
-                        <release>21</release>
+                        <release>25</release>
                         <encoding>UTF-8</encoding>
                         <compilerArgs>
                             <arg>-J-Xss10M</arg>
