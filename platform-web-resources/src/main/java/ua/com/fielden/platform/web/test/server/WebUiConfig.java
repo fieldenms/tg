@@ -1865,7 +1865,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .minWidth(42)
                 .also()
             .addEditableProp("bigDecimalProp")
-                .minWidth(68);
+                .minWidth(68)
+                .also()
+            .addProp("moneyProp")
+                .minWidth(100);
 
         final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
             .withContext(context().withSelectedEntities().build())

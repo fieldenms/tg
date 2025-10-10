@@ -908,6 +908,7 @@ const TgEntityCentreBehaviorImpl = {
                 this.$.egi.adjustColumnWidths(result.columnWidths);
                 this.$.egi.visibleRowsCount = result.resultConfig.visibleRowsCount;
                 this.$.egi.numberOfHeaderLines = result.resultConfig.numberOfHeaderLines;
+                this.$.egi.adjustColumnAvailability(result.resultConfig.unavailableColumns);
                 this.$.egi.adjustColumnsVisibility(result.resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
                 this.$.egi.adjustColumnsSorting(result.resultConfig.orderingConfig.map(propOrder => {
                    if (propOrder.property === "this") {
