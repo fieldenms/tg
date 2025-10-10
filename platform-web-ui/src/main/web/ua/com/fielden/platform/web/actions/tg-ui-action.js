@@ -717,7 +717,7 @@ Polymer({
         // enhances it with information of what 'property' was chosen (property result-set actions)
         if (self.chosenProperty !== null) {
             let chosenProperty = null;
-            if (self.currentEntity()) {
+            if (self.currentEntity() && typeof self.chosenProperty !== 'undefined') {
                 const entity = self.currentEntity().get(self.chosenProperty);
                 const entityType = entity && entity.constructor.prototype.type.call(entity);
                 chosenProperty = self.chosenProperty + (entityType && entityType.isUnionEntity() && entity._activeProperty() ? '.' + entity._activeProperty() : '');
