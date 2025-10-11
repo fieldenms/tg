@@ -1069,7 +1069,11 @@ Polymer({
                 //Should consider whether it is correct for dynamic columns.
                 return entity.get(column.getActualProperty())._activeEntity().type().entityMaster();
             } else if (propertyType instanceof this._reflector._getEntityTypePrototype() && propertyType.isUnionEntity()) {
-                return true;
+                const title = type.prop(column.getActualProperty()).title();
+                return {
+                    shortDesc: title,
+                    longDesc: 'Edit ' + title
+                };
             } else if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
                 return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
             }
