@@ -720,7 +720,7 @@ Polymer({
             if (self.currentEntity() && typeof self.chosenProperty !== 'undefined') {
                 const entity = self.currentEntity().get(self.chosenProperty);
                 const entityType = entity && entity.constructor.prototype.type.call(entity);
-                chosenProperty = self.chosenProperty + (entityType && entityType.isUnionEntity() && entity._activeProperty() ? '.' + entity._activeProperty() : '');
+                chosenProperty = self.chosenProperty + (entityType && entityType.isUnionEntity() && entity._activeProperty() ? (self.chosenProperty ? '.' : '') + entity._activeProperty() : '');
             }
             else {
                 chosenProperty = self.chosenProperty;
