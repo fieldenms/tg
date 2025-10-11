@@ -1065,17 +1065,25 @@ Polymer({
         const type = entity && entity.constructor.prototype.type && entity.constructor.prototype.type.call(entity);
         if (type) {
             const propertyType = this._reflector.tg_determinePropertyType(type, column.getActualProperty());
-            if (propertyType instanceof this._reflector._getEntityTypePrototype() && propertyType.isUnionEntity() && entity.get(column.getActualProperty())) {
-                //Should consider whether it is correct for dynamic columns.
-                return entity.get(column.getActualProperty())._activeEntity().type().entityMaster();
-            } else if (propertyType instanceof this._reflector._getEntityTypePrototype() && propertyType.isUnionEntity()) {
-                const title = type.prop(column.getActualProperty()).title();
-                return {
-                    shortDesc: title,
-                    longDesc: 'Edit ' + title
-                };
-            } else if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
-                return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
+            // Only entity-typed columns can have default actions.
+            if (propertyType instanceof this._reflector._getEntityTypePrototype()) {
+                if (propertyType.isUnionEntity()) {
+                    if (entity.get(column.getActualProperty())) {
+                        // TODO Should consider whether it is correct for dynamic columns.
+                        return entity.get(column.getActualProperty())._activeEntity().type().entityMaster();
+                    }
+                    else {
+                        const title = type.prop(column.getActualProperty()).title();
+                        return {
+                            shortDesc: title,
+                            longDesc: 'Edit ' + title
+                        };
+                    }
+                }
+                else {
+                    // Only entity-typed columns, that have corresponding entity masters, can have default actions.
+                    return propertyType.entityMaster();
+                }
             }
         }
         return false;
