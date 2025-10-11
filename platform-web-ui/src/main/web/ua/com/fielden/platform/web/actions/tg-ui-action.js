@@ -734,24 +734,38 @@ Polymer({
         }
         // enhances it with information of what 'property' was chosen (property result-set actions)
         if (self.chosenProperty !== null) {
-            let chosenProperty = null;
-            // In case of dynamic EDIT action, determine chosen property type and, if union, extend with union active property.
-            //   Please note, that actual union active property type is already assigned into this action for its attributes.
-            // Be carefull with undefined `chosenProperty`, which was not designed (null is expected), but is actually used for locators.
-            if (this._getEditDynamicActionType() && typeof self.chosenProperty !== 'undefined') {
-                const entity = currentEntity.get(self.chosenProperty);
-                const entityType = entity && entity.constructor.prototype.type.call(entity);
-                chosenProperty = self.chosenProperty + (entityType && entityType.isUnionEntity() && entity._activeProperty() ? (self.chosenProperty ? '.' : '') + entity._activeProperty() : '');
-            }
-            else {
-                chosenProperty = self.chosenProperty;
-            }
-            self._enhanceContextWithChosenProperty(context, chosenProperty);
+            self._enhanceContextWithChosenProperty(context,
+                // In case of dynamic EDIT action, determine chosen property type and, if union, extend with union active property.
+                //   Please note, that actual union active property type is already assigned into this action for its attributes.
+                //   See `tg-polymer-utils.getFirstEntityTypeAndProperty` for more details.
+                self._getEditDynamicActionType() && self._extendUnionChosenProperty(currentEntity, self.chosenProperty)
+                // Otherwise, if non-dynamic, or non-EDIT, or non-union leaf value, -- use `self.chosenProperty` as usual.
+                || self.chosenProperty
+            );
         }
         if (self.rootEntityType) {
             this._reflector.setCustomProperty(context, '@@rootEntityType', self.rootEntityType);
         }
         return context;
+    },
+
+    /**
+     * Concatenates `chosenProperty` with active property, if leaf value (`currentEntity.get(chosenProperty)`) is union.
+     * Returns nothing otherwise.
+     */
+    _extendUnionChosenProperty: function (currentEntity, chosenProperty) {
+        // Be carefull with undefined `chosenProperty`, which was not as per design (`null` is expected for empty value).
+        // Undefined `chosenProperty` was actually used for locators.
+        if (typeof chosenProperty !== 'undefined') {
+            const entity = currentEntity.get(chosenProperty);
+            const entityType = entity && entity.constructor.prototype.type.call(entity);
+            if (entityType && entityType.isUnionEntity()) {
+                const activeProp = entity._activeProperty();
+                if (activeProp) {
+                    return (chosenProperty ? chosenProperty + '.' : '') + activeProp;
+                }
+            }
+        } // Otherwise, it returns nothing (undefined).
     },
 
     _enhanceContextWithChosenProperty: function (context, chosenProperty) {
