@@ -90,12 +90,9 @@
             <version>1.3.8</version>
         </dependency>
 
-        <!-- ByteBuddy is high level Java API that has a potential to replace the direct use of ASM in TG.
-             But its current role to replace Javassist for creation of proxied entity instances. -->
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
-            <version>1.17.8</version>
         </dependency>
 
         <!-- Password strength estimation -->
@@ -273,8 +270,13 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>${assertj.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>
