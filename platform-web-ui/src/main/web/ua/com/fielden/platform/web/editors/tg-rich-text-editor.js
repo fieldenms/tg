@@ -8,7 +8,7 @@ import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/c
 
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
-import { tearDownEvent, localStorageKey, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, localStorageKey, getRelativePos, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -51,7 +51,8 @@ const additionalTemplate = html`
 const customInputTemplate = html`
     <tg-rich-text-input id="input" 
         class="custom-input paper-input-input"
-        disabled="[[_disabled]]" 
+        disabled="[[_disabled]]"
+        is-readonly="[[isReadonly]]" 
         value="{{_editingValue}}"
         toaster="[[toaster]]"
         change-event-handler="[[_onChange]]"
@@ -93,6 +94,12 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
                 computed: "_isAutoResizable(height)",
                 observer: "_autoResizeChanged",
                 reflectToAttribute: true
+            },
+
+            isReadonly: {
+                type: Boolean,
+                computed: "_isReadonly(entity, propertyName)",
+                readOnly: true,
             },
 
             /**
@@ -167,6 +174,13 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
         if (newValue) {
             this._lastOpenedEntity = newValue;
         }
+    }
+
+    _isReadonly (entity, propertyName) {
+        if (allDefined(arguments)) {
+            return !this.reflector().isEntity(entity) || this.reflector().isDotNotated(propertyName) || !entity["@" + propertyName + "_editable"];
+        }
+        return true;
     }
 
     _lastOpenedEntityChanged (newValue, oldValue) {

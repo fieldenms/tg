@@ -749,7 +749,7 @@ const template = html`
     <iron-dropdown id="colorDropdown" style="width:300px;height:160px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
         <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]" toaster="[[toaster]]"></tg-color-picker-dialog>
     </iron-dropdown>
-    <tg-responsive-toolbar class="custom-responsive-toolbar editor-toolbar" disabled$="[[disabled]]">
+    <tg-responsive-toolbar class="custom-responsive-toolbar editor-toolbar" disabled$="[[disabled]]" hidden$="[[isReadonly]]">
         <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:format-bold" tooltip-text="Bold, Ctrl+B, &#x2318;+B" on-down="_stopMouseEvent" on-tap="_applyBold"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:format-italic" tooltip-text="Italic, Ctrl+I, &#x2318;+I" on-down="_stopMouseEvent" on-tap="_applyItalic"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:strikethrough-s" tooltip-text="Strikethrough, Ctrl+S, &#x2318;+S" on-down="_stopMouseEvent" on-tap="_applyStrikethough"></iron-icon>
@@ -805,6 +805,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             disabled: {
                 type: Boolean,
                 value: false,
+                reflectToAttribute: true
+            },
+
+            isReadonly: {
+                type: Boolean,
+                value: true,
                 reflectToAttribute: true
             },
 
