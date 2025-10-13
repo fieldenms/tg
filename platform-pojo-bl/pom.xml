@@ -17,7 +17,6 @@
 
     <properties>
         <jackson.version>2.19.2</jackson.version>
-        <log4j.version>2.25.1</log4j.version>
         <guava.version>33.4.8-jre</guava.version>
         <poi.verstion>5.4.1</poi.verstion>
         <xalan.version>2.7.3</xalan.version>
@@ -202,17 +201,14 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>${log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>${log4j.version}</version>
         </dependency>
          <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
-            <version>${log4j.version}</version>
         </dependency>
 
         <dependency>
