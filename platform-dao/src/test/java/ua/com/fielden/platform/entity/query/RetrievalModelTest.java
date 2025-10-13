@@ -32,6 +32,7 @@ import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
+import static ua.com.fielden.platform.reflection.Finder.commonPropertiesForUnion;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertNotEmpty;
 
 public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrievalModelTestUtils {
@@ -382,7 +383,7 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
 
         assertRetrievalModel(TgBogie.class, ID_ONLY, f -> f.with("location", fetchNone(TgBogieLocation.class).with("wagonSlot")))
                 .containsExactly(ID, "location")
-                .subModel("location", a -> a.containsExactly("wagonSlot").proxiesExactly("workshop", "fuelType", "desc"))
+                .subModel("location", a -> a.containsExactly("wagonSlot").proxiesExactly("workshop"))
                 .subModel("location.wagonSlot", a -> a.equalsModel(DEFAULT));
     }
 
@@ -601,6 +602,75 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
         assertThat(entityMetadata).matches(EntityMetadata::isUnion);
         assertRetrievalModel(UnionEntity.class, category)
                 .notContains(UnionEntity.Property.propertyOne, UnionEntity.Property.propertyTwo);
+    }
+
+    /*----------------------------------------------------------------------------
+     | Common union properties
+     -----------------------------------------------------------------------------*/
+
+    @Test
+    public void strategy_KEY_AND_DESC_common_properties_in_union_entities_are_not_proxied_if_not_included() {
+        _common_properties_in_union_entities_are_not_proxied_if_not_included(KEY_AND_DESC);
+    }
+    @Test
+    public void strategy_DEFAULT_common_properties_in_union_entities_are_not_proxied_if_not_included() {
+        _common_properties_in_union_entities_are_not_proxied_if_not_included(DEFAULT);
+    }
+    @Test
+    public void strategy_ALL_common_properties_in_union_entities_are_not_proxied_if_not_included() {
+        _common_properties_in_union_entities_are_not_proxied_if_not_included(ALL);
+    }
+
+    @Test
+    public void strategy_ID_ONLY_common_properties_in_union_entities_are_not_proxied_if_not_included() {
+        _common_properties_in_union_entities_are_not_proxied_if_not_included(ID_ONLY);
+    }
+
+    @Test
+    public void strategy_ID_AND_VERSION_common_properties_in_union_entities_are_not_proxied_if_not_included() {
+        _common_properties_in_union_entities_are_not_proxied_if_not_included(ID_AND_VERSION);
+    }
+
+    @Test
+    public void strategy_NONE_common_properties_in_union_entities_are_not_proxied_if_not_included() {
+        _common_properties_in_union_entities_are_not_proxied_if_not_included(NONE);
+    }
+
+    private void _common_properties_in_union_entities_are_not_proxied_if_not_included(final FetchCategory category) {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        final var stringProperty = "stringProperty";
+        assertThat(commonPropertiesForUnion(UnionEntity.class).contains(stringProperty));
+        assertRetrievalModel(UnionEntity.class, category)
+                .notContains(stringProperty)
+                .notProxies(stringProperty);
+    }
+
+    /*----------------------------------------------------------------------------
+     | Property `desc` in union entities
+     -----------------------------------------------------------------------------*/
+
+    @Test
+    public void strategy_ID_ONLY_property_desc_in_union_entities_is_not_proxied_if_not_included() {
+        _property_desc_in_union_entities_is_not_proxied_if_not_included(ID_ONLY);
+    }
+
+    @Test
+    public void strategy_ID_AND_VERSION_property_desc_in_union_entities_is_not_proxied_if_not_included() {
+        _property_desc_in_union_entities_is_not_proxied_if_not_included(ID_AND_VERSION);
+    }
+
+    @Test
+    public void strategy_NONE_property_desc_in_union_entities_is_not_proxied_if_not_included() {
+        _property_desc_in_union_entities_is_not_proxied_if_not_included(NONE);
+    }
+
+    private void _property_desc_in_union_entities_is_not_proxied_if_not_included(final FetchCategory category) {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        assertRetrievalModel(UnionEntity.class, category)
+                .notContains(DESC)
+                .notProxies(DESC);
     }
 
     /*----------------------------------------------------------------------------

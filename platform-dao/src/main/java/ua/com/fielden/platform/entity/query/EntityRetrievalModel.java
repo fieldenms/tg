@@ -5,6 +5,7 @@ import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EntityRetrievalModelException;
@@ -38,6 +39,7 @@ import static ua.com.fielden.platform.entity.query.fluent.fetch.ERR_MISMATCH_BET
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
+import static ua.com.fielden.platform.reflection.Finder.commonPropertiesForUnion;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.ImmutableListUtils.prepend;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
@@ -366,6 +368,14 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                                 }
                                 // Non-persistent key is never proxied.
                                 else if (KEY.equals(propMetadata.name()) && !propMetadata.isPersistent()) {
+                                    return false;
+                                }
+                                // Do not proxy common properties and `desc` in union entities.
+                                // Instead, illegal access to proxied properties should be detected when the underlying properties of the union members themselves are accessed.
+                                else if (entityMetadata.isUnion()
+                                         && (DESC.equals(propMetadata.name())
+                                             || commonPropertiesForUnion((Class<? extends AbstractUnionEntity>) entityMetadata.javaType()).contains(propMetadata.name())))
+                                {
                                     return false;
                                 }
                                 else return true;
