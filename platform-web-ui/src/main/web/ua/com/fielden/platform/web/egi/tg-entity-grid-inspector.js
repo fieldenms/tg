@@ -1226,9 +1226,9 @@ Polymer({
         this._updateTableSizeAsync();
     },
 
-    adjustColumnAvailability: function(columnsToRemove) {
+    adjustColumnAvailability: function(availableColumns) {
         this.allColumns.forEach(col => {
-                col.isHidden = columnsToRemove.includes(col.property);
+                col.isHidden = !availableColumns.includes(col.property);
         });
         this._updateColumns(this.fixedColumns.concat(this.columns));
     },

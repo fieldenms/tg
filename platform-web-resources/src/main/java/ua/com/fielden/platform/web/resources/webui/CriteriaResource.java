@@ -634,7 +634,6 @@ public class CriteriaResource extends AbstractWebResource {
                 final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
                 final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
                     customObject,
-                    authorisationModel,
                     complementCriteriaEntityBeforeRunning( // complements previouslyRunCriteriaEntity instance
                         previouslyRunCriteriaEntity,
                         webUiConfig,

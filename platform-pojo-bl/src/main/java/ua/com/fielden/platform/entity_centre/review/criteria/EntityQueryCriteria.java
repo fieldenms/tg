@@ -10,7 +10,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ILifecycleDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -33,6 +32,8 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -45,6 +46,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Optional.ofNullable;
@@ -70,6 +72,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     private final C cdtme;
     private final ICompanionObjectFinder controllerProvider;
+    private final IAuthorisationModel authorisationModel;
     private Optional<IFetchProvider<T>> additionalFetchProvider = Optional.empty();
     private Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties = Optional.empty();
     private Optional<IQueryEnhancer<T>> additionalQueryEnhancer = Optional.empty();
@@ -81,10 +84,11 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
-    public EntityQueryCriteria(final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IDates dates) {
+    public EntityQueryCriteria(final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IAuthorisationModel authorisationModel, final IDates dates) {
         this.generatedEntityController = generatedEntityController;
         this.serialiser = serialiser;
         this.controllerProvider = controllerProvider;
+        this.authorisationModel = authorisationModel;
         this.dates = dates;
 
         //This values should be initialized through reflection.
@@ -333,8 +337,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> generateQueryWithSummaries() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
+        final Pair<Set<String>, Set<String>> separatedFetch = getAvailableResultSetAndSummaryProperties();
         final Map<String, Object> paramMap = getParameters();
         final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
         final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties);
@@ -479,10 +482,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public void export(final String fileName, final String[] propertyNames, final String[] propertyTitles) throws IOException {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
         final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
-        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties);
+        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), getAvailableResultSetAndSummaryProperties().getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties);
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
                 .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
                 .with(fetchProvider.fetchModel())//
@@ -522,10 +523,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private QueryExecutionModel<T, EntityResultQueryModel<T>> generateQuery() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
         final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
-        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties);
+        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), getAvailableResultSetAndSummaryProperties().getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties);
         return adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
                 .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
                 .with(fetchProvider.fetchModel())//
@@ -540,11 +539,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public IFetchProvider<T> createResultSetFetchProvider() {
         return createFetchModelFrom(
             getManagedType(),
-            separateFetchAndTotalProperties(
-                getEntityClass(),
-                getCentreDomainTreeMangerAndEnhancer().getSecondTick(),
-                getCentreDomainTreeMangerAndEnhancer().getEnhancer()
-            ).getKey(),
+            getAvailableResultSetAndSummaryProperties().getKey(),
             additionalFetchProvider,
             additionalFetchProviderForTooltipProperties
         );
@@ -555,7 +550,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
         final List<String> propertyNames = new ArrayList<>();
         final List<String> propertyTitles = new ArrayList<>();
-        for (final String propertyName : tickManager.usedProperties(root)) {
+        for (final String propertyName : getAvailableResultSetAndSummaryProperties().getKey()) {
             if (tickManager.getWidth(root, propertyName) > 0) {
                 propertyNames.add(propertyName);
                 propertyTitles.add(CriteriaReflector.getCriteriaTitleAndDesc(getManagedType(), propertyName).getKey());
@@ -572,10 +567,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     public T getEntityById(final Long id) {
         final Class<?> root = getEntityClass();
-        final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
-        final fetch<T> fetchModel = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties).fetchModel();
+        final fetch<T> fetchModel = createFetchModelFrom(getManagedType(), getAvailableResultSetAndSummaryProperties().getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties).fetchModel();
         if (getManagedType().equals(getEntityClass())) {
             return dao.findById(id, fetchModel);
         } else {
@@ -666,6 +658,31 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = generateQueryWithSummaries();
         final List<T> entities = getAllEntities(queries.getKey());
         return pair(entities, entities.isEmpty() ? null : getSummary(queries.getValue()));
+    }
+
+    /// Returns the result set and summary properties available to the currently logged-in user.
+    /// Note, that some properties may not be available, even if specified in the configuration, due to security policies.
+    ///
+    public Pair<Set<String>, Set<String>> getAvailableResultSetAndSummaryProperties() {
+        final var pairOfProps = separateFetchAndTotalProperties(
+                getEntityClass(),
+                getCentreDomainTreeMangerAndEnhancer().getSecondTick(),
+                getCentreDomainTreeMangerAndEnhancer().getEnhancer());
+        return new Pair<>(getAvailableProperties(pairOfProps.getKey()), getAvailableProperties(pairOfProps.getValue()));
+    }
+
+    private Set<String> getAvailableProperties(final Set<String> properties) {
+        final var root = getEntityClass();
+        return properties.stream().filter(prop -> {
+            if (StringUtils.isEmpty(prop)) {
+                return true;
+            }
+            Authorise authAnnotation = AnnotationReflector.getPropertyAnnotation(Authorise.class, root, prop);
+            if (authAnnotation != null && !authorisationModel.authorise(authAnnotation.value()).isSuccessful()) {
+                return false;
+            }
+            return true;
+        }).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     /**

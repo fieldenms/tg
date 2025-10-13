@@ -29,8 +29,6 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
@@ -64,7 +62,6 @@ import static java.lang.Boolean.FALSE;
 import static java.lang.Math.min;
 import static java.util.Optional.*;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
@@ -303,7 +300,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<AbstractEntity<?>>> createCriteriaMetaValuesCustomObjectWithResult(
             final Map<String, Object> customObject,
-            final IAuthorisationModel authorisationModel,
             final M updatedPreviouslyRunCriteriaEntity) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
         final IAddToResultTickManager secondTick = updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick();
@@ -356,7 +352,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         resultantCustomObject.put("resultEntities", data);
         resultantCustomObject.put("columnWidths", createColumnWidths(secondTick, updatedPreviouslyRunCriteriaEntity.getEntityClass()));
-        resultantCustomObject.put("resultConfig", createResultConfigObject(updatedPreviouslyRunCriteriaEntity, authorisationModel));
+        resultantCustomObject.put("resultConfig", createResultConfigObject(updatedPreviouslyRunCriteriaEntity));
         final int pageCount = page != null ? page.numberOfPages() : pageCount(realPageCount(data.size(), secondTick.getPageCapacity()));
         resultantCustomObject.put("pageCount", pageCount);
         resultantCustomObject.put("pageNumber", page != null ? page.no() : pageCount <= pageNumber ? pageCount - 1 : pageNumber);
@@ -398,30 +394,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param updatedPreviouslyRunCriteriaEntity -- criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action)
      * @return
      */
-    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Map<String, Object> createResultConfigObject(final M updatedPreviouslyRunCriteriaEntity, IAuthorisationModel authorisationModel) {
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Map<String, Object> createResultConfigObject(final M updatedPreviouslyRunCriteriaEntity) {
         final Map<String, Object> resultConfigObject = new LinkedHashMap<>();
-        resultConfigObject.put("unavailableColumns", getUnavailableColumns(updatedPreviouslyRunCriteriaEntity, authorisationModel));
+        resultConfigObject.put("availableColumns", updatedPreviouslyRunCriteriaEntity.getAvailableResultSetAndSummaryProperties().getKey());
         resultConfigObject.put("visibleColumnsWithOrder", updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().usedProperties(updatedPreviouslyRunCriteriaEntity.getEntityClass()));
         resultConfigObject.put("orderingConfig", createOrderingProperties(updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().orderedProperties(updatedPreviouslyRunCriteriaEntity.getEntityClass())));
         resultConfigObject.put("pageCapacity", updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity());
         resultConfigObject.put("visibleRowsCount", updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getVisibleRowsCount());
         resultConfigObject.put("numberOfHeaderLines", updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getNumberOfHeaderLines());
         return resultConfigObject;
-    }
-
-    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> List<String> getUnavailableColumns(final M updatedQueryCriteria, IAuthorisationModel authorisationModel) {
-        final var secondTick = updatedQueryCriteria.getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final var root = updatedQueryCriteria.getEntityClass();
-        return secondTick.checkedProperties(root).stream().filter(prop -> {
-            if (StringUtils.isEmpty(prop)) {
-                return false;
-            }
-            Authorise authAnnotation = AnnotationReflector.getPropertyAnnotation(Authorise.class, root, prop);
-            if (authAnnotation != null && !authorisationModel.authorise(authAnnotation.value()).isSuccessful()) {
-                return true;
-            }
-            return false;
-        }).collect(toList());
     }
 
     private static List<Map<String, String>> createOrderingProperties(final List<Pair<String, Ordering>> orderedProperties) {
