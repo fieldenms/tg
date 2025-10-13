@@ -808,6 +808,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
                 reflectToAttribute: true
             },
 
+            /**Determines whether this editor is in read-only mode.*/
             isReadonly: {
                 type: Boolean,
                 value: true,

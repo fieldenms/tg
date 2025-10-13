@@ -96,6 +96,7 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
                 reflectToAttribute: true
             },
 
+            /**Determines whether this editor is in read-only mode. This state differs from ‘disabled’ because it depends on the meta-state of the corresponding property in the bound entity. */
             isReadonly: {
                 type: Boolean,
                 computed: "_isReadonly(entity, propertyName)",
@@ -176,6 +177,12 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
         }
     }
 
+    /**
+     * Calculates the read-only state for this editor.
+     * 
+     * @param {Object} entity - The entity bound to this rich text editor.
+     * @param {String} propertyName - The name of the rich text property.
+     */
     _isReadonly (entity, propertyName) {
         if (allDefined(arguments)) {
             return !this.reflector().isEntity(entity) || this.reflector().isDotNotated(propertyName) || !entity["@" + propertyName + "_editable"];
