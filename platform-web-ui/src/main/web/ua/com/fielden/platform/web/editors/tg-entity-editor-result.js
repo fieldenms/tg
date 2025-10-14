@@ -469,7 +469,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     v.toString(),
                     () => this._propValueByName(v, 'desc'),
                     withDesc === true,
-                    typeof v.active === 'undefined' || v.get("active")
+                    this._isActive(v)
                 );
 
                 //Add type description if entity editor is for union entity
@@ -497,7 +497,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                             this._propValueByName(v, propName),
                             () => this._propValueByName(v, propName + '.desc'),
                             this.reflector.isEntity(v.get(propName)) && (typeof v.get(propName)['desc'] !== 'undefined' || v.get(propName).type().isUnionEntity()),
-                            typeof v.active === 'undefined' || v.get("active")
+                            this._isActive(v)
                         );
                     }
                 }
@@ -510,6 +510,20 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 }
             }
         }.bind(this));
+    }
+
+    /**
+     * Checks whether 'entity' is active, either it is activatable active (or non-activatable)
+     *   or union with activatable active (or with non-activatable).
+     */ 
+    _isActive (entity) {
+        // Take the active entity from union, if it is union. Otherwise take the entity as is.
+        const realEntity = this.reflector.isEntity(entity) && entity.constructor.prototype.type.call(entity).isUnionEntity() && entity._activeEntity() || entity;
+        // Check whether 'active' property even exists. It should always be fetched here.
+        // If not, consider it as the active entity.
+        // Otherwise, get property through a proper getter and check whether it is truthy.
+        // (Be more lenient if 'active' property is not boolean-typed for some reason).
+        return this.reflector.isEntity(realEntity) && (typeof realEntity.active === 'undefined' || realEntity.get('active'));
     }
 
     /**
@@ -720,11 +734,8 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
      */
     _calcItemClass (item) {
         let klass = 'tg-item vertical-layout';
-        // Take the active entity from union, if it is union. Otherwise take the item as is.
-        const realItem = item.type && item.type().isUnionEntity() && item._activeEntity() || item;
-        // Determine the 'inactive' colours of the item from the above "real" item.
         // TODO Inactive unions should show type indicators also as grey.
-        if (typeof realItem.active !== 'undefined' && realItem.get('active') === false) {
+        if (!this._isActive(item)) {
             klass += ' inactive';
         }
         return klass;
