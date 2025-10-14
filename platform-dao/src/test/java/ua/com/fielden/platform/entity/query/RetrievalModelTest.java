@@ -30,6 +30,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.reflection.Finder.commonPropertiesForUnion;
@@ -646,6 +647,83 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                 .notProxies(stringProperty);
     }
 
+    @Test
+    public void strategy_KEY_AND_DESC_common_properties_in_union_entities_are_included_as_sub_properties_of_union_members_but_not_directly() {
+        _common_properties_in_union_entities_are_included_as_sub_properties_of_union_members_but_not_directly(KEY_AND_DESC);
+    }
+
+    @Test
+    public void strategy_DEFAULT_common_properties_in_union_entities_are_included_as_sub_properties_of_union_members_but_not_directly() {
+        _common_properties_in_union_entities_are_included_as_sub_properties_of_union_members_but_not_directly(DEFAULT);
+    }
+
+    @Test
+    public void strategy_ALL_common_properties_in_union_entities_are_included_as_sub_properties_of_union_members_but_not_directly() {
+        _common_properties_in_union_entities_are_included_as_sub_properties_of_union_members_but_not_directly(ALL);
+    }
+
+    @Test
+    public void strategy_ALL_INCL_CALC_common_properties_in_union_entities_are_included_as_sub_properties_of_union_members_but_not_directly() {
+        _common_properties_in_union_entities_are_included_as_sub_properties_of_union_members_but_not_directly(ALL_INCL_CALC);
+    }
+
+    @Test
+    public void strategy_ID_ONLY_common_properties_in_union_entities_are_not_included() {
+        _common_properties_in_union_entities_are_not_included(ID_ONLY);
+    }
+
+    @Test
+    public void strategy_ID_AND_VERSION_common_properties_in_union_entities_are_not_included() {
+        _common_properties_in_union_entities_are_not_included(ID_AND_VERSION);
+    }
+
+    @Test
+    public void strategy_NONE_common_properties_in_union_entities_are_not_included() {
+        _common_properties_in_union_entities_are_not_included(NONE);
+    }
+
+    private void _common_properties_in_union_entities_are_not_included(final FetchCategory category) {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        final var stringProperty = "stringProperty";
+        final var entityThree = "entityThree";
+        assertThat(commonPropertiesForUnion(UnionEntity.class)).contains(stringProperty, entityThree);
+        final var rm = makeRetrievalModel(UnionEntity.class, category);
+        assertRetrievalModel(rm).notContains(stringProperty, entityThree);
+        if (rm.containsProp("propertyOne")) {
+            assertRetrievalModel(rm).subModel("propertyOne", it -> it.notContains(stringProperty, entityThree));
+        }
+        if (rm.containsProp("propertyTwo")) {
+            assertRetrievalModel(rm).subModel("propertyTwo", it -> it.notContains(stringProperty, entityThree));
+        }
+    }
+
+    private void _common_properties_in_union_entities_are_included_as_sub_properties_of_union_members_but_not_directly(final FetchCategory category) {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        final var stringProperty = "stringProperty";
+        final var entityThree = "entityThree";
+        assertThat(commonPropertiesForUnion(UnionEntity.class)).contains(stringProperty, entityThree);
+        assertRetrievalModel(UnionEntity.class, category)
+                .notContains(stringProperty, entityThree)
+                .subModel("propertyOne", it -> it.contains(stringProperty, entityThree))
+                .subModel("propertyTwo", it -> it.contains(stringProperty, entityThree));
+    }
+
+    @Test
+    public void if_fetch_for_union_contains_a_common_roperty_then_it_is_replaced_in_the_retrieval_model_by_sub_properties_of_union_members() {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        final var stringProperty = "stringProperty";
+        final var entityThree = "entityThree";
+        assertThat(commonPropertiesForUnion(UnionEntity.class)).contains(stringProperty, entityThree);
+
+        assertRetrievalModel(fetchKeyAndDescOnly(UnionEntity.class).with(stringProperty, entityThree))
+                .notContains(stringProperty, entityThree)
+                .subModel("propertyOne", it -> it.contains(stringProperty, entityThree))
+                .subModel("propertyTwo", it -> it.contains(stringProperty, entityThree));
+    }
+
     /*----------------------------------------------------------------------------
      | Property `desc` in union entities
      -----------------------------------------------------------------------------*/
@@ -671,6 +749,44 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
         assertRetrievalModel(UnionEntity.class, category)
                 .notContains(DESC)
                 .notProxies(DESC);
+    }
+
+    @Test
+    public void strategy_KEY_AND_DESC_property_desc_in_union_entity_is_included_as_sub_property_of_each_union_member_but_not_directly() {
+        _property_desc_in_union_entity_is_included_as_sub_property_of_each_union_member_but_not_directly(KEY_AND_DESC);
+    }
+    @Test
+    public void strategy_DEFAULT_property_desc_in_union_entity_is_included_as_sub_property_of_each_union_member_but_not_directly() {
+        _property_desc_in_union_entity_is_included_as_sub_property_of_each_union_member_but_not_directly(DEFAULT);
+    }
+
+    @Test
+    public void strategy_ALL_property_desc_in_union_entity_is_included_as_sub_property_of_each_union_member_but_not_directly() {
+        _property_desc_in_union_entity_is_included_as_sub_property_of_each_union_member_but_not_directly(ALL);
+    }
+
+    @Test
+    public void strategy_ALL_INCL_CALC_property_desc_in_union_entity_is_included_as_sub_property_of_each_union_member_but_not_directly() {
+        _property_desc_in_union_entity_is_included_as_sub_property_of_each_union_member_but_not_directly(ALL_INCL_CALC);
+    }
+
+    private void _property_desc_in_union_entity_is_included_as_sub_property_of_each_union_member_but_not_directly(final FetchCategory category) {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        assertRetrievalModel(UnionEntity.class, category)
+                .notContains(DESC)
+                .subModel("propertyOne", it -> it.contains(DESC))
+                .subModel("propertyTwo", it -> it.contains(DESC));
+    }
+
+    @Test
+    public void if_fetch_for_union_contains_property_desc_then_it_is_replaced_in_the_retrieval_model_by_sub_property_desc_for_each_union_member() {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        assertRetrievalModel(fetchNone(UnionEntity.class).with(DESC))
+                .notContains(DESC)
+                .subModel("propertyOne", it -> it.contains(DESC))
+                .subModel("propertyTwo", it -> it.contains(DESC));
     }
 
     /*----------------------------------------------------------------------------

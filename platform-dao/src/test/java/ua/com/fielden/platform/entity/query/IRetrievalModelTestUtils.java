@@ -45,6 +45,10 @@ interface IRetrievalModelTestUtils {
         return new RetrievalModelAssert<>(model, this);
     }
 
+    default <E extends AbstractEntity<?>> RetrievalModelAssert<IRetrievalModel<E>, E> assertRetrievalModel(final fetch<E> fetchModel) {
+        return assertRetrievalModel(makeRetrievalModel(fetchModel));
+    }
+
     default <E extends AbstractEntity<?>> RetrievalModelAssert<IRetrievalModel<E>, E> assertRetrievalModel(
             final Class<E> entityType,
             final FetchCategory category)
