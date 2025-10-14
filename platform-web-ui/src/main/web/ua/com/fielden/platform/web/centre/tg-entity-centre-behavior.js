@@ -867,6 +867,7 @@ const TgEntityCentreBehaviorImpl = {
         this._dom().showMarginAroundInsertionPoints = showMarginAround;
         // Configure all views to be able to switch between them
         const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[alternative-view]');
+        this._alternativeViews = [...altViews];
         this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];
         // Create result views to create centre view switch button
         this.resultViews = [{index: 1, icon: this.$.egi.icon, iconStyle: this.$.egi.iconStyle, title: "Grid", desc: "Standard grid representation."}, ...createViewsFromInsPoints([...altViews])];
@@ -1369,6 +1370,12 @@ const TgEntityCentreBehaviorImpl = {
                     if (this._selectedView !== 0 && this.preferredView !== this._selectedView) {
                         this.preferredView = this._selectedView;
                         this._preferredViewUpdaterAction._run();
+                        this.runInsertionPointActions();
+//                        const actions = this.$.egi.querySelectorAll('.insertion-point-action');
+//                        let altViewAction;
+//                        if (actions && (altViewAction = [...actions].find(action => this.preferredView === action.elementName.toUpperCase()))) {
+//                            altViewAction._run();
+//                        }
                     }
                 }
             }   
@@ -1616,7 +1623,16 @@ const TgEntityCentreBehaviorImpl = {
         const actions = self.$.egi.querySelectorAll('.insertion-point-action');
         if (actions) {
             actions.forEach(function (action) {
-                if (!Array.isArray(excludeInsertionPoints) || !excludeInsertionPoints.includes(action.elementName)) {
+                let alternativeView;
+                if (
+                    (
+                        !Array.isArray(excludeInsertionPoints)
+                        || !excludeInsertionPoints.includes(action.elementName)
+                    ) && (
+                        !(alternativeView = self._alternativeViews.find(altView => altView.functionalMasterTagName === action.elementName.toUpperCase()))
+                        || alternativeView.offsetParent !== null
+                    )
+                ) {
                     self.async(function () {
                         action._run();
                     }, 1);
