@@ -33,6 +33,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getProperty
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityOrUnionType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.EntityCentre.createFetchModelForAutocompleterFrom;
@@ -139,7 +140,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         final IEntityDao<?> co = coFinder.find(propertyType);
         // filtering out of inactive should only happen for activatable properties without SkipEntityExistsValidation present
         final boolean activeOnly =
-                ActivatableAbstractEntity.class.isAssignableFrom(propertyType) &&
+                isActivatableEntityOrUnionType(propertyType) &&
                 !findFieldByName(entityType, propertyName).isAnnotationPresent(SkipEntityExistsValidation.class);
         return new FallbackValueMatcherWithContext<>(co, activeOnly);
     }

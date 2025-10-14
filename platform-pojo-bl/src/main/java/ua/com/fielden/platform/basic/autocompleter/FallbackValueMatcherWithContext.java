@@ -1,16 +1,16 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.EntityException;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
+
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-
-import ua.com.fielden.platform.basic.IValueMatcherWithContext;
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.EntityException;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityOrUnionType;
 
 /**
  * This is a fall back implementation for {@link IValueMatcherWithContext}, which does not use a context. It simply performs the search by key and description, if applicable.
@@ -38,11 +38,10 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
         final Class<T> entityType = co.getEntityType();
         this.activeOnlyByDefault = activeOnlyByDefault;
         this.activeOnly = activeOnlyByDefault;
-        if (activeOnlyByDefault && !ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
+        if (activeOnlyByDefault && !isActivatableEntityOrUnionType(entityType)) {
             final String entityTitle = getEntityTitleAndDesc(entityType).getKey();
-            throw new EntityException(format("Activatable type is expected. Entity [%s] is not activatable.", entityTitle));
+            throw new EntityException(format("Activatable entity type is expected (or union with activatable subtype). Entity [%s] does not conform to this condition.", entityTitle));
         }
-
     }
 
     @Override
