@@ -492,7 +492,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                     // Do not include the key itself.
                     // See the documentation of this class.
                     includeAllCompositeKeyMembers();
-                } else if (propName.equals(KEY) && entityMetadata.isUnion()) {
+                } else if (entityMetadata.isUnion() && propName.equals(KEY)) {
                     primProps.add(KEY);
                     includeAllUnionEntityKeyMembers();
                 } else if (entityMetadata.isUnion() && propName.equals(DESC)) {
