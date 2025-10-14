@@ -640,7 +640,7 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
         final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
         assertThat(entityMetadata).matches(EntityMetadata::isUnion);
         final var stringProperty = "stringProperty";
-        assertThat(commonPropertiesForUnion(UnionEntity.class).contains(stringProperty));
+        assertThat(commonPropertiesForUnion(UnionEntity.class)).contains(stringProperty);
         assertRetrievalModel(UnionEntity.class, category)
                 .notContains(stringProperty)
                 .notProxies(stringProperty);
