@@ -110,8 +110,8 @@ const template = html`
 
         .type-name {
             font-size: x-small;
-            background-color: var(--paper-grey-200);
-            color: #737373;
+            background-color: var(--paper-grey-100);
+            color: color-mix(in srgb, black 33%, white);
             line-height: 18px;
             border-radius: 9px;
             padding-left: 8px;
@@ -477,10 +477,14 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 if (entityType.isUnionEntity()) {
                     const activeProp = v._activeProperty();
                     const title = entityType.prop(activeProp).title();
-                    const colourIndex = entityType.unionProps().indexOf(activeProp) % unionPropertyBgColours.length;
-                    const bgColor = unionPropertyBgColours[colourIndex];
-                    const fgColor = unionPropertyFgColours[colourIndex];
-                    html = html + `<span class="type-name" style="background-color:${bgColor};color:${fgColor}">${title}</span>`;
+                    let activeStyle;
+                    if (this._isActive(v)) {
+                        const colourIndex = entityType.unionProps().indexOf(activeProp) % unionPropertyBgColours.length;
+                        const bgColor = unionPropertyBgColours[colourIndex];
+                        const fgColor = unionPropertyFgColours[colourIndex];
+                        activeStyle = ` style="background-color:${bgColor};color:${fgColor}"`;
+                    }
+                    html = html + `<span class="type-name"${activeStyle}>${title}</span>`;
                 }
 
                 // add values for additional properties with highlighting of matching parts if required
@@ -734,7 +738,6 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
      */
     _calcItemClass (item) {
         let klass = 'tg-item vertical-layout';
-        // TODO Inactive unions should show type indicators also as grey.
         if (!this._isActive(item)) {
             klass += ' inactive';
         }
