@@ -40,6 +40,7 @@ import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
 import static ua.com.fielden.platform.reflection.Finder.commonPropertiesForUnion;
+import static ua.com.fielden.platform.reflection.Finder.unionProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.ImmutableListUtils.prepend;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
@@ -390,9 +391,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeAllUnionEntityKeyMembers() {
-            entityMetadata.properties().stream()
-                    .filter(pm -> propMetadataUtils.isPropEntityType(pm.type(), EntityMetadata::isPersistent))
-                    .forEach(pm -> with(pm.name()));
+            final var unionType = entityMetadata.asUnion().orElseThrow().javaType();
+            unionProperties(unionType).forEach(prop -> with(prop.getName()));
         }
 
         private void includeAllFirstLevelPrimPropsAndKey() {
