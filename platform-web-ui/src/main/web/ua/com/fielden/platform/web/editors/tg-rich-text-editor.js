@@ -96,7 +96,10 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
                 reflectToAttribute: true
             },
 
-            /**Determines whether this editor is in read-only mode. This state differs from ‘disabled’ because it depends on the meta-state of the corresponding property in the bound entity. */
+            /**
+             * Determines whether this editor is in read-only mode.
+             * This state differs from `disabled` because it depends on the meta-state of the corresponding property in the bound entity.
+             */
             isReadonly: {
                 type: Boolean,
                 computed: "_isReadonly(entity, propertyName)",
@@ -105,7 +108,6 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
 
             /**
              * OVERRIDDEN FROM TgEditor: this specific event is invoked after some key has been pressed.
-             *
              */
             _onKeydown: {
                 type: Function,
