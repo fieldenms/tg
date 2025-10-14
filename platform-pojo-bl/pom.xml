@@ -17,7 +17,7 @@
 
     <properties>
         <jackson.version>2.19.2</jackson.version>
-        <guava.version>33.4.8-jre</guava.version>
+        <guava.version>33.5.0-jre</guava.version>
         <poi.verstion>5.4.1</poi.verstion>
         <xalan.version>2.7.3</xalan.version>
         <guice.version>7.0.0</guice.version>
