@@ -1,23 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.entity.IContextDecomposer.AUTOCOMPLETE_ACTIVE_ONLY_KEY;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
-import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource.AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource.LOAD_MORE_DATA_KEY;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
@@ -25,7 +7,6 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
@@ -40,6 +21,24 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.entity.IContextDecomposer.AUTOCOMPLETE_ACTIVE_ONLY_KEY;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityOrUnionType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
+import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource.AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource.LOAD_MORE_DATA_KEY;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 
 /**
  * The web resource for entity autocompletion serves as a back-end mechanism of searching entities by search strings and using additional parameters.
@@ -115,7 +114,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
 
             // for a master autocompleter, we need to determine whether it is for an activatable property and can match inactive values
             // if that is the case, we need to show the "exclude inactive values" action
-            if (isActivatableEntityType(propType) && valueMatcher instanceof FallbackValueMatcherWithContext) {
+            if (isActivatableEntityOrUnionType(propType) && valueMatcher instanceof FallbackValueMatcherWithContext) {
                 final FallbackValueMatcherWithContext<?,?> matcher = (FallbackValueMatcherWithContext<?,?>) valueMatcher; // this could be either a custom or the default fallback matcher
                 if (!matcher.activeOnlyByDefault) { // match inactive values?
                     // read the client-side user configuration for an autocompleter
