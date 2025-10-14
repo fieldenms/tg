@@ -377,7 +377,7 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                                  CREATED_DATE, CREATED_BY, CREATED_TRANSACTION_GUID,
                                  ACTIVE, REF_COUNT,
                                  "location", "bogieClass")
-                .subModel("location", a -> a.containsExactly(DESC, "wagonSlot", "workshop"))
+                .subModel("location", a -> a.containsExactly("wagonSlot", "workshop"))
                 .subModel("location.wagonSlot", a -> a.equalsModel(DEFAULT))
                 .subModel("location.workshop", a -> a.equalsModel(DEFAULT))
                 .subModel("bogieClass", a -> a.equalsModel(DEFAULT));

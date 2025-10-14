@@ -399,7 +399,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             // Always include `desc`.
             // This category should be a superset of KEY_AND_DESC.
             if (entityMetadata.hasProperty(DESC)) {
-                primProps.add(DESC);
+                with(DESC);
             }
 
             forEachProperty((prop, optPropMetadata) -> {
@@ -435,7 +435,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             with(KEY, false);
 
             if (entityMetadata.hasProperty(DESC)) {
-                primProps.add(DESC);
+                with(DESC);
             }
         }
 
@@ -443,7 +443,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             // Always include `desc`.
             // This category should be a superset of KEY_AND_DESC.
             if (entityMetadata.hasProperty(DESC)) {
-                primProps.add(DESC);
+                with(DESC);
             }
 
             forEachProperty((prop, optPropMetadata) -> {
@@ -495,6 +495,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 } else if (propName.equals(KEY) && entityMetadata.isUnion()) {
                     primProps.add(KEY);
                     includeAllUnionEntityKeyMembers();
+                } else if (entityMetadata.isUnion() && propName.equals(DESC)) {
+                    includeCommonUnionProperty(DESC, false);
                 } else if (entityMetadata.isUnion() && commonPropertiesForUnion(entityMetadata.asUnion().orElseThrow().javaType()).contains(propName)) {
                     includeCommonUnionProperty(propName, skipEntities);
                 } else {
@@ -538,14 +540,17 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                    .map(prop -> entityMetadata.property(prop.getName()))
                    .forEach(memberPropMetadata -> {
                        final var memberType = memberPropMetadata.type().asEntity().orElseThrow().javaType();
-                       final var commonPropMetadata = domainMetadata.forProperty(memberType, commonPropName);
-                       final var maybeCommonPropFetch = commonPropMetadata.type().asEntity().map(it -> skipEntities ? fetchIdOnly(it.javaType()) : null);
-                       // Use id-only fetch for the union member.
-                       // If anything else needs to be retrieved, it will be added by other methods and combined into one model.
-                       final var memberPropFetch = maybeCommonPropFetch
-                               .<fetch<? extends AbstractEntity<?>>>map(commonPropFetch -> fetchIdOnly(memberType).with(commonPropName, commonPropFetch))
-                               .orElseGet(() -> fetchIdOnly(memberType).with(commonPropName));
-                       with(memberPropMetadata.name(), memberPropFetch);
+                       // Ignore common properties that may not be so common.
+                       // E.g., `desc` may exist only in some union members, but we still want to process it as common for uniformity.
+                       domainMetadata.forPropertyOpt(memberType, commonPropName).ifPresent(commonPropMetadata -> {
+                           final var maybeCommonPropFetch = commonPropMetadata.type().asEntity().map(it -> skipEntities ? fetchIdOnly(it.javaType()) : null);
+                           // Use id-only fetch for the union member.
+                           // If anything else needs to be retrieved, it will be added by other methods and combined into one model.
+                           final var memberPropFetch = maybeCommonPropFetch
+                                   .<fetch<? extends AbstractEntity<?>>>map(commonPropFetch -> fetchIdOnly(memberType).with(commonPropName, commonPropFetch))
+                                   .orElseGet(() -> fetchIdOnly(memberType).with(commonPropName));
+                           with(memberPropMetadata.name(), memberPropFetch);
+                       });
                    });
        }
 
