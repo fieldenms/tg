@@ -32,7 +32,6 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -46,7 +45,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Optional.ofNullable;
@@ -57,8 +55,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder.buildParametersMap;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
-import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createParamValuesMap;
-import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.separateFetchAndTotalProperties;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
@@ -668,21 +665,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
                 getEntityClass(),
                 getCentreDomainTreeMangerAndEnhancer().getSecondTick(),
                 getCentreDomainTreeMangerAndEnhancer().getEnhancer());
-        return new Pair<>(getAvailableProperties(pairOfProps.getKey()), getAvailableProperties(pairOfProps.getValue()));
-    }
-
-    private Set<String> getAvailableProperties(final Set<String> properties) {
         final var root = getEntityClass();
-        return properties.stream().filter(prop -> {
-            if (StringUtils.isEmpty(prop)) {
-                return true;
-            }
-            Authorise authAnnotation = AnnotationReflector.getPropertyAnnotation(Authorise.class, root, prop);
-            if (authAnnotation != null && !authorisationModel.authorise(authAnnotation.value()).isSuccessful()) {
-                return false;
-            }
-            return true;
-        }).collect(Collectors.toCollection(LinkedHashSet::new));
+        return new Pair<>(getAvailableProperties(root, pairOfProps.getKey(), authorisationModel),
+                          getAvailableProperties(root, pairOfProps.getValue(), authorisationModel));
     }
 
     /**

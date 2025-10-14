@@ -1,16 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
-import static java.util.stream.Collectors.toCollection;
-import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createCustomisableColumns;
-import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createSortingVals;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
-
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -20,7 +10,19 @@ import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
+import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createCustomisableColumns;
+import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createSortingVals;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 
 /**
  * A producer for new instances of entity {@link CentreConfigUpdater}.
@@ -30,11 +32,13 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> {
     private final ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> controller;
-    
+    private final IAuthorisationModel authorisationModel;
+
     @Inject
-    public CentreConfigUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
+    public CentreConfigUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IAuthorisationModel authorisationModel) {
         super(factory, CentreConfigUpdater.class, companionFinder);
         this.controller = new CentreConfigUpdaterController(null);
+        this.authorisationModel = authorisationModel;
     }
     
     @Override
@@ -46,7 +50,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
     protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
         entity.setMasterEntityHolder(masterEntity.centreContextHolder());
         
-        final Class<?> root = masterEntity.getEntityClass();
+        final Class<? extends AbstractEntity<?>> root = masterEntity.getEntityClass();
         
         // When opening Customise Columns dialog we need to show the order / sort / visibility that is currently present in EGI.
         // It however does not mean that this configuration is synchronised with 'fresh' centre configuration.
@@ -56,7 +60,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         // Very similar situation is with Change Columns Width action.
         final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = masterEntity.previouslyRunCentre();
         
-        final List<String> previouslyRunCheckedProperties = previouslyRunCentre.getSecondTick().checkedProperties(root);
+        final List<String> previouslyRunCheckedProperties = new ArrayList<>(EntityQueryCriteriaUtils.getAvailableProperties(root, new LinkedHashSet<>(previouslyRunCentre.getSecondTick().checkedProperties(root)), authorisationModel));
         final List<String> previouslyRunUsedProperties = previouslyRunCentre.getSecondTick().usedProperties(root);
         final List<Pair<String, Ordering>> previouslyRunSortedProperties = previouslyRunCentre.getSecondTick().orderedProperties(root);
         final Class<?> previouslyRunManagedType = previouslyRunCentre.getEnhancer().getManagedType(root);

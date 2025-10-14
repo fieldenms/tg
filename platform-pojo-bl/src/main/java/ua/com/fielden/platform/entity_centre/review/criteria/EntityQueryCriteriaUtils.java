@@ -1,5 +1,26 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.utils.Pair;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 import static org.joda.time.DateTimeZone.UTC;
 import static org.joda.time.DateTimeZone.getDefault;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
@@ -10,28 +31,6 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.joda.time.DateTime;
-
-import ua.com.fielden.platform.domaintree.ICalculatedProperty;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.Pair;
-
 /**
  * Provides utility methods for entity query criteria.
  *
@@ -39,6 +38,19 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class EntityQueryCriteriaUtils {
+
+    public static Set<String> getAvailableProperties(Class<? extends AbstractEntity<?>> root, final Set<String> properties, IAuthorisationModel authorisationModel) {
+        return properties.stream().filter(prop -> {
+            if (StringUtils.isEmpty(prop)) {
+                return true;
+            }
+            Authorise authAnnotation = AnnotationReflector.getPropertyAnnotation(Authorise.class, root, prop);
+            if (authAnnotation != null && !authorisationModel.authorise(authAnnotation.value()).isSuccessful()) {
+                return false;
+            }
+            return true;
+        }).collect(Collectors.toCollection(LinkedHashSet::new));
+    }
 
     /**
      * Separates total properties from fetch properties. The key of the pair is the list of fetch properties, the value of the pair is the list of totals.
