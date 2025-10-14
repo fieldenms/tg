@@ -1464,7 +1464,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     ///
     public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleterFrom(final Class<V> propType, final Set<String> additionalProperties) {
         // always include 'active' property to render inactive activatables as grayed-out in client application
-        return (isActivatableEntityType(propType) ? Stream.concat(additionalProperties.stream(), Stream.of(ACTIVE)) : additionalProperties.stream()).reduce(
+        return (isActivatableEntityOrUnionType(propType) /* TODO will only work for common 'active' prop */ ? Stream.concat(additionalProperties.stream(), Stream.of(ACTIVE)) : additionalProperties.stream()).reduce(
             fetchNone(propType),
             (fp, additionalProp) -> fp.addPropWithKeys(additionalProp, true), // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
             (fp1, fp2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");}
