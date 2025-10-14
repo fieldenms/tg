@@ -720,7 +720,11 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
      */
     _calcItemClass (item) {
         let klass = 'tg-item vertical-layout';
-        if (typeof item.active !== 'undefined' && item.get('active') === false) {
+        // Take the active entity from union, if it is union. Otherwise take the item as is.
+        const realItem = item.type && item.type().isUnionEntity() && item._activeEntity() || item;
+        // Determine the 'inactive' colours of the item from the above "real" item.
+        // TODO Inactive unions should show type indicators also as grey.
+        if (typeof realItem.active !== 'undefined' && realItem.get('active') === false) {
             klass += ' inactive';
         }
         return klass;
