@@ -58,8 +58,7 @@ import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -610,6 +609,16 @@ public class EntityUtils {
     ///
     public static boolean isContinuationData(final Class<?> type) {
         return type != null && IContinuationData.class.isAssignableFrom(type);
+    }
+
+    /// Indicates whether type represents [ActivatableAbstractEntity]-typed values.
+    /// Or [AbstractUnionEntity]-typed values with at least one [ActivatableAbstractEntity]-typed property.
+    ///
+    public static boolean isActivatableEntityOrUnionType(final Class<?> type) {
+        return isActivatableEntityType(type)
+            || isUnionEntityType(type)
+                && unionProperties((Class<? extends AbstractUnionEntity>) type).stream()
+                .map(Field::getType).anyMatch(EntityUtils::isActivatableEntityType);
     }
 
     /// Indicates whether type represents [ActivatableAbstractEntity]-typed values.
