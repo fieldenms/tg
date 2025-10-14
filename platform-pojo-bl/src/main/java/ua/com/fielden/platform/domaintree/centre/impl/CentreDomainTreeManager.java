@@ -9,15 +9,16 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Orderin
 import ua.com.fielden.platform.domaintree.centre.IWidthManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.*;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.areDifferent;
@@ -434,16 +435,26 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             return this;
         }
 
-        /**
-         * Validates 'autocomplete active only' getter or setter for concrete property. The property should be checked and of activatable property type.
-         * 
-         * @param root
-         * @param property
-         * @param getOrSet -- "get" or "set" string
-         */
+        /// Validates 'autocomplete active only' getter or setter for concrete property. The property should be checked and of activatable property type.
+        ///
+        /// @param getOrSet -- "get" or "set" string
+        ///
         private void validateAutocompleteActiveOnlyProperty(final Class<?> root, final String property, final String getOrSet) {
             illegalUncheckedProperties(this, root, property, format(AUTOCOMPLETE_ACTIVE_ONLY_ERR, getOrSet, UNCHECKED, property, root.getSimpleName()));
-            illegalType(root, property, format(AUTOCOMPLETE_ACTIVE_ONLY_ERR, getOrSet, NON_ACTIVATABLE, property, root.getSimpleName()), ActivatableAbstractEntity.class);
+            illegalPropertyType(root, property, format(AUTOCOMPLETE_ACTIVE_ONLY_ERR, getOrSet, NON_ACTIVATABLE, property, root.getSimpleName()), EntityUtils::isActivatableEntityOrUnionType);
+        }
+
+        /// Throws [DomainTreeException] if the property type does not conform to any of `typePredicates`.
+        ///
+        protected static void illegalPropertyType(final Class<?> root, final String property, final String message, final Predicate<Class<?>>... typePredicates) {
+            final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+            final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
+            for (final Predicate<Class<?>> typePredicate : typePredicates) {
+                if (typePredicate.test(propertyType)) {
+                    return;
+                }
+            }
+            throw new DomainTreeException(message);
         }
 
         @Override

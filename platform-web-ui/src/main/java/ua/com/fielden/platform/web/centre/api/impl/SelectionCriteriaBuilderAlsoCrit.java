@@ -1,14 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions.HIDE_ACTIVE_ONLY_ACTION;
-
-import java.util.List;
-import java.util.Optional;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions;
@@ -19,6 +10,15 @@ import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResul
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
+
+import java.util.List;
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityOrUnionType;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions.HIDE_ACTIVE_ONLY_ACTION;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -72,7 +72,7 @@ class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements I
             throw new EntityCentreConfigurationException("Matcher must be provided.");
         }
 
-        if (options.contains(HIDE_ACTIVE_ONLY_ACTION) && !isActivatableEntityType(determinePropertyType(builder.getEntityType(), builder.currSelectionCrit.get()))) {
+        if (options.contains(HIDE_ACTIVE_ONLY_ACTION) && !isActivatableEntityOrUnionType(determinePropertyType(builder.getEntityType(), builder.currSelectionCrit.get()))) {
             throw new EntityCentreConfigurationException(format("'Active only' action can not be hidden for non-activatable property [%s] of type [%s].", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName()));
         }
 

@@ -1097,7 +1097,7 @@ public class CentreUpdater {
                         diff(property, propertiesDiff).put(VALUE2.name(), convertTo(value2Val, managedTypeSupplier, property));
                     }
                 }
-                if (isActivatableEntityType(propertyType)) {
+                if (isActivatableEntityOrUnionType(propertyType)) {
                     final boolean autocompleteActiveOnlyVal = centre.getFirstTick().getAutocompleteActiveOnly(root, property);
                     if (!equalsEx(autocompleteActiveOnlyVal, defaultCentre.getFirstTick().getAutocompleteActiveOnly(root, property))) {
                         diff(property, propertiesDiff).put(AUTOCOMPLETE_ACTIVE_ONLY.name(), autocompleteActiveOnlyVal);
