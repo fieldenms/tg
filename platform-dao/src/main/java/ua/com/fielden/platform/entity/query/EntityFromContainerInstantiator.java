@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.reflection.Finder.commonPropertiesForUnion;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
@@ -15,7 +14,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.exceptions.EntityContainerInstantiationException;
 import ua.com.fielden.platform.reflection.Finder;
@@ -52,39 +50,23 @@ public class EntityFromContainerInstantiator {
         final boolean unionEntity = isUnionEntityType(entityContainer.getResultType());
 
         for (final Map.Entry<String, Object> primPropEntry : entityContainer.getPrimitives().entrySet()) {
-            final var propName = primPropEntry.getKey();
-            // Need to skip population of proxied properties, ID, and of common properties for union entities.
-            if (!justAddedEntity.proxiedPropertyNames().contains(propName)
-                    && !ID.equals(propName)
-                    && (!unionEntity
-                        || !AbstractEntity.DESC.equals(propName)
-                        || !commonPropertiesForUnion((Class<? extends AbstractUnionEntity>) entityContainer.getResultType()).contains(propName)))
-            {
-
-                setPropertyValue(justAddedEntity, propName, primPropEntry.getValue(), entityContainer.getResultType());
+            if (!justAddedEntity.proxiedPropertyNames().contains(primPropEntry.getKey()) && !ID.equals(primPropEntry.getKey())) {
+                setPropertyValue(justAddedEntity, primPropEntry.getKey(), primPropEntry.getValue(), entityContainer.getResultType());
             }
         }
 
         for (final Map.Entry<String, ValueContainer> compositePropEntry : entityContainer.getComposites().entrySet()) {
-            final var propName = compositePropEntry.getKey();
-            // Need to skip population of proxied properties and of common properties for union entities.
-            if (!justAddedEntity.proxiedPropertyNames().contains(propName)
-                    && (!unionEntity
-                        || !commonPropertiesForUnion((Class<? extends AbstractUnionEntity>) entityContainer.getResultType()).contains(propName)))
-            {
-                setPropertyValue(justAddedEntity, propName, instantiate(compositePropEntry.getValue()), entityContainer.getResultType());
+            if (!justAddedEntity.proxiedPropertyNames().contains(compositePropEntry.getKey())) {
+                setPropertyValue(justAddedEntity, compositePropEntry.getKey(), instantiate(compositePropEntry.getValue()), entityContainer.getResultType());
             }
         }
 
         for (final Map.Entry<String, EntityContainer<? extends AbstractEntity<?>>> entityEntry : entityContainer.getEntities().entrySet()) {
-            final var propName = entityEntry.getKey();
-            // Need to skip population of proxied properties and of common properties for union entities.
-            if (!justAddedEntity.proxiedPropertyNames().contains(propName)
-                    && (!unionEntity
-                        || !commonPropertiesForUnion((Class<? extends AbstractUnionEntity>) entityContainer.getResultType()).contains(propName)))
-            {
-                final Object propValue = determinePropValue(justAddedEntity, propName, entityEntry.getValue());
-                setPropertyValue(justAddedEntity, propName, propValue, entityContainer.getResultType());
+            final String key = entityEntry.getKey();
+            if (!justAddedEntity.proxiedPropertyNames().contains(key)) {
+
+                final Object propValue = determinePropValue(justAddedEntity, key, entityEntry.getValue());
+                setPropertyValue(justAddedEntity, key, propValue, entityContainer.getResultType());
                 if (unionEntity && propValue != null /*&& lightweight*/) {
                     // FIXME ((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey());
                 }
