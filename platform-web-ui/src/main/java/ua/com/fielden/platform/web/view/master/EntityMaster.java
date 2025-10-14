@@ -131,13 +131,17 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return masterConfig.matcherTypeFor(propertyName)
                 .<IValueMatcherWithContext<T, ?>> map(injector::getInstance)
                 .or(() -> masterConfig.getAutocompleterAssociatedType(entityType, propertyName)
-                                      .map(it -> createDefaultValueMatcherForPropType(it, coFinder)))
+                                      .map(it -> EntityMaster.<T>createDefaultValueMatcherForPropType(it, propertyName, entityType, coFinder)))
                 .orElseGet(() -> createDefaultValueMatcher(propertyName, entityType, coFinder));
     }
 
-    private IValueMatcherWithContext<T, ?> createDefaultValueMatcherForPropType(final Class<? extends AbstractEntity<?>> propertyType, final ICompanionObjectFinder coFinder) {
+    private static <T extends AbstractEntity<?>> IValueMatcherWithContext<T, ?> createDefaultValueMatcherForPropType(final Class<? extends AbstractEntity<?>> propertyType, final String propertyName, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
         final IEntityDao<?> co = coFinder.find(propertyType);
-        return new FallbackValueMatcherWithContext<>(co, false);
+        // filtering out of inactive should only happen for activatable properties without SkipEntityExistsValidation present
+        final boolean activeOnly =
+                ActivatableAbstractEntity.class.isAssignableFrom(propertyType) &&
+                !findFieldByName(entityType, propertyName).isAnnotationPresent(SkipEntityExistsValidation.class);
+        return new FallbackValueMatcherWithContext<>(co, activeOnly);
     }
 
     /// Creates fetch model for entity-typed autocompleted values. Fetches only properties specified in Master DSL configuration.
@@ -160,12 +164,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         if (isPropertyDescriptor(propertyType)) {
             return (IValueMatcherWithContext<T, V>) new FallbackPropertyDescriptorMatcherWithContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, entityType, propertyName).value());
         } else {
-            final IEntityDao<V> co = coFinder.find(propertyType);
-            // filtering out of inactive should only happen for activatable properties without SkipEntityExistsValidation present
-            final boolean activeOnly =
-                    ActivatableAbstractEntity.class.isAssignableFrom(propertyType) &&
-                    !findFieldByName(entityType, propertyName).isAnnotationPresent(SkipEntityExistsValidation.class);
-            return new FallbackValueMatcherWithContext<>(co, activeOnly);
+            return (IValueMatcherWithContext<T, V>) EntityMaster.<T>createDefaultValueMatcherForPropType(propertyType, propertyName, entityType, coFinder);
         }
     }
 
