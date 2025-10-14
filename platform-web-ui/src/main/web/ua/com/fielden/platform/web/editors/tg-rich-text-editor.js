@@ -8,7 +8,7 @@ import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/c
 
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
-import { tearDownEvent, localStorageKey, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, localStorageKey, getRelativePos, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -51,7 +51,8 @@ const additionalTemplate = html`
 const customInputTemplate = html`
     <tg-rich-text-input id="input" 
         class="custom-input paper-input-input"
-        disabled="[[_disabled]]" 
+        disabled="[[_disabled]]"
+        is-readonly="[[isReadonly]]" 
         value="{{_editingValue}}"
         toaster="[[toaster]]"
         change-event-handler="[[_onChange]]"
@@ -96,8 +97,17 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
             },
 
             /**
+             * Determines whether this editor is in read-only mode.
+             * This state differs from `disabled` because it depends on the meta-state of the corresponding property in the bound entity.
+             */
+            isReadonly: {
+                type: Boolean,
+                computed: "_isReadonly(entity, propertyName)",
+                readOnly: true,
+            },
+
+            /**
              * OVERRIDDEN FROM TgEditor: this specific event is invoked after some key has been pressed.
-             *
              */
             _onKeydown: {
                 type: Function,
@@ -167,6 +177,19 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
         if (newValue) {
             this._lastOpenedEntity = newValue;
         }
+    }
+
+    /**
+     * Calculates the read-only state for this editor.
+     * 
+     * @param {Object} entity - The entity bound to this rich text editor.
+     * @param {String} propertyName - The name of the rich text property.
+     */
+    _isReadonly (entity, propertyName) {
+        if (allDefined(arguments)) {
+            return !this.reflector().isEntity(entity) || this.reflector().isDotNotated(propertyName) || !entity["@" + propertyName + "_editable"];
+        }
+        return true;
     }
 
     _lastOpenedEntityChanged (newValue, oldValue) {
