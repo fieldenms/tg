@@ -512,11 +512,18 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                         .subModel("entity", a -> a.contains("union"))
                         .subModel("entity.union", a -> a.equalsModel(ID_ONLY)));
 
-        assertThat(List.of(ALL_INCL_CALC, KEY_AND_DESC, DEFAULT))
+        assertThat(List.of(KEY_AND_DESC, DEFAULT))
                 .allSatisfy(cat -> assertRetrievalModel(Circular_UnionEntity.class, cat)
                         .subModel("entity", a -> a.contains("union"))
                         .subModel("entity.union", a -> a.contains("entity"))
                         .subModel("entity.union.entity", a -> a.equalsModel(ID_ONLY)));
+
+        assertThat(List.of(ALL_INCL_CALC))
+                .allSatisfy(cat -> assertRetrievalModel(Circular_UnionEntity.class, cat)
+                        .subModel("entity", a -> a.contains("union"))
+                        .subModel("entity.union", a -> a.contains("entity"))
+                        .subModel("entity.union.entity", a -> a.contains("union"))
+                        .subModel("entity.union.entity.union", a -> a.equalsModel(ID_ONLY)));
     }
 
     @Test
