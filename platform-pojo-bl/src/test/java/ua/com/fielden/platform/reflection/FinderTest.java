@@ -650,7 +650,7 @@ public class FinderTest {
     @Test
     public void commonPropertiesForUnion_identifies_all_common_properties_amongst_union_properties() {
         final Set<String> commonProps = Finder.commonPropertiesForUnion(UnionEntity.class);
-        assertEquals(Set.of("desc", "stringProperty", "key"), commonProps);
+        assertEquals(Set.of("desc", "stringProperty", "entityThree", "key"), commonProps);
     }
 
     @Test
