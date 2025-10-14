@@ -39,17 +39,25 @@ import static ua.com.fielden.platform.utils.Pair.pair;
  */
 public class EntityQueryCriteriaUtils {
 
+    /// Returns the property names that the user is permitted to view or manipulate. The set of accessible properties is determined by the specified authorization model.
+    ///
     public static Set<String> getAvailableProperties(Class<? extends AbstractEntity<?>> root, final Set<String> properties, IAuthorisationModel authorisationModel) {
         return properties.stream().filter(prop -> {
-            if (StringUtils.isEmpty(prop)) {
-                return true;
-            }
-            Authorise authAnnotation = AnnotationReflector.getPropertyAnnotation(Authorise.class, root, prop);
-            if (authAnnotation != null && !authorisationModel.authorise(authAnnotation.value()).isSuccessful()) {
-                return false;
-            }
-            return true;
+            return isPropertyAuthorised(root, prop, authorisationModel);
         }).collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    /// Returns the property name that the user is permitted to view or manipulate. The accessibility of this property is determined by the specified authorization model.
+    ///
+    public static boolean isPropertyAuthorised(Class<? extends AbstractEntity<?>> root, String property, IAuthorisationModel authorisationModel) {
+        if (StringUtils.isEmpty(property)) {
+            return true;
+        }
+        final Authorise authAnnotation = AnnotationReflector.getPropertyAnnotation(Authorise.class, root, property);
+        if (authAnnotation != null && !authorisationModel.authorise(authAnnotation.value()).isSuccessful()) {
+            return false;
+        }
+        return true;
     }
 
     /**

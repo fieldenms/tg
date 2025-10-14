@@ -592,6 +592,14 @@ public class CriteriaResource extends AbstractWebResource {
                         final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                         return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication));
                     }
+
+                    final Result authorisationResult = freshCentreAppliedCriteriaEntity.authoriseCriteria();
+                    if (!authorisationResult.isSuccessful()) {
+                        LOGGER.debug("CRITERIA_RESOURCE: run failed (authorisation validation failed).");
+                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                        final Result result = authorisationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication))));
+                        return restUtil.resultJSONRepresentation(result);
+                    }
                 } else {
                     updatedFreshCentre = null;
                     freshCentreAppliedCriteriaEntity = null;
