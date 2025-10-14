@@ -1031,6 +1031,7 @@ export const TgEntityBinderBehavior = {
             self._bindingEntityModified;
         // console.debug('_bindingEntityNotPersistentOrNotPersistedOrModified = ', self._bindingEntityNotPersistentOrNotPersistedOrModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
         if (self._currBindingEntity != null && oldCurrBindingEntity == null) {
+            console.log('_updateManuallyFocusedInputWith (binding-entity-appeared for', self.is);
             self.fire('binding-entity-appeared', self._currBindingEntity);
         }
         console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);

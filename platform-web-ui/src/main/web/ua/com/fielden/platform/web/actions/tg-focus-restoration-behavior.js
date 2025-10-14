@@ -20,7 +20,7 @@ export const TgFocusRestorationBehavior = {
         }
         const self = this;
         const activeElement = focusingCallback ? focusingCallback : deepestActiveElement();
-        console.debug('persistActiveElement: initiator', self, 'elem', activeElement);
+        console.trace('_updateManuallyFocusedInputWith persistActiveElement: initiator', self, 'elem', activeElement);
         _previousActiveElements.push({
             initiator: self,
             elem: activeElement
@@ -35,7 +35,7 @@ export const TgFocusRestorationBehavior = {
             const last = _previousActiveElements[_previousActiveElements.length - 1];
             if (last.initiator === this) {
                 const _previousActiveElementAndInitiator = _previousActiveElements.pop();
-                console.debug('restoreActiveElement:', _previousActiveElementAndInitiator);
+                console.trace('_updateManuallyFocusedInputWith restoreActiveElement:', _previousActiveElementAndInitiator);
                 if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem === 'function') {
                     _previousActiveElementAndInitiator.elem();
                 } else if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem.focus === 'function') {
@@ -57,10 +57,10 @@ export const TgFocusRestorationBehavior = {
             } else {
                 // if 'this' exists on the stack then it should wait for restoration
                 if (this._existsOnStack()) {
-                    console.debug('restoreActiveElement: initiator', this, 'should wait.');
+                    //console.debug('_updateManuallyFocusedInputWith restoreActiveElement: initiator', this, 'should wait.');
                     _notRestoredInitiators.push(this);
                 } else {
-                    console.warn('restoreActiveElement: initiator', this, 'does not exist on the stack of [initiator; activeElem] elements. It will be disregarded.');
+                    console.warn('_updateManuallyFocusedInputWith restoreActiveElement: initiator', this, 'does not exist on the stack of [initiator; activeElem] elements. It will be disregarded.');
                 }
             }
         }
