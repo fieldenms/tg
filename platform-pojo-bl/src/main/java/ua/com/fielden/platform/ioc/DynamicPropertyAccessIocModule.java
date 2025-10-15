@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.indexer.CacheConfig;
 import ua.com.fielden.platform.entity.indexer.CachingPropertyIndexerImpl;
 import ua.com.fielden.platform.entity.indexer.IPropertyIndexer;
 import ua.com.fielden.platform.entity.indexer.PropertyIndexerImpl;
-import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.parser.DurationParser;
 import ua.com.fielden.platform.parser.IValueParser;
 
@@ -156,7 +155,6 @@ public final class DynamicPropertyAccessIocModule extends AbstractPlatformIocMod
     @Override
     protected void configure() {
         requestStaticInjection(AbstractEntity.class);
-        requestStaticInjection(EntityQueryCriteriaUtils.class);
     }
 
     @Provides
