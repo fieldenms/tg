@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
-import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.util.ArrayList;
@@ -32,13 +31,11 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWi
  */
 public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> {
     private final ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> controller;
-    private final IAuthorisationModel authorisationModel;
 
     @Inject
-    public CentreConfigUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IAuthorisationModel authorisationModel) {
+    public CentreConfigUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, CentreConfigUpdater.class, companionFinder);
         this.controller = new CentreConfigUpdaterController(null);
-        this.authorisationModel = authorisationModel;
     }
     
     @Override
@@ -60,7 +57,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         // Very similar situation is with Change Columns Width action.
         final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = masterEntity.previouslyRunCentre();
         
-        final List<String> previouslyRunCheckedProperties = new ArrayList<>(EntityQueryCriteriaUtils.getAvailableProperties(root, new LinkedHashSet<>(previouslyRunCentre.getSecondTick().checkedProperties(root)), authorisationModel));
+        final List<String> previouslyRunCheckedProperties = new ArrayList<>(EntityQueryCriteriaUtils.getAvailableProperties(root, new LinkedHashSet<>(previouslyRunCentre.getSecondTick().checkedProperties(root))));
         final List<String> previouslyRunUsedProperties = previouslyRunCentre.getSecondTick().usedProperties(root);
         final List<Pair<String, Ordering>> previouslyRunSortedProperties = previouslyRunCentre.getSecondTick().orderedProperties(root);
         final Class<?> previouslyRunManagedType = previouslyRunCentre.getEnhancer().getManagedType(root);

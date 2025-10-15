@@ -12,16 +12,17 @@ import ua.com.fielden.platform.entity.indexer.CacheConfig;
 import ua.com.fielden.platform.entity.indexer.CachingPropertyIndexerImpl;
 import ua.com.fielden.platform.entity.indexer.IPropertyIndexer;
 import ua.com.fielden.platform.entity.indexer.PropertyIndexerImpl;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.parser.DurationParser;
 import ua.com.fielden.platform.parser.IValueParser;
 
 import java.time.Duration;
-import java.util.*;
-import java.util.function.Function;
+import java.util.Map;
+import java.util.Properties;
 
 import static java.util.Objects.requireNonNull;
-import static ua.com.fielden.platform.parser.IValueParser.Result.ok;
-import static ua.com.fielden.platform.parser.IValueParser.*;
+import static ua.com.fielden.platform.parser.IValueParser.enumIgnoreCaseParser;
+import static ua.com.fielden.platform.parser.IValueParser.propertyParser;
 
 /**
  * This module binds {@link DynamicPropertyAccess} and its dependencies.
@@ -155,6 +156,7 @@ public final class DynamicPropertyAccessIocModule extends AbstractPlatformIocMod
     @Override
     protected void configure() {
         requestStaticInjection(AbstractEntity.class);
+        requestStaticInjection(EntityQueryCriteriaUtils.class);
     }
 
     @Provides

@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -23,7 +22,7 @@ import ua.com.fielden.platform.utils.IDates;
 public class CentreEntityQueryCriteriaToEnhance<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EnhancedCentreEntityQueryCriteria<T, DAO> {
 
     @Inject
-    protected CentreEntityQueryCriteriaToEnhance(final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, IAuthorisationModel authorisationModel, final IDates dates) {
-        super(generatedEntityController, serialiser, controllerProvider, authorisationModel, dates);
+    protected CentreEntityQueryCriteriaToEnhance(final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IDates dates) {
+        super(generatedEntityController, serialiser, controllerProvider, dates);
     }
 }

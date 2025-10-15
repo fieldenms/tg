@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
+import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
@@ -39,17 +40,20 @@ import static ua.com.fielden.platform.utils.Pair.pair;
  */
 public class EntityQueryCriteriaUtils {
 
+    @Inject
+    private static IAuthorisationModel authorisationModel;
+
     /// Returns the property names that the user is permitted to view or manipulate. The set of accessible properties is determined by the specified authorization model.
     ///
-    public static Set<String> getAvailableProperties(Class<? extends AbstractEntity<?>> root, final Set<String> properties, IAuthorisationModel authorisationModel) {
+    public static Set<String> getAvailableProperties(Class<? extends AbstractEntity<?>> root, final Set<String> properties) {
         return properties.stream().filter(prop -> {
-            return isPropertyAuthorised(root, prop, authorisationModel);
+            return isPropertyAuthorised(root, prop);
         }).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     /// Returns the property name that the user is permitted to view or manipulate. The accessibility of this property is determined by the specified authorization model.
     ///
-    public static boolean isPropertyAuthorised(Class<? extends AbstractEntity<?>> root, String property, IAuthorisationModel authorisationModel) {
+    public static boolean isPropertyAuthorised(Class<?> root, String property) {
         if (StringUtils.isEmpty(property)) {
             return true;
         }

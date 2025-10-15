@@ -34,7 +34,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -71,7 +70,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private final ISerialiser serialiser;
     private final C cdtme;
     private final ICompanionObjectFinder controllerProvider;
-    private final IAuthorisationModel authorisationModel;
     private Optional<IFetchProvider<T>> additionalFetchProvider = Optional.empty();
     private Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties = Optional.empty();
     private Optional<IQueryEnhancer<T>> additionalQueryEnhancer = Optional.empty();
@@ -83,11 +81,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
-    public EntityQueryCriteria(final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IAuthorisationModel authorisationModel, final IDates dates) {
+    public EntityQueryCriteria(final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IDates dates) {
         this.generatedEntityController = generatedEntityController;
         this.serialiser = serialiser;
         this.controllerProvider = controllerProvider;
-        this.authorisationModel = authorisationModel;
         this.dates = dates;
 
         //This values should be initialized through reflection.
@@ -149,7 +146,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         for (final QueryProperty qProperty : createQueryProperties()) {
             final Class<T> root = getEntityClass();
             final String critProperty = qProperty.getPropertyName();
-            if (!qProperty.isEmptyWithoutMnemonics() && !EntityQueryCriteriaUtils.isPropertyAuthorised(root, critProperty, authorisationModel)) {
+            if (!qProperty.isEmptyWithoutMnemonics() && !EntityQueryCriteriaUtils.isPropertyAuthorised(root, critProperty)) {
                 final String propTitle = TitlesDescsGetter.getTitleAndDesc(critProperty, root).getKey();
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(root).getKey();
                 return Result.failuref(ERR_PROP_AUTHORISATION, propTitle, entityTitle, propTitle);
@@ -686,8 +683,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
                 getCentreDomainTreeMangerAndEnhancer().getSecondTick(),
                 getCentreDomainTreeMangerAndEnhancer().getEnhancer());
         final var root = getEntityClass();
-        return new Pair<>(getAvailableProperties(root, pairOfProps.getKey(), authorisationModel),
-                          getAvailableProperties(root, pairOfProps.getValue(), authorisationModel));
+        return new Pair<>(getAvailableProperties(root, pairOfProps.getKey()),
+                          getAvailableProperties(root, pairOfProps.getValue()));
     }
 
     /**

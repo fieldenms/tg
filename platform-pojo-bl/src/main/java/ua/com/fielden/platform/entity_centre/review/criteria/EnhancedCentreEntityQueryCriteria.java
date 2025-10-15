@@ -8,7 +8,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
-import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -80,8 +79,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Class<? extends MiWithConfigurationSupport<?>> miType;
 
     @Inject
-    protected EnhancedCentreEntityQueryCriteria(final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, IAuthorisationModel authorisationModel, final IDates dates) {
-        super(generatedEntityController, serialiser, controllerProvider,authorisationModel, dates);
+    protected EnhancedCentreEntityQueryCriteria(final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IDates dates) {
+        super(generatedEntityController, serialiser, controllerProvider, dates);
     }
 
     /**
