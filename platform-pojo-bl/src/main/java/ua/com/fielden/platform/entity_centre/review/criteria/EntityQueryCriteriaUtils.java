@@ -20,8 +20,8 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
 import static org.joda.time.DateTimeZone.UTC;
 import static org.joda.time.DateTimeZone.getDefault;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
@@ -45,10 +45,10 @@ public class EntityQueryCriteriaUtils {
 
     /// Returns the property names that the user is permitted to view or manipulate. The set of accessible properties is determined by the specified authorization model.
     ///
-    public static Set<String> getAvailableProperties(Class<? extends AbstractEntity<?>> root, final Set<String> properties) {
+    public static List<String> getAvailableProperties(Class<? extends AbstractEntity<?>> root, final List<String> properties) {
         return properties.stream().filter(prop -> {
             return isPropertyAuthorised(root, prop);
-        }).collect(Collectors.toCollection(LinkedHashSet::new));
+        }).collect(toList());
     }
 
     /// Returns the property name that the user is permitted to view or manipulate. The accessibility of this property is determined by the specified authorization model.

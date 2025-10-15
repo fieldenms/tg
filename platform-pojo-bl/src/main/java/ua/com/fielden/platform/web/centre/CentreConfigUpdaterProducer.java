@@ -13,7 +13,6 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.utils.Pair;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,7 +56,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         // Very similar situation is with Change Columns Width action.
         final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = masterEntity.previouslyRunCentre();
         
-        final List<String> previouslyRunCheckedProperties = new ArrayList<>(EntityQueryCriteriaUtils.getAvailableProperties(root, new LinkedHashSet<>(previouslyRunCentre.getSecondTick().checkedProperties(root))));
+        final List<String> previouslyRunCheckedProperties = EntityQueryCriteriaUtils.getAvailableProperties(root, previouslyRunCentre.getSecondTick().checkedProperties(root));
         final List<String> previouslyRunUsedProperties = previouslyRunCentre.getSecondTick().usedProperties(root);
         final List<Pair<String, Ordering>> previouslyRunSortedProperties = previouslyRunCentre.getSecondTick().orderedProperties(root);
         final Class<?> previouslyRunManagedType = previouslyRunCentre.getEnhancer().getManagedType(root);

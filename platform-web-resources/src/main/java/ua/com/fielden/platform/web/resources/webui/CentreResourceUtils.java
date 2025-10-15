@@ -65,6 +65,7 @@ import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.getAvailableProperties;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.pagination.IPage.pageCount;
@@ -396,12 +397,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Map<String, Object> createResultConfigObject(final M updatedPreviouslyRunCriteriaEntity) {
         final Map<String, Object> resultConfigObject = new LinkedHashMap<>();
-        resultConfigObject.put("availableColumns", updatedPreviouslyRunCriteriaEntity.getAvailableResultSetAndSummaryProperties().getKey());
-        resultConfigObject.put("visibleColumnsWithOrder", updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().usedProperties(updatedPreviouslyRunCriteriaEntity.getEntityClass()));
-        resultConfigObject.put("orderingConfig", createOrderingProperties(updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().orderedProperties(updatedPreviouslyRunCriteriaEntity.getEntityClass())));
-        resultConfigObject.put("pageCapacity", updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity());
-        resultConfigObject.put("visibleRowsCount", updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getVisibleRowsCount());
-        resultConfigObject.put("numberOfHeaderLines", updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getNumberOfHeaderLines());
+        final Class<T> root = updatedPreviouslyRunCriteriaEntity.getEntityClass();
+        final IAddToResultTickManager secondTick = updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+        resultConfigObject.put("availableColumns", getAvailableProperties(root, secondTick.checkedProperties(root)));
+        resultConfigObject.put("visibleColumnsWithOrder", secondTick.usedProperties(root));
+        resultConfigObject.put("orderingConfig", createOrderingProperties(secondTick.orderedProperties(root)));
+        resultConfigObject.put("pageCapacity", secondTick.getPageCapacity());
+        resultConfigObject.put("visibleRowsCount", secondTick.getVisibleRowsCount());
+        resultConfigObject.put("numberOfHeaderLines", secondTick.getNumberOfHeaderLines());
         return resultConfigObject;
     }
 
@@ -472,7 +475,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param root
      * @param prop
      * @param cdtmae
-     * @param dvc
      * @return
      */
     private static Map<String, Object> createMetaValuesFor(final Class<AbstractEntity<?>> root, final String prop, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
@@ -524,8 +526,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /**
      * Applies all meta values, that are located in 'modifiedPropertiesHolder', to cdtmae (taken from 'miType' and 'gdtm').
      *
-     * @param miType
-     * @param gdtm
      * @param modifiedPropertiesHolder
      */
     private static void applyMetaValues(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<AbstractEntity<?>> root, final Map<String, Object> modifiedPropertiesHolder) {
@@ -1107,13 +1107,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * It is used as part of initialisation for an export query runner.
      *
      * @param webUiConfig
-     * @param serverGdtm
      * @param companionFinder
      * @param critGenerator
      * @param centreContextHolder
      * @param criteriaEntity
      * @param adhocParams
-     * @param utils
      *
      * @return
      */
