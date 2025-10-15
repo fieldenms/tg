@@ -136,10 +136,15 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
 
     private static <T extends AbstractEntity<?>> IValueMatcherWithContext<T, ?> createDefaultValueMatcherForPropType(final Class<? extends AbstractEntity<?>> propertyType, final String propertyName, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
         final IEntityDao<?> co = coFinder.find(propertyType);
-        // Filtering out of inactive values by default should only happen for activatable properties.
-        // See `isActivatableProperty` for more.
-        // Here, activatable unions are included, but @SkipEntityExistsValidation(skipActiveOnly) props excluded.
-        return new FallbackValueMatcherWithContext<>(co, isActivatableProperty(entityType, propertyName));
+        if (isPropertyDescriptor(propertyType)) {
+            return new FallbackPropertyDescriptorMatcherWithContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, entityType, propertyName).value());
+        }
+        else {
+            // Filtering out of inactive values by default should only happen for activatable properties.
+            // See `isActivatableProperty` for more.
+            // Here, activatable unions are included, but @SkipEntityExistsValidation(skipActiveOnly) props excluded.
+            return new FallbackValueMatcherWithContext<>(co, isActivatableProperty(entityType, propertyName));
+        }
     }
 
     /// Creates fetch model for entity-typed autocompleted values. Fetches only properties specified in Master DSL configuration.
@@ -159,11 +164,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
 
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
         final Class<V> propertyType = (Class<V>) (isEntityItself ? entityType : determinePropertyType(entityType, propertyName));
-        if (isPropertyDescriptor(propertyType)) {
-            return (IValueMatcherWithContext<T, V>) new FallbackPropertyDescriptorMatcherWithContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, entityType, propertyName).value());
-        } else {
-            return (IValueMatcherWithContext<T, V>) EntityMaster.<T>createDefaultValueMatcherForPropType(propertyType, propertyName, entityType, coFinder);
-        }
+        return (IValueMatcherWithContext<T, V>) EntityMaster.<T>createDefaultValueMatcherForPropType(propertyType, propertyName, entityType, coFinder);
     }
 
     @Override
