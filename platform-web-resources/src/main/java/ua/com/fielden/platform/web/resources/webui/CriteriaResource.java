@@ -590,14 +590,14 @@ public class CriteriaResource extends AbstractWebResource {
                     if (!validationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (validation failed).");
                         final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                        return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication));
+                        return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication)));
                     }
 
                     final Result authorisationResult = freshCentreAppliedCriteriaEntity.authoriseCriteria();
                     if (!authorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run failed (authorisation validation failed).");
                         final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                        final Result result = authorisationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication))));
+                        final Result result = authorisationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication)))));
                         return restUtil.resultJSONRepresentation(result);
                     }
                 } else {
@@ -629,7 +629,7 @@ public class CriteriaResource extends AbstractWebResource {
                     if (!generationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (generation failed).");
                         final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                        final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), criteriaIndication))));
+                        final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication)))));
                         return restUtil.resultJSONRepresentation(result);
                     }
                 }
@@ -640,6 +640,15 @@ public class CriteriaResource extends AbstractWebResource {
 
                 final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                //Performs criteria validation on centre refresh. It is needed if user changed token role association between run and refresh actions.
+                if (!isRunning) {
+                    final Result authorisationResult = previouslyRunCriteriaEntity.authoriseCriteria();
+                    if (!authorisationResult.isSuccessful()) {
+                        LOGGER.debug("CRITERIA_RESOURCE: refresh failed (authorisation validation failed).");
+                        final Result result = authorisationResult.copyWith(new ArrayList<>(Arrays.asList(previouslyRunCriteriaEntity, updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, previouslyRunCentre, new LinkedHashMap<>(), empty()))));
+                        return restUtil.resultJSONRepresentation(result);
+                    }
+                }
                 final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
                     customObject,
                     complementCriteriaEntityBeforeRunning( // complements previouslyRunCriteriaEntity instance
@@ -659,7 +668,7 @@ public class CriteriaResource extends AbstractWebResource {
                 if (isRunning) {
                     final var updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);;
                     final var changedCriteriaIndication = createChangedCriteriaIndication(updatedFreshCentre, updatedSavedCentre);
-                    updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculatorWithSavedSupplier().apply(() -> updatedSavedCentre), miType, saveAsName, previouslyRunCentre, pair.getKey(), changedCriteriaIndication);
+                    updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculatorWithSavedSupplier().apply(() -> updatedSavedCentre), miType, saveAsName, previouslyRunCentre, pair.getKey(), of(changedCriteriaIndication));
                 }
 
                 // Running the rendering customiser for result set of entities.
@@ -844,33 +853,26 @@ public class CriteriaResource extends AbstractWebResource {
         return dynamicColumns;
     }
 
-    /**
-     * Resultant custom object contains important result information such as 'centreDirty' (guards enablement of SAVE button) or 'metaValues'
-     * (they bind to metaValues criteria editors) or information whether selection criteria is stale or changed (config button colour / tooltip).
-     * <p>
-     * This method updates such information just before returning resultant custom object to the client.
-     *
-     * @param miType
-     * @param saveAsName
-     * @param updatedFreshCentre
-     * @param resultantCustomObject
-     * @param criteriaIndication -- contains actual {@link CriteriaIndication} for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI
-     *
-     * @return
-     */
+    /// Resultant custom object contains important result information such as 'centreDirty' (guards enablement of SAVE button) or 'metaValues'
+    /// (they bind to metaValues criteria editors) or information whether selection criteria is stale or changed (config button colour / tooltip).
+    ///
+    /// This method updates such information just before returning resultant custom object to the client.
+    ///
+    /// @param maybeCriteriaIndication -- contains optional actual [CriteriaIndication] for currently loaded centre configuration and its result-set;
+    ///                                this indication will be promoted to 'Show selection criteria' button in EGI
     private static Map<String, Object> updateResultantCustomObject(
             final Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre,
             final Map<String, Object> resultantCustomObject,
-            final CriteriaIndication criteriaIndication) {
+            final Optional<CriteriaIndication> maybeCriteriaIndication) {
         resultantCustomObject.put(CENTRE_DIRTY, centreDirtyCalculator.apply(saveAsName).apply(() -> updatedFreshCentre));
         resultantCustomObject.put(META_VALUES, createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)));
 
         // Resultant custom object contains information whether selection criteria is stale / changed (config button colour / tooltip).
         // Such information should be updated just before returning resultant custom object to the client.
-        resultantCustomObject.put(CRITERIA_INDICATION, criteriaIndication);
+        maybeCriteriaIndication.ifPresent(criteriaIndication -> resultantCustomObject.put(CRITERIA_INDICATION, criteriaIndication));
 
         return resultantCustomObject;
     }
@@ -911,7 +913,7 @@ public class CriteriaResource extends AbstractWebResource {
                 )
             ));
         } else {
-            return Optional.empty();
+            return empty();
         }
     }
 
