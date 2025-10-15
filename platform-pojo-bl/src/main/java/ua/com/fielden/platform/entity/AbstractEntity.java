@@ -516,7 +516,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
         try {
             return (T) dynamicPropertyAccess.getProperty(this, propertyName);
-        } catch (final Throwable ex) {
+        }
+        catch (final StrictProxyException ex) {
+            throw new StrictProxyException(ERR_CANNOT_GET_VALUE_FOR_PROXIED_PROPERTY.formatted(propertyName, getType().getName()), ex);
+        }
+        catch (final Throwable ex) {
             // There are cases where this.toString() may fail such as for non-initialized union entities.
             // Need to degrade gracefully to hide the original exception.
             // Also, do not try toString() if dynamic property access fails critically.

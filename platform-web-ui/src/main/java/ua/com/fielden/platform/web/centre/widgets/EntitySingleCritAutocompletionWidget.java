@@ -1,19 +1,14 @@
-package ua.com.fielden.platform.web.centre.api.crit.impl;
-
-import java.util.Map;
+package ua.com.fielden.platform.web.centre.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityCritAutocompletionWidget;
 
-/**
- *
- * A wrapper for <code>tg-entity-editor</code> that represents a widget for specifying values in single entity-typed criteria on Entity Centre.
- *
- * @author TG Team
- *
- */
+import java.util.Map;
+
+/// A wrapper for `tg-entity-editor` that represents a widget for specifying values in single entity-typed criteria on Entity Centre.
+///
 public class EntitySingleCritAutocompletionWidget extends AbstractEntityCritAutocompletionWidget {
     private boolean shouldSearchByDescOnly = false;
     private final CentreContextConfig centreContextConfig;
