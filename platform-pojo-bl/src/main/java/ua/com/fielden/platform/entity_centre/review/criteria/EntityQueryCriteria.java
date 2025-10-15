@@ -145,19 +145,15 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public Result authoriseCriteria() {
         final IAddToCriteriaTickRepresentation ftr = getCentreDomainTreeMangerAndEnhancer().getRepresentation().getFirstTick();
         final IAddToCriteriaTickManager ftm = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-        for (final Field propertyField : CriteriaReflector.getCriteriaProperties(getType())) {
+
+        for (final QueryProperty qProperty : createQueryProperties()) {
             final Class<T> root = getEntityClass();
-            final String critProperty = AnnotationReflector.getAnnotation(propertyField, CriteriaProperty.class).propertyName();
-            if (!EntityQueryCriteriaUtils.isPropertyAuthorised(root, critProperty, authorisationModel)) {
-                final SecondParam secondParam = AnnotationReflector.getAnnotation(propertyField, SecondParam.class);
-                final Object value = secondParam == null ? ftm.getValue(root, critProperty) : ftm.getValue2(root, critProperty);
-                final Object emptyValue = secondParam == null ? ftr.getEmptyValueFor(root, critProperty) : ftr.get2EmptyValueFor(root, critProperty);
-                if (!EntityUtils.equalsEx(value, emptyValue)) {
-                    final String propTitle = TitlesDescsGetter.getTitleAndDesc(critProperty, root).getKey();
-                    final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(root).getKey();
-                    return Result.failuref(ERR_PROP_AUTHORISATION, propTitle, entityTitle, propTitle);
-                }
-            };
+            final String critProperty = qProperty.getPropertyName();
+            if (!qProperty.isEmptyWithoutMnemonics() && !EntityQueryCriteriaUtils.isPropertyAuthorised(root, critProperty, authorisationModel)) {
+                final String propTitle = TitlesDescsGetter.getTitleAndDesc(critProperty, root).getKey();
+                final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(root).getKey();
+                return Result.failuref(ERR_PROP_AUTHORISATION, propTitle, entityTitle, propTitle);
+            }
         }
         return Result.successful(this);
     }
