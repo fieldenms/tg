@@ -92,10 +92,9 @@ public class ActivatableEntityRetrospectionHelper {
         //         but it does not affect the activatable nature of the property -- only the counting of references.
         // Note 2: @CritOnly properties (mainly relevant for SINGLE) in the context of persistent entity are considered activatable.
         //         This is to support generative entities (those implementing [WithCreatedByUser] and companion implementing [IGenerator]).
-        // TODO Properties whose type is a union entity type without activatable members should not be activatable.
-        //      This change would serve as an optimisation, without changing semantics, because activatability of union-typed properties
-        //      can be determined only from their actual values.
-        if ((isActivatableEntityType(propType) || isUnionEntityType(propType)) && !isPropertyCalculated(entityType, propName)) {
+        // Note 3: Properties whose type is a union entity type without activatable members are not activatable.
+        //         Activatability of union-typed properties can be determined only from their actual values.
+        if (isActivatableEntityOrUnionType(propType) && !isPropertyCalculated(entityType, propName)) {
             final var seevAnnotation = getAnnotation(prop, SkipEntityExistsValidation.class);
             final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();
             return !skipActiveOnly;
