@@ -130,14 +130,14 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return masterConfig.matcherTypeFor(propertyName)
                 .<IValueMatcherWithContext<T, ?>> map(injector::getInstance)
                 .or(() -> masterConfig.getAutocompleterAssociatedType(entityType, propertyName)
-                                      .map(it -> EntityMaster.<T>createDefaultValueMatcherForPropType(it, propertyName, entityType, coFinder)))
+                                      .map(it -> createDefaultValueMatcherForPropType(it, propertyName, entityType, coFinder)))
                 .orElseGet(() -> createDefaultValueMatcher(propertyName, entityType, coFinder));
     }
 
-    private static <T extends AbstractEntity<?>> IValueMatcherWithContext<T, ?> createDefaultValueMatcherForPropType(final Class<? extends AbstractEntity<?>> propertyType, final String propertyName, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
-        final IEntityDao<?> co = coFinder.find(propertyType);
+    private static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createDefaultValueMatcherForPropType(final Class<V> propertyType, final String propertyName, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
+        final IEntityDao<V> co = coFinder.find(propertyType);
         if (isPropertyDescriptor(propertyType)) {
-            return new FallbackPropertyDescriptorMatcherWithContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, entityType, propertyName).value());
+            return (IValueMatcherWithContext<T, V>) new FallbackPropertyDescriptorMatcherWithContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, entityType, propertyName).value());
         }
         else {
             // Filtering out of inactive values by default should only happen for activatable properties.
@@ -164,7 +164,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
 
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
         final Class<V> propertyType = (Class<V>) (isEntityItself ? entityType : determinePropertyType(entityType, propertyName));
-        return (IValueMatcherWithContext<T, V>) EntityMaster.<T>createDefaultValueMatcherForPropType(propertyType, propertyName, entityType, coFinder);
+        return createDefaultValueMatcherForPropType(propertyType, propertyName, entityType, coFinder);
     }
 
     @Override
