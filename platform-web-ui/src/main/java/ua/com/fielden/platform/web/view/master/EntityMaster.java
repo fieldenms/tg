@@ -9,7 +9,6 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -29,11 +28,10 @@ import java.util.Optional;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableProperty;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityOrUnionType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.EntityCentre.createFetchModelForAutocompleterFrom;
@@ -138,11 +136,10 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
 
     private static <T extends AbstractEntity<?>> IValueMatcherWithContext<T, ?> createDefaultValueMatcherForPropType(final Class<? extends AbstractEntity<?>> propertyType, final String propertyName, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
         final IEntityDao<?> co = coFinder.find(propertyType);
-        // filtering out of inactive should only happen for activatable properties without SkipEntityExistsValidation present
-        final boolean activeOnly =
-                isActivatableEntityOrUnionType(propertyType) &&
-                !findFieldByName(entityType, propertyName).isAnnotationPresent(SkipEntityExistsValidation.class);
-        return new FallbackValueMatcherWithContext<>(co, activeOnly);
+        // Filtering out of inactive values by default should only happen for activatable properties.
+        // See `isActivatableProperty` for more.
+        // Here, activatable unions are included, but @SkipEntityExistsValidation(skipActiveOnly) props excluded.
+        return new FallbackValueMatcherWithContext<>(co, isActivatableProperty(entityType, propertyName));
     }
 
     /// Creates fetch model for entity-typed autocompleted values. Fetches only properties specified in Master DSL configuration.
