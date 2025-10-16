@@ -32,6 +32,7 @@ import ua.com.fielden.platform.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.security.interception.AuthenticationTestIocModule;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -53,6 +54,7 @@ public class DynamicQueryBuilderSqlTest {
 
     private final static Injector injector = new ApplicationInjectorFactory()
             .add(new CommonEntityTestIocModuleWithPropertyFactory())
+            .add(new AuthenticationTestIocModule())
             .getInjector();
     private final static EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
     private final static IDates dates = injector.getInstance(IDates.class);
@@ -117,6 +119,8 @@ public class DynamicQueryBuilderSqlTest {
                 "booleanProp",
                 "stringProp",
                 "entityProp",
+                "authorisedProp",
+                "unauthorisedProp",
                 "entityProp.masterEntityProp",
                 "entityProp.integerProp",
                 "entityProp.bigDecimalProp",
@@ -1417,4 +1421,38 @@ public class DynamicQueryBuilderSqlTest {
         assertEquals("Incorrect query model for union entities has been built.", expected.model(), actual.model());
     }
 
+    //////// property authorisation tests//////////////////////
+    @Test
+    public void authorised_prop_should_be_present_in_query() {
+        test_atomic_query_composition_for_range_type("authorisedProp");
+    }
+
+    @Test
+    public void unauthorised_prop_should_not_be_present_in_query() {
+        set_up();
+        final QueryProperty property = queryProperties.get("unauthorisedProp");
+        property.setValue(3);
+        property.setValue2(7);
+
+        final String cbn = property.getConditionBuildingName();
+
+        final ICompleted<? extends AbstractEntity<?>> expected = iJoin; //
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
+
+        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+    }
+
+    @Test
+    public void unauthorised_prop_initiate_with_mnemonics_should_not_be_present_in_query() {
+        set_up();
+        final QueryProperty property = queryProperties.get("unauthorisedProp");
+        property.setOrNull(true);
+
+        final String cbn = property.getConditionBuildingName();
+
+        final ICompleted<? extends AbstractEntity<?>> expected = iJoin; //
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
+
+        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+    }
 }
