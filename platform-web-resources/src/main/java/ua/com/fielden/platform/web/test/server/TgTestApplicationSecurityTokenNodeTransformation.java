@@ -29,7 +29,7 @@ public class TgTestApplicationSecurityTokenNodeTransformation implements ISecuri
                         ReUser_CanRead_Token.class,
                         ReUser_CanReadModel_Token.class),
                 User_CanRead_Token.class);
-
+        //Should be commented out to make test application work with simple User entity master.
 //        final var trans3 = SecurityTokenNodeTransformations.setParentOf(
 //                List.of(
 //                        OpenUserMasterAction_CanOpen_Token.class,

@@ -32,12 +32,8 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
-/**
- * Provides utility methods for entity query criteria.
- *
- * @author TG Team
- *
- */
+/// Provides utility methods for entity query criteria.
+///
 public class EntityQueryCriteriaUtils {
 
     @Inject
@@ -64,14 +60,8 @@ public class EntityQueryCriteriaUtils {
         return true;
     }
 
-    /**
-     * Separates total properties from fetch properties. The key of the pair is the list of fetch properties, the value of the pair is the list of totals.
-     *
-     * @param root
-     * @param tickManager
-     * @param enhancer
-     * @return
-     */
+    /// Separates total properties from fetch properties. The key of the pair is the list of fetch properties, the value of the pair is the list of totals.
+    ///
     public static Pair<Set<String>, Set<String>> separateFetchAndTotalProperties(final Class<?> root, final IAddToResultTickManager tickManager, final IDomainTreeEnhancer enhancer) {
         final Set<String> fetchProperties = new LinkedHashSet<>();
         final Set<String> totalProperties = new LinkedHashSet<>();
@@ -85,13 +75,8 @@ public class EntityQueryCriteriaUtils {
         return pair(fetchProperties, totalProperties);
     }
 
-    /**
-     * Returns the pair of fetch properties and totals map. The totals map - it is a map between fetch properties and list of total names.
-     *
-     * @param rootType
-     * @param cdtme
-     * @return
-     */
+    /// Returns the pair of fetch properties and totals map. The totals map - it is a map between fetch properties and list of total names.
+    ///
     public static Pair<List<Pair<String, Integer>>, Map<String, List<String>>> getMappedFetchAndTotals(final Class<?> root, final IAddToResultTickManager tickManager, final IDomainTreeEnhancer enhancer) {
         final List<Pair<String, Integer>> columns = new ArrayList<>();
         final Map<String, List<String>> totals = new HashMap<>();
@@ -119,14 +104,8 @@ public class EntityQueryCriteriaUtils {
         return pair(columns, totals);
     }
 
-    /**
-     * Returns the map between real property name and pair of it's values. If the second value doesn't exists then it is null.
-     *
-     * @param root
-     * @param managedType
-     * @param tickManager
-     * @return
-     */
+    /// Returns the map between real property name and `pair` of its values. If the second value doesn't exist then it is null.
+    ///
     public static Map<String, Pair<Object, Object>> createParamValuesMap(final Class<?> root, final Class<?> managedType, final IAddToCriteriaTickManager tickManager, final IDates dates) {
         final Map<String, Pair<Object, Object>> paramValues = new HashMap<>();
         for (final String propertyName : tickManager.checkedProperties(root)) {
@@ -157,72 +136,48 @@ public class EntityQueryCriteriaUtils {
         return paramValues;
     }
 
-    /**
-     * Converts {@code value} to a form suitable for EQL parameters.
-     * <p>
-     * The only specifics here is UTC date handling. Date value is converted to the form in which UTC dates are persisted in database.
-     *
-     * @param value
-     * @param isDate -- {@code true} if property is of {@link Date} type
-     * @param queryProperty
-     * @return
-     */
+    /// Converts `value` to a form suitable for EQL parameters.
+    ///
+    /// The only specifics here is UTC date handling. Date value is converted to the form in which UTC dates are persisted in database.
+    ///
+    /// @param isDate `true` if property is of [Date] type
+    ///
     public static Object paramValue(final Object value, final boolean isDate, final QueryProperty queryProperty) {
         return paramValue(value, isDate, queryProperty.getEntityClass(), queryProperty.getPropertyName());
     }
 
-    /**
-     * Converts {@code value} to a form suitable for EQL parameters.
-     * <p>
-     * The only specifics here is UTC date handling. Date value is converted to the form in which UTC dates are persisted in database.
-     *
-     * @param value
-     * @param isDate -- {@code true} if property is of {@link Date} type
-     * @param managedType
-     * @param propertyName
-     * @return
-     */
+    /// Converts `value` to a form suitable for EQL parameters.
+    ///
+    /// The only specifics here is UTC date handling. Date value is converted to the form in which UTC dates are persisted in database.
+    ///
+    /// @param isDate `true` if property is of [Date] type
+    ///
     public static Object paramValue(final Object value, final boolean isDate, final Class<?> managedType, final String propertyName) {
         return value != null && isDate && isUtc(managedType, propertyName) ? utcDateParamValue((Date) value) : value;
     }
 
-    /**
-     * Converts {@code value} for UTC property to the form in which UTC dates are persisted in database.
-     *
-     * @param date
-     * @return
-     */
+    /// Converts `value` for UTC property to the form in which UTC dates are persisted in database.
+    ///
     private static Date utcDateParamValue(final Date date) {
         return new DateTime(date, UTC).withZoneRetainFields(getDefault()).toDate();
     }
 
-    /**
-     * Returns the not configured query property instance for the specified property.
-     *
-     * @param propertyName
-     * @return
-     */
+    /// Returns the not configured query property instance for the specified property.
+    ///
     public static QueryProperty createNotInitialisedQueryProperty(final Class<?> root, final String propertyName) {
         return new QueryProperty(root, propertyName);
     }
 
-    /**
-     * Returns the not configured query property instance for the specified property.
-     *
-     * @param propertyPath
-     * @return
-     */
+    /// Returns the not configured query property instance for the specified property.
+    ///
     public static QueryProperty createNotInitialisedQueryProperty(final Class<?> root, final CharSequence propertyPath) {
         return new QueryProperty(root, propertyPath.toString());
     }
 
-    /**
-     * Returns the expression for calculated property specified with propName parameter. If the property is not calculated then returns <code>null</code>.
-     *
-     * @param propName
-     *            - the name of the calculated property.
-     * @return
-     */
+    /// Returns the expression for calculated property specified with propName parameter. If the property is not calculated then returns `null`.
+    ///
+    /// @param propName the name of the calculated property.
+    ///
     public static ExpressionModel getExpressionForProp(final Class<?> root, final String propName, final IDomainTreeEnhancer enhancer) {
         try {
             return enhancer.getCalculatedProperty(root, propName).getExpressionModel();

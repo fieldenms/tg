@@ -1,11 +1,7 @@
 package ua.com.fielden.platform.security.tokens;
 
-/**
- * Various standard templates for titles and descriptions of security tokens. 
- *
- * @author TG Team
- *
- */
+/// Various standard templates for titles and descriptions of security tokens.
+///
 public enum Template {
     
     SAVE_NEW ("%s_CanSaveNew_Token", "%s Can Save New", "Authorises saving of new data."),

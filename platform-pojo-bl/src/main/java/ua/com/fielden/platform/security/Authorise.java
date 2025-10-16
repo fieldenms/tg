@@ -5,13 +5,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Annotation, which should be used for annotating methods requiring call authorisation. The annotation parameter should be a required security token.
- * <p>
- * During instantiation, methods annotated with this annotation are provided with a method interceptor, which would validate a call permission.
- * 
- * @author TG Team
- */
+/// Annotation, which should be used for annotating methods requiring call authorisation. The annotation parameter should be a required security token.
+///
+/// During instantiation, methods annotated with this annotation are provided with a method interceptor, which would validate a call permission.
+///
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.FIELD})
 public @interface Authorise {

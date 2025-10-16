@@ -90,15 +90,10 @@ import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.*;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.*;
 
-/**
- * The web resource for criteria serves as a back-end mechanism of criteria retrieval. It provides a base implementation for handling the following methods:
- * <ul>
- * <li>retrieve entity -- GET request.
- * </ul>
- *
- * @author TG Team
- *
- */
+/// The web resource for criteria serves as a back-end mechanism of criteria retrieval. It provides a base implementation for handling the following methods:
+///
+///   - retrieve entity -- GET request.
+///
 public class CriteriaResource extends AbstractWebResource {
     private final static Logger LOGGER = LogManager.getLogger(CriteriaResource.class);
     private static final String CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER = "No configuration can be shared with base users (%s).";
@@ -107,17 +102,15 @@ public class CriteriaResource extends AbstractWebResource {
     private static final String COULD_NOT_LOAD_CONFLICTING_SHARED_CONFIGURATION = "Cannot load a shared configuration with conflicting title [%s].";
     private static final String LINK_CONFIG_COULD_NOT_BE_LOADED = "A link configuration could not be loaded. Please try again.";
 
-    /**
-     * Map for user+miType based locks for centre running. It is used to emulate a queue for execution of run requests for the same user and centre (regardless of the {@code saveAsName} value).
-     */
+    /// Map for user+miType based locks for centre running. It is used to emulate a queue for execution of run requests for the same user and centre (regardless of the `saveAsName` value).
+    ///
     private static final ConcurrentHashMap<T2<User, Class<? extends MiWithConfigurationSupport<?>>>, Lock> locks = new ConcurrentHashMap<>();
 
-    /**
-     * Timeout in seconds to wait for an active lock.
-     * It is expected that in practice there should less than 10 self-concurrent requests running for ~1 second each.
-     * If this timeout is in insufficient then instead of throwing an exception, a running request gets executed anyway (concurrently), as it was originally before the locking mechanism was introduced.
-     * Hypothetically specking such approach should be more appropriate from the user experience point of view.
-     */
+    /// Timeout in seconds to wait for an active lock.
+    /// It is expected that in practice there should less than 10 self-concurrent requests running for ~1 second each.
+    /// If this timeout is in insufficient then instead of throwing an exception, a running request gets executed anyway (concurrently), as it was originally before the locking mechanism was introduced.
+    /// Hypothetically specking such approach should be more appropriate from the user experience point of view.
+    ///
     private static final long RUNNING_LOCK_TIMEOUT = 10;
 
     private final RestServerUtil restUtil;
@@ -168,9 +161,8 @@ public class CriteriaResource extends AbstractWebResource {
         this.securityTokenProvider = securityTokenProvider;
     }
 
-    /**
-     * Handles GET requests resulting from tg-selection-criteria <code>retrieve()</code> method (new entity).
-     */
+    /// Handles GET requests resulting from tg-selection-criteria `retrieve()` method (new entity).
+    ///
     @Get
     @Override
     public Representation get() {
@@ -245,9 +237,8 @@ public class CriteriaResource extends AbstractWebResource {
         }, restUtil);
     }
 
-    /**
-     * Validates {@code configUuid} on the subject of configuration existence and general ability to share it with current {@code user}.
-     */
+    /// Validates `configUuid` on the subject of configuration existence and general ability to share it with current `user`.
+    ///
     private Either<Result, EntityCentreConfig> validateUuidAndGetUpstreamConfig(final String configUuid) {
         // we look only for owners; "owning" is indicated by presence of SAVED configuration with the specified uuid
         final Optional<EntityCentreConfig> savedConfigOptForOtherUser = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, eccCompanion);
@@ -268,9 +259,8 @@ public class CriteriaResource extends AbstractWebResource {
         return right(savedConfigOptForOtherUser.get());
     }
 
-    /**
-     * Implements first time loading of configuration into 'inherited from base / shared'.
-     */
+    /// Implements first time loading of configuration into `inherited from base / shared`.
+    ///
     private T2<Optional<String>, Boolean> firstTimeLoadingFrom(final EntityCentreConfig upstreamConfig) {
         final String configUuid = upstreamConfig.getConfigUuid();
         final User upstreamConfigCreator = upstreamConfig.getOwner();
@@ -307,14 +297,13 @@ public class CriteriaResource extends AbstractWebResource {
         }
     }
 
-    /**
-     * Determines name of inherited from shared configuration.
-     * Usually it is the same as {@code preliminaryName} (if there is no config with this name).
-     * <p>
-     * If there is conflicting name then '(shared)' suffix is added.
-     * If even that did not work -- '(shared 1)' -> '(shared 9)' suffixes are tried.
-     * If even that did not work -- error is thrown.
-     */
+    /// Determines name of inherited from shared configuration.
+    /// Usually it is the same as `preliminaryName` (if there is no config with this name).
+    ///
+    /// If there is conflicting name then '(shared)' suffix is added.
+    /// If even that did not work -- '(shared 1)' -> '(shared 9)' suffixes are tried.
+    /// If even that did not work -- error is thrown.
+    ///
     private String determineNonConflictingName(final String preliminaryName, final int index) {
         final String name;
         if (index > 9) {
@@ -327,9 +316,8 @@ public class CriteriaResource extends AbstractWebResource {
             .orElse(name);
     }
 
-    /**
-     * Updates already loaded by {@code user} configuration with concrete {@code configUuid} from its upstream configuration (if it is inherited).
-     */
+    /// Updates already loaded by `user` configuration with concrete `configUuid` from its upstream configuration (if it is inherited).
+    ///
     private T2<Optional<String>, Boolean> updateFromUpstream(final String configUuid, final Optional<String> saveAsName) {
         // look for config creator
         final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, eccCompanion);
@@ -362,9 +350,8 @@ public class CriteriaResource extends AbstractWebResource {
         return t2(saveAsName, false);
     }
 
-    /**
-     * Prepares FRESH / SAVED link configs if not yet created. Returns a pair of resultant saveAsName and configUuid.
-     */
+    /// Prepares FRESH / SAVED link configs if not yet created. Returns a pair of resultant saveAsName and configUuid.
+    ///
     private T2<Optional<String>, Optional<String>> prepareLinkConfigInfrastructure() {
         // 'link' configuration loading is not limited only to first time loading;
         // user can paste 'link' configuration URI into current app context;
@@ -393,9 +380,8 @@ public class CriteriaResource extends AbstractWebResource {
         }
     }
 
-    /**
-     * Returns whether FRESH config is changed from SAVED one.
-     */
+    /// Returns whether FRESH config is changed from SAVED one.
+    ///
     private boolean isCentreChanged(final Optional<String> actualSaveAsName) {
         return isFreshCentreChanged(
             updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
@@ -403,9 +389,8 @@ public class CriteriaResource extends AbstractWebResource {
         );
     }
 
-    /**
-     * Handles POST request resulting from tg-selection-criteria <code>validate()</code> method.
-     */
+    /// Handles POST request resulting from tg-selection-criteria `validate()` method.
+    ///
     @Post
     @Override
     public Representation post(final Representation envelope) {
@@ -526,9 +511,8 @@ public class CriteriaResource extends AbstractWebResource {
         return !savedCentre.getFirstTick().selectionCriteriaEquals(freshCentre.getFirstTick()) ? CHANGED : NONE;
     }
 
-    /**
-     * Handles PUT request resulting from tg-selection-criteria <code>run()</code> method.
-     */
+    /// Handles PUT request resulting from tg-selection-criteria `run()` method.
+    ///
     @SuppressWarnings("unchecked")
     @Put
     @Override
@@ -729,13 +713,9 @@ public class CriteriaResource extends AbstractWebResource {
         }, restUtil);
     }
 
-    /**
-     * A method to try acquiring a lock for running a centre.
-     * It should not throw any exceptions, but simply return {@code true} if the lock was acquired or {@code false} otherwise.
-     *
-     * @param lock
-     * @return
-     */
+    /// A method to try acquiring a lock for running a centre.
+    /// It should not throw any exceptions, but simply return `true` if the lock was acquired or `false` otherwise.
+    ///
     private boolean tryLocking(final Lock lock) {
         try {
             // try acquiring an exclusive lock for running a miType centre for the current user
@@ -749,12 +729,8 @@ public class CriteriaResource extends AbstractWebResource {
         return false;
     }
 
-    /**
-     * Calculates rendering hints for {@code entities}.
-     *
-     * @param entities
-     * @return
-     */
+    /// Calculates rendering hints for `entities`.
+    ///
     private List<Object> createRenderingHints(final List<AbstractEntity<?>> entities) {
         final Optional<IRenderingCustomiser<?>> renderingCustomiser = centre.getRenderingCustomiser();
         if (renderingCustomiser.isPresent()) {
@@ -860,6 +836,7 @@ public class CriteriaResource extends AbstractWebResource {
     ///
     /// @param maybeCriteriaIndication -- contains optional actual [CriteriaIndication] for currently loaded centre configuration and its result-set;
     ///                                this indication will be promoted to 'Show selection criteria' button in EGI
+    ///
     private static Map<String, Object> updateResultantCustomObject(
             final Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
@@ -917,13 +894,8 @@ public class CriteriaResource extends AbstractWebResource {
         }
     }
 
-    /**
-     * Assigns the values for custom properties.
-     *
-     * @param propertiesDefinitions
-     * @param customPropertiesAsignmentHandler
-     * @param entities
-     */
+    /// Assigns the values for custom properties.
+    ///
     public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithCustomPropertyValues(
             final EntityCentre<AbstractEntity<?>> centre,
             final Optional<List<ResultSetProp<AbstractEntity<?>>>> propertiesDefinitions,

@@ -931,7 +931,7 @@ Polymer({
             const result = [];
             for (let index = 0; index < this.allColumns.length; index++) {
                 const column = this.allColumns[index];
-                if (!column.isHidden) {
+                if (!column.isHidden) {//Checks whether the column is authorized and therefore visible.
                     const entry = {
                         dotNotation: column.property,
                         value: this.getBindedValue(entity, column),
@@ -1240,6 +1240,11 @@ Polymer({
         this._updateTableSizeAsync();
     },
 
+    /**
+     * Updates the available columns list according to security configuration.
+     * 
+     * @param {Array} availableColumns the list of authorised columns.
+     */
     adjustColumnAvailability: function(availableColumns) {
         this.allColumns.forEach(col => {
                 col.isHidden = !availableColumns.includes(col.property);
@@ -1396,6 +1401,7 @@ Polymer({
     },
 
     _updateColumns: function (resultantColumns) {
+        //First filter the columns to include only authorized (i.e., visible) columns.
         const availableColumns = resultantColumns.filter(col => !col.isHidden);
         this.fixedColumns = availableColumns.splice(0, this.numOfFixedCols);
         this.columns = availableColumns;

@@ -86,12 +86,8 @@ import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
 
-/**
- * This utility class contains the methods that are shared across {@link CentreResource} and {@link CriteriaResource}.
- *
- * @author TG Team
- *
- */
+/// This utility class contains the methods that are shared across [CentreResource] and [CriteriaResource].
+///
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
     private static final Logger logger = LogManager.getLogger(CentreResourceUtils.class);
     public static final String CONFIG_DOES_NOT_EXIST = "Configuration does not exist.";
@@ -99,44 +95,36 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     public static final String SAVE_OWN_COPY_MSG = "Only sharing of your own configurations is supported. Please save as your copy and try again.";
     private static final String DUPLICATE_SAVE_MSG = "Please duplicate, save and try again.";
 
-    /**
-     * The key for customObject's value containing save-as name.
-     */
+    /// The key for customObject's value containing save-as name.
+    ///
     public static final String SAVE_AS_NAME = "saveAsName";
-    /**
-     * The key for customObject's value containing save-as description.
-     */
+    /// The key for customObject's value containing save-as description.
+    ///
     private static final String SAVE_AS_DESC = "saveAsDesc";
-    /**
-     * The key for customObject's value containing configuration uuid.
-     */
+    /// The key for customObject's value containing configuration uuid.
+    ///
     private static final String CONFIG_UUID = "configUuid";
-    /**
-     * The key for customObject's value indicating whether centre configuration is dirty meaning it is changed or of [default, link, inherited] kind.
-     */
+    /// The key for customObject's value indicating whether centre configuration is dirty meaning it is changed or of [default, link, inherited] kind.
+    ///
     static final String CENTRE_DIRTY = "centreDirty";
-    /**
-     * The key for customObject's value containing meta values e.g. mnemonics.
-     */
+    /// The key for customObject's value containing meta values e.g. mnemonics.
+    ///
     static final String META_VALUES = "metaValues";
-    /**
-     * The key for customObject's value, which contains {@link CriteriaIndication}.
-     */
+    /// The key for customObject's value, which contains [CriteriaIndication].
+    ///
     static final String CRITERIA_INDICATION = "criteriaIndication";
-    /**
-     * The key for customObject's value containing the preferred view index.
-     */
+    /// The key for customObject's value containing the preferred view index.
+    ///
     static final String PREFERRED_VIEW = "preferredView";
-    /**
-     * The key for customObject's value containing the user name.
-     */
+    /// The key for customObject's value containing the username.
+    ///
     static final String USER_NAME = "userName";
-    /**
-     * The key for customObject's value containing the config share validation error.
-     */
+    /// The key for customObject's value containing the config share validation error.
+    ///
     static final String SHARE_ERROR = "shareError";
 
-    /** Private default constructor to prevent instantiation. */
+    /// Private default constructor to prevent instantiation.
+    ///
     private CentreResourceUtils() {
     }
 
@@ -158,13 +146,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     ///////////////////////////////// CUSTOM OBJECTS /////////////////////////////////
-    /**
-     * Creates the 'custom object' that contains 'critMetaValues' and 'centreDirty'.
-     *
-     * @param criteriaMetaValues
-     * @param centreDirty
-     * @return
-     */
+
+    /// Creates the 'custom object' that contains 'critMetaValues' and 'centreDirty'.
+    ///
     static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean centreDirty) {
         final Map<String, Object> customObject = new LinkedHashMap<>();
         customObject.put(CENTRE_DIRTY, centreDirty);
@@ -172,22 +156,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return customObject;
     }
 
-    /**
-     * Creates the 'custom object' that contains 'critMetaValues', 'centreDirty' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean)},
-     * optional 'saveAsName' value, optional 'saveAsDesc' value, optional 'configUuid' value and optional 'shareError' value.
-     *
-     * @param criteriaMetaValues
-     * @param centreDirty
-     * @param saveAsName -- represents a configuration title to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
-     * @param configUuid -- represents uuid of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
-     * @param autoRun -- represents autoRun parameter of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
-     * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
-     * @param criteriaIndicationOpt -- optional {@link CriteriaIndication} for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI if not empty
-     * @param preferredView -- represents a configuration preferred view index to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
-     * @param shareError -- represents a configuration sharing error message to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
-     *
-     * @return
-     */
+    /// Creates the `custom object` that contains `critMetaValues`, `centreDirty` flag (see [#createCriteriaMetaValuesCustomObject(Map,boolean)],
+    /// optional `saveAsName` value, optional `saveAsDesc` value, optional `configUuid` value and optional `shareError` value.
+    ///
+    /// @param saveAsName represents a configuration title to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
+    /// @param configUuid represents uuid of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
+    /// @param autoRun represents autoRun parameter of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
+    /// @param saveAsDesc represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
+    /// @param criteriaIndicationOpt optional [CriteriaIndication] for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI if not empty
+    /// @param preferredView represents a configuration preferred view index to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
+    /// @param shareError represents a configuration sharing error message to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
+    ///
     static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
         final Map<String, Map<String, Object>> criteriaMetaValues,
         final boolean centreDirty,
@@ -226,79 +205,51 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return customObject;
     }
 
-    /**
-     * Creates the 'custom object' that contain 'critMetaValues', 'centreDirty' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean)}) and 'criteriaIndication'.
-     *
-     * @param criteriaMetaValues
-     * @param centreDirty
-     * @param criteriaIndication -- contains actual {@link CriteriaIndication} for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI
-     *
-     * @return
-     */
+    /// Creates the 'custom object' that contain `critMetaValues`, `centreDirty` flag (see [#createCriteriaMetaValuesCustomObject(Map,boolean)]) and `criteriaIndication`.
+    ///
+    /// @param criteriaIndication contains actual [CriteriaIndication] for currently loaded centre configuration and its result-set; this indication will be promoted to `Show selection criteria` button in EGI
+    ///
     static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean centreDirty, final CriteriaIndication criteriaIndication) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, centreDirty);
         customObject.put(CRITERIA_INDICATION, criteriaIndication);
         return customObject;
     }
 
-    /**
-     * A predicate to determine whether {@code customObject} represents action {@code Run}.
-     *
-     * @param customObject
-     * @return
-     */
+    /// A predicate to determine whether `customObject` represents action `Run`.
+    ///
     public static boolean isRunning(final Map<String, Object> customObject) {
         return RunActions.RUN.toString().equals(customObject.get("@@action"));
     }
 
-    /**
-     * A predicate to determine whether {@code customObject} represents action with 'retrieveAll' option.
-     *
-     * @param customObject
-     * @return
-     */
+    /// A predicate to determine whether `customObject` represents action with `retrieveAll` option.
+    ///
     public static boolean isRetrieveAll(final Map<String, Object> customObject) {
         return Boolean.TRUE.equals(customObject.get("@@retrieveAll"));
     }
 
-    /**
-     * A predicate to determine whether {@code customObject} represents action {@code Refresh}.
-     *
-     * @param customObject
-     * @return
-     */
+    /// A predicate to determine whether `customObject` represents action `Refresh`.
+    ///
     public static boolean isRefreshing(final Map<String, Object> customObject) {
         return RunActions.REFRESH.toString().equals(customObject.get("@@action"));
     }
 
-    /**
-     * Returns <code>true</code> if 'Sorting' action is performed, otherwise <code>false</code>.
-     *
-     * @param customObject
-     * @return
-     */
+    /// Returns `true` if `Sorting` action is performed, otherwise `false`.
+    ///
     public static boolean isSorting(final Map<String, Object> customObject) {
         return customObject.containsKey("@@sortingAction");
     }
 
-    /**
-     * Returns <code>true</code> if 'autoRunning' action is performed, otherwise <code>false</code>.
-     *
-     * @param customObject
-     * @return
-     */
+    /// Returns `true` if `autoRunning` action is performed, otherwise `false`.
+    ///
     public static boolean isAutoRunning(final Map<String, Object> customObject) {
         return customObject.containsKey("@@autoRunning");
     }
 
-    /**
-     * Creates the pair of 'custom object' (that contain 'resultEntities' and 'pageCount') and 'resultEntities' (query run is performed
-     * inside).
-     *
-     * @param customObject
-     * @param updatedPreviouslyRunCriteriaEntity -- criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action), but not yet actually used for running
-     * @return
-     */
+    /// Creates the pair of `custom object` (that contain `resultEntities` and `pageCount`) and `resultEntities` (query run is performed
+    /// inside).
+    ///
+    /// @param updatedPreviouslyRunCriteriaEntity criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action), but not yet actually used for running
+    ///
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<AbstractEntity<?>>> createCriteriaMetaValuesCustomObjectWithResult(
             final Map<String, Object> customObject,
             final M updatedPreviouslyRunCriteriaEntity) {
@@ -360,14 +311,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return new Pair<>(resultantCustomObject, (List<AbstractEntity<?>>) data);
     }
 
-    /**
-     * Runs the entity centre with option {@code retrieveAll}. Returns {@link Right} with a list of entities of all matching entities and a summary, if {@code retrieveAll == true}.
-     * Otherwise, returns {@link Left} with {@link IPage}, which should be most common case.
-     *
-     * @param retrieveAll
-     * @param criteria
-     * @return
-     */
+    /// Runs the entity centre with option `retrieveAll`. Returns [Right] with a list of entities of all matching entities and a summary, if `retrieveAll == true`.
+    /// Otherwise, returns [Left] with [IPage], which should be the most common case.
+    ///
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<IPage<T>, Pair<List<T>, T>> run(final boolean retrieveAll, final M criteria) {
         if (retrieveAll) {
             return right(criteria.getAllEntitiesWithSummary());
@@ -377,9 +323,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
     }
 
-    /**
-     * Refreshes current page of entity centre based on {@code retrieveAll} option. Returns {@link Right} with list of entities and summary if true. Otherwise returns {@link Left} with {@link IPage}.
-     */
+    /// Refreshes current page of entity centre based on `retrieveAll` option. Returns [Right] with list of entities and summary if true. Otherwise, returns [Left] with [IPage].
+    ///
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Pair<IPage<T>, T>, Pair<List<T>, T>> refresh(final boolean retrieveAll, final Integer pageNumber, final M criteria) {
         if (retrieveAll) {
             return right(criteria.getAllEntitiesWithSummary());
@@ -389,12 +334,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
     }
 
-    /**
-     * Creates custom resultant object containing running configuration (e.g. pageCapacity, visibleRowsCount, visibleColumnsWithOrder etc.) to be sent to the client-side application.
-     *
-     * @param updatedPreviouslyRunCriteriaEntity -- criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action)
-     * @return
-     */
+    /// Creates custom resultant object containing running configuration (e.g. pageCapacity, visibleRowsCount, visibleColumnsWithOrder etc.) to be sent to the client-side application.
+    ///
+    /// @param updatedPreviouslyRunCriteriaEntity criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action)
+    ///
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Map<String, Object> createResultConfigObject(final M updatedPreviouslyRunCriteriaEntity) {
         final Map<String, Object> resultConfigObject = new LinkedHashMap<>();
         final Class<T> root = updatedPreviouslyRunCriteriaEntity.getEntityClass();
@@ -417,15 +360,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }).collect(Collectors.toList());
     }
 
-    /**
-     * This method is similar to {@link #createCriteriaMetaValuesCustomObjectWithResult(Map, EnhancedCentreEntityQueryCriteria, Optional, Optional, Optional)}, but instead of returning a list of entities,
-     * it returns a stream.
-     *
-     * @param adhocParams
-     * @param criteriaEntity
-     * @param dynamicProperties
-     * @return
-     */
+    /// This method is similar to [#createCriteriaMetaValuesCustomObjectWithResult(Map, EnhancedCentreEntityQueryCriteria)], but instead of returning a list of entities,
+    /// it returns a stream.
+    ///
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Stream<T> createCriteriaMetaValuesCustomObjectWithStream(
             final Map<String, Object> adhocParams,
             final M criteriaEntity,
@@ -436,7 +373,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return criteriaEntity.streamEntities(fetchSize, ids);
     }
 
-    ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////
+    ///////////////////////////////// CUSTOM OBJECTS \[END] ///////////////////////////
 
     @SuppressWarnings("serial")
     private static Map<String, Map<String, Integer>> createColumnWidths(final IAddToResultTickManager secondTick, final Class<?> root) {
@@ -449,16 +386,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return columnWidths;
     }
 
-    /**
-     * Creates the holder of meta-values (missingValue, not, exclusive etc.) for criteria of concrete [miType].
-     * <p>
-     * The holder should contain only those meta-values, which are different from default values, that are defined in {@link DefaultValueContract}. Client-side logic should also be
-     * smart-enough to understand which values are currently relevant, even if they do not exist in transferred object.
-     *
-     * @param miType
-     * @param gdtm
-     * @return
-     */
+    /// Creates the holder of meta-values (missingValue, not, exclusive etc.) for criteria of concrete `miType`.
+    ///
+    /// The holder should contain only those meta-values, which are different from default values, that are defined in [DefaultValueContract]. Client-side logic should also be
+    /// smart-enough to understand which values are currently relevant, even if they do not exist in transferred object.
+    ///
     static Map<String, Map<String, Object>> createCriteriaMetaValues(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<AbstractEntity<?>> root) {
         final Map<String, Map<String, Object>> metaValues = new LinkedHashMap<>();
         for (final String checkedProp : cdtmae.getFirstTick().checkedProperties(root)) {
@@ -469,14 +401,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return metaValues;
     }
 
-    /**
-     * Creates the map of meta-values for the specified property based on cdtmae configuration.
-     *
-     * @param root
-     * @param prop
-     * @param cdtmae
-     * @return
-     */
+    /// Creates the map of meta-values for the specified property based on `cdtmae` configuration.
+    ///
     private static Map<String, Object> createMetaValuesFor(final Class<AbstractEntity<?>> root, final String prop, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
         final IAddToCriteriaTickManager tickManager = cdtmae.getFirstTick();
 
@@ -523,11 +449,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return metaValues;
     }
 
-    /**
-     * Applies all meta values, that are located in 'modifiedPropertiesHolder', to cdtmae (taken from 'miType' and 'gdtm').
-     *
-     * @param modifiedPropertiesHolder
-     */
+    /// Applies all meta values, that are located in `modifiedPropertiesHolder``, to `cdtmae` (taken from `miType` and `gdtm`).
+    ///
     private static void applyMetaValues(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<AbstractEntity<?>> root, final Map<String, Object> modifiedPropertiesHolder) {
         final Map<String, Map<String, Object>> metaValues = (Map<String, Map<String, Object>>) modifiedPropertiesHolder.get("@@metaValues");
 
@@ -552,15 +475,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
     }
 
-    /**
-     * Creates the validation prototype for criteria entity of concrete [miType].
-     * <p>
-     * The entity creation process uses rigorous generation of criteria type and the instance every time (based on cdtmae of concrete miType).
-     *
-     * @param miType
-     * @param critGenerator
-     * @return
-     */
+    /// Creates the validation prototype for criteria entity of concrete `miType`.
+    ///
+    /// The entity creation process uses rigorous generation of criteria type and the instance every time (based on cdtmae of concrete miType).
+    ///
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaValidationPrototype(
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
@@ -915,19 +833,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         );
     }
 
-    /**
-     * Resets the meta state for the specified criteria entity.
-     * <p>
-     * The meta state reset is necessary to make the criteria entity like 'just saved and retrieved from the database' (originalValues should be equal to values).
-     * <p>
-     * UPDATE: resetting of the values has been enhanced (comparing to just invoking resetMetaState() on entity) with the functionality, for which the detailed comment is inside
-     * the method implementation.
-     *
-     *
-     * @param criteriaValidationPrototype
-     * @param originalManagedType
-     * @return
-     */
+    /// Resets the meta state for the specified criteria entity.
+    ///
+    /// The meta state reset is necessary to make the criteria entity like `just saved and retrieved from the database` (originalValues should be equal to values).
+    ///
+    /// UPDATE: resetting of the values has been enhanced (comparing to just invoking resetMetaState() on entity) with the functionality, for which the detailed comment is inside
+    /// the method implementation.
+    ///
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M resetMetaStateForCriteriaValidationPrototype(final M criteriaValidationPrototype, final Class<?> originalManagedType) {
         // standard resetting of meta-values: copies values into originalValues for all properties:
         criteriaValidationPrototype.resetMetaState();
@@ -961,15 +873,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return criteriaValidationPrototype;
     }
 
-    /**
-     * Determines whether the property represents a) entity-typed property or b) crit-only 'multi' entity-typed property.
-     * <p>
-     * if <code>true</code> -- this means that criterion, generated for that property, will be 'multi', if <code>false</code> -- it will be 'single'.
-     *
-     * @param property
-     * @param managedType
-     * @return
-     */
+    /// Determines whether the property represents a) entity-typed property or b) crit-only 'multi' entity-typed property.
+    ///
+    /// if `true` -- this means that criterion, generated for that property, will be 'multi', if `false` -- it will be `single`.
+    ///
     private static boolean isMultiEntityTypedProperty(final String property, final Class<?> managedType) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, property);
@@ -980,15 +887,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     //////////////////////////////////////////////////// CREATE CENTRE CONTEXT FOR CENTRE RUN METHOD ETC. (context config is available) ////////////////////////////////////////////////////
 
-    /**
-     * Creates centre context based on serialisation {@link CentreContextHolder} entity.
-     * <p>
-     * Note: the control of which centreContext's parts should be initialised is provided by the server (using 'contextConfig'), but the client also filters out the context parts
-     * that are not needed (the 'centreContextHolder' will contain only desirable context parts).
-     *
-     * @param centreContextHolder
-     * @return
-     */
+    /// Creates centre context based on serialisation [CentreContextHolder] entity.
+    ///
+    /// Note: the control of which centreContext's parts should be initialised is provided by the server (using `contextConfig`), but the client also filters out the context parts
+    /// that are not needed (the `centreContextHolder` will contain only desirable context parts).
+    ///
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Optional<CentreContext<T, ?>> createCentreContext(
             final boolean disregardOriginallyProducedEntities,
             final IWebUiConfig webUiConfig,
@@ -1065,12 +968,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     //////////////////////////////////////////// CRITERIA ENTITY CREATION ////////////////////////////////////////////
 
-    /**
-     * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
-     *
-     * @param centreContextHolder
-     * @return
-     */
+    /// Creates selection criteria entity from [CentreContextHolder] entity (which contains modifPropsHolder).
+    ///
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(
         final CentreContextHolder centreContextHolder,
         final ICompanionObjectFinder companionFinder,
@@ -1102,19 +1001,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return criteriaEntity;
     }
 
-    /**
-     * A method to stream entities based on the centre query, including various transformations such as custom properties etc.
-     * It is used as part of initialisation for an export query runner.
-     *
-     * @param webUiConfig
-     * @param companionFinder
-     * @param critGenerator
-     * @param centreContextHolder
-     * @param criteriaEntity
-     * @param adhocParams
-     *
-     * @return
-     */
+    /// A method to stream entities based on the centre query, including various transformations such as custom properties etc.
+    /// It is used as part of initialisation for an export query runner.
+    ///
     private static <T extends AbstractEntity<?>> Stream<AbstractEntity<?>> stream(
         final IWebUiConfig webUiConfig,
         final User user,
@@ -1248,13 +1137,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return dynamicColumns;
     }
 
-    /**
-     * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
-     *
-     * @param centreContextHolder
-     * @param isPaginating -- returns {@code true} in case where this method is a part of 'Paginating Actions', {@code false} otherwise
-     * @return
-     */
+    /// Creates selection criteria entity from [CentreContextHolder] entity (which contains `modifPropsHolder`).
+    ///
     protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForPaginating(
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
@@ -1271,13 +1155,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return createCriteriaValidationPrototype(miType, saveAsName, updatedPreviouslyRunCentre, companionFinder, critGenerator, 0L, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
     }
 
-    /**
-     * Creates selection criteria entity from <code>modifPropsHolder</code>.
-     * <p>
-     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
-     *
-     * @return
-     */
+    /// Creates selection criteria entity from `modifPropsHolder`.
+    ///
+    /// IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+    ///
     protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityWithoutConflicts(
         final Map<String, Object> modifiedPropertiesHolder,
         final ICompanionObjectFinder companionFinder,
@@ -1312,27 +1193,22 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return appliedCriteriaEntity;
     }
 
-    /**
-     * Returns {@code true} in case where 'modifiedPropertiesHolder' is empty and should not be used for 'criteriaValidationPrototype' application, {@code false} otherwise.
-     *
-     * @param modifiedPropertiesHolder
-     * @return
-     */
+    /// Returns `true` in case where `modifiedPropertiesHolder` is empty and should not be used for `criteriaValidationPrototype` application, `false` otherwise.
+    ///
     public static boolean isEmpty(final Map<String, Object> modifiedPropertiesHolder) {
         // TODO improve implementation?
         return !modifiedPropertiesHolder.containsKey(AbstractEntity.VERSION);
     }
 
-    /**
-     * Constructs the criteria entity from the client envelope and resets the original values of the entity to be equal to the values.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
+    /// Constructs the criteria entity from the client envelope and resets the original values of the entity to be equal to the values.
+    ///
+    /// The envelope contains special version of entity called `modifiedPropertiesHolder` which has only modified properties and potentially some custom stuff with `@` sign as the
+    /// prefix. All custom properties will be disregarded, but can be used later from the returning map.
+    ///
+    /// All normal properties will be applied in `validationPrototype`.
+    ///
+    /// @return applied `validationPrototype` and `modifiedPropertiesHolder` map
+    ///
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<M, Map<String, Object>> constructCriteriaEntityAndResetMetaValues(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final Class<?> originalManagedType, final ICompanionObjectFinder companionFinder) {
         return new Pair<>(
                 resetMetaStateForCriteriaValidationPrototype(
@@ -1343,20 +1219,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         );
     }
 
-    /**
-     * Updates FRESH / SAVED / PREVIOUSLY_RUN versions of configuration for {@code user} from upstream configuration if it exists.<br>
-     * Returns upstream configuration.
-     * <p>
-     * This method safely checks whether FRESH / SAVED / PREVIOUSLY_RUN configs exist.<br>
-     * They should (FRESH / SAVED), if prior isInherited check was true.<br>
-     * However in highly concurrent system {@code user} could have performed deletion of current configuration (very unlikely).<br>
-     * PREVIOUSLY_RUN may not be present, and this is checked also.<br>
-     * <p>
-     * IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.<br>
-     *   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
-     *
-     * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
-     */
+    /// Updates FRESH / SAVED / PREVIOUSLY_RUN versions of configuration for `user` from upstream configuration if it exists.
+    /// Returns upstream configuration.
+    ///
+    /// This method safely checks whether FRESH / SAVED / PREVIOUSLY_RUN configs exist.
+    /// They should (FRESH / SAVED), if prior isInherited check was true.
+    /// However, in highly concurrent system `user` could have performed deletion of current configuration (very unlikely).
+    /// PREVIOUSLY_RUN may not be present, and this is checked also.
+    ///
+    /// IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.
+    ///   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
+    ///
+    /// @param checkChanges optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
+    ///
     public static Optional<EntityCentreConfig> updateInheritedFromShared(
         final String configUuid,
         final Class<? extends MiWithConfigurationSupport<?>> miType,
@@ -1370,20 +1245,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                .map(upstreamConfig -> updateInheritedFromShared(upstreamConfig, miType, device, saveAsName, user, eccCompanion, checkChanges));
     }
 
-    /**
-     * Updates FRESH / SAVED / PREVIOUSLY_RUN versions of configuration for {@code user} from upstream configuration.<br>
-     * Returns upstream configuration back.
-     * <p>
-     * This method safely checks whether FRESH / SAVED / PREVIOUSLY_RUN configs exist.<br>
-     * They should (FRESH / SAVED), if prior isInherited check was true.<br>
-     * However in highly concurrent system {@code user} could have performed deletion of current configuration (very unlikely).<br>
-     * PREVIOUSLY_RUN may not be present, and this is checked also.<br>
-     * <p>
-     * IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.<br>
-     *   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
-     *
-     * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
-     */
+    /// Updates FRESH / SAVED / PREVIOUSLY_RUN versions of configuration for `user` from upstream configuration.
+    /// Returns upstream configuration back.
+    ///
+    /// This method safely checks whether FRESH / SAVED / PREVIOUSLY_RUN configs exist.
+    /// They should (FRESH / SAVED), if prior isInherited check was true.
+    /// However, in highly concurrent system `user` could have performed deletion of current configuration (very unlikely).
+    /// PREVIOUSLY_RUN may not be present, and this is checked also.
+    ///
+    /// IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.
+    ///   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
+    ///
+    /// @param checkChanges optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
+    ///
     public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final EntityCentreConfigCo eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
         final String upstreamTitle = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device);
         final Optional<String> changedTitle = !equalsEx(upstreamTitle, saveAsName.get()) ? of(upstreamTitle) : empty();

@@ -22,12 +22,8 @@ import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.create
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createSortingVals;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 
-/**
- * A producer for new instances of entity {@link CentreConfigUpdater}.
- *
- * @author TG Team
- *
- */
+/// A producer for new instances of entity [CentreConfigUpdater].
+///
 public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> {
     private final ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> controller;
 
