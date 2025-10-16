@@ -19,7 +19,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -78,7 +77,6 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.Map.Entry;
@@ -95,17 +93,16 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.basic.ValueMatcherUtils.determineActivePropertiesFrom;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.Finder.unionProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityOrUnionType;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createEmptyCentre;
@@ -1468,22 +1465,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     ///
     public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleterFrom(final Class<V> propType, final Set<String> additionalProperties) {
         // always include 'active' property to render inactive activatables as grayed-out in client application
-        return (isActivatableEntityOrUnionType(propType) ? Stream.concat(additionalProperties.stream(), determineActivePropertiesFrom(propType)) : additionalProperties.stream()).reduce(
+        return (isActivatableEntityOrUnionType(propType) ? Stream.concat(additionalProperties.stream(), determineActivePropertiesFrom(propType).get(true).stream().map(activatableProp -> activatableProp + "." + ACTIVE)) : additionalProperties.stream()).reduce(
             fetchNone(propType),
             (fp, additionalProp) -> fp.addPropWithKeys(additionalProp, true), // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
             (fp1, fp2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");}
         ).addPropWithKeys("", false) // adding deep keys for entity itself (no 'desc' property is required, it should be explicitly added by withProps() API or otherwise it will be in default additional properties)
         .fetchModel();
-    }
-
-    private static Stream<String> determineActivePropertiesFrom(final Class<? extends AbstractEntity<?>> activatableEntityOrUnionType) {
-        if (isActivatableEntityType(activatableEntityOrUnionType)) {
-            return Stream.of(ACTIVE);
-        }
-        return unionProperties((Class<? extends AbstractUnionEntity>) activatableEntityOrUnionType).stream()
-            .filter(unionField -> isActivatableEntityType(unionField.getType()))
-            .map(Field::getName)
-            .map(name -> name + "." + ACTIVE);
     }
 
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {

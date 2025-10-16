@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.basic.ValueMatcherUtils.createActiveOnlyCondition;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityOrUnionType;
@@ -51,9 +51,8 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
 
     @Override
     protected ConditionModel makeSearchCriteriaModel(final CONTEXT context, final String searchString) {
-
-        final ConditionModel originalSearchCriteria = super.makeSearchCriteriaModel(context, searchString);
-        return activeOnly ? cond().condition(originalSearchCriteria).and().prop(ACTIVE).eq().val(true).model() : originalSearchCriteria;
+        final var originalSearchCriteria = super.makeSearchCriteriaModel(context, searchString);
+        return activeOnly ? cond().condition(originalSearchCriteria).and().condition(createActiveOnlyCondition(getEntityType()).model()).model() : originalSearchCriteria;
     }
 
     public boolean isActiveOnly() {
