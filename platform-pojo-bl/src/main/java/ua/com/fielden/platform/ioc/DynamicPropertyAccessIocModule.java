@@ -16,12 +16,12 @@ import ua.com.fielden.platform.parser.DurationParser;
 import ua.com.fielden.platform.parser.IValueParser;
 
 import java.time.Duration;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
-import static ua.com.fielden.platform.parser.IValueParser.enumIgnoreCaseParser;
-import static ua.com.fielden.platform.parser.IValueParser.propertyParser;
+import static ua.com.fielden.platform.parser.IValueParser.Result.ok;
+import static ua.com.fielden.platform.parser.IValueParser.*;
 
 /**
  * This module binds {@link DynamicPropertyAccess} and its dependencies.
