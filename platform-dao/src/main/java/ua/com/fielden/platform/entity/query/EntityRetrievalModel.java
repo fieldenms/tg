@@ -590,8 +590,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             //            .forEach(primProps::add));
             //}
 
-           final var existingFetch = entityProps.get(propName);
-           final var finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
+            final var existingFetch = entityProps.get(propName);
+            final var finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
 
             if (entityMetadata.isUnion() && commonPropertiesForUnion(entityMetadata.asUnion().orElseThrow().javaType()).contains(propName)) {
                 includeCommonUnionProperty(propName, Optional.of(finalFetch));
