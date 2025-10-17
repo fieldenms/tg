@@ -15,10 +15,12 @@ import java.util.Map;
 
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.*;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.reflection.Finder.unionProperties;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
@@ -54,28 +56,53 @@ public class ValueMatcherUtils {
         return cond().prop(KEY).iLikeWithCast().val(searchString).model();
     }
 
+    /// Creates a condition to calculate active only values for a type.
+    /// For unions, it includes all non-activatable subtype values, as they are treated as active.
+    ///
     public static <T extends AbstractEntity<?>> IStandAloneConditionCompoundCondition<T> createActiveOnlyCondition(final Class<T> activatableEntityOrUnionType) {
-        final var activatableAndNonActivatableProps = determineActivePropertiesFrom(activatableEntityOrUnionType);
+        final var activatableAndNonActivatableProps = determineActivatableAndOtherwisePropertiesFrom(activatableEntityOrUnionType);
+        // Activatable properties must exist here, i.e. activatableAndNonActivatableProps.get(true) != null.
+        // Create a combined condition from all these properties and get() the result from Optional as it will be present.
         final var activatableConditions = activatableAndNonActivatableProps.get(true).stream()
-            .map(activatableProp -> EntityQueryUtils.<T>cond().prop(activatableProp + "." + ACTIVE).eq().val(true))
+            .map(activatableProp -> EntityQueryUtils.<T>cond().prop(activePropFrom(activatableProp)).eq().val(true))
             .reduce((cond1, cond2) -> cond1.or().condition(cond2.model()))
             .get();
+        // Non-activatable properties (if present) must be included too -- use isNotNull() for each property.
         final var maybeNonActivatableConditions = ofNullable(activatableAndNonActivatableProps.get(false))
             .flatMap(nonActivatableProps -> nonActivatableProps.stream()
                 .map(nonActivatableProp -> EntityQueryUtils.<T>cond().prop(nonActivatableProp).isNotNull())
                 .reduce((cond1, cond2) -> cond1.or().condition(cond2.model())
             ));
+        // Combine both categories of conditions.
         return maybeNonActivatableConditions
             .map(nonActivatableConditions -> nonActivatableConditions.or().condition(activatableConditions.model()))
             .orElse(activatableConditions);
     }
 
-    public static Map<Boolean, List<String>> determineActivePropertiesFrom(final Class<? extends AbstractEntity<?>> activatableEntityOrUnionType) {
+    /// Determines "active" sub-property from activatable property.
+    /// Takes into account "" activatable property (aka "this" / "entity itself").
+    ///
+    public static String activePropFrom(final String activatableProp) {
+        return (isBlank(activatableProp) ? "" : activatableProp + PROPERTY_SPLITTER) + ACTIVE;
+    }
 
+    /// Returns two categories of properties from activatable or union with activatable type (`activatableEntityOrUnionType`).
+    /// First category contains activatable properties.
+    /// Second category contains non-activatable properties.
+    ///
+    /// If the type is activatable then returns "" (aka "this" / "entity itself") property only (in [true]-keyed value).
+    /// If the type is union with at least one activatable, returns activatable sub-properties in [true]-keyed value,
+    ///   and non-activatable sub-properties in [false]-keyed value.
+    /// If the type is union with no activatable sub-properties, throws [ValueMatcherException].
+    ///
+    public static Map<Boolean, List<String>> determineActivatableAndOtherwisePropertiesFrom(final Class<? extends AbstractEntity<?>> activatableEntityOrUnionType) {
+        // In case of activatable type return "entity itself" property.
+        // Activatable type can not be union and vice versa.
         if (isActivatableEntityType(activatableEntityOrUnionType)) {
-            return mapOf(t2(true, listOf(ACTIVE)));
+            return mapOf(t2(true, listOf("")));
         }
 
+        // In case of union type, categorise its `unionProperties` by `isActivatableEntityType`.
         final var unionType = (Class<? extends AbstractUnionEntity>) activatableEntityOrUnionType;
         final var activatableAndNonActivatableProps = unionProperties(unionType).stream()
             .collect(groupingBy(
@@ -83,6 +110,7 @@ public class ValueMatcherUtils {
                 mapping(Field::getName, toList())
             ));
 
+        // Ensure only union with some activatable subtypes is used here.
         if (!activatableAndNonActivatableProps.containsKey(true)) {
             throw new ValueMatcherException(ERR_UNION_TYPE_HAS_NO_ACTIVATABLE_SUBTYPE.formatted(unionType.getSimpleName()));
         }

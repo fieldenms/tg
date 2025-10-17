@@ -4,6 +4,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.inject.Injector;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
+import ua.com.fielden.platform.basic.ValueMatcherUtils;
 import ua.com.fielden.platform.basic.autocompleter.FallbackPropertyDescriptorMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -93,11 +94,10 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.basic.ValueMatcherUtils.determineActivePropertiesFrom;
+import static ua.com.fielden.platform.basic.ValueMatcherUtils.determineActivatableAndOtherwisePropertiesFrom;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -1465,7 +1465,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     ///
     public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleterFrom(final Class<V> propType, final Set<String> additionalProperties) {
         // always include 'active' property to render inactive activatables as grayed-out in client application
-        return (isActivatableEntityOrUnionType(propType) ? Stream.concat(additionalProperties.stream(), determineActivePropertiesFrom(propType).get(true).stream().map(activatableProp -> activatableProp + "." + ACTIVE)) : additionalProperties.stream()).reduce(
+        return (isActivatableEntityOrUnionType(propType) ? Stream.concat(additionalProperties.stream(), determineActivatableAndOtherwisePropertiesFrom(propType).get(true).stream().map(ValueMatcherUtils::activePropFrom)) : additionalProperties.stream()).reduce(
             fetchNone(propType),
             (fp, additionalProp) -> fp.addPropWithKeys(additionalProp, true), // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
             (fp1, fp2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");}
