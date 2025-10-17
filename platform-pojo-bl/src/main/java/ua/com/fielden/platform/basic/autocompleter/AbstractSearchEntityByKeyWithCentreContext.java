@@ -46,13 +46,11 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
         this.defaultFetchModel = maybeCompanion.map(co -> fetchKeyAndDescOnly(co.getEntityType())).orElse(null);
     }
 
-    /**
-     * This method may be overridden to create a different EQL condition model for search criteria.
-     *
-     * @param context
-     * @param searchString
-     * @return
-     */
+    /// Makes standard condition for querying Entity Centre entity editor values.
+    /// Takes into account 'active only' option.
+    ///
+    ///  This method may be overridden to create a different EQL condition model for search criteria.
+    ///
     protected ConditionModel makeSearchCriteriaModel(final CentreContext<T, ?> context, final String searchString) {
         final boolean wideSearch = "%".equals(searchString);
         final var initialCond = decompose(context).autocompleteActiveOnly() ? createActiveOnlyCondition((Class<AbstractEntity<?>>) getEntityType()) : cond().val(1).eq().val(1);

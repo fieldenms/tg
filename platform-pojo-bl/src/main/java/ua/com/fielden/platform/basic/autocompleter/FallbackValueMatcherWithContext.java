@@ -49,6 +49,11 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
         return IEntityDao.DEFAULT_PAGE_CAPACITY;
     }
 
+    /// Makes standard condition for querying Entity Master entity editor values.
+    /// Takes into account 'active only' option.
+    ///
+    ///  This method may be overridden to create a different EQL condition model for search criteria.
+    ///
     @Override
     protected ConditionModel makeSearchCriteriaModel(final CONTEXT context, final String searchString) {
         final var originalSearchCriteria = super.makeSearchCriteriaModel(context, searchString);

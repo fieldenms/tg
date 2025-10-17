@@ -85,13 +85,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.*;
+import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.basic.ValueMatcherUtils.determineActivatableAndOtherwisePropertiesFrom;
@@ -1464,8 +1464,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     /// Includes 'active' property for activatable `propType`.
     ///
     public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleterFrom(final Class<V> propType, final Set<String> additionalProperties) {
-        // always include 'active' property to render inactive activatables as grayed-out in client application
-        return (isActivatableEntityOrUnionType(propType) ? Stream.concat(additionalProperties.stream(), determineActivatableAndOtherwisePropertiesFrom(propType).get(true).stream().map(ValueMatcherUtils::activePropFrom)) : additionalProperties.stream()).reduce(
+        // Always include 'active' property to render inactive activatables as grayed-out in client application.
+        // Take into account union-typed activatables too.
+        return (isActivatableEntityOrUnionType(propType)
+            ? concat(additionalProperties.stream(), determineActivatableAndOtherwisePropertiesFrom(propType).get(true).stream().map(ValueMatcherUtils::activePropFrom))
+            : additionalProperties.stream()
+        ).reduce(
             fetchNone(propType),
             (fp, additionalProp) -> fp.addPropWithKeys(additionalProp, true), // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
             (fp1, fp2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");}
