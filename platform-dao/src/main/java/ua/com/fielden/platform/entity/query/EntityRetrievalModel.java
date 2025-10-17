@@ -533,7 +533,6 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
        ///
        /// @param maybeFetch a fetch model for `commonPropName`
        ///
-       /// @see #includeCommonUnionProperty(String)
        ///
        private void includeCommonUnionProperty(final String commonPropName, final Optional<fetch<?>> maybeFetch) {
            final var unionType = entityMetadata.asUnion().orElseThrow().javaType();
