@@ -25,11 +25,11 @@ import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js'
 /**
  * A set of colours used for rendering labels in the autocompletion result when autocompleting union entities, to represent values of various entity types that correspond to different union properties.
  * These colours are selected from https://materialui.co/colors/ – a subset from the row with colour ID 50.
+ * The second row was selected mostly from the row with colour ID 400. However, some colours are ~450 and ~350.
  */
-//                                green     d-purple   pink       brown      teal       indigo
-const unionPropertyBgColours = ['#E8F5E9', '#EDE7F6', '#FCE4EC', '#EFEBE9', '#E0F2F1', '#E8EAF6'];
-const unionPropertyFgColours = ['#63BB6A', '#855CC2', '#E93772', '#A0887C', '#5DBBB6', '#5F6DC0'];
-
+//                                green     d-purple   pink       teal       indigo     cyan       red        blue       purple     orange
+const unionPropertyBgColours = ['#E8F5E9', '#EDE7F6', '#FCE4EC', '#E0F2F1', '#E8EAF6', '#E0F7FA', '#FFEBEE', '#E3F2FD', '#F3E5F5', '#FFF3E0'];
+const unionPropertyFgColours = ['#63BB6A', '#855CC2', '#E93772', '#5DBBB6', '#5F6DC0', '#26C6DA', '#EF5350', '#42A5F5', '#AB47BC', '#FFA726'];
 /**
  * The minimal number of items that should be visible in the result dialog if it is placed under the editor.
  * If the result dialog can not contain this number of items then this result dialog should be placed above the editor.
