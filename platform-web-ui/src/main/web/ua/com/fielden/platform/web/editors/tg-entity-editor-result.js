@@ -479,7 +479,8 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     const title = entityType.prop(activeProp).title();
                     let activeStyle;
                     if (this._isActive(v)) {
-                        const colourIndex = entityType.unionProps().indexOf(activeProp) % unionPropertyBgColours.length;
+                        // Ensure the same predictable order for union subtypes colouring (sort by union prop name).
+                        const colourIndex = entityType.unionProps().toSorted().indexOf(activeProp) % unionPropertyBgColours.length;
                         const bgColor = unionPropertyBgColours[colourIndex];
                         const fgColor = unionPropertyFgColours[colourIndex];
                         activeStyle = ` style="background-color:${bgColor};color:${fgColor}"`;
