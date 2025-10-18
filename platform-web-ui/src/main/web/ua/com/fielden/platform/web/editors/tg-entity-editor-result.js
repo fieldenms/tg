@@ -31,6 +31,10 @@ import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js'
 const unionPropertyBgColours = ['#E8F5E9', '#EDE7F6', '#FCE4EC', '#E0F2F1', '#E8EAF6', '#E0F7FA', '#FFEBEE', '#E3F2FD', '#F3E5F5', '#FFF3E0'];
 const unionPropertyFgColours = ['#63BB6A', '#855CC2', '#E93772', '#5DBBB6', '#5F6DC0', '#26C6DA', '#EF5350', '#42A5F5', '#AB47BC', '#FFA726'];
 /**
+ * Global lazy caches of union subtypes and their colours across the system.
+ */
+let unionSubtypesWithDescendingUsageFrequency, unionColoursByType;
+/**
  * The minimal number of items that should be visible in the result dialog if it is placed under the editor.
  * If the result dialog can not contain this number of items then this result dialog should be placed above the editor.
  */
@@ -479,8 +483,32 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     const title = entityType.prop(activeProp).title();
                     let activeStyle;
                     if (this._isActive(v)) {
-                        // Ensure the same predictable order for union subtypes colouring (sort by union prop name).
-                        const colourIndex = entityType.unionProps().toSorted().indexOf(activeProp) % unionPropertyBgColours.length;
+                        // Ensure the same colours for union subtypes across all different unions in a system.
+                        // To do that, first load all subtypes into a global singleton cache (if not yet loaded).
+                        if (!unionSubtypesWithDescendingUsageFrequency) {
+                            unionSubtypesWithDescendingUsageFrequency = this.reflector.loadUnionSubtypesAndSortByUsageFrequency();
+                            unionColoursByType = new Map();
+                        }
+                        // Pre-assign colours for union `entityType` (if not yet assigned) taking first colours for the most frequent subtypes.
+                        if (!unionColoursByType.get(entityType)) {
+                            unionColoursByType.set(entityType, new Map(
+                                entityType.unionProps().map(unionProp => [
+                                    unionProp,
+                                    unionSubtypesWithDescendingUsageFrequency.indexOf(entityType.prop(unionProp).type()) % unionPropertyBgColours.length
+                                ])
+                            ));
+                            // If there is a conflict of a colour (unlikely), then mark the type with empty Map (for later fallback logic).
+                            const preAssignedUnionColours = unionColoursByType.get(entityType).values();
+                            if ([...new Set(preAssignedUnionColours)].length < [...preAssignedUnionColours].length) {
+                                unionColoursByType.set(entityType, new Map());
+                            }
+                        }
+                        // Determine whether standard colouring scheme of global subtype colours can be used.
+                        const standardColouringScheme = unionColoursByType.get(entityType).size !== 0;
+                        // Use it if true, otherwise use colouring assignment from a single union as previously.
+                        const colourIndex = standardColouringScheme
+                            ? unionColoursByType.get(entityType).get(activeProp)
+                            : entityType.unionProps().toSorted().indexOf(activeProp) % unionPropertyBgColours.length;
                         const bgColor = unionPropertyBgColours[colourIndex];
                         const fgColor = unionPropertyFgColours[colourIndex];
                         activeStyle = ` style="background-color:${bgColor};color:${fgColor}"`;

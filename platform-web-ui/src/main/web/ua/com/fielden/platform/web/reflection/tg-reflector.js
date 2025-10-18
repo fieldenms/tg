@@ -2202,6 +2202,26 @@ export const TgReflector = Polymer({
     },
 
     /**
+     * Loads all union subtypes in the system. Sort them descendingly by frequency of usages in union types.
+     */
+    loadUnionSubtypesAndSortByUsageFrequency: function() {
+        // Load all union subtypes from union types.
+        // These can have duplicates.
+        const allUnionSubtypes = Object.values(_typeTable)
+            .filter(type => type.isUnionEntity())
+            .flatMap(type => type.unionProps().map(unionProp => type.prop(unionProp).type()));
+        // Create a frequency of usage of those subtypes in union types.
+        const freqMap = new Map();
+        allUnionSubtypes.forEach(unionSubtype => {
+            freqMap.set(unionSubtype, freqMap.get(unionSubtype) ? freqMap.get(unionSubtype) + 1 : 1);
+        });
+        // Sort subtypes descendingly by frequency of usage; return array of subtypes only.
+        return Array.from(freqMap)
+            .toSorted((pair1, pair2) => pair2[1] - pair1[1])
+            .map(pair => pair[0]);
+    },
+
+    /**
      * Returns URI-fashined identification key for the centre.
      */
     _centreKey: function (miType, saveAsName) {
