@@ -10,8 +10,9 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import java.util.Collections;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static java.util.stream.Collectors.toCollection;
 
 /// Db-driven implementation of [IKeyNumber].
 ///
@@ -20,11 +21,11 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
 
     public static final String ERR_NO_NUMBER_FOR_KEY = "No number associated with key [%s].";
 
-    /// Retrieves the next number for a `key`.
+    /// {@inheritDoc}
     ///
     @Override
     @SessionRequired
-    public Integer nextNumber(final String key) {
+    public Integer nextNumber(final String key, final int radix) {
         KeyNumber number = findByKey(key); // find an instance
         if (number != null) {
             // re-fetch instance with pessimistic write lock
@@ -33,17 +34,17 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
             number = new_().setKey(key).setValue("0");
         }
 
-        final Integer nextNo = Integer.parseInt(number.getValue()) + 1;
-        number.setValue(nextNo.toString());
+        final int nextNo = Integer.parseInt(number.getValue(), radix) + 1;
+        number.setValue(Integer.toString(nextNo, radix));
         save(number);
         return nextNo;
     }
 
-    /// Retrieves the next `count` numbers for a `key`.
+    /// {@inheritDoc}
     ///
     @Override
     @SessionRequired
-    public SortedSet<Integer> nextNumbers(final String key, final int count) {
+    public SortedSet<Integer> nextNumbers(final String key, final int count, final int radix) {
         if (count < 1) {
             return Collections.emptySortedSet();
         }
@@ -56,22 +57,22 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
             number = new_().setKey(key).setValue("0");
         }
 
-        final SortedSet<Integer> keys = IntStream.iterate(Integer.parseInt(number.getValue()) + 1, n -> n + 1).limit(count).boxed().collect(Collectors.toCollection(() -> new TreeSet<Integer>()));
-        number.setValue(keys.last().toString());
+        final SortedSet<Integer> keys = IntStream.iterate(Integer.parseInt(number.getValue(), radix) + 1, n -> n + 1).limit(count).boxed().collect(toCollection(TreeSet::new));
+        number.setValue(Integer.toString(keys.last(), radix));
         save(number);
         return keys;
     }
 
-    /// Retrieves the current number for a `key`.
+    /// {@inheritDoc}
     ///
     @Override
     @SessionRequired
-    public Integer currNumber(final String key) {
+    public Integer currNumber(final String key, final int radix) {
         final KeyNumber number = findByKey(key); // find an instance
         if (number == null) {
             throw new EntityCompanionException(ERR_NO_NUMBER_FOR_KEY.formatted(key));
         }
-        return Integer.valueOf(number.getValue());
+        return Integer.valueOf(number.getValue(), radix);
     }
 
 }
