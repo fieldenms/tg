@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 
 import java.lang.reflect.Field;
@@ -186,7 +187,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key, final String desc) {
         final T entity = new_(entityClass);
         entity.setKey(key);
-        entity.setDesc(desc);
+        entity.set(DESC, desc);
         return entity;
     }
 

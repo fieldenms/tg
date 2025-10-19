@@ -1,14 +1,7 @@
 package fielden.test_app.close_leave;
 
-import fielden.test_app.close_leave.TgCloseLeaveExample;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.DisplayDescription;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
+import ua.com.fielden.platform.entity.annotation.*;
 
 /** 
  * One-2-One entity object.
@@ -24,5 +17,18 @@ import ua.com.fielden.platform.entity.annotation.DescRequired;
 @DisplayDescription
 @DescRequired
 public class TgCloseLeaveExampleDetail extends AbstractPersistentEntity<TgCloseLeaveExample> {
+
+    @Override
+    @Observable
+    public TgCloseLeaveExampleDetail setKey(TgCloseLeaveExample key) {
+        super.setKey(key);
+        return this;
+    }
+
+    @Override
+    @Observable
+    public TgCloseLeaveExampleDetail setDesc(String desc) {
+        return super.setDesc(desc);
+    }
 
 }
