@@ -1,13 +1,11 @@
 package ua.com.fielden.platform.keygen;
 
-import com.google.inject.Inject;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 import java.util.Collections;
 import java.util.SortedSet;
@@ -15,7 +13,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-/// Hibernate driven implementation of {@link IKeyNumber);
+/// Db-driven implementation of [IKeyNumber].
 ///
 @EntityType(KeyNumber.class)
 public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumber {
