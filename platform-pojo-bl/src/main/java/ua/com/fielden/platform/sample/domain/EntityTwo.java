@@ -56,4 +56,10 @@ public class EntityTwo extends AbstractEntity<String> {
         this.integerProperty = integerProperty;
     }
 
+    @Override
+    @Observable
+    public EntityTwo setDesc(String desc) {
+        return super.setDesc(desc);
+    }
+
 }

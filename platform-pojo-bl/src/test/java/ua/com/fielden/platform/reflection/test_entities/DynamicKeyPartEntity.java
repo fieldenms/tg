@@ -2,13 +2,7 @@ package ua.com.fielden.platform.reflection.test_entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "key", desc = "key description")
@@ -80,6 +74,12 @@ public class DynamicKeyPartEntity extends AbstractEntity<DynamicEntityKey> {
     @Observable
     public void setUncommonProperty(final String uncommonProperty) {
         this.uncommonProperty = uncommonProperty;
+    }
+
+    @Override
+    @Observable
+    public DynamicKeyPartEntity setDesc(String desc) {
+        return super.setDesc(desc);
     }
 
 }
