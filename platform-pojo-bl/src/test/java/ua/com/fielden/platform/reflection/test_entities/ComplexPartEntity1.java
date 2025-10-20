@@ -1,12 +1,7 @@
 package ua.com.fielden.platform.reflection.test_entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 
 @KeyType(UnionEntityForReflector.class)
 @KeyTitle(value = "key", desc = "key description")
@@ -50,6 +45,12 @@ public class ComplexPartEntity1 extends AbstractEntity<UnionEntityForReflector> 
     @Observable
     public void setAnotherUncommonProperty(final String anotherUncommonProperty) {
         this.anotherUncommonProperty = anotherUncommonProperty;
+    }
+
+    @Override
+    @Observable
+    public ComplexPartEntity1 setDesc(String desc) {
+        return super.setDesc(desc);
     }
 
 }

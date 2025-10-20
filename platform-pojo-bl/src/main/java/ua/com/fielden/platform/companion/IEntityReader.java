@@ -271,13 +271,10 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      */
     T getEntity(final QueryExecutionModel<T, ?> model);
 
-    default Optional<T> getEntityOptional(final QueryExecutionModel<T, ?> model) {
-        try {
-            return Optional.ofNullable(getEntity(model));
-        } catch (final UnexpectedNumberOfReturnedEntities ex) {
-            return Optional.empty();
-        }
-    }
+    /// If the query returns exactly one entity, an optional describing it is returned.
+    /// Otherwise, an empty optional is returned (zero or more than one entity returned by the query).
+    ///
+    Optional<T> getEntityOptional(QueryExecutionModel<T, ?> model);
 
     /**
      * Should return true if the passed entity exists in the persistent state.
