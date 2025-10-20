@@ -481,7 +481,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 if (entityType.isUnionEntity()) {
                     const activeProp = v._activeProperty();
                     const title = entityType.prop(activeProp).title();
-                    let activeStyle;
+                    let activeStyle = '';
                     if (this._isActive(v)) {
                         // Ensure the same colours for union subtypes across all different unions in a system.
                         // To do that, first load all subtypes into a global singleton cache (if not yet loaded).
