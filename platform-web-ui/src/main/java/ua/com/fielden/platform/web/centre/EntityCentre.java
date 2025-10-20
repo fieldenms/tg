@@ -4,7 +4,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.inject.Injector;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
-import ua.com.fielden.platform.basic.ValueMatcherUtils;
 import ua.com.fielden.platform.basic.autocompleter.FallbackPropertyDescriptorMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -20,6 +19,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -85,6 +85,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
@@ -94,11 +95,12 @@ import static java.util.stream.Collectors.*;
 import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.basic.ValueMatcherUtils.determineActivatableAndOtherwisePropertiesFrom;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.streamUnionSubProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
@@ -1466,15 +1468,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleterFrom(final Class<V> propType, final Set<String> additionalProperties) {
         // Always include 'active' property to render inactive activatables as grayed-out in client application.
         // Take into account union-typed activatables too.
-        return (isActivatableEntityOrUnionType(propType)
-            ? concat(additionalProperties.stream(), determineActivatableAndOtherwisePropertiesFrom(propType).get(true).stream().map(ValueMatcherUtils::activePropFrom))
-            : additionalProperties.stream()
-        ).reduce(
-            fetchNone(propType),
-            (fp, additionalProp) -> fp.addPropWithKeys(additionalProp, true), // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
-            (fp1, fp2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");}
-        ).addPropWithKeys("", false) // adding deep keys for entity itself (no 'desc' property is required, it should be explicitly added by withProps() API or otherwise it will be in default additional properties)
-        .fetchModel();
+        return concat(additionalProperties.stream(),
+                      isActivatableEntityType(propType)
+                              ? Stream.of(ACTIVE)
+                              : isUnionEntityType(propType) ? streamUnionSubProperties((Class<? extends AbstractUnionEntity>) propType, ACTIVE) : Stream.of())
+                .reduce(fetchNone(propType),
+                        (fp, additionalProp) -> fp.addPropWithKeys(additionalProp, true), // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
+                        (fp1, fp2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");}
+                ).addPropWithKeys("", false) // adding deep keys for entity itself (no 'desc' property is required, it should be explicitly added by withProps() API or otherwise it will be in default additional properties)
+                .fetchModel();
     }
 
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {

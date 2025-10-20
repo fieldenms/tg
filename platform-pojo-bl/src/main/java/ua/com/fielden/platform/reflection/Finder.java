@@ -834,6 +834,29 @@ public class Finder {
                 .collect(toImmutableList());
     }
 
+    /// Returns a stream that contains the full paths to `subProp` for each union member that has this property.
+    ///
+    /// @param subProp a simple property name
+    ///
+    public static Stream<String> streamUnionSubProperties(final Class<? extends AbstractUnionEntity> unionType, final CharSequence subProp) {
+        return streamUnionMembersWithSubProperty(unionType, subProp)
+                .map(memberName -> memberName + "." + subProp);
+    }
+
+    /// Returns a stream that contains the names of those union members that have property `subProp`.
+    ///
+    /// By definition, if `subProp` is a common property, the resulting stream contains all union members.
+    ///
+    /// @param subProp a simple property name
+    ///
+    public static Stream<String> streamUnionMembersWithSubProperty(final Class<? extends AbstractUnionEntity> unionType, final CharSequence subProp) {
+        return unionProperties(unionType)
+                .stream()
+                .filter(memberField -> isPropertyPresent(memberField.getType(), subProp.toString()))
+                .map(Field::getName);
+    }
+
+
     /// Returns `true` if `prop` is present among `otherProps`.
     /// In the case of property `key`, special care is taken to determine its type.
     ///
