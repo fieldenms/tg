@@ -19,6 +19,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.areDifferent;
@@ -435,26 +436,32 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             return this;
         }
 
-        /// Validates 'autocomplete active only' getter or setter for concrete property. The property should be checked and of activatable property type.
+        /// Validates "autocomplete active only" getter or setter for `property` in `root`.
+        /// `property` must be checked and its type must represent activatable values.
         ///
-        /// @param getOrSet -- "get" or "set" string
+        /// @param getOrSet "get" or "set" string
         ///
         private void validateAutocompleteActiveOnlyProperty(final Class<?> root, final String property, final String getOrSet) {
             illegalUncheckedProperties(this, root, property, format(AUTOCOMPLETE_ACTIVE_ONLY_ERR, getOrSet, UNCHECKED, property, root.getSimpleName()));
-            illegalPropertyType(root, property, format(AUTOCOMPLETE_ACTIVE_ONLY_ERR, getOrSet, NON_ACTIVATABLE, property, root.getSimpleName()), EntityUtils::isActivatableEntityOrUnionType);
+            illegalPropertyType(root, property, () -> format(AUTOCOMPLETE_ACTIVE_ONLY_ERR, getOrSet, NON_ACTIVATABLE, property, root.getSimpleName()), EntityUtils::isActivatableEntityOrUnionType);
         }
 
-        /// Throws [DomainTreeException] if the property type does not conform to any of `typePredicates`.
+        /// Throws a [DomainTreeException] if the property type does not conform to any of `typePredicates`.
         ///
-        protected static void illegalPropertyType(final Class<?> root, final String property, final String message, final Predicate<Class<?>>... typePredicates) {
+        protected static void illegalPropertyType(
+                final Class<?> root,
+                final String property,
+                final Supplier<String> messageSupplier,
+                final Predicate<Class<?>>... typePredicates)
+        {
             final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-            final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-            for (final Predicate<Class<?>> typePredicate : typePredicates) {
+            final var propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
+            for (final var typePredicate : typePredicates) {
                 if (typePredicate.test(propertyType)) {
                     return;
                 }
             }
-            throw new DomainTreeException(message);
+            throw new DomainTreeException(messageSupplier.get());
         }
 
         @Override

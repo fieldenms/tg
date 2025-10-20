@@ -616,9 +616,8 @@ public class EntityUtils {
     ///
     public static boolean isActivatableEntityOrUnionType(final Class<?> type) {
         return isActivatableEntityType(type)
-            || isUnionEntityType(type)
-                && unionProperties((Class<? extends AbstractUnionEntity>) type).stream()
-                .map(Field::getType).anyMatch(EntityUtils::isActivatableEntityType);
+               || isUnionEntityType(type)
+                  && unionProperties((Class<? extends AbstractUnionEntity>) type).stream().map(Field::getType).anyMatch(EntityUtils::isActivatableEntityType);
     }
 
     /// Indicates whether type represents [ActivatableAbstractEntity]-typed values.

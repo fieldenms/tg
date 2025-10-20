@@ -546,15 +546,13 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     }
 
     /**
-     * Checks whether 'entity' is active, either it is activatable active (or non-activatable)
-     *   or union with activatable active (or with non-activatable).
+     * Checks whether 'entity' is active -- either it is an active activatable (or non-activatable) or a union with an active activatable (or with non-activatable).
      */ 
     _isActive (entity) {
         // Take the active entity from union, if it is union. Otherwise take the entity as is.
         const realEntity = this.reflector.isEntity(entity) && entity.constructor.prototype.type.call(entity).isUnionEntity() && entity._activeEntity() || entity;
-        // Check whether 'active' property even exists. It should always be fetched here.
-        // If not, consider it as the active entity.
-        // Otherwise, get property through a proper getter and check whether it is truthy.
+        // If property `active` does not exist, treat the entity as active.
+        // Property `active` should always be fetched at this point.
         // (Be more lenient if 'active' property is not boolean-typed for some reason).
         return this.reflector.isEntity(realEntity) && (typeof realEntity.active === 'undefined' || realEntity.get('active'));
     }

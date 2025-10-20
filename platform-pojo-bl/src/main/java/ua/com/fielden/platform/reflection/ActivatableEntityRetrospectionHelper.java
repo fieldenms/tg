@@ -85,7 +85,7 @@ public class ActivatableEntityRetrospectionHelper {
         final var propType = EntityMetadata.determinePropType(entityType, prop);
         // A property of an activatable entity type is considered "activatable" iff:
         // 1. Property type is an activatable entity or a union entity.
-        // 2. @SkipEntityExistsValidation is absent or is present with skipActiveOnly == true.
+        // 2. @SkipEntityExistsValidation is absent or is present with skipActiveOnly == false.
         // 3. Property is not calculated (both persistent and plain are applicable).
         //
         // Note 1: There is also @SkipActivatableTracking,

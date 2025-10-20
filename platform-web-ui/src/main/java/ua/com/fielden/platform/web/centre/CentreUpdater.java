@@ -18,7 +18,6 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
@@ -66,14 +65,13 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
 
-/**
- * Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
- * <p>
- * Every surrogate centre has its own diff centre that, saves into the database during {@link #commitCentre(User, IUserProvider, Class, String, Optional, DeviceProfile, ICentreDomainTreeManagerAndEnhancer, IWebUiConfig, ISerialiser, EntityCentreConfigCo, MainMenuItemCo, IUser)} process.
- *
- * @author TG Team
- *
- */
+/// Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
+///
+/// Every surrogate centre has its own diff centre that is saved into the database during
+/// [#commitCentreWithoutConflicts(User, Class, String, Optional, DeviceProfile, ICentreDomainTreeManagerAndEnhancer, String, IWebUiConfig, EntityCentreConfigCo, MainMenuItemCo, IUser)]
+/// and
+/// [#commitCentreDiffWithoutConflicts(User, Class, String, Optional, DeviceProfile, ICentreDomainTreeManagerAndEnhancer, Map, String, EntityCentreConfigCo, MainMenuItemCo, ICompanionObjectFinder, Function)].
+///
 public class CentreUpdater {
     private static final Logger logger = getLogger(CentreUpdater.class);
     

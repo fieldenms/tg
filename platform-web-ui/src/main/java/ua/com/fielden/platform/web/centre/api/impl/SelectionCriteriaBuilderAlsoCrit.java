@@ -20,13 +20,9 @@ import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityOrUnionType;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions.HIDE_ACTIVE_ONLY_ACTION;
 
-/**
- * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
- *
- * @author TG Team
- *
- * @param <T>
- */
+/// A package private helper class to decompose the task of implementing the Entity Centre DSL.
+/// It has direct access to protected fields in [EntityCentreBuilder].
+///
 class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements IAlsoCrit<T> {
 
     private final EntityCentreBuilder<T> builder;
@@ -56,15 +52,14 @@ class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements I
         return new SelectionCriteriaLayoutBuilder<>(builder).setLayoutFor(device, orientation, flexString);
     }
 
-    /**
-     * Builds custom matcher configuration for criteria property with different parameters.
-     * 
-     * @param matcherType
-     * @param contextOpt
-     * @param options
-     */
-    protected void buildWithMatcher(final Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>> matcherType, final Optional<CentreContextConfig> contextOpt, final List<MatcherOptions> options) {
-        if (!builder.currSelectionCrit.isPresent()) {
+    /// Builds a custom matcher configuration for criteria property with different parameters.
+    ///
+    protected void buildWithMatcher(
+            final Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>> matcherType,
+            final Optional<CentreContextConfig> contextOpt,
+            final List<MatcherOptions> options)
+    {
+        if (builder.currSelectionCrit.isEmpty()) {
             throw new EntityCentreConfigurationException("The current selection criterion should have been associated with some property at this stage.");
         }
 
@@ -72,11 +67,14 @@ class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements I
             throw new EntityCentreConfigurationException("Matcher must be provided.");
         }
 
-        if (options.contains(HIDE_ACTIVE_ONLY_ACTION) && !isActivatableEntityOrUnionType(determinePropertyType(builder.getEntityType(), builder.currSelectionCrit.get()))) {
-            throw new EntityCentreConfigurationException(format("'Active only' action can not be hidden for non-activatable property [%s] of type [%s].", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName()));
+        final var currSelectionCrit = builder.currSelectionCrit.get();
+        if (options.contains(HIDE_ACTIVE_ONLY_ACTION) && !isActivatableEntityOrUnionType(determinePropertyType(builder.getEntityType(), currSelectionCrit))) {
+            throw new EntityCentreConfigurationException(format(
+                    "'Active only' action can not be hidden for non-activatable property [%s.%s].",
+                    builder.getEntityType().getSimpleName(), currSelectionCrit));
         }
 
-        this.builder.valueMatchersForSelectionCriteria.put(builder.currSelectionCrit.get(), t3(matcherType, contextOpt, options));
+        this.builder.valueMatchersForSelectionCriteria.put(currSelectionCrit, t3(matcherType, contextOpt, options));
     }
 
 }

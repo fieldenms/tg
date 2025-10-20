@@ -112,23 +112,20 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final T2<String, Integer> searchStringAndDataPageNo = prepSearchString(centreContextHolder, shouldUpperCase);
             final Map<String, Object> customObject = linkedMapOf(t2(LOAD_MORE_DATA_KEY, searchStringAndDataPageNo._2 > 1));
 
-            // for a master autocompleter, we need to determine whether it is for an activatable property and can match inactive values
-            // if that is the case, we need to show the "exclude inactive values" action
-            if (isActivatableEntityOrUnionType(propType) && valueMatcher instanceof FallbackValueMatcherWithContext) {
-                final FallbackValueMatcherWithContext<?,?> matcher = (FallbackValueMatcherWithContext<?,?>) valueMatcher; // this could be either a custom or the default fallback matcher
-                if (!matcher.activeOnlyByDefault) { // match inactive values?
-                    // read the client-side user configuration for an autocompleter
-                    // AUTOCOMPLETE_ACTIVE_ONLY_KEY is empty only for the loading the data for the first time
-                    final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY));
-                    // AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY is non-empty only if the current request is the result of user tapping "exclude inactive values" button, and its values is always "true"
-                    final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY));
+            // For a master autocompleter, we need to determine if it is for an activatable property and can match inactive values.
+            // If so, we need to show the "exclude inactive values" action.
+            if (isActivatableEntityOrUnionType(propType) && valueMatcher instanceof FallbackValueMatcherWithContext<?, ?> matcher) {
+                if (!matcher.activeOnlyByDefault) { // Match inactive values?
+                    // Read the client-side user configuration for an autocompleter.
+                    // AUTOCOMPLETE_ACTIVE_ONLY_KEY is empty only when loading the data for the first time.
+                    final var activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY));
+                    // AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY is present only if the current request is the result of user tapping "exclude inactive values" button, and its value is always `true`.
+                    final var activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY));
 
-                    // instruct the matcher to match active only based on the current user preference AUTOCOMPLETE_ACTIVE_ONLY_KEY, if present
-                    // otherwise, match both active and inactive
                     final boolean activeOnly = activeOnlyFromClientOpt.orElse(false);
                     matcher.setActiveOnly(activeOnly);
 
-                    // return the autocompleter configuration back to the client
+                    // Return the autocompleter configuration back to the client.
                     customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnly);
                     activeOnlyChangedFromClientOpt.ifPresent(activeOnlyChanged -> customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY, true));
                 }

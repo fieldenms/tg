@@ -141,11 +141,16 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
                 .orElseGet(() -> createDefaultValueMatcher(propertyName, entityType, coFinder));
     }
 
-    /// Creates default Entity Master value matcher for concrete property type.
+    /// Creates a default Entity Master value matcher for concrete property type.
     /// The type may come from standard entity-typed properties with no custom matchers specified.
     /// Or it may come from String-typed properties with entity editor configurations (#2510).
     ///
-    private static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createDefaultValueMatcherForPropType(final Class<V> propertyType, final String propertyName, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
+    private static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createDefaultValueMatcherForPropType(
+            final Class<V> propertyType,
+            final String propertyName,
+            final Class<T> entityType,
+            final ICompanionObjectFinder coFinder)
+    {
         // Create standard fallback `PropertyDescriptor` matcher, if the type is applicable.
         if (isPropertyDescriptor(propertyType)) {
             return (IValueMatcherWithContext<T, V>) new FallbackPropertyDescriptorMatcherWithContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, entityType, propertyName).value());
