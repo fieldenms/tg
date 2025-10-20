@@ -1,16 +1,7 @@
 package ua.com.fielden.platform.sample.domain.compound;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.DisplayDescription;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -48,6 +39,13 @@ public class TgCompoundEntityDetail extends AbstractPersistentEntity<TgCompoundE
     @Observable
     public TgCompoundEntityDetail setDesc(final String desc) {
         this.desc = desc;
+        return this;
+    }
+
+    @Override
+    @Observable
+    public TgCompoundEntityDetail setKey(TgCompoundEntity key) {
+        super.setKey(key);
         return this;
     }
 

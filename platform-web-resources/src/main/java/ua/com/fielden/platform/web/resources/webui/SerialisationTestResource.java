@@ -33,6 +33,7 @@ import java.util.*;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
@@ -464,7 +465,7 @@ public class SerialisationTestResource extends AbstractWebResource {
 
         entity.beginInitialising();
         entity.setKey("GENERATED+UNINSTRUMENTED");
-        entity.setDesc("GENERATED+UNINSTRUMENTED desc");
+        entity.set(DESC, "GENERATED+UNINSTRUMENTED desc");
         entity.endInitialising();
         
         return entity;

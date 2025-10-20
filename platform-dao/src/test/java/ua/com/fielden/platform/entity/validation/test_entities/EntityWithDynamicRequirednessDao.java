@@ -7,19 +7,10 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 
-/**
- * DAO implementation for companion object {@link EntityWithDynamicRequirednessCo}.
- *
- * @author TG Team
- *
- */
+/// DAO implementation for companion object [EntityWithDynamicRequirednessCo].
+///
 @EntityType(EntityWithDynamicRequiredness.class)
 public class EntityWithDynamicRequirednessDao extends CommonEntityDao<EntityWithDynamicRequiredness> implements EntityWithDynamicRequirednessCo {
-
-    @Inject
-    public EntityWithDynamicRequirednessDao(final IFilter filter) {
-        super(filter);
-    }
 
     @Override
     public EntityWithDynamicRequiredness new_() {

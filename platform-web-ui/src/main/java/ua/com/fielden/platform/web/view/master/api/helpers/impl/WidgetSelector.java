@@ -1,10 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api.helpers.impl;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
@@ -30,8 +26,21 @@ import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.S
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
+
 public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelector<T> {
-    private final String ERR_INVALID_DATEPICKER_CHOICE = "Invalid editor choice for [%s@%s] due to annotation @%s.";
+
+    private static final String ERR_INVALID_AUTOCOMPLETER_TYPE = """
+            Type [%s] cannot be used for autocompletion of property [%s.%s] with type [%s]. \
+            Please use asAutocompleter(entityType), or asAutocompleter() for an entity-typed property.""";
+    private static final String ERR_INVALID_PROPERTY_FOR_AUTOCOMPLETION = """
+            Property [%s.%s] with type [%s] cannot be used for autocompletion. \
+            Please use asAutocompleter(entityType), or asAutocompleter() for an entity-typed property.""";
+    private static final String ERR_INVALID_DATEPICKER_CHOICE = "Invalid editor choice for property [%s.%s] due to annotation @%s.";
+
     public final SimpleMasterBuilder<T> smBuilder;
     public final String propertyName;
 
@@ -56,10 +65,33 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IAutocompleterConfig<T> asAutocompleter() {
-        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(propertyName) ? smBuilder.getEntityType()
-                : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(smBuilder.getEntityType(), propertyName);
-        widget = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName, propType);
+        widget = createAutocompleter(smBuilder.getEntityType(), propertyName, Optional.empty());
         return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder, withMatcherCallbank);
+    }
+
+    @Override
+    public IAutocompleterConfig<T> asAutocompleter(final Class<? extends AbstractEntity<?>> entityType) {
+        widget = createAutocompleter(smBuilder.getEntityType(), propertyName, Optional.ofNullable(entityType));
+        return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder, withMatcherCallbank);
+    }
+
+    public static <T extends AbstractEntity<?>> EntityAutocompletionWidget createAutocompleter(final Class<T> entityType, final String propertyName, final Optional<Class<? extends AbstractEntity<?>>> optPropType) {
+        final var declaredPropType = StringUtils.isEmpty(propertyName) ? entityType : PropertyTypeDeterminator.determinePropertyType(entityType, propertyName);
+        return optPropType.map(propType -> {
+            if (String.class.isAssignableFrom(declaredPropType)) {
+                return new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, entityType), propertyName, propType, true);
+            } else if (propType.equals(declaredPropType)) {
+                return new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, entityType), propertyName, propType, false);
+            } else {
+                throw new EntityMasterConfigurationException(format(ERR_INVALID_AUTOCOMPLETER_TYPE, propType.getTypeName(), entityType.getSimpleName(), propertyName, declaredPropType.getTypeName()));
+            }
+        }).orElseGet(() -> {
+            if (AbstractEntity.class.isAssignableFrom(declaredPropType)) {
+                return new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, entityType), propertyName, (Class<? extends AbstractEntity<?>>) declaredPropType, false);
+            } else {
+                throw new EntityMasterConfigurationException(format(ERR_INVALID_PROPERTY_FOR_AUTOCOMPLETION, entityType.getSimpleName(), propertyName, declaredPropType.getTypeName()));
+            }
+        });
     }
 
     @Override
@@ -116,7 +148,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
             return new DateTimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
         throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE,
-                propertyName, smBuilder.getEntityType().getSimpleName(), "DATE".equals(timePortion) ? DateOnly.class.getSimpleName() : TimeOnly.class.getSimpleName()));
+                smBuilder.getEntityType().getSimpleName(), propertyName, "DATE".equals(timePortion) ? DateOnly.class.getSimpleName() : TimeOnly.class.getSimpleName()));
     }
 
     @Override

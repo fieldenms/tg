@@ -81,23 +81,24 @@ public class AbstractUnionEntityTest {
     }
 
     @Test
+    public void commonMethods_identifies_getters_and_setters_for_all_common_properties() {
+        assertThat(AbstractUnionEntity.commonMethodNames(UnionEntity.class))
+                .containsExactlyInAnyOrder("getStringProperty", "setStringProperty",
+                                           "getEntityThree", "setEntityThree",
+                                           "getDesc", "setDesc",
+                                           "getKey", "setKey");
+    }
+
+    @Test
     public void commonProperties_identifies_all_common_properties_amongst_union_properties() {
         final Set<String> commonProps = AbstractUnionEntity.commonProperties(UnionEntity.class);
-        assertEquals(Set.of("desc", "stringProperty", "key"), commonProps);
+        assertEquals(Set.of("desc", "stringProperty", "entityThree", "key"), commonProps);
     }
 
     @Test
     public void unionProperties_identifies_all_union_properties() {
         final List<Field> unionProperties = AbstractUnionEntity.unionProperties(UnionEntity.class);
         assertEquals(Set.of("propertyOne", "propertyTwo"), unionProperties.stream().map(Field::getName).collect(toSet()));
-    }
-
-    @Test
-    public void commonMethods_idenfities_getters_and_setters_for_all_common_properties() {
-        assertThat(AbstractUnionEntity.commonMethodNames(UnionEntity.class))
-                .containsExactlyInAnyOrder("getStringProperty", "setStringProperty",
-                                           "getDesc", "setDesc",
-                                           "getKey", "setKey");
     }
 
     @Test

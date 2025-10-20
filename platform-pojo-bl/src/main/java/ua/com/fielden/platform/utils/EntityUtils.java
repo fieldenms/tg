@@ -68,7 +68,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 public class EntityUtils {
-    private static final Logger logger = getLogger(EntityUtils.class);
+    private static final Logger logger = getLogger();
 
     private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
     private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();

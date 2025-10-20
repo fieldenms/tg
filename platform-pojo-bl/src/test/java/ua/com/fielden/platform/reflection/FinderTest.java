@@ -1,30 +1,7 @@
 package ua.com.fielden.platform.reflection;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.stream.Collectors;
-
-import org.junit.Test;
-
 import com.google.inject.Injector;
-
+import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -34,26 +11,21 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder.IPropertyPathFilteringCondition;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-import ua.com.fielden.platform.reflection.test_entities.CollectionalEntity;
-import ua.com.fielden.platform.reflection.test_entities.ComplexEntity;
-import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
-import ua.com.fielden.platform.reflection.test_entities.ComplexPartEntity1;
-import ua.com.fielden.platform.reflection.test_entities.DynamicKeyEntity;
-import ua.com.fielden.platform.reflection.test_entities.DynamicKeyPartEntity;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithoutDesc;
-import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
-import ua.com.fielden.platform.reflection.test_entities.KeyEntity;
-import ua.com.fielden.platform.reflection.test_entities.MultiLevelEntity;
-import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
-import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
-import ua.com.fielden.platform.reflection.test_entities.SimpleEntityWithCommonProperties;
-import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
-import ua.com.fielden.platform.reflection.test_entities.SimpleWithoutDescEntity;
-import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
-import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
-import ua.com.fielden.platform.reflection.test_entities.UnionEntityWithoutDesc;
+import ua.com.fielden.platform.reflection.test_entities.*;
+import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.tuples.T2;
+
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
 /**
  * Test case for {@link Finder}.
@@ -673,6 +645,18 @@ public class FinderTest {
         final List<String> properties = Finder.streamProperties(UnionEntityForReflector.class).map(Field::getName).collect(toList());
         assertEquals(expectedProperties.size(), properties.size());
         assertTrue(properties.stream().allMatch(p -> expectedProperties.contains(p) ));
+    }
+
+    @Test
+    public void commonPropertiesForUnion_identifies_all_common_properties_amongst_union_properties() {
+        final Set<String> commonProps = Finder.commonPropertiesForUnion(UnionEntity.class);
+        assertEquals(Set.of("desc", "stringProperty", "entityThree", "key"), commonProps);
+    }
+
+    @Test
+    public void unionProperties_identifies_all_union_properties() {
+        final List<Field> unionProperties = Finder.unionProperties(UnionEntity.class);
+        assertEquals(Set.of("propertyOne", "propertyTwo"), unionProperties.stream().map(Field::getName).collect(toSet()));
     }
 
     @Test
