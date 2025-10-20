@@ -403,11 +403,11 @@ public class PopulateDb extends DomainDrivenDataPopulation {
      * Creates 30-ty entities to be able to demonstrate (with populated statuses).
      */
     private void createDemoDomain(final TgPersistentEntityWithProperties ent1, final TgPersistentEntityWithProperties ent2, final TgPersistentCompositeEntity compEnt1) {
-        final TgPersistentStatus dr = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "DR").setDesc("Defect Radio"));
-        final TgPersistentStatus is = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "IS").setDesc("In Service"));
-        final TgPersistentStatus ir = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "IR").setDesc("In Repair"));
-        final TgPersistentStatus on = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "ON").setDesc("On Road Defect Station"));
-        final TgPersistentStatus sr = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "SR").setDesc("Defect Smash Repair"));
+        final TgPersistentStatus dr = save(new_(TgPersistentStatus.class, "DR").setDesc("Defect Radio"));
+        final TgPersistentStatus is = save(new_(TgPersistentStatus.class, "IS").setDesc("In Service"));
+        final TgPersistentStatus ir = save(new_(TgPersistentStatus.class, "IR").setDesc("In Repair"));
+        final TgPersistentStatus on = save(new_(TgPersistentStatus.class, "ON").setDesc("On Road Defect Station"));
+        final TgPersistentStatus sr = save(new_(TgPersistentStatus.class, "SR").setDesc("Defect Smash Repair"));
 
         for (int i = 0; i < 30; i++) {
             save(new_(TgPersistentEntityWithProperties.class, "DEMO" + convert(i))

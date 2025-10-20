@@ -2,6 +2,8 @@ package ua.com.fielden.platform.serialisation.jackson.entities;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
@@ -84,8 +86,8 @@ public class FactoryForTestingEntities {
         final T entity = factory.newEntity(type, id);
 
         entity.beginInitialising();
-        entity.set(AbstractEntity.KEY, key);
-        entity.setDesc(desc);
+        entity.set(KEY, key);
+        entity.set(DESC, desc);
 
         return entity;
     }
@@ -103,8 +105,8 @@ public class FactoryForTestingEntities {
         final T entity = EntityFactory.newPlainEntity(type, id);
 
         entity.beginInitialising();
-        entity.set(AbstractEntity.KEY, key);
-        entity.setDesc(desc);
+        entity.set(KEY, key);
+        entity.set(DESC, desc);
         entity.endInitialising();
 
         return entity;
@@ -115,10 +117,10 @@ public class FactoryForTestingEntities {
 
         entity.resetMetaValue();
 
-        assertFalse("Incorrect key dirtiness.", entity.getProperty(AbstractEntity.KEY).isDirty());
-        assertFalse("Incorrect desc dirtiness.", entity.getProperty(AbstractEntity.DESC).isDirty());
-        assertFalse("Incorrect key ChangedFromOriginal.", entity.getProperty(AbstractEntity.KEY).isChangedFromOriginal());
-        assertFalse("Incorrect desc ChangedFromOriginal.", entity.getProperty(AbstractEntity.DESC).isChangedFromOriginal());
+        assertFalse("Incorrect key dirtiness.", entity.getProperty(KEY).isDirty());
+        assertFalse("Incorrect desc dirtiness.", entity.getProperty(DESC).isDirty());
+        assertFalse("Incorrect key ChangedFromOriginal.", entity.getProperty(KEY).isChangedFromOriginal());
+        assertFalse("Incorrect desc ChangedFromOriginal.", entity.getProperty(DESC).isChangedFromOriginal());
 
         final Optional<MetaProperty<?>> op = entity.getPropertyOptionally("prop");
         if (op.isPresent() && !op.get().isProxy() && !op.get().isCollectional()) {
@@ -142,14 +144,14 @@ public class FactoryForTestingEntities {
         final T entity = factory.newEntity(type, null);
 
         entity.beginInitialising();
-        entity.set(AbstractEntity.KEY, key);
-        entity.setDesc(desc);
+        entity.set(KEY, key);
+        entity.set(DESC, desc);
         entity.endInitialising();
 
-        assertTrue("Incorrect key dirtiness.", entity.getProperty(AbstractEntity.KEY).isDirty());
-        assertTrue("Incorrect desc dirtiness.", entity.getProperty(AbstractEntity.DESC).isDirty());
-        assertTrue("Incorrect key ChangedFromOriginal.", entity.getProperty(AbstractEntity.KEY).isChangedFromOriginal());
-        assertTrue("Incorrect desc ChangedFromOriginal.", entity.getProperty(AbstractEntity.DESC).isChangedFromOriginal());
+        assertTrue("Incorrect key dirtiness.", entity.getProperty(KEY).isDirty());
+        assertTrue("Incorrect desc dirtiness.", entity.getProperty(DESC).isDirty());
+        assertTrue("Incorrect key ChangedFromOriginal.", entity.getProperty(KEY).isChangedFromOriginal());
+        assertTrue("Incorrect desc ChangedFromOriginal.", entity.getProperty(DESC).isChangedFromOriginal());
 
         return entity;
     }
