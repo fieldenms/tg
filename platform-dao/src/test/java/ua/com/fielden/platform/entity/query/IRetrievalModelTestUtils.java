@@ -4,6 +4,7 @@ import com.google.common.collect.Streams;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Assertions;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
@@ -16,6 +17,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.utils.ImmutableSetUtils.union;
 
@@ -128,7 +130,16 @@ interface IRetrievalModelTestUtils {
         }
 
         public RetrievalModelAssert<M, E> equalsModel(final FetchCategory category) {
-            final var model = utils.makeRetrievalModel(new fetch<>(actual.getEntityType(), category));
+            return equalsModel(new fetch<>(actual.getEntityType(), category));
+        }
+
+        public RetrievalModelAssert<M, E> equalsModel(final fetch<?> fetch) {
+            if (!fetch.getEntityType().equals(actual.getEntityType())) {
+                throw new InvalidArgumentException(format(
+                        "Type mismatch: fetch(%s) cannot used for assertion of fetch(%s).",
+                        fetch.getEntityType().getSimpleName(), actual.getEntityType().getSimpleName()));
+            }
+            final var model = utils.makeRetrievalModel(fetch);
 
             Assertions.assertThat(actual)
                     .usingEquals(RetrievalModelAssert::areEqualByProperties)

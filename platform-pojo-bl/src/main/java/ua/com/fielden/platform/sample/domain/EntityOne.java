@@ -60,4 +60,10 @@ public class EntityOne extends AbstractEntity<String> {
         return this;
     }
 
+    @Override
+    @Observable
+    public EntityOne setDesc(String desc) {
+        return super.setDesc(desc);
+    }
+
 }

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.test_entities.Circular_EntityWithCompositeKeyMemberUnionEntity;
@@ -30,7 +31,6 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.reflection.Finder.commonPropertiesForUnion;
@@ -523,7 +523,8 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                         .subModel("entity", a -> a.contains("union"))
                         .subModel("entity.union", a -> a.contains("entity"))
                         .subModel("entity.union.entity", a -> a.contains("union"))
-                        .subModel("entity.union.entity.union", a -> a.equalsModel(ID_ONLY)));
+                        .subModel("entity.union.entity.union", a -> a.contains("entity"))
+                        .subModel("entity.union.entity.union.entity", a -> a.equalsModel(ID_ONLY)));
     }
 
     @Test
@@ -718,17 +719,33 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
     }
 
     @Test
-    public void if_fetch_for_union_contains_a_common_roperty_then_it_is_replaced_in_the_retrieval_model_by_sub_properties_of_union_members() {
+    public void if_fetch_for_union_contains_a_common_property_then_it_is_replaced_in_the_retrieval_model_by_sub_properties_of_union_members() {
         final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
         assertThat(entityMetadata).matches(EntityMetadata::isUnion);
         final var stringProperty = "stringProperty";
         final var entityThree = "entityThree";
         assertThat(commonPropertiesForUnion(UnionEntity.class)).contains(stringProperty, entityThree);
 
-        assertRetrievalModel(fetchKeyAndDescOnly(UnionEntity.class).with(stringProperty, entityThree))
+        assertRetrievalModel(fetchNone(UnionEntity.class).with(stringProperty, entityThree))
                 .notContains(stringProperty, entityThree)
                 .subModel("propertyOne", it -> it.contains(stringProperty, entityThree))
                 .subModel("propertyTwo", it -> it.contains(stringProperty, entityThree));
+    }
+
+    @Test
+    public void if_fetch_for_union_contains_a_common_property_with_explicit_fetch_model_then_it_is_replaced_in_the_retrieval_model_by_sub_properties_of_union_members_using_the_specified_fetch_model() {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        final var entityThree = "entityThree";
+        assertThat(commonPropertiesForUnion(UnionEntity.class)).contains(entityThree);
+
+        final var entityThreeFetch = EntityQueryUtils.fetchNone(EntityThree.class).with("integerProperty");
+        assertRetrievalModel(fetchNone(UnionEntity.class).with(entityThree, entityThreeFetch))
+                .notContains(entityThree)
+                .subModel("propertyOne", it -> it.contains(entityThree))
+                .subModel("propertyOne.%s".formatted(entityThree), it -> it.equalsModel(entityThreeFetch))
+                .subModel("propertyTwo", it -> it.contains(entityThree))
+                .subModel("propertyTwo.%s".formatted(entityThree), it -> it.equalsModel(entityThreeFetch));
     }
 
     /*----------------------------------------------------------------------------

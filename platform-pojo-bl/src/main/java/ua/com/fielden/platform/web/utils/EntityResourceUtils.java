@@ -332,10 +332,10 @@ public class EntityResourceUtils {
         if (isUnionEntityType(type)) {
             final List<Field> unionProps = unionProperties((Class<AbstractUnionEntity>) type);
             final Class<? extends AbstractEntity<?>> unionPropType = (Class<? extends AbstractEntity<?>>) unionProps.getFirst().getType();
-            final AbstractEntity<?> unionPropValue = newPlainEntity(mock(unionPropType), null).setDesc(searchString);
+            final AbstractEntity<?> unionPropValue = newPlainEntity(mock(unionPropType), null).set(DESC, searchString);
             return newPlainEntity(mock(type), null).set(unionProps.getFirst().getName(), unionPropValue);
         }
-        return newPlainEntity(mock(type), null).setDesc(searchString);
+        return newPlainEntity(mock(type), null).set(DESC, searchString);
     }
 
     /**

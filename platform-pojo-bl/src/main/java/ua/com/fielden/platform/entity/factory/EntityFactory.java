@@ -14,14 +14,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 
-/**
- *
- * Factory for instantiating entities derived from {@link AbstractEntity} with AOP/IoC support.
- *
- * @author TG Team
- */
+/// Factory for instantiating entities derived from [AbstractEntity] with AOP/IoC support.
+///
 @Singleton
 public class EntityFactory {
 
@@ -32,15 +29,8 @@ public class EntityFactory {
         this.injector = injector;
     }
 
-    /**
-     * This factory method should be used for lightweight entity instantiation (not via injector).
-     *
-     * @param <T>
-     * @param entityClass
-     * @param id
-     * @return
-     * @throws RuntimeException
-     */
+    /// This factory method should be used for lightweight entity instantiation (not via injector).
+    ///
     public static <T extends AbstractEntity<?>> T newPlainEntity(final Class<T> entityClass, final Long id) {
         try {
             final Constructor<T> constructor = entityClass.getDeclaredConstructor();
@@ -56,15 +46,8 @@ public class EntityFactory {
         }
     }
 
-    /**
-     * This factory method should be used strictly for Hibernate intercepter during entity instantiation.
-     *
-     * @param <T>
-     * @param entityClass
-     * @param id
-     * @return
-     * @throws RuntimeException
-     */
+    /// This factory method should be used strictly for Hibernate interceptor during entity instantiation.
+    ///
     public <T extends AbstractEntity<?>> T newEntity(final Class<T> entityClass, final Long id) {
         try {
             final T entity = injector.getInstance(entityClass);
@@ -78,23 +61,14 @@ public class EntityFactory {
         }
     }
 
-    /**
-     * A convenient factory method, which creates entity with <code>null</code> id.
-     *
-     * @param <T>
-     * @param entityClass
-     * @return
-     */
+    /// A convenient factory method, which creates entity with <code>null</code> id.
+    ///
     public <T extends AbstractEntity<?>> T newEntity(final Class<T> entityClass) {
         return newEntity(entityClass, null);
     }
 
-    /**
-     * Invokes protected 'setEntityFactory' method on passed {@link AbstractEntity} to set reference to this {@link EntityFactory} instance.
-     *
-     * @param entity
-     * @throws RuntimeException
-     */
+    /// Invokes protected [AbstractEntity#setEntityFactory(EntityFactory)] method to reference this [EntityFactory] instance.
+    ///
     private static void setReferenceToThis(final AbstractEntity<?> entity, final EntityFactory factory) {
         try {
             final Method method = Reflector.getMethod(entity.getType(), "setEntityFactory", EntityFactory.class);
@@ -106,31 +80,23 @@ public class EntityFactory {
         }
     }
 
-    /**
-     * Instantiates an entity of the specified type with the passed parameters.
-     *
-     * @param <T>
-     *            -- entity type
-     * @param <K>
-     *            -- type of the entity key property
-     * @param entityClass
-     *            -- entity class
-     * @param id
-     *            -- id value, which can be null if this is a bran new entity
-     * @param key
-     *            -- key value
-     * @param desc
-     *            -- entity description, which can be null
-     * @return
-     * @throws Exception
-     */
+    /// Instantiates an entity of the specified type with the passed parameters.
+    ///
+    /// @param <T> entity type
+    /// @param <K> type of the entity key property
+    ///
+    /// @param entityClass entity class
+    /// @param id          id value, which can be null if this is a brand-new entity
+    /// @param key         key value
+    /// @param desc        entity description, which can be null
+    ///
     public <T extends AbstractEntity<K>, K extends Comparable> T newEntity(final Class<T> entityClass, final Long id, final K key, final String desc) {
         try {
             final T entity = injector.getInstance(entityClass);
             setReferenceToThis(entity, this);
             setId(entityClass, id, entity);
             setKey(entityClass, key, entity);
-            entity.setDesc(desc);
+            entity.set(DESC, desc);
             return entity;
         } catch (final RuntimeException ex) {
             throw ex;
@@ -139,30 +105,24 @@ public class EntityFactory {
         }
     }
 
-    /**
-     * Convenient constructor for instantiation of the brand new entity with no id yet assigned.
-     */
+    /// Convenient constructor for instantiation of a brand-new entity with no `id` yet assigned.
+    ///
     public <T extends AbstractEntity<K>, K extends Comparable> T newEntity(final Class<T> entityClass, final K key, final String desc) {
         return newEntity(entityClass, null, key, desc);
     }
 
-    /**
-     * Convenient constructor for instantiation of the brand new entity with no id yet assigned and with no description.
-     */
+    /// Convenient constructor for instantiation of a brand-new entity with no `id` yet assigned and with no description.
+    ///
     public <T extends AbstractEntity<K>, K extends Comparable> T newByKey(final Class<T> entityClass, final K key) {
         return newEntity(entityClass, null, key, null);
     }
 
-    /**
-     * Creates entity with {@link DynamicEntityKey} with specified keys set
-     *
-     * @param keys
-     *            - key values that are composite key members of {@link DynamicEntityKey} of entity
-     * @return created entity with keys set
-     * @throws Exception
-     *             - if number of keys instances is not equal to number of composite key member in entity.<br>
-     *             And in other cases.
-     */
+    /// Creates entity with [DynamicEntityKey] with specified keys set
+    ///
+    /// @param keys the key values that correspond to the composite key members of `entityClass`.
+    ///
+    /// @return created entity with assigned key members
+    ///
     public <T extends AbstractEntity<DynamicEntityKey>> T newByKey(final Class<T> entityClass, final Object... keys) {
         try {
             final T entity = injector.getInstance(entityClass); // DynamicEntityKey should be set in default constructor of entity
@@ -185,18 +145,14 @@ public class EntityFactory {
         }
     }
 
-    /**
-     * Convenient constructor for instantiation of an entity without description.
-     */
+    /// Convenient constructor for instantiation of an entity without description.
+    ///
     public <T extends AbstractEntity<K>, K extends Comparable> T newEntity(final Class<T> entityClass, final Long id, final K key) {
         return newEntity(entityClass, id, key, null);
     }
 
-    /**
-     * Convenience method for setting entity id value.
-     *
-     * @throws IllegalAccessException 
-     */
+    /// Convenience method for setting entity id value.
+    ///
     private static <T> void setId(final Class<T> entityClass, final Long id, final T entity) throws IllegalAccessException {
         final Field idField = Finder.getFieldByName(entityClass, ID);
         final boolean accessible = idField.isAccessible();
@@ -205,9 +161,8 @@ public class EntityFactory {
         idField.setAccessible(accessible);
     }
 
-    /**
-     * Convenience method for setting entity key value.
-     */
+    /// Convenience method for setting entity key value.
+    ///
     private <T, K> void setKey(final Class<T> entityClass, final K key, final T entity) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         final Method setKey = Reflector.getMethod(entityClass, "setKey", Comparable.class);
         setKey.setAccessible(true);
