@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -850,10 +851,26 @@ public class Finder {
     /// @param subProp a simple property name
     ///
     public static Stream<String> streamUnionMembersWithSubProperty(final Class<? extends AbstractUnionEntity> unionType, final CharSequence subProp) {
-        return unionProperties(unionType)
-                .stream()
-                .filter(memberField -> isPropertyPresent(memberField.getType(), subProp.toString()))
-                .map(Field::getName);
+        if (subProp.toString().contains(".")) {
+            throw new InvalidArgumentException("[subProp] must be a simple property name. Invalid value: %s".formatted(subProp));
+        }
+
+        // `isPropertyPresent` will not at all identify `id`, and will not take `@DescTitle` into account for `desc`.
+        if (ID.contentEquals(subProp)) {
+            return unionProperties(unionType).stream().map(Field::getName);
+        }
+        else if (DESC.contentEquals(subProp)) {
+            return unionProperties(unionType)
+                    .stream()
+                    .filter(memberField -> hasDescProperty((Class<? extends AbstractEntity<?>>) memberField.getType()))
+                    .map(Field::getName);
+        }
+        else {
+            return unionProperties(unionType)
+                    .stream()
+                    .filter(memberField -> isPropertyPresent(memberField.getType(), subProp.toString()))
+                    .map(Field::getName);
+        }
     }
 
 
