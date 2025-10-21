@@ -535,6 +535,18 @@
                 assert.exists(reflector.getType('ua.com.fielden.platform.sample.domain.TgUnionHolder').prop('union.common.desc'));
                 done();
             });
+
+            test('EntityType.prop: title / desc of key prop of composite entity type without @KeyTitle are defined, but empty', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('key').title(), '');
+                assert.strictEqual(reflector.getType(typeName7).prop('key').desc(), '');
+                done();
+            });
+
+            test('EntityType.prop: title / desc of key prop of composite entity type with @KeyTitle are as in @KeyTitle definition', function (done) {
+                assert.strictEqual(reflector.getType(typeName8).prop('key').title(), 'Entity With Composite Boolean Key');
+                assert.strictEqual(reflector.getType(typeName8).prop('key').desc(), 'Represents an entity with single composite key of type Boolean.');
+                done();
+            });
             
             test('tg_determinePropertyType: boolean prop type is defined', function (done) {
                 assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName8), 'booleanKey'), 'boolean');

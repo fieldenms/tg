@@ -38,6 +38,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyA
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
@@ -120,6 +121,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             if (!isCompositeKeySeparatorDefault(compositeKeySeparator)) {
                 entityTypeInfo.set_compositeKeySeparator(compositeKeySeparator);
             }
+            final var titleAndDesc = getTitleAndDesc(KEY, type);
+            entityTypeInfo.set_compositeKey_title(titleAndDesc.getKey());
+            entityTypeInfo.set_compositeKey_desc(titleAndDesc.getValue());
         }
         if (AbstractUnionEntity.class.isAssignableFrom(type)) {
             entityTypeInfo.set_unionCommonProps(new ArrayList<>(commonProperties((Class<AbstractUnionEntity>) type)));
@@ -167,7 +171,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (!isUpperCaseDefault(upperCase)) {
                     entityTypeProp.set_upperCase(upperCase);
                 }
-                final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(name, type);
+                final Pair<String, String> titleAndDesc = getTitleAndDesc(name, type);
                 entityTypeProp.set_title(titleAndDesc.getKey());
                 entityTypeProp.set_desc(titleAndDesc.getValue());
                 final Boolean critOnly = AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, type, name);

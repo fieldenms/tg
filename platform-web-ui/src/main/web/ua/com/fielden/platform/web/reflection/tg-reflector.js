@@ -909,6 +909,20 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
+     * Returns composite key title in case of composite entity type, 'undefined' otherwise.
+     */
+    EntityType.prototype.compositeKeyTitle = function () {
+        return this._compositeKey_title;
+    }
+
+    /**
+     * Returns composite key description in case of composite entity type, 'undefined' otherwise.
+     */
+    EntityType.prototype.compositeKeyDesc = function () {
+        return this._compositeKey_desc;
+    }
+
+    /**
      * Returns 'true' if the entity type represents a persistent entity.
      *
      */
@@ -962,7 +976,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
             const prop = typeof this._props !== 'undefined' && this._props && this._props[name];
             if (!prop && name === 'key') {
                 if (this.isCompositeEntity()) {
-                    return { type: function () { return 'DynamicEntityKey'; } }
+                    // Composite entity type serialisation excludes KEY property in case if it is of composite nature.
+                    // See `Finder.streamRealProperties` and `EntitySerialiser.createCachedProperties` methods.
+                    // That's why we provide "virtual" implementation for EntityTypeProp here.
+                    return {
+                        type: () => 'DynamicEntityKey',
+                        title: this.compositeKeyTitle.bind(this),
+                        desc: this.compositeKeyDesc.bind(this)
+                    };
                 } else if (this.isUnionEntity()) { // the key type for union entities at the Java level is "String", but for JS its actual type is determined at runtime base on the active property
                     return { type: function () { return 'String'; } }
                 }

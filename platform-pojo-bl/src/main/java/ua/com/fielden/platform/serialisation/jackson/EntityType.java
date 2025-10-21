@@ -29,6 +29,14 @@ public class EntityType extends AbstractEntity<String> {
     private String _compositeKeySeparator;
 
     @IsProperty
+    @Title(value = "Composite Key Title", desc = "The title of the composite key.")
+    private String _compositeKey_title;
+
+    @IsProperty
+    @Title(value = "Composite Key Description", desc = "The description of the composite key.")
+    private String _compositeKey_desc;
+
+    @IsProperty
     @Title(value = "Entity Title", desc = "Entity title")
     private String _entityTitle;
 
@@ -223,6 +231,26 @@ public class EntityType extends AbstractEntity<String> {
 
     public String get_entityTitle() {
         return _entityTitle;
+    }
+
+    @Observable
+    public EntityType set_compositeKey_desc(final String _compositeKey_desc) {
+        this._compositeKey_desc = _compositeKey_desc;
+        return this;
+    }
+
+    public String get_compositeKey_desc() {
+        return _compositeKey_desc;
+    }
+
+    @Observable
+    public EntityType set_compositeKey_title(final String _compositeKey_title) {
+        this._compositeKey_title = _compositeKey_title;
+        return this;
+    }
+
+    public String get_compositeKey_title() {
+        return _compositeKey_title;
     }
 
     @Observable
