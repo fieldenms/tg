@@ -23,23 +23,14 @@ const SCAN_AND_APPLY = 'scanAndApply';
 const CAMERA_ID = 'cameraId';
 const SEPARATOR = 'scanSeparator';
 
-function calculateAspectRation(width, height) {
-    const portrait = window.matchMedia('(orientation: portrait)').matches;
-    if (portrait && isMobileApp()) {
-        return width === 0 ? 1 : height/width;
-    } else {
-        return height === 0 ? 1 : width/height; 
-    }
+const DEFAULT_SCANNER_SIZE = 400;
+
+function calculateAspectRatio(width, height) {
+    return width/height;
 }
 
 
 function qrboxFunction(viewfinderWidth, viewfinderHeight) {
-    const width = parseInt(this._videoFeedElement.style.width);
-    const height = parseInt(this._videoFeedElement.style.height);
-    if (width !== viewfinderWidth || height !== viewfinderHeight) {
-        this._videoFeedElement.style.width = viewfinderWidth + 'px';
-        this._videoFeedElement.style.height = viewfinderHeight + 'px';
-    } 
     const minEdgePercentage = 0.7; // 70%
     const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
     const qrboxSize = Math.min(Math.floor(minEdgeSize * minEdgePercentage), 250);
@@ -273,7 +264,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             const scannerStyles = window.getComputedStyle(this.$.qrCodeScanner);
             const dims = isMobileApp() ? 
                     {width: windowWidth, height: Math.max(0, windowHeight - controlDimension.height)} :
-                    {width: Math.min(parseInt(scannerStyles.maxWidth), 600), height: Math.max(0, Math.min(parseInt(scannerStyles.maxHeight) - controlDimension.height, 600))};
+                    {width: Math.min(parseInt(scannerStyles.maxWidth), DEFAULT_SCANNER_SIZE), height: Math.max(0, Math.min(parseInt(scannerStyles.maxHeight) - controlDimension.height, DEFAULT_SCANNER_SIZE))};
             this._videoFeedElement.style.width = dims.width + 'px';
             this._videoFeedElement.style.height = dims.height + 'px';
             oldRefit();
@@ -313,7 +304,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                     const width = parseInt(this._videoFeedElement.style.width);
                     const height = parseInt(this._videoFeedElement.style.height);
                     stopPromise && stopPromise.then(() => {
-                        this._startCamera(width, height, calculateAspectRation(width, height));
+                        this._startCamera(width, height, calculateAspectRatio(width, height));
                     });
                 } else {
                     setTimeout(() => this._changeCamera(e), 100);
@@ -336,7 +327,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                     this.$.cameraSelector.viewIndex = getCameraIndex(this._cameras);
                     const width = parseInt(this._videoFeedElement.style.width);
                     const height = parseInt(this._videoFeedElement.style.height);
-                    this._startCamera(width, height, calculateAspectRation(width, height));
+                    this._startCamera(width, height, calculateAspectRatio(width, height));
                 } else {
                     this._showError('No cammera error', 'There is no cameras to scan QR or Bar code');
                 }
@@ -364,6 +355,10 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             this._scanner.start(this._cameras[this.$.cameraSelector.viewIndex].id,  { fps: 10, aspectRatio: aspectRatio, qrbox: qrboxFunction.bind(this) },
                 this._successfulScan.bind(this), this._faildScan.bind(this)
             ).then(() => {
+                this._scanner.applyVideoConstraints({
+                    width: this._videoFeedElement.clientWidth,
+                    height: this._videoFeedElement.clientHeight
+                });
                 this._hideBlockingPane();
             }).catch((err) => {
                 this._showError('Camera error', err);
@@ -427,7 +422,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                 const width = parseInt(this._videoFeedElement.style.width);
                 const height = parseInt(this._videoFeedElement.style.height);
                 this._canClose = false;
-                this._startCamera(width, height, calculateAspectRation(width, height));
+                this._startCamera(width, height, calculateAspectRatio(width, height));
             } else if (this._scanner.stateManagerProxy.isPaused()) {
                 this._canClose = false;
                 this._scanner.resume();
