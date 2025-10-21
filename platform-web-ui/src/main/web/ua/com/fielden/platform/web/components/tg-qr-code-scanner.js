@@ -268,8 +268,14 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             this._videoFeedElement.style.width = dims.width + 'px';
             this._videoFeedElement.style.height = dims.height + 'px';
             oldRefit();
-
         }
+        // This listener is needed to close the camera when the user switches to another page.  
+        // The user can start the camera again upon returning to this page and pressing "SCAN".
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                this._qrCodeScannerResized(this.$.qrCodeScanner);
+            } 
+        });
     }
 
     open() {
