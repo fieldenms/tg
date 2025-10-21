@@ -909,17 +909,17 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
-     * Returns composite key title in case of composite entity type, 'undefined' otherwise.
+     * Returns key title in case of composite / union entity type, 'undefined' otherwise.
      */
-    EntityType.prototype.compositeKeyTitle = function () {
-        return this._compositeKey_title;
+    EntityType.prototype.keyTitle = function () {
+        return this._keyTitle;
     }
 
     /**
-     * Returns composite key description in case of composite entity type, 'undefined' otherwise.
+     * Returns key description in case of composite / union entity type, 'undefined' otherwise.
      */
-    EntityType.prototype.compositeKeyDesc = function () {
-        return this._compositeKey_desc;
+    EntityType.prototype.keyDesc = function () {
+        return this._keyDesc;
     }
 
     /**
@@ -975,17 +975,21 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
         } else {
             const prop = typeof this._props !== 'undefined' && this._props && this._props[name];
             if (!prop && name === 'key') {
+                // Composite / union entity type serialisation excludes KEY property in case if it is of composite / union nature.
+                // See `Finder.streamRealProperties` and `EntitySerialiser.createCachedProperties` methods.
+                // That's why we provide "virtual" implementation for EntityTypeProp here.
                 if (this.isCompositeEntity()) {
-                    // Composite entity type serialisation excludes KEY property in case if it is of composite nature.
-                    // See `Finder.streamRealProperties` and `EntitySerialiser.createCachedProperties` methods.
-                    // That's why we provide "virtual" implementation for EntityTypeProp here.
                     return {
                         type: () => 'DynamicEntityKey',
-                        title: this.compositeKeyTitle.bind(this),
-                        desc: this.compositeKeyDesc.bind(this)
+                        title: this.keyTitle.bind(this),
+                        desc: this.keyDesc.bind(this)
                     };
                 } else if (this.isUnionEntity()) { // the key type for union entities at the Java level is "String", but for JS its actual type is determined at runtime base on the active property
-                    return { type: function () { return 'String'; } }
+                    return {
+                        type: () => 'String',
+                        title: this.keyTitle.bind(this),
+                        desc: this.keyDesc.bind(this)
+                    }
                 }
             } else if (!prop && name === 'desc' && this.isUnionEntity()) { // the 'desc' type for union entities always return "String", even if there is no @DescTitle annotation on union type
                 return { type: function () { return 'String'; } }

@@ -109,7 +109,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             entityTypeInfo.set_displayDesc(shouldDisplayDescription);
         }
 
-        if (EntityUtils.isCompositeEntity(type)) {
+        if (isCompositeEntity(type)) {
             final List<String> compositeKeyNames = new ArrayList<>();
             final List<Field> keyMembers = Finder.getKeyMembers(type);
             for (final Field keyMember : keyMembers) {
@@ -122,12 +122,15 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 entityTypeInfo.set_compositeKeySeparator(compositeKeySeparator);
             }
             final var titleAndDesc = getTitleAndDesc(KEY, type);
-            entityTypeInfo.set_compositeKey_title(titleAndDesc.getKey());
-            entityTypeInfo.set_compositeKey_desc(titleAndDesc.getValue());
+            entityTypeInfo.set_keyTitle(titleAndDesc.getKey());
+            entityTypeInfo.set_keyDesc(titleAndDesc.getValue());
         }
-        if (AbstractUnionEntity.class.isAssignableFrom(type)) {
+        if (isUnionEntityType(type)) {
             entityTypeInfo.set_unionCommonProps(new ArrayList<>(commonProperties((Class<AbstractUnionEntity>) type)));
             entityTypeInfo.set_unionProps(unionProperties((Class<AbstractUnionEntity>) type).stream().map(filed -> filed.getName()).collect(toList()));
+            final var titleAndDesc = getTitleAndDesc(KEY, type);
+            entityTypeInfo.set_keyTitle(titleAndDesc.getKey());
+            entityTypeInfo.set_keyDesc(titleAndDesc.getValue());
         }
         if (AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(type)) {
             entityTypeInfo.set_compoundOpenerType(getKeyType(type).getName());
