@@ -25,11 +25,15 @@ import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js'
 /**
  * A set of colours used for rendering labels in the autocompletion result when autocompleting union entities, to represent values of various entity types that correspond to different union properties.
  * These colours are selected from https://materialui.co/colors/ – a subset from the row with colour ID 50.
+ * The second row was selected mostly from the row with colour ID 400. However, some colours are ~450 and ~350.
  */
-//                                green     d-purple   pink       brown      teal       indigo
-const unionPropertyBgColours = ['#E8F5E9', '#EDE7F6', '#FCE4EC', '#EFEBE9', '#E0F2F1', '#E8EAF6'];
-const unionPropertyFgColours = ['#63BB6A', '#855CC2', '#E93772', '#A0887C', '#5DBBB6', '#5F6DC0'];
-
+//                                green     d-purple   pink       teal       indigo     cyan       red        blue       purple     orange
+const unionPropertyBgColours = ['#E8F5E9', '#EDE7F6', '#FCE4EC', '#E0F2F1', '#E8EAF6', '#E0F7FA', '#FFEBEE', '#E3F2FD', '#F3E5F5', '#FFF3E0'];
+const unionPropertyFgColours = ['#63BB6A', '#855CC2', '#E93772', '#5DBBB6', '#5F6DC0', '#26C6DA', '#EF5350', '#42A5F5', '#AB47BC', '#FFA726'];
+/**
+ * Global lazy caches of union subtypes and their colours across the system.
+ */
+let unionSubtypesWithDescendingUsageFrequency, unionColoursByType;
 /**
  * The minimal number of items that should be visible in the result dialog if it is placed under the editor.
  * If the result dialog can not contain this number of items then this result dialog should be placed above the editor.
@@ -110,8 +114,8 @@ const template = html`
 
         .type-name {
             font-size: x-small;
-            background-color: var(--paper-grey-200);
-            color: #737373;
+            background-color: var(--paper-grey-100);
+            color: color-mix(in srgb, black 33%, white);
             line-height: 18px;
             border-radius: 9px;
             padding-left: 8px;
@@ -469,7 +473,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     v.toString(),
                     () => this._propValueByName(v, 'desc'),
                     withDesc === true,
-                    typeof v.active === 'undefined' || v.get("active")
+                    this._isActive(v)
                 );
 
                 //Add type description if entity editor is for union entity
@@ -477,10 +481,39 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 if (entityType.isUnionEntity()) {
                     const activeProp = v._activeProperty();
                     const title = entityType.prop(activeProp).title();
-                    const colourIndex = entityType.unionProps().indexOf(activeProp) % unionPropertyBgColours.length;
-                    const bgColor = unionPropertyBgColours[colourIndex];
-                    const fgColor = unionPropertyFgColours[colourIndex];
-                    html = html + `<span class="type-name" style="background-color:${bgColor};color:${fgColor}">${title}</span>`;
+                    let activeStyle = '';
+                    if (this._isActive(v)) {
+                        // Ensure the same colours for union subtypes across all different unions in a system.
+                        // To do that, first load all subtypes into a global singleton cache (if not yet loaded).
+                        if (!unionSubtypesWithDescendingUsageFrequency) {
+                            unionSubtypesWithDescendingUsageFrequency = this.reflector.loadUnionSubtypesAndSortByUsageFrequency();
+                            unionColoursByType = new Map();
+                        }
+                        // Pre-assign colours for union `entityType` (if not yet assigned) taking first colours for the most frequent subtypes.
+                        if (!unionColoursByType.get(entityType)) {
+                            unionColoursByType.set(entityType, new Map(
+                                entityType.unionProps().map(unionProp => [
+                                    unionProp,
+                                    unionSubtypesWithDescendingUsageFrequency.indexOf(entityType.prop(unionProp).type()) % unionPropertyBgColours.length
+                                ])
+                            ));
+                            // If there is a conflict of a colour (unlikely), then mark the type with empty Map (for later fallback logic).
+                            const preAssignedUnionColours = unionColoursByType.get(entityType).values();
+                            if ([...new Set(preAssignedUnionColours)].length < [...preAssignedUnionColours].length) {
+                                unionColoursByType.set(entityType, new Map());
+                            }
+                        }
+                        // Determine whether standard colouring scheme of global subtype colours can be used.
+                        const standardColouringScheme = unionColoursByType.get(entityType).size !== 0;
+                        // Use it if true, otherwise use colouring assignment from a single union as previously.
+                        const colourIndex = standardColouringScheme
+                            ? unionColoursByType.get(entityType).get(activeProp)
+                            : entityType.unionProps().toSorted().indexOf(activeProp) % unionPropertyBgColours.length;
+                        const bgColor = unionPropertyBgColours[colourIndex];
+                        const fgColor = unionPropertyFgColours[colourIndex];
+                        activeStyle = ` style="background-color:${bgColor};color:${fgColor}"`;
+                    }
+                    html = html + `<span class="type-name"${activeStyle}>${title}</span>`;
                 }
 
                 // add values for additional properties with highlighting of matching parts if required
@@ -497,7 +530,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                             this._propValueByName(v, propName),
                             () => this._propValueByName(v, propName + '.desc'),
                             this.reflector.isEntity(v.get(propName)) && (typeof v.get(propName)['desc'] !== 'undefined' || v.get(propName).type().isUnionEntity()),
-                            typeof v.active === 'undefined' || v.get("active")
+                            this._isActive(v)
                         );
                     }
                 }
@@ -510,6 +543,18 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 }
             }
         }.bind(this));
+    }
+
+    /**
+     * Checks whether 'entity' is active -- either it is an active activatable (or non-activatable) or a union with an active activatable (or with non-activatable).
+     */ 
+    _isActive (entity) {
+        // Take the active entity from union, if it is union. Otherwise take the entity as is.
+        const realEntity = this.reflector.isEntity(entity) && entity.constructor.prototype.type.call(entity).isUnionEntity() && entity._activeEntity() || entity;
+        // If property `active` does not exist, treat the entity as active.
+        // Property `active` should always be fetched at this point.
+        // (Be more lenient if 'active' property is not boolean-typed for some reason).
+        return this.reflector.isEntity(realEntity) && (typeof realEntity.active === 'undefined' || realEntity.get('active'));
     }
 
     /**
@@ -720,7 +765,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
      */
     _calcItemClass (item) {
         let klass = 'tg-item vertical-layout';
-        if (typeof item.active !== 'undefined' && item.get('active') === false) {
+        if (!this._isActive(item)) {
             klass += ' inactive';
         }
         return klass;

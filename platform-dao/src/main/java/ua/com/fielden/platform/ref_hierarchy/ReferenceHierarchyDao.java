@@ -8,7 +8,6 @@ import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -43,6 +42,7 @@ import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel.*;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 
 /// DAO implementation for companion object [IReferenceHierarchy].
 ///
@@ -76,7 +76,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         } else {
             final var referencedEntityType = action.getRefEntityClass().orElseThrow(() -> failure(ERR_COULD_NOT_FIND_ENTITY_TYPE.formatted(action.getRefEntityType())));
             final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependencies = new HashMap<>();
-            if (!action.isActiveOnly() || !ActivatableAbstractEntity.class.isAssignableFrom(referencedEntityType)) {
+            if (!action.isActiveOnly() || !isActivatableEntityType(referencedEntityType)) {
                 dependencies.putAll(DataDependencyQueriesGenerator.produceDependenciesMetadata(applicationDomainProvider.entityTypes()));
             }
             // In case of active only we need to build the dependency graph in the same way as in ActivePropertyValidator.

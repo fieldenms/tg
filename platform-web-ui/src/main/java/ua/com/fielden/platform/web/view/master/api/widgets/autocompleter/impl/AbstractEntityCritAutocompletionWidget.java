@@ -8,7 +8,7 @@ import ua.com.fielden.platform.web.centre.widgets.EntitySingleCritAutocompletion
 
 import java.util.Map;
 
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityOrUnionType;
 
 /// A base class for selection criteria as autocompleters.
 ///
@@ -25,7 +25,7 @@ public abstract class AbstractEntityCritAutocompletionWidget extends AbstractEnt
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
-        if (isActivatableEntityType(propType)) {
+        if (isActivatableEntityOrUnionType(propType)) {
             attrs.put("_update-centre-dirty", "[[_updateCentreDirty]]");
         }
         return attrs;
