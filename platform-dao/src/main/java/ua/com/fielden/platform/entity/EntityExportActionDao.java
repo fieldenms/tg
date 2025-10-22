@@ -30,6 +30,7 @@ import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getDefaultEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseCriteria;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
@@ -164,6 +165,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             final boolean allowNoSelectionForExportOfSelected)
     {
         authoriseReading(selectionCrit.getEntityClass().getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime); // reading of entities should be authorised when exporting
+        authoriseCriteria(selectionCrit.queryProperties.get(), authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
         if (entity.isExportAll()) {
             return selectionCrit.export(new LinkedHashMap<>());
         }

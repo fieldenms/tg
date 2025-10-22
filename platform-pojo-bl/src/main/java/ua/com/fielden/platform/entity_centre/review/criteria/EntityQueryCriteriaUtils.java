@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
 import com.google.inject.Inject;
-import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
@@ -12,10 +11,10 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -28,6 +27,7 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getDateValuesFrom;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authorisePropertyReading;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUtc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -38,26 +38,21 @@ public class EntityQueryCriteriaUtils {
 
     @Inject
     private static IAuthorisationModel authorisationModel;
+    @Inject
+    private static ISecurityTokenProvider securityTokenProvider;
 
     /// Returns the property names that the user is permitted to view or manipulate. The set of accessible properties is determined by the specified authorization model.
     ///
     public static List<String> getAvailableProperties(Class<? extends AbstractEntity<?>> root, final List<String> properties) {
-        return properties.stream().filter(prop -> {
-            return isPropertyAuthorised(root, prop);
-        }).collect(toList());
+        return properties.stream()
+            .filter(prop -> isPropertyAuthorised(root, prop))
+            .collect(toList());
     }
 
     /// Returns the property name that the user is permitted to view or manipulate. The accessibility of this property is determined by the specified authorization model.
     ///
-    public static boolean isPropertyAuthorised(Class<?> root, String property) {
-        if (StringUtils.isEmpty(property)) {
-            return true;
-        }
-        final Authorise authAnnotation = AnnotationReflector.getPropertyAnnotation(Authorise.class, root, property);
-        if (authAnnotation != null && !authorisationModel.authorise(authAnnotation.value()).isSuccessful()) {
-            return false;
-        }
-        return true;
+    public static boolean isPropertyAuthorised(final Class<?> root, final String property) {
+        return authorisePropertyReading(root, property, authorisationModel, securityTokenProvider).orElseGet(Result::successful).isSuccessful();
     }
 
     /// Separates total properties from fetch properties. The key of the pair is the list of fetch properties, the value of the pair is the list of totals.

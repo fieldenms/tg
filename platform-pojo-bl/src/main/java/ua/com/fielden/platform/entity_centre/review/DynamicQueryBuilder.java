@@ -48,7 +48,6 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.mnemonics.DateMnemonicUtils.dateOfRangeThatIncludes;
-import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.isPropertyAuthorised;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.*;
@@ -555,7 +554,7 @@ public class DynamicQueryBuilder {
         final Map<Integer, List<QueryProperty>> orGroups = new TreeMap<>(); // lets have it sorted by group number
         // traverse all properties to enhance resulting query
         for (final QueryProperty property : properties) {
-            if (!property.shouldBeIgnored() && isPropertyAuthorised(property.getEntityClass(), property.getPropertyName())) {
+            if (!property.shouldBeIgnored()) {
                 if (property.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL()) { // the property is in collection hierarchy. So, separate collection sub-model (EXISTS or NOT_EXISTS) should be enhanced by this property's criteria.
                     final Class<? extends AbstractEntity<?>> ccType = property.getCollectionContainerType();
                     if (!collectionalProperties.containsKey(ccType)) {

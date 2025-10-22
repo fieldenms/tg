@@ -68,6 +68,7 @@ import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATI
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseCriteria;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.either.Either.left;
@@ -534,6 +535,7 @@ public class CriteriaResource extends AbstractWebResource {
             }
 
             try {
+                // TODO investigate how criteria indicator is updated here (on throw).
                 authoriseReading(getEntityType(miType).getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime); // reading of entities should be authorised when running / refreshing
 
                 final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
@@ -577,7 +579,7 @@ public class CriteriaResource extends AbstractWebResource {
                         return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication)));
                     }
 
-                    final Result authorisationResult = freshCentreAppliedCriteriaEntity.authoriseCriteria();
+                    final Result authorisationResult = authoriseCriteria(freshCentreAppliedCriteriaEntity.queryProperties.get(), authorisationModel, securityTokenProvider);
                     if (!authorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run failed (authorisation validation failed).");
                         final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
@@ -626,7 +628,7 @@ public class CriteriaResource extends AbstractWebResource {
                 final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
                 //Performs criteria validation on centre refresh. It is needed if user changed token role association between run and refresh actions.
                 if (!isRunning) {
-                    final Result authorisationResult = previouslyRunCriteriaEntity.authoriseCriteria();
+                    final Result authorisationResult = authoriseCriteria(previouslyRunCriteriaEntity.queryProperties.get(), authorisationModel, securityTokenProvider);
                     if (!authorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: refresh failed (authorisation validation failed).");
                         final Result result = authorisationResult.copyWith(new ArrayList<>(Arrays.asList(previouslyRunCriteriaEntity, updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, previouslyRunCentre, new LinkedHashMap<>(), empty()))));

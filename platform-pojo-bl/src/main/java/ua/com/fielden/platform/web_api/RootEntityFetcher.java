@@ -1,20 +1,5 @@
 package ua.com.fielden.platform.web_api;
 
-import static graphql.GraphqlErrorBuilder.newError;
-import static ua.com.fielden.platform.security.tokens.Template.READ;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_CAPACITY;
-import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_NUMBER;
-import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_CAPACITY;
-import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_NUMBER;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.extractValue;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.generateQueryModelFrom;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.rootPropAndArguments;
-
-import java.util.List;
-import java.util.Optional;
-
 import graphql.execution.DataFetcherResult;
 import graphql.execution.DataFetcherResult.Builder;
 import graphql.language.Argument;
@@ -32,6 +17,16 @@ import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
+
+import java.util.List;
+import java.util.Optional;
+
+import static graphql.GraphqlErrorBuilder.newError;
+import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.web_api.FieldSchema.*;
+import static ua.com.fielden.platform.web_api.RootEntityUtils.*;
 
 /**
  * {@link DataFetcher} implementation responsible for resolving root {@code Query} fields that correspond to main entity trees.
@@ -86,7 +81,9 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
             entityType,
             environment.getGraphQLSchema(),
             environment.getGraphQlContext(),
-            environment.getLocale()
+            environment.getLocale(),
+            authorisationModel,
+            securityTokenProvider
         ).apply(dates);
         final Builder<List<T>> result = DataFetcherResult.<List<T>>newResult().data(coFinder.findAsReader(entityType, true).getPage( // reader must be uninstrumented
             warningAndModel._2,
