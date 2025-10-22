@@ -26,6 +26,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
 
         final DomElement img = new DomElement("img")
                 .clazz("relative")
+                .attr("id", "imageLoader")
                 .attr("src$", "[[_getImageUri(_currBindingEntity)]]")
                 .attr("hidden$", "[[!_isImageVisible(_currBindingEntity)]]")
                 .style("width:100%", "height:100%", "object-fit:contain");
@@ -50,7 +51,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 .add(altImage, img);
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, "")
+                .replace(IMPORTS, "import { isSupportedLink } from '/resources/components/tg-link-opener.js'")
                 .replace(ENTITY_TYPE, flattenedNameOf(AttachmentPreviewEntityAction.class))
                 .replace("<!--@tg-entity-master-content-->", container.toString())
                 .replace("//@ready-callback", generateReadyCallback())
@@ -68,9 +69,21 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
 
     private String generateReadyCallback() {
         return  """
+                self.$.imageLoader.addEventListener('load', () => {
+                    alert(`loaded successfully ${self.$.imageLoader.src}`);
+                });
+                self.$.imageLoader.addEventListener('error', () => {
+                    alert(`loaded failed ${self.$.imageLoader.src}`);
+                });
                 self._isNecessaryForConversion = function (propertyName) {
                     return ['attachment', 'attachmentUri'].indexOf(propertyName) >= 0;
                 };
+                self._handleBindingEntityChanged = function (e) {
+                    if (e.detail.value) {
+                        
+                    }
+                };
+                self.addEventListener('_curr-binding-entity-changed', self._handleBindingEntityChanged.bind(self));
                 self._getImageUri = function (entity) {
                     const newEntity = entity ? entity['@@origin'] : null;
                     if (newEntity && newEntity.attachmentUri) {
