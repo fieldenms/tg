@@ -909,6 +909,20 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
+     * Returns key title in case of composite / union entity type, 'undefined' otherwise.
+     */
+    EntityType.prototype.keyTitle = function () {
+        return this._keyTitle;
+    }
+
+    /**
+     * Returns key description in case of composite / union entity type, 'undefined' otherwise.
+     */
+    EntityType.prototype.keyDesc = function () {
+        return this._keyDesc;
+    }
+
+    /**
      * Returns 'true' if the entity type represents a persistent entity.
      *
      */
@@ -961,10 +975,21 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
         } else {
             const prop = typeof this._props !== 'undefined' && this._props && this._props[name];
             if (!prop && name === 'key') {
+                // Composite / union entity type serialisation excludes KEY property in case if it is of composite / union nature.
+                // See `Finder.streamRealProperties` and `EntitySerialiser.createCachedProperties` methods.
+                // That's why we provide "virtual" implementation for EntityTypeProp here.
                 if (this.isCompositeEntity()) {
-                    return { type: function () { return 'DynamicEntityKey'; } }
+                    return {
+                        type: () => 'DynamicEntityKey',
+                        title: this.keyTitle.bind(this),
+                        desc: this.keyDesc.bind(this)
+                    };
                 } else if (this.isUnionEntity()) { // the key type for union entities at the Java level is "String", but for JS its actual type is determined at runtime base on the active property
-                    return { type: function () { return 'String'; } }
+                    return {
+                        type: () => 'String',
+                        title: this.keyTitle.bind(this),
+                        desc: this.keyDesc.bind(this)
+                    }
                 }
             } else if (!prop && name === 'desc' && this.isUnionEntity()) { // the 'desc' type for union entities always return "String", even if there is no @DescTitle annotation on union type
                 return { type: function () { return 'String'; } }
@@ -2199,6 +2224,26 @@ export const TgReflector = Polymer({
             }
         }
         return context;
+    },
+
+    /**
+     * Loads all union subtypes in the system. Sort them descendingly by frequency of usages in union types.
+     */
+    loadUnionSubtypesAndSortByUsageFrequency: function() {
+        // Load all union subtypes from union types.
+        // These can have duplicates.
+        const allUnionSubtypes = Object.values(_typeTable)
+            .filter(type => type.isUnionEntity())
+            .flatMap(type => type.unionProps().map(unionProp => type.prop(unionProp).type()));
+        // Create a frequency of usage of those subtypes in union types.
+        const freqMap = new Map();
+        allUnionSubtypes.forEach(unionSubtype => {
+            freqMap.set(unionSubtype, freqMap.get(unionSubtype) ? freqMap.get(unionSubtype) + 1 : 1);
+        });
+        // Sort subtypes descendingly by frequency of usage; return array of subtypes only.
+        return Array.from(freqMap)
+            .toSorted((pair1, pair2) => pair2[1] - pair1[1])
+            .map(pair => pair[0]);
     },
 
     /**

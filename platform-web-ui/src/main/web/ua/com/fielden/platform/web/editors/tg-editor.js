@@ -96,6 +96,9 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             #decorator[focused]:not([disabled]) .label-title {
                 font-weight: 700;
             }
+            #decorator[focused]:not([disabled]) .label {
+                font-weight: 700;
+            }
             .label-action {
                 width: 18px;
                 height: 18px;
@@ -535,6 +538,9 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                 value: function () {
                     return (function (event) {
                         this._setFocused(true);
+                        if (this._updateManuallyFocusedInputWith) {
+                            this._updateManuallyFocusedInputWith(this._focusTarget(event.target));
+                        }
                     }).bind(this);
                 }
             },
@@ -550,6 +556,9 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                     return (function (event) {
                         this._setFocused(false);
                         this._checkBuiltInValidation();
+                        if (this._updateManuallyFocusedInputWith) {
+                            this._updateManuallyFocusedInputWith(null);
+                        }
                     }).bind(this);
                 }
             },
@@ -658,6 +667,13 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         this.propertyActions.forEach(action => {
             action.setAttribute('hidden', '');
         });
+    }
+
+    /**
+     * Returns a concrete element in `_onFocus` `target` to be stored for further focusing.
+     */
+    _focusTarget (target) {
+        return target;
     }
 
     isInWarning () {
