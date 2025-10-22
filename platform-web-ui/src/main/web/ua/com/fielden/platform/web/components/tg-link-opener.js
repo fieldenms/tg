@@ -10,9 +10,9 @@ const appConfig = new TgAppConfig();
 const confirmationDialog = new TgConfirmationDialog();
 
 // 'mailto:' protocol, which is supported in TG links.
-export const MAILTO_PROTOCOL = 'mailto:';
+const MAILTO_PROTOCOL = 'mailto:';
 // Protocols, which are supported in TG links (besides mailto: above).
-export const SUPPORTED_PROTOCOLS = ['https:', 'http:', 'ftp:', 'ftps:'];
+const SUPPORTED_PROTOCOLS = ['https:', 'http:', 'ftp:', 'ftps:'];
 // An error indicating unsupported protocol usage in links.
 export const ERR_UNSUPPORTED_PROTOCOL = 'One of http, https, ftp, ftps or mailto hyperlink protocols is expected.';
 
@@ -144,6 +144,10 @@ export function checkLinkAndOpen(urlString, target, windowFeatures) {
             openLink(url, target, windowFeatures);
         }
     }
+}
+
+export function isSupportedLink(maybeLink) {
+    return maybeLink.startsWith(MAILTO_PROTOCOL) || SUPPORTED_PROTOCOLS.some(p => maybeLink.startsWith(p + '//'))
 }
 
 /**

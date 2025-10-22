@@ -2,7 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
-import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
+import { checkLinkAndOpen, isSupportedLink } from '/resources/components/tg-link-opener.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -417,12 +417,7 @@ export const TgEntityBinderBehavior = {
     mkDownloadAttachmentFunction: function () {
         return attachment => {
             if (attachment.isPersisted()) {
-                const openAsHyperLink = attachment.title.toLowerCase().startsWith('https://') ||
-                                        attachment.title.toLowerCase().startsWith('http://') ||
-                                        attachment.title.toLowerCase().startsWith('ftp://') ||
-                                        attachment.title.toLowerCase().startsWith('ftps://') ||
-                                        attachment.title.toLowerCase().startsWith('mailto:');
-                if (openAsHyperLink === true) {
+                if (isSupportedLink(attachment.title) === true) {
                     checkLinkAndOpen(attachment.title);
                 } else {
                     const self = this;

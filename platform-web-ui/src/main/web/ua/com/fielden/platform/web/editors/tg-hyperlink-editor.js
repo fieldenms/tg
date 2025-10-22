@@ -7,7 +7,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 
-import { checkLinkAndOpen, MAILTO_PROTOCOL, SUPPORTED_PROTOCOLS, ERR_UNSUPPORTED_PROTOCOL } from '/resources/components/tg-link-opener.js';
+import { checkLinkAndOpen, isSupportedLink, ERR_UNSUPPORTED_PROTOCOL } from '/resources/components/tg-link-opener.js';
 
 const additionalTemplate = html`
     <style>
@@ -53,7 +53,7 @@ export class TgHyperlinkEditor extends TgEditor {
         if (strValue === '') {
             return null;
         } else {
-            if (!strValue.startsWith(MAILTO_PROTOCOL) && SUPPORTED_PROTOCOLS.every(p => !strValue.startsWith(p + '//'))) {
+            if (!isSupportedLink(strValue)) {
                 throw ERR_UNSUPPORTED_PROTOCOL;
             }
 
