@@ -28,7 +28,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 .clazz("relative")
                 .attr("id", "imageLoader")
                 .attr("src$", "[[_getImageUri(_currBindingEntity)]]")
-                .attr("hidden$", "[[!_isImageVisible(_currBindingEntity)]]")
+                .attr("hidden$", "[[!_isImageVisible(_loadingError, _currBindingEntity)]]")
                 .style("width:100%", "height:100%", "object-fit:contain");
         final DomElement messageElement =  new DomElement("span")
                 .style("font-size: 18px", "color: #BDBDBD", "margin: 24px")
@@ -36,13 +36,13 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
         final DomElement downloadAction = new DomElement("paper-button")
                 .style("font-size: 14px", "font-weight: 500", "color: #000000DE")
                 .attr("raised", true)
-                .attr("on-tap", "_downloadAttachment")
-                .attr("tooltip-text", "Downloads the attachment.")
-                .add(new DomElement("span").add(new InnerTextElement("DOWNLOAD")));
+                .attr("on-tap", "_downloadOrOpenAttachment")
+                .attr("tooltip-text", "[[_getButtonTooltip(_currBindingEntity)]]")
+                .add(new DomElement("span").add(new InnerTextElement("[[_getButtonName(_currBindingEntity)]]")));
         final DomElement altImage = new DomElement("div")
                 .style("background-color: white")
                 .clazz("fit", "layout vertical center-center")
-                .attr("hidden$", "[[_isImageVisible(_currBindingEntity)]]")
+                .attr("hidden$", "[[_isImageVisible(_loadingError, _currBindingEntity)]]")
                 .add(messageElement, downloadAction);
         final DomElement container = new DomElement("div")
                 .attr("slot", "property-editors")
@@ -51,7 +51,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 .add(altImage, img);
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, "import { isSupportedLink } from '/resources/components/tg-link-opener.js'")
+                .replace(IMPORTS, "import { isSupportedLink, checkLinkAndOpen, canOpenLinkWithoutConfirmation } from '/resources/components/tg-link-opener.js'")
                 .replace(ENTITY_TYPE, flattenedNameOf(AttachmentPreviewEntityAction.class))
                 .replace("<!--@tg-entity-master-content-->", container.toString())
                 .replace("//@ready-callback", generateReadyCallback())
@@ -70,27 +70,54 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
     private String generateReadyCallback() {
         return  """
                 self.$.imageLoader.addEventListener('load', () => {
-                    alert(`loaded successfully ${self.$.imageLoader.src}`);
+                    self._loadingError = false;
                 });
                 self.$.imageLoader.addEventListener('error', () => {
-                    alert(`loaded failed ${self.$.imageLoader.src}`);
+                    self._loadingError = true;
                 });
                 self._isNecessaryForConversion = function (propertyName) {
                     return ['attachment', 'attachmentUri'].indexOf(propertyName) >= 0;
                 };
                 self._handleBindingEntityChanged = function (e) {
                     if (e.detail.value) {
-                        
+                        isSupportedLink
                     }
                 };
                 self.addEventListener('_curr-binding-entity-changed', self._handleBindingEntityChanged.bind(self));
                 self._getImageUri = function (entity) {
                     const newEntity = entity ? entity['@@origin'] : null;
                     if (newEntity && newEntity.attachmentUri) {
-                        return newEntity.attachmentUri;
+                        if (isSupportedLink(newEntity.attachmentUri)) {
+                            const checkLinkRes = canOpenLinkWithoutConfirmation(newEntity.attachmentUri);
+                            if (checkLinkRes && !checkLinkRes.canOpenWithoutConfirmation) {
+                                return "";
+                            }
+                        }
+                        return newEntity.attachmentUri;    
                     }
                 }.bind(self);
-                self._isImageVisible = function (entity) {
+                self._getButtonName = function (_currBindingEntity) {
+                    const newEntity = entity ? entity['@@origin'] : null;
+                    if (newEntity && newEntity.attachmentUri) {
+                        if (isSupportedLink(newEntity.attachmentUri)) {
+                            return "OPEN";
+                        }
+                    }
+                    return "DOWNLOAD";
+                };
+                self._getButtonTooltip = function (_currBindingEntity) {
+                    const newEntity = entity ? entity['@@origin'] : null;
+                    if (newEntity && newEntity.attachmentUri) {
+                        if (isSupportedLink(newEntity.attachmentUri)) {
+                            return "Opens the attachment.";
+                        }
+                    }
+                    return "Downloads the attachment.";
+                };
+                self._isImageVisible = function (loadingError, entity) {
+                    if (loadingError) {
+                        return false;
+                    }
                     const newEntity = entity ? entity['@@origin'] : null;
                     if (newEntity && !newEntity.attachmentUri) {
                         return false;
@@ -100,14 +127,25 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 self._getAltImageText = function (entity) {
                     const newEntity = entity ? entity['@@origin'] : null;
                     if (newEntity && !newEntity.attachmentUri) {
+                        if (isSupportedLink(newEntity.attachmentUri)) {
+                            const checkLinkRes = canOpenLinkWithoutConfirmation(newEntity.attachmentUri);
+                            if (checkLinkRes && !checkLinkRes.canOpenWithoutConfirmation) {
+                                return "This preview isn’t from a trusted source. Please confirm that you trust it by clicking the OPEN button below.";
+                            }
+                            return 'Preview is not available for this link attachment. Please open it instead.';
+                        }
                         return 'Preview is not available for this file. Please download it instead.';
                     }
                     return '';
                 }.bind(self);
                 self.downloadAttachment = self.mkDownloadAttachmentFunction();
-                self._downloadAttachment = function (e) {
+                self._downloadOrOpenAttachment = function (e) {
                     if (this._currEntity && this._currEntity.attachment) {
-                        this.downloadAttachment(this._currEntity.attachment);
+                        if (isSupportedLink(this._currEntity.attachmentUri)) {
+                            checkLinkAndOpen(this._currEntity.attachmentUri);
+                        } else {
+                            this.downloadAttachment(this._currEntity.attachment);
+                        }
                     }
                 }.bind(self);
                 """;
