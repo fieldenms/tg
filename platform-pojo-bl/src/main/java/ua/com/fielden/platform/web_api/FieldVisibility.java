@@ -17,6 +17,7 @@ import java.util.function.Function;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.isPropertyAuthorised;
 import static ua.com.fielden.platform.security.tokens.Template.READ_MODEL;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 
@@ -43,10 +44,19 @@ public class FieldVisibility implements GraphqlFieldVisibility {
     @Override
     public List<GraphQLFieldDefinition> getFieldDefinitions(final GraphQLFieldsContainer fieldsContainer) {
         final String simpleName = fieldsContainer.getName();
-        if (domainTypes.containsKey(simpleName)) { // only consider containers that represent TG domain types (more specifically only those domain types that are used for Query root fields)
-            if (!authoriseReading(simpleName, READ_MODEL, authorisationModel, securityTokenProvider).isSuccessful()) { // always create new instance of auth model; otherwise it would contain single instance of SecurityRoleAssociationDao companion and concurrent requests may fail
+        // Only consider containers that represent TG domain types (more specifically only those domain types that are used for Query root fields).
+        if (domainTypes.containsKey(simpleName)) {
+            if (!authoriseReading(simpleName, READ_MODEL, authorisationModel, securityTokenProvider).isSuccessful()) {
                 return fieldsContainer.getFieldDefinitions().stream()
-                    .filter(def -> ID.equals(def.getName())) // at least one field should be accessible (ID was chosen for that purpose); otherwise the type does not conform to GraphQL spec (and validations in GraphiQL editor become broken)
+                    // At least one field should be accessible (ID was chosen for that purpose).
+                    // Otherwise, the type does not conform to GraphQL spec (and validations in GraphiQL editor become broken).
+                    .filter(def -> ID.equals(def.getName()))
+                    .collect(toList());
+            }
+            else {
+                return fieldsContainer.getFieldDefinitions().stream()
+                    // Filter out unauthorised properties.
+                    .filter(def -> isPropertyAuthorised(domainTypes.get(simpleName), def.getName()))
                     .collect(toList());
             }
         }
