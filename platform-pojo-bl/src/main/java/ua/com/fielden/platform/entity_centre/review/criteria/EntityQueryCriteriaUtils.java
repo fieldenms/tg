@@ -52,7 +52,10 @@ public class EntityQueryCriteriaUtils {
     /// Returns the property name that the user is permitted to view or manipulate. The accessibility of this property is determined by the specified authorization model.
     ///
     public static boolean isPropertyAuthorised(final Class<?> root, final String property) {
-        return authorisePropertyReading(root, property, authorisationModel, securityTokenProvider).orElseGet(Result::successful).isSuccessful();
+        // Root property (aka "entity itself") is always authorised.
+        return "".equals(property)
+            // Non-root property access is governed by *_CanRead_property_* tokens, where `property` part is never empty.
+            || authorisePropertyReading(root, property, authorisationModel, securityTokenProvider).orElseGet(Result::successful).isSuccessful();
     }
 
     /// Separates total properties from fetch properties. The key of the pair is the list of fetch properties, the value of the pair is the list of totals.

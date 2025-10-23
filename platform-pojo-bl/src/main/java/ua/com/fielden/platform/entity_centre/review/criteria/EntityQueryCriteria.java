@@ -201,6 +201,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
                 .filter(qp -> qp.isCritOnly() || qp.isAECritOnlyChild())
                 .collect(toMap(qp -> queryPropertyParamName(qp.getPropertyName()), qp -> qp));
     }
+
     /// Creates the fetch provider based on `properties` of the `managedType` and on custom fetch provider (if any).
     ///
     /// Please, note that custom fetch provider can have its top-level type marked as 'instrumented' (or its property fetch providers). If this is the case, then it will override
