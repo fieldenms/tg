@@ -19,9 +19,6 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicPropertyAnalyser;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.security.IAuthorisationModel;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
@@ -37,6 +34,7 @@ import java.util.stream.Stream;
 import static graphql.execution.CoercedVariables.of;
 import static graphql.execution.ValuesResolver.getArgumentValues;
 import static java.lang.Byte.valueOf;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -54,7 +52,6 @@ import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.Q
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseCriteria;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
@@ -103,9 +100,7 @@ public class RootEntityUtils {
         final Class<T> entityType,
         final GraphQLSchema schema,
         final GraphQLContext context,
-        final Locale locale,
-        final IAuthorisationModel authorisationModel,
-        final ISecurityTokenProvider securityTokenProvider
+        final Locale locale
     ) {
         final SelectionSet selectionSet = rootField.getSelectionSet();
         // convert selectionSet to concrete properties (their dot-notated names) with their arguments
@@ -125,7 +120,6 @@ public class RootEntityUtils {
                 locale
             ))
             .collect(toList());
-        authoriseCriteria(queryProperties, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);// reading of entity properties should be authorised when running GraphQL query
         final List<T3<String, Ordering, Byte>> propOrderingWithPriorities = propertiesAndArguments.entrySet().stream()
             .filter(propertyAndArguments -> propertyAndArguments.getValue()._1.contains(ORDER_ARGUMENT)) // if GraphQL argument definitions contain ORDER_ARGUMENT ...
             .map(propertyAndArguments -> createOrderingProperty( // ... create ordering properties based on them

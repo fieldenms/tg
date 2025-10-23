@@ -81,9 +81,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
             entityType,
             environment.getGraphQLSchema(),
             environment.getGraphQlContext(),
-            environment.getLocale(),
-            authorisationModel,
-            securityTokenProvider
+            environment.getLocale()
         ).apply(dates);
         final Builder<List<T>> result = DataFetcherResult.<List<T>>newResult().data(coFinder.findAsReader(entityType, true).getPage( // reader must be uninstrumented
             warningAndModel._2,
