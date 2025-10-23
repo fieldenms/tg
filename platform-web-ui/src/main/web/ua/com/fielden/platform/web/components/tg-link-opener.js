@@ -9,6 +9,8 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 const appConfig = new TgAppConfig();
 const confirmationDialog = new TgConfirmationDialog();
 
+// This date format is used to save date information for saved link
+const DATE_FORMAT_FOR_LINK_OPENER = 'YYYY MM DD';
 // 'mailto:' protocol, which is supported in TG links.
 const MAILTO_PROTOCOL = 'mailto:';
 // Protocols, which are supported in TG links (besides mailto: above).
@@ -107,7 +109,40 @@ export function isExternalURL(urlAndHostname) {
  * @param {Object} windowFeatures - optional features passed to `window.open()` when opening the link.
  */
 export function checkLinkAndOpen(urlString, target, windowFeatures) {
-    const dateFormat = 'YYYY MM DD';
+    const urlCheckRes = canOpenLinkWithoutConfirmation(urlString);
+    if (urlCheckRes) {
+        if (urlCheckRes.canOpenWithoutConfirmation === false) {
+            const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br><pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${url}</pre>`;
+            const options = ["Don't show this again for this link", "Don't show this again for this site"];
+            const buttons = [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true, classes: "red" }];
+
+            confirmationDialog.showConfirmationDialog(text, buttons, { single: true, options }, "Double-check this link").then(opt => {
+                if (opt[options[0]]) {
+                    localStorage.setItem(localStorageKey(url), moment().format(DATE_FORMAT_FOR_LINK_OPENER));
+                }
+                if (opt[options[1]]) {
+                    localStorage.setItem(localStorageKey(hostName), moment().format(DATE_FORMAT_FOR_LINK_OPENER));
+                }
+                openLink(urlCheckRes.url, urlCheckRes.target || target, windowFeatures);
+            });
+        } else {
+            openLink(urlCheckRes.url, urlCheckRes.target || target, windowFeatures);
+        }
+    }
+}
+
+/**
+ * Checks whether the specified URL string can be opened without user confirmation.
+ *
+ * @param {String} urlString - The URL to check for confirmation requirements.
+ * @returns {undefined|Object}
+ *  - `undefined` if the URL is either unsupported or invalid.
+ *  - An object containing the following properties if the link is valid and supported:
+ *      - `canOpenWithoutConfirmation` — Indicates whether the link can be opened without user confirmation.
+ *      - `target` — The `target` attribute used when opening the link (e.g., "_blank").
+ *      - `url` — The normalized URL string.
+ */
+export function canOpenLinkWithoutConfirmation(urlString) {
     const urlAndHostname = processURL(urlString);
     if (urlAndHostname) {
         const url = urlAndHostname.url.href;
@@ -119,30 +154,13 @@ export function checkLinkAndOpen(urlString, target, windowFeatures) {
                 const isRecent = (key) =>
                     appConfig.getDaysUntilSitePermissionExpires() && 
                     localStorage.getItem(key) &&
-                    now.diff(moment(localStorage.getItem(key), dateFormat), 'days') < appConfig.getDaysUntilSitePermissionExpires();
+                    now.diff(moment(localStorage.getItem(key), DATE_FORMAT_FOR_LINK_OPENER), 'days') < appConfig.getDaysUntilSitePermissionExpires();
 
                 return isRecent(localStorageKey(url)) || isRecent(localStorageKey(hostName));
             };
-            if (!isAllowedSite() && !wasAcceptedByUser()) {
-                const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br><pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${url}</pre>`;
-                const options = ["Don't show this again for this link", "Don't show this again for this site"];
-                const buttons = [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true, classes: "red" }];
-
-                confirmationDialog.showConfirmationDialog(text, buttons, { single: true, options }, "Double-check this link").then(opt => {
-                    if (opt[options[0]]) {
-                        localStorage.setItem(localStorageKey(url), moment().format(dateFormat));
-                    }
-                    if (opt[options[1]]) {
-                        localStorage.setItem(localStorageKey(hostName), moment().format(dateFormat));
-                    }
-                    openLink(url, "_blank", windowFeatures);
-                });
-            } else {
-                openLink(url, "_blank", windowFeatures);
-            }
-        } else {
-            openLink(url, target, windowFeatures);
+            return {canOpenWithoutConfirmation: isAllowedSite() || wasAcceptedByUser(), target: "_blank", url: url};
         }
+        return {canOpenWithoutConfirmation: true, url: url};
     }
 }
 
