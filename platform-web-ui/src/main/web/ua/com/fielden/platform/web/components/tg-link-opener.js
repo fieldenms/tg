@@ -24,7 +24,7 @@ export const ERR_UNSUPPORTED_PROTOCOL = 'One of http, https, ftp, ftps or mailto
  *
  * Unspecified 'target' means '_blank' i.e. most likely to be opened in a new tab (or window with special user options).
  */
-function openLink(url, target, windowFeatures) {
+export function openLink(url, target, windowFeatures) {
     const newWindow = window.open(url, target, windowFeatures);
     if (newWindow) {
         // Always prevent tabnapping.
@@ -100,6 +100,22 @@ export function isExternalURL(urlAndHostname) {
     return urlAndHostname && urlAndHostname.hostname !== window.location.hostname;
 }
 
+export function confirmLinkAndThen(urlCheckResult, task) {
+    const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br><pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${urlCheckResult.urlAndHostname.url.href}</pre>`;
+    const options = ["Don't show this again for this link", "Don't show this again for this site"];
+    const buttons = [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true, classes: "red" }];
+
+    confirmationDialog.showConfirmationDialog(text, buttons, { single: true, options }, "Double-check this link").then(opt => {
+        if (opt[options[0]]) {
+            localStorage.setItem(localStorageKey(urlCheckResult.urlAndHostname.url.href), moment().format(DATE_FORMAT_FOR_LINK_OPENER));
+        }
+        if (opt[options[1]]) {
+            localStorage.setItem(localStorageKey(urlCheckResult.urlAndHostname.hostname), moment().format(DATE_FORMAT_FOR_LINK_OPENER));
+        }
+        task(opt);
+    });
+}
+
 /**
  * Displays a confirmation dialog before opening a potentially external link.
  * If the user accepts, their choice can be remembered to skip the dialog in the future for the same URL or host.
@@ -112,21 +128,11 @@ export function checkLinkAndOpen(urlString, target, windowFeatures) {
     const urlCheckRes = canOpenLinkWithoutConfirmation(urlString);
     if (urlCheckRes) {
         if (urlCheckRes.canOpenWithoutConfirmation === false) {
-            const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br><pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${url}</pre>`;
-            const options = ["Don't show this again for this link", "Don't show this again for this site"];
-            const buttons = [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true, classes: "red" }];
-
-            confirmationDialog.showConfirmationDialog(text, buttons, { single: true, options }, "Double-check this link").then(opt => {
-                if (opt[options[0]]) {
-                    localStorage.setItem(localStorageKey(url), moment().format(DATE_FORMAT_FOR_LINK_OPENER));
-                }
-                if (opt[options[1]]) {
-                    localStorage.setItem(localStorageKey(hostName), moment().format(DATE_FORMAT_FOR_LINK_OPENER));
-                }
-                openLink(urlCheckRes.url, urlCheckRes.target || target, windowFeatures);
+            confirmLinkAndThen(urlCheckRes, opt => {
+                openLink(urlCheckRes.urlAndHostname.url.href, urlCheckRes.target || target, windowFeatures);
             });
         } else {
-            openLink(urlCheckRes.url, urlCheckRes.target || target, windowFeatures);
+            openLink(urlCheckRes.urlAndHostname.url.href, urlCheckRes.target || target, windowFeatures);
         }
     }
 }
@@ -140,15 +146,14 @@ export function checkLinkAndOpen(urlString, target, windowFeatures) {
  *  - An object containing the following properties if the link is valid and supported:
  *      - `canOpenWithoutConfirmation` — Indicates whether the link can be opened without user confirmation.
  *      - `target` — The `target` attribute used when opening the link (e.g., "_blank").
- *      - `url` — The normalized URL string.
+ *      - `urlAndHostname` — The Object containing URL Object and hostname.
+ *      - `hostname` — The URL host name string.
  */
 export function canOpenLinkWithoutConfirmation(urlString) {
     const urlAndHostname = processURL(urlString);
     if (urlAndHostname) {
-        const url = urlAndHostname.url.href;
         if (isExternalURL(urlAndHostname)) {
-            const hostName = urlAndHostname.hostname;
-            const isAllowedSite = () => appConfig.getSiteAllowlist() && appConfig.getSiteAllowlist().find(pattern => pattern.test(hostName));
+            const isAllowedSite = () => appConfig.getSiteAllowlist() && appConfig.getSiteAllowlist().find(pattern => pattern.test(urlAndHostname.hostname));
             const wasAcceptedByUser = () => {
                 const now = moment();
                 const isRecent = (key) =>
@@ -156,11 +161,11 @@ export function canOpenLinkWithoutConfirmation(urlString) {
                     localStorage.getItem(key) &&
                     now.diff(moment(localStorage.getItem(key), DATE_FORMAT_FOR_LINK_OPENER), 'days') < appConfig.getDaysUntilSitePermissionExpires();
 
-                return isRecent(localStorageKey(url)) || isRecent(localStorageKey(hostName));
+                return isRecent(localStorageKey(urlAndHostname.url.href)) || isRecent(localStorageKey(urlAndHostname.hostname));
             };
-            return {canOpenWithoutConfirmation: isAllowedSite() || wasAcceptedByUser(), target: "_blank", url: url};
+            return {canOpenWithoutConfirmation: !!(isAllowedSite() || wasAcceptedByUser()), target: "_blank", urlAndHostname: urlAndHostname};
         }
-        return {canOpenWithoutConfirmation: true, url: url};
+        return {canOpenWithoutConfirmation: true, urlAndHostname: urlAndHostname};
     }
 }
 

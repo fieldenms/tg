@@ -27,18 +27,18 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
         final DomElement img = new DomElement("img")
                 .clazz("relative")
                 .attr("id", "imageLoader")
-                .attr("src$", "[[_getImageUri(_currBindingEntity)]]")
-                .attr("hidden$", "[[!_isImageVisible(_loadingError, _currBindingEntity)]]")
-                .style("width:100%", "height:100%", "object-fit:contain");
+                .attr("src$", "[[_getImageUri(_linkCheckRes, _wasConfirmed, _attachmentUri)]]")
+                .attr("hidden$", "[[!_isImageVisible(_loadingError, _attachmentUri)]]")
+                .style("width:100%", "height:100%", "object-fit:contain", "background-color:white;");
         final DomElement messageElement =  new DomElement("span")
                 .style("font-size: 18px", "color: #BDBDBD", "margin: 24px")
-                .add(new InnerTextElement("[[_getAltImageText(_currBindingEntity)]]"));
+                .add(new InnerTextElement("[[_getAltImageText(_linkCheckRes, _wasConfirmed)]]"));
         final DomElement downloadAction = new DomElement("paper-button")
                 .style("font-size: 14px", "font-weight: 500", "color: #000000DE")
                 .attr("raised", true)
                 .attr("on-tap", "_downloadOrOpenAttachment")
-                .attr("tooltip-text", "[[_getButtonTooltip(_currBindingEntity)]]")
-                .add(new DomElement("span").add(new InnerTextElement("[[_getButtonName(_currBindingEntity)]]")));
+                .attr("tooltip-text", "[[_getButtonTooltip(_linkCheckRes)]]")
+                .add(new DomElement("span").add(new InnerTextElement("[[_getButtonText(_linkCheckRes)]]")));
         final DomElement altImage = new DomElement("div")
                 .style("background-color: white")
                 .clazz("fit", "layout vertical center-center")
@@ -51,7 +51,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 .add(altImage, img);
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, "import { isSupportedLink, checkLinkAndOpen, canOpenLinkWithoutConfirmation } from '/resources/components/tg-link-opener.js'")
+                .replace(IMPORTS, "import { isSupportedLink, openLink, canOpenLinkWithoutConfirmation, confirmLinkAndThen } from '/resources/components/tg-link-opener.js'")
                 .replace(ENTITY_TYPE, flattenedNameOf(AttachmentPreviewEntityAction.class))
                 .replace("<!--@tg-entity-master-content-->", container.toString())
                 .replace("//@ready-callback", generateReadyCallback())
@@ -79,73 +79,76 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                     return ['attachment', 'attachmentUri'].indexOf(propertyName) >= 0;
                 };
                 self._handleBindingEntityChanged = function (e) {
-                    if (e.detail.value) {
-                        isSupportedLink
-                    }
-                };
-                self.addEventListener('_curr-binding-entity-changed', self._handleBindingEntityChanged.bind(self));
-                self._getImageUri = function (entity) {
-                    const newEntity = entity ? entity['@@origin'] : null;
-                    if (newEntity && newEntity.attachmentUri) {
-                        if (isSupportedLink(newEntity.attachmentUri)) {
-                            const checkLinkRes = canOpenLinkWithoutConfirmation(newEntity.attachmentUri);
-                            if (checkLinkRes && !checkLinkRes.canOpenWithoutConfirmation) {
-                                return "";
+                    this._updateAttachmentPreviewProperties(e.detail.value);
+                }.bind(self);
+                self._updateAttachmentPreviewProperties = function (attachment) {
+                    this._linkCheckRes = null;
+                    this._wasConfirmed = true;
+                    this._attachmentUri = null;
+                    if (attachment && attachment.attachmentUri) {
+                        this._attachmentUri = attachment.attachmentUri;
+                        if (isSupportedLink(this._attachmentUri)) {
+                            this._linkCheckRes = canOpenLinkWithoutConfirmation(this._attachmentUri);
+                            if (this._linkCheckRes) {
+                                if (!this._linkCheckRes.canOpenWithoutConfirmation) {
+                                    this._wasConfirmed = false;
+                                }
                             }
                         }
-                        return newEntity.attachmentUri;    
                     }
                 }.bind(self);
-                self._getButtonName = function (_currBindingEntity) {
-                    const newEntity = entity ? entity['@@origin'] : null;
-                    if (newEntity && newEntity.attachmentUri) {
-                        if (isSupportedLink(newEntity.attachmentUri)) {
-                            return "OPEN";
-                        }
+                self.addEventListener('_curr-binding-entity-changed', self._handleBindingEntityChanged.bind(self));
+                self._getImageUri = function (_linkCheckRes, _wasConfirmed, _attachmentUri) {
+                    if (_linkCheckRes && !_wasConfirmed) {
+                        return "broken_link";
+                    }
+                    return _attachmentUri;
+                }.bind(self);
+                self._getButtonText = function (_linkCheckRes) {
+                    if (_linkCheckRes) {
+                        return "OPEN";
                     }
                     return "DOWNLOAD";
                 };
-                self._getButtonTooltip = function (_currBindingEntity) {
-                    const newEntity = entity ? entity['@@origin'] : null;
-                    if (newEntity && newEntity.attachmentUri) {
-                        if (isSupportedLink(newEntity.attachmentUri)) {
-                            return "Opens the attachment.";
-                        }
+                self._getButtonTooltip = function (_linkCheckRes) {
+                    if (_linkCheckRes) {
+                        return "Opens the attachment.";
                     }
                     return "Downloads the attachment.";
                 };
-                self._isImageVisible = function (loadingError, entity) {
-                    if (loadingError) {
-                        return false;
-                    }
-                    const newEntity = entity ? entity['@@origin'] : null;
-                    if (newEntity && !newEntity.attachmentUri) {
-                        return false;
-                    }
-                    return true;
+                self._isImageVisible = function (_loadingError, _attachmentUri) {
+                    return !_loadingError && _attachmentUri;
                 }.bind(self);
-                self._getAltImageText = function (entity) {
-                    const newEntity = entity ? entity['@@origin'] : null;
-                    if (newEntity && !newEntity.attachmentUri) {
-                        if (isSupportedLink(newEntity.attachmentUri)) {
-                            const checkLinkRes = canOpenLinkWithoutConfirmation(newEntity.attachmentUri);
-                            if (checkLinkRes && !checkLinkRes.canOpenWithoutConfirmation) {
-                                return "This preview isn’t from a trusted source. Please confirm that you trust it by clicking the OPEN button below.";
-                            }
-                            return 'Preview is not available for this link attachment. Please open it instead.';
+                self._getAltImageText = function (_linkCheckRes, _wasConfirmed) {
+                    if (_linkCheckRes) {
+                        if (!_wasConfirmed) {
+                            return "This preview isn’t from a trusted source. Please confirm that you trust it by clicking the OPEN button below.";
                         }
-                        return 'Preview is not available for this file. Please download it instead.';
+                        return 'Preview is not available for this link attachment. Please open it instead.';
                     }
-                    return '';
+                    return 'Preview is not available for this file. Please download it instead.';
                 }.bind(self);
                 self.downloadAttachment = self.mkDownloadAttachmentFunction();
                 self._downloadOrOpenAttachment = function (e) {
-                    if (this._currEntity && this._currEntity.attachment) {
-                        if (isSupportedLink(this._currEntity.attachmentUri)) {
-                            checkLinkAndOpen(this._currEntity.attachmentUri);
-                        } else {
-                            this.downloadAttachment(this._currEntity.attachment);
+                    if (this._linkCheckRes) {
+                        if (this._wasConfirmed) {
+                            if (this._loadingError) {
+                                //The link does not represents image that's why loadingError happened.
+                                openLink(this._attachmentUri, this._linkCheckRes.target || "_blank");
+                            }
+                            //Otherwise image should be visible
+                        } else { //If link is not trusted yet then confirm it first.
+                            const afterImageLoadListener = e => {
+                                openLink(this._attachmentUri, this._linkCheckRes.target || "_blank");
+                                this.$.imageLoader.removeEventListener("error", afterImageLoadListener);
+                            };
+                            this.$.imageLoader.addEventListener("error", afterImageLoadListener);
+                            confirmLinkAndThen(this._linkCheckRes, opt => {
+                                this._wasConfirmed = true;
+                            });
                         }
+                    } else {
+                        this.downloadAttachment(this._currEntity.attachment);
                     }
                 }.bind(self);
                 """;
