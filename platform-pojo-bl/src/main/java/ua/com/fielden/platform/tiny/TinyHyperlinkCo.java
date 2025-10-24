@@ -4,6 +4,8 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 
+import java.util.Map;
+
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
 public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
@@ -13,5 +15,7 @@ public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
             "entityId");
 
     <E extends AbstractEntity<?>> E entityFromLink(TinyHyperlink link);
+
+    TinyHyperlink createAndSave(Class<? extends AbstractEntity<?>> entityType, Map<String, Object> propertyValues);
 
 }
