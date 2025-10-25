@@ -62,7 +62,9 @@ public class TokenUtils {
     public static Result authoriseCriteria(final List<QueryProperty> queryProperties, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
         return queryProperties.stream()
             .map(queryProperty -> {
-                if (!queryProperty.isEmptyWithoutMnemonics()) {
+                // Criterion without any conditions is authorised.
+                // Root property (aka "entity itself") is always authorised.
+                if (!queryProperty.isEmptyWithoutMnemonics() && !"".equals(queryProperty.getPropertyName())) {
                     final var originalType = getOriginalType(stripIfNeeded(queryProperty.getEntityClass()));
                     return authorisePropertyReading(originalType, queryProperty.getPropertyName(), authorisation, securityTokenProvider);
                 }
@@ -91,7 +93,7 @@ public class TokenUtils {
     /// @param template              a security token template
     /// @param securityTokenProvider a security token provider, used to get a token class by name
     ///
-    public static <T extends ISecurityToken> Optional<Class<T>> findPropertyToken(final String templateParam1, final String templateParam2, final Template template, final ISecurityTokenProvider securityTokenProvider) {
+    private static <T extends ISecurityToken> Optional<Class<T>> findPropertyToken(final String templateParam1, final String templateParam2, final Template template, final ISecurityTokenProvider securityTokenProvider) {
         final String tokenSimpleClassName = format(template.forClassName(), templateParam1, templateParam2);
         return securityTokenProvider.getTokenByName(tokenSimpleClassName);
     }
