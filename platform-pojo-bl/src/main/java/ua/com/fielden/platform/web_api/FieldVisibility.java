@@ -46,19 +46,16 @@ public class FieldVisibility implements GraphqlFieldVisibility {
         final String simpleName = fieldsContainer.getName();
         // Only consider containers that represent TG domain types (more specifically only those domain types that are used for Query root fields).
         if (domainTypes.containsKey(simpleName)) {
-            if (!authoriseReading(simpleName, READ_MODEL, authorisationModel, securityTokenProvider).isSuccessful()) {
-                return fieldsContainer.getFieldDefinitions().stream()
+            final var rootAuthorised = authoriseReading(simpleName, READ_MODEL, authorisationModel, securityTokenProvider).isSuccessful();
+            return fieldsContainer.getFieldDefinitions().stream()
+                .filter(def -> !rootAuthorised
                     // At least one field should be accessible (ID was chosen for that purpose).
                     // Otherwise, the type does not conform to GraphQL spec (and validations in GraphiQL editor become broken).
-                    .filter(def -> ID.equals(def.getName()))
-                    .collect(toList());
-            }
-            else {
-                return fieldsContainer.getFieldDefinitions().stream()
+                    ? ID.equals(def.getName())
                     // Filter out unauthorised properties.
-                    .filter(def -> isPropertyAuthorised(domainTypes.get(simpleName), def.getName()))
-                    .collect(toList());
-            }
+                    : isPropertyAuthorised(domainTypes.get(simpleName), def.getName())
+                )
+                .collect(toList());
         }
         return fieldsContainer.getFieldDefinitions();
     }
