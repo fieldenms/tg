@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.util.LinkedHashSet;
@@ -18,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.getAvailableProperties;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createCustomisableColumns;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createSortingVals;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
@@ -52,9 +52,11 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         // Very similar situation is with Change Columns Width action.
         final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = masterEntity.previouslyRunCentre();
         
-        final List<String> previouslyRunCheckedProperties = EntityQueryCriteriaUtils.getAvailableProperties(root, previouslyRunCentre.getSecondTick().checkedProperties(root));
-        final List<String> previouslyRunUsedProperties = previouslyRunCentre.getSecondTick().usedProperties(root);
-        final List<Pair<String, Ordering>> previouslyRunSortedProperties = previouslyRunCentre.getSecondTick().orderedProperties(root);
+        final List<String> previouslyRunCheckedProperties = getAvailableProperties(root, previouslyRunCentre.getSecondTick().checkedProperties(root));
+        final List<String> previouslyRunUsedProperties = previouslyRunCentre.getSecondTick().usedProperties(root)
+            .stream().filter(previouslyRunCheckedProperties::contains).toList();
+        final List<Pair<String, Ordering>> previouslyRunSortedProperties = previouslyRunCentre.getSecondTick().orderedProperties(root)
+            .stream().filter(pair -> previouslyRunCheckedProperties.contains(pair.getKey())).toList();
         final Class<?> previouslyRunManagedType = previouslyRunCentre.getEnhancer().getManagedType(root);
         
         // provide chosenIds into the action
