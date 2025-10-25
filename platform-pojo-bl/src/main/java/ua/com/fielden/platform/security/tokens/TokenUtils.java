@@ -71,6 +71,7 @@ public class TokenUtils {
                 return Optional.<Result>empty();
             })
             .flatMap(Optional::stream)
+            .filter(res -> !res.isSuccessful())
             .findFirst()
             .orElseGet(Result::successful);
     }
