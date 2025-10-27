@@ -100,6 +100,13 @@ export function isExternalURL(urlAndHostname) {
     return urlAndHostname && urlAndHostname.hostname !== window.location.hostname;
 }
 
+/**
+ * Opens a confirmation dialog for the URL provided in the `urlCheckResult` parameter
+ * and invokes the custom function specified by the `task` parameter.
+ *
+ * @param {Object} urlCheckResult - The object returned by the `canOpenLinkWithoutConfirmation` method.
+ * @param {Function} task - The function to invoke if the confirmation dialog is accepted.
+ */
 export function confirmLinkAndThen(urlCheckResult, task) {
     const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br><pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${urlCheckResult.urlAndHostname.url.href}</pre>`;
     const options = ["Don't show this again for this link", "Don't show this again for this site"];
@@ -169,6 +176,12 @@ export function canOpenLinkWithoutConfirmation(urlString) {
     }
 }
 
+/**
+ * Determines whether the specified link protocol is supported by the TG Platform.
+ *
+ * @param {String} maybeLink - The link to check.
+ * @returns {Boolean} `true` if the link protocol is supported; otherwise, `false`.
+ */
 export function isSupportedLink(maybeLink) {
     return maybeLink.startsWith(MAILTO_PROTOCOL) || SUPPORTED_PROTOCOLS.some(p => maybeLink.startsWith(p + '//'))
 }
