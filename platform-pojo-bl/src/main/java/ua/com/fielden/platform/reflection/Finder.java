@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -833,6 +834,45 @@ public class Finder {
                 .filter(prop -> AbstractEntity.class.isAssignableFrom(prop.getType()))
                 .collect(toImmutableList());
     }
+
+    /// Returns a stream that contains the full paths to `subProp` for each union member that has this property.
+    ///
+    /// @param subProp a simple property name
+    ///
+    public static Stream<String> streamUnionSubProperties(final Class<? extends AbstractUnionEntity> unionType, final CharSequence subProp) {
+        return streamUnionMembersWithSubProperty(unionType, subProp)
+                .map(memberName -> memberName + "." + subProp);
+    }
+
+    /// Returns a stream that contains the names of those union members that have property `subProp`.
+    ///
+    /// By definition, if `subProp` is a common property, the resulting stream contains all union members.
+    ///
+    /// @param subProp a simple property name
+    ///
+    public static Stream<String> streamUnionMembersWithSubProperty(final Class<? extends AbstractUnionEntity> unionType, final CharSequence subProp) {
+        if (subProp.toString().contains(".")) {
+            throw new InvalidArgumentException("[subProp] must be a simple property name. Invalid value: %s".formatted(subProp));
+        }
+
+        // `isPropertyPresent` will not at all identify `id`, and will not take `@DescTitle` into account for `desc`.
+        if (ID.contentEquals(subProp)) {
+            return unionProperties(unionType).stream().map(Field::getName);
+        }
+        else if (DESC.contentEquals(subProp)) {
+            return unionProperties(unionType)
+                    .stream()
+                    .filter(memberField -> hasDescProperty((Class<? extends AbstractEntity<?>>) memberField.getType()))
+                    .map(Field::getName);
+        }
+        else {
+            return unionProperties(unionType)
+                    .stream()
+                    .filter(memberField -> isPropertyPresent(memberField.getType(), subProp.toString()))
+                    .map(Field::getName);
+        }
+    }
+
 
     /// Returns `true` if `prop` is present among `otherProps`.
     /// In the case of property `key`, special care is taken to determine its type.

@@ -19,7 +19,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
-import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 import '/resources/components/postal-lib.js';
@@ -104,7 +104,7 @@ const template = html`
     <slot id="menuItemActions" name="menu-item-action"></slot>
 
     <app-drawer-layout id="drawerPanel" fullbleed on-app-drawer-transitioned="_appDrawerTransitioned">
-        <app-drawer id="drawer" disable-swipe="[[!mobile]]" slot="drawer">
+        <app-drawer id="drawer" disable-swipe="[[!touchEnabled]]" slot="drawer">
             <paper-listbox id="menu" attr-for-selected="data-route" selected="{{route}}" style="height: 100%; overflow: auto;">
                 <slot id="menuItems" name="menu-item"></slot>
             </paper-listbox>
@@ -140,9 +140,9 @@ Polymer({
     is: 'tg-master-menu',
 
     properties: {
-        mobile: {
+        touchEnabled: {
             type: Boolean,
-            value: isMobileApp()
+            value: isTouchEnabled()
         },
         sectionTitle: {
             type: String,
@@ -831,17 +831,14 @@ Polymer({
     },
     
     /**
-     * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
-     * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
-     *
-     * @param section
+     * Returns truthy value (actual embedded master) if the specified 'section' represents a master with master; falsy value otherwise.
      */
     isMasterWithMaster: function (section) {
         if (section && section._element && section._element.masterWithMaster && section._element.$.loader && section._element.$.loader.loadedElement) {
             const embeddedMaster = section._element.$.loader.loadedElement;
-            return true;
+            return embeddedMaster;
         }
-        return false;
+        return null;
     },
 
     /**

@@ -4,7 +4,7 @@ import { TgEntityMasterBehavior, focusEnabledInputIfAny } from '/resources/maste
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEgiMasterBehaviorImpl = {
 
@@ -90,7 +90,7 @@ const TgEgiMasterBehaviorImpl = {
      */
     focusView: function () {
         this.async(() => {
-            if (!isMobileApp()) {
+            if (!isTouchEnabled()) {
                 this._focusFirstInput();
             } else {
                 this._focusPreferredInput();
@@ -131,12 +131,30 @@ const TgEgiMasterBehaviorImpl = {
      * In case of preferred input focusing, the contents of the input gets selected.
      */
     _focusFirstInput: function () {
-        focusEnabledInputIfAny.bind(this)(false, () => {
+        focusEnabledInputIfAny.bind(this)(false, null, null, () => {
             const focusableParent = getParentAnd(this, parent => parent.matches(FOCUSABLE_ELEMENTS_SELECTOR));
             if (focusableParent) {
                 focusableParent.focus();
             }
         });
+    },
+
+    /**
+     * Avoid caching of parent node (dialog) for EGI masters.
+     */
+    _cacheParentNode: function () {},
+
+    /**
+     * Avoid removing of cached parent node (dialog) for EGI masters.
+     */
+    _removeParentNodeFromCache: function () {},
+
+    /**
+     * A custom condition of whether non-erroneous/preferred first enabled input should be focused on CANCEL/SAVE.
+     * In EGI master we always want to focus first enabled input, because editing is intended for persisted entities.
+     */
+    shouldFocusEnabledInput: function () {
+        return true;
     },
 
     getEditors: function () {

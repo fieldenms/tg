@@ -85,17 +85,16 @@ public class ActivatableEntityRetrospectionHelper {
         final var propType = EntityMetadata.determinePropType(entityType, prop);
         // A property of an activatable entity type is considered "activatable" iff:
         // 1. Property type is an activatable entity or a union entity.
-        // 2. @SkipEntityExistsValidation is absent or is present with skipActiveOnly == true.
+        // 2. @SkipEntityExistsValidation is absent or is present with skipActiveOnly == false.
         // 3. Property is not calculated (both persistent and plain are applicable).
         //
         // Note 1: There is also @SkipActivatableTracking,
         //         but it does not affect the activatable nature of the property -- only the counting of references.
         // Note 2: @CritOnly properties (mainly relevant for SINGLE) in the context of persistent entity are considered activatable.
         //         This is to support generative entities (those implementing [WithCreatedByUser] and companion implementing [IGenerator]).
-        // TODO Properties whose type is a union entity type without activatable members should not be activatable.
-        //      This change would serve as an optimisation, without changing semantics, because activatability of union-typed properties
-        //      can be determined only from their actual values.
-        if ((isActivatableEntityType(propType) || isUnionEntityType(propType)) && !isPropertyCalculated(entityType, propName)) {
+        // Note 3: Properties whose type is a union entity type without activatable members are not activatable.
+        //         Activatability of union-typed properties can be determined only from their actual values.
+        if (isActivatableEntityOrUnionType(propType) && !isPropertyCalculated(entityType, propName)) {
             final var seevAnnotation = getAnnotation(prop, SkipEntityExistsValidation.class);
             final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();
             return !skipActiveOnly;

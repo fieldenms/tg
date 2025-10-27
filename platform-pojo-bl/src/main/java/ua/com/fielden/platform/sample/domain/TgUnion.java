@@ -1,12 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.EntityTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 
 /**
  * Union entity type for web tests.
@@ -15,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @EntityTitle("TG Union")
+@KeyTitle("Entity With Union Key")
 // @DescTitle should not be used here -- description is either common property from union types or can be present individually there; description cannot be present on union type itself
 @CompanionObject(TgUnionCo.class)
 public class TgUnion extends AbstractUnionEntity {

@@ -81,6 +81,8 @@ const customInputTemplate = html`
             checked="[[_isBooleanChecked(_editingValue)]]"
             disabled$="[[_disabled]]"
             on-change="_onChange"
+            on-focus="_onFocus"
+            on-blur="_outFocus"
             tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]"><span class="label truncate">[[propTitle]]</span></paper-checkbox>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
