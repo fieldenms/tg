@@ -89,10 +89,8 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                         this._attachmentUri = attachment.attachmentUri;
                         if (isSupportedLink(this._attachmentUri)) {
                             this._linkCheckRes = canOpenLinkWithoutConfirmation(this._attachmentUri);
-                            if (this._linkCheckRes) {
-                                if (!this._linkCheckRes.canOpenWithoutConfirmation) {
-                                    this._wasConfirmed = false;
-                                }
+                            if (this._linkCheckRes && !this._linkCheckRes.canOpenWithoutConfirmation) {
+                                this._wasConfirmed = false;
                             }
                         }
                     }
@@ -133,17 +131,32 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                     if (this._linkCheckRes) {
                         if (this._wasConfirmed) {
                             if (this._loadingError) {
-                                //The link does not represents image that's why loadingError happened.
+                                //The link does not represent an image, which caused the loadingError.
+                                //Open the link instead.
                                 openLink(this._attachmentUri, this._linkCheckRes.target || "_blank");
                             }
                             //Otherwise image should be visible
-                        } else { //If link is not trusted yet then confirm it first.
-                            const afterImageLoadListener = e => {
+                        } else { //If the link is not yet trusted, confirm it first.
+                            // After the link becomes trusted, opening it as an image may cause an error,
+                            // which means the link does not represent an image.
+                            // In that case, the link should be opened as a regular one.
+                            const afterImageErrorListener = e => {
                                 openLink(this._attachmentUri, this._linkCheckRes.target || "_blank");
-                                this.$.imageLoader.removeEventListener("error", afterImageLoadListener);
+                                removeImageListeners();
                             };
-                            this.$.imageLoader.addEventListener("error", afterImageLoadListener);
+                            const afterImageLoadListener = e => {
+                                removeImageListeners();
+                            };
+                            const removeImageListeners = () => {
+                                this.$.imageLoader.removeEventListener("error", afterImageErrorListener);
+                                this.$.imageLoader.removeEventListener("load", afterImageLoadListener);
+                            }
+                            this.$.imageLoader.addEventListener("error", afterImageErrorListener);
+                            this.$.imageLoader.addEventListener("load", afterImageLoadListener);
                             confirmLinkAndThen(this._linkCheckRes, opt => {
+                                // Mark the attachment as confirmed if the user accepts it.
+                                // The next assignment will trigger recalculation of the image URI and, consequently, image loading.
+                                // Image loading may fail, indicating that the link should be opened as a regular one in the image loading error handler.
                                 this._wasConfirmed = true;
                             });
                         }
