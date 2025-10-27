@@ -42,7 +42,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
         final DomElement altImage = new DomElement("div")
                 .style("background-color: white")
                 .clazz("fit", "layout vertical center-center")
-                .attr("hidden$", "[[_isImageVisible(_loadingError, _currBindingEntity)]]")
+                .attr("hidden$", "[[_isImageVisible(_loadingError, _attachmentUri)]]")
                 .add(messageElement, downloadAction);
         final DomElement container = new DomElement("div")
                 .attr("slot", "property-editors")
@@ -115,7 +115,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                     return "Downloads the attachment.";
                 };
                 self._isImageVisible = function (_loadingError, _attachmentUri) {
-                    return !_loadingError && _attachmentUri;
+                    return !!(!_loadingError && _attachmentUri);
                 }.bind(self);
                 self._getAltImageText = function (_linkCheckRes, _wasConfirmed) {
                     if (_linkCheckRes) {
