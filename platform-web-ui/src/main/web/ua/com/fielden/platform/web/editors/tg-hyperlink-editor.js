@@ -7,7 +7,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 
-import { checkLinkAndOpen, isSupportedLink, ERR_UNSUPPORTED_PROTOCOL } from '/resources/components/tg-link-opener.js';
+import { checkLinkAndOpen, isSupportedLink, MAILTO_PROTOCOL, ERR_UNSUPPORTED_PROTOCOL } from '/resources/components/tg-link-opener.js';
 
 const additionalTemplate = html`
     <style>

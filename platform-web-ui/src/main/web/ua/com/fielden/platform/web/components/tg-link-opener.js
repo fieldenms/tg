@@ -12,11 +12,11 @@ const confirmationDialog = new TgConfirmationDialog();
 // This date format is used to save date information for saved link
 const DATE_FORMAT_FOR_LINK_OPENER = 'YYYY MM DD';
 // 'mailto:' protocol, which is supported in TG links.
-const MAILTO_PROTOCOL = 'mailto:';
-// Protocols, which are supported in TG links (besides mailto: above).
-const SUPPORTED_PROTOCOLS = ['https:', 'http:', 'ftp:', 'ftps:'];
+export const MAILTO_PROTOCOL = 'mailto:';
 // An error indicating unsupported protocol usage in links.
 export const ERR_UNSUPPORTED_PROTOCOL = 'One of http, https, ftp, ftps or mailto hyperlink protocols is expected.';
+// Protocols, which are supported in TG links (besides mailto: above).
+const SUPPORTED_PROTOCOLS = ['https:', 'http:', 'ftp:', 'ftps:'];
 
 /**
  * Loads a specified resource into new or existing browsing context (see https://developer.mozilla.org/en-US/docs/Web/API/Window/open).
