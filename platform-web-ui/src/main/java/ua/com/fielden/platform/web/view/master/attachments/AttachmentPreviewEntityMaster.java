@@ -151,12 +151,12 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                                 this.$.imageLoader.removeEventListener("error", afterImageErrorListener);
                                 this.$.imageLoader.removeEventListener("load", afterImageLoadListener);
                             }
-                            this.$.imageLoader.addEventListener("error", afterImageErrorListener);
-                            this.$.imageLoader.addEventListener("load", afterImageLoadListener);
                             confirmLinkAndThen(this._linkCheckRes, opt => {
                                 // Mark the attachment as confirmed if the user accepts it.
                                 // The next assignment will trigger recalculation of the image URI and, consequently, image loading.
                                 // Image loading may fail, indicating that the link should be opened as a regular one in the image loading error handler.
+                                this.$.imageLoader.addEventListener("error", afterImageErrorListener);
+                                this.$.imageLoader.addEventListener("load", afterImageLoadListener);
                                 this._wasConfirmed = true;
                             });
                         }
