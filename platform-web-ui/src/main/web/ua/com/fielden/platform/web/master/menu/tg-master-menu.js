@@ -479,16 +479,18 @@ Polymer({
 
     //Drag from behavior implementation
     startDrag: function (dragEvent) {
-        this._menuItemToDrag = dragEvent.target.parentElement;
-        this.async(() => {
-            if (this._menuItemToDrag) {
-                this._menuItemToDrag.classList.add("dragging");
-                this.$.menu.classList.add("dragging");
-            }
-        }, 1);
-        dragEvent.dataTransfer.effectAllowed = "copyMove";
-        dragEvent.dataTransfer.setDragImage(this._menuItemToDrag, 12, 24);
-        hideTooltip();
+        if (dragEvent.target.nodeType === Node.ELEMENT_NODE && dragEvent.target.getAttribute("draggable") === "true") {
+            this._menuItemToDrag = dragEvent.target.parentElement;
+            this.async(() => {
+                if (this._menuItemToDrag) {
+                    this._menuItemToDrag.classList.add("dragging");
+                    this.$.menu.classList.add("dragging");
+                }
+            }, 1);
+            dragEvent.dataTransfer.effectAllowed = "copyMove";
+            dragEvent.dataTransfer.setDragImage(this._menuItemToDrag, 12, 24);
+            hideTooltip();
+        }
     },
 
     endDrag: function (dragEvent) {
