@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.utils.CollectionUtil;
@@ -56,7 +55,7 @@ public abstract class AbstractSingleOperand2 implements ToString.IFormattable {
         } else if (nonNullTypes.contains(STRING_PROP_TYPE)) {
             return STRING_PROP_TYPE;
         } else {
-            throw new EqlException("Can't determine type with highest precedence among {%s}".formatted(CollectionUtil.toString(nonNullTypes, ", ")));
+            throw new EqlStage2ProcessingException("Can't determine type with highest precedence among {%s}".formatted(CollectionUtil.toString(nonNullTypes, ", ")));
         }
     }
 

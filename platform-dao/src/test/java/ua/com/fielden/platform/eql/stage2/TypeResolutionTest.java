@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage2;
 
 import org.junit.Test;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgWagon;
@@ -82,7 +82,7 @@ public class TypeResolutionTest extends EqlStage2TestCase {
                 .modelAsEntity(BOGIE);
 
         assertThatThrownBy(() -> qry(query))
-                .isInstanceOf(EqlException.class)
+                .isInstanceOf(EqlStage2ProcessingException.class)
                 .hasMessageStartingWith("Can't determine type with highest precedence");
     }
 
