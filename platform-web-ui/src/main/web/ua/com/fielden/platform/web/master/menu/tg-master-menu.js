@@ -796,7 +796,7 @@ Polymer({
 
     _routeChanged: function (newRoute, oldRoute) {
         if (this.route !== this.sectionRoute) {
-            if (this.sectionRoute !== undefined) {
+            if (this.sectionRoute !== undefined && newRoute !== undefined) {
                 const currentSection = this.currentSection();
                 if (!currentSection) {
                     throw 'Compound master\'s menu item section [' + this.sectionRoute + '] does not exist.';
