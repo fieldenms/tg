@@ -122,18 +122,44 @@ export class TgMultilineTextEditor extends TgEditor {
         const _prevValueChanged = this.decoratedInput()._valueChanged.bind(this.decoratedInput());
         this.decoratedInput()._valueChanged = (newValue, oldValue) => {
             if (this.decoratedInput().bindValue === newValue) {
-                setTimeout(() => {
-                    this.decoratedInput().selectionStart = this.decoratedInput().selectionEnd = 0;
-                }, 0);
-                
+                this.decoratedInput().selectionStart = this.decoratedInput().selectionEnd = 0;
             }
             _prevValueChanged(newValue, oldValue);
         };
     }
 
+    focusDecoratedInput() {
+        this.decoratedInput().textarea.focus();
+    }
+
+    get availableScanSeparators() {
+        return ['\n', ' ', '\t'];
+        
+    }
+
+    get selectionStart() {
+        return this.decoratedInput().selectionStart;
+    }
+
+    set selectionStart(where) {
+        setTimeout(() => {
+            this.decoratedInput().selectionStart = where;
+        }, 1);
+    }
+
+    get selectionEnd() {
+        return this.decoratedInput().selectionEnd;
+    }
+
+    set selectionEnd(where) {
+        setTimeout(() => {
+            this.decoratedInput().selectionEnd = where;
+        }, 1);
+    }
+
     _labelDownEventHandler (event) {
         if (this.shadowRoot.activeElement !== this.decoratedInput() && !this._disabled) {
-            this.decoratedInput().textarea.focus();
+            this.focusDecoratedInput();
         }
         tearDownEvent(event);
     }
