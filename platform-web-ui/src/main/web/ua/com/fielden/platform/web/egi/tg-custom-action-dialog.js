@@ -198,7 +198,7 @@ const template = html`
     </div>
     <div id="dialogBody" class="relative flex layout vertical">
         <div id="loadingPanel" class="fit layout horizontal">
-            <div style="margin: auto; padding: 20px" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
+            <div style="margin: auto; padding: 20px; text-align: center;" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
         </div>
         <div id="dialogLoader" class="flex layout horizontal">
             <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
