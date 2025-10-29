@@ -479,6 +479,8 @@ Polymer({
 
     //Drag from behavior implementation
     startDrag: function (dragEvent) {
+        // Make sure the drag start event is triggered only on the draggable icon of the menu item.
+        // This prevents dragging from other elements in the compound entity master.
         if (dragEvent.target.nodeType === Node.ELEMENT_NODE && dragEvent.target.getAttribute("draggable") === "true") {
             this._menuItemToDrag = dragEvent.target.parentElement;
             this.async(() => {
@@ -796,6 +798,10 @@ Polymer({
 
     _routeChanged: function (newRoute, oldRoute) {
         if (this.route !== this.sectionRoute) {
+            // Make sure the following logic is triggered only when the route changes 
+            // from a section with a defined name to another defined section.
+            // This should prevent unnecessary checks when closing an entity master 
+            // for a persisted entity or canceling a compound entity master for a new entity.
             if (this.sectionRoute !== undefined && newRoute !== undefined) {
                 const currentSection = this.currentSection();
                 if (!currentSection) {
