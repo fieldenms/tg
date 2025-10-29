@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -37,8 +36,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
-import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableReference;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 
 /// Various delete operations that are used by entity companions.
 /// The main purpose of this class is to be more like a mixin that provides an implementation of delete operations.
@@ -193,7 +192,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     public int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> parameters) {
         requireNonNull(model, "model");
 
-        if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
+        if (isActivatableEntityType(entityType)) {
             return defaultDelete(model, parameters);
         } else {
             return entityBatchDeleteFactory.create(session).deleteEntities(model, parameters);
@@ -226,7 +225,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             throw new EntityCompanionException("No entity ids have been provided for deletion.");
         }
 
-        if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
+        if (isActivatableEntityType(entityType)) {
             return defaultDelete(select(entityType).where().prop(propName).in().values(entitiesIds).model());
         } else {
             return batchDeleteByIdsOp.get().deleteEntities(propName, entitiesIds);

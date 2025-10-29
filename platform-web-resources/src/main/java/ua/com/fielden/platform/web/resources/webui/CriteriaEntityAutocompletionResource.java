@@ -1,24 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.entity.IContextDecomposer.AUTOCOMPLETE_ACTIVE_ONLY_KEY;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
-import static ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource.prepSearchString;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
@@ -26,7 +7,6 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -54,6 +34,23 @@ import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.entity.IContextDecomposer.AUTOCOMPLETE_ACTIVE_ONLY_KEY;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityOrUnionType;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource.prepSearchString;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 
 /**
  * The web resource for entity autocompletion serves as a back-end mechanism of searching entities by search strings and using additional parameters.
@@ -199,7 +196,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final Map<String, Object> customObject = linkedMapOf(t2(LOAD_MORE_DATA_KEY, searchStringAndDataPageNo._2 > 1));
 
             // in selection criteria autocompleter (single / multi), find out whether it is for activatable property and not explicitly hidden
-            if (isActivatableEntityType(propType) && !centre.isActiveOnlyActionHidden(origPropName)) {
+            if (isActivatableEntityOrUnionType(propType) && !centre.isActiveOnlyActionHidden(origPropName)) {
                 // determine data from client-side for further processing
                 final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY)); // empty only for first time loading (or for non-activatables)
                 final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY)); // non-empty only for 'active only' button tap (always with 'true' value inside)
