@@ -421,7 +421,7 @@ export const localStorageKeyForCentre = function (miType, subject) {
 /**
  * Creates simple dummy entity to bind it to entity master
  */
-export const createDummyBindingEntity = function (customPropObject, propDefinition) {
+export const createStubBindingEntity = function (typeName, customPropObject, propDefinition) {
     const reflector = new TgReflector();
     const fullEntityType = reflector.getEntityPrototype();
     fullEntityType.compoundOpenerType = () => null;
@@ -460,7 +460,9 @@ export const createDummyBindingEntity = function (customPropObject, propDefiniti
         }
         return bindingView[prop];
     };
-    const bindingViewType = reflector.getEntityPrototype();
+
+    const EntityType = reflector._getEntityTypePrototype();
+    const bindingViewType = new EntityType({key: typeName});
     bindingViewType.prop = propDefinition;
     bindingView._type = bindingViewType;
     return bindingView;

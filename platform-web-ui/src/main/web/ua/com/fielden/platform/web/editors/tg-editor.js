@@ -23,6 +23,8 @@ let lastEditor = null;
 
 let qrCodeScanner = null;
 
+const separators = {' ': /\\s/g, '\t': /\\t/g, '\n': /\\n/g};
+
 const timeoutCheckIcon = function (editor) {
     if (checkIconTimer) {
         clearTimeout(checkIconTimer);
@@ -692,6 +694,52 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         return this.$.decorator;
     }
 
+    focusDecoratedInput() {
+        this.decoratedInput().focus();
+    }
+
+    selectDecoratedInput() {
+        this.decoratedInput().select();
+    }
+
+    replaceText(text, start, end) {
+        const adjustedStart = start || 0;
+        const adjustedEnd = end || this._editingValue.length;
+        this._editingValue = this._editingValue.substring(0, adjustedStart) + text + this._editingValue.substring(adjustedEnd);
+        this.selectionStart = this.selectionEnd = adjustedStart + text.length;
+    }
+
+    insertText(text, where) {
+        if (typeof where === 'undefined') {
+            this._editingValue += text;
+            this.selectionStart = this.selectionEnd = this._editingValue.length + text.length;
+        } else {
+            this._editingValue = this._editingValue.substring(0, where) + text + this._editingValue.substring(where);
+            this.selectionStart = this.selectionEnd = where + text.length;
+        }
+    }
+
+    get selectionStart() {
+        return this.decoratedInput().selectionStart;
+    }
+
+    set selectionStart(where) {
+        this.decoratedInput().selectionStart = where;
+    }
+
+    get selectionEnd() {
+        return this.decoratedInput().selectionEnd;
+    }
+
+    set selectionEnd(where) {
+        this.decoratedInput().selectionEnd = where;
+    }
+
+    get availableScanSeparators() {
+        return [' ', '\t'];
+        
+    }
+
     _handleCopy (event) {
         if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
             this.commitIfChanged();
@@ -972,8 +1020,8 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         // Select text inside editor and focus it, if it is enabled and not yet focused.
         // Selection of the text on-focus is consistent with on-tap action in the editor or focus gain logic when tabbing between editors.
         if (this.shadowRoot.activeElement !== this.decoratedInput() && !this._disabled) {
-            this.decoratedInput().select();
-            this.decoratedInput().focus();
+            this.selectDecoratedInput();
+            this.focusDecoratedInput();
         }
         // Need to tear down the event for the editor to remain focused.
         tearDownEvent(event);
@@ -1001,7 +1049,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         if (qrCodeScanner) {
             qrCodeScanner.toaster = this.toaster;
             qrCodeScanner.closeCallback = this._closeScanner(this.focused);
-            qrCodeScanner.applyCallback = this._applyScannerValue.bind(this);
+            qrCodeScanner.applyCallback = this._applyScannerValue(this.focused).bind(this);
             qrCodeScanner.open();
         } else {
             throw new Error("QR code scanner is not present in DOM. Please add it with 'qrScanner' id");
@@ -1015,16 +1063,43 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                 qrCodeScanner.closeCallback = null;
                 qrCodeScanner.applyCallback = null;
                 if (wasFocused) {
-                    this._labelDownEventHandler();
+                    this.focusDecoratedInput();
                 }
             }
         }
     }
 
-    _applyScannerValue (value) {
-        this._editingValue = value;
-        this._checkBuiltInValidation();
-        this.commitIfChanged();
+    _applyScannerValue(focused) {
+        return (value, separator) => {
+            let adjustedSeparator = separator && separator.trim();
+            const availableSepartors = this.availableScanSeparators;
+            availableSepartors.forEach(s => {
+                adjustedSeparator = adjustedSeparator.replace(separators[s], s);
+            });
+            if (!adjustedSeparator || !this._editingValue.trim()) {
+                this.replaceText(value);//If there is no separator specified then just replace all text in editor
+            } else if (!focused) {// If separator was specified but editor wasn't focused then append separator with scanned text to the end of editor's text.
+                this.insertText(adjustedSeparator + value); 
+            } else { //If editor was focused
+                const selectionStart = this.selectionStart;
+                const selectionEnd = this.selectionEnd;
+                if (selectionStart === selectionEnd) { //But there was no selection then insert text at the cursor position
+                    if (selectionStart === 0) {//If cursor was at the begining then do not prepend separator to the scanned text
+                        this.insertText(value, 0);
+                    } else { //Otherwise prepend separator to the scanned text and then insert text at cursor position.
+                        this.insertText(adjustedSeparator + value, selectionStart);
+                    }
+                } else { //If some part of editor's text was selected
+                    if (selectionStart === 0) {//Then replace it with new scanned text, but without separator if selection starts from the begining of editr's text
+                        this.replaceText(value, 0, selectionEnd);
+                    } else {//Otherwise replace all selected text with prepended separator to the scanned text.
+                        this.replaceText(adjustedSeparator + value, selectionStart, selectionEnd);
+                    }
+                }
+            }
+            this._checkBuiltInValidation();
+            this.commitIfChanged();
+        }
     }
 
     _canScan (hideQrCodeScanner, noLabelFloat, entity, propertyName) {

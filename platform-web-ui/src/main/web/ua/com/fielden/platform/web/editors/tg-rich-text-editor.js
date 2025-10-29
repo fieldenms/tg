@@ -169,6 +169,23 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
         return {coreText: '', 'formattedText': strValue};
     }
 
+    focusDecoratedInput() {
+        this.decoratedInput().focusInput();
+    }
+
+    get availableScanSeparators() {
+        return ['\n', ' ', '\t'];
+        
+    }
+
+    replaceText(text, start, end) {
+        this.decoratedInput().replaceText(text, start, end);
+    }
+
+    insertText(text, where) {
+        this.decoratedInput().insertText(text, where);
+    }
+
      /**
      * Overridden to calculate union value type title on each arrival of binding entity.
      */
@@ -301,7 +318,7 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
 
     _labelDownEventHandler (event) {
         if (!this.decoratedInput().shadowRoot.activeElement && !this._disabled) {
-            this.decoratedInput().focusInput();
+            this.focusDecoratedInput();
         }
         tearDownEvent(event);
     }

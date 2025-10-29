@@ -14,31 +14,23 @@ import '/resources/components/tg-dropdown-switch.js';
 import '/resources/editors/tg-singleline-text-editor.js';
 import '/resources/editors/tg-boolean-editor.js';
 
-import { tearDownEvent, localStorageKey, createDummyBindingEntity, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, localStorageKey, createStubBindingEntity, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
 
 const SCAN_AND_APPLY = 'scanAndApply';
 const CAMERA_ID = 'cameraId';
+const SEPARATOR = 'scanSeparator';
 
-function calculateAspectRation(width, height) {
-    const portrait = window.matchMedia('(orientation: portrait)').matches;
-    if (portrait && isMobileApp()) {
-        return width === 0 ? 1 : height/width;
-    } else {
-        return height === 0 ? 1 : width/height; 
-    }
+const DEFAULT_SCANNER_SIZE = 400;
+
+function calculateAspectRatio(width, height) {
+    return width/height;
 }
 
 
 function qrboxFunction(viewfinderWidth, viewfinderHeight) {
-    const width = parseInt(this._videoFeedElement.style.width);
-    const height = parseInt(this._videoFeedElement.style.height);
-    if (width !== viewfinderWidth || height !== viewfinderHeight) {
-        this._videoFeedElement.style.width = viewfinderWidth + 'px';
-        this._videoFeedElement.style.height = viewfinderHeight + 'px';
-    } 
     const minEdgePercentage = 0.7; // 70%
     const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
     const qrboxSize = Math.min(Math.floor(minEdgeSize * minEdgePercentage), 250);
@@ -66,8 +58,20 @@ function saveCamera(camera) {
     }
 }
 
+function getSeparator() {
+    return localStorage.getItem(localStorageKey(SEPARATOR)) || '';
+}
+
+function saveSeparator(separator) {
+    if (separator) {
+        localStorage.setItem(localStorageKey(SEPARATOR), separator);
+    } else {
+        localStorage.removeItem(localStorageKey(SEPARATOR));
+    }
+}
+
 const template = html`
-    <style include="iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <style>
         paper-dialog {
             overflow: hidden;
@@ -139,17 +143,22 @@ const template = html`
             <div id="cameraLoadingView" hidden$="[[!_showCameraLoadingView]]">[[_loadingMsg]]</div>
         </div>
         <div id="controls" class="no-padding">
-            <tg-dropdown-switch id="camearSelector" class ="editor" views="[[_cameras]]" dropdown-button-tooltip-text="Select camera" raised make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_changeCamera"></tg-dropdown-switch>
+            <tg-dropdown-switch id="cameraSelector" class ="editor" style="padding-bottom: 12px" views="[[_cameras]]" dropdown-button-tooltip-text="Select camera" raised make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_changeCamera"></tg-dropdown-switch>
             <tg-singleline-text-editor id="textEditor" class ="editor" entity="[[_entity]]" property-name="scannedValue" prop-title="Scanned Value" 
                     prop-desc="Contains text scanned from a QR or barcode" current-state="EDIT" 
                     validation-callback="[[_validate]]" toaster="[[toaster]]" hide-qr-code-scanner></tg-singleline-text-editor>
-            <tg-boolean-editor id="scanAndApplyEditor" class ="editor" entity="[[_entity]]" property-name="scanAndApply" prop-title="Scan & apply?" 
+            <div class="layout horizontal justified">
+                <tg-boolean-editor id="scanAndApplyEditor" class ="editor flex" style="margin-right:20px;" entity="[[_entity]]" property-name="scanAndApply" prop-title="Scan & apply?" 
                         prop-desc="Determines whether the scanned value should be applied immediately or not" current-state="EDIT" 
                         validation-callback="[[_validate]]" toaster="[[toaster]]"></tg-boolean-editor>
+                <tg-singleline-text-editor id="separatorEditor" class ="editor flex" entity="[[_entity]]" property-name="separator" prop-title="Append w/ Separator (\\s, \\n, \\t)"
+                        prop-desc="Separator to prepend to the scanned value.<br>A comma or a semicolon is good choice.<br>Use \\s for a space, \\n for a new line, \\t for a tab." current-state="EDIT"
+                        validation-callback="[[_validate]]" toaster="[[toaster]]" hide-qr-code-scanner></tg-singleline-text-editor>
+            </div>
             <div class="buttons">
                 <paper-button raised roll="button" tooltip-text="Close dialog" on-tap="_cancelScan"><span>CLOSE</span></paper-button>
                 <paper-button raised roll="button" tooltip-text="Auto-restart scanner" on-tap="_scanAgain"><span>SCAN</span></paper-button>
-                <paper-button raised roll="button" tooltip-text="Accept scanned value" class="blue" on-tap="_applyScane"><span>APPLY</span></paper-button>
+                <paper-button raised roll="button" tooltip-text="Accept scanned value" class="blue" on-tap="_applyScan"><span>APPLY</span></paper-button>
             </div>
         </div>
     </paper-dialog>`; 
@@ -185,6 +194,12 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                 value: false
             },
 
+            //Indicates whether this qr code scanner can be closed.
+            _canClose: {
+                type: Boolean,
+                value: false
+            },
+
             //Message displayed when _showCameraLoadingView property is true (i.e. when camera loading view is visible)
             _loadingMsg: String,
 
@@ -201,16 +216,17 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
     constructor() {
         super();
         this._reflector = new TgReflector();
-        this._entity = createDummyBindingEntity(
+        this._entity = createStubBindingEntity('QrCodeScannerEntity',
             {'scannedValue': {value: '', editable: false},
-             'scanAndApply': {value: false, editable: true}},
+             'scanAndApply': {value: false, editable: true},
+             'separator': {value: '', editable: true}},
              (name) => {
                 return {
-                    type: () => name === 'scannedValue' ? 'string' : 'boolean'
+                    type: () => name === 'scanAndApply' ? 'boolean' : 'string'
                 }
             }
         );
-        this._validate = function () {};
+        this._validate = () => {};
         this.addEventListener('addon-attached', this._onAddonAttached.bind(this));
     }
 
@@ -248,27 +264,35 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             const scannerStyles = window.getComputedStyle(this.$.qrCodeScanner);
             const dims = isMobileApp() ? 
                     {width: windowWidth, height: Math.max(0, windowHeight - controlDimension.height)} :
-                    {width: Math.min(parseInt(scannerStyles.maxWidth), 600), height: Math.max(0, Math.min(parseInt(scannerStyles.maxHeight) - controlDimension.height, 600))};
+                    {width: Math.min(parseInt(scannerStyles.maxWidth), DEFAULT_SCANNER_SIZE), height: Math.max(0, Math.min(parseInt(scannerStyles.maxHeight) - controlDimension.height, DEFAULT_SCANNER_SIZE))};
             this._videoFeedElement.style.width = dims.width + 'px';
             this._videoFeedElement.style.height = dims.height + 'px';
             oldRefit();
-
         }
+        // This listener is needed to close the camera when the user switches to another page.  
+        // The user can start the camera again upon returning to this page and pressing "SCAN".
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                this._qrCodeScannerResized(this.$.qrCodeScanner);
+            } 
+        });
     }
 
     open() {
         if (this._scanner) {
             this._resetState();
-            this.$.scanAndApplyEditor._editingValue = localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) || 'false';
-            this.$.scanAndApplyEditor.commitIfChanged();
             this.$.qrCodeScanner.open();
         } else {
-            this.toaster && this.toaster.openToastForError('Scanner error', 'Please specify element for camera feed inside tg-qr-code-scanner with slot attribute equal to "scanner"', true);
+            this._showError('Scanner error', 'Please specify element for camera feed inside tg-qr-code-scanner with slot attribute equal to "scanner"');
         }
     }
 
     get scannedText() {
         return this._entity['scannedValue'] ? this._entity['scannedValue'] : '';
+    }
+
+    get separator() {
+        return this._entity['separator'] ? this._entity['separator'] : '';
     }
 
     _changeCamera(e) {
@@ -286,7 +310,7 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                     const width = parseInt(this._videoFeedElement.style.width);
                     const height = parseInt(this._videoFeedElement.style.height);
                     stopPromise && stopPromise.then(() => {
-                        this._startCamera(width, height, calculateAspectRation(width, height));
+                        this._startCamera(width, height, calculateAspectRatio(width, height));
                     });
                 } else {
                     setTimeout(() => this._changeCamera(e), 100);
@@ -306,17 +330,16 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
                  */
                 if (devices && devices.length) {
                     this._cameras = devices.map((device, idx) => {return {index: idx, id: device.id, title: device.label, desc: device.label};});
-                    this.$.camearSelector.viewIndex = getCameraIndex(this._cameras);
+                    this.$.cameraSelector.viewIndex = getCameraIndex(this._cameras);
                     const width = parseInt(this._videoFeedElement.style.width);
                     const height = parseInt(this._videoFeedElement.style.height);
-                    this._startCamera(width, height, calculateAspectRation(width, height));
+                    this._startCamera(width, height, calculateAspectRatio(width, height));
                 } else {
-                    this.toaster && this.toaster.openToastForError('No cammera error', 'There is no cameras to scan QR or Bar code', true);
+                    this._showError('No cammera error', 'There is no cameras to scan QR or Bar code');
                 }
             }).catch(err => {
-                this.toaster && this.toaster.openToastForError('Camera error', err, true);
+                this._showError('Camera error', err);
             });
-            
         }
     }
 
@@ -325,22 +348,29 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && this._scanner.isScanning) {
                 this._scanner.stop().then(() => {
                     this._showBlockingPane("Tap SCAN, to start scanning");
+                    this._canClose = true;
                 });
         }
     }
 
     _startCamera(width, height, aspectRatio) {
         if (qrboxFunction.bind(this)(width, height).width < 50) {
-            this.toaster && this.toaster.openToastForError('Camera error', 'The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.', true);
+            this._showError('Camera error', 'The size of the scanner box is less than 50px. Please adjust your camera to make the video feed area larger.');
         } else if (this._scanner && this._cameras && this._cameras.length > 0 && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && !this._scanner.isScanning) {
             this._showBlockingPane("Loading...");
-            this._scanner.start(this._cameras[this.$.camearSelector.viewIndex].id,  { fps: 10, aspectRatio: aspectRatio, qrbox: qrboxFunction.bind(this) },
+            this._scanner.start(this._cameras[this.$.cameraSelector.viewIndex].id,  { fps: 10, aspectRatio: aspectRatio, qrbox: qrboxFunction.bind(this) },
                 this._successfulScan.bind(this), this._faildScan.bind(this)
             ).then(() => {
+                this._scanner.applyVideoConstraints({
+                    width: this._videoFeedElement.clientWidth,
+                    height: this._videoFeedElement.clientHeight
+                });
                 this._hideBlockingPane();
             }).catch((err) => {
-                this.toaster && this.toaster.openToastForError('Camera error', err, true);
+                this._showError('Camera error', err);
             });
+        } else {
+            this._showError("Camera error", "Could not start camera");
         }
     }
 
@@ -349,13 +379,19 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
         this._showCameraLoadingView = true;
     }
 
+    _showError(shortMsg, extMsg) {
+        this.toaster && this.toaster.openToastForError(shortMsg, extMsg.message || extMsg, true);
+        this._canClose = true;
+        this._showBlockingPane(extMsg.message || extMsg);
+    } 
+
     _hideBlockingPane() {
         this._showCameraLoadingView = false;
     }
 
     _qrCodeScannerClosed(e) {
         if (e.target === this.$.qrCodeScanner) {
-            if (this._scanner.isScanning) {
+            if (this._scanner && this._scanner.isScanning) {
                 this._scanner.stop();
             }
             if (this.closeCallback) {
@@ -367,16 +403,23 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
     _successfulScan (decodedText, decodedResult) {
         this.$.textEditor.assignConcreteValue(decodedText, this._reflector.tg_convert.bind(this._reflector));
         this.$.textEditor.commitIfChanged();
-        if (this._entity['scanAndApply']) {
-            this._applyScane();
-        } else if (this._scanner.isScanning) {
+        if (this._scanner.isScanning) {
             this._scanner.pause(true);
+            if (this._entity['scanAndApply']) {
+                this._applyScan();
+            }
         }
     }
 
     _resetState() {
         this.$.textEditor.assignConcreteValue('', this._reflector.tg_convert.bind(this._reflector));
         this.$.textEditor.commitIfChanged();
+        this.$.scanAndApplyEditor.assignConcreteValue(localStorage.getItem(localStorageKey(SCAN_AND_APPLY)) === 'true' || false, this._reflector.tg_convert.bind(this._reflector));
+        this.$.scanAndApplyEditor.commitIfChanged();
+        this.$.separatorEditor.assignConcreteValue(getSeparator(), this._reflector.tg_convert.bind(this._reflector));
+        this.$.separatorEditor.commitIfChanged();
+        this._canClose = false;
+        this._hideBlockingPane();
     }
 
     _scanAgain(e) {
@@ -384,25 +427,29 @@ class TgQrCodeScanner extends mixinBehaviors([TgTooltipBehavior], PolymerElement
             if (!this._scanner.isScanning) {
                 const width = parseInt(this._videoFeedElement.style.width);
                 const height = parseInt(this._videoFeedElement.style.height);
-                this._startCamera(width, height, calculateAspectRation(width, height));
+                this._canClose = false;
+                this._startCamera(width, height, calculateAspectRatio(width, height));
             } else if (this._scanner.stateManagerProxy.isPaused()) {
+                this._canClose = false;
                 this._scanner.resume();
             }
         }
     }
             
     _cancelScan() {
-        if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && this._scanner.isScanning) {
+        if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && (this._scanner.isScanning || this._canClose)) {
             this.$.qrCodeScanner.cancel();
         }
     }
     
-    _applyScane() {
-        if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && this._scanner.isScanning) {
+    _applyScan() {
+        if (this._scanner && !this._scanner.stateManagerProxy.stateManager.onGoingTransactionNewState && (this._scanner.isScanning || this._canClose)) {
             this.$.textEditor.commitIfChanged();
+            this.$.separatorEditor.commitIfChanged();
+            saveSeparator(this.separator);
             this.$.qrCodeScanner.close();
             if (this.applyCallback) {
-                this.applyCallback(this.scannedText);
+                this.applyCallback(this.scannedText, this.separator);
             }
         }
     }
