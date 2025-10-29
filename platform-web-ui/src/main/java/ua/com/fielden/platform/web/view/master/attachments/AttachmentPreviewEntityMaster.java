@@ -18,6 +18,11 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewEntityAction> {
 
+    public static final String
+    MSG_ATTACHMENT_LINK_IS_NOT_TRUSTED = "This link points to an untrusted site. Only open it if you’re sure it’s safe.",
+    MSG_ATTACHMENT_LINK_CANNOT_BE_VIEWED = "This link can’t be previewed. Open it to view the content.",
+    MSG_ATTACHMENT_CANNOT_BE_VIEWED = "This file can’t be previewed. Download it to see the content.";
+
     private final IRenderable renderable;
 
     public AttachmentPreviewEntityMaster() {
@@ -31,7 +36,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 .attr("hidden$", "[[!_isImageVisible(_loadingError, _attachmentUri)]]")
                 .style("width:100%", "height:100%", "object-fit:contain", "background-color:white;");
         final DomElement messageElement =  new DomElement("span")
-                .style("font-size: 18px", "color: #BDBDBD", "margin: 24px")
+                .style("font-size: 18px", "color: #BDBDBD", "margin: 24px", "text-align: center")
                 .add(new InnerTextElement("[[_getAltImageText(_linkCheckRes, _wasConfirmed)]]"));
         final DomElement downloadAction = new DomElement("paper-button")
                 .style("font-size: 14px", "font-weight: 500", "color: #000000DE")
@@ -120,23 +125,25 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 self._getAltImageText = function (_linkCheckRes, _wasConfirmed) {
                     if (_linkCheckRes) {
                         if (!_wasConfirmed) {
-                            return "This preview isn’t from a trusted source. Please confirm that you trust it by clicking the OPEN button below.";
+                            return "%s";
                         }
-                        return 'Preview is not available for this link attachment. Please open it instead.';
+                        return "%s";
                     }
-                    return 'Preview is not available for this file. Please download it instead.';
+                    return "%s";
                 }.bind(self);
                 self.downloadAttachment = self.mkDownloadAttachmentFunction();
                 self._downloadOrOpenAttachment = function (e) {
                     if (this._linkCheckRes) {
                         if (this._wasConfirmed) {
                             if (this._loadingError) {
-                                //The link does not represent an image, which caused the loadingError.
-                                //Open the link instead.
+                                // The link does not represent an image, which caused the loadingError.
+                                // Open the link instead.
                                 openLink(this._attachmentUri, this._linkCheckRes.target || "_blank");
                             }
-                            //Otherwise image should be visible
-                        } else { //If the link is not yet trusted, confirm it first.
+                            // Otherwise image should be visible.
+                        }
+                        // If the link is not yet trusted, confirm it first.
+                        else {
                             // After the link becomes trusted, opening it as an image may cause an error,
                             // which means the link does not represent an image.
                             // In that case, the link should be opened as a regular one.
@@ -164,7 +171,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                         this.downloadAttachment(this._currEntity.attachment);
                     }
                 }.bind(self);
-                """;
+                """.formatted(MSG_ATTACHMENT_LINK_IS_NOT_TRUSTED, MSG_ATTACHMENT_LINK_CANNOT_BE_VIEWED, MSG_ATTACHMENT_CANNOT_BE_VIEWED);
     }
 
     @Override
