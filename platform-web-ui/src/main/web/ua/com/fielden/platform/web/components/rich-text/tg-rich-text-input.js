@@ -439,7 +439,6 @@ function rgbToHex(rgbString) {
  * @param {Object} event keyboard event
  */
 function handleKeyEventsBeforeEditor(event) {
-    const docSize = this._editor.wwEditor.view.state.tr.doc.content.size;
     const selection = this._getSelection();
     if (event.keyCode === 13 /*Enter*/ && selection && selection[0] === 0 /*Text is selected from beginning*/) {
         this._editor.insertText("\n");
@@ -1002,6 +1001,43 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         const state = this._editor.wwEditor.createState();
         state.doc = this._editor.wwEditor.view.state.doc;
         this._editor.wwEditor.view.updateState(state);
+    }
+
+    replaceText(text, start, end) {
+        const adjustedStart = start || 0;
+        const adjustedEnd = end || this._editor.wwEditor.view.state.tr.doc.content.size;
+        this._editor.replaceSelection(text, adjustedStart, adjustedEnd);
+        const increment = text.includes('\n') || adjustedStart === 0 || adjustedEnd === this._editor.wwEditor.view.state.tr.doc.content.size ? 1 : 0;
+        const cursorPosition = adjustedStart + text.length + increment;
+        this._applySelection(cursorPosition, cursorPosition);
+    }
+
+    insertText(text, where) {
+        if (typeof where === 'undefined') {
+            this._editor.moveCursorToEnd(false);
+        } else if (where) {
+            this._applySelection(where, where);
+        }
+        this._editor.insertText(text);
+    }
+
+    get selectionStart() {
+        const selection = this._getSelection();
+        return selection[0] === 1 ? 0 : selection[0];
+    }
+
+    set selectionStart(where) {
+        const selectionEnd = this._getSelection()[1];
+        this._applySelection(where, selectionEnd < where ? where : selectionEnd);
+    }
+
+    get selectionEnd() {
+        return this._getSelection()[1];
+    }
+
+    set selectionEnd(where) {
+        const selectionStart = this._getSelection()[0];
+        this._applySelection(selectionStart > where ? where : selectionStart, where);
     }
 
     _editorScrolled(e) {
