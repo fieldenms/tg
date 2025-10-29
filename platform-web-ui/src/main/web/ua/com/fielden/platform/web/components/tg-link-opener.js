@@ -183,7 +183,11 @@ export function canOpenLinkWithoutConfirmation(urlString) {
  * @returns {Boolean} `true` if the link protocol is supported; otherwise, `false`.
  */
 export function isSupportedLink(maybeLink) {
-    return maybeLink.startsWith(MAILTO_PROTOCOL) || SUPPORTED_PROTOCOLS.some(p => maybeLink.startsWith(p + '//'))
+    if (maybeLink) {
+        const lowerCaseMaybeLink = maybeLink.toLowerCase();
+        return lowerCaseMaybeLink.startsWith(MAILTO_PROTOCOL) || SUPPORTED_PROTOCOLS.some(p => lowerCaseMaybeLink.startsWith(p + '//'))
+    }
+    return false;
 }
 
 /**
