@@ -1,24 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
-import static java.lang.String.format;
-import static java.util.Collections.unmodifiableList;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DESC;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DISPLAY_PROP;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP_VALUE;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROW_FACTOR;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_MIN_WIDTH;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TITLE;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TOOLTIP_PROP;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TYPE;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_WIDTH;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
@@ -26,12 +7,14 @@ import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
-/**
- * The implementation for all result set columns (dom element).
- *
- * @author TG Team
- *
- */
+import java.util.*;
+
+import static java.lang.String.format;
+import static java.util.Collections.unmodifiableList;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.*;
+
+/// The implementation for all result set columns (dom element).
+///
 public class PropertyColumnElement implements IRenderable, IImportable {
     //The minimal column width. It is used only when specified width is greater than minimal.
     public static final int MIN_COLUMN_WIDTH = 16;
@@ -50,17 +33,13 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     private boolean debug = false;
     private final int growFactor;
     private final Optional<AbstractWidget> widget;
+    private final int width;
+    private final boolean wordWrap;
+    private final boolean isFlexible;
 
-    public final int width;
-    public final boolean isFlexible;
-
-    /**
-     * Creates {@link PropertyColumnElement} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
-     *
-     * @param criteriaType
-     * @param propertyName
-     */
-    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final List<FunctionalActionElement> actions) {
+    /// Creates [PropertyColumnElement] from `entityType` type and `propertyName` and the name&path of widget.
+    ///
+    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean wordWrap, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final List<FunctionalActionElement> actions) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
@@ -70,6 +49,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         this.tooltipProp = Optional.ofNullable(tooltipProp);
         this.width = width;
         this.growFactor = growFactor;
+        this.wordWrap = wordWrap;
         this.isFlexible = isFlexible;
         this.propertyType = propertyType;
         this.titleDesc = titleDesc;
@@ -85,59 +65,38 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         return widget.map(widget -> widget.importPath());
     }
 
-    /**
-     * Adds the summary to this {@link PropertyColumnElement} instance.
-     *
-     * @param propertyName
-     * @param propertyType
-     * @param titleDesc
-     */
+    /// Adds the summary to this [PropertyColumnElement] instance.
+    ///
     public void addSummary(final String propertyName, final Class<?> propertyType, final Pair<String, String> titleDesc) {
         summary.add(new SummaryElement(propertyName, propertyType, titleDesc));
     }
 
-    /**
-     * Determines whether this {@link PropertyColumnElement} instance has summary.
-     *
-     * @return
-     */
+    /// Determines whether this [PropertyColumnElement] instance has summary.
+    ///
     public boolean hasSummary() {
         return !summary.isEmpty();
     }
 
-    /**
-     * Returns the size of summary properties associated with this {@link PropertyColumnElement} instance.
-     *
-     * @return
-     */
+    /// Returns the size of summary properties associated with this [PropertyColumnElement] instance.
+    ///
     public int getSummaryCount() {
         return summary.size();
     }
 
-    /**
-     * Returns the summary property associated with this {@link PropertyColumnElement} instance at specified position.
-     *
-     * @param index
-     * @return
-     */
+    /// Returns the summary property associated with this [PropertyColumnElement] instance at specified position.
+    ///
     public SummaryElement getSummary(final int index) {
         return summary.get(index);
     }
 
-    /**
-     * The name of the property for this column.
-     *
-     * @return
-     */
+    /// The name of the property for this column.
+    ///
     protected String propertyName() {
         return propertyName;
     }
 
-    /**
-     * Creates an attributes that will be used for widget component generation (generic attributes).
-     *
-     * @return
-     */
+   /// Creates an attributes that will be used for widget component generation (generic attributes).
+   ///
     private Map<String, Object> createAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
         attrs.put("debug", isDebug());
@@ -149,6 +108,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         attrs.put("slot", "property-column");
         attrs.put("width", widthBinding());
         attrs.put("min-width", minWidthBinding());
+        attrs.put("word-wrap", wordWrapBinding());
         attrs.put("grow-factor", growFactorBinding());
         attrs.put("type", propertyTypeBinding());
         attrs.put("column-title", titleBinding());
@@ -182,6 +142,10 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         return isDynamic ? format("[[item.%s]]", DYN_COL_GROW_FACTOR) : (isFlexible ? String.valueOf(growFactor) : "0");
     }
 
+    private Object wordWrapBinding() {
+        return isDynamic ? format("[[item.%s]]", DYN_COL_WORDWRAP) : Boolean.valueOf(wordWrap);
+    }
+
     private String minWidthBinding() {
         return isDynamic ? format("[[item.%s]]", DYN_COL_MIN_WIDTH) : String.valueOf(MIN_COLUMN_WIDTH > width ? width : MIN_COLUMN_WIDTH);
     }
@@ -209,13 +173,10 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         return attrs;
     }
 
-    /**
-     * Creates an attributes that will be used for widget component generation.
-     * <p>
-     * Please, implement this method in descendants (for concrete widgets) to extend the attributes set by widget-specific attributes.
-     *
-     * @return
-     */
+    /// Creates an attributes that will be used for widget component generation.
+    ///
+    /// Please, implement this method in descendants (for concrete widgets) to extend the attributes set by widget-specific attributes.
+    ///
     protected Map<String, Object> createCustomAttributes() {
         return new LinkedHashMap<>();
     }

@@ -2,7 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
-import { getFirstEntityType, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { getFirstEntityType, getParentAnd, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
@@ -307,8 +307,14 @@ const TgEntityCentreTemplateBehaviorImpl = {
                                 })
                             }
                         } else {
+                            // Entity navigation: store Entity Master focus on Ctrl+arrow action.
+                            // Also force loosing of the focus to as early as possible to before actual transition starts.
+                            master._storeFocus && master._storeFocus() && deepestActiveElement().blur();
                             master.savingContext = action._createContextHolderForAction();
                             master.retrieve(master.savingContext).then(function(ironRequest) {
+                                // Entity navigation: restore Entity Master focus on Ctrl+arrow action.
+                                // On async execution, `tg-editor._outFocus` has already been completed and we can restore focus back.
+                                master._restoreFocus && master._restoreFocus();
                                 if (action.modifyFunctionalEntity) {
                                     action.modifyFunctionalEntity(master._currBindingEntity, master, action);
                                 }
@@ -368,7 +374,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 }
                 return action._countActualEntities() > 0;
             }.bind(this);
-            action.hasNextEntry = function(entitiesCount, entityIndex) {
+            action.hasNextEntry = function () {
                 const thisPageInd = this.$.egi.findFilteredEntityIndex(action.currentEntity());
                 if (thisPageInd >= 0) {
                     const lastEntity = action._findLastEntity();

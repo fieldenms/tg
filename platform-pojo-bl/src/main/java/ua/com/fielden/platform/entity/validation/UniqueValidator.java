@@ -17,25 +17,24 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 
-/**
- * A validator to check that a passed in value is unique for an entity/property combination.
- *
- * IMPORTANT: value {@code null} is always considered valid and permissible for multiple entity instances (i.e., {@code NULL = NULL} is {@code false}).
- *
- * @author TG Team
- *
- */
+/// A validator to check that a passed in value is unique for an entity/property combination.
+///
+/// **IMPORTANT:**
+/// - Value `null` is always considered valid and permissible for multiple records.
+/// - Value `false` for boolean properties is always considered valid and permissible for multiple records.
+///
 public class UniqueValidator<E extends AbstractEntity<?>, T> extends AbstractBeforeChangeEventHandler<T> {
 
-    public static final String ERR_VALIDATION_ERROR_TEMPLATE = "Value [%s] must be unique for property [%s] in entity [%s].";
+    public static final String
+            ERR_VALIDATION_ERROR_TEMPLATE = "Value [%s] must be unique for property [%s] in entity [%s].",
+            ERR_MISSING_CO = "Companion object is missing for entity [%s].";
 
     @Override
     public Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations) {
-        @SuppressWarnings("unchecked")
-        final E entity = (E) property.getEntity();
-        // let's for now consider that multiple NULL values are permitted for columns with unique index...
-        // TODO may need to revisit the above premise
-        if (newValue == null) {
+        final E entity = property.getEntity();
+
+        // Do not enforce uniqueness for `null` and `false`.
+        if (newValue == null || newValue instanceof Boolean newBool && !newBool) {
             return successful();
         }
 
@@ -43,7 +42,7 @@ public class UniqueValidator<E extends AbstractEntity<?>, T> extends AbstractBef
         final Class<E> type = (Class<E>) entity.getType();
         final IEntityDao<E> co = co(type);
         if (co == null) {
-            throw new EntityException("Companion object is missing for entity [%s].".formatted(type.getName()));
+            throw new EntityException(ERR_MISSING_CO.formatted(type.getName()));
         }
 
         final EntityResultQueryModel<E> query = entity.isPersisted() 

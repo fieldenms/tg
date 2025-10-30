@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
+import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.*;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.processors.minheritance.SpecifiedBy;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -55,10 +57,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
+import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -67,7 +67,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 public class EntityUtils {
-    private static final Logger logger = getLogger(EntityUtils.class);
+    private static final Logger logger = getLogger();
 
     private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
     private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
@@ -602,9 +602,23 @@ public class EntityUtils {
      * @return
      */
     public static boolean isEntityType(final Class<?> type) {
-        return type == null ? false : AbstractEntity.class.isAssignableFrom(type);
+        return type != null && AbstractEntity.class.isAssignableFrom(type);
     }
 
+    /// Indicates whether type represents [IContinuationData]-typed values.
+    ///
+    public static boolean isContinuationData(final Class<?> type) {
+        return type != null && IContinuationData.class.isAssignableFrom(type);
+    }
+
+    /// Indicates whether type represents [ActivatableAbstractEntity]-typed values.
+    /// Or [AbstractUnionEntity]-typed values with at least one [ActivatableAbstractEntity]-typed property.
+    ///
+    public static boolean isActivatableEntityOrUnionType(final Class<?> type) {
+        return isActivatableEntityType(type)
+               || isUnionEntityType(type)
+                  && unionProperties((Class<? extends AbstractUnionEntity>) type).stream().map(Field::getType).anyMatch(EntityUtils::isActivatableEntityType);
+    }
 
     /// Indicates whether type represents [ActivatableAbstractEntity]-typed values.
     ///
@@ -817,14 +831,25 @@ public class EntityUtils {
         return Optional.empty();
     }
 
-    /**
-     * Determines whether the provided entity type models a union-type.
-     *
-     * @return
-     */
+    /// Determines whether the provided entity type models a union-type.
+    ///
     public static boolean isUnionEntityType(final Class<?> type) {
         return type != null && AbstractUnionEntity.class.isAssignableFrom(type);
     }
+
+    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
+    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
+    ///
+    /// This method is a utility to perform instrumentation for uninstrumented values.
+    ///
+    /// TODO Instrumentation will no longer be necessary after #2466.
+    ///
+    public static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityInstantiator<U> instantiator) {
+        return unionEntity.isInstrumented()
+               ? unionEntity
+               : copy(unionEntity, instantiator.new_(), ID, VERSION);
+    }
+
 
     /**
      * Determines whether {@code type} represents entity query criteria.
@@ -843,6 +868,10 @@ public class EntityUtils {
             logger.error(msg, ex);
             throw new ReflectionException(msg, ex);
         }
+    }
+
+    public static boolean isGeneratedMultiInheritanceEntityType(final Class<?> type) {
+        return isAnnotationPresent(type, SpecifiedBy.class);
     }
 
     /**
@@ -1160,6 +1189,21 @@ public class EntityUtils {
                : maybeSingleKeyMemberOfEntityType(type).map(t2 -> t2._1);
     }
 
+    /// Given a generated multi-inheritance type, returns the specification type that was used to generate it.
+    /// [SpecifiedBy] is used to locate the specification type.
+    /// It is an error if [SpecifiedBy] is not present on the given type.
+    ///
+    @SuppressWarnings("unchecked")
+    public static Class<? extends AbstractEntity<?>> specTypeFor(final Class<? extends AbstractEntity<?>> multiInheritanceType) {
+        final var atSpecifiedBy = getAnnotationForClass(SpecifiedBy.class, multiInheritanceType);
+        if (atSpecifiedBy == null) {
+            throw new IllegalArgumentException(format(
+                    "[%s] is missing annotation @%s or is not a generated multi-inheritance type.",
+                    multiInheritanceType.getCanonicalName(), SpecifiedBy.class.getSimpleName()));
+        }
+        return (Class<? extends AbstractEntity<?>>) atSpecifiedBy.value();
+    }
+
     public static class BigDecimalWithTwoPlaces {
     }
 
@@ -1314,23 +1358,24 @@ public class EntityUtils {
         }
     }
 
-    ///
     /// The same as [#copy], but with variable arity for property names.
     ///
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final CharSequence... skipProperties) {
+    public static <T extends AbstractEntity> T copy(final AbstractEntity<?> fromEntity, final T toEntity, final CharSequence... skipProperties) {
         copy_(fromEntity, toEntity, Stream.of(skipProperties).map(CharSequence::toString).collect(Collectors.toSet()));
+        return toEntity;
     }
 
-    ///
-    /// The most generic and most straightforward function to copy properties from instance `fromEntity` to `toEntity``,
+    /// The most generic and most straightforward function to copy properties from instance `fromEntity` to `toEntity`,
     /// with the ability to skip the specified properties from being copied.
     ///
     /// @param fromEntity  An instance that is the source from which property values are copied from.
     /// @param toEntity   A destination that is an instance where the property values are copied to.
     /// @param skipProperties  A sequence of property names, which may include ID and VERSION.
+    /// @return  `toEntity` is returned for convenience.
     ///
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
+    public static <T extends AbstractEntity> T copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
         copy_(fromEntity, toEntity, skipProperties.stream().map(CharSequence::toString).collect(Collectors.toSet()));
+        return toEntity;
     }
 
     private static <T extends AbstractEntity> void copy_(final AbstractEntity<?> fromEntity, final T toEntity, final Set<String> skipProperties) {

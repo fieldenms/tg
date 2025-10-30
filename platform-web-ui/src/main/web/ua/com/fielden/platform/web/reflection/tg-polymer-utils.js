@@ -17,31 +17,47 @@ export function getFirstEntityTypeAndProperty (entity, propertyName) {
         const entityType = entity.constructor.prototype.type.call(entity);
         let currentProperty = propertyName;
         let currentType = entityType.prop(propertyName).type();
-        if (currentType instanceof reflector._getEntityTypePrototype() && currentType.isUnionEntity() && entity.get(propertyName)) {
-            currentProperty += "." + entity.get(propertyName)._activeProperty();
-            currentType = entityType.prop(currentProperty).type();
-        }
         while (!(currentType instanceof reflector._getEntityTypePrototype())) {
             const lastDotIndex = currentProperty.lastIndexOf(".");
             currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
             currentType = currentProperty ? entityType.prop(currentProperty).type() : entityType;
         }
-        return [calculateEntityType(entity.get(currentProperty), reflector) || currentType, currentProperty]; 
+        return [
+            calculateEntityType(entity.get(currentProperty), reflector)
+                // For empty unions, take the type from first union sub-property.
+                // This is to be able to start opening the master with 'There is nothing to open' toast message.
+                || currentType.isUnionEntity() && currentType.prop(currentType.unionProps()[0]).type()
+                // Otherwise, fallback to 'currentType' as usual.
+                || currentType,
+            // Even for unions, leave the `currentProperty` as is.
+            // See `tg-ui-action._createContextHolderForAction` for more details.
+            currentProperty
+        ];
     } else if (entity) {
         return [calculateEntityType(entity, reflector), propertyName];
     }
 };
 
 /**
- * Local function that calculates the actual type of given entity. It returns the type that was carried by property in synthetic entity or exact type of given entity.
+ * Local function that calculates the actual type of given entity.
+ * It returns the type that was carried by property in synthetic entity.
+ * Or the type of union active entity.
+ * Or exact type of given entity.
  * 
- * @param {Object} entity - the entity which type should calcualted
+ * @param {Object} entity - the entity which type should calculated
  * @param {Object} reflector - type reflection object that contains the information about the entity types in tg application
  * @returns The object that represents the type of given entity
  */
 function calculateEntityType(entity, reflector) {
     const entityType = entity && entity.constructor.prototype.type.call(entity);
-    return (entityType && entityType.entityTypeCarrierName() && reflector.getType(entity.get(entityType.entityTypeCarrierName()))) || entityType;
+    return (entityType &&
+        (
+            // For synthesised "unions", take the type from '@EntityTypeCarrier' property.
+            entityType.entityTypeCarrierName() && reflector.getType(entity.get(entityType.entityTypeCarrierName()))
+            // For standard unions, take the type from non-empty active entity.
+            || entityType.isUnionEntity() && entity._activeEntity() && entity._activeEntity().constructor.prototype.type.call(entity._activeEntity())
+        )
+    ) || entityType;
 }
 
 /**
@@ -309,6 +325,27 @@ export const isIPhoneOs = function () {
 };
 
 /**
+ * Determines whether the client is running on an iPad device.
+ * Works for both pre-iPadOS 13 (UA contains "iPad") and iPadOS 13+ (desktop-class UA).
+ */
+export const isIPadOs = function () {
+    // iPad before iPadOS 13:
+    return window.navigator.userAgent.includes('iPad')
+        // iPadOS 13+ identifies as Mac but has touch support
+        || window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1;
+};
+
+/**
+ * Determines whether the browser is Safari running on macOS.
+ */
+export const isMacSafari = function () {
+    const ua = window.navigator.userAgent;
+    const isMac = window.navigator.platform === 'MacIntel';
+    const isSafari = /Safari/.test(ua) && !/(Chrome|CriOS|Chromium|Edg)/.test(ua);
+    return isMac && isSafari;
+};
+
+/**
  * Determines whether device's browser supports touch events.
  * This is different from whether the device has a touchscreen. However, if true, it means that device has touchscreen in most cases.
  *
@@ -384,7 +421,7 @@ export const localStorageKeyForCentre = function (miType, subject) {
 /**
  * Creates simple dummy entity to bind it to entity master
  */
-export const createDummyBindingEntity = function (customPropObject, propDefinition) {
+export const createStubBindingEntity = function (typeName, customPropObject, propDefinition) {
     const reflector = new TgReflector();
     const fullEntityType = reflector.getEntityPrototype();
     fullEntityType.compoundOpenerType = () => null;
@@ -423,7 +460,9 @@ export const createDummyBindingEntity = function (customPropObject, propDefiniti
         }
         return bindingView[prop];
     };
-    const bindingViewType = reflector.getEntityPrototype();
+
+    const EntityType = reflector._getEntityTypePrototype();
+    const bindingViewType = new EntityType({key: typeName});
     bindingViewType.prop = propDefinition;
     bindingView._type = bindingViewType;
     return bindingView;

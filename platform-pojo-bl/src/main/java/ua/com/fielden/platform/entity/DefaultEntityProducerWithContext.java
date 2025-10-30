@@ -26,9 +26,12 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
 
     private final EntityFactory factory;
     protected final Class<T> entityType;
-    /** Instrumented reader to be used for producing of {@link #new_()} editable entities and for re-fetching ({@link #refetchInstrumentedEntityById(Long)}) of persisted editable entities. */
+    /// Instrumented reader to be used for producing of [#new_()] editable entities.
+    /// And for re-fetching ([#refetchInstrumentedEntityById(Long)]) of persisted editable entities.
+    ///
     private final Optional<IEntityReader<T>> reader;
-    /** Optional context for context-dependent entity producing logic. */
+    /// Optional context for context-dependent entity producing logic.
+    ///
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context;
     private final ICompanionObjectFinder coFinder;
     private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> coCache = new HashMap<>();
@@ -103,7 +106,9 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             producedEntity = compoundMasterEntity.isPersisted() ? refetchInstrumentedEntityById(compoundMasterEntity.getId()) : compoundMasterEntity; // but refetched when it is persisted
             // please also note that no custom logic (provideDefaultValues) will be applied to that entity, the process of its initiation is a sole prerogative of compound master opener's producer -- this is the only place where it should be produced (or retrieved)
         } else {
-            final T entity = new_();
+            // Instance-based continuation should be used as initial entity value, if it is present.
+            // Producer entity type will be exactly the same as 'instanceBasedContinuation' type.
+            final T entity = context != null && context.getInstanceBasedContinuation() != null ? (T) context.getInstanceBasedContinuation() : new_();
 
             if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
                 final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;

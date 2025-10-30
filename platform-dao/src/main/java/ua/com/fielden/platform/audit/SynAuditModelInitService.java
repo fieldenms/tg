@@ -10,7 +10,7 @@ import ua.com.fielden.platform.reflection.Reflector;
 import java.util.List;
 
 import static java.lang.String.format;
-import static javassist.Modifier.isFinal;
+import static java.lang.reflect.Modifier.isFinal;
 import static ua.com.fielden.platform.audit.AuditUtils.isSynAuditEntityType;
 import static ua.com.fielden.platform.audit.AuditUtils.isSynAuditPropEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.findSyntheticModelFieldFor;

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -42,6 +43,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     private final WebMenuItemInvisibilityCo miInvisible;
     private final Set<String> siteAllowlist;
     private final int daysUntilSitePermissionExpires;
+    private final IApplicationSettings appSettings;
 
     @Inject
     public MenuProducer(
@@ -50,6 +52,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
             final IUserProvider userProvider,
             final ICompanionObjectFinder coFinder,
             final EntityFactory entityFactory,
+            final IApplicationSettings appSettings,
             final @Named("externalSites.allowlist") String siteAllowlist,
             final @Named("externalSites.expiresIn") String expiryDays) {
         super(entityFactory, Menu.class, coFinder);
@@ -68,6 +71,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
                 .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'siteAllowlist': %s".formatted(ex.getMessage())));
         this.daysUntilSitePermissionExpires = TryWrapper.Try( () -> isEmpty(expiryDays) ? DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS : Integer.parseInt(expiryDays) )
                 .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'daysUntilSitePermissionExpires': %s".formatted(ex.getMessage())));
+        this.appSettings = appSettings;
     }
 
     @Override
@@ -82,6 +86,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         }
         menu.setSiteAllowlist(this.siteAllowlist);
         menu.setDaysUntilSitePermissionExpires(this.daysUntilSitePermissionExpires);
+        menu.setCurrencySymbol(appSettings.currencySymbol());
         return menu.copyTo(entity);
     }
 

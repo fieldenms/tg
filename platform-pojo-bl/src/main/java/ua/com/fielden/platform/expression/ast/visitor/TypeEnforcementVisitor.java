@@ -1,6 +1,17 @@
 package ua.com.fielden.platform.expression.ast.visitor;
 
-import static java.lang.String.format;
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.expression.EgTokenCategory;
+import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
+import ua.com.fielden.platform.expression.ast.AstNode;
+import ua.com.fielden.platform.expression.exception.semantic.*;
+import ua.com.fielden.platform.expression.type.*;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.types.Money;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -9,42 +20,19 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
+import static java.lang.String.format;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.expression.EgTokenCategory;
-import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
-import ua.com.fielden.platform.expression.ast.AstNode;
-import ua.com.fielden.platform.expression.exception.semantic.CouldNotDetermineTypeException;
-import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
-import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
-import ua.com.fielden.platform.expression.exception.semantic.UnexpectedNumberOfOperandsException;
-import ua.com.fielden.platform.expression.exception.semantic.UnsupportedTypeException;
-import ua.com.fielden.platform.expression.type.AbstractDateLiteral;
-import ua.com.fielden.platform.expression.type.DateLiteral;
-import ua.com.fielden.platform.expression.type.Day;
-import ua.com.fielden.platform.expression.type.Month;
-import ua.com.fielden.platform.expression.type.Null;
-import ua.com.fielden.platform.expression.type.Year;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.types.Money;
-
-/**
- * A visitor, which enforces type compatibility between AST nodes and identifies the type of the expression represented by the AST.
- * 
- * @author TG Team
- * 
- */
+/// A visitor, which enforces type compatibility between AST nodes and identifies the type of the expression represented by the AST.
+///
 public class TypeEnforcementVisitor extends AbstractAstVisitor {
 
-    public TypeEnforcementVisitor(final Class<? extends AbstractEntity> higherOrderType, final String contextProperty) {
+    public static final String ERR_INCOMPATIBLE_OPERANDS = "Operands for operation %s should have compatible types [%s, %s].";
+
+    public TypeEnforcementVisitor(final Class<? extends AbstractEntity<?>> higherOrderType, final String contextProperty) {
         super(higherOrderType, contextProperty);
     }
 
-    public TypeEnforcementVisitor(final Class<? extends AbstractEntity> higherOrderType) {
+    public TypeEnforcementVisitor(final Class<? extends AbstractEntity<?>> higherOrderType) {
         super(higherOrderType, null);
     }
 
@@ -56,6 +44,14 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
         case INT:
             node.setType(Integer.class);
             node.setValue(Integer.parseInt(node.getToken().text));
+            break;
+        case TRUE:
+            node.setType(boolean.class);
+            node.setValue(true);
+            break;
+        case FALSE:
+            node.setType(boolean.class);
+            node.setValue(false);
             break;
         case DECIMAL:
             node.setType(BigDecimal.class);
@@ -158,7 +154,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
             throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 2 operands, found " + node.getChildren().size(), node.getToken());
         }
         // check if the operands have type
-        final AstNode leftOperand = node.getChildren().get(0);
+        final AstNode leftOperand = node.getChildren().getFirst();
         final Class<?> leftOperandType = leftOperand.getType();
         if (leftOperandType == null) {
             throw new TypeCompatibilityException("Operand " + leftOperand + " is missing type.", leftOperand.getToken());
@@ -173,6 +169,9 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
         // TODO more precise error reporting can be achieved here
         if (String.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)
                 || // strings are comparable
+                (boolean.class.isAssignableFrom(leftOperandType) || Boolean.class.isAssignableFrom(leftOperandType)) 
+                && (boolean.class.isAssignableFrom(rightOperandType) || Boolean.class.isAssignableFrom(rightOperandType))
+                || // booleans are comparable
                 Money.class.isAssignableFrom(leftOperandType) && (leftOperandType.isAssignableFrom(rightOperandType) || Number.class.isAssignableFrom(rightOperandType))
                 || // money are comparable with each other and numbers
                 Number.class.isAssignableFrom(leftOperandType) && (Number.class.isAssignableFrom(rightOperandType) || Money.class.isAssignableFrom(rightOperandType))
@@ -191,26 +190,29 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
                 && Null.class != rightOperandType) { // this basically checks whether some other types such as entities are being compared
             node.setType(boolean.class);
         } else if ((cat == EgTokenCategory.EQ || cat == EgTokenCategory.NE) && (Null.class == leftOperandType || Null.class == rightOperandType)) { // = and <> with NULL is possible, and needs to be validated further
-            if (Null.class == leftOperandType && (String.class.isAssignableFrom(rightOperandType) || //
-                    Money.class.isAssignableFrom(rightOperandType) || //
-                    Number.class.isAssignableFrom(rightOperandType) || //
-                    Date.class.isAssignableFrom(rightOperandType) || //
-                    DateTime.class.isAssignableFrom(rightOperandType) || //
-                    AbstractEntity.class.isAssignableFrom(rightOperandType) //
+            if (Null.class == leftOperandType && (String.class.isAssignableFrom(rightOperandType) ||
+                    Money.class.isAssignableFrom(rightOperandType) ||
+                    Number.class.isAssignableFrom(rightOperandType) ||
+                    Date.class.isAssignableFrom(rightOperandType) ||
+                    DateTime.class.isAssignableFrom(rightOperandType) ||
+                    AbstractEntity.class.isAssignableFrom(rightOperandType)
                     )) {
                 // the type of the comparison operation is always boolean
                 node.setType(boolean.class);
-            } else if (String.class.isAssignableFrom(leftOperandType) || //
-                    Money.class.isAssignableFrom(leftOperandType) || //
-                    Number.class.isAssignableFrom(leftOperandType) || //
-                    Date.class.isAssignableFrom(leftOperandType) || //
-                    DateTime.class.isAssignableFrom(leftOperandType) || //
-                    AbstractEntity.class.isAssignableFrom(leftOperandType)) { //
+            } else if (String.class.isAssignableFrom(leftOperandType) ||
+                    Money.class.isAssignableFrom(leftOperandType) ||
+                    Number.class.isAssignableFrom(leftOperandType) ||
+                    Date.class.isAssignableFrom(leftOperandType) ||
+                    DateTime.class.isAssignableFrom(leftOperandType) ||
+                    AbstractEntity.class.isAssignableFrom(leftOperandType)) {
                 // the type of the comparison operation is always boolean
                 node.setType(boolean.class);
+            } else {
+                // For example, comparing boolean with NULL is not supported.
+                throw new UnsupportedTypeException(ERR_INCOMPATIBLE_OPERANDS.formatted(cat, leftOperandType, rightOperandType), leftOperandType, node.getToken());
             }
         } else {
-            throw new UnsupportedTypeException("Operands for operation " + cat + " should have compatible types.", leftOperandType, node.getToken());
+            throw new UnsupportedTypeException(ERR_INCOMPATIBLE_OPERANDS.formatted(cat, leftOperandType, rightOperandType), leftOperandType, node.getToken());
         }
     }
 
@@ -220,7 +222,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
             throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 2 operands, found " + node.getChildren().size(), node.getToken());
         }
         // check if the operands have type
-        final AstNode leftOperand = node.getChildren().get(0);
+        final AstNode leftOperand = node.getChildren().getFirst();
         final Class<?> leftOperandType = leftOperand.getType();
         if (leftOperandType == null) {
             throw new TypeCompatibilityException("Operand " + leftOperand + " is missing type.", leftOperand.getToken());

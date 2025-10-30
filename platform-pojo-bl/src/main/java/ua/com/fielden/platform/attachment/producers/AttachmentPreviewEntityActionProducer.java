@@ -1,11 +1,6 @@
 package ua.com.fielden.platform.attachment.producers;
 
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
-import static ua.com.fielden.platform.utils.EntityUtils.findByIdWithMasterFetch;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.attachment.AbstractAttachment;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
@@ -13,15 +8,21 @@ import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity_master.exceptions.SimpleMasterException;
 import ua.com.fielden.platform.types.Hyperlink;
 
-/**
- * Producer for {@link AttachmentPreviewEntityAction}.
- *
- * @author TG Team
- *
- */
+import java.util.function.Supplier;
+
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
+import static ua.com.fielden.platform.utils.EntityUtils.findByIdWithMasterFetch;
+
+/// Producer for [AttachmentPreviewEntityAction].
+///
 public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducerWithContext<AttachmentPreviewEntityAction> {
+
+    private static final String ERR_NOTHING_TO_VIEW = "There is nothing to view.";
+    private static final Supplier<SimpleMasterException> NOTHING_TO_VIEW_EXCEPTION_SUPPLIER = () -> new SimpleMasterException(ERR_NOTHING_TO_VIEW);
 
     @Inject
     public AttachmentPreviewEntityActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -29,14 +30,19 @@ public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducer
     }
 
     @Override
-    protected AttachmentPreviewEntityAction provideDefaultValues(final AttachmentPreviewEntityAction entity) {
+    protected AttachmentPreviewEntityAction provideDefaultValues(final AttachmentPreviewEntityAction action) {
         final Long attachmentId = getAttachmentId();
-        if (attachmentId != null) {
-            final IAttachment attachmentCo = co(Attachment.class);
-            findByIdWithMasterFetch(attachmentCo, attachmentId)
-                .ifPresent(attachment -> entity.setAttachmentUri(generateUri(attachment)));
+        if (attachmentId == null) {
+            throw NOTHING_TO_VIEW_EXCEPTION_SUPPLIER.get();
         }
-        return entity;
+        else {
+            final IAttachment attachmentCo = co(Attachment.class);
+            final Attachment attachment = findByIdWithMasterFetch(attachmentCo, attachmentId)
+                    .orElseThrow(NOTHING_TO_VIEW_EXCEPTION_SUPPLIER);
+            action.setAttachment(attachment);
+            action.setAttachmentUri(generateUri(attachment));
+        }
+        return action;
     }
 
     private String generateUri(final Attachment attachment) {
@@ -54,7 +60,7 @@ public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducer
             return currentEntity().getId();
         } else if (currentEntityInstanceOf(AbstractAttachment.class)) {
             return ((AbstractAttachment<?,?>)currentEntity()).getAttachment().getId();
-        } else if (chosenPropertyNotEmpty()) {
+        } else if (chosenPropertyNotEmpty() && currentEntity().get(chosenProperty()) != null) {
             if (Attachment.class.isAssignableFrom(currentEntity().get(chosenProperty()).getClass())) {
                 return ((Attachment)currentEntity().get(chosenProperty())).getId();
             } else if (Attachment.class.isAssignableFrom(transform(currentEntity().getType(), chosenProperty()).getKey())) {

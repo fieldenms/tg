@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.entity.activatable;
 
+import org.junit.Test;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
+
+import static org.junit.Assert.assertFalse;
 
 public class ActivatableEntityDeletionAndRefCountStandardTest extends AbstractActivatableEntityDeletionAndRefCountTestCase {
 
@@ -104,6 +107,32 @@ public class ActivatableEntityDeletionAndRefCountStandardTest extends AbstractAc
     protected void delete(final AbstractEntity<?> entity) {
         final var co$ = (IEntityDao<AbstractEntity<?>>) co$(entity.getType());
         co$.delete(entity);
+    }
+
+    @Test
+    public void deletion_of_active_A_that_references_active_B_does_not_affect_refCount_of_B_if_skipActiveOnly_is_true() {
+        final var b = save(new_(TgCategory.class, "CAT1").setActive(true).setRefCount(10));
+        final var a = save(new_(TgSystem.class, "SYS1").setActive(true).setThirdCategory(b));
+
+        assertRefCount(10, b);
+
+        delete(a);
+
+        assertFalse(co$(TgSystem.class).entityExists(a));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public void deletion_of_active_A_that_references_active_B_via_union_does_not_affect_refCount_of_B_if_SkipActivatableTracking_is_present_on_both_levels() {
+        final var b = save(new_(TgCategory.class, "CAT1").setActive(true).setRefCount(10));
+        final var a = save(new_(TgSystem.class, "SYS1").setActive(true).setForthCat(b));
+
+        assertRefCount(10, b);
+
+        delete(a);
+
+        assertFalse(co$(TgSystem.class).entityExists(a));
+        assertRefCount(10, b);
     }
 
 }

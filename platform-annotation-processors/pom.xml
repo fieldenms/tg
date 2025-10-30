@@ -82,7 +82,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.1</version>
                 <executions>
                     <execution>
                         <id>uber</id>
@@ -93,7 +93,8 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>uber</shadedClassifierName>
-                            <minimizeJar>true</minimizeJar>
+                            <!-- TODO: uncomment once maven-shade-plugin supports Java 25 (class file version 69) -->
+                            <!-- <minimizeJar>true</minimizeJar> -->
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -147,26 +148,14 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>default-testCompile</id>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <release>21</release>
-                            <encoding>UTF-8</encoding>
-                            <showWarnings>true</showWarnings>
-                            <generatedTestSourcesDirectory>${project.build.directory}/generated-test-sources</generatedTestSourcesDirectory>
-                            <annotationProcessors>
-                                <annotationProcessor>ua.com.fielden.platform.processors.metamodel.MetaModelProcessor</annotationProcessor>
-                            </annotationProcessors>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>default-compile</id>
                         <goals>
                             <goal>compile</goal>
                         </goals>
                         <configuration>
+<!--                          Disable annotation processing for main sources as a workaround for a Maven bug. -->
+<!--                          Old Jira reference: https://issues.apache.org/jira/browse/MCOMPILER-97 -->
+<!--                          New GitHub reference: https://github.com/apache/maven-compiler-plugin/issues/455 -->
                             <compilerArgument>-proc:none</compilerArgument>
                         </configuration>
                     </execution>

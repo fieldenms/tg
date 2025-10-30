@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.impl.AbstractBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -31,14 +32,14 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.*;
 import static ua.com.fielden.platform.error.Result.*;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatablePersistentProperty;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableReferenceWithoutPreconditions;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
@@ -57,10 +58,15 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE = EntityUtils::isActivatablePersistentEntityType;
 
     private final IApplicationDomainProvider applicationDomainProvider;
+    private final ICompanionObjectFinder coFinder;
 
     @Inject
-    ActivePropertyValidator(final IApplicationDomainProvider applicationDomainProvider) {
+    ActivePropertyValidator(
+            final IApplicationDomainProvider applicationDomainProvider,
+            final ICompanionObjectFinder coFinder)
+    {
         this.applicationDomainProvider = applicationDomainProvider;
+        this.coFinder = coFinder;
     }
 
     @Override
@@ -144,13 +150,21 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     ///
     @SuppressWarnings("unchecked")
     private List<? extends MetaProperty<? extends AbstractEntity<?>>> activatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
-        // TODO For union-typed properties, check the union member property annotations as well.
         return entity.nonProxiedProperties()
-                .filter(mp -> mp.getValue() != null &&
-                              isActivatablePersistentProperty(mp.getEntity().getType(), mp.getName()) &&
-                              !isSpecialActivatableToBeSkipped(mp) &&
-                              !((AbstractEntity<?>) mp.getValue()).isIdOnlyProxy() &&
-                              !entity.equals(mp.getValue()))
+                .filter(mp -> {
+                    final Object value = mp.getValue();
+                    if (value == null || !isEntityType(mp.getType())) {
+                        return false;
+                    }
+                    final var propValue = (AbstractEntity<?>) value;
+                    if (propValue.isIdOnlyProxy() || entity.equals(propValue)) {
+                        return false;
+                    }
+
+                    final var entityType = (Class<? extends ActivatableAbstractEntity<?>>) entity.getType();
+                    final var propName = mp.getName();
+                    return isActivatableReferenceWithoutPreconditions(entityType, propName, propValue, coFinder);
+                })
                 .map(mp -> (MetaProperty<? extends AbstractEntity<?>>) mp)
                 .toList();
     }

@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.migration;
 
 import com.google.inject.Injector;
+import jakarta.inject.Provider;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
+import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.sql.*;
@@ -27,6 +28,9 @@ import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
 
 public class DataMigrator {
 
+    public static final String ERR_WHILE_EXECUTING_RETRIEVERS = "An error occurred while executing retriever [%s]",
+                               ERR_TO_COMPILE_RETRIEVER = "Failed to compile retriever [%s].";
+
     private static final Integer BATCH_SIZE = 100;
 
     private static final Logger LOGGER = getLogger();
@@ -34,19 +38,18 @@ public class DataMigrator {
     private static final TimeZone utcTz = TimeZone.getTimeZone("UTC");
     private static final Calendar utcCal = Calendar.getInstance(utcTz);
 
-    private final HibernateUtil hiberUtil;
+    private final Provider<TransactionalExecution> transactionalExecutionProvider;
     private final IdCache cache;
     private final MigrationUtils utils;
 
     public DataMigrator(
             final Injector injector,
-            final HibernateUtil hiberUtil,
             final boolean skipValidations,
             final boolean includeDetails,
             final Class<? extends IRetriever<? extends AbstractEntity<?>>>... retrieverTypes) throws SQLException
     {
         final DateTime start = new DateTime();
-        this.hiberUtil = hiberUtil;
+        this.transactionalExecutionProvider = injector.getProvider(TransactionalExecution.class);
         this.utils = injector.getInstance(MigrationUtils.class);
         this.cache = new IdCache();
 
@@ -73,20 +76,17 @@ public class DataMigrator {
         LOGGER.info(() -> "Migration duration: %s m %s s %s ms".formatted(period.getMinutes(), period.getSeconds(), period.getMillis()));
     }
 
-    /**
-     * Prints out retrievers grouped by their entity types (only those that have more than one retriever per type).
-     *
-     * @param retrieversJobs
-     */
+    /// Prints out retrievers grouped by their entity types (only those that have more than one retriever per type).
+    ///
     private static void printRetrieversScheme(final List<CompiledRetriever> retrieversJobs) {
         final var allRetrieverByType = retrieversJobs.stream().collect(Collectors.groupingBy(CompiledRetriever::getType));
 
         for (final Entry<? extends Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> typeAndItsRetrievers : allRetrieverByType.entrySet()) {
             if (typeAndItsRetrievers.getValue().size() > 1) {
-                System.out.println(" == " + typeAndItsRetrievers.getKey().getSimpleName());
+                LOGGER.info(() -> " == " + typeAndItsRetrievers.getKey().getSimpleName());
                 for (final CompiledRetriever compiledRetriever : typeAndItsRetrievers.getValue()) {
-                    System.out.println("        " + (compiledRetriever.isUpdater() ? "U" : " ") + " "
-                                       + compiledRetriever.retriever().getClass().getSimpleName());
+                    LOGGER.info(() -> "        " + (compiledRetriever.isUpdater() ? "U" : " ") + " "
+                                      + compiledRetriever.retriever().getClass().getSimpleName());
                 }
             }
         }
@@ -112,7 +112,7 @@ public class DataMigrator {
                         }
                     }
                     catch (final Exception ex) {
-                        throw new DataMigrationException("Failed to compile retriever [%s].".formatted(retriever.getClass().getSimpleName()), ex);
+                        throw new DataMigrationException(ERR_TO_COMPILE_RETRIEVER.formatted(retriever.getClass().getSimpleName()), ex);
                     }
                 })
                 .toList();
@@ -126,43 +126,39 @@ public class DataMigrator {
     }
 
     private void runSql(final List<String> statements) {
-        final var tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        hiberUtil.getSessionFactory().getCurrentSession().doWork(conn -> {
+        transactionalExecutionProvider.get().exec(conn -> {
             for (final var sql : statements) {
                 try (final var st = conn.createStatement()) {
                     st.execute(sql);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
                 }
             }
         });
-        tr.commit();
     }
 
     private long getNextId() {
-        final var tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        final long result = nextIdValue(ID_SEQUENCE_NAME, hiberUtil.getSessionFactory().getCurrentSession());
-        tr.commit();
-        return result;
+        return transactionalExecutionProvider.get()
+                .execWithSession(sessionEnabled -> nextIdValue(ID_SEQUENCE_NAME, sessionEnabled.getSession()));
     }
 
     private long batchInsert(final List<CompiledRetriever> retrievers, final Connection legacyConn, final long firstId) throws SQLException {
         final var id = new AtomicLong(firstId);
 
         for (final var ret : retrievers) {
+            final var retrieverName = ret.retriever().getClass().getSimpleName();
             try (final var legacyStmt = legacyConn.createStatement(); final var legacyRs = legacyStmt.executeQuery(ret.legacySql())) {
-                final var retrieverName = ret.retriever().getClass().getSimpleName();
                 LOGGER.info(() -> "Executing retriever [%s]".formatted(retrieverName));
-                try {
-                    final Function<TargetDataUpdate, Optional<Long>> updater = tdu -> {
-                        performBatchUpdates(tdu, legacyRs, retrieverName);
-                        return empty();
-                    };
-                    final Function<TargetDataInsert, Optional<Long>> inserter = tdi ->
-                        of(performBatchInserts(tdi, legacyRs, retrieverName, id.get()));
+                final Function<TargetDataUpdate, Optional<Long>> updater = tdu -> {
+                    performBatchUpdates(tdu, legacyRs, retrieverName);
+                    return empty();
+                };
+                final Function<TargetDataInsert, Optional<Long>> inserter = tdi ->
+                    of(performBatchInserts(tdi, legacyRs, retrieverName, id.get()));
 
-                    ret.exec(updater, inserter).ifPresent(id::set);
-                } catch (final Exception ex) {
-                    throw new DataMigrationException("An error occured while executing retriever [%s]".formatted(retrieverName), ex);
-                }
+                ret.exec(updater, inserter).ifPresent(id::set);
+            } catch (final Exception ex) {
+                throw new DataMigrationException(ERR_WHILE_EXECUTING_RETRIEVERS.formatted(retrieverName), ex);
             }
         }
 
@@ -173,8 +169,8 @@ public class DataMigrator {
         final var start = new DateTime();
         final var exceptions = new HashMap<String, List<List<Object>>>();
         final var typeCache = utils.cacheForType(cache, tdu.entityType());
-        final var tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        hiberUtil.getSessionFactory().getCurrentSession().doWork(targetConn -> {
+
+        transactionalExecutionProvider.get().exec(targetConn -> {
             try (final var insertStmt = targetConn.prepareStatement(tdu.updateStmt())) {
                 int batchId = 0;
                 final var batchValues = new ArrayList<List<Object>>();
@@ -185,10 +181,10 @@ public class DataMigrator {
                     for (final Integer keyIndex : tdu.keyIndices()) {
                         keyValue.add(legacyRs.getObject(keyIndex));
                     }
-                    final Object key = keyValue.size() == 1 ? keyValue.get(0) : keyValue;
+                    final Object key = keyValue.size() == 1 ? keyValue.getFirst() : keyValue;
                     final Long idObject = typeCache.get(key);
                     if (idObject == null) {
-                        System.out.println("           !!! can't find id for " + tdu.entityType().getSimpleName() + " with key: [" + key + "]");
+                        LOGGER.warn(() -> "           !!! can't find id for " + tdu.entityType().getSimpleName() + " with key: [" + key + "]");
                     } else {
                         final long id = idObject;
                         int index = 1;
@@ -211,9 +207,11 @@ public class DataMigrator {
                 if (batchId % BATCH_SIZE != 0) {
                     repeatAction(insertStmt, batchValues, exceptions);
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         });
-        tr.commit();
+
         LOGGER.info(generateFinalMessage(start, retrieverName, typeCache.size(), tdu.updateStmt(), exceptions));
     }
 
@@ -221,13 +219,12 @@ public class DataMigrator {
         final var start = new DateTime();
         final var exceptions = new HashMap<String, List<List<Object>>>();
         final var typeCache = utils.cacheForType(cache, tdi.entityType());
-        final var tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
 
-        final long idToReturn = hiberUtil.getSessionFactory().getCurrentSession().doReturningWork(targetConn -> {
+        return transactionalExecutionProvider.get().execFn(targetConn -> {
             try (final var insertStmt = targetConn.prepareStatement(tdi.insertStmt())) {
                 int batchId = 0;
                 final var batchValues = new ArrayList<List<Object>>();
-                Long id = startingId;
+                long id = startingId;
                 while (legacyRs.next()) {
                     id = id + 1;
                     batchId = batchId + 1;
@@ -263,15 +260,14 @@ public class DataMigrator {
 
                 LOGGER.info(() -> generateFinalMessage(start, retrieverName, typeCache.size(), tdi.insertStmt(), exceptions));
                 return id;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         });
-        tr.commit();
-        return idToReturn;
     }
 
-    /**
-     * Handles assignment of date/time fields for properties with UTC markers.
-     */
+    /// Handles assignment of date/time fields for properties with UTC markers.
+    ///
     private void transformIfUtcValueAndSet(final boolean hasUtcType, final PreparedStatement insertStmt, final int index, final Object value) throws SQLException {
         if (hasUtcType) {
             final Timestamp ts = (Timestamp) value;
@@ -301,11 +297,8 @@ public class DataMigrator {
         } catch (final BatchUpdateException ex) {
             LOGGER.warn(ex);
             int updateIndex = 0;
-            final List<List<Object>> existingValue = exceptions.get(ex.toString());
-            if (existingValue == null) {
-                exceptions.put(ex.toString(), new ArrayList<List<Object>>());
-            }
-            final List<List<Object>> exValues = exceptions.get(ex.toString());
+            exceptions.computeIfAbsent(ex.toString(), k -> new ArrayList<List<Object>>());
+            final var exValues = exceptions.get(ex.toString());
             for (final int updateCount : ex.getUpdateCounts()) {
                 if (updateCount != 1) {
                     exValues.add(batchValues.get(updateIndex));

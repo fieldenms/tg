@@ -8,6 +8,7 @@ import '/resources/polymer/@polymer/paper-input/paper-input-error.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js';
 
 import '/resources/components/tg-confirmation-dialog.js';
+import '/resources/images/tg-icons.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
 
@@ -19,6 +20,10 @@ import { tearDownEvent, allDefined, resultMessages, deepestActiveElement, isInHi
 let checkIconTimer = null;
 
 let lastEditor = null;
+
+let qrCodeScanner = null;
+
+const separators = {' ': /\\s/g, '\t': /\\t/g, '\n': /\\n/g};
 
 const timeoutCheckIcon = function (editor) {
     if (checkIconTimer) {
@@ -59,9 +64,10 @@ const hideCheckIconOnMouseLeave = function () {
 }
 
 const defaultLabelTemplate = html`
-    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]" slot="label">
         <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
         <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <iron-icon class="label-action" hidden$="[[!_scanAvailable]]" id="scanIcon" icon="tg-icons:qrcode-scan" on-down="_preventFocusOut" on-tap="_scanTap"></iron-icon>
     </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
@@ -90,6 +96,9 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 margin-right: 4px;
             }
             #decorator[focused]:not([disabled]) .label-title {
+                font-weight: 700;
+            }
+            #decorator[focused]:not([disabled]) .label {
                 font-weight: 700;
             }
             .label-action {
@@ -254,9 +263,17 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
             },
 
             /**
-             * Determines whther label is floatable or not.
+             * Determines whether label is floatable or not.
              */
             noLabelFloat: {
+                type: Boolean,
+                value: false,
+            },
+
+            /**
+             * Determines whether the QR code scanner action in the title should be hidden. 
+             */
+            hideQrCodeScanner: {
                 type: Boolean,
                 value: false,
             },
@@ -389,6 +406,11 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                 computed: '_isDisabled(currentState, entity, propertyName)',
                 observer: '_disabledChanged'
             },
+
+            _scanAvailable: {
+                type: Boolean,
+                computed: '_canScan(hideQrCodeScanner, noLabelFloat, entity, propertyName)'
+            },
     
             _invalid: {
                 type: Boolean,
@@ -518,6 +540,9 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                 value: function () {
                     return (function (event) {
                         this._setFocused(true);
+                        if (this._updateManuallyFocusedInputWith) {
+                            this._updateManuallyFocusedInputWith(this._focusTarget(event.target));
+                        }
                     }).bind(this);
                 }
             },
@@ -533,6 +558,9 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                     return (function (event) {
                         this._setFocused(false);
                         this._checkBuiltInValidation();
+                        if (this._updateManuallyFocusedInputWith) {
+                            this._updateManuallyFocusedInputWith(null);
+                        }
                     }).bind(this);
                 }
             },
@@ -643,6 +671,13 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         });
     }
 
+    /**
+     * Returns a concrete element in `_onFocus` `target` to be stored for further focusing.
+     */
+    _focusTarget (target) {
+        return target;
+    }
+
     isInWarning () {
         return this.$.decorator.classList.contains("warning");
     }
@@ -657,6 +692,52 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
 
     decorator () {
         return this.$.decorator;
+    }
+
+    focusDecoratedInput() {
+        this.decoratedInput().focus();
+    }
+
+    selectDecoratedInput() {
+        this.decoratedInput().select();
+    }
+
+    replaceText(text, start, end) {
+        const adjustedStart = start || 0;
+        const adjustedEnd = end || this._editingValue.length;
+        this._editingValue = this._editingValue.substring(0, adjustedStart) + text + this._editingValue.substring(adjustedEnd);
+        this.selectionStart = this.selectionEnd = adjustedStart + text.length;
+    }
+
+    insertText(text, where) {
+        if (typeof where === 'undefined') {
+            this._editingValue += text;
+            this.selectionStart = this.selectionEnd = this._editingValue.length + text.length;
+        } else {
+            this._editingValue = this._editingValue.substring(0, where) + text + this._editingValue.substring(where);
+            this.selectionStart = this.selectionEnd = where + text.length;
+        }
+    }
+
+    get selectionStart() {
+        return this.decoratedInput().selectionStart;
+    }
+
+    set selectionStart(where) {
+        this.decoratedInput().selectionStart = where;
+    }
+
+    get selectionEnd() {
+        return this.decoratedInput().selectionEnd;
+    }
+
+    set selectionEnd(where) {
+        this.decoratedInput().selectionEnd = where;
+    }
+
+    get availableScanSeparators() {
+        return [' ', '\t'];
+        
     }
 
     _handleCopy (event) {
@@ -771,21 +852,33 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     /**
      * This function returns the tooltip for this editor.
      */
-    _getTooltip (value) {
+    _getTooltip (value, _scanAvailable) {
         var tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
-        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip();
+        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip(_scanAvailable);
         return tooltip;
     }
 
     /**
      * Returns tooltip for action
      */
-    _getActionTooltip () {
+    _getActionTooltip (_scanAvailable) {
+        const actionTooltips = [];
+        actionTooltips.push(this._getCopyActionTooltip());
+        actionTooltips.push(this._getScanActionTooltip(_scanAvailable));
+        const filteredActionTooltips = actionTooltips.filter(tooltip => !!tooltip);
         return `<div style='display:flex;'>
-            <div style='margin-right:10px;'>With action: </div>
-            <div style='flex-grow:1;'><b>Copy</b><br>Copy content</div>
+            <div style='margin-right:10px;'>${filteredActionTooltips.length > 1 ? "With actions:" : "With action:"} </div>
+            <div style='flex-grow:1;'>${filteredActionTooltips.join("<br><br>")}</div>
             </div>`
+    }
+
+    _getCopyActionTooltip() {
+        return "<b>Copy</b><br>Copy content"
+    }
+
+    _getScanActionTooltip(_scanAvailable) {
+        return _scanAvailable ? "<b>Scan</b><br>Scan QR or Bar code" : "";
     }
     
     /**
@@ -927,8 +1020,8 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         // Select text inside editor and focus it, if it is enabled and not yet focused.
         // Selection of the text on-focus is consistent with on-tap action in the editor or focus gain logic when tabbing between editors.
         if (this.shadowRoot.activeElement !== this.decoratedInput() && !this._disabled) {
-            this.decoratedInput().select();
-            this.decoratedInput().focus();
+            this.selectDecoratedInput();
+            this.focusDecoratedInput();
         }
         // Need to tear down the event for the editor to remain focused.
         tearDownEvent(event);
@@ -943,6 +1036,82 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
             this.toaster.openToastWithoutEntity("Nothing to copy", true, "There was nothing to copy.", false);
         }
     }
+
+    /*************************QR Code Scanner related methods****************************************/
+    _preventFocusOut(e) {
+        tearDownEvent(e);
+    }
+
+    _scanTap () {
+        if (qrCodeScanner === null) {
+            qrCodeScanner = document.getElementById("qrScanner");
+        }
+        if (qrCodeScanner) {
+            qrCodeScanner.toaster = this.toaster;
+            qrCodeScanner.closeCallback = this._closeScanner(this.focused);
+            qrCodeScanner.applyCallback = this._applyScannerValue(this.focused).bind(this);
+            qrCodeScanner.open();
+        } else {
+            throw new Error("QR code scanner is not present in DOM. Please add it with 'qrScanner' id");
+        }
+    }
+
+    _closeScanner (wasFocused) {
+        return () => {
+            if (qrCodeScanner) {
+                qrCodeScanner.toaster = null;
+                qrCodeScanner.closeCallback = null;
+                qrCodeScanner.applyCallback = null;
+                if (wasFocused) {
+                    this.focusDecoratedInput();
+                }
+            }
+        }
+    }
+
+    _applyScannerValue(focused) {
+        return (value, separator) => {
+            let adjustedSeparator = separator && separator.trim();
+            const availableSepartors = this.availableScanSeparators;
+            availableSepartors.forEach(s => {
+                adjustedSeparator = adjustedSeparator.replace(separators[s], s);
+            });
+            if (!adjustedSeparator || !this._editingValue.trim()) {
+                this.replaceText(value);//If there is no separator specified then just replace all text in editor
+            } else if (!focused) {// If separator was specified but editor wasn't focused then append separator with scanned text to the end of editor's text.
+                this.insertText(adjustedSeparator + value); 
+            } else { //If editor was focused
+                const selectionStart = this.selectionStart;
+                const selectionEnd = this.selectionEnd;
+                if (selectionStart === selectionEnd) { //But there was no selection then insert text at the cursor position
+                    if (selectionStart === 0) {//If cursor was at the begining then do not prepend separator to the scanned text
+                        this.insertText(value, 0);
+                    } else { //Otherwise prepend separator to the scanned text and then insert text at cursor position.
+                        this.insertText(adjustedSeparator + value, selectionStart);
+                    }
+                } else { //If some part of editor's text was selected
+                    if (selectionStart === 0) {//Then replace it with new scanned text, but without separator if selection starts from the begining of editr's text
+                        this.replaceText(value, 0, selectionEnd);
+                    } else {//Otherwise replace all selected text with prepended separator to the scanned text.
+                        this.replaceText(adjustedSeparator + value, selectionStart, selectionEnd);
+                    }
+                }
+            }
+            this._checkBuiltInValidation();
+            this.commitIfChanged();
+        }
+    }
+
+    _canScan (hideQrCodeScanner, noLabelFloat, entity, propertyName) {
+        if (allDefined(arguments)) {
+            const metaPropEditable = this.reflector().isEntity(entity) && !this.reflector().isDotNotated(propertyName)
+                                 ? entity["@" + propertyName + "_editable"]
+                                 : false;
+            return !hideQrCodeScanner && !noLabelFloat && metaPropEditable
+        }
+        return false;
+    }
+    /*********************************** QR Code Scanner related methods end******************************/
 
     _showCheckIconAndToast (text) {
         if (this.toaster) {

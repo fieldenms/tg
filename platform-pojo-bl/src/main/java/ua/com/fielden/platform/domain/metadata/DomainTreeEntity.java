@@ -1,19 +1,10 @@
 package ua.com.fielden.platform.domain.metadata;
 
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 
-/**
- * The entity that represents the row in domain explorer tree.
- *
- * @author TG Team
- *
- */
+/// The entity that represents the row in domain explorer tree.
+///
 @KeyType(String.class)
 @KeyTitle(value = "Entity Type Title", desc = "The title of entity type")
 @DescTitle(value="Entity Type Description", desc="The description of entity type")
@@ -88,4 +79,11 @@ public class DomainTreeEntity extends AbstractTreeEntry<String> {
     public DomainType getPropertyType() {
         return propertyType;
     }
+
+    @Override
+    @Observable
+    public  DomainTreeEntity setDesc(String desc) {
+        return super.setDesc(desc);
+    }
+
 }
