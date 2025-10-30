@@ -41,4 +41,10 @@ public class TgInventoryPart extends ActivatableAbstractEntity<DynamicEntityKey>
         return number;
     }
 
+    @Override
+    @Observable
+    public TgInventoryPart setDesc(String desc) {
+        return super.setDesc(desc);
+    }
+
 }

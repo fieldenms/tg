@@ -1,17 +1,14 @@
 package ua.com.fielden.platform.menu;
 
-import static java.util.Collections.unmodifiableList;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Observable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.Optional;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * Represents device-profile-specific application menu with tiles and actions on them.
@@ -25,7 +22,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
 
     @IsProperty(ModuleMenu.class)
     @Title("Menu")
-    private List<ModuleMenu> menu = new ArrayList<>();
+    private final List<ModuleMenu> menu = new ArrayList<>();
 
     @IsProperty
     @Title("Edit menu items")
@@ -54,6 +51,48 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     @IsProperty
     @Title("User name")
     private String userName;
+
+    @IsProperty
+    private String currencySymbol;
+
+    @IsProperty(String.class)
+    @Title(value = "Site Allow List", desc = "Site white list that user can visit without confirmation.")
+    private final Set<String> siteAllowlist = new HashSet<>();
+
+    @IsProperty
+    @Title(value = "Allowed Site Expiry (Days)", desc = "Defines how long an allowed site remains trusted before requiring re-confirmation.")
+    private Integer daysUntilSitePermissionExpires;
+
+    public Integer getDaysUntilSitePermissionExpires() {
+        return daysUntilSitePermissionExpires;
+    }
+
+    @Observable
+    public Menu setDaysUntilSitePermissionExpires(final Integer daysUntilSitePermissionExpires) {
+        this.daysUntilSitePermissionExpires = daysUntilSitePermissionExpires;
+        return this;
+    }
+    
+    @Observable
+    protected Menu setSiteAllowlist(final Set<String> siteAllowlist) {
+        this.siteAllowlist.clear();
+        this.siteAllowlist.addAll(siteAllowlist);
+        return this;
+    }
+
+    public Set<String> getSiteAllowlist() {
+        return unmodifiableSet(siteAllowlist);
+    }
+
+    @Observable
+    public Menu setCurrencySymbol(final String currencySymbol) {
+        this.currencySymbol = currencySymbol;
+        return this;
+    }
+
+    public String getCurrencySymbol() {
+        return currencySymbol;
+    }
 
     @Observable
     public Menu setUserName(final String userName) {

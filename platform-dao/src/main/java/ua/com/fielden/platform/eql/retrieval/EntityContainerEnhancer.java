@@ -25,6 +25,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.findCollectionalProperty;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 public class EntityContainerEnhancer {
 
@@ -79,7 +80,7 @@ public class EntityContainerEnhancer {
                                      final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
                                      enhancePropertyWithLinkToParent(session, entities, propName, propFetchModel, linkPropName, paramValues);
                                  } catch (final Exception e) {
-                                     if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.isPersistent() || EntityUtils.isOneToOne(em.javaType()))) {
+                                     if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.isPersistent() || em.isSynthetic() || EntityUtils.isOneToOne(em.javaType()))) {
                                          enhanceProperty(session, entities, propName, propFetchModel, paramValues);
                                      } else {
                                          // logger.debug(format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));
@@ -149,7 +150,18 @@ public class EntityContainerEnhancer {
             final List<EntityContainer<E>> entities,
             final String propName, final Class<T> propType)
     {
-        if (propType != EntityAggregates.class) {
+        if (isUnionEntityType(propType)) {
+            for (final var entity : entities) {
+                final var unionContainer = entity.getEntities().get(propName);
+                for (final var memberContainer : unionContainer.getEntities().values()) {
+                    final var memberProxyType = idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(memberContainer.getResultType());
+                    if (memberProxyType != null) {
+                        memberContainer.setProxiedResultType((Class) memberProxyType);
+                    }
+                }
+            }
+        }
+        else if (propType != EntityAggregates.class) {
             final Class<? extends T> proxiedPropType = idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(propType);
             for (final EntityContainer<E> entity : entities) {
                 final EntityContainer<T> propContainer = (EntityContainer<T>) entity.getEntities().get(propName);

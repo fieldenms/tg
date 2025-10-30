@@ -867,15 +867,15 @@ public class CriteriaResource extends AbstractWebResource {
         return resultantCustomObject;
     }
 
-    public static Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> createQueryEnhancerAndContext(
+    public static <T extends AbstractEntity<?>> Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> createQueryEnhancerAndContext(
             final IWebUiConfig webUiConfig,
             final ICompanionObjectFinder companionFinder,
             final User user,
             final ICriteriaGenerator critGenerator,
             final EntityFactory entityFactory,
             final CentreContextHolder centreContextHolder,
-            final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContextConfig>>> queryEnhancerConfig,
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
+            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> queryEnhancerConfig,
+            final EnhancedCentreEntityQueryCriteria<T, ?> criteriaEntity,
             final DeviceProfile device,
             final EntityCentreConfigCo eccCompanion,
             final MainMenuItemCo mmiCompanion,

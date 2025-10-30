@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -297,7 +297,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         // If auditing is enabled, validate existence of audit types.
         if (auditingMode == AuditingMode.ENABLED) {
             if (auditEntityTypes.isEmpty()) {
-                throw new EntityDefinitionException(ERR_MUST_HAVE_AT_LEAST_ONE_PERSISTENT_AUDIT_ENTITY_TYPE);
+                throw new EntityDefinitionException(ERR_MUST_HAVE_AT_LEAST_ONE_PERSISTENT_AUDIT_ENTITY_TYPE.formatted(auditedType.getSimpleName()));
             }
 
             final var expectedTypeVersions = IntStream.rangeClosed(1, auditEntityTypes.size()).toArray();

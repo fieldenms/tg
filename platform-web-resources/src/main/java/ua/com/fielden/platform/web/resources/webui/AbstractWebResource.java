@@ -47,7 +47,8 @@ public abstract class AbstractWebResource extends ServerResource {
     private static DeviceProfile calculateDeviceProfile(final Request request) {
         // It is recommended to use word "Mobi" for mobile device detection, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent for more info.
         // At this stage "Tablet" token will be skipped for 'Mozilla (Gecko, Firefox)' browsers -- this will direct the page to the desktop version.
-        if (request.getClientInfo().getAgent().contains("Mobi")) {
+        final String agent = request.getClientInfo().getAgent();
+        if (agent != null && agent.contains("Mobi")) {
             return MOBILE;
         } else {
             return DESKTOP;

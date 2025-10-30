@@ -254,6 +254,9 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
     private ConditionModel collectionalCritConditionOperatorModel(
             final ICompoundCondition0<?> collectionQueryStart, final String propName, final QueryProperty qp)
     {
+        // TODO Ensure that `propName` refers to a property whose type is compatible with the type of `qp`.
+        //      This validation requires access to semantic information about `collectionQueryStart`,
+        //      which is available only in the EQL transformation pipeline (stages 1-3).
         final boolean hasValue = !qp.isEmpty();
         final boolean not = TRUE.equals(qp.getNot());
         final boolean orNull = TRUE.equals(qp.getOrNull());

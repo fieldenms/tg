@@ -16,6 +16,16 @@ moment.locale('custom-locale', {
 });
 
 /**
+ * External site allowlist for hyperlinks that can be opened without a confirmation prompt.
+ */
+let siteAllowlist;
+
+/**
+ * A number of days for caching user-allowed sites/links that can be opened without a confirmation prompt.
+ */
+let daysUntilSitePermissionExpires;
+
+/**
  * Timer Id to reconnect via sse after an error.
  */
 let timerIdForReconnection = null;
@@ -171,20 +181,30 @@ export const TgAppConfig = Polymer({
             readOnly: true,
             value: window.firstDayOfWeek
         },
-        siteAllowlist: {
-            type: Array,
-            readOnly: true,
-            value: @siteAllowlist
-        },
-        daysUntilSitePermissionExpires: {
-            type: Number,
-            readOnly: true,
-            value: @daysUntilSitePermissionExpires
-        }
     },
     
     attached: function() {
         this.style.display = "none";
+    },
+
+    getSiteAllowlist: function () {
+        return siteAllowlist;
+    },
+
+    setSiteAllowlist: function (allowlist) {
+        if (!siteAllowlist) {
+            siteAllowlist = allowlist;
+        }
+    },
+
+    getDaysUntilSitePermissionExpires: function () {
+        return daysUntilSitePermissionExpires;
+    },
+
+    setDaysUntilSitePermissionExpires: function (expiryDays) {
+        if (!daysUntilSitePermissionExpires) {
+            daysUntilSitePermissionExpires = expiryDays;
+        }
     }
     
 });

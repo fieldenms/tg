@@ -3,12 +3,8 @@ package ua.com.fielden.platform.entity.annotation.factory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
-/**
- * A factory for convenient instantiation of {@link EntityExists} annotations, which mainly should be used for dynamic property or validator creation.
- *
- * @author TG Team
- *
- */
+/// A factory for convenient instantiation of [EntityExists] annotations, which mainly should be used for dynamic property or validator creation.
+///
 public class EntityExistsAnnotation {
 
     public static EntityExists newInstance(final Class<? extends AbstractEntity<?>> value) {
@@ -22,11 +18,6 @@ public class EntityExistsAnnotation {
             @Override
             public Class<? extends AbstractEntity<?>> value() {
                 return value;
-            }
-
-            @Override
-            public String errorMsg() {
-                return "";
             }
 
         };

@@ -19,6 +19,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -45,7 +46,10 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
-import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.*;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.ICentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
@@ -88,6 +92,7 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.*;
+import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
@@ -95,6 +100,7 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validat
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.streamUnionSubProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
@@ -116,12 +122,8 @@ import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedName
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 import static ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget.createDefaultAdditionalProps;
 
-/**
- * Represents the entity centre.
- *
- * @author TG Team
- *
- */
+/// Represents the entity centre.
+///
 public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private static final CentreContextConfig defaultCentreContextConfig = new CentreContextConfig(false, false, false, false, null, empty(), empty());
@@ -211,27 +213,22 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final MainMenuItemCo mmiCompanion;
     private final IUser userCompanion;
 
-    /**
-     * Constructs an entity centre based on the specified configuration.
-     *
-     * @param miType – a menu item type representing an entry point for the entity centre being constructed.
-     * @param dslDefaultConfig – an entity centre configuration.
-     * @param injector – needed for dynamic instantiation of the companion finder and other infrastructural types.
-     */
+    /// Constructs an entity centre based on the specified configuration.
+    ///
+    /// @param miType a menu item type representing an entry point for the entity centre being constructed.
+    /// @param dslDefaultConfig an entity centre configuration.
+    /// @param injector needed for dynamic instantiation of the companion finder and other infrastructural types.
+    ///
     public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector) {
         this(miType, miType.getSimpleName(), dslDefaultConfig, injector, null);
     }
 
-    /**
-     * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
-     *
-     * @param miType
-     *            - the menu item type for which this entity centre is to be created.
-     * @param name
-     *            - the name for this entity centre.
-     * @param dslDefaultConfig
-     *            -- default configuration taken from Centre DSL
-     */
+    /// Creates new [EntityCentre] instance for the menu item type and with specified name.
+    ///
+    /// @param miType the menu item type for which this entity centre is to be created.
+    /// @param name the name for this entity centre.
+    /// @param dslDefaultConfig default configuration taken from Centre DSL
+    ///
     public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
         this.name = name;
         this.dslDefaultConfig = dslDefaultConfig;
@@ -252,11 +249,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         userCompanion = companionFinder.find(User.class);
     }
 
-    /**
-     * Validates root type corresponding to <code>menuItemType</code>.
-     *
-     * @param miType
-     */
+    /// Validates root type corresponding to `menuItemType`.
+    ///
     private static void validateMenuItemTypeRootType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         final EntityType etAnnotation = miType.getAnnotation(EntityType.class);
         if (etAnnotation == null || etAnnotation.value() == null) {
@@ -266,11 +260,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         validateRootType(root);
     }
 
-    /**
-     * Validates entity centre's views and their availability.
-     *
-     * @param dslDefaultConfig
-     */
+    /// Validates entity centre's views and their availability.
+    ///
     private static <T extends AbstractEntity<?>> void validateViewConfiguration(final Class<? extends MiWithConfigurationSupport<?>> miType, final EntityCentreConfig<T> dslDefaultConfig) {
         final long altViewCount = dslDefaultConfig.getInsertionPointConfigs().stream()
             .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == ALTERNATIVE_VIEW).orElse(FALSE)).count();
@@ -281,36 +272,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    /**
-     * Generates default centre from DSL config and postCentreCreated callback (user unspecific).
-     *
-     * @param dslDefaultConfig
-     * @param postCentreCreated
-     * @return
-     */
+    /// Generates default centre from DSL config and postCentreCreated callback (user unspecific).
+    ///
     private ICentreDomainTreeManagerAndEnhancer createUserUnspecificDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final EntityFactory entityFactory, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
         return createDefaultCentre0(dslDefaultConfig, entityFactory, postCentreCreated, false);
     }
 
-    /**
-     * Generates default centre from DSL config and postCentreCreated callback (user specific).
-     *
-     * @param dslDefaultConfig
-     * @param postCentreCreated
-     * @return
-     */
+    /// Generates default centre from DSL config and postCentreCreated callback (user specific).
+    ///
     private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final EntityFactory entityFactory, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
         return createDefaultCentre0(dslDefaultConfig, entityFactory, postCentreCreated, true);
     }
 
-    /**
-     * Creates calculated / custom property containers from Centre DSL definition. This is to be used when constructing {@link CentreDomainTreeManagerAndEnhancer} instances.
-     *
-     * @param entityType
-     * @param resultSetProps
-     * @param summaryExpressions
-     * @return
-     */
+    /// Creates calculated / custom property containers from Centre DSL definition. This is to be used when constructing [CentreDomainTreeManagerAndEnhancer] instances.
+    ///
     private static <T extends AbstractEntity<?>>T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> createCalculatedAndCustomProperties(final Class<?> entityType, final Optional<List<ResultSetProp<T>>> resultSetProps, final ListMultimap<String, SummaryPropDef> summaryExpressions) {
         final Map<Class<?>, List<CustomProperty>> customProperties = new LinkedHashMap<>();
         customProperties.put(entityType, new ArrayList<CustomProperty>());
@@ -346,18 +321,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return t2(calculatedPropertiesInfo, customProperties);
     }
 
-    /**
-     * Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
-     *
-     * @param dslDefaultConfig
-     * @param entityFactory
-     * @param postCentreCreated
-     * @param userSpecific
-     * @param entityType
-     * @param miType
-     * @param injector
-     * @return
-     */
+    /// Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
+    ///
     public static <T extends AbstractEntity<?>> ICentreDomainTreeManagerAndEnhancer createDefaultCentreFrom(
         final EntityCentreConfig<T> dslDefaultConfig,
         final EntityFactory entityFactory,
@@ -441,12 +406,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
     }
 
-    /**
-     * Calculates preferred view index. It can be 1 (EGI) or other alternative view index (2, 3...).
-     *
-     * @param dslDefaultConfig
-     * @return
-     */
+    /// Calculates preferred view index. It can be 1 (EGI) or other alternative view index (2, 3...).
+    ///
     private static <T extends AbstractEntity<?>> Integer calculatePreferredViewIndex(final EntityCentreConfig<T> dslDefaultConfig) {
         final List<InsertionPointConfig> altViews = dslDefaultConfig.getInsertionPointConfigs().stream()
             .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == ALTERNATIVE_VIEW).orElse(FALSE))
@@ -461,15 +422,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return preferredViewIndex.get();
     }
 
-    /**
-     * Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
-     *
-     * @param dslDefaultConfig
-     * @param entityFactory
-     * @param postCentreCreated
-     * @param userSpecific
-     * @return
-     */
+    /// Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
+    ///
     private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final EntityFactory entityFactory, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
         return createDefaultCentreFrom(dslDefaultConfig, entityFactory, postCentreCreated, userSpecific, entityType, miType, injector);
     }
@@ -780,56 +734,38 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    /**
-     * Returns the menu item type for this {@link EntityCentre} instance.
-     *
-     * @return
-     */
+    /// Returns the menu item type for this [EntityCentre] instance.
+    ///
     public Class<? extends MiWithConfigurationSupport<?>> getMenuItemType() {
         return miType;
     }
 
-    /**
-     * Returns the entity type for which this entity centre was created.
-     *
-     * @return
-     */
+    /// Returns the entity type for which this entity centre was created.
+    ///
     public Class<T> getEntityType() {
         return entityType;
     }
 
-    /**
-     * Returns the entity centre name.
-     *
-     * @return
-     */
+    /// Returns the entity centre name.
+    ///
     public String getName() {
         return name;
     }
 
-    /**
-     * Returns action configuration for concrete action kind and its number in that kind's space.
-     *
-     * @param actionKind
-     * @param actionNumber
-     * @return
-     */
+    /// Returns action configuration for concrete action kind and its number in that kind's space.
+    ///
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         return dslDefaultConfig.actionConfig(actionKind, actionNumber);
     }
 
-    /**
-     * Returns the value that indicates whether centre must run automatically or not.
-     *
-     * @return
-     */
+    /// Returns the value that indicates whether centre must run automatically or not.
+    ///
     public boolean isRunAutomatically() {
         return dslDefaultConfig.isRunAutomatically();
     }
 
-    /**
-     * @return whether the centre should run automatically (by default; can be changed) and its behaviour is not customised: criteria should be cleared in the process (default configs) and config moved to empty default (save-as configs, embedded only)
-     */
+    /// Returns the value that indicates whether the centre should run automatically (by default; can be changed) and its behaviour is not customised: criteria should be cleared in the process (default configs) and config moved to empty default (save-as configs, embedded only)
+    ///
     public boolean isRunAutomaticallyAndNotAllowCustomised() {
         return dslDefaultConfig.isRunAutomatically() && !allowCustomised();
     }
@@ -838,28 +774,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.getRunAutomaticallyOptions().contains(ALLOW_CUSTOMISED);
     }
 
-    /**
-     * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
-     *
-     * @return
-     */
+    /// Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
+    ///
     public boolean shouldEnforcePostSaveRefresh() {
         return dslDefaultConfig.shouldEnforcePostSaveRefresh();
     }
 
-    /**
-     * Returns a class name of an SSE event source, associated with this entity centre. This event source is used at the client-side to subscribe to a postal event to refresh this entity centre.
-     *
-     * @return
-     */
+    /// Returns a class name of an SSE event source, associated with this entity centre. This event source is used at the client-side to subscribe to a postal event to refresh this entity centre.
+    ///
     public Optional<Class<? extends IEventSource>> eventSourceClass() {
         return dslDefaultConfig.getEventSourceClass();
     }
-    /**
-     * Returns the instance of rendering customiser for this entity centre.
-     *
-     * @return
-     */
+
+    /// Returns the instance of rendering customiser for this entity centre.
+    ///
     public Optional<IRenderingCustomiser<?>> getRenderingCustomiser() {
         if (dslDefaultConfig.getResultSetRenderingCustomiserType().isPresent()) {
             return Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
@@ -868,20 +796,18 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    /**
-     * Creates and returns instance of multi-action selector in case of primary multi-action specified in Centre DSL.
-     * Returns empty {@link Optional} otherwise.
-     */
+    /// Creates and returns instance of multi-action selector in case of primary multi-action specified in Centre DSL.
+    /// Returns empty [Optional] otherwise.
+    ///
     public Optional<? extends IEntityMultiActionSelector> createPrimaryActionSelector() {
         return dslDefaultConfig
             .getResultSetPrimaryEntityAction()
             .map(multiActionConfig -> injector.getInstance(multiActionConfig.actionSelectorClass()));
     }
 
-    /**
-     * Creates and returns instance of multi-action selector in case of property multi-action specified in Centre DSL.
-     * Returns map between property names and property action selector.
-     */
+    /// Creates and returns instance of multi-action selector in case of property multi-action specified in Centre DSL.
+    /// Returns map between property names and property action selector.
+    ///
     public Map<String, ? extends IEntityMultiActionSelector> createPropertyActionSelectors() {
         return dslDefaultConfig.getResultSetProperties().map(resultProps -> {
             return resultProps.stream()
@@ -891,10 +817,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }).orElse(new HashMap<>());
     }
 
-    /**
-     * Creates instances of multi-action selectors in case of secondary multi-actions (or single actions) specified in Centre DSL.
-     * Returns empty {@link List} if there were no secondary multi-actions (or single actions) specified in Centre DSL.
-     */
+    /// Creates instances of multi-action selectors in case of secondary multi-actions (or single actions) specified in Centre DSL.
+    /// Returns empty [List] if there were no secondary multi-actions (or single actions) specified in Centre DSL.
+    ///
     public List<? extends IEntityMultiActionSelector> createSecondaryActionSelectors() {
         return dslDefaultConfig
             .getResultSetSecondaryEntityActions()
@@ -935,11 +860,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return typeRes;
     }
 
-    /**
-     * Returns default centre manager that was formed using DSL configuration and postCentreCreated hook.
-     *
-     * @return
-     */
+    /// Returns default centre manager that was formed using DSL configuration and postCentreCreated hook.
+    ///
     public ICentreDomainTreeManagerAndEnhancer createDefaultCentre() {
         return createDefaultCentre(dslDefaultConfig, injector.getInstance(EntityFactory.class), postCentreCreated);
     }
@@ -996,6 +918,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         !resultProp.propDef.isPresent(),
                         resultProp.width,
                         resultProp.dynamicColBuilderType.isPresent() ? 0 : centre.getSecondTick().getGrowFactor(root, resultPropName), // collectional dynamic columns are always unchecked -- skip getGrowFactor() invocation and use 0 as default grow factor
+                        resultProp.wordWrap,
                         resultProp.isFlexible,
                         tooltipProp,
                         egiRepresentationFor(
@@ -1287,15 +1210,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return representation;
     }
 
-    /**
-     * Generates DOM for alternative view actions. Also updates action's order, import path and action object.
-     *
-     * @param el
-     * @param importPaths
-     * @param functionalActionsObjects
-     * @param alternativeViewActionOrder
-     * @return
-     */
+   /// Generates DOM for alternative view actions. Also updates action's order, import path and action object.
+   ///
     private Optional<DomElement> alternativeViewActions(final InsertionPointBuilder el, final LinkedHashSet<String> importPaths, final StringBuilder functionalActionsObjects, final AtomicInteger alternativeViewActionOrder) {
         if (!el.getActions().isEmpty()) {
             final DomElement domContainer = new DomContainer();
@@ -1310,15 +1226,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return empty();
     }
 
-    /**
-     * Creates dropdown button with selected insertionPoint, that allows to switch between other alternative views including EGI.
-     * It might return empty optional if this centre doesn't have enough alternative views to switch between
-     * (i.e. there is only EGI or only one alternative view with hidden EGI and without other insertion points)
-     *
-     * @param insertionPointActionsElements
-     * @param insertionPoint
-     * @return
-     */
+    /// Creates dropdown button with selected insertionPoint, that allows to switch between other alternative views including EGI.
+    /// It might return empty optional if this centre doesn't have enough alternative views to switch between
+    /// (i.e. there is only EGI or only one alternative view with hidden EGI and without other insertion points)
+    ///
     private Optional<DomElement> switchViewButtons(final List<InsertionPointBuilder> insertionPointActionsElements, final Optional<InsertionPointBuilder> insertionPoint) {
         final List<InsertionPointBuilder> altViews = insertionPointActionsElements.stream().filter(insPoint -> insPoint.whereToInsert() == ALTERNATIVE_VIEW).collect(toList());
         final long otherViewCount = insertionPointActionsElements.size() - altViews.size();//Calculate the number of insertion points those are not an alternative view.
@@ -1337,9 +1248,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return new DomElement("div").attr("selectable-elements-container", null).attr("slot", "entity-specific-action").clazz("entity-specific-action", groupIndex == 0 ? "first-group" : "group");
     }
 
-    /**
-     * Calculates the relative grow factor for all columns.
-     */
+    /// Calculates the relative grow factor for all columns.
+    ///
     private static <T extends AbstractEntity<?>> Map<String, Integer> calculateGrowFactors(final List<ResultSetProp<T>> propertyColumns) {
         // Searching for the minimal column width which are not flexible and their width is greater than 0.
         final int minWidth = propertyColumns.stream()
@@ -1409,11 +1319,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return new Pair<>(resultsetLayoutHtml.toString(), resultsetLayoutJs.toString());
     }
 
-    /**
-     * Returns user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
-     *
-     * @return
-     */
+    /// Returns user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
+    ///
     private User getUser() {
         return injector.getInstance(IUserProvider.class).getUser();
     }
@@ -1436,13 +1343,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return sb.toString();
     }
 
-    /**
-     * Creates the widgets for criteria.
-     *
-     * @param centre
-     * @param root
-     * @return
-     */
+    /// Creates the widgets for criteria.
+    ///
     private List<AbstractCriterionWidget> createCriteriaWidgets(final ICentreDomainTreeManagerAndEnhancer centre, final Class<? extends AbstractEntity<?>> root) {
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         final List<AbstractCriterionWidget> criteriaWidgets = new ArrayList<>();
@@ -1475,6 +1377,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     if (EntityUtils.isEntityType(propertyType)) {
                         final List<Pair<String, Boolean>> additionalProps = dslDefaultConfig.getAdditionalPropsForAutocompleter(critProp);
                         criterionWidget = new EntityCriterionWidget(root, managedType, critProp, additionalProps, getCentreContextConfigFor(critProp));
+                    } else if (EntityUtils.isString(propertyType) && dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(critProp).isPresent()) {
+                        final List<Pair<String, Boolean>> additionalProps = dslDefaultConfig.getAdditionalPropsForAutocompleter(critProp);
+                        criterionWidget = new EntityStringCriterionWidget(root, managedType, critProp, dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(critProp).get(), additionalProps, getCentreContextConfigFor(critProp));
                     } else if (EntityUtils.isString(propertyType) || EntityUtils.isRichText(propertyType)) {
                         criterionWidget = new StringCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isBoolean(propertyType)) {
@@ -1518,13 +1423,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.getValueMatchersForSelectionCriteria().map(m -> m.get(dslProp)).flatMap(t3 -> t3._2).orElse(defaultCentreContextConfig);
     }
 
-    /**
-     * Creates value matcher instance with its context configuration; additionally returns original property with its type.
-     *
-     * @param criteriaType
-     * @param criterionPropertyName
-     * @return
-     */
+    /// Creates value matcher instance with its context configuration; additionally returns original property with its type.
+    ///
     public <V extends AbstractEntity<?>> T3<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>, T2<String, Class<V>>> createValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> criteriaType, final String criterionPropertyName) {
         final String originalPropertyName = getOriginalPropertyName(criteriaType, criterionPropertyName);
         final Class<V> propType = dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(originalPropertyName)
@@ -1551,38 +1451,32 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return matcherAndConfigAndPropWithType;
     }
 
-    /**
-     * Creates fetch model for entity-typed criteria autocompleted values. Fetches key and description complemented with additional properties specified in Centre DSL configuration.
-     *
-     * @param originalPropertyName
-     * @param propType
-     * @return
-     */
+    /// Creates fetch model for entity-typed criteria autocompleted values. Fetches key and description complemented with additional properties specified in Centre DSL configuration.
+    ///
     private <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String originalPropertyName, final Class<V> propType) {
         final Set<String> nonDefaultAdditionalProperties = dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream().map(Pair::getKey).collect(toSet());
         final Set<String> additionalProperties = nonDefaultAdditionalProperties.isEmpty() ? createDefaultAdditionalProps(propType).keySet() : nonDefaultAdditionalProperties;
         return createFetchModelForAutocompleterFrom(propType, additionalProperties);
     }
 
-    /**
-     * Creates lean fetch model for autocompleted values with deep keys for entity itself and deep keys for every <code>additionalProperties</code>.
-     * <p>
-     * Deep keys are needed for conversion of entity itself and its additional properties to string in client application.
-     * <p>
-     * Includes 'active' property for activatable {@code propType}.
-     *
-     * @param propType
-     * @param additionalProperties
-     * @return
-     */
+    /// Creates lean fetch model for autocompleted values with deep keys for entity itself and deep keys for every `additionalProperties`.
+    ///
+    /// Deep keys are needed for conversion of entity itself and its additional properties to string in client application.
+    ///
+    /// Includes 'active' property for activatable `propType`.
+    ///
     public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleterFrom(final Class<V> propType, final Set<String> additionalProperties) {
-        // always include 'active' property to render inactive activatables as grayed-out in client application
-        return (isActivatableEntityType(propType) ? Stream.concat(additionalProperties.stream(), Stream.of(ACTIVE)) : additionalProperties.stream()).reduce(
-            fetchNone(propType),
-            (fp, additionalProp) -> fp.addPropWithKeys(additionalProp, true), // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
-            (fp1, fp2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");}
-        ).addPropWithKeys("", false) // adding deep keys for entity itself (no 'desc' property is required, it should be explicitly added by withProps() API or otherwise it will be in default additional properties)
-        .fetchModel();
+        // Always include 'active' property to render inactive activatables as grayed-out in client application.
+        // Take into account union-typed activatables too.
+        return concat(additionalProperties.stream(),
+                      isActivatableEntityType(propType)
+                              ? Stream.of(ACTIVE)
+                              : isUnionEntityType(propType) ? streamUnionSubProperties((Class<? extends AbstractUnionEntity>) propType, ACTIVE) : Stream.of())
+                .reduce(fetchNone(propType),
+                        (fp, additionalProp) -> fp.addPropWithKeys(additionalProp, true), // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
+                        (fp1, fp2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");}
+                ).addPropWithKeys("", false) // adding deep keys for entity itself (no 'desc' property is required, it should be explicitly added by withProps() API or otherwise it will be in default additional properties)
+                .fetchModel();
     }
 
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {
@@ -1601,11 +1495,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.getFetchProvider();
     }
 
-    /**
-     * Returns fetch provider consisting only of 'tooltip properties': properties that are used as tooltips for other properties.
-     *
-     * @return
-     */
+    /// Returns fetch provider consisting only of 'tooltip properties': properties that are used as tooltips for other properties.
+    ///
     public Optional<IFetchProvider<T>> getAdditionalFetchProviderForTooltipProperties() {
         final Set<String> tooltipProps = new LinkedHashSet<>();
         final Optional<List<ResultSetProp<T>>> resultSetProps = dslDefaultConfig.getResultSetProperties();
@@ -1632,62 +1523,42 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.getGeneratorTypes();
     }
 
-    /**
-     * Creates generic {@link IGenerator} instance from injector based on assumption that <code>generatorType</code> is of appropriate type (such checks are performed on API implementation level).
-     *
-     * @param generatorType
-     * @return
-     */
+    /// Creates generic [IGenerator] instance from injector based on assumption that `generatorType` is of appropriate type (such checks are performed on API implementation level).
+    ///
     @SuppressWarnings("rawtypes")
     public IGenerator createGeneratorInstance(final Class<?> generatorType) {
         return (IGenerator) injector.getInstance(generatorType);
     }
 
-    /**
-     * Injects custom JavaScript code into centre implementation. This code will be executed after
-     * centre component creation.
-     *
-     * @param customCode
-     * @return
-     */
+    /// Injects custom JavaScript code into centre implementation. This code will be executed after
+    /// centre component creation.
+    ///
     public EntityCentre<T> injectCustomCode(final JsCode customCode) {
         this.customCode = Optional.of(customCode);
         return this;
     }
 
-    /**
-     * Injects custom JavaScript code into centre implementation. This code will be executed every time
-     * centre component is attached to client application's DOM.
-     *
-     * @param customCode
-     * @return
-     */
+    /// Injects custom JavaScript code into centre implementation. This code will be executed every time
+    /// centre component is attached to client application's DOM.
+    ///
     public EntityCentre<T> injectCustomCodeOnAttach(final JsCode customCode) {
         this.customCodeOnAttach = Optional.of(customCode);
         return this;
     }
 
-    /**
-     * Injects custom JavaScript imports into centre implementation.
-     *
-     * @param customImports
-     * @return
-     */
+    /// Injects custom JavaScript imports into centre implementation.
+    ///
     public EntityCentre<T> injectCustomImports(final JsCode customImports) {
         this.customImports = of(customImports);
         return this;
     }
 
-    /**
-     * Indicates whether 'active only' action was deliberately hidden by specifying {@link MatcherOptions#HIDE_ACTIVE_ONLY_ACTION} option in following methods:<br>
-     * {@link ISingleValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)}<br>
-     * {@link ISingleValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)}<br>
-     * {@link IMultiValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)}<br>
-     * {@link IMultiValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)}
-     * 
-     * @param property
-     * @return
-     */
+    /// Indicates whether 'active only' action was deliberately hidden by specifying [MatcherOptions#HIDE_ACTIVE_ONLY_ACTION] option in following methods:\
+    /// [ISingleValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)]\
+    /// [ISingleValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)]\
+    /// [IMultiValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)]\
+    /// [IMultiValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)]
+    ///
     public boolean isActiveOnlyActionHidden(final String property) {
         return dslDefaultConfig.isActiveOnlyActionHidden(property);
     }

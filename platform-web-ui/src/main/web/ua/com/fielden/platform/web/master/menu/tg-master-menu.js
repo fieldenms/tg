@@ -19,7 +19,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
-import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 import '/resources/components/postal-lib.js';
@@ -104,7 +104,7 @@ const template = html`
     <slot id="menuItemActions" name="menu-item-action"></slot>
 
     <app-drawer-layout id="drawerPanel" fullbleed on-app-drawer-transitioned="_appDrawerTransitioned">
-        <app-drawer id="drawer" disable-swipe="[[!mobile]]" slot="drawer">
+        <app-drawer id="drawer" disable-swipe="[[!touchEnabled]]" slot="drawer">
             <paper-listbox id="menu" attr-for-selected="data-route" selected="{{route}}" style="height: 100%; overflow: auto;">
                 <slot id="menuItems" name="menu-item"></slot>
             </paper-listbox>
@@ -140,13 +140,13 @@ Polymer({
     is: 'tg-master-menu',
 
     properties: {
-        mobile: {
+        touchEnabled: {
             type: Boolean,
-            value: isMobileApp()
+            value: isTouchEnabled()
         },
         sectionTitle: {
             type: String,
-            value: '[[sectionTitle]]',
+            value: '',
             observer: '_sectionTitleChanged'
         },
 
@@ -354,6 +354,7 @@ Polymer({
             this.addEventListener('dragenter', this.dragEntered.bind(this));
             this.addEventListener('dragover', this.dragOver.bind(this));
         }
+        this._toggleMenuBound = this._toggleMenu.bind(this);
     },
 
     attached: function () {
@@ -451,11 +452,6 @@ Polymer({
         }.bind(this), 0);
         //Needed to set the dynamic title
         this.fire('tg-dynamic-title-changed', this.sectionTitle);
-        this.fire('tg-menu-appeared', {
-            appeared: true,
-            func: self._toggleMenu.bind(self),
-            drawer: self.$.drawerPanel
-        });
         //Configure key event target for menu triggering.
         self.async(function () {
             self.keyEventTarget = getKeyEventTarget(self, self);
@@ -464,8 +460,10 @@ Polymer({
         afterNextRender(this, () => {
             this.$.drawerPanel._narrowChanged();
         });
-        this._cachedParentNode = this.parentNode;
-        this.fire('tg-master-menu-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
+        this._cachedParentNode = getParentAnd(this.parentElement, element => element.matches('tg-custom-action-dialog'));
+        if (this._cachedParentNode) {
+            this.fire('tg-master-menu-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on dialog that contains this master menu
+        }
     },
 
     detached: function () {
@@ -473,8 +471,10 @@ Polymer({
             this._subscriptions.pop().unsubscribe();
         }
         this.defaultRoute = this._originalDefaultRoute; // return original value after detaching; this is necessary in case where the same instance of 'tg-master-menu' (and the same instance of parent master) is used for different actions
-        this.fire('tg-master-menu-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
-        delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
+        if (this._cachedParentNode) {
+            this.fire('tg-master-menu-detached', this, { node: this._cachedParentNode }); // start event bubbling on dialog from which this entity master has already been detached
+            delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of dialog from memory
+        }
     },
 
     //Drag from behavior implementation
@@ -706,7 +706,11 @@ Polymer({
 
         if (this._isRefreshCycle === false) {
             if (this.maintainPreviouslyOpenedMenuItem) {
-                this._sectionRouteChanged(this.route, this.route);
+                if (!this.route) {
+                    this.route = this.defaultRoute;
+                } else {
+                    this._sectionRouteChanged(this.route, this.route);
+                }
             } else {
                 if (this.route !== this.defaultRoute) {
                     this.route = this.defaultRoute;
@@ -827,17 +831,14 @@ Polymer({
     },
     
     /**
-     * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
-     * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
-     *
-     * @param section
+     * Returns truthy value (actual embedded master) if the specified 'section' represents a master with master; falsy value otherwise.
      */
     isMasterWithMaster: function (section) {
         if (section && section._element && section._element.masterWithMaster && section._element.$.loader && section._element.$.loader.loadedElement) {
             const embeddedMaster = section._element.$.loader.loadedElement;
-            return true;
+            return embeddedMaster;
         }
-        return false;
+        return null;
     },
 
     /**
@@ -858,7 +859,7 @@ Polymer({
 
     /** Used by the master, which incorporates this menu to check if it can be closed. */
     canLeave: function () {
-        return this._section(this.route).canLeave();
+        return this._section(this.route) && this._section(this.route).canLeave();
     },
 
     _sectionRouteChanged: function (newRoute, oldRoute) {
@@ -878,6 +879,6 @@ Polymer({
             }
         }
 
-        action._run();
+        action && action._run();
     }
 });

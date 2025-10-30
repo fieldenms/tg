@@ -48,7 +48,10 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
         if (idObject != null) {
             return ((Number) idObject).longValue();
-        } else if (isUnionEntityType(resultType)) {
+        }
+        // NOTE: This may be unnecessary.
+        //       This is definitely not needed to assign `id` to union entities, as their field `id` is never accessed, instead delegating to the union members.
+        else if (isUnionEntityType(resultType)) {
             final Optional<Long> opId = entities.values().stream()
                     .map(EntityContainer::id)
                     .filter(EntityContainer::idIsNotNull)
@@ -103,4 +106,10 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     public Map<String, CollectionContainer<? extends AbstractEntity<?>>> getCollections() {
         return collections;
    }
+
+    @Override
+    public String toString() {
+        return "EntityContainer(%s)".formatted(resultType.getSimpleName());
+    }
+
 }

@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 
 import java.util.Optional;
 
@@ -18,16 +17,16 @@ import java.util.Optional;
 public interface ISecurityTokenGenerator {
 
     /// Generates a security token type.
-    /// By default the generated token's package is equal to that of the specified entity type,
-    /// but this can be overriden by specifiying `maybePkgName`.
+    /// By default, the generated token's package is equal to that of the specified entity type,
+    /// but this can be overridden by specifying `maybePkgName`.
     ///
     /// If the generated token type needs to be found by its name, use [ISecurityTokenProvider] or [ClassesRetriever]
     /// if the former is not accessible.
     ///
-    /// @param entityType  entity type for which the token will be generated
-    /// @param template  kind of the generated token
-    /// @param maybePkgName  package name for the generated token
-    /// @param maybeParentType  security token type that will be extended by the generated token
+    /// @param entityType       an entity type for which the token will be generated
+    /// @param template         a kind of the generated token
+    /// @param maybePkgName     a package name for the generated token
+    /// @param maybeParentType  a security token type that will be extended by the generated token
     ///
     Class<? extends ISecurityToken> generateToken(
             Class<? extends AbstractEntity<?>> entityType,

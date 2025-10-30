@@ -170,20 +170,25 @@ public class TableDdl {
                 .filter(col -> col.nullable ? MSSQL == dbVersion || POSTGRESQL == dbVersion : true)
                 .filter(col -> {
                     if (!col.indexApplicable) {
-                        LOGGER.warn("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
-                                    .formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
+                        LOGGER.warn(() -> "Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
+                                          .formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
                         return false;
                     } else {
                         return true;
                     }
                 })
                 .map(col -> {
-                    // otherwise, let's create unique index with the nullable clause if required
+                    // Otherwise, create a unique index.
                     final String indexName = "KEY_".equals(col.name) ? "KUI_%s".formatted(this.tableName) : "UI_%s_%s".formatted(this.tableName, col.name);
                     final StringBuilder sb = new StringBuilder();
                     sb.append("CREATE UNIQUE INDEX %s ON %s(%s)".formatted(indexName, this.tableName, col.name));
+                    // Enforce uniqueness for NOT NULL values, permitting multiple records with NUll in the same column.
                     if (col.nullable) {
                         sb.append(" WHERE (%s IS NOT NULL)".formatted(col.name));
+                    }
+                    // Enforce uniqueness for value 'Y', permitting multiple records with 'N' in the same column.
+                    else if (col.javaType == boolean.class) {
+                        sb.append(" WHERE (%s = 'Y')".formatted(col.name));
                     }
                     sb.append(";");
                     return sb.toString();

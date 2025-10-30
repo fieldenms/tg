@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-05-07 11:15:11 EEST
+// Generation timestamp: 2025-09-01 15:36:07 EEST
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -62,25 +62,18 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   private PropertyDescriptor<ReAuditedEntity_a3t> changedPropsCrit;
 
   @Title(
-      value = "Str 2",
-      desc = "[Str 2] at the time of the audited event."
+      value = "Bool 1",
+      desc = "[Bool 1] at the time of the audited event."
   )
   @IsProperty
-  private String a3t_str2;
+  private boolean a3t_bool1;
 
   @Title(
-      value = "Union Entity",
-      desc = "[Union Entity] at the time of the audited event."
+      value = "Date 1",
+      desc = "[Date 1] at the time of the audited event."
   )
   @IsProperty
-  private UnionEntity a3t_union;
-
-  @Title(
-      value = "Rich Text",
-      desc = "[Rich Text] at the time of the audited event."
-  )
-  @IsProperty
-  private RichText a3t_richText;
+  private Date a3t_date1;
 
   @Title(
       value = "Invalidate",
@@ -97,18 +90,11 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   private String a3t_key;
 
   @Title(
-      value = "Date 1",
-      desc = "[Date 1] at the time of the audited event."
+      value = "Rich Text",
+      desc = "[Rich Text] at the time of the audited event."
   )
   @IsProperty
-  private Date a3t_date1;
-
-  @Title(
-      value = "Bool 1",
-      desc = "[Bool 1] at the time of the audited event."
-  )
-  @IsProperty
-  private boolean a3t_bool1;
+  private RichText a3t_richText;
 
   @Title(
       value = "Str 1 [removed]",
@@ -117,6 +103,20 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   @InactiveAuditProperty
   @IsProperty
   private String a3t_str1;
+
+  @Title(
+      value = "Str 2",
+      desc = "[Str 2] at the time of the audited event."
+  )
+  @IsProperty
+  private String a3t_str2;
+
+  @Title(
+      value = "Union Entity",
+      desc = "[Union Entity] at the time of the audited event."
+  )
+  @IsProperty
+  private UnionEntity a3t_union;
 
   public AuditedEntity getAuditedEntity() {
     return this.auditedEntity;
@@ -150,33 +150,23 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
     return this;
   }
 
-  public String getA3t_str2() {
-    return this.a3t_str2;
+  public boolean isA3t_bool1() {
+    return this.a3t_bool1;
   }
 
   @Observable
-  public ReAuditedEntity_a3t setA3t_str2(final String a3t_str2) {
-    this.a3t_str2 = a3t_str2;
+  public ReAuditedEntity_a3t setA3t_bool1(final boolean a3t_bool1) {
+    this.a3t_bool1 = a3t_bool1;
     return this;
   }
 
-  public UnionEntity getA3t_union() {
-    return this.a3t_union;
+  public Date getA3t_date1() {
+    return this.a3t_date1;
   }
 
   @Observable
-  public ReAuditedEntity_a3t setA3t_union(final UnionEntity a3t_union) {
-    this.a3t_union = a3t_union;
-    return this;
-  }
-
-  public RichText getA3t_richText() {
-    return this.a3t_richText;
-  }
-
-  @Observable
-  public ReAuditedEntity_a3t setA3t_richText(final RichText a3t_richText) {
-    this.a3t_richText = a3t_richText;
+  public ReAuditedEntity_a3t setA3t_date1(final Date a3t_date1) {
+    this.a3t_date1 = a3t_date1;
     return this;
   }
 
@@ -200,23 +190,13 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
     return this;
   }
 
-  public Date getA3t_date1() {
-    return this.a3t_date1;
+  public RichText getA3t_richText() {
+    return this.a3t_richText;
   }
 
   @Observable
-  public ReAuditedEntity_a3t setA3t_date1(final Date a3t_date1) {
-    this.a3t_date1 = a3t_date1;
-    return this;
-  }
-
-  public boolean isA3t_bool1() {
-    return this.a3t_bool1;
-  }
-
-  @Observable
-  public ReAuditedEntity_a3t setA3t_bool1(final boolean a3t_bool1) {
-    this.a3t_bool1 = a3t_bool1;
+  public ReAuditedEntity_a3t setA3t_richText(final RichText a3t_richText) {
+    this.a3t_richText = a3t_richText;
     return this;
   }
 
@@ -227,6 +207,26 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   @Observable
   public ReAuditedEntity_a3t setA3t_str1(final String a3t_str1) {
     this.a3t_str1 = a3t_str1;
+    return this;
+  }
+
+  public String getA3t_str2() {
+    return this.a3t_str2;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_str2(final String a3t_str2) {
+    this.a3t_str2 = a3t_str2;
+    return this;
+  }
+
+  public UnionEntity getA3t_union() {
+    return this.a3t_union;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_union(final UnionEntity a3t_union) {
+    this.a3t_union = a3t_union;
     return this;
   }
 }

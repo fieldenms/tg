@@ -204,7 +204,13 @@ Polymer({
     },
 
     _handleViewLoaded: function () {
-        if (!this.offsetParent) { // offloads children from menu item section only if it is not visible
+        if (!this.offsetParent && !this.activated) {
+            // Offloads children from the menu item section only if it is not visible and not active.
+            // This handles issues when quickly switching between menu items,
+            // and also when switching between compound masters. 
+            // In that special case, the menu item section won't have an offset parent 
+            // until all data is loaded, but it will still be activated—
+            // which does not happen when switching between menu item sections.
             this.offloadDom();
         } else if (this._element && typeof this._element.addOwnKeyBindings === 'function') {
             this._element.addOwnKeyBindings();

@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.parser;
 
 import com.google.common.collect.Iterables;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.parser.exceptions.ValueParsingException;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;

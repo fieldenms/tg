@@ -15,11 +15,16 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 
-/**
- * Default implementation for {@link ICompanionObjectFinder}, which utilises injector (thread-safe) for creating Companion Object (CO) instances.
- * 
- * @author TG Team
- */
+/// Default implementation for [ICompanionObjectFinder], which utilises injector (thread-safe) for creating Companion Object (CO) instances.
+///
+/// There are two cases:
+/// 1. If an entity type is annotated with [CompanionObject], the finder uses a companion object type, specified by this annotation.
+/// 2. If an entity type is annotated with [CompanionIsGenerated], the finder generates a new type that represents the default companion object implementation.
+///    The companion type generation is delegated to [ICompanionGenerator].
+///
+/// If none of the above cases hold, the finder returns `null`.
+///
+///
 @Singleton
 final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
 
@@ -80,13 +85,8 @@ final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
         }
     }
 
-    /**
-     * A helper method to decide whether the instantiated companion should read instrumented or uninstrumented entities.
-     *  
-     * @param uninstrumented
-     * @param co
-     * @return
-     */
+    /// A helper method to decide whether the instantiated companion should read instrumented or uninstrumented entities.
+    ///
     private <T extends IEntityDao<E>, E extends AbstractEntity<?>> T decideUninstrumentation(final boolean uninstrumented, final T co) {
         if (uninstrumented) {
             if (co instanceof ICanReadUninstrumented) {

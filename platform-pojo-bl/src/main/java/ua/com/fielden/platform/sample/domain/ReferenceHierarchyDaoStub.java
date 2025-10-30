@@ -119,6 +119,11 @@ public class ReferenceHierarchyDaoStub implements IReferenceHierarchy, ICanReadU
     }
 
     @Override
+    public Optional<ReferenceHierarchy> getEntityOptional(final QueryExecutionModel<ReferenceHierarchy, ?> model) {
+        return Optional.empty();
+    }
+
+    @Override
     public boolean entityExists(final ReferenceHierarchy entity) {
         return false;
     }

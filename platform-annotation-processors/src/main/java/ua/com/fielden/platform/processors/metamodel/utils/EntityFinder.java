@@ -7,8 +7,8 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
@@ -16,6 +16,7 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderExce
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
@@ -25,19 +26,20 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.TypeKindVisitor14;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
-import java.util.Optional;
 import java.util.*;
+import java.util.Optional;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
-/**
- * A collection of utility functions to finding various elements in application to an entity abstraction of type {@link EntityElement}.
- *
- * @author TG Team
- */
+/// A collection of utility functions to finding various elements in application to an entity abstraction of type [EntityElement].
+///
 public class EntityFinder extends ElementFinder {
     public static final Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
     public static final Class<?> UNION_ENTITY_CLASS = AbstractUnionEntity.class;
@@ -46,44 +48,92 @@ public class EntityFinder extends ElementFinder {
         super(procEnv);
     }
 
-    /**
-     * Returns the element representing the given entity type.
-     *
-     * @see ElementFinder#getTypeElement(Class)
-     * @throws ElementFinderException if no corresponding type element was found
-     */
+    /// Returns the element representing the given entity type.
+    ///
+    /// @see ElementFinder#getTypeElement(Class)
+    /// @throws ElementFinderException if no corresponding type element was found
+    ///
     public EntityElement findEntity(final Class<? extends AbstractEntity> clazz) {
         return newEntityElement(getTypeElement(clazz));
     }
 
-    /**
-     * Returns the element representing the entity type with the specified canonical name.
-     *
-     * @see ElementFinder#getTypeElement(Class)
-     * @throws ElementFinderException if no corresponding type element was found
-     */
+    /// Returns the element representing the entity type with the specified canonical name.
+    ///
+    /// @see ElementFinder#getTypeElement(Class)
+    /// @throws ElementFinderException if no corresponding type element was found
+    ///
     public EntityElement findEntity(final String name) {
         return newEntityElement(getTypeElement(name));
     }
 
-   /**
-    * Returns a stream of declared properties.
-    *
-    * @param entityElement
-    */
-    public Stream<PropertyElement> streamDeclaredProperties(final EntityElement entityElement) {
+   /// Returns a stream of declared properties.
+   ///
+   /// * If `entityElement` is a union entity, the stream will contain only the union members.
+   ///   In most cases, it makes more sense to use [#streamProperties(EntityElement)] for union entities.
+   /// * Otherwise, a property is defined simply as a field annotated with [IsProperty].
+   ///   For more detailed processing use [#processProperties(Collection,EntityElement)].
+   ///
+   /// @see #findDeclaredProperties(EntityElement)
+   ///
+   public Stream<PropertyElement> streamDeclaredProperties(final EntityElement entityElement) {
         return streamDeclaredFields(entityElement)
                 .filter(this::isProperty)
                 .map(PropertyElement::new);
     }
 
+    /// Returns a stream of entity elements that form the union `entityElement`.
+    ///
+    public Stream<EntityElement> streamUnionMembers(final EntityElement entityElement) {
+        if (!isUnionEntityType(entityElement)) {
+            throw new InvalidArgumentException("Expected a union entity type: [%s].".formatted(entityElement.getQualifiedName()));
+        }
+
+        return streamDeclaredProperties(entityElement)
+                .filter(prop -> isEntityType(prop.getType()))
+                .map(prop -> asTypeElementOfTypeMirror(prop.getType()))
+                .map(this::newEntityElement);
+    }
+
+    public Stream<PropertyElement> streamCommonPropertiesForUnion(final EntityElement entityElement) {
+        if (!isUnionEntityType(entityElement)) {
+            throw new InvalidArgumentException("Expected a union entity type: [%s].".formatted(entityElement.getQualifiedName()));
+        }
+
+        final List<EntityElement> unionMembers = streamUnionMembers(entityElement).toList();
+
+        // (EntityElement, Properties)
+        final var pairs = unionMembers.stream().map(m -> t2(m, streamProperties(m).distinct().toList())).toList();
+
+        return first(pairs).map(fstPair -> {
+                    final var restPairs = pairs.subList(1, pairs.size());
+                    return fstPair.map((fstType, fstProps) -> fstProps.stream()
+                            .filter(fstProp -> restPairs.stream()
+                                    .allMatch(pair -> pair.map((otherType, otherProps) -> isPropertyPresent(fstProp, fstType, otherProps, otherType)))));
+                })
+                .orElseGet(Stream::of);
+    }
+
+    /// Returns `true` if `prop` is present among `otherProps`.
+    /// In the case of property `key`, special care is taken to determine its type.
+    ///
+    /// @param propOwner  the type where `prop` is present, required to correctly identify the type of property `key`.
+    /// @param otherPropsOwner  the type where `otherProps` are present, required to correctly identify the type of property `key`.
+    ///
+    private boolean isPropertyPresent(final PropertyElement prop, final EntityElement propOwner, final List<PropertyElement> otherProps, final EntityElement otherPropsOwner) {
+        return otherProps.stream()
+                .filter(otherProp -> prop.getSimpleName().contentEquals(otherProp.getSimpleName()))
+                .anyMatch(otherProp -> {
+                    final boolean isKey = KEY.contentEquals(prop.getSimpleName());
+                    final var propType = isKey ? determineKeyType(propOwner).orElse(null) : prop.getType();
+                    final var otherPropType = isKey ? determineKeyType(otherPropsOwner).orElse(null) : otherProp.getType();
+                    return propType != null && otherPropType != null && propType.equals(otherPropType);
+                });
+    }
+
     // TODO possible optimisation: move this method to EntityElement and memoize its result
-   /**
-    * Collects the elements of {@link #streamDeclaredFields(TypeElement)} into a list.
-    *
-    * @param entityElement
-    */
-    public List<PropertyElement> findDeclaredProperties(final EntityElement entityElement) {
+   /// Collects the elements of [#streamDeclaredFields(TypeElement)] into a list.
+   ///
+   public List<PropertyElement> findDeclaredProperties(final EntityElement entityElement) {
         return streamDeclaredProperties(entityElement).toList();
     }
 
@@ -98,33 +148,29 @@ public class EntityFinder extends ElementFinder {
                 .findFirst();
     }
 
-    /**
-     * Returns a stream of all inherited properties with no guarantees on element uniqueness.
-     *
-     * @see PropertyElement#equals(Object)
-     * @param entityElement
-     * @return
-     */
+    /// Returns a stream of all properties inherited by `entityElement`.
+    /// The stream will include hidden properties if they are inherited by `entityElement`.
+    /// It is up to the caller to filter them out.
+    ///
+    /// * If `entityElement` is a union entity, the contents of the stream are unspecified.
+    ///   In most cases, it makes more sense to use [#streamProperties(EntityElement)] for union entities.
+    /// * Otherwise, a property is defined simply as a field annotated with [IsProperty].
+    ///   For more detailed processing use [#processProperties(Collection,EntityElement)].
+    /// 
+    /// @see #findInheritedProperties(EntityElement)
+    ///
     public Stream<PropertyElement> streamInheritedProperties(final EntityElement entityElement) {
         return streamInheritedFields(entityElement, ROOT_ENTITY_CLASS)
                 .filter(this::isProperty)
                 .map(PropertyElement::new);
     }
 
-    /**
-     * Returns an unmodifiable set of properties, which are inherited by an entity.
-     * <p>
-     * Property uniqueness is described by {@link PropertyElement#equals(Object)}.
-     * Entity hierarchy is traversed in natural order.
-     * <p>
-     * A property is defined simply as a field annotated with {@link IsProperty}. For more detailed processing use
-     * {@link #processProperties(Collection, EntityElement)}.
-     */
-    public Set<PropertyElement> findInheritedProperties(final EntityElement entity) {
-        return streamInheritedFields(entity, ROOT_ENTITY_CLASS)
-                .filter(this::isProperty)
-                .map(PropertyElement::new)
-                .collect(toCollection(LinkedHashSet::new));
+    /// Collects the results of [#streamProperties(EntityElement)] into a sequenced set.
+    /// Property uniqueness is based on [PropertyElement#equals(Object)].
+    /// Hidden properties will be excluded.
+    ///
+    public SequencedSet<PropertyElement> findInheritedProperties(final EntityElement entity) {
+        return streamInheritedProperties(entity).collect(collectingAndThen(toCollection(LinkedHashSet::new), Collections::unmodifiableSequencedSet));
     }
 
     /**
@@ -132,7 +178,8 @@ public class EntityFinder extends ElementFinder {
      * <p>
      * The following properties are processed:
      * <ul>
-     *  <li>{@code id} – included if this or any of the entities represented by supertypes, is persistent.
+     *  <li>{@code id} – included if this or any of the entities represented by supertypes, is persistent,
+     *                   or {@code entity} represents a synthetic type that declares {@code id}.
      *  <li>{@code desc} – included if this or any of the entities represented by supertypes, declares {@code desc} or is annotated
      *  with {@code @DescTitle}, excluded otherwise.
      * </ul>
@@ -142,59 +189,90 @@ public class EntityFinder extends ElementFinder {
      */
     public Set<PropertyElement> processProperties(final Collection<PropertyElement> properties, final EntityElement entity) {
         final Set<PropertyElement> processed = new LinkedHashSet<>(properties);
-        processPropertyId(processed, entity);
-        processPropertyDesc(processed, entity);
+        maybePropId(entity).ifPresent(processed::add);
+        maybePropDesc(entity).ifPresentOrElse(processed::add,
+                                              () -> processed.removeIf(elt -> elt.getSimpleName().toString().equals(AbstractEntity.DESC)));
         return Collections.unmodifiableSet(processed);
     }
-    // where
-    private void processPropertyId(final Set<PropertyElement> properties, final EntityElement entity) {
-        // include property "id" only for persistent entities
-        if (isPersistentEntityType(entity) || doesExtendPersistentEntity(entity)) {
-            // "id" must exist
-            final VariableElement idElt = findField(entity, AbstractEntity.ID)
-                    .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.ID, entity)));
-            properties.add(new PropertyElement(idElt));
+
+    /// If property `id` is present in `entity`, returns an optional describing it.
+    /// Otherwise, returns an empty optional.
+    ///
+    /// `id` is considered to be present in:
+    /// * persistent entity types and their subtypes;
+    /// * union entity types;
+    /// * synthetic entity types that explicitly declare `id` or inherit `id` annotated with [IsProperty] (this annotation is absent on [AbstractEntity#id]).
+    ///
+    public Optional<PropertyElement> maybePropId(final EntityElement entity) {
+        if (isPersistentEntityType(entity) || doesExtendPersistentEntity(entity) || isUnionEntityType(entity)) {
+            // `id` must exist.
+            return Optional.of(new PropertyElement(getField(entity, AbstractEntity.ID)));
         }
-    }
-    // and
-    private void processPropertyDesc(final Set<PropertyElement> properties, final EntityElement entity) {
-        // include property "desc" in the following cases:
-        // 1. property "desc" is declared by entity or one of its supertypes below AbstractEntity
-        // 2. entity or any of its supertypes is annotated with @DescTitle
-        final Optional<PropertyElement> maybeDesc = findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class);
-        if (maybeDesc.isPresent()) {
-            properties.add(maybeDesc.get());
+        else if (isSyntheticEntityType(entity)) {
+            // Will be found iff annotated with `@IsProperty` (i.e., redeclared).
+            return findProperty(entity, AbstractEntity.ID);
         }
-        else if (findAnnotation(entity, DescTitle.class).isPresent()) {
-            // "desc" must exist
-            final VariableElement descElt = findField(entity, AbstractEntity.DESC)
-                    .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.DESC, entity)));
-            properties.add(new PropertyElement(descElt));
-        }
-        // in other cases we need to exclude it
-        else properties.removeIf(elt -> elt.getSimpleName().toString().equals(AbstractEntity.DESC));
+        else return Optional.empty();
     }
 
-    /**
-     * Returns a stream of all properties (both declared and inherited) with no guarantees on element uniqueness.
-     *
-     * @see PropertyElement#equals(Object)
-     * @param entityElement
-     */
+    /// If property `desc` is present in `entity`, returns an optional describing it.
+    /// Otherwise, returns an empty optional.
+    ///
+    /// `desc` is considered to be present if:
+    /// * `entity` is a union type, or;
+    /// * [DescTitle] is present on the enclosing entity type (directly or indirectly), or;
+    /// * property `desc` is explicitly redeclared.
+    ///
+    public Optional<PropertyElement> maybePropDesc(final EntityElement entity) {
+        if (isUnionEntityType(entity)) {
+            // `desc` must exist.
+            return Optional.of(new PropertyElement(getField(entity, AbstractEntity.DESC)));
+        }
+        else {
+            return findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class)
+                    .or(() -> {
+                        if (findAnnotation(entity, DescTitle.class).isPresent()) {
+                            // `desc` must exist.
+                            return Optional.of(new PropertyElement(getField(entity, AbstractEntity.DESC)));
+                        }
+                        else {
+                            return Optional.empty();
+                        }
+                    });
+        }
+    }
+
+    /// Returns a stream of all properties present in `entityElement`, starting from declared properties up to those inherited from [AbstractEntity].
+    /// The stream will include hidden properties if they exist in `entityElement`.
+    /// It is up to the caller to filter them out.
+    ///
+    /// * If `entityElement` is a union type, the result will include exactly: union members, common properties, `id`, `key`, `desc`.
+    /// * Otherwise, a property is defined simply as a field annotated with [IsProperty].
+    ///   For more detailed processing use [#processProperties(Collection,EntityElement)].
+    ///
+    /// @see #findProperties(EntityElement)
+    ///
     public Stream<PropertyElement> streamProperties(final EntityElement entityElement) {
-        return Stream.concat(streamDeclaredProperties(entityElement), streamInheritedProperties(entityElement));
+        if (isUnionEntityType(entityElement)) {
+            // AbstractUnionEntity.key : String
+            final var keyPropElt = new PropertyElement(getField(entityElement, KEY)).changeType(asType(String.class));
+            return StreamUtils.concat(streamDeclaredProperties(entityElement),
+                                      streamCommonPropertiesForUnion(entityElement),
+                                      maybePropId(entityElement).stream(),
+                                      maybePropDesc(entityElement).stream(),
+                                      Stream.of(keyPropElt));
+        }
+        else {
+            return Stream.concat(streamDeclaredProperties(entityElement), streamInheritedProperties(entityElement));
+        }
     }
 
-    /**
-     * Returns an unmodifiable set of all unique properties of the entity element: both declared an inherited.
-     * <p>
-     * Property uniqueness is described by {@link PropertyElement#equals(Object)}.
-     * Entity hierarchy is traversed in natural order.
-     */
-    public Set<PropertyElement> findProperties(final EntityElement entityElement) {
-        final Set<PropertyElement> properties = new LinkedHashSet<>(findDeclaredProperties(entityElement));
-        properties.addAll(findInheritedProperties(entityElement));
-        return Collections.unmodifiableSet(properties);
+    /// Collects the results of [#streamProperties(EntityElement)] into a sequenced set.
+    /// Property uniqueness is based on [PropertyElement#equals(Object)].
+    /// Hidden properties will be excluded.
+    ///
+    public SequencedSet<PropertyElement> findProperties(final EntityElement entityElement) {
+        return streamProperties(entityElement).distinct().collect(collectingAndThen(toCollection(LinkedHashSet::new), Collections::unmodifiableSequencedSet));
     }
 
     /**
@@ -365,6 +443,14 @@ public class EntityFinder extends ElementFinder {
         return isSubtype(type, UNION_ENTITY_CLASS);
     }
 
+    /**
+     * Tests whether the entity element represents a union entity type, which is defined as any subtype of
+     * {@link AbstractUnionEntity} (itself included).
+     */
+    public boolean isUnionEntityType(final EntityElement element) {
+        return isUnionEntityType(element.asType());
+    }
+
     public boolean isSyntheticEntityType(final EntityElement entity) {
         return streamDeclaredFields(entity.element())
                 .filter(ElementFinder::isStatic)
@@ -444,6 +530,12 @@ public class EntityFinder extends ElementFinder {
      */
     public boolean isCollectionalProperty(final PropertyElement property) {
         return isSubtype(property.getType(), Collection.class);
+    }
+
+    /// Tests whether the property element represents a persistent property.
+    ///
+    public boolean isPersistentProperty(final PropertyElement prop) {
+        return prop.getAnnotation(MapTo.class) != null;
     }
 
     public boolean isKeyMember(final PropertyElement property) {

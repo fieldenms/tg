@@ -1,16 +1,5 @@
 package ua.com.fielden.platform.web_api;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.security.tokens.Template.READ_MODEL;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLFieldsContainer;
 import graphql.schema.GraphQLSchema;
@@ -18,30 +7,36 @@ import graphql.schema.visibility.GraphqlFieldVisibility;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.tokens.Template;
 
-/**
- * Default {@link GraphqlFieldVisibility} for GraphQL Web API implementation.
- * <p>
- * It governs dynamic field visibility for TG domain types on different (root and nested) levels of fields using {@link Template#READ_MODEL} tokens.
- *
- * @author TG Team
- */
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.security.tokens.Template.READ_MODEL;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
+
+/// Default [GraphqlFieldVisibility] for GraphQL Web API implementation.
+///
+/// It governs dynamic field visibility for TG domain types on different (root and nested) levels of fields using [#READ_MODEL] tokens.
+///
 public class FieldVisibility implements GraphqlFieldVisibility {
     private final IAuthorisationModel authorisationModel;
     private final Map<String, Class<? extends AbstractEntity<?>>> domainTypes;
     private final ISecurityTokenProvider securityTokenProvider;
 
-    /**
-     * Creates {@link FieldVisibility} instance to be used as a singleton for the whole {@link GraphQLSchema}.
-     * 
-     * @param authorisationModel --authorises Web API queries {@link FieldVisibility}.
-     * @param domainTypes -- a set of TG domain types to be processed for field visibility
-     * @param securityToken -- security token provider, used to get token classes by their string names.
-     */
+    /// Creates [FieldVisibility] instance to be used as a singleton for the whole [GraphQLSchema].
+    ///
+    /// @param authorisationModel    authorises Web API queries [FieldVisibility].
+    /// @param domainTypes           a set of TG domain types to be processed for field visibility
+    /// @param securityTokenProvider a security token provider, used to get token classes by their string names.
     public FieldVisibility(final IAuthorisationModel authorisationModel, final Set<Class<? extends AbstractEntity<?>>> domainTypes, final ISecurityTokenProvider securityTokenProvider) {
         this.authorisationModel = authorisationModel;
-        this.domainTypes = domainTypes.stream().collect(toMap(type -> type.getSimpleName(), type -> type));
+        this.domainTypes = domainTypes.stream().collect(toMap(Class::getSimpleName, Function.identity()));
         this.securityTokenProvider = securityTokenProvider;
     }
 

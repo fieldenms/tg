@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.dao;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -12,20 +13,22 @@ import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.handlers.IAfterSave;
+import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.IDbVersionProvider;
-import ua.com.fielden.platform.entity.query.IEntityFetcher;
-import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -39,7 +42,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Optional.empty;
@@ -50,18 +53,15 @@ import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.utils.Lazy.lazyProvider;
 import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 
-/**
- * This is a base class for db-aware implementations of entity companions.
- * <p>
- * Method injection is used to free subclasses from the burden of declaring a huge constructor that only needs to call {@code super}.
- *
- * @author TG Team
- *
- * @param <T> entity type
- */
+/// Base class for database-aware implementations of entity companions.
+/// It is suitable for companions for both persistent and action entities.
+///
+/// Method injection is used to spare subclasses from declaring large constructors that merely delegate to `super`.
+/// This approach also improves evolvability, allowing changes in a backward-compatible manner.
+///
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityReader<T> implements IEntityDao<T>, ISessionEnabled, ICanReadUninstrumented {
 
-    private final Logger logger = getLogger(this.getClass());
+    private final Logger logger = getLogger();
 
     // *** INJECTABLE FIELDS
     private IDbVersionProvider dbVersionProvider;
@@ -72,6 +72,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private EntityFactory entityFactory;
     private IEntityFetcher entityFetcher;
     private Supplier<DeleteOperations<T>> deleteOps;
+    private EntityBatchInsertOperation.Factory batchInsertOpsFactory;
     private Supplier<PersistentEntitySaver<T>> entitySaver;
     // ***
 
@@ -114,6 +115,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     protected void setDeleteOpsFactory(final Provider<DeleteOperations.Factory> deleteOpsFactory) {
         deleteOps = lazyProvider(() -> deleteOpsFactory.get().create(this, this::getSession, entityType));
+    }
+
+    @Inject
+    protected void setBatchInsertOpsFactory(final EntityBatchInsertOperation.Factory batchInsertOpsFactory) {
+        this.batchInsertOpsFactory = batchInsertOpsFactory;
     }
 
     @Inject
@@ -275,10 +281,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return skipRefetching ? left(result._1) : right(result._2);
     }
 
-    /**
-     * Returns an open session, if present. Otherwise, throws {@link EntityCompanionException} exception.
-     * @return
-     */
+    /// Returns an open session, if present.
+    /// Otherwise, throws [EntityCompanionException] exception.
+    ///
     @Override
     public Session getSession() {
         if (session == null) {
@@ -289,13 +294,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return session;
     }
 
-    /**
-     * Returns a session instances without any checks.
-     * It is intended mainly for testing purposes to ensure correctness of the session state after various db operations.
-     *
-     * @return
-     */
-    public Session getSessionUnsafe() {
+    /// Returns a session instances without any checks.
+    /// It is intended mainly for testing purposes to ensure correctness of the session state after various db operations.
+    ///
+    public @Nullable Session getSessionUnsafe() {
         return session;
     }
 
@@ -573,23 +575,15 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return deleteOps.get().defaultBatchDelete(model);
     }
 
-    /**
-     * Batch deletion of entities in the provided list.
-     *
-     * @param entities
-     * @return
-     */
+    /// Batch deletion of entities in the provided list.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
-        return batchDelete(entities.stream().map(e -> e.getId()).collect(Collectors.toList()));
+        return batchDelete(entities.stream().map(AbstractEntity::getId).toList());
     }
 
-    /**
-     * Batch deletion of entities by their ID values.
-     *
-     * @param entitiesIds
-     * @return
-     */
+    /// Batch deletion of entities by their ID values.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
         return deleteOps.get().defaultBatchDelete(entitiesIds);
@@ -663,6 +657,58 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     public T new_() {
         return entityFactory.newEntity(getEntityType());
+    }
+
+    /// Provides the default implementation for batch insertion of new entities.
+    ///
+    /// This method serves as the standard implementation for batch insertion operations in entity companions.
+    /// It handles the common logic required for efficiently inserting multiple new entities into the database
+    /// while ensuring data integrity and applying necessary pre-save operations.
+    ///
+    /// The method performs the following operations for each entity:
+    /// - Auto-populates required properties for new entities (creation timestamps, user info, etc.).
+    /// - Validates each entity before insertion.
+    /// - Processes entities in batches according to the specified batch size.
+    ///
+    /// If validation fails for any entity, a runtime exception is thrown and the entire batch operation is rolled back.
+    ///
+    /// **Important:**
+    /// - Batch insertion is not suitable in many cases and should be used with care.
+    ///   Attempts to batch insert *active* activatable entities throws [InvalidArgumentException].
+    /// - This method should be called in the scope of an open session.
+    ///   Otherwise, [EntityCompanionException] is thrown.
+    ///
+    /// @param newEntities a stream of new entities to be inserted
+    /// @param batchSize   the number of entities to process in each database batch operation;
+    ///                    larger values improve throughput but increase memory usage
+    ///
+    /// @return the total count of successfully inserted entities
+    ///
+    /// @see EntityBatchInsertOperation#batchInsert for the underlying batch insertion mechanism
+    ///
+    protected int defaultBatchInsert(final Stream<T> newEntities, final int batchSize) {
+        // Call getSession() to make sure defaultBatchInsert is called in the scope of an open session.
+        // If not, this call throws exception.
+        getSession();
+
+        // If there is an open session, batch insertion cat be attempted.
+        final var ops = batchInsertOpsFactory.create(() -> new TransactionalExecution(userProvider, this::getSession));
+        final var saver = entitySaver.get();
+        return ops.batchInsert(newEntities.filter(Objects::nonNull).peek(entity -> {
+            // Do not permit batch insertion for active activatbles.
+            if (entity instanceof ActivatableAbstractEntity<?> ae && ae.isActive()) {
+                throw new InvalidArgumentException("Batch insertion of active activatable entities [%s] is not supported.".formatted(entity.getType().getSimpleName()));
+            }
+
+            // Autopopulated entity props.
+            if (entity instanceof AbstractPersistentEntity<?> persistentEntity) {
+                saver.assignCreationInfoForNew(persistentEntity);
+            }
+            saver.assignPropsBeforeSaveForNew(entity);
+
+            // Validate and throw if invalid.
+            entity.isValid().ifFailure(Result::throwRuntime);
+        }), batchSize);
     }
 
 }

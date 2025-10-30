@@ -12,7 +12,7 @@ import '/resources/centre/tg-selection-view.js';
 import '/resources/centre/tg-centre-result-view.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, localStorageKeyForCentre, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, localStorageKeyForCentre, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/actions/tg-ui-action.js';
 import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
@@ -554,7 +554,7 @@ Polymer({
                         //   This is possible if validation was triggered fast (in 50 millis debouncing time) since last validation and after current saving process.
                         //   This is very artificial case, because saving will likely be last in the chain of user actions.
                         const lastValidationAttemptPromise = self.lastValidationAttemptPromise();
-                        if (lastValidationAttemptPromise !== null) {
+                        if (lastValidationAttemptPromise) {
                             console.warn("Saving is chained to the last validation attempt promise...", lastValidationAttemptPromise);
                             // Don't reject on rejected 'lastValidationAttemptPromise'.
                             // We should allow SAVE even after validation with connection lost / server (or other) error.
@@ -791,7 +791,7 @@ Polymer({
     },
 
     focusSelectedView: function () {
-        if (!isMobileApp()) {
+        if (!isTouchEnabled()) {
             const elementToFocus = this._getVisibleFocusableElementIn(this._allViews[this._selectedView]);
             if (this._selectedView !== 1 || !this._allViews[1].isEditing()) {
                 if (elementToFocus) {

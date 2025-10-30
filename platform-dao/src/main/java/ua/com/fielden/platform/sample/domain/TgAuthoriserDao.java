@@ -20,7 +20,11 @@ public class TgAuthoriserDao extends CommonEntityDao<TgAuthoriser> implements IT
     protected TgAuthoriserDao(final IFilter filter) {
         super(filter);
     }
-    
+
+    @Override
+    public void delete(final TgAuthoriser entity) {
+        defaultDelete(entity);
+    }
 
     @Override
     protected IFetchProvider<TgAuthoriser> createFetchProvider() {

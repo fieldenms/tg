@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage0;
 
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
@@ -18,7 +19,6 @@ import ua.com.fielden.platform.eql.stage1.queries.SubQueryForExists1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;

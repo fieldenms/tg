@@ -1,31 +1,15 @@
 package ua.com.fielden.platform.reflection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.util.List;
-
-import org.junit.Test;
-
 import com.google.inject.Injector;
-
+import org.junit.Test;
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.DetailEntityForOneToOneAssociationWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 import ua.com.fielden.platform.associations.test_entities.EntityWithManyToOneAssociations;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -35,13 +19,24 @@ import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
-import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
-import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
-import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
-import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
+import ua.com.fielden.platform.reflection.test_entities.*;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyPersistent;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * Test case for {@link Reflector}.
@@ -234,12 +229,12 @@ public class ReflectorTest {
 
     @Test
     public void test_conversion_of_relative_property_paths_to_absolute() {
-        assertEquals("originator.name", Reflector.fromRelative2AbsotulePath("", "originator.name"));
-        assertEquals("vehicle.driver.name", Reflector.fromRelative2AbsotulePath("vehicle.driver", "name"));
-        assertEquals("originator.name", Reflector.fromRelative2AbsotulePath("vehicle.driver", "←.←.originator.name"));
-        assertEquals("vehicle.owner.name", Reflector.fromRelative2AbsotulePath("vehicle.driver", "←.owner.name"));
+        assertEquals("originator.name", Reflector.fromRelative2AbsolutePath("", "originator.name"));
+        assertEquals("vehicle.driver.name", Reflector.fromRelative2AbsolutePath("vehicle.driver", "name"));
+        assertEquals("originator.name", Reflector.fromRelative2AbsolutePath("vehicle.driver", "←.←.originator.name"));
+        assertEquals("vehicle.owner.name", Reflector.fromRelative2AbsolutePath("vehicle.driver", "←.owner.name"));
         try {
-            Reflector.fromRelative2AbsotulePath("vehicle.driver", "←.←.←.originator.name");
+            Reflector.fromRelative2AbsolutePath("vehicle.driver", "←.←.←.originator.name");
             fail("Validation should have prevented successful conversion.");
         } catch (final Exception ex) {
         }
@@ -247,24 +242,24 @@ public class ReflectorTest {
 
     @Test
     public void test_conversion_of_relative_property_paths_to_absolute_for_SELF_properties() {
-        assertEquals("", Reflector.fromRelative2AbsotulePath("", "SELF"));
-        assertEquals("vehicle", Reflector.fromRelative2AbsotulePath("vehicle", "SELF"));
-        assertEquals("vehicle.driver", Reflector.fromRelative2AbsotulePath("vehicle.driver", "SELF"));
+        assertEquals("", Reflector.fromRelative2AbsolutePath("", "SELF"));
+        assertEquals("vehicle", Reflector.fromRelative2AbsolutePath("vehicle", "SELF"));
+        assertEquals("vehicle.driver", Reflector.fromRelative2AbsolutePath("vehicle.driver", "SELF"));
     }
 
     @Test
     public void test_conversion_of_absolute_property_paths_to_relative() {
-        assertEquals("originator.name", Reflector.fromAbsotule2RelativePath("", "originator.name"));
-        assertEquals("name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.driver.name"));
-        assertEquals("←.←.originator.name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "originator.name"));
-        assertEquals("←.owner.name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.owner.name"));
+        assertEquals("originator.name", Reflector.fromAbsolute2RelativePath("", "originator.name"));
+        assertEquals("name", Reflector.fromAbsolute2RelativePath("vehicle.driver", "vehicle.driver.name"));
+        assertEquals("←.←.originator.name", Reflector.fromAbsolute2RelativePath("vehicle.driver", "originator.name"));
+        assertEquals("←.owner.name", Reflector.fromAbsolute2RelativePath("vehicle.driver", "vehicle.owner.name"));
     }
 
     @Test
     public void test_conversion_of_absolute_property_paths_to_relative_for_SELF_properties() {
-        assertEquals("SELF", Reflector.fromAbsotule2RelativePath("", ""));
-        assertEquals("SELF", Reflector.fromAbsotule2RelativePath("vehicle", "vehicle"));
-        assertEquals("SELF", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.driver"));
+        assertEquals("SELF", Reflector.fromAbsolute2RelativePath("", ""));
+        assertEquals("SELF", Reflector.fromAbsolute2RelativePath("vehicle", "vehicle"));
+        assertEquals("SELF", Reflector.fromAbsolute2RelativePath("vehicle.driver", "vehicle.driver"));
     }
 
     @Test
@@ -324,6 +319,188 @@ public class ReflectorTest {
             assertTrue(AbstractEntity.isStrictModelVerification());
             assertTrue(ComplexKeyEntity.isStrictModelVerification());
         }
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_calculated_properties() {
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "calcCategory"));
+        assertFalse(isPropertyPersistent(EntityWithPropertiesOfActivatableTypes.class, "calcCategory"));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_critOnly_properties() {
+        assertTrue(isPropertyAnnotationPresent(CritOnly.class, EntityWithPropertiesOfActivatableTypes.class, "categoryCrit"));
+        assertFalse(isPropertyPersistent(EntityWithPropertiesOfActivatableTypes.class, "categoryCrit"));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_plain_properties() {
+        assertFalse(isPropertyAnnotationPresent(CritOnly.class, EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+        assertFalse(isPropertyPersistent(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+        assertFalse(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+        assertFalse(isPropertyPersistent(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_true_for_simple_key_in_a_persistent_entity_type() {
+        assertTrue(isPersistentEntityType(TgPerson.class));
+        assertFalse(isCompositeEntity(TgPerson.class));
+        assertTrue(isPropertyPersistent(TgPerson.class, KEY));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_composite_key_in_a_persistent_entity_type() {
+        assertTrue(isPersistentEntityType(TgAuthorship.class));
+        assertTrue(isCompositeEntity(TgAuthorship.class));
+        assertFalse(isPropertyPersistent(TgAuthorship.class, KEY));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_composite_key_in_a_synthetic_entity_type() {
+        assertTrue(isSyntheticEntityType(TgVehicleFuelUsage.class));
+        assertTrue(isCompositeEntity(TgVehicleFuelUsage.class));
+        assertFalse(isPropertyPersistent(TgVehicleFuelUsage.class, KEY));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_key_in_a_union_type() {
+        assertTrue(isUnionEntityType(TgUnion.class));
+        assertFalse(isPropertyPersistent(TgUnion.class, KEY));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_desc_in_a_union_type_without_desc() {
+        assertTrue(isUnionEntityType(UnionEntityWithoutDesc.class));
+        assertFalse(hasDescProperty(UnionEntityWithoutDesc.class));
+        assertFalse(isPropertyPersistent(UnionEntityWithoutDesc.class, DESC));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_desc_in_a_union_type_with_desc() {
+        assertTrue(isUnionEntityType(UnionEntityWithDesc.class));
+        assertTrue(hasDescProperty(UnionEntityWithDesc.class));
+        assertFalse(isPropertyPersistent(UnionEntityWithDesc.class, DESC));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_true_for_desc_in_a_persistent_entity_type_with_desc() {
+        assertTrue(isPersistentEntityType(TgAuthor.class));
+        assertTrue(hasDescProperty(TgAuthor.class));
+        assertTrue(isPropertyPersistent(TgAuthor.class, DESC));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_desc_in_a_persistent_entity_type_without_desc() {
+        assertTrue(isPersistentEntityType(TgAuthorship.class));
+        assertFalse(hasDescProperty(TgAuthorship.class));
+        assertFalse(isPropertyPersistent(TgAuthorship.class, DESC));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_true_for_properties_annotated_with_MapTo_in_persistent_entities() {
+        assertTrue(isPersistentEntityType(TgVehicle.class));
+        assertTrue(isPropertyAnnotationPresent(MapTo.class, TgVehicle.class, "initDate"));
+        assertTrue(isPropertyPersistent(TgVehicle.class, "initDate"));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_true_for_properties_annotated_with_MapTo_in_union_entities() {
+        assertTrue(isUnionEntityType(TgUnion.class));
+        assertTrue(isPropertyAnnotationPresent(MapTo.class, TgUnion.class, "union1"));
+        assertTrue(isPropertyPersistent(TgUnion.class, "union1"));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_properties_annotated_with_MapTo_in_synthetic_entities() {
+        assertTrue(isSyntheticEntityType(TgReBogieWithHighLoad.class));
+        assertTrue(isPropertyAnnotationPresent(MapTo.class, TgReBogieWithHighLoad.class, "location"));
+        assertFalse(isPropertyPersistent(TgReBogieWithHighLoad.class, "location"));
+    }
+
+    @Test
+    public void isPropetyPersistent_is_false_for_properties_annotated_with_MapTo_in_action_entities() {
+        assertFalse(isPropertyPersistent(ExportAction.class, "count"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_true_for_explicitly_calculated_properties_in_persistent_entities() {
+        assertTrue(isPersistentEntityType(EntityWithPropertiesOfActivatableTypes.class));
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "calcCategory"));
+        assertTrue(Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "calcCategory"));
+        
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "calcAuthor"));
+        assertTrue(Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "calcAuthor"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_calculated_properties_in_non_persistent_non_synthetic_entities() {
+        // Entity is neither persistent nor synthetic, so calculated properties should return false
+        assertFalse(isPersistentEntityType(Entity.class));
+        assertFalse(isSyntheticEntityType(Entity.class));
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, Entity.class, "firstProperty"));
+        assertFalse(Reflector.isPropertyCalculated(Entity.class, "firstProperty"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_true_for_implicitly_calculated_one2one_relationships_in_persistent_entities() {
+        assertTrue(isPersistentEntityType(MasterEntityWithOneToOneAssociation.class));
+        assertTrue(Finder.isOne2One_association(MasterEntityWithOneToOneAssociation.class, "one2oneAssociation"));
+        assertTrue(Reflector.isPropertyCalculated(MasterEntityWithOneToOneAssociation.class, "one2oneAssociation"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_non_calculated_persistent_properties() {
+        assertTrue(isPersistentEntityType(EntityWithPropertiesOfActivatableTypes.class));
+        assertFalse(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "category"));
+        assertFalse(Finder.isOne2One_association(EntityWithPropertiesOfActivatableTypes.class, "category"));
+        assertFalse(Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "category"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_critOnly_properties() {
+        assertTrue(isPersistentEntityType(EntityWithPropertiesOfActivatableTypes.class));
+        assertTrue(isPropertyAnnotationPresent(CritOnly.class, EntityWithPropertiesOfActivatableTypes.class, "categoryCrit"));
+        assertFalse(Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "categoryCrit"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_plain_properties() {
+        assertTrue(isPersistentEntityType(EntityWithPropertiesOfActivatableTypes.class));
+        assertFalse(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+        assertFalse(Finder.isOne2One_association(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+        assertFalse(Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_properties_in_action_entities() {
+        assertFalse(isPersistentEntityType(ActionEntity.class));
+        assertFalse(isSyntheticEntityType(ActionEntity.class));
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, ActionEntity.class, "calculated"));
+        assertFalse(Reflector.isPropertyCalculated(ActionEntity.class, "calculated"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_non_calculated_properties_in_synthetic_entities() {
+        assertTrue(isSyntheticEntityType(TgReBogieWithHighLoad.class));
+        // TgReBogieWithHighLoad extends TgBogie and inherits "location" property which is annotated with @MapTo but not @Calculated
+        assertFalse(isPropertyAnnotationPresent(Calculated.class, TgReBogieWithHighLoad.class, "location"));
+        assertFalse(Finder.isOne2One_association(TgReBogieWithHighLoad.class, "location"));
+        assertFalse(Reflector.isPropertyCalculated(TgReBogieWithHighLoad.class, "location"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_true_for_calculated_properties_in_synthetic_entities() {
+        assertTrue(isSyntheticEntityType(TgReBogieWithHighLoad.class));
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, TgReBogieWithHighLoad.class, "calculated"));
+        assertFalse(Finder.isOne2One_association(TgReBogieWithHighLoad.class, "calculated"));
+        assertTrue(Reflector.isPropertyCalculated(TgReBogieWithHighLoad.class, "calculated"));
+    }
+
+    @Test
+    public void isPropertyCalculated_throws_exception_for_dot_expressions() {
+        assertThatThrownBy(() -> Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "category.key"))
+                .isInstanceOf(InvalidArgumentException.class)
+                .hasMessageContaining("must be a simple property name");
     }
 
     @KeyType(String.class)

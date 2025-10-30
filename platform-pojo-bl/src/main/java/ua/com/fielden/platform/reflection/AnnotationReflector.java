@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -12,10 +13,10 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
 
-import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Optional;
@@ -82,13 +83,8 @@ public final class AnnotationReflector {
         return getAnnotationForClass(annotationType, forType) != null;
     }
 
-    /**
-     * Returns the element's annotation for the specified type if such an annotation is present, else {@code null}.
-     *
-     * @param annotationType  the annotation type
-     * @return  this element's annotation for the specified annotation type if present on this element, else {@code null}
-     * @throws NullPointerException  if the given annotation type is null
-     */
+    /// Returns the element's annotation of the specified type if such an annotation is present, else `null`.
+    ///
     public static <A extends Annotation> @Nullable A getAnnotation(final AnnotatedElement annotatedElement, final Class<A> annotationType) {
         if (annotatedElement == null) {
             throw new InvalidArgumentException("Argument [annotatedElement] cannot be null.");
@@ -99,6 +95,23 @@ public final class AnnotationReflector {
             case Method method -> (A) getMethodAnnotations(method).get(annotationType);
             default -> throw new ReflectionException(format("Reflecting on annotations for [%s] is not supported.", annotatedElement.getClass().getTypeName()));
         };
+    }
+
+    /// Returns the element's annotation of the specified type if such an annotation is present, else throws an exception.
+    ///
+    public static <A extends Annotation> A requireAnnotation(final AnnotatedElement annotatedElement, final Class<A> annotationType) {
+        final var annot = getAnnotation(annotatedElement, annotationType);
+        if (annot == null) {
+            throw new InvalidArgumentException(format(
+                    "Required annotation @%s is missing for [%s].",
+                    annotationType.getCanonicalName(),
+                    switch (annotatedElement) {
+                        case Class<?> it -> it.getCanonicalName();
+                        case Member it -> "%s.%s".formatted(it.getDeclaringClass().getCanonicalName(), it.getName());
+                        default -> annotatedElement.toString();
+                    }));
+        }
+        return annot;
     }
 
     public static Map<Class<? extends Annotation>, Annotation> getFieldAnnotations(final Field field) {

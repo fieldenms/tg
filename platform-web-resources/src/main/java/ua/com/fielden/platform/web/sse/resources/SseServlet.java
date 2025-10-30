@@ -1,12 +1,29 @@
 package ua.com.fielden.platform.web.sse.resources;
 
-import static java.lang.Integer.parseInt;
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.security.session.Authenticator.fromString;
-import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.annotations.SessionHashingKey;
+import ua.com.fielden.platform.security.session.Authenticator;
+import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.web.sse.EventSourceEmitter;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
+import ua.com.fielden.platform.web.sse.RequestInfo;
+import ua.com.fielden.platform.web.sse.exceptions.SseException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -17,44 +34,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import static java.lang.Integer.parseInt;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.security.session.Authenticator.fromString;
+import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
-import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.security.annotations.SessionHashingKey;
-import ua.com.fielden.platform.security.session.Authenticator;
-import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.web.sse.EventSourceEmitter;
-import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
-import ua.com.fielden.platform.web.sse.RequestInfo;
-import ua.com.fielden.platform.web.sse.exceptions.SseException;
-
-/**
- * A Servlet that implements support for non-blocking async Server-Sent Eventing.
- * <p>
- * TG-based applications should use factory method {@link #addSseServlet(ServletHandler, IEventSourceEmitterRegister, IUserProvider, ICompanionObjectFinder, String, SessionIdentifierGenerator)}
- * to create and add an SSE servlet to {@link ServletHandler}.
- *
- * @author TG Team
- *
- */
+/// A Servlet that implements support for non-blocking async Server-Sent Eventing.
+///
+/// TG-based applications should use factory method [#addSseServlet] to create and add an SSE servlet to [ServletContextHandler].
+///
 public final class SseServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -69,38 +59,29 @@ public final class SseServlet extends HttpServlet {
     private final String hashingKey;
     private final SessionIdentifierGenerator crypto;
 
-    /**
-     * A convenient factory method to create an SSE service.
-     * <p>
-     * The method inspects application property {@code sse.enabled}. If true, creates, but does not start, a separate Jetty server instances with {@code SseServlet} added.
-     * <p>
-     * The following properties can be provided:
-     * <ul>
-     * <li>{@code sse.enabled}, default value "true".
-     * <li>{@code sse.jetty.port}, default value "8092".
-     * <li>{@code sse.jetty.threadPool.maxThreads}, default value "10".
-     * <li>{@code sse.jetty.threadPool.minThreads}, default value "1".
-     * <li>{@code sse.jetty.threadPool.idleTimeout}, default value "60000".
-     * <li>{@code sse.jetty.connector.acceptors}, default value "1".
-     * </ul>
-     * 
-     * @param props
-     * @param eseRegister
-     * @param coFinder
-     * @param hashingKey
-     * @param crypto
-     * @param logger
-     * @return
-     */
+     /// A convenient factory method to create an SSE service.
+     ///
+     /// The method inspects application property `sse.enabled`.
+     /// If true, creates, but does not start, a separate Jetty server instances with `SseServlet` added.
+     ///
+     /// The following properties can be provided:
+     ///
+     /// * `sse.enabled`, default value `true`.
+     /// * `sse.jetty.port`, default value `8092`.
+     /// * `sse.jetty.threadPool.maxThreads`, default value `10`.
+     /// * `sse.jetty.threadPool.minThreads`, default value `1`.
+     /// * `sse.jetty.threadPool.idleTimeout`, default value `60000`.
+     /// * `sse.jetty.connector.acceptors`, default value `1`.
+     ///
      public static Optional<Server> createSseService(
             final Properties props,
             final IEventSourceEmitterRegister eseRegister,
             final ICompanionObjectFinder coFinder,
             final @SessionHashingKey String hashingKey,
             final SessionIdentifierGenerator crypto,
-            final Logger logger
-            ) {
-        if (!Boolean.valueOf(props.getProperty("sse.enabled", "true"))) {
+            final Logger logger)
+     {
+        if (!Boolean.parseBoolean(props.getProperty("sse.enabled", "true"))) {
             logger.warn("SSE service is disabled. Attachments and auto-refresh capabilities won't work.");
             return empty();
         }
@@ -110,7 +91,7 @@ public final class SseServlet extends HttpServlet {
         final int idleTimeout = parseInt(props.getProperty("sse.jetty.threadPool.idleTimeout", "60000"));
         final int acceptors = parseInt(props.getProperty("sse.jetty.connector.acceptors", "1"));
         
-        logger.info(
+        logger.info(() ->
                 """
                 Creating SSE service:
                     sse.jetty.port..............................%s
@@ -127,43 +108,39 @@ public final class SseServlet extends HttpServlet {
         http.setPort(port);
         server.addConnector(http);
 
-        // so we need to add a handler
-        final ServletHandler handler = new ServletHandler();
-        server.setHandler(handler);
+        // We need to use a context handler since Jetty 12+.
+        final ServletContextHandler contextHandler = new ServletContextHandler("/");
+        server.setHandler(contextHandler);
+
         // SSE servlet instantiation, which still needs to be associated with a Jetty instance
-        SseServlet.addSseServlet(handler, eseRegister, coFinder, hashingKey, crypto);
+        SseServlet.addSseServlet(contextHandler, eseRegister, coFinder, hashingKey, crypto);
         return of(server);
     }
 
-    /**
-     * A factory method for instantiating and adding SSE servlet to {@code handler}.
-     *
-     * @param handler
-     * @param eseRegister
-     * @param coFinder
-     * @param hashingKey
-     * @param crypto
-     */
+    /// A factory method for instantiating and adding SSE servlet to `context`.
+    ///
     private static void addSseServlet(
-            final ServletHandler handler,
+            final ServletContextHandler contextHandler,
             final IEventSourceEmitterRegister eseRegister,
             final ICompanionObjectFinder coFinder,
             final @SessionHashingKey String hashingKey,
-            final SessionIdentifierGenerator crypto) {
+            final SessionIdentifierGenerator crypto)
+    {
         // instantiate this servlet
         final SseServlet sseServlet = new SseServlet(eseRegister, coFinder, hashingKey, crypto);
         // need to configure a servlet holder with async support
         final ServletHolder servletHolder = new ServletHolder(sseServlet);
         servletHolder.setAsyncSupported(true);
         // let's now bind the servlet to the default SSE path
-        handler.addServletWithMapping(servletHolder, "/sse/*");
+        contextHandler.addServlet(servletHolder, "/sse/*");
     }
 
     private SseServlet(
             final IEventSourceEmitterRegister eseRegister,
             final ICompanionObjectFinder coFinder,
             final @SessionHashingKey String hashingKey,
-            final SessionIdentifierGenerator crypto) {
+            final SessionIdentifierGenerator crypto)
+    {
         this.eseRegister = eseRegister;
         this.coFinder = coFinder;
         this.hashingKey = hashingKey;
@@ -177,11 +154,10 @@ public final class SseServlet extends HttpServlet {
         super.destroy();
     }
 
-    /**
-     * Responsible for processing requests for establishing SSE communication channels.
-     */
+    /// Responsible for processing requests for establishing SSE communication channels.
+    ///
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        final String sseIdString = Optional.ofNullable(request.getPathInfo()).filter(pi -> pi.length() > 1).map(pi -> pi.substring(1, pi.length())).orElse(NO_SSE_UID);
+        final String sseIdString = Optional.ofNullable(request.getPathInfo()).filter(pi -> pi.length() > 1).map(pi -> pi.substring(1)).orElse(NO_SSE_UID);
         if (NO_SSE_UID.equals(sseIdString)) {
             LOGGER.debug("SSE request: missing UID.");
             super.doGet(request, response);
@@ -189,14 +165,14 @@ public final class SseServlet extends HttpServlet {
         }
 
         final Optional<User> maybeUser = verifyAuthenticatorAndGetUser(request);
-        if (!maybeUser.isPresent()) {
+        if (maybeUser.isEmpty()) {
             LOGGER.debug("SSE request: no user identified, rejecting request.");
             super.doGet(request, response);
             return;
         }
 
         final User user = maybeUser.get();
-        // any errors that may occur during subscription or a normal lifecycle after, should result in deregistering and closing of the emitter, created during this request
+        // Any errors, which may occur during subscription or a normal lifecycle after, should result in deregistering and closing of the emitter, created during this request.
         try {
             eseRegister.registerEmitter(user, sseIdString, () -> {
                 try {
@@ -212,34 +188,29 @@ public final class SseServlet extends HttpServlet {
                     throw new SseException("Could not create a new SSE emitter.", ex);
                 }
             }).ifFailure(Result::throwRuntime);
-            LOGGER.info(format("SSE subscription for client [%s, %s] completed.", user, sseIdString));
+            LOGGER.info(() -> "SSE subscription for client [%s, %s] completed.".formatted(user, sseIdString));
         } catch (final Exception ex) {
             LOGGER.error(ex);
             eseRegister.deregisterEmitter(user, sseIdString);
-            LOGGER.warn(format("SSE subscription for client [%s, %s] did not complete.", user, sseIdString), ex);
+            LOGGER.warn(() -> "SSE subscription for client [%s, %s] did not complete.".formatted(user, sseIdString), ex);
             throw new ServletException(ex);
         }
     }
 
-    /**
-     * Obtains and verifies authenticator from the request, and returns a corresponding user if successful.
-     *
-     * @param request
-     * @param response
-     * @return
-     * @throws ServletException
-     * @throws IOException
-     */
+    /// Obtains and verifies authenticator from the request, and returns a corresponding user if successful.
+    ///
+    /// @param request
+    ///
     private Optional<User> verifyAuthenticatorAndGetUser(final HttpServletRequest request) {
         final Optional<Authenticator> oAuth = extractAuthenticator(request);
-        if (!oAuth.isPresent()) {
+        if (oAuth.isEmpty()) {
             LOGGER.debug("SSE request: unauthenticated.");
             return empty();
         }
         final Authenticator auth = oAuth.get();
         try {
             if (!auth.hash.equals(crypto.calculateRFC2104HMAC(auth.token, hashingKey))) {
-                LOGGER.debug(format("SSE request: authenticator %s cannot be verified. A tempered authenticator is suspected.", auth));
+                LOGGER.debug(() -> "SSE request: authenticator %s cannot be verified. A tempered authenticator is suspected.".formatted(auth));
                 return empty();
             }
         } catch (final SignatureException ex) {
@@ -252,14 +223,10 @@ public final class SseServlet extends HttpServlet {
         return user != null && user.isActive() ? of(user) : empty();
     }
 
-    /**
-     * Adjusts {@code response} to be suitable for SSE communication.
-     * This effectively completes the server-end part of the handshake to establish an SSE connection.
-     *
-     * @param response
-     * @throws IOException
-     */
-    protected void makeHandshake(final HttpServletResponse response) throws IOException {
+    /// Adjusts `response` to be suitable for SSE communication.
+    /// This effectively completes the server-end part of the handshake to establish an SSE connection.
+    ///
+    private void makeHandshake(final HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType("text/event-stream");
@@ -270,8 +237,8 @@ public final class SseServlet extends HttpServlet {
         response.flushBuffer();
     }
 
-    protected static Optional<Authenticator> extractAuthenticator(final HttpServletRequest request) {
-        // If request has not cookies, getCookies() returns null instead of an empty array.
+    private static Optional<Authenticator> extractAuthenticator(final HttpServletRequest request) {
+        // If request has no cookies, getCookies() returns null instead of an empty array.
         if (request.getCookies() == null) {
             return empty();
         }

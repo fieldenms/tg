@@ -1,8 +1,19 @@
 package ua.com.fielden.platform.entity;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import com.google.inject.Inject;
+import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
+import ua.com.fielden.platform.security.user.UserRole;
 
 import java.util.HashMap;
 import java.util.List;
@@ -11,29 +22,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.inject.Inject;
-
-import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 @EntityType(SecurityMatrixSaveAction.class)
 public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixSaveAction> implements SecurityMatrixSaveActionCo{
+
+    public static final String ERR_SECURITY_TOKEN_NOT_FOUND = "Security token [%s] could not be found.";
 
     private final ISecurityTokenProvider securityTokenProvider;
 
     @Inject
     protected SecurityMatrixSaveActionDao(final IFilter filter, final ISecurityTokenProvider securityTokenProvider) {
-        super(filter);
         this.securityTokenProvider = securityTokenProvider;
     }
 
@@ -61,7 +60,7 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
     private List<SecurityRoleAssociation> createSecurityRoleAssociations(final String securityToken, final List<Integer> roleIds, final Map<Long, UserRole> idRoleMap) {
         final Class<? extends ISecurityToken> token = loadToken(securityToken);
         final SecurityRoleAssociationCo associationCo = co$(SecurityRoleAssociation.class);
-        return roleIds.stream().map(id -> associationCo.new_().setRole(idRoleMap.get(Long.valueOf(id.longValue()))).setSecurityToken(token)).collect(Collectors.toList());
+        return roleIds.stream().map(id -> associationCo.new_().setRole(idRoleMap.get(id.longValue())).setSecurityToken(token)).collect(Collectors.toList());
     }
 
     private Map<Long, UserRole> getUserRoles(final SecurityMatrixSaveAction entity) {
@@ -76,8 +75,9 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
         return new HashMap<>();
     }
 
-    private Class<? extends ISecurityToken> loadToken(final String name) {
-        return securityTokenProvider.getTokenByName(name)
-                .orElseThrow(() -> Result.failure(new IllegalStateException(String.format("Security token [%s] could not be found.", name))));
+    private Class<? extends ISecurityToken> loadToken(final String tokenClassSimpleName) {
+        return securityTokenProvider.getTokenByName(tokenClassSimpleName)
+                .orElseThrow(() -> Result.failure(new InvalidStateException(ERR_SECURITY_TOKEN_NOT_FOUND.formatted(tokenClassSimpleName))));
     }
+
 }

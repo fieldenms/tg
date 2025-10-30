@@ -27,7 +27,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -53,6 +52,7 @@ import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryC
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
+import static ua.com.fielden.platform.utils.CollectionUtil.partitionBy;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -139,7 +139,11 @@ public class DynamicQueryBuilder {
             this.type = analyser.getPropertyType();
             final Pair<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> collectionalTypes = analyser.getCollectionContainerAndItsParentType();
             final String propertyNameWithinCollectionalHierarchy;
-            this.inUnionHierarchy = analyser.isInUnionHierarchy();
+
+            // Turned off the recognition of union members in order to treat them as any other property.
+            // This results in combining conditions for union members with logical AND instead of OR.
+            // TODO: Once it is proven in practice that AND is indeed more practical, the code needs to be cleaned up by removing the union-specific logic.
+            this.inUnionHierarchy = false; // analyser.isInUnionHierarchy();
             if (this.inUnionHierarchy) {
                 this.collectionContainerType = null;
                 this.collectionContainerParentType = null;
@@ -1100,33 +1104,42 @@ public class DynamicQueryBuilder {
             : cond().prop(getPropertyNameWithoutKeyPart(propertyNameWithKey)).in().values(matchedPropDescriptors.toArray()).model(); // passing of PropertyDescriptor instances works due to their proper conversion .toString() at the EQL level
     }
 
-    /**
-     * Generates condition for entity-typed property with type <code>propType</code> and criteria <code>searchValues</code>.
-     *
-     * @param propertyNameWithKey -- the name of property concatenated with ".key"
-     * @param searchValues
-     * @param propType
-     * @return
-     */
-    private static ConditionModel propertyLike(final String propertyNameWithKey, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
-        // A map to separate exact (false) and wildcard (true) search values; this provides a way to optimise the database query.
-        final Map<Boolean, List<String>> exactAndWildcardSearchVals = searchValues.stream().collect(groupingBy(str -> str.contains("*")));
-        final String propertyNameWithoutKey = getPropertyNameWithoutKeyPart(propertyNameWithKey);
-        if (exactAndWildcardSearchVals.containsKey(false) && exactAndWildcardSearchVals.containsKey(true)) { // both exact and whildcard search values are present
-            return cond()
-                    // Condition for exact search values; union entities need ".id" to help EQL.
-                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop(KEY).in().values(exactAndWildcardSearchVals.get(false).toArray()).model())
-                    // Condition for wildcard search values.
-                    .or().prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(exactAndWildcardSearchVals.get(true))).model();
-        } else if (exactAndWildcardSearchVals.containsKey(false) && !exactAndWildcardSearchVals.containsKey(true)) { // only exact search values are present
-            return cond()
-                    // Condition for exact search values; union entities need ".id" to help EQL.
-                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop(KEY).in().values(exactAndWildcardSearchVals.get(false).toArray()).model()).model();
-        } else { // only whildcard search values are present
-            return cond()
-                    // Condition for wildcard search values.
-                    .prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(exactAndWildcardSearchVals.get(true))).model();
-        }
+    /// Generates a condition for an entity-typed property using values specified for a criterion.
+    ///
+    /// @param prop  property path that ends with an entity-typed property or with `key`
+    /// @param propType  type of the criterion property
+    ///
+    private static ConditionModel propertyLike(final String prop, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
+        return partitionBy(searchValues, str -> str.contains("*"))
+                .map((wildVals, exactVals) -> {
+                    final var propWithoutKey = getPropertyNameWithoutKeyPart(prop);
+                    // TODO After #2452, adding ".id" for union-typed properties will no longer be necessary.
+                    final var propId = propWithoutKey + (isUnionEntityType(propType) ? ".id" : "");
+                    // Exact and wilcard search values.
+                    if (!exactVals.isEmpty() && !wildVals.isEmpty()) {
+                        return cond()
+                                // Condition for exact search values.
+                                .prop(propId).in().model(select(propType).where().prop(KEY).in().values(exactVals).model())
+                                .or()
+                                // Condition for wildcard search values.
+                                .prop(propId).in().model(select(propType).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals)).model())
+                                .model();
+                    }
+                    // Only exact search values.
+                    else if (!exactVals.isEmpty()) {
+                        return cond()
+                                .prop(propId).in().model(select(propType).where().prop(KEY).in().values(exactVals).model())
+                                .model();
+                    }
+                    // Only wildcards.
+                    else {
+                        return cond()
+                                .prop(propId)
+                                .in()
+                                .model(select(propType).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals)).model())
+                                .model();
+                    }
+                });
     }
 
     /**

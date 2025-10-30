@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.eql.meta.query;
 
-import java.util.Objects;
-
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
-import javax.annotation.Nullable;
+import java.util.Objects;
 
 public class QuerySourceItemForPrimType<T> extends AbstractQuerySourceItem<T> {
     /** The type of this item or {@code null}. */

@@ -256,6 +256,14 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         return data.size() == 1 ? data.get(0) : null;
     }
 
+    @Override
+    @SessionRequired
+    public Optional<T> getEntityOptional(final QueryExecutionModel<T, ?> model) {
+        final var qem = !instrumented() ? model.lightweight() : model;
+        final List<T> data = getFirstEntities(qem, 2);
+        return data.size() == 1 ? Optional.of(data.getFirst()) : Optional.empty();
+    }
+
     /**
      * Calculates the number of pages with a given size, needed to fit all records in a result set.
      *

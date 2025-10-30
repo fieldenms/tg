@@ -11,17 +11,14 @@ import java.util.List;
 import java.util.Set;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
 
-/**
- * A test case for user and role, and role and security token associations.
- *
- * @author TG Team
- *
- */
+/// A test case for user and role, and role and security token associations.
+///
 public class UserAndRoleAndTokenAssociationTestCase extends AbstractDaoTestCase {
     private final UserRoleCo coUserRole = getInstance(UserRoleCo.class);
     private final UserAndRoleAssociationCo coUserAndRoleAssociation = getInstance(UserAndRoleAssociationCo.class);
@@ -35,7 +32,7 @@ public class UserAndRoleAndTokenAssociationTestCase extends AbstractDaoTestCase 
     }
 
     @Test
-    public void users_can_be_retrived_together_with_their_roles() {
+    public void users_can_be_retrieved_together_with_their_roles() {
         final List<User> users = coUser.findAllUsersWithRoles();
         assertEquals(5, users.size());
 

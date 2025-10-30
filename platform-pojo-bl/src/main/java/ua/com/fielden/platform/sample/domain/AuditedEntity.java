@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.audit.Audited;
+import ua.com.fielden.platform.audit.DisableAuditing;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
@@ -20,7 +21,7 @@ import java.util.Date;
 public class AuditedEntity extends AbstractPersistentEntity<String> {
 
     public enum Property implements IConvertableToPath {
-        date1, bool1, str2, richText, union, invalidate;
+        date1, bool1, str2, str3, richText, union, invalidate;
 
         @Override
         public String toPath() {
@@ -39,6 +40,11 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
     @IsProperty
     @MapTo
     private String str2;
+
+    @IsProperty
+    @MapTo
+    @DisableAuditing
+    private String str3;
 
     @IsProperty
     @MapTo
@@ -83,6 +89,16 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
     @Observable
     public AuditedEntity setRichText(final RichText richText) {
         this.richText = richText;
+        return this;
+    }
+
+    public String getStr3() {
+        return str3;
+    }
+
+    @Observable
+    public AuditedEntity setStr3(final String str3) {
+        this.str3 = str3;
         return this;
     }
 

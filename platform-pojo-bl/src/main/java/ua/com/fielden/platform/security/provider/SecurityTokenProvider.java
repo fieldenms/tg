@@ -9,6 +9,7 @@ import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Extends;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.AuditModuleToken;
 import ua.com.fielden.platform.security.ISecurityToken;
@@ -27,6 +28,7 @@ import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_
 import ua.com.fielden.platform.security.tokens.user.*;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
 import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -37,35 +39,31 @@ import static java.util.Collections.unmodifiableCollection;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.collections4.CollectionUtils.disjunction;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.requireAnnotation;
 
 /// Tokens are accumulated from the following sources:
 /// - The location of security tokens given by application properties `tokens.path` and `tokens.package` is scanned.
+/// - Tokens for generated multi-inheritance types are dynamically generated.
 /// - Tokens for synthetic audit-entity types are dynamically generated in package `${tokens.package}.audit`.
 ///   Also see [#templatesForAuditedType(Class)].
 ///
 /// **A fundamental assumption:** simple class names uniquely identify security tokens and entities.
 ///
-/// @author TG Team
-///
 @Singleton
 public class SecurityTokenProvider implements ISecurityTokenProvider {
 
-    /**
-     * A map between token classes and their names.
-     * Used as a cache for obtaining class by name.
-     */
+    /// A map between token classes and their names.
+    /// Used as a cache for obtaining class by name.
     private final Map<String, Class<? extends ISecurityToken>> tokenClassesByName = new HashMap<>();
     private final Map<String, Class<? extends ISecurityToken>> tokenClassesBySimpleName = new HashMap<>();
 
-    /**
-     * Contains top level security token nodes.
-     * Effectively final.
-     */
+    /// Contains top level security token nodes.
+    /// Effectively final.
+    ///
     private SortedSet<SecurityTokenNode> topLevelSecurityTokenNodes;
 
-    /**
-     * The "default" constructor that can be used by IoC.
-     */
+    /// The "default" constructor that can be used by IoC.
+    ///
     @Inject
     public SecurityTokenProvider(
             final @Named("tokens.path") String path,
@@ -74,21 +72,20 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         this(path, packageName, emptySet(), emptySet());
     }
 
-    /**
-     * Creates security provider by automatically determining all security tokens available on the path within the specified package.
-     * May throw an exception as a result of failure to loaded token classes.
-     *
-     * @param path -- a path to classes or a jar (requires jar file name too) where security tokens are located.
-     * @param packageName -- a package name containing security tokens (sub-packages are traversed automatically).
-     * @param extraTokens -- additional tokens that belong neither to the standard platform ones not to the application specific ones, loaded dynamically "tokens.path".
-     * @param redundantTokens -- tokens to be removed for consideration; in most cases this would only be relevant for some of the platform-level tokens that are not applicable for some applications.
-     */
+    /// Creates security provider by automatically determining all security tokens available on the path within the specified package.
+    /// May throw an exception as a result of failure to loaded token classes.
+    ///
+    /// @param path            a path to classes or a jar (requires jar file name too) where security tokens are located.
+    /// @param packageName     a package name containing security tokens (sub-packages are traversed automatically).
+    /// @param extraTokens     the additional tokens that belong neither to the standard platform ones not to the application specific ones, loaded dynamically "tokens.path".
+    /// @param redundantTokens the tokens to be removed for consideration; in most cases this would only be relevant for some of the platform-level tokens that are not applicable for some applications.
+    ///
     public SecurityTokenProvider(
             final String path,
             final String packageName,
             final Set<Class<? extends ISecurityToken>> extraTokens,
-            final Set<Class<? extends ISecurityToken>> redundantTokens
-    ) {
+            final Set<Class<? extends ISecurityToken>> redundantTokens)
+    {
         final Set<Class<? extends ISecurityToken>> platformLevelTokens = CollectionUtil.setOf(
                 User_CanSave_Token.class,
                 User_CanRead_Token.class,
@@ -137,18 +134,19 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         }
     }
 
-    /**
-     * Additional initialisation after the constructor.
-     * Called by the IoC framework.
-     */
+    /// Additional initialisation after the constructor.
+    /// Called by the IoC framework.
+    ///
     @Inject
     private void init(
             final AuditingMode auditingMode,
-            final IApplicationDomainProvider appDomain,
             final IAuditTypeFinder auditTypeFinder,
+            final IApplicationDomainProvider appDomain,
             final ISecurityTokenGenerator generator,
             final @Named("tokens.package") String tokensPkgName)
     {
+        registerTokensForMultiInheritanceEntities(appDomain, generator, tokensPkgName);
+
         if (auditingMode == AuditingMode.ENABLED) {
             registerAuditTokens(appDomain, auditTypeFinder, generator, tokensPkgName);
         }
@@ -156,7 +154,44 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
             throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
         }
+
         topLevelSecurityTokenNodes = buildTokenNodes(tokenClassesByName.values());
+    }
+
+    private void registerTokensForMultiInheritanceEntities(
+            final IApplicationDomainProvider appDomain,
+            final ISecurityTokenGenerator generator,
+            final String tokensPkgName)
+    {
+        appDomain.entityTypes()
+                .stream()
+                .filter(EntityUtils::isGeneratedMultiInheritanceEntityType)
+                .flatMap(entityType -> tokensForMultiInheritanceEntity(entityType, generator, tokensPkgName))
+                .forEach(tokenType -> {
+                    tokenClassesByName.put(tokenType.getName(), tokenType);
+                    tokenClassesBySimpleName.put(tokenType.getSimpleName(), tokenType);
+                });
+    }
+
+    /// Provides tokens for a generated multi-inheritance entity type.
+    /// This method generates [Template#READ] and [Template#READ_MODEL] tokens for each type.
+    ///
+    /// @param entityType     a generated multi-inheritance entity type
+    /// @param generator      a token generator that should be used to generate tokens
+    /// @param tokensPkgName  a destination package for tokens
+    ///
+    protected Stream<? extends Class<? extends ISecurityToken>> tokensForMultiInheritanceEntity(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final ISecurityTokenGenerator generator,
+            final String tokensPkgName)
+    {
+        final var specType = EntityUtils.specTypeFor(entityType);
+        final var atExtends = requireAnnotation(specType, Extends.class);
+        return Stream.of(Template.READ, Template.READ_MODEL)
+                .map(templ -> generator.generateToken(entityType,
+                                                      templ,
+                                                      Optional.of(tokensPkgName),
+                                                      Optional.of(atExtends.parentToken())));
     }
 
     private void registerAuditTokens(
@@ -209,26 +244,26 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         return unmodifiableCollection(tokenClassesByName.values());
     }
 
-    /**
-     * Returns a class representing a security token by its simple or full class name.
-     *
-     * @param tokenClassSimpleName -- a simple or a full class name for a security token.
-     */
+    /// Returns a class representing a security token by its simple or full class name.
+    ///
+    /// @param tokenClassSimpleName a simple or a full class name for a security token.
+    ///
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends ISecurityToken> Optional<Class<T>> getTokenByName(final String tokenClassSimpleName) {
+    public <T extends ISecurityToken > Optional < Class < T >> getTokenByName(final String tokenClassSimpleName) {
         final Class<T> classBySimpleName = (Class<T>) tokenClassesBySimpleName.get(tokenClassSimpleName);
         return ofNullable(classBySimpleName != null ? classBySimpleName : (Class<T>) tokenClassesByName.get(tokenClassSimpleName));
     }
 
     /// Transforms a set of security tokens into a hierarchy of [SecurityTokenNode] nodes.
     ///
-    /// The result is a forest of trees (i.e., multiple trees), ordered according to the comparator, implemented by [SecurityTokenNode].
-    /// Roots for each trees represent one of the top-level security tokens.
+    /// The result is a forest of trees (i.e. multiple trees), ordered according to the comparator, implemented by [SecurityTokenNode].
+    /// Roots for each tree represent one of the top-level security tokens.
     ///
     /// `allTokens` must contain all tokens that are contained in the resulting forest of trees.
     /// For example, it is an error if `allTokens` contains a sub-token but does not contain its parent token.
-    private static SortedSet<SecurityTokenNode> buildTokenNodes(final Iterable<Class<? extends ISecurityToken>> allTokens) {
+    ///
+    static SortedSet<SecurityTokenNode> buildTokenNodes(final Collection<Class<? extends ISecurityToken>> allTokens) {
         final Map<Class<? extends ISecurityToken>, SecurityTokenNode> tokenTypeToNode = new HashMap<>(Iterables.size(allTokens));
         allTokens.forEach(t -> buildTokenNodes_(t, tokenTypeToNode));
 

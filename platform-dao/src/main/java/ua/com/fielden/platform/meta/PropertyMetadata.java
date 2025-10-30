@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.meta;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
+
 import java.util.Optional;
 
 import static java.lang.Boolean.FALSE;

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -20,7 +21,6 @@ import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -41,19 +41,16 @@ import static ua.com.fielden.platform.utils.CollectionUtil.mapValues;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
-/**
- * An abstraction for EQL-specific metadata about query sources (i.e., entity types).
- * </p>
- * The term for this metadata is "query source info", and it is organised using 2 categories:
- * <li> <b>Declared</b> - contains a subset of properties present in the corresponding {@linkplain ua.com.fielden.platform.reflection.EntityMetadata entity metadata}.
- *      Only properties that are relevant to EQL are included.
- * <li> <b>Modelled</b> - depends on the entity's nature:
- *      <ul>
- *        <li> Persistent, Union - equal to the declared query source info.
- *        <li> Synthetic - contains neither a superset, nor a subset of properties present in the entity's metadata.
- *             Instead, it includes only those properties that are yielded in the underlying models.
- *      </ul>
- */
+/// An abstraction for EQL-specific metadata about query sources (i.e. entity types).
+///
+/// The term for this metadata is "query source info", and it is organised using 2 categories:
+/// -  **Declared** - contains a subset of properties present in the corresponding [entity metadata][ua.com.fielden.platform.reflection.EntityMetadata].
+///     Only properties that are relevant to EQL are included.
+/// -  **Modelled** - depends on the entity's nature:
+///     -  Persistent, Union - equal to the declared query source info.
+///     -  Synthetic - contains neither a superset, nor a subset of properties present in the entity's metadata.
+///        Instead, it includes only those properties that are yielded in the underlying models.
+///
 @Singleton
 public class QuerySourceInfoProvider {
 
@@ -165,18 +162,13 @@ public class QuerySourceInfoProvider {
                                          querySourceInfo -> DependentCalcPropsOrder.orderDependentCalcProps(this, domainMetadata, QUERY_MODEL_TO_STAGE_1_TRANSFORMER, querySourceInfo)));
     }
 
-    /**
-     * Produces a query source info for the specified entity type backed by the specified models.
-     * <p>
-     * Use cases of this method are:
-     * <ul>
-     *   <li> A synthetic entity type backed by its underlying models (as defined in the class).
-     *   <li> A persistent entity type backed by ad-hoc models used in a query (e.g., a union of 2 sub-queries that select from {@code Vehicle}).
-     *   <li> {@link EntityAggregates} backed by ad-hoc models used in a query.
-     * </ul>
-     *
-     * @param isComprehensive  see {@link QuerySourceInfo#isComprehensive}
-     */
+    /// Produces a query source info for the specified entity type backed by the specified models.
+    ///
+    /// Use cases of this method are:
+    /// -  A synthetic entity type backed by its underlying models (as defined in the class).
+    /// -  A persistent entity type backed by ad-hoc models used in a query (e.g. a union of 2 sub-queries that select from `Vehicle`).
+    /// -  [EntityAggregates] backed by ad-hoc models used in a query.
+    ///
     public <T extends AbstractEntity<?>> QuerySourceInfo<T> produceQuerySourceInfoForEntityType(
             final List<SourceQuery2> models,
             final Class<T> sourceType,
@@ -257,11 +249,8 @@ public class QuerySourceInfoProvider {
         return new QuerySourceInfo<>(sourceType, isComprehensive, allProps);
     }
 
-    /**
-     * Only properties that are present in SE yields are preserved.
-     *
-     * @return
-     */
+    /// Only properties that are present in SE yields are preserved.
+    ///
     private <T extends AbstractEntity<?>> QuerySourceInfo<?> generateModelledQuerySourceInfoForSyntheticType(final Class<? extends AbstractEntity<?>> entityType, final List<SourceQuery1> queries) {
         final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(this, domainMetadata);
         final List<SourceQuery2> transformedQueries = queries.stream().map(m -> m.transform(context)).collect(toList());
@@ -409,17 +398,15 @@ public class QuerySourceInfoProvider {
         return new QuerySourceInfo<>(type, true, generateQuerySourceItems(modelledQuerySourceInfoMap, type));
     }
 
-    /**
-     * @param type  entity type which must be reifiable with metadata
-     */
+    /// @param type  entity type which must be reifiable with metadata
+    ///
     public QuerySourceInfo<?> getDeclaredQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
         final QuerySourceInfo<?> existing = declaredQuerySourceInfoMap.get(type);
         return existing != null ? existing : generateDeclaredQuerySourceInfo(type);
     }
 
-    /**
-     * @param type  entity type which must be reifiable with metadata
-     */
+    /// @param type  entity type which must be reifiable with metadata
+    ///
     public QuerySourceInfo<?> getModelledQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
         final QuerySourceInfo<?> existing = modelledQuerySourceInfoMap.get(type);
         if (existing != null) {

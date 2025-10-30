@@ -14,7 +14,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -30,45 +29,33 @@ import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.DomainMetadataUtils;
-import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadataUtils;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
 
-/**
- * A test for {@link DynamicQueryBuilder}.
- *
- * @author TG Team
- *
- */
-@SuppressWarnings({ "serial", "unchecked" })
+/// A test for [DynamicQueryBuilder].
+///
+@SuppressWarnings({"unchecked"})
 public class DynamicQueryBuilderSqlTest {
-    private final static Injector injector = createInjector();
-    private final static EntityFactory entityFactory = createFactory();
+
+    private final static Injector injector = new ApplicationInjectorFactory()
+            .add(new CommonEntityTestIocModuleWithPropertyFactory())
+            .getInjector();
+    private final static EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
     private final static IDates dates = injector.getInstance(IDates.class);
-
-    private static Injector createInjector() {
-        final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
-        return new ApplicationInjectorFactory().add(module).getInjector();
-    }
-
-    private static EntityFactory createFactory() {
-        return injector.getInstance(EntityFactory.class);
-    }
 
     private final String alias;
     private final Class<? extends AbstractEntity<?>> masterKlass, slaveCollectionType, evenSlaverCollectionType;
@@ -78,11 +65,7 @@ public class DynamicQueryBuilderSqlTest {
     {
         alias = "alias_for_main_criteria_type";
         // enhance domain with ALL / ANY calc properties
-        final IDomainTreeEnhancer dte = new DomainTreeEnhancer(entityFactory, new HashSet<Class<?>>() {
-            {
-                add(MasterEntity.class);
-            }
-        });
+        final IDomainTreeEnhancer dte = new DomainTreeEnhancer(entityFactory, Set.of(MasterEntity.class));
         dte.addCalculatedProperty(MasterEntity.class, "collection", "masterEntityProp", "Any of masterEntityProp", "Desc", CalculatedPropertyAttribute.ANY, "masterEntityProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dte.addCalculatedProperty(MasterEntity.class, "collection", "bigDecimalProp", "Any of bigDecimalProp", "Desc", CalculatedPropertyAttribute.ANY, "bigDecimalProp", 19, 4);
         dte.addCalculatedProperty(MasterEntity.class, "collection", "dateProp", "Any of dateProp", "Desc", CalculatedPropertyAttribute.ANY, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
@@ -107,72 +90,68 @@ public class DynamicQueryBuilderSqlTest {
 
         final Configuration hibConf = new Configuration();
 
-        final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<>();
-        domainTypes.add(MasterEntity.class);
-        domainTypes.add(SlaveEntity.class);
-        domainTypes.add(EvenSlaverEntity.class);
+        final List<Class<? extends AbstractEntity<?>>> domainTypes = List.of(MasterEntity.class, SlaveEntity.class, EvenSlaverEntity.class);
         final IApplicationDomainProvider appDomain = () -> domainTypes;
 
-        final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.H2);
-        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
+        final var dbVersionProvider = constantDbVersion(DbVersion.H2);
+        final var domainMetadata = new DomainMetadataBuilder(
                 new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), domainTypes, dbVersionProvider)
                 .build();
-        final IDomainMetadataUtils domainMetadataUtils = new DomainMetadataUtils(appDomain, domainMetadata);
+        final var domainMetadataUtils = new DomainMetadataUtils(appDomain, domainMetadata);
         try {
             hibConf.addInputStream(new ByteArrayInputStream(
                     new HibernateMappingsGenerator(domainMetadata, domainMetadataUtils,
                                                    dbVersionProvider,
                                                    new EqlTables(domainMetadata, domainMetadataUtils),
                                                    new PropertyInlinerImpl(domainMetadata))
-                            .generateMappings().getBytes("UTF8")));
-        } catch (final MappingException | UnsupportedEncodingException e) {
+                            .generateMappings().getBytes(UTF_8)));
+        } catch (final MappingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }
 
-        final List<String> propertyNames = Arrays.asList(new String[] { //
-        "integerProp", //
-        "bigDecimalProp", //
-        "moneyProp", //
-        "dateProp", //
-        "booleanProp", //
-        "stringProp", //
-        "entityProp", //
-        "entityProp.masterEntityProp", //
-        "entityProp.integerProp", //
-        "entityProp.bigDecimalProp", //
-        "entityProp.moneyProp", //
-        "entityProp.dateProp", //
-        "entityProp.booleanProp", //
-        "entityProp.stringProp", //
-        "collection.masterEntityProp", //
-        "collection.integerProp", //
-        "collection.bigDecimalProp", //
-        "collection.dateProp", //
-        "collection.stringProp", //
-        "collection.booleanProp", //
-        "collection.anyOfMasterEntityProp", //
-        "collection.anyOfBigDecimalProp", //
-        "collection.anyOfDateProp", //
-        "collection.anyOfIntegerProp", //
-        "collection.anyOfMoneyProp", //
-        "collection.allOfMasterEntityProp", //
-        "collection.allOfBigDecimalProp", //
-        "collection.allOfDateProp", //
-        "entityProp.collection.slaveEntityProp", //
-        "entityProp.collection.integerProp", //
-        "entityProp.collection.bigDecimalProp", //
-        "entityProp.collection.dateProp", //
-        "entityProp.collection.stringProp", //
-        "entityProp.collection.booleanProp", //
-        "entityProp.collection.allOfSlaveEntityProp", //
-        "entityProp.collection.allOfBigDecimalProp", //
-        "entityProp.collection.allOfDateProp", //
-        "entityProp.collection.anyOfIntegerProp", //
-        "entityProp.collection.anyOfMoneyProp" //
+        final var propertyNames = List.of(
+                "integerProp",
+                "bigDecimalProp",
+                "moneyProp",
+                "dateProp",
+                "booleanProp",
+                "stringProp",
+                "entityProp",
+                "entityProp.masterEntityProp",
+                "entityProp.integerProp",
+                "entityProp.bigDecimalProp",
+                "entityProp.moneyProp",
+                "entityProp.dateProp",
+                "entityProp.booleanProp",
+                "entityProp.stringProp",
+                "collection.masterEntityProp",
+                "collection.integerProp",
+                "collection.bigDecimalProp",
+                "collection.dateProp",
+                "collection.stringProp",
+                "collection.booleanProp",
+                "collection.anyOfMasterEntityProp",
+                "collection.anyOfBigDecimalProp",
+                "collection.anyOfDateProp",
+                "collection.anyOfIntegerProp",
+                "collection.anyOfMoneyProp",
+                "collection.allOfMasterEntityProp",
+                "collection.allOfBigDecimalProp",
+                "collection.allOfDateProp",
+                "entityProp.collection.slaveEntityProp",
+                "entityProp.collection.integerProp",
+                "entityProp.collection.bigDecimalProp",
+                "entityProp.collection.dateProp",
+                "entityProp.collection.stringProp",
+                "entityProp.collection.booleanProp",
+                "entityProp.collection.allOfSlaveEntityProp",
+                "entityProp.collection.allOfBigDecimalProp",
+                "entityProp.collection.allOfDateProp",
+                "entityProp.collection.anyOfIntegerProp",
+                "entityProp.collection.anyOfMoneyProp");
 
-        });
-        for (final String propertyName : propertyNames) {
-            final QueryProperty qp = new QueryProperty(masterKlass, propertyName);
+        for (final var propertyName : propertyNames) {
+            final var qp = new QueryProperty(masterKlass, propertyName);
             queryProperties.put(propertyName, qp);
             qp.setValue(getEmptyValue(qp.getType(), qp.isSingle()));
             qp.setValue2(getEmptyValue(qp.getType(), qp.isSingle()));
@@ -188,7 +167,7 @@ public class DynamicQueryBuilderSqlTest {
     @Before
     public void set_up() {
         // make the values to be default for all properties before any test
-        for (final QueryProperty qp : queryProperties.values()) {
+        for (final var qp : queryProperties.values()) {
             qp.setValue(getEmptyValue(qp.getType(), qp.isSingle()));
             qp.setValue2(getEmptyValue(qp.getType(), qp.isSingle()));
             qp.setExclusive(null);
@@ -204,8 +183,7 @@ public class DynamicQueryBuilderSqlTest {
 
     @Test
     public void test_empty_query_composition_for_empty_query_properties() {
-        final ICompleted<? extends AbstractEntity<?>> expected = //
-        /**/iJoin; //
+        final ICompleted<? extends AbstractEntity<?>> expected = iJoin;
         final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
@@ -596,14 +574,16 @@ public class DynamicQueryBuilderSqlTest {
 
         set_up();
         final QueryProperty property = queryProperties.get(propertyName);
-        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
+        final var values = List.of("some val 1*", "some val 2*");
+        property.setValue(values);
 
         final String cbn = property.getConditionBuildingName();
+        final var cbnNoKey = getPropertyNameWithoutKeyPart(cbn);
 
         final ICompleted<? extends AbstractEntity<?>> expected = //
         /**/iJoin.where().condition(cond() //
-        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
-        /*    */.condition(cond().prop(cbn).iLike().anyOfValues((Object[]) DynamicQueryBuilder.prepCritValuesForEntityTypedProp((List<String>) property.getValue())).model()) //
+        /*  */.condition(cond().prop(cbnNoKey).isNotNull().and() //
+        /*    */.condition(cond().prop(cbnNoKey).in().model(select(SlaveEntity.class).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(values)).model()).model())
         /*  */.model()) //
         /**/.model()); //
         final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
@@ -657,7 +637,7 @@ public class DynamicQueryBuilderSqlTest {
                             .and()
                             .condition(
                                 cond().prop(cbnNoKey).in().model(subSelect)
-                                .or().prop(cbn).iLike().anyOfValues(prepCritValuesForEntityTypedProp(Arrays.asList(critValuesWithWildcard)))
+                                .or().prop(cbnNoKey).in().model(select(SlaveEntity.class).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(Arrays.asList(critValuesWithWildcard))).model())
                                 .model())
                         .model())
                 .model();
@@ -1360,18 +1340,16 @@ public class DynamicQueryBuilderSqlTest {
     }
 
     @Test
-    public void test_union_entity_query_composition() {
-        final List<String> propertyNames = Arrays.asList(new String[] { //
-        "", //
-        "desc", //
-        "location", //
-        "location.workshop", //
-        "location.workshop.desc", //
-        "location.wagonSlot", //
-        "location.wagonSlot.wagon", //
-        "location.wagonSlot.position", //
-
-        });
+    public void conditions_for_union_members_are_combined_with_logical_AND() {
+        final List<String> propertyNames = List.of(
+                "",
+                "desc",
+                "location",
+                "location.workshop",
+                "location.workshop.desc",
+                "location.wagonSlot",
+                "location.wagonSlot.wagon",
+                "location.wagonSlot.position");
         final Map<String, QueryProperty> unionProps = new LinkedHashMap<>();
         for (final String propertyName : propertyNames) {
             final QueryProperty qp = new QueryProperty(TgBogie.class, propertyName);
@@ -1383,65 +1361,60 @@ public class DynamicQueryBuilderSqlTest {
         QueryProperty property = null;
 
         property = unionProps.get("");
-        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
+        property.setValue(List.of("some val 1*", "some val 2*"));
 
         property = unionProps.get("desc");
         property.setValue("Some string value");
 
         property = unionProps.get("location");
-        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
+        property.setValue(List.of("some val 1*", "some val 2*"));
 
         property = unionProps.get("location.workshop");
-        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
+        property.setValue(List.of("some val 1*", "some val 2*"));
 
         property = unionProps.get("location.workshop.desc");
         property.setValue("Some string value");
 
         property = unionProps.get("location.wagonSlot");
-        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
+        property.setValue(List.of("some val 1*", "some val 2*"));
 
         property = unionProps.get("location.wagonSlot.wagon");
-        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
+        property.setValue(List.of("some val 1*", "some val 2*"));
 
         property = unionProps.get("location.wagonSlot.position");
         property.setValue(3);
         property.setValue2(7);
 
-        final ICompleted<? extends AbstractEntity<?>> expected = //
+        final ICompleted<? extends AbstractEntity<?>> expected =
         /**/select(select(TgBogie.class).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).as(alias).where().condition(cond() //
         /*  */.condition(cond().prop(alias).isNotNull().and() //
-        /*    */.condition(cond().prop(alias + ".key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
+           /*    */.condition(cond().prop(alias).in().model(select(TgBogie.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
         /*  */.model()).and()//
         /*  */.condition(cond().prop(alias + ".desc").isNotNull().and() //
-        /*    */.condition(cond().prop(alias + ".desc").iLike().anyOfValues(new Object[] { "%Some string value%" }).model()) //
+        /*    */.condition(cond().prop(alias + ".desc").iLike().anyOfValues("%Some string value%").model()) //
         /*  */.model()).and()//
         /*  */.condition(cond().prop(alias + ".location").isNotNull().and() //
-        /*    */.condition(cond().prop(alias + ".location.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
+        /*    */.condition(cond().prop(alias + ".location.id").in().model(select(TgBogieLocation.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
         /*  */.model()).and()//
-        /*    */.condition(cond()//
-        /*	*/.condition(cond()//
-        /*	  */.condition(cond().prop(alias + ".location.workshop").isNotNull().and()//
-        /*	    */.condition(cond().prop(alias + ".location.workshop.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
+        /*    */.condition(cond().prop(alias + ".location.workshop").isNotNull().and()//
+        /*	    */.condition(cond().prop(alias + ".location.workshop").in().model(select(TgWorkshop.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
         /*	  */.model()).and()//
         /*	  */.condition(cond().prop(alias + ".location.workshop.desc").isNotNull().and()//
-        /*	    */.condition(cond().prop(alias + ".location.workshop.desc").iLike().anyOfValues(new Object[] { "%Some string value%" }).model())
+        /*	    */.condition(cond().prop(alias + ".location.workshop.desc").iLike().anyOfValues("%Some string value%").model())
                 /*	  */.model())//
-        /*	*/.model())//
-        /*    */.or()//
-        /*	*/.condition(cond()//
+        /*    */.and() // this used to be OR
         /*	  */.condition(cond().prop(alias + ".location.wagonSlot").isNotNull().and()//
-        /*	    */.condition(cond().prop(alias + ".location.wagonSlot.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
+        /*	    */.condition(cond().prop(alias + ".location.wagonSlot").in().model(select(TgWagonSlot.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
         /*	  */.model()).and()//
         /*	  */.condition(cond().prop(alias + ".location.wagonSlot.wagon").isNotNull().and()//
-        /*	    */.condition(cond().prop(alias + ".location.wagonSlot.wagon.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
+        /*	    */.condition(cond().prop(alias + ".location.wagonSlot.wagon").in().model(select(TgWagon.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
         /*	  */.model()).and()//
         /*	  */.condition(cond().prop(alias + ".location.wagonSlot.position").isNotNull().and()//
         /*	    */.condition(cond().prop(alias + ".location.wagonSlot.position").ge().iVal(3).and().prop(alias + ".location.wagonSlot.position").le().iVal(7).model())//
         /*	  */.model())//
-        /*	*/.model())//
-        /*    */.model())//
         /**/.model()); //
         final ICompleted<? extends AbstractEntity<?>> actual = createQuery(TgBogie.class, new ArrayList<>(unionProps.values()), dates);
         assertEquals("Incorrect query model for union entities has been built.", expected.model(), actual.model());
     }
+
 }

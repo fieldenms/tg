@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.substringAfter;

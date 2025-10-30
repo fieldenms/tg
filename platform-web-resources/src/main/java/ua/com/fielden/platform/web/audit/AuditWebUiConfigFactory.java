@@ -23,7 +23,7 @@ import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -111,7 +111,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .setLayoutFor(DESKTOP, empty(), layout)
                 .setLayoutFor(TABLET, empty(), layout)
                 .setLayoutFor(MOBILE, empty(), layout)
-                .withScrollingConfig(standardEmbeddedScrollingConfig(3))
+                .withScrollingConfig(standardEmbeddedScrollingConfig(1))
 
                 // Order by version, which resembles entity history more accurately than audit date.
                 .addProp(AUDITED_VERSION).order(1).desc().minWidth(50)

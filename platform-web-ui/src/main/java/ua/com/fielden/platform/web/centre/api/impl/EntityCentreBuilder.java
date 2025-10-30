@@ -4,7 +4,9 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.EntityTypeCarrier;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -38,14 +40,11 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
 
-/**
- * A class implementing the Entity Centre DSL contracts.
- *
- * @author TG Team
- *
- * @param <T>
- */
+/// A class implementing the Entity Centre DSL contracts.
+///
 public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntityCentreBuilder<T> {
+
+    public static final String ERR_CUSTOM_PROPS_MISSING_DEFAULT_VALUES = "There are custom properties without default values, but the custom assignment handler is also missing.";
 
     private Class<T> entityType;
 
@@ -163,14 +162,33 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     public EntityCentreConfig<T> build() {
         // check if there are custom props without default values and no custom values assignment handler
-        if (resultSetCustomPropAssignmentHandlerType == null &&
-                resultSetProperties.stream().filter(v -> v.propDef.isPresent() && !v.propDef.get().value.isPresent()).count() > 0) {
-            throw new IllegalStateException("There are custom properties without default values, but the custom assignment handler is also missing.");
+        if (resultSetCustomPropAssignmentHandlerType == null
+            && resultSetProperties.stream().anyMatch(v -> v.propDef.isPresent() && v.propDef.get().value.isEmpty()))
+        {
+            throw new IllegalStateException(ERR_CUSTOM_PROPS_MISSING_DEFAULT_VALUES);
         }
 
         // compose a correct ordering structure before instantiating an EntityCentreConfig
         final LinkedHashMap<String, OrderDirection> properResultSetOrdering = new LinkedHashMap<>();
         resultSetOrdering.forEach((k, v) -> properResultSetOrdering.put(v.getKey(), v.getValue()));
+
+        // Entity types that include property with @EntityTypeCarrier needs to have this property auto-fetched,
+        // instead of forcing the developer to include it explicitly.
+        // Let's leverage `fetchProvider` for this purpose.
+        final IFetchProvider<T> customFetchProvider = Finder.streamProperties(getEntityType(), EntityTypeCarrier.class)
+                .findFirst()
+                .map(entityTypeCarrier -> {
+                    final String propName = entityTypeCarrier.getName();
+                    if (fetchProvider == null) {
+                        return EntityUtils.fetch(getEntityType()).with(propName);
+                    }
+                    else {
+                        return fetchProvider.allProperties().contains(propName)
+                                ? fetchProvider
+                                : fetchProvider.with(propName);
+                    }
+                })
+                .orElse(fetchProvider);
 
         return new EntityCentreConfig<>(
                 egiHidden,
@@ -239,7 +257,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 resultSetCustomPropAssignmentHandlerType,
                 queryEnhancerConfig,
                 generatorTypes,
-                fetchProvider,
+                customFetchProvider,
                 insertionPointCustomLayoutEnabled);
     }
 

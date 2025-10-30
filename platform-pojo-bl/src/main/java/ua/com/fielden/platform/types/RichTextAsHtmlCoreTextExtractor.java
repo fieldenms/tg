@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.types;
 
+import jakarta.annotation.Nullable;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import ua.com.fielden.platform.types.function.CharPredicate;
 import ua.com.fielden.platform.utils.StringUtils;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;

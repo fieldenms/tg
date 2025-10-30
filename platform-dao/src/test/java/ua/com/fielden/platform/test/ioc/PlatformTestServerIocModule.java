@@ -12,10 +12,12 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.activatable.test_entities.*;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolderDao;
 import ua.com.fielden.platform.entity.functional.centre.ICentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.ISavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolderDao;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.*;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessCo;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessDao;
 import ua.com.fielden.platform.ioc.BasicWebServerIocModule;
@@ -143,6 +145,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgEntityWithManyPropTypesCo.class).to(TgEntityWithManyPropTypesDao.class);
         bind(IEntityOne.class).to(EntityOneDao.class);
         bind(IEntityTwo.class).to(EntityTwoDao.class);
+        bind(EntityThreeCo.class).to(EntityThreeDao.class);
         bind(IUnionEntity.class).to(UnionEntityDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
@@ -186,6 +189,26 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgInventoryCo.class).to(TgInventoryDao.class);
         bind(TgInventoryBinCo.class).to(TgInventoryBinDao.class);
         bind(TgInventoryIssueCo.class).to(TgInventoryIssueDao.class);
+
+        bind(UnionEntityDetailsCo.class).to(UnionEntityDetailsDao.class);
+
+        bind(UnionCo.class).to(UnionDao.class);
+        bind(Member1Co.class).to(Member1Dao.class);
+        bind(MemberDetailsCo.class).to(MemberDetailsDao.class);
+        bind(Member2Co.class).to(Member2Dao.class);
+        bind(Member3Co.class).to(Member3Dao.class);
+        bind(Member4Co.class).to(Member4Dao.class);
+        bind(Member5Co.class).to(Member5Dao.class);
+        bind(ActivatableUnionOwnerCo.class).to(ActivatableUnionOwnerDao.class);
+        bind(UnionOwnerCo.class).to(UnionOwnerDao.class);
+
+        bind(TestExists_UnionCo.class).to(TestExists_UnionDao.class);
+        bind(TestExists_Member1Co.class).to(TestExists_Member1Dao.class);
+        bind(TestExists_Member2Co.class).to(TestExists_Member2Dao.class);
+        bind(TestExists_Member3Co.class).to(TestExists_Member3Dao.class);
+        bind(TestExists_Member4Co.class).to(TestExists_Member4Dao.class);
+        bind(TestExists_ActivatableUnionOwnerCo.class).to(TestExists_ActivatableUnionOwnerDao.class);
+        bind(TestExists_UnionOwnerCo.class).to(TestExists_UnionOwnerDao.class);
 
         // FIXME the following approach should have been the correct one for binding companion objects,
         //       however, not all test domain entities actually have companions, hence manual binding...

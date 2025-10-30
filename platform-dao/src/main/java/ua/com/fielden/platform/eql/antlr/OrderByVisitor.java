@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.eql.antlr;
 
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
 import ua.com.fielden.platform.eql.antlr.tokens.LimitToken;
 import ua.com.fielden.platform.eql.antlr.tokens.OffsetToken;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
-
-import javax.annotation.Nullable;
 
 import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.orderBys1;
 

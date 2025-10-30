@@ -21,7 +21,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.*;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -205,9 +205,9 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         // properties common to all audit-entities
         audit.setAuditedEntity(auditedEntity);
         audit.setAuditedVersion(auditedEntity.getVersion());
-        // Alternatively, annotate AbstractAuditEntity.auditDate with @IsProperty(assignBeforeSave = true)
         audit.setAuditDate(now().toDate());
-        // Alternatively, annotate AbstractAuditEntity.user with @IsProperty(assignBeforeSave = true)
+        // TODO `User` itself cannot be audited, because saving the first User involves its auditing, which in turn requires a persisted User for the `user` property.
+        //      The current workaround is to persist the first User without auditing (e.g., via an SQL script).
         audit.setUser(getUserOrThrow());
         audit.setAuditedTransactionGuid(transactionGuid);
 

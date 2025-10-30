@@ -16,7 +16,6 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
-import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
@@ -52,7 +51,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Arrays.stream;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
@@ -105,8 +103,6 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Map<String, String> checksums;
     private final boolean independentTimeZone;
     private final MasterActionOptions masterActionOptions;
-    private final List<String> siteAllowlist;
-    private final int daysUntilSitePermissionExpires;
 
     /**
      * Holds the map between embedded entity centres' menu item types and [entity centre, entity master] pair.
@@ -122,8 +118,6 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param independentTimeZone  if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
      * @param masterActionOptions  determines what options are available for master's save and cancel actions.
      * @param ideaUri  an optional idea page URI.
-     * @param optionalSiteAllowlist a list of external site patterns (*) with comma separator to be excluded from checking during opening
-     * @param optionalExpiryDays custom number of days to expire accepted sites / links (half a year is the default)
      */
     public AbstractWebUiConfig(
             final String title,
@@ -131,20 +125,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             final String[] externalResourcePaths,
             final boolean independentTimeZone,
             final Optional<MasterActionOptions> masterActionOptions,
-            final Optional<String> ideaUri,
-            final Optional<String> optionalSiteAllowlist,
-            final Optional<String> optionalExpiryDays)
+            final Optional<String> ideaUri)
     {
         this.title = title;
         this.ideaUri = ideaUri.map(uri -> validateIdeaUri(uri).getInstanceOrElseThrow());
         this.independentTimeZone = independentTimeZone;
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
-        this.siteAllowlist = TryWrapper.Try( () -> optionalSiteAllowlist.map(sites -> stream(sites.trim().split("\\s*,\\s*"))
-                                                   .map(site -> "/" + site.toLowerCase().replaceAll("[\"']", "").replace(".", "\\.").replace("*", ".*") + "/") //generates javascript RegEx
-                                                   .toList()).orElse(List.of()))
-                             .orElseThrow(ex -> new InvalidUiConfigException("Could not parse value for 'siteAllowlist': %s".formatted(ex.getMessage())));
-        this.daysUntilSitePermissionExpires = TryWrapper.Try( () -> optionalExpiryDays.map(Integer::parseInt).orElse(DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS) )
-                                              .orElseThrow(ex -> new InvalidUiConfigException("Could not parse value for 'daysUntilSitePermissionExpires': %s".formatted(ex.getMessage())));
         this.webUiBuilder = new WebUiBuilder(this);
         this.dispatchingEmitter = new EventSourceDispatchingEmitter();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -175,19 +161,6 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     /**
-     * The same as {@link #AbstractWebUiConfig}, but without {@code siteAllowlist} and {@code optionalExpiryDays}.
-     */
-    public AbstractWebUiConfig(
-            final String title,
-            final Workflows workflow,
-            final String[] externalResourcePaths,
-            final boolean independentTimeZone,
-            final Optional<MasterActionOptions> masterActionOptions,
-            final Optional<String> ideaUri) {
-        this(title, workflow, externalResourcePaths, independentTimeZone, masterActionOptions, ideaUri, Optional.empty(), Optional.empty());
-    }
-
-    /**
      * The same as {@link #AbstractWebUiConfig}, but without {@code ideaUri}.
      */
     public AbstractWebUiConfig(
@@ -196,7 +169,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             final String[] externalResourcePaths,
             final boolean independentTimeZone,
             final Optional<MasterActionOptions> masterActionOptions) {
-        this(title, workflow, externalResourcePaths, independentTimeZone, masterActionOptions, Optional.empty(), Optional.empty(), Optional.empty());
+        this(title, workflow, externalResourcePaths, independentTimeZone, masterActionOptions, Optional.empty());
     }
 
     /**
@@ -422,16 +395,6 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public MasterActionOptions masterActionOptions() {
         return masterActionOptions;
-    }
-
-    @Override
-    public List<String> siteAllowlist() {
-        return this.siteAllowlist;
-    }
-
-    @Override
-    public int daysUntilSitePermissionExpires() {
-        return this.daysUntilSitePermissionExpires;
     }
 
     /**

@@ -6,8 +6,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider.MissingSecurityTokenPlaceholder;
 import ua.com.fielden.platform.types.markers.ISecurityTokenType;
 
 import java.io.Serializable;
@@ -16,11 +16,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-/**
- * Class that helps Hibernate to map {@link ISecurityToken} class into database.
- * 
- * @author TG Team
- */
+/// Class that helps Hibernate to map [ISecurityToken] class into database.
+///
 @Singleton
 public class SecurityTokenType implements UserType, ISecurityTokenType {
 
@@ -28,11 +25,10 @@ public class SecurityTokenType implements UserType, ISecurityTokenType {
 
     private static final int[] SQL_TYPES = { Types.VARCHAR };
 
-    /**
-     * A security token provider is required to locate token types by name.
-     * It must be injected statically because Hibernate requires user types to have a public default constructor,
-     * implying that they may be constructed reflectively, which disables instance-level injection.
-     */
+    /// A security token provider is required to locate token types by name.
+    /// It must be injected statically because Hibernate requires user types to have a public default constructor,
+    /// implying that they may be constructed reflectively, which disables instance-level injection.
+    ///
     @Inject
     private static ISecurityTokenProvider securityTokenProvider;
 
@@ -49,15 +45,15 @@ public class SecurityTokenType implements UserType, ISecurityTokenType {
     @Override
     public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor session, final Object owner) throws SQLException {
         final String name = resultSet.getString(names[0]);
-        return securityTokenProvider.getTokenByName(name)
-                .orElseThrow(() -> new SecurityException("Security token for value '" + name + "' could not be found"));
+        final var maybeSecurityToken = securityTokenProvider.getTokenByName(name);
+        return maybeSecurityToken.isPresent() ? maybeSecurityToken.get() : MissingSecurityTokenPlaceholder.class;
     }
 
     @Override
     public Object instantiate(final Object argument, final EntityFactory factory) {
         final var name = (String) argument;
-        return securityTokenProvider.getTokenByName(name)
-                .orElseThrow(() -> new SecurityException("Security token for value '" + name + "' could not be found"));
+        final var maybeSecurityToken = securityTokenProvider.getTokenByName(name);
+        return maybeSecurityToken.isPresent() ? maybeSecurityToken.get() : MissingSecurityTokenPlaceholder.class;
     }
 
     @Override
@@ -109,4 +105,5 @@ public class SecurityTokenType implements UserType, ISecurityTokenType {
         }
         return x.equals(y);
     }
+
 }

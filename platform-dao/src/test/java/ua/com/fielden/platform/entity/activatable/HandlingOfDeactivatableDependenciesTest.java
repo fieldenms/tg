@@ -2,66 +2,86 @@ package ua.com.fielden.platform.entity.activatable;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
+import ua.com.fielden.platform.entity.activatable.test_entities.Member5;
+import ua.com.fielden.platform.entity.activatable.test_entities.MemberDetails;
+import ua.com.fielden.platform.entity.activatable.test_entities.Union;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
 
-import java.util.List;
-
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 
-public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase {
+public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase implements WithActivatabilityTestUtils {
 
     @Test
-    public void active_person_with_active_authoriser_and_originator_deactivatable_dependencies_and_one_tangenital_dependency_has_one_ref_count() {
-        final TgPerson person = co$(TgPerson.class).findByKey("P1");
-
-        assertEquals(Integer.valueOf(1), person.getRefCount());
+    public void active_person_with_active_authoriser_and_originator_deactivatable_dependencies_and_one_tangential_dependency_has_one_ref_count() {
+        final var person = co$(TgPerson.class).findByKey("P1");
+        assertRefCount(1, person);
     }
 
     @Test
     public void active_person_with_active_authoriser_and_inactive_originator_deactivatable_dependencies_has_zero_ref_count() {
-        final TgPerson person = co$(TgPerson.class).findByKey("P2");
-
-        assertEquals(Integer.valueOf(0), person.getRefCount());
+        final var person = co$(TgPerson.class).findByKey("P2");
+        assertRefCount(0, person);
     }
 
     @Test
     public void deactivating_authoriser_that_references_active_person_does_not_change_its_ref_count() {
-        final TgPerson person = co$(TgPerson.class).findByKey("P1");
-        assertEquals(Integer.valueOf(1), person.getRefCount());
-        final TgAuthoriser auth = co$(TgAuthoriser.class).findByKey(person);
+        final var person = co$(TgPerson.class).findByKey("P1");
+        assertRefCount(1, person);
+        final var auth = co$(TgAuthoriser.class).findByKey(person);
 
         save(auth.setActive(false));
 
-        assertEquals(Integer.valueOf(1), co$(TgPerson.class).findByKey("P1").getRefCount());
+        assertRefCount(1, person);
+    }
+
+    @Test
+    public void deactivating_B_that_is_a_deactivatable_dependency_of_A_and_references_active_A_via_union_does_not_change_refCount_of_A() {
+        final int expectedRefCount = 10;
+        final var member1 = save(new_(Member1.class, "Member1").setActive(true).setRefCount(expectedRefCount));
+        final var member1Det = save(new_(MemberDetails.class).setUnion(new_(Union.class).setMember1(member1)).setActive(true));
+
+        // A sanity check to ensure that `member1.refCount` did not increase after saving a new active details record.
+        assertRefCount(expectedRefCount, member1);
+
+        // Deactivate the details record.
+        save(member1Det.setActive(false));
+
+        // Assert that refCount did not change.
+        assertRefCount(expectedRefCount, member1);
     }
 
     @Test
     public void there_suppose_to_be_two_deactivatable_dependencies_for_person_P1() {
-        final TgPerson p1 = co$(TgPerson.class).findByKey("P1");
+        final var p1 = co$(TgPerson.class).findByKey("P1");
 
-        final List<? extends ActivatableAbstractEntity<?>> deps = Validators.findActiveDeactivatableDependencies(p1, getInstance(ICompanionObjectFinder.class));
+        final var deps = Validators.findActiveDeactivatableDependencies(p1, getInstance(ICompanionObjectFinder.class));
 
         assertEquals(2, deps.size());
         assertTrue(deps.stream().map(AbstractEntity::getId).collect(toSet()).contains(co$(TgAuthoriser.class).findByKey(p1).getId()));
         assertTrue(deps.stream().map(AbstractEntity::getId).collect(toSet()).contains(co$(TgOriginator.class).findByKey(p1).getId()));
 
-        final TgPerson p3 = co$(TgPerson.class).findByKey("P3");
+        final var p3 = co$(TgPerson.class).findByKey("P3");
         assertFalse(deps.stream().map(AbstractEntity::getId).collect(toSet()).contains(co$(TgOriginator.class).findByKey(p3).getId()));
     }
 
     @Test
     public void there_suppose_to_be_one_deactivatable_dependencies_for_person_P2() {
-        final TgPerson person = co$(TgPerson.class).findByKey("P2");
+        final var person = co$(TgPerson.class).findByKey("P2");
 
-        final List<? extends ActivatableAbstractEntity<?>> deps = Validators.findActiveDeactivatableDependencies(person, getInstance(ICompanionObjectFinder.class));
+        final var deps = Validators.findActiveDeactivatableDependencies(person, getInstance(ICompanionObjectFinder.class));
 
         assertEquals(1, deps.size());
         assertTrue(deps.stream().map(AbstractEntity::getId).collect(toSet()).contains(co$(TgAuthoriser.class).findByKey(person).getId()));
@@ -69,69 +89,101 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
 
     @Test
     public void deactivation_of_person_with_only_active_authoriser_and_originator_deactivatable_dependencies_is_permitted() {
-        final TgPerson person = co$(TgPerson.class).findByKey("P2");
+        final var person = co$(TgPerson.class).findByKey("P2");
 
-        final TgPerson savedPerson = save(person.setActive(false));
+        final var savedPerson = save(person.setActive(false));
         assertFalse(savedPerson.isActive());
     }
 
     @Test
     public void deactivation_of_person_with_deactivatable_dependencies_that_is_not_part_of_a_key_is_prevented() {
-        final TgPerson person = co$(TgPerson.class).findByKey("P1");
-
-        try {
-            save(person.setActive(false));
-            fail();
-        } catch (final Result ex) {
-            assertTrue(ex.getMessage().startsWith("Tg Person [P1] has 1 active dependency."));
-        }
+        final var person = co$(TgPerson.class).findByKey("P1");
+        person.setActive(false);
+        assertThat(person.getProperty(ACTIVE).getFirstFailure())
+                .hasMessageStartingWith("Tg Person [P1] has 1 active dependency.");
     }
 
     @Test
     public void deactivating_originator_that_references_two_active_persons_should_not_change_ref_count_for_one_where_it_is_dependable_and_changes_for_the_other() {
-        final TgPerson p3 = co$(TgPerson.class).findByKey("P3");
-        assertEquals(Integer.valueOf(0), p3.getRefCount());
-        final TgOriginator orig = co$(TgOriginator.class).findByKey(p3);
+        final var p3 = co$(TgPerson.class).findByKey("P3");
+        assertRefCount(0, p3);
+        final var orig = co$(TgOriginator.class).findByKey(p3);
+        final var p1 = co$(TgPerson.class).findByKey("P1");
+        assertRefCount(1, p1);
 
         save(orig.setActive(false));
 
-        assertEquals("P1 was referenced by just deactivated originator as an assistant, and should have its refCount decremented.", Integer.valueOf(0), co$(TgPerson.class).findByKey("P1").getRefCount());
-        assertEquals("P3 was referenced by just deactivated originator as one of key members, and should not have its refCount effected.",Integer.valueOf(0), co$(TgPerson.class).findByKey("P3").getRefCount());
+        assertRefCount("P1 was referenced by just deactivated originator as an assistant, and should have its refCount decremented.", 0, p1);
+        assertRefCount("P3 was referenced by just deactivated originator as one of key members, and should not have its refCount affected.", 0, p3);
+    }
+
+    @Test
+    public void deactivating_B_that_is_a_deactivatable_dependency_of_A_and_references_active_A_via_a_key_member_and_a_non_key_member_decrements_refCount_of_A_once() {
+        final var member1 = save(new_(Member1.class, "Member1").setActive(true).setRefCount(10));
+        final var member1Det = save(new_(MemberDetails.class)
+                                            .setUnion(new_(Union.class).setMember1(member1))
+                                            .setUnion2(new_(Union.class).setMember1(member1))
+                                            .setActive(true));
+        // And this covers activation of B -- refCount of A is incremented once.
+        assertRefCount(11, member1);
+
+        save(member1Det.setActive(false));
+
+        assertRefCount(10, member1);
     }
 
     @Test
     public void activating_originator_that_references_two_active_persons_does_not_change_ref_count_for_one_where_it_is_dependable_and_does_change_for_the_other() {
-        final TgPerson p2 = co$(TgPerson.class).findByKey("P2");
-        final TgOriginator orig = co$(TgOriginator.class).findByKey(p2);
+        final var p2 = co$(TgPerson.class).findByKey("P2");
+        assertRefCount(0, p2);
+        final var orig = co$(TgOriginator.class).findByKey(p2);
+        final var p1 = co$(TgPerson.class).findByKey("P1");
+        assertRefCount(1, p1);
 
         save(orig.setActive(true));
 
-        assertEquals("P1 is referenced by just activated originator as an assistant, and should have its refCount incremented.", Integer.valueOf(2), co$(TgPerson.class).findByKey("P1").getRefCount());
-        assertEquals("P2 is referenced by just activated originator as one of key members, and should not have its refCount effected.",Integer.valueOf(0), co$(TgPerson.class).findByKey("P2").getRefCount());
+        assertRefCount("P1 is referenced by just activated originator as an assistant, and should have its refCount incremented.", 2, p1);
+        assertRefCount("P2 is referenced by just activated originator as one of key members, and should not have its refCount effected.", 0, p2);
     }
 
     @Test
     public void deactivation_of_person_p3_with_originators_assistant_as_p1_does_decrement_p1s_ref_count() {
-        final TgPerson p1 = co$(TgPerson.class).findByKey("P1");
-        assertEquals("Test pre condition should validate", Integer.valueOf(1), p1.getRefCount());
-        final TgPerson p3 = save(co$(TgPerson.class).findByKey("P3").setActive(false));
+        final var p1 = co$(TgPerson.class).findByKey("P1");
+        assertRefCount(1, p1);
+        final var p3 = save(co$(TgPerson.class).findByKey("P3").setActive(false));
         assertFalse(co$(TgAuthoriser.class).findByKey(p3).isActive());
         assertFalse(co$(TgOriginator.class).findByKey(p3).isActive());
-        assertEquals(Integer.valueOf(0), co$(TgPerson.class).findByKey("P1").getRefCount());
+        assertRefCount(0, p1);
     }
 
     @Test
-    public void activation_of_inactive_authoriser_increases_ref_count_for_referenced_category_and_decreases_it_upon_automatic_deactivation() {
+    public void activation_of_inactive_authoriser_increments_ref_count_for_referenced_category_and_decrements_it_upon_automatic_deactivation() {
         final TgPerson p3 = co$(TgPerson.class).findByKey("P3");
         final TgAuthoriser auth = co$(TgAuthoriser.class).findByKey(p3);
-        assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey("CAT1").getRefCount());
+        assertRefCount(0, TgCategory.class, "CAT1");
 
         save(auth.setActive(true));
-        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey("CAT1").getRefCount());
+        assertRefCount(1, TgCategory.class, "CAT1");
 
         save(p3.setActive(false));
         assertFalse(co$(TgAuthoriser.class).findByKey(p3).isActive());
-        assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey("CAT1").getRefCount());
+        assertRefCount(0, TgCategory.class, "CAT1");
+    }
+
+    @Test
+    public void inactive_authoriser_cannot_be_activated_if_its_key_person_is_inactive() {
+        final var p3 = save(co$(TgPerson.class).findByKey("P3").setActive(false));
+        final var auth = co$(TgAuthoriser.class).findByKey(p3);
+        assertFalse(auth.isActive());
+
+        auth.setActive(true);
+        assertThat(auth.getProperty(ACTIVE).getFirstFailure())
+                        .hasMessage(format(ERR_INACTIVE_REFERENCES,
+                                           getTitleAndDesc("person", TgAuthoriser.class).getKey(),
+                                           getEntityTitleAndDesc(auth).getKey(),
+                                           auth,
+                                           getEntityTitleAndDesc(p3).getKey(),
+                                           p3));
     }
 
     @Test
@@ -161,6 +213,19 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
         assertFalse(part1.isActive());
         final var inactivePart1 = save(part1);
         assertFalse(inactivePart1.isActive());
+    }
+
+    @Test
+    public void deactivation_of_an_entity_deactivates_its_active_deactivatable_dependencies_that_reference_it_via_union() {
+        final var member1 = save(new_(Member1.class, "Member1").setActive(true));
+        final var member1Det = save(new_(MemberDetails.class).setUnion(new_(Union.class).setMember1(member1)).setActive(true));
+        final var member5 = save(new_(Member5.class, "Member5").setActive(true));
+        final var member5Det = save(new_(MemberDetails.class).setUnion(new_(Union.class).setMember5(member5)).setActive(true));
+
+        // Refetch member1 after having used it (increment of its `refCount` and a concurrent deactivation is a conflicting change).
+        save(refetch$(member1).setActive(false));
+        assertFalse(co(MemberDetails.class).findByEntityAndFetch(fetch(MemberDetails.class), member1Det).isActive());
+        assertTrue(co(MemberDetails.class).findByEntityAndFetch(fetch(MemberDetails.class), member5Det).isActive());
     }
 
     @Override

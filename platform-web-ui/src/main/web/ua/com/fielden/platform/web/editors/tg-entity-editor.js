@@ -15,7 +15,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
-import { tearDownEvent, allDefined, isMobileApp, localStorageKey } from '/resources/reflection/tg-polymer-utils.js'
+import { tearDownEvent, allDefined, isTouchEnabled, localStorageKey } from '/resources/reflection/tg-polymer-utils.js'
 import { composeEntityValue } from '/resources/editors/tg-entity-formatter.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
@@ -78,10 +78,11 @@ const customLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]"
            disabled$="[[_disabled]]" 
            slot="label"
-           tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
+           tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable, _scanAvailable)]]">
         <span class="label-title" on-down="_labelDownEventHandler">[[_editorPropTitle]]</span>
         <iron-icon id="actionAvailability" class="label-action" icon="[[_actionIcon(actionAvailable, entity, propertyName)]]" action-available$="[[actionAvailable]]" on-tap="_editNewTap"></iron-icon>
         <iron-icon id="copyIcon" class="label-action" hidden$="[[noLabelFloat]]" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <iron-icon id="scanIcon" class="label-action" hidden$="[[!_canScan(hideQrCodeScanner, noLabelFloat, entity, propertyName)]]" icon="tg-icons:qrcode-scan" on-down="_preventFocusOut" on-tap="_scanTap"></iron-icon>
     </label>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
@@ -97,11 +98,11 @@ const customInputTemplate = html`
             on-mousedown="_onMouseDown" 
             on-focus="_onFocus"
             disabled$="[[_disabled]]" 
-            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]"
+            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable, _scanAvailable)]]"
             autocomplete="off"/>
     </iron-input>`;
 const inputLayerTemplate = html`
-    <div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
+    <div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable, _scanAvailable)]]">
         <template is="dom-repeat" items="[[_customPropTitle]]">
             <span hidden$="[[!item.separator]]" style="white-space: pre;">[[item.separator]]</span>
             <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; white-space: pre;"><span>[[item.title]]</span>: </span>
@@ -197,7 +198,7 @@ export class TgEntityEditor extends TgEditor {
              */
             entityMaster: {
                 type: Object,
-                computed: '_computeEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat)'
+                computed: '_computeEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat)'
             },
 
             /**
@@ -205,7 +206,7 @@ export class TgEntityEditor extends TgEditor {
              */
             newEntityMaster: {
                 type: Object,
-                computed: '_computeNewEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat)'
+                computed: '_computeNewEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat)'
             },
 
             /**
@@ -233,6 +234,14 @@ export class TgEntityEditor extends TgEditor {
             lastValidationAttemptPromise: {
                 type: Object,
                 value: null
+            },
+
+            /**
+             * Determines whether this entity editor is bound to a string property instead of an entity property as it is in case of multi==false or a list property as it is in case of multi=true.
+             */
+            bindToString: {
+                type: Boolean,
+                computed: '_computeBindToString(entity, propertyName)'
             },
 
            /**
@@ -590,7 +599,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _copyTap () {
-        if (this.multi) {
+        if (this.multi || this.bindToString) {
             super._copyTap();
         } else if (this.lastValidationAttemptPromise) {
             // Open master on title edit also for previously rejected 'lastValidationAttemptPromise'.
@@ -1064,6 +1073,7 @@ export class TgEntityEditor extends TgEditor {
         if (
             this.entity
             && this.entity.type().prop(this.propertyName).type()
+            && this.entity.type().prop(this.propertyName).type() instanceof this.reflector()._getEntityTypePrototype()
             && this.entity.type().prop(this.propertyName).type().isUnionEntity()
             && !this.unionValueChosenFromAutocompleter
             && this._refreshCycleStarted !== true
@@ -1140,7 +1150,7 @@ export class TgEntityEditor extends TgEditor {
         this._onChange();
 
         // at the end let's focus...
-        if (!isMobileApp()) {
+        if (!isTouchEnabled()) {
             this._focusInput();
         }
     }
@@ -1218,9 +1228,13 @@ export class TgEntityEditor extends TgEditor {
         // this happens when a crit-only property changes from type SINGLE to MULTI;
         // joining on an empty array evaluates to an empty string;
         // null converts to '' in majority of cases (except boolean) in reflector.tg_toString... family of methods and this is the case for this editor (String or Array of Strings types)
-        return this.multi === true
-            ? this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, collection: true, separator: this.separator }) // custom ',' separator is needed here, otherwise tg-editor.convertToString would be sufficient
-            : super.convertToString(value);
+        if (this.bindToString) {
+            return value || '';
+        } else if (this.multi === true) {
+            return this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, collection: true, separator: this.separator }); // custom ',' separator is needed here, otherwise tg-editor.convertToString would be sufficient
+        } else {//if single entity value
+            return super.convertToString(value);
+        }
     }
 
     /**
@@ -1232,7 +1246,9 @@ export class TgEntityEditor extends TgEditor {
      * or converted to null due to the fact that there should be no empty string representing an entity key.
      */
     convertFromString (strValue) {
-        if (this.multi === true) {
+        if (this.bindToString) {
+            return strValue || null;
+        } else if (this.multi === true) {
             if (strValue === '') {
                 return []; // missing value for multi autocompliter is empty array []!
             } else {
@@ -1283,7 +1299,7 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
-    _getTooltip (_editingValue, entity, focused, actionAvailable) {
+    _getTooltip (_editingValue, entity, focused, actionAvailable, _scanAvailable) {
         if (!allDefined(arguments)) {
             return;
         }
@@ -1295,15 +1311,15 @@ export class TgEntityEditor extends TgEditor {
             } else {
                 valueToFormat = fullEntity.get(this.propertyName);
             }
-            return this._generateTooltip(valueToFormat, actionAvailable);
+            return this._generateTooltip(valueToFormat, actionAvailable, _scanAvailable);
         }
-        return this._generateTooltip(null, actionAvailable);
+        return this._generateTooltip(null, actionAvailable, _scanAvailable);
     }
 
-    _generateTooltip (value, actionAvailable) {
+    _generateTooltip (value, actionAvailable, _scanAvailable) {
         let tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc ? (tooltip ? '<br><br>' : '') + this.propDesc : '';
-        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip(actionAvailable);
+        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip(actionAvailable, _scanAvailable);
         return tooltip;
     }
 
@@ -1325,7 +1341,7 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Calculates title action tooltip.
      */
-    _getActionTooltip (actionAvailable) {
+    _getActionTooltip (actionAvailable, _scanAvailable) {
         let editActionShortDesc = "", editActionLongDesc = "";
         if (actionAvailable) {
             const entityMaster = this._valueToEdit(this.entity, this.propertyName) ? this.entityMaster : this.newEntityMaster;
@@ -1336,13 +1352,14 @@ export class TgEntityEditor extends TgEditor {
                 editActionLongDesc = entityMaster.longDesc ? `<b>${entityMaster.longDesc}</b>` : "";
             }
         }
-        const editNewActionTooltip = editActionShortDesc + editActionLongDesc;
-        const copyActionTooltip = "<b>Copy</b><br>Copy content";
-        const withActionTitle = editNewActionTooltip ? "With actions: " : "With action: ";
-        const actionsTooltip = (editNewActionTooltip ? `${editNewActionTooltip}<br><br>` : "") + copyActionTooltip
+        const actionTooltips = [];
+        actionTooltips.push(editActionShortDesc + editActionLongDesc);
+        actionTooltips.push(this._getCopyActionTooltip());
+        actionTooltips.push(this._getScanActionTooltip(_scanAvailable));
+        const filteredActionTooltips = actionTooltips.filter(tooltip => !!tooltip);
         return `<div style='display:flex;'>
-            <div style='margin-right:10px;'>${withActionTitle}</div>
-            <div style='flex-grow:1;'>${actionsTooltip}</div>
+            <div style='margin-right:10px;'>${filteredActionTooltips.length > 1 ? "With actions:" : "With action:"} </div>
+            <div style='flex-grow:1;'>${filteredActionTooltips.join("<br><br>")}</div>
             </div>`
     }
 
@@ -1364,23 +1381,23 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Computes entity master object for entity-typed property represented by this autocompleter (only for non-multi).
      */
-    _computeEntityMaster (multi, autocompletionType, entity, propertyName, noLabelFloat) {
-        return this._getEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat, true);
+    _computeEntityMaster (multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat) {
+        return this._getEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat, true);
     }
 
     /**
      * Computes new entity master object for entity-typed property represented by this autocompleter (only for non-multi).
      */
-    _computeNewEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat) {
-        return this._getEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat, false);
+    _computeNewEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat) {
+        return this._getEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat, false);
     }
 
-    _getEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat, edit) {
+    _getEntityMaster(multi, bindToString, autocompletionType, entity, propertyName, noLabelFloat, edit) {
         if (!allDefined(arguments) || !entity) {
             return null;
         }
         const type = this.reflector().findTypeByName(autocompletionType);
-        if (!multi && !noLabelFloat && type) {
+        if (!multi && !bindToString && !noLabelFloat && type) {
             const propertyType = type.prop(propertyName).type();
             if (propertyType.isUnionEntity()) {
                 const val = this._valueToEdit(entity, propertyName);
@@ -1414,6 +1431,13 @@ export class TgEntityEditor extends TgEditor {
         return this._valueToEdit(entity, propertyName) ? !!entityMaster : (metaPropEditable && !!newEntityMaster);
     }
 
+    _computeBindToString (entity, propertyName) {
+        if (entity) {
+            return entity.type().prop(propertyName).type()
+                    && entity.type().prop(propertyName).type() === "String";
+        }
+    }
+
     _actionIcon (actionAvailable, entity, propertyName) {
         if (actionAvailable) {
             if (this._valueToEdit(entity, propertyName)) {
@@ -1428,7 +1452,8 @@ export class TgEntityEditor extends TgEditor {
         if (entity !== null) {
             const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             const metaProp = this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(entity), this.propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
+            if (entityValue !== null && !Array.isArray(entityValue) 
+                    && this.reflector().isEntity(entityValue) && entityValue.type().shouldDisplayDescription()) {
                 try {
                     return composeEntityValue(entityValue, metaProp.displayAs());
                 } catch (e) {
@@ -1475,7 +1500,8 @@ export class TgEntityEditor extends TgEditor {
     _formatDesc (entity, propertyName) {
         if (entity && propertyName) {
             const entityValue = this.reflector().tg_getFullValue(entity, propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
+            if (entityValue !== null && !Array.isArray(entityValue) && this.reflector().isEntity(entityValue)
+                && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
                 return entityValue.get('desc');
             }
         }
@@ -1490,7 +1516,9 @@ export class TgEntityEditor extends TgEditor {
             const metaProperty = this.reflector().tg_getFullEntity(entity).prop(propertyName);
             const isMock = this.reflector().isError(metaProperty.validationResult()) && this.reflector().isMockNotFoundEntity(metaProperty.lastInvalidValue());
             const entityValue = this.reflector().tg_getFullValue(entity, propertyName);
-            this._hasLayer = entityValue !== null && !isMock && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
+            this._hasLayer = entityValue !== null && !isMock && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue 
+                    && !Array.isArray(entityValue) && this.reflector().isEntity(entityValue) 
+                    && entityValue.type().shouldDisplayDescription();
         } else {
             this._hasLayer = false;
         }
@@ -1545,7 +1573,7 @@ export class TgEntityEditor extends TgEditor {
      * For empty values and for mocks (both not-found and more-than-one) there would be no type title.
      */
     _calculateTypeTitle (entity) {
-        if (!this.multi && this.reflector().isEntity(entity)) {
+        if (!this.multi && !this.bindToString && this.reflector().isEntity(entity)) {
             const fullEntity = this.reflector().tg_getFullEntity(entity);
             const value = this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())
                 ? fullEntity.prop(this.propertyName).lastInvalidValue()

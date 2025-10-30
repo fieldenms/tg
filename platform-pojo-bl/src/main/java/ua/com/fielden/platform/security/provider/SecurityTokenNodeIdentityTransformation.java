@@ -1,17 +1,17 @@
 package ua.com.fielden.platform.security.provider;
 
+import jakarta.inject.Singleton;
+
 import java.util.SortedSet;
 
-/**
- * This is the default implementation for {@link ISecurityTokenNodeTransformation}, which does not apply any transformations.    
- *
- * @author TG Team
- */
-public class SecurityTokenNodeIdentityTransformation implements ISecurityTokenNodeTransformation {
+/// The default implementation -- the identity function.
+///
+@Singleton
+final class SecurityTokenNodeIdentityTransformation implements ISecurityTokenNodeTransformation {
 
     @Override
-    public SortedSet<SecurityTokenNode> transform(final SortedSet<SecurityTokenNode> topLevelSecurityTokenNodes) {
-        return topLevelSecurityTokenNodes;
+    public SortedSet<SecurityTokenNode> transform(final SortedSet<SecurityTokenNode> tree) {
+        return tree;
     }
 
 }
