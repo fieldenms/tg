@@ -9,7 +9,7 @@ import ua.com.fielden.platform.reflection.Reflector;
 
 import java.util.List;
 
-import static javassist.Modifier.isFinal;
+import static java.lang.reflect.Modifier.isFinal;
 import static ua.com.fielden.platform.utils.EntityUtils.findSyntheticModelFieldFor;
 import static ua.com.fielden.platform.utils.EntityUtils.isGeneratedMultiInheritanceEntityType;
 

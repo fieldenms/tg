@@ -17,9 +17,9 @@ import ua.com.fielden.platform.types.either.Left;
 import java.math.BigDecimal;
 import java.util.stream.Stream;
 
-import static javassist.util.proxy.ProxyFactory.isProxyClass;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isLoadedByHibernate;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
@@ -30,7 +30,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
     private final ITgWagon coWagon = co(TgWagon.class);
 
     private static void shouldNotBeProxy(Class<? extends AbstractEntity<?>> entityClass) {
-        assertFalse("Should not be proxy", isProxyClass(entityClass));
+        assertFalse("Should not be proxy", isLoadedByHibernate(entityClass));
     }
 
     private static void shouldBeProxy(final AbstractEntity<?> entity, final String propName) {

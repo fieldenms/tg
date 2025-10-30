@@ -77,10 +77,15 @@
 
         <!-- https://mvnrepository.com/artifact/org.assertj/assertj-core -->
         <dependency>
-          <groupId>org.assertj</groupId>
-          <artifactId>assertj-core</artifactId>
-          <version>${assertj.version}</version>
-          <scope>test</scope>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>
@@ -108,7 +113,7 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <configuration>
-            <release>21</release>
+            <release>25</release>
             <encoding>UTF-8</encoding>
             <showWarnings>true</showWarnings>
             <generatedSourcesDirectory>${project.build.directory}/generated-sources</generatedSourcesDirectory>
