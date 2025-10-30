@@ -37,9 +37,9 @@ public class SqlServerDbCreator extends DbCreator {
             final IDomainDrivenTestCaseConfiguration config,
             final List<String> maybeDdl,
             final boolean execDdslScripts)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException
+    {
         super(testCaseType, props, config, maybeDdl, execDdslScripts);
-
     }
 
     /**
