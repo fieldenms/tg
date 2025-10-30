@@ -43,7 +43,7 @@ public class SqlServerDomainDrivenTestCaseRunner extends AbstractDomainDrivenTes
             final Properties props = new Properties();
             props.setProperty("config.domain", PlatformDomainDrivenTestCaseConfiguration.class.getName());
             props.setProperty("hibernate.dialect", "org.hibernate.dialect.SQLServer2012Dialect");
-            props.setProperty("hibernate.connection.url", format("jdbc:sqlserver:%s;queryTimeout=30", dbUri));
+            props.setProperty("hibernate.connection.url", format(dbUri.contains("queryTimeout") ? "jdbc:sqlserver:%s" : "jdbc:sqlserver:%s;queryTimeout=30", dbUri));
             props.setProperty("hibernate.connection.driver_class", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
             props.setProperty("hibernate.connection.username", "junit");
             props.setProperty("hibernate.connection.password", "junit");

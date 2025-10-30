@@ -9,7 +9,6 @@ import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
  *
  */
 public class DomainDriventTestException extends AbstractPlatformRuntimeException {
-    private static final long serialVersionUID = 1L;
 
     public DomainDriventTestException(final String msg) {
         super(msg);
