@@ -3,6 +3,7 @@ package ua.com.fielden.platform.test;
 import com.google.common.io.Files;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
+import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.ddl.IDdlGenerator;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.meta.EntityMetadata;
@@ -14,7 +15,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -35,22 +35,24 @@ public abstract class DbCreator {
     public static final String baseDir = "./src/test/resources/db";
     public static final String ddlScriptFileName = format("%s/create-db-ddl.script", DbCreator.baseDir);
 
+    public final IDomainDrivenTestCaseConfiguration config;
+
     protected final Logger logger = getLogger(getClass());
 
     private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
-    private final Connection conn;
     private final Collection<EntityMetadata.Persistent> persistentEntitiesMetadata;
 
     private final Set<String> dataScripts = new LinkedHashSet<>();
     private final List<String> truncateScripts = new ArrayList<>();
-    
-    
+
     public DbCreator(
             final Class<? extends AbstractDomainDrivenTestCase> testCaseType, 
             final Properties defaultDbProps,
             final IDomainDrivenTestCaseConfiguration config,
             final List<String> maybeDdl,
-            final boolean execDdslScripts) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+            final boolean execDdslScripts) throws ClassNotFoundException, InstantiationException, IllegalAccessException
+    {
+        this.config = config;
 
         this.testCaseType = testCaseType;
         this.persistentEntitiesMetadata = config.getInstance(IDomainMetadataUtils.class)
@@ -59,10 +61,6 @@ public abstract class DbCreator {
                 .flatMap(Optional::stream)
                 .collect(toImmutableList());
 
-        // this is a single place where a new DB connection is established
-        logger.info("CREATING DB CONNECTION...");
-        conn = createConnection(defaultDbProps);
-        
         if (maybeDdl.isEmpty()) {
             logger.info("GENERATING DDL...");
             // let's create the database...
@@ -75,12 +73,7 @@ public abstract class DbCreator {
         if (execDdslScripts) {
             // recreate DB structures
             logger.info("CREATING DB SCHEMA...");
-            batchExecSql(maybeDdl, conn, 0);
-            try {
-                conn.commit();
-            } catch (final SQLException ex) {
-                throw new DomainDriventTestException("Could not commit transaction after creating database schema.", ex);
-            }
+            config.getInstance(TransactionalExecution.class).exec(conn -> batchExecSql(maybeDdl, conn, 0));
             logger.info(" DONE!");
         }
     }
@@ -101,10 +94,6 @@ public abstract class DbCreator {
         return persistentEntitiesMetadata;
     }
 
-    public Connection connection() {
-        return conn;
-    }
-
     /**
      * Executes test data population logic. Should be executed before each unit test. 
      * 
@@ -122,13 +111,11 @@ public abstract class DbCreator {
         if (!dataScripts.isEmpty()) {
             // apply data population script
             logger.debug("Executing data population script.");
-            batchExecSql(new ArrayList<>(dataScripts), conn, 100);
-            conn.commit();
+            config.getInstance(TransactionalExecution.class).exec(conn -> batchExecSql(new ArrayList<>(dataScripts), conn, 100));
         } else {
             try {
                 if (testCase.useSavedDataPopulationScript()) {
-                    restoreDataFromFile(testCaseType, conn);
-                    conn.commit();
+                    config.getInstance(TransactionalExecution.class).exec(conn -> restoreDataFromFile(testCaseType, conn));
                 }
                 // need to call populateDomain, which might have some initialization even if the actual data saving does not need to occur
                 testCase.populateDomain();
@@ -139,11 +126,9 @@ public abstract class DbCreator {
             // record data population statements
             if (!testCase.useSavedDataPopulationScript() && dataScripts.isEmpty()) {
                 try {
-                    recordDataPopulationScript(testCase, conn);
+                    config.getInstance(TransactionalExecution.class).exec(conn -> recordDataPopulationScript(testCase, conn));
                 } catch (final Exception ex) {
                     throw new DomainDriventTestException("Could not record data population script.", ex);
-                } finally {
-                    conn.commit();
                 }
             }
         }
@@ -161,9 +146,8 @@ public abstract class DbCreator {
      */
     public final void clearData() {
         try {
-            batchExecSql(truncateScripts, conn, 100);
             logger.debug("Executing tables truncation script.");
-            conn.commit();
+            config.getInstance(TransactionalExecution.class).exec(conn -> batchExecSql(truncateScripts, conn, 100));
         } catch (final Exception ex) {
             throw new DomainDriventTestException("Could not clear data.", ex);
         }
@@ -235,49 +219,10 @@ public abstract class DbCreator {
 
     /**
      * Implement to generate SQL statements for inserting records that correspond to test domain data that is present currently in the database with the specified connection.
-     * 
-     * @param entityMetadata
-     * @param conn
-     * @return
-     * @throws SQLException
      */
-    public abstract List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) throws SQLException;
+    public abstract List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn);
     
-    /**
-     * Creates a new DB connection based on the provided properties.
-     * 
-     * @param props
-     * @return
-     */
-    private static Connection createConnection(final Properties props) {
-        final String url = props.getProperty("hibernate.connection.url");
-        final String jdbcDriver = props.getProperty("hibernate.connection.driver_class");
-        final String user = props.getProperty("hibernate.connection.username");
-        final String passwd = props.getProperty("hibernate.connection.password");
-
-        try {
-            Class.forName(jdbcDriver);
-            final Connection conn = DriverManager.getConnection(url, user, passwd);
-            conn.setAutoCommit(false);
-            return conn;
-        } catch (final Exception ex) {
-            throw new DomainDriventTestException(format("Could not establish a database connection to [%s]", url), ex);
-        }
-    }
-
-    /**
-     * Closes the current db connection.
-     */
-    public void closeConnetion() {
-        logger.info("CLOSING DB CONNECTION...");
-        try {
-            conn.close();
-        } catch (final SQLException ex) {
-            logger.fatal("Could not close DB connection.", ex);
-        }
-    }
-
-    protected String dataScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) { 
+    protected String dataScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
         return format("%s/data-%s.script", baseDir, testCaseType.getSimpleName());
     }
     

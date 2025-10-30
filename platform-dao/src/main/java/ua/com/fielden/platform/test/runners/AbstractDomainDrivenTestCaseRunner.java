@@ -170,7 +170,6 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
      * A routine to clean up the database once it is no longer needed. For example, in case of H2 the database file can be deleted.
      */
     public void dbCleanUp() {
-        dbCreator.closeConnetion();
     }
     
     /**
