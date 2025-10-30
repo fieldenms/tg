@@ -23,17 +23,12 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
-/**
- * Contains methods for property type determination.
- * Methods travers through:
- * <ol>
- *   <li>type hierarchies,</li>
- *   <li>dot-expressions that represent property paths.</li>
- * </ol>
- *
- * @author TG Team
- *
- */
+/// Contains methods for property type determination.
+///
+/// Methods travers through:
+/// - type hierarchies
+/// - dot-expressions that represent property paths.
+///
 public class PropertyTypeDeterminator {
     public static final String PROPERTY_SPLITTER = ".";
     public static final String ERR_TYPE_AND_PROP_REQUIRED = "Property type cannot be determined without both property name and owning type specified.";
@@ -280,7 +275,9 @@ public class PropertyTypeDeterminator {
         }
     }
 
-    private static boolean isLoadedByHibernate(final Class<?> type) {
+    /// Identifies whether `type` represents a proxy, loaded by Hibernate.
+    ///
+    public static boolean isLoadedByHibernate(final Class<?> type) {
         final String name = type.getSimpleName();
         return name.contains("$HibernateProxy") || name.contains("$$_javassist") || name.contains("_$$_");
     }
