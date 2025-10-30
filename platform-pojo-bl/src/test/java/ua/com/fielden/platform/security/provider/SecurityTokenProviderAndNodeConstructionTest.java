@@ -72,7 +72,7 @@ public class SecurityTokenProviderAndNodeConstructionTest {
         assertEquals("Incorrect number of top security tokens.", 39, topNodes.size());
 
         // skip attachment related security tokens before getting iterator nodesWithSkippedAttachmentTokens
-        final Iterator<SecurityTokenNode> superIter = topNodes.stream().skip(21).collect(toList()).iterator();
+        final Iterator<SecurityTokenNode> superIter = topNodes.stream().skip(20).collect(toList()).iterator();
 
         final SecurityTokenNode top1 = superIter.next();
         assertEquals("Incorrect first top token.", Top1LevelSecurityToken.class, top1.getToken());
