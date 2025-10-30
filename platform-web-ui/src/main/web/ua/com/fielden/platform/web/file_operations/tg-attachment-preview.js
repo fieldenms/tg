@@ -6,6 +6,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 
 
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
+import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 
 import { isSupportedLink, openLink, canOpenLinkWithoutConfirmation, confirmLinkAndThen } from '/resources/components/tg-link-opener.js';
 
@@ -45,13 +46,29 @@ const template = html`
             font-size: 14px;
             font-weight: 500;
             color: #000000DE;
+            position: relative;
+        }
+        #spinner {
+            position: absolute;
+            top: 50%;/*position Y halfway in*/
+            left: 50%;/*position X halfway in*/
+            transform: translate(-50%,-50%);/*move it halfway back(x,y)*/
+            padding: 2px;
+            margin: 0px;
+            width: 24px;
+            height: 24px;
+            --paper-spinner-layer-1-color: var(--paper-blue-500);
+            --paper-spinner-layer-2-color: var(--paper-blue-500);
+            --paper-spinner-layer-3-color: var(--paper-blue-500);
+            --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
     </style>
     <img id="imageLoader" src$="[[_getImageUri(_linkCheckRes, _wasConfirmed, _attachmentUri)]]" hidden$="[[!_isImageVisible(_loadingError, _attachmentUri)]]" on-load="_imageLoaded" on-error="_imageLoadeError"/>
     <div id="altImage" hidden$="[[_isImageVisible(_loadingError, _attachmentUri)]]">
         <span id="message">[[_getAltImageText(_linkCheckRes, _wasConfirmed)]]</span>
-        <paper-button raised on-tap="_downloadOrOpenAttachment" tooltip-text="[[_getButtonTooltip(_linkCheckRes)]]">
+        <paper-button raised on-tap="_downloadOrOpenAttachment" tooltip-text="[[_getButtonTooltip(_linkCheckRes)]]" disabled$="[[_loading]]">
             <span>[[_getButtonText(_linkCheckRes)]]</span>
+            <paper-spinner id="spinner" active="[[_loading]]" alt="in progress"></paper-spinner>
         </paper-button>
     </div>`; 
 
@@ -91,17 +108,14 @@ class TgAttachmentPreview extends PolymerElement {
             _attachmentUri: {
                 type: String,
                 value: null
+            },
+            
+            _loading: {
+                type: Boolean,
+                value: false
             }
         }
     }
-
-    
-
-    ready() {
-        super.ready();
-        
-    }
-
     
     _imageLoaded() {
         this._loadingError = false;
@@ -200,8 +214,11 @@ class TgAttachmentPreview extends PolymerElement {
                     this._wasConfirmed = true;
                 });
             }
-        } else {
-            this.downloadAttachment && this.downloadAttachment(this.entity.attachment);
+        } else if (this.downloadAttachment) {
+            this._loading = true;
+            this.downloadAttachment(this.entity.attachment).finally(() => {
+                this._loading = false;
+            });
         }
     }
 }

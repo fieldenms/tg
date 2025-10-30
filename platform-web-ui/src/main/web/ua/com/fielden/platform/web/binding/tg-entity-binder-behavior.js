@@ -416,65 +416,73 @@ export const TgEntityBinderBehavior = {
     /* Returns a function that accepts an instance of Attachment to start the download of the associated file. The passed in attachment must not be null.*/
     mkDownloadAttachmentFunction: function () {
         return attachment => {
-            if (attachment.isPersisted()) {
-                if (isSupportedLink(attachment.title) === true) {
-                    checkLinkAndOpen(attachment.title);
-                } else {
-                    const self = this;
-                    const url = '/download-attachment/' + attachment.id + '/' + attachment.sha1;
-                    // AJAX approach to the file download
-                    const xhr = new XMLHttpRequest();
-                    xhr.open("GET", url, true);
-                    xhr.responseType = 'blob';
-                    const tzHeader = _timeZoneHeader();
-                    for (const headerName in tzHeader) {
-                        xhr.setRequestHeader(headerName, tzHeader[headerName]);
-                    }
-                    xhr.onload = function (e) {
-                        if (xhr.status === 200) {
-                            console.log('File received', xhr.getResponseHeader('Content-Disposition'));
-                            const bySemicolon = xhr.getResponseHeader('Content-Disposition').split(';');
-                            const filename = bySemicolon.filter(part => part.includes('filename=')).map(part => part.split('=')[1])[0];
-                            if (filename) {
-                                // create a Blob object from the response and a URL for it
-                                const blob = new Blob([xhr.response]);
-                                const blobUrl = window.URL.createObjectURL(blob);
-                                // the blob URL can be used for the <a> element for the user to download/open the file
-                                const a = document.createElement("a");
-                                a.href = blobUrl;
-                                // let's perform decoding, followed by removal of leading and trailing double quotes if present
-                                // browsers replace double quotes with _ automatically, which may corrupt the file extension
-                                let trimmedFileName = decodeURIComponent(filename);
-                                if (trimmedFileName.startsWith('"')) {
-                                    trimmedFileName = trimmedFileName.substring(1);
-                                }
-                                if (trimmedFileName.endsWith('"')) {
-                                    trimmedFileName = trimmedFileName.substring(0, trimmedFileName.length - 1);
-                                }
-                                a.download = trimmedFileName;
-                                a.click();
-                                // release the reference to the file by revoking the Object URL
-                                window.URL.revokeObjectURL(blobUrl);
-                            }
-                        } else {
-                            console.error('Error occurred when trying to download the attachment.', 'Error code:', xhr.status);
-                            const reader = new FileReader();
-                            reader.onload = function () {
-                                const resultAsObj = JSON.parse(reader.result);
-                                const result = self._serialiser().deserialise(resultAsObj);
-                                self._openToastForErrorResult(result, true);
-                            }
-                            reader.readAsText(xhr.response);
+            return new Promise((resolve, reject) => {
+                if (attachment.isPersisted()) {
+                    if (isSupportedLink(attachment.title) === true) {
+                        checkLinkAndOpen(attachment.title);
+                        resolve(attachment.title);
+                    } else {
+                        const self = this;
+                        const url = '/download-attachment/' + attachment.id + '/' + attachment.sha1;
+                        // AJAX approach to the file download
+                        const xhr = new XMLHttpRequest();
+                        xhr.open("GET", url, true);
+                        xhr.responseType = 'blob';
+                        const tzHeader = _timeZoneHeader();
+                        for (const headerName in tzHeader) {
+                            xhr.setRequestHeader(headerName, tzHeader[headerName]);
                         }
-                    }.bind(self);
-                    xhr.onerror = function (e) {
-                        const msg = "Unknown error occurred when sending request to download the attachment.";
-                        console.error(msg, e);
-                        self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
-                    }.bind(self);
-                    xhr.send();
+                        xhr.onload = function (e) {
+                            if (xhr.status === 200) {
+                                console.log('File received', xhr.getResponseHeader('Content-Disposition'));
+                                const bySemicolon = xhr.getResponseHeader('Content-Disposition').split(';');
+                                const filename = bySemicolon.filter(part => part.includes('filename=')).map(part => part.split('=')[1])[0];
+                                if (filename) {
+                                    // create a Blob object from the response and a URL for it
+                                    const blob = new Blob([xhr.response]);
+                                    const blobUrl = window.URL.createObjectURL(blob);
+                                    // the blob URL can be used for the <a> element for the user to download/open the file
+                                    const a = document.createElement("a");
+                                    a.href = blobUrl;
+                                    // let's perform decoding, followed by removal of leading and trailing double quotes if present
+                                    // browsers replace double quotes with _ automatically, which may corrupt the file extension
+                                    let trimmedFileName = decodeURIComponent(filename);
+                                    if (trimmedFileName.startsWith('"')) {
+                                        trimmedFileName = trimmedFileName.substring(1);
+                                    }
+                                    if (trimmedFileName.endsWith('"')) {
+                                        trimmedFileName = trimmedFileName.substring(0, trimmedFileName.length - 1);
+                                    }
+                                    a.download = trimmedFileName;
+                                    a.click();
+                                    // release the reference to the file by revoking the Object URL
+                                    window.URL.revokeObjectURL(blobUrl);
+                                    resolve(filename);
+                                } else {
+                                    reject("The response does not contain the filename to download");
+                                }
+                            } else {
+                                console.error('Error occurred when trying to download the attachment.', 'Error code:', xhr.status);
+                                const reader = new FileReader();
+                                reader.onload = function () {
+                                    const resultAsObj = JSON.parse(reader.result);
+                                    const result = self._serialiser().deserialise(resultAsObj);
+                                    self._openToastForErrorResult(result, true);
+                                    reject(result);
+                                }
+                                reader.readAsText(xhr.response);
+                            }
+                        }.bind(self);
+                        xhr.onerror = function (e) {
+                            const msg = "Unknown error occurred when sending request to download the attachment.";
+                            console.error(msg, e);
+                            self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
+                            reject(msg);
+                        }.bind(self);
+                        xhr.send();
+                    }
                 }
-            }
+            });
         }
     },
 
