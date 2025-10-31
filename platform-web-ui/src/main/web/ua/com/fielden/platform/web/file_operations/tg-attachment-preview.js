@@ -66,9 +66,9 @@ const template = html`
     <img id="imageLoader" src$="[[_getImageUri(_linkCheckRes, _wasConfirmed, _attachmentUri)]]" hidden$="[[!_isImageVisible(_loadingError, _attachmentUri)]]" on-load="_imageLoaded" on-error="_imageLoadeError"/>
     <div id="altImage" hidden$="[[_isImageVisible(_loadingError, _attachmentUri)]]">
         <span id="message">[[_getAltImageText(_linkCheckRes, _wasConfirmed)]]</span>
-        <paper-button raised on-tap="_downloadOrOpenAttachment" tooltip-text="[[_getButtonTooltip(_linkCheckRes)]]" disabled$="[[_loading]]">
+        <paper-button raised on-tap="_downloadOrOpenAttachment" tooltip-text="[[_getButtonTooltip(_linkCheckRes)]]" disabled$="[[_working]]">
             <span>[[_getButtonText(_linkCheckRes)]]</span>
-            <paper-spinner id="spinner" active="[[_loading]]" alt="in progress"></paper-spinner>
+            <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
         </paper-button>
     </div>`; 
 
@@ -109,14 +109,26 @@ class TgAttachmentPreview extends PolymerElement {
                 type: String,
                 value: null
             },
-            
-            _loading: {
+
+            /** A timer to prevent spinner from activating for quick actions. */
+            _startSpinnerTimer: {
+                type: Object,
+                value: null
+            },
+
+            /** Indicates whether the download action is in progress. */
+            _working: {
                 type: Boolean,
                 value: false
             }
         }
     }
-    
+
+    /* A timer callback that performs spinner activation. */
+    _startSpinnerCallback() {
+        this.$.spinner.style.display = null;
+    }
+
     _imageLoaded() {
         this._loadingError = false;
     }
@@ -215,9 +227,19 @@ class TgAttachmentPreview extends PolymerElement {
                 });
             }
         } else if (this.downloadAttachment) {
-            this._loading = true;
+            if (this._startSpinnerTimer) {
+                clearTimeout(this._startSpinnerTimer);
+            }
+            this._startSpinnerTimer = setTimeout(this._startSpinnerCallback.bind(this), 700);
+            this._working = true;
             this.downloadAttachment(this.entity.attachment).finally(() => {
-                this._loading = false;
+                this._working = false;
+                // Clear timeout to prevent not yet activated spinner from activating.
+                if (this._startSpinnerTimer) {
+                    clearTimeout(this._startSpinnerTimer);
+                }
+                // Make spinner invisible
+                this.$.spinner.style.display = 'none';
             });
         }
     }
