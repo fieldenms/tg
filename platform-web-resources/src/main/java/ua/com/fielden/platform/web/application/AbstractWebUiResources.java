@@ -127,6 +127,8 @@ public abstract class AbstractWebUiResources extends Application {
         // Registering autocompletion resources:
         attachAutocompletionResources(guardedRouter, webApp);
 
+        guardedRouter.attach("/tiny/{%s}".formatted(TinyHyperlinkResourceFactory.ENTITY_ID), new TinyHyperlinkResourceFactory(webApp, injector));
+
         if (injector.getInstance(Key.get(boolean.class, Names.named("web.api")))) { // in case where Web API has been turned-on in application.properties ...
             // ... register GraphiQL resources
             guardedRouter.attach("/graphiql", new GraphiQLResourceFactory(injector));
