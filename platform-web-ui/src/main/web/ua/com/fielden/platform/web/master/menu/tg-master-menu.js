@@ -805,13 +805,13 @@ Polymer({
             if (this.sectionRoute !== undefined && newRoute !== undefined) {
                 const currentSection = this.currentSection();
                 if (!currentSection) {
-                    throw 'Compound master\'s menu item section [' + this.sectionRoute + '] does not exist.';
+                    throw 'Compound master’s menu item section [' + this.sectionRoute + '] does not exist.';
                 }
                 const cannotLeaveReason = currentSection.canLeave();
                 const cannotLeaveMessage = cannotLeaveReason ? cannotLeaveReason.msg : (this.isMasterWithMasterAndNonPersisted(currentSection) ? 'A new entity is being created. Please save or cancel your changes.' : undefined);
                 if (cannotLeaveMessage) {
                     this.route = this.sectionRoute;
-                    this.parent._openToastForError('Cannot leave "' + currentSection.sectionTitle + '".', cannotLeaveMessage);
+                    this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage);
                 } else {
                     this.sectionRoute = newRoute;
                     if (currentSection.activated) {
