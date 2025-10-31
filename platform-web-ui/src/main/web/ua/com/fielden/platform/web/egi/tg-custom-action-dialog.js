@@ -198,7 +198,7 @@ const template = html`
     </div>
     <div id="dialogBody" class="relative flex layout vertical">
         <div id="loadingPanel" class="fit layout horizontal">
-            <div style="margin: auto; padding: 20px" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
+            <div style="margin: auto; padding: 20px; text-align: center;" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
         </div>
         <div id="dialogLoader" class="flex layout horizontal">
             <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
@@ -1245,7 +1245,7 @@ Polymer({
         }
     },
     
-    // Inoked by navigation buttons it turns on spinner on navigation button and makes blocking layer visible. Also it resets error message if it is present due to previous navigation action.
+    // Invoked by navigation buttons it turns on spinner on navigation button and makes blocking layer visible. Also it resets error message if it is present due to previous navigation action.
     _handleActionNavigationInvoked: function (e) {
         //Reset dataLoaded property to ensure that blocking layer will work correctly and appropriate event handlers will be invoked.
         this._dataLoaded = false;
