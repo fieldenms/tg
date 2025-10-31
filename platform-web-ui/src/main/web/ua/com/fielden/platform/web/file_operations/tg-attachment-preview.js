@@ -126,6 +126,8 @@ class TgAttachmentPreview extends PolymerElement {
 
     /* A timer callback that performs spinner activation. */
     _startSpinnerCallback() {
+        // The approach with using `display: none` ensure
+        // that the spinner gets hidden just before the button becomes enabled.
         this.$.spinner.style.display = null;
     }
 
@@ -191,7 +193,12 @@ class TgAttachmentPreview extends PolymerElement {
         return MSG_ATTACHMENT_CANNOT_BE_VIEWED;
     }
 
+    /**
+     * An on-tap even handler for the DOWNLOAD/OPEN button.
+     */
     _downloadOrOpenAttachment(e) {
+        // If the button represent the OPEN state, there would be a link check result.
+        // Tapping the OPEN button should open the link, but with security verification.
         if (this._linkCheckRes) {
             if (this._wasConfirmed) {
                 if (this._loadingError) {
@@ -226,7 +233,11 @@ class TgAttachmentPreview extends PolymerElement {
                     this._wasConfirmed = true;
                 });
             }
-        } else if (this.downloadAttachment) {
+        }
+        // Otherwise, the button represents the DOWNLOAD state, which should be the only possible alternative.
+        // However, because function `this.downloadAttachment` is assigned outside, we should be a bit more defensive,
+        // and check whether it was assigned.
+        else if (this.downloadAttachment) {
             if (this._startSpinnerTimer) {
                 clearTimeout(this._startSpinnerTimer);
             }
