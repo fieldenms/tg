@@ -279,7 +279,7 @@ Polymer({
         },
 
         /**
-         * Indicates wheather the action is in progress.
+         * Indicates whether the action is in progress.
          */
         _working: {
             type: Boolean
@@ -569,7 +569,7 @@ Polymer({
     _afterExecution: function () {
         if (!this._continuationInProgress) {
             this._working = false;
-            // prevent not yet activated spinner from activating if any
+            // Clear timeout to prevent not yet activated spinner from activating.
             if (this._startSpinnerTimer) {
                 clearTimeout(this._startSpinnerTimer);
             }
