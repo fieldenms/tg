@@ -42,12 +42,6 @@ const template = html`
             margin: 24px;
             text-align: center;
         }
-        paper-button {
-            font-size: 14px;
-            font-weight: 500;
-            color: #000000DE;
-            position: relative;
-        }
         #spinner {
             position: absolute;
             top: 50%;/*position Y halfway in*/
