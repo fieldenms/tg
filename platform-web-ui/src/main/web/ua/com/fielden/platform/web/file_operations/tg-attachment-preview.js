@@ -60,8 +60,8 @@ const template = html`
     <img id="imageLoader" src$="[[_getImageUri(_linkCheckRes, _wasConfirmed, _attachmentUri)]]" hidden$="[[!_isImageVisible(_loadingError, _attachmentUri)]]" on-load="_imageLoaded" on-error="_imageLoadeError"/>
     <div id="altImage" hidden$="[[_isImageVisible(_loadingError, _attachmentUri)]]">
         <span id="message">[[_getAltImageText(_linkCheckRes, _wasConfirmed)]]</span>
-        <paper-button raised on-tap="_downloadOrOpenAttachment" tooltip-text$="[[_getButtonTooltip(_linkCheckRes)]]" disabled$="[[_working]]">
-            <span>[[_getButtonText(_linkCheckRes)]]</span>
+        <paper-button raised roll="button" on-tap="_downloadOrOpenAttachment" tooltip-text$="[[_getButtonTooltip(_linkCheckRes)]]" disabled$="[[_working]]">
+            <span style="margin: 0 8px 0 8px">[[_getButtonText(_linkCheckRes)]]</span>
             <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
         </paper-button>
     </div>`; 
