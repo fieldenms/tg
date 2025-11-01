@@ -39,39 +39,85 @@ public class TransactionalExecution extends WithTransaction {
         this.maybeSessionSupplier = sessionSupplier;
     }
 
-    /// A method for transactional execution of `action`, which requires a database connection as its argument.
+    /// Executes the specified `action` transactionally, providing a database connection as its argument.
     ///
     @SessionRequired
     public void exec(final Consumer<Connection> action) {
         getSession().doWork(action::accept);
     }
 
-    /// A method for transactional execution of `action` that does not require any arguments, but may return some value.
+    /// Executes the specified `action` transactionally, providing a database connection as its argument.
     ///
-    /// Type [Void] can be specified if action returns no result.
+    /// This is a **strict** execution method — it throws an exception if invoked within the scope of an existing session.
+    ///
+    @SessionRequired(allowNestedScope = false)
+    public void execStrict(final Consumer<Connection> action) {
+        getSession().doWork(action::accept);
+    }
+
+    /// Executes the specified `action` transactionally, which does not require any arguments, and returns its result.
+    ///
+    /// The return type `R` can be any type.
+    /// Specify [Void] if the action does not return a result.
     ///
     @SessionRequired
     public <R> R exec(final Supplier<R> action) {
         return action.get();
     }
 
-    /// A method for transactional execution of `action` that requires a database connection,
-    /// and returns some result.
+    /// Executes the specified `action` transactionally, which does not require any arguments, and returns its result.
     ///
-    /// Type [Void] can be specified if action returns no result.
+    /// This is a **strict** execution method — it throws an exception if invoked within the scope of an existing session.
+    ///
+    /// The return type `R` can be any type.
+    /// Specify [Void] if the action does not return a result.
+    ///
+    @SessionRequired(allowNestedScope = false)
+    public <R> R execStrict(final Supplier<R> action) {
+        return action.get();
+    }
+
+    /// Executes the specified `action` transactionally, providing a database connection, and returns its result.
+    ///
+    /// The return type `R` can be any type.
+    /// Specify [Void] if the action does not return a result.
     ///
     @SessionRequired
     public <R> R execFn(final Function<Connection, R> action) {
         return getSession().doReturningWork(action::apply);
     }
 
-    /// A method for transactional execution of `action` that requires an instance of [ISessionEnabled],
-    /// and returns some result.
+    /// Executes the specified `action` transactionally, providing a database connection, and returns its result.
     ///
-    /// Type [Void] can be specified if action returns no result.
+    /// This is a **strict** execution method — it throws an exception if invoked within the scope of an existing session.
+    ///
+    /// The return type `R` can be any type.
+    /// Specify [Void] if the action does not return a result.
+    ///
+    @SessionRequired(allowNestedScope = false)
+    public <R> R execFnStrict(final Function<Connection, R> action) {
+        return getSession().doReturningWork(action::apply);
+    }
+
+    /// Executes the specified `action` transactionally, providing this instance of [ISessionEnabled], and returns its result.
+    ///
+    /// The return type `R` can be any type.
+    /// Specify [Void] if the action does not return a result.
     ///
     @SessionRequired
     public <R> R execWithSession(final Function<ISessionEnabled, R> action) {
+        return action.apply(this);
+    }
+
+    /// Executes the specified `action` transactionally, providing this instance of [ISessionEnabled], and returns its result.
+    ///
+    /// This is a **strict** execution method — it throws an exception if invoked within the scope of an existing session.
+    /// 
+    /// The return type `R` can be any type.
+    /// Specify [Void] if the action does not return a result.
+    ///
+    @SessionRequired(allowNestedScope = false)
+    public <R> R execWithSessionStrict(final Function<ISessionEnabled, R> action) {
         return action.apply(this);
     }
 
