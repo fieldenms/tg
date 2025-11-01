@@ -216,6 +216,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /// This is temporary solution needed for pagination support on web ui
     ///
+    @Deprecated(forRemoval = true, since = "2.2.0")
     public IPage<T> getPage(final int pageNumber, final int pageCount, final int pageCapacity) {
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = generateQuery();
         if (getManagedType().equals(getEntityClass())) {
@@ -365,12 +366,13 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /// Exports data in to the specified external file.
     ///
+    @Deprecated(forRemoval = true, since = "2.2.0")
     public void export(final String fileName, final String[] propertyNames, final String[] propertyTitles) throws IOException {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = separateFetchAndTotalProperties(root, tickManager, enhancer);
-        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), queryProperties.get(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
+        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getEntityClass(), getManagedType(), queryProperties.get(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
         final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties);
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
                 .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
@@ -512,6 +514,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /// Returns all entities that satisfy conditions of `this` entity query criteria.
     ///
+    @Deprecated(forRemoval = true, since = "2.2.0")
     public final List<T> getAllEntities() {
         return getAllEntities(generateQuery());
     }
