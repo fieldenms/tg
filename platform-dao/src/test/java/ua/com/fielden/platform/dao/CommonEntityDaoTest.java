@@ -1,32 +1,8 @@
 package ua.com.fielden.platform.dao;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.companion.AbstractEntityReader.ERR_MISSING_ID_VALUE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.utils.EntityUtils.fetch;
-import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
-
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
-
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -37,25 +13,51 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetailsDao;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
-/**
- * This test case ensures correct implementation of the common DAO functionality in conjunction with Session injection by means of method intercepter.
- *
- * @author TG Team
- *
- */
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.companion.AbstractEntityReader.ERR_MISSING_ID_VALUE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
+import static ua.com.fielden.platform.utils.EntityUtils.fetch;
+import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
+
+/// This test case ensures correct implementation of the common DAO functionality in conjunction with Session injection by means of method intercepter.
+///
 public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
+
+    /// Demonstrates the behaviour of [DbCreator] when attempting to clear test data
+    /// in a scenario where the logic under test does not correctly handle database transactions.
+    ///
+    /// This test must run to exhibit the problem, which is why it remains annotated with `@Ignore`.
+    /// Uncomment `@Ignore` to execute the test and observe the issue.
+    ///
+    /// The expected error is:
+    /// ```
+    /// ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException:
+    /// Method [ua.com.fielden.platform.dao.session.TransactionalExecution#execStrict]
+    /// disallows invocation within a nested session scope.
+    /// ```
     @Test
+    @Ignore
+    public void co_stream_without_try_with_resources_leads_to_error_due_to_nested_scope_execution_during_test_data_clearing() {
+        co(EntityWithMoney.class).stream(from(select(EntityWithMoney.class).model()).model());
+    }
+
+        @Test
     public void test_that_entity_with_simple_key_is_handled_correctly() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
@@ -902,13 +904,14 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         assertEquals(entityByKeyAsString, entityByKey);
     }
 
-    /**
-     * This test demonstrates that inherited methods, which are intercepted when invoked directly, do not get intercepted when invoked via a {@code super} call in one of the methods, defined in a subtype.
-     * <p>
-     * Such behaviour of the AOP in general and the one included as part of Guice in particular, is very natural - instrumentation does not happen for inherited methods, invoked on a {@code super} instance, which cannot itself be instrumented.
-     * </p>
-     * This specific test covers the case where no session was yet associated with a companion object.
-     */
+    /// This test demonstrates that inherited methods, which are intercepted when invoked directly, do not get intercepted when invoked via a `super` call in one of the methods,
+    /// defined in a subtype.
+    ///
+    /// Such behaviour of the AOP in general and the one included as part of Guice in particular, is very natural - instrumentation does not happen for inherited methods,
+    /// invoked on a `super` instance, which cannot itself be instrumented.
+    ///
+    /// This specific test covers the case where no session was yet associated with a companion object.
+    ///
     @Test
     public void super_saving_new_instance_invoked_from_a_method_without_SessionRequired_is_not_intercepted_and_fails_due_not_missing_or_invalid_session() {
         final var co = getInstance(IEntityWithMoney.class);
@@ -917,17 +920,16 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         try {
             ((ISessionEnabled)co).setSession(null); // remove session manually - methods intercepted due to @SessionRequired would initialise a new session
             co.superSave(entity); // invokes super.save(), which should fail due to missing session as the super call is not intercepted to create a new session
-            failure("Invocation of superSave should have failed due to missing @SesionRequired");
+            fail("Invocation of superSave should have failed due to missing @SessionRequired");
         } catch(final EntityCompanionException ex) {
             // no session was yet associated with the companion instance, hence the "missing session" error
             assertEquals("Session is missing, most likely, due to missing @SessionRequired annotation.", ex.getMessage());
         }
     }
 
-    /**
-     * This test is similar to {@link #super_saving_new_instance_invoked_from_a_method_without_SessionRequired_is_not_intercepted_and_fails_due_not_missing_or_invalid_session},
-     * covering the case where a session was already associated with a companion object, but an attempt to use that session is made subsequently by a {@code super.save} call.
-     */
+    /// This test is similar to [#super_saving_new_instance_invoked_from_a_method_without_SessionRequired_is_not_intercepted_and_fails_due_not_missing_or_invalid_session],
+    /// covering the case where a session was already associated with a companion object, but an attempt to use that session is made subsequently by a `super.save` call.
+    ///
     @Test
     public void super_saving_modified_instance_invoked_from_a_method_without_SessionRequired_is_not_intercepted_and_fails_due_not_missing_or_invalid_session() {
         final var co = getInstance(IEntityWithMoney.class);
@@ -937,7 +939,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         try {
             savedEntity.setKey("new value 1"); // modify before save to actually attempt saving
             co.superSave(savedEntity); // invokes super.save(), which should fail due to missing session as the super call is not intercepted to create a new session
-            failure("Invocation of superSave should have failed due to missing @SesionRequired");
+            fail("Invocation of superSave should have failed due to missing @SessionRequired");
         } catch(final EntityCompanionException ex) {
             // previously associated session was already closed when an attempt to use is made
             assertEquals("Session is closed, most likely, due to missing @SessionRequired annotation.", ex.getMessage());
