@@ -43,7 +43,7 @@ class WebResourceGuardTestWebApplication extends Application {
         final Router router = new Router(getContext());
 
         // and add some other resource to be accessed
-        router.attach(format("/users/{username}/%s/{entity-id}", TgPerson.class.getSimpleName()), new TestResource());
+        router.attach("/users/{username}/%s/{entity-id}".formatted(TgPerson.class.getSimpleName()), new TestWebResource());
 
         // setup resource guard for the whole router
         final AbstractWebResourceGuard guard = new AbstractWebResourceGuard(getContext(), "tgdev.com", "/", injector) {

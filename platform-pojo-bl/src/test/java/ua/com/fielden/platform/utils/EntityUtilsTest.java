@@ -718,6 +718,68 @@ public class EntityUtilsTest {
                      entityTypeHierarchy(TgReVehicleModel.class, false).toList());
     }
 
+    @Test
+    public void isActivatableEntityType_returns_true_for_activatable_persistent_entities() {
+        // TgPerson extends ActivatableAbstractEntity and is persistent.
+        assertTrue(isActivatableEntityType(TgPerson.class));
+    }
+
+    @Test
+    public void isActivatableEntityType_returns_false_for_non_activatable_persistent_entities() {
+        // TgAuthor is persistent but does not extend ActivatableAbstractEntity.
+        assertFalse(isActivatableEntityType(TgAuthor.class));
+    }
+
+    @Test
+    public void isActivatableEntityType_returns_false_for_non_activatable_synthetic_entities() {
+        assertFalse(isActivatableEntityType(TgAverageFuelUsage.class));
+    }
+
+    @Test
+    public void isActivatableEntityType_returns_true_for_synthetic_based_on_activatable_persistent_entities() {
+        // TgReActivatableVehicleModel extends activatable persistent TgActivatableVehicleModel.
+        assertTrue(isActivatableEntityType(TgReActivatableVehicleModel.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_true_for_activatable_persistent_entities() {
+        // TgPerson extends ActivatableAbstractEntity and is persistent.
+        assertTrue(isActivatablePersistentEntityType(TgPerson.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_non_activatable_persistent_entities() {
+        // TgAuthor is persistent but does not extend ActivatableAbstractEntity.
+        assertFalse(isActivatablePersistentEntityType(TgAuthor.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_non_activatable_synthetic_entities() {
+        assertFalse(isActivatablePersistentEntityType(TgAverageFuelUsage.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_synthetic_based_on_activatable_persistent_entities() {
+        // TgReActivatableVehicleModel extends activatable persistent TgActivatableVehicleModel.
+        assertFalse(isActivatablePersistentEntityType(TgReActivatableVehicleModel.class));
+    }
+
+    @Test
+    public void isActivatableEntityType_returns_false_for_union_entities() {
+        // Union entities are never considered activatable.
+        assertFalse(isActivatableEntityType(UnionEntity.class));
+    }
+
+    @Test
+    public void isActivatableEntityType_returns_false_for_null_input() {
+        assertFalse(isActivatableEntityType(null));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_null_input() {
+        assertFalse(isActivatablePersistentEntityType(null));
+    }
+
     /**
      * A helper factory method for generating a new type based on {@code baseType} with the {@code maxNestedLevels} of nesting (i.e., a new type gets generated based on the previously generated type sequentially).  
      *

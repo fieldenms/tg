@@ -752,8 +752,7 @@ GisComponent.prototype.initiateShowLabelsAction = function (tgMap, getParentAnd)
     const showLabelsButton = insertionPoint.querySelector('.toggle-button');
     // and provide action implementation
     showLabelsButton.addEventListener('change', event => {
-        const target = event.target || event.srcElement;
-        this._map.getPane('tooltipPane').hidden = !target.active; // shows / hides tooltip pane; this does not require processing of any particular marker or marker cluster
+        this._map.getPane('tooltipPane').hidden = !event.target.active; // shows / hides tooltip pane; this does not require processing of any particular marker or marker cluster
         this.initiateZoomEventAsync(); // trick map with zoom event to properly update tooltip positions; in some cases they get shifted to the right, particularly after hiding labels + zooming + showing them again
     });
 }

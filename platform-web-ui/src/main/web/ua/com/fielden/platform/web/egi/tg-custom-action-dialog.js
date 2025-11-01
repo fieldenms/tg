@@ -15,22 +15,24 @@ import '/resources/components/tg-toast.js';
 import '/resources/images/tg-icons.js';
 import '/resources/components/postal-lib.js';
 
-import {IronOverlayBehavior, IronOverlayBehaviorImpl} from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
+import { IronOverlayBehavior, IronOverlayBehaviorImpl } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import { IronOverlayManager } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-manager.js';
-import {IronA11yKeysBehavior} from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iron-fit-behavior.js';
+import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
+import { IronFitBehavior } from '/resources/polymer/@polymer/iron-fit-behavior/iron-fit-behavior.js';
 
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgReflector } from '/app/tg-reflector.js';
-import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
-import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
-import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
+import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
+import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
+import { TgBackButtonBehavior } from '/resources/views/tg-back-button-behavior.js'
+import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
+import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
 
 const ST_WIDTH = '_width';
 const ST_HEIGHT = '_height';
@@ -160,24 +162,9 @@ const template = html`
         paper-icon-button.button-reverse {
             transform: scale(-1, 1);
         }
-        paper-spinner {
-            position: absolute;
-            width: 20px;
-            height: 20px; 
-            min-width: 20px; 
-            min-height: 20px; 
-            max-width: 20px; 
-            max-height: 20px; 
-            padding: 0;
-            margin-left: 0;
-            --paper-spinner-layer-1-color: white;
-            --paper-spinner-layer-2-color: white;
-            --paper-spinner-layer-3-color: white;
-            --paper-spinner-layer-4-color: white;
-        }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
+    <div id="titleBar" class="title-bar layout horizontal justified center" on-track="moveComponent">
         <paper-icon-button id="menuToggler" hidden icon="menu" tooltip-text="Menu" on-tap="_toggleMenu"></paper-icon-button>
         <div class="title-text layout horizontal center flex">
             <span class="static-title truncate">[[staticTitle]]</span>
@@ -185,39 +172,39 @@ const template = html`
             <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
         </div>
         <div class="relative layout horizontal justified center">
-            <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
-                <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
-                <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+            <div id="navigationBar" hidden$="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
+                <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" on-pointerdown="_storePrevFocus" on-pointerup="_restorePrevFocus" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" on-pointerdown="_storePrevFocus" on-pointerup="_restorePrevFocus" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
                 <span style="white-space: nowrap;">[[_sequentialEditText]]</span>
-                <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_isNavigationButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
-                <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigationButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" on-pointerdown="_storePrevFocus" on-pointerup="_restorePrevFocus" disabled$="[[!_isNavigationButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" on-pointerdown="_storePrevFocus" on-pointerup="_restorePrevFocus" disabled$="[[!_isNavigationButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
             </div>
             <div class="layout horizontal center">
                 <!-- Get A Link button -->
-                <paper-icon-button hidden="[[!_mainEntityType]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
+                <paper-icon-button hidden$="[[!_mainEntityType]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
-                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
+                <paper-icon-button hidden$="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button maximise-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseStateAndStore" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
+                <paper-icon-button hidden$="[[mobile]]" class="default-button title-bar-button maximise-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseStateAndStore" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
 
                 <!-- close/next buttons -->
-                <paper-icon-button id="closeButton" hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
-                <paper-icon-button id="skipNext" hidden="[[!_lastAction.continuous]]" disabled$="[[isNavigationActionInProgress]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
+                <paper-icon-button id="closeButton" hidden$="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
+                <paper-icon-button id="skipNext" hidden$="[[!_lastAction.continuous]]" disabled$="[[isNavigationActionInProgress]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
             <paper-spinner id="spinner" active="[[isNavigationActionInProgress]]" style="display: none;" alt="in progress"></paper-spinner>
         </div>
     </div>
     <div id="dialogBody" class="relative flex layout vertical">
         <div id="loadingPanel" class="fit layout horizontal">
-            <div style="margin: auto; padding: 20px" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
+            <div style="margin: auto; padding: 20px; text-align: center;" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
         </div>
         <div id="dialogLoader" class="flex layout horizontal">
             <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
         </div>
     </div>
-    <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-down="_handleResizeDown" on-track="resizeDialog" tooltip-text="Drag to resize<br>Double tap to reset dimensions" on-tap="resetDimensions"></iron-icon>
+    <iron-icon id="resizer" hidden$=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-down="_handleResizeDown" on-track="resizeDialog" tooltip-text="Drag to resize<br>Double tap to reset dimensions" on-tap="resetDimensions"></iron-icon>
     <tg-toast id="toaster"></tg-toast>`;
 
 template.setAttribute('strip-whitespace', '');
@@ -265,15 +252,15 @@ Polymer({
         TgFocusRestorationBehavior,
         TgTooltipBehavior,
         TgBackButtonBehavior,
-        TgElementSelectorBehavior
+        TgElementSelectorBehavior,
+        TgResizableMovableBehavior,
+        TgDoubleTapHandlerBehavior
     ],
 
     listeners: {
         'iron-overlay-opened': '_dialogOpened',
         'iron-overlay-closed': '_dialogClosed',
         'tg-dynamic-title-changed': '_updateDynamicTitle',
-        'tg-menu-appeared': '_updateMenuButton',
-        'tg-master-type-changed': '_handleMasterChanged',
         'tg-master-type-before-change': '_handleMasterBeforeChange',
         'tg-action-navigation-changed': '_handleActionNavigationChange',
         'tg-action-navigation-invoked': '_handleActionNavigationInvoked',
@@ -335,7 +322,7 @@ Polymer({
         //This property also has three states: true, false and undefined.
         //True - means that master is about to change it's layout when master type is changing. This value is applied only in _handleMasterBeforeChange method.
         //False - means that master has changed it's type and can be resized smoothly using the CSS transitioning functionality, which is invoked in _updateDialogAnimation method.
-        //        This value is applied only in _handleMasterChanged method.
+        //        This value is applied only in _handleDataLoaded method.
         //Undefined - means that dialog has changed it's size and blocking layer has become invisible. This indicates also that all animations have finished.
         //            This value is applied in _handleBodyTransitionEnd method when master container is visible and in _resetAnimationBlockingSpinnerState method to ensure 
         //            that all animation is finished in case when master was closed during animation process or error happend when navigating to another entity. 
@@ -515,7 +502,7 @@ Polymer({
         }
     },
 
-    observers: ["_updateDialogDimensionsIfNotAnimating(prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
+    observers: ["_updateDialogDimensionsIfNotAnimating(_masterVisibilityChanges, _masterLayoutChanges, prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
 
     keyBindings: {
         'alt+c': '_invertMinimiseState',
@@ -554,6 +541,11 @@ Polymer({
 
         this._setIsRunning(false);
 
+        // initialise properties from tg-resizable-movable-behavior
+        this.minimumWidth = 60 /* reasonable minimum width of text */ + (16 * 2) /* padding left+right */ + (22 * 3) /* three buttons width */;
+        this.persistSize = () => this._saveCustomDim(this.style.width, this.style.height);
+        this.persistPosition = () => this._saveCustomPosition(this.style.top, this.style.left);
+        this.allowMove = () => this._maximised === false;
     },
 
     ready: function() {
@@ -570,17 +562,40 @@ Polymer({
         this.$.dialogLoader.addEventListener("transitionend", this._handleBodyTransitionEnd.bind(this));
         //Add tg-screen-resolution-changed event listener to reset dialog dimension and position if resolution changes
         window.addEventListener('tg-screen-resolution-changed', this._handleResolutionChanged.bind(this));
+        //Create double tap handle for resizer icon
+        this.resetDimensions = this._createDoubleTapHandler("_lastResizerTap", (e) => {
+            this._removePersistedPositionAndDimensions()
+            this.refit();
+            this.notifyResizeWithoutItselfAndAncestors();
+        });
+        //Set inline style for spinner, because it will be added to shadow dom of paper-icon-buttons
+        this.$.spinner.style.position = 'absolute';
+        this.$.spinner.style.left = '50%';
+        this.$.spinner.style.top = '50%';
+        this.$.spinner.style.transform = 'translate(-50%, -50%)';
+        this.$.spinner.style.width = '20px';
+        this.$.spinner.style.height = '20px'; 
+        this.$.spinner.style.minWidth = '20px'; 
+        this.$.spinner.style.minHeight = '20px'; 
+        this.$.spinner.style.maxWidth = '20px'; 
+        this.$.spinner.style.maxHeight = '20px'; 
+        this.$.spinner.style.padding = '0';
+        this.$.spinner.style.marginLeft = '0';
+        this.$.spinner.style.setProperty('--paper-spinner-layer-1-color', 'white');
+        this.$.spinner.style.setProperty('--paper-spinner-layer-2-color', 'white');
+        this.$.spinner.style.setProperty('--paper-spinner-layer-3-color', 'white');
+        this.$.spinner.style.setProperty('--paper-spinner-layer-4-color', 'white');
     },
 
     attached: function() {
-        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        const clickEvent = isTouchEnabled() ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
         this.addEventListener('focus', this._onCaptureFocus, true);
         this.addEventListener('keydown', this._onCaptureKeyDown);
     },
 
     detached: function() {
-        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        const clickEvent = isTouchEnabled() ? 'touchstart' : 'mousedown';
         this.removeEventListener(clickEvent, this._onCaptureClick, true);
         this.removeEventListener('focus', this._onCaptureFocus, true);
         this.removeEventListener('keydown', this._onCaptureKeyDown);
@@ -602,6 +617,26 @@ Polymer({
 
     _onShiftTabDown: function(e) {
         this._focusChange(e, false);
+    },
+
+    /**
+     * Entity navigation: stores Entity Master focus on navigation button actions.
+     */
+    _storePrevFocus: function (event) {
+        let master = null;
+        if (this.$.elementLoader && (master = this.$.elementLoader.loadedElement)) {
+            master._storeFocus && master._storeFocus();
+        }
+    },
+
+    /**
+     * Entity navigation: restores Entity Master focus on navigation button actions.
+     */
+    _restorePrevFocus: function (event) {
+        let master = null;
+        if (this.$.elementLoader && (master = this.$.elementLoader.loadedElement)) {
+            master._restoreFocus && master._restoreFocus();
+        }
     },
 
     _focusChange: function(e, forward) {
@@ -734,7 +769,7 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
-            this._lastAction.firstEntry();
+            this._lastAction.firstEntry(this.reloadDialog.bind(this));
         }
     },
     
@@ -744,7 +779,7 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
-            this._lastAction.previousEntry();
+            this._lastAction.previousEntry(this.reloadDialog.bind(this));
         }
     },
     
@@ -754,7 +789,7 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
-            this._lastAction.nextEntry();
+            this._lastAction.nextEntry(this.reloadDialog.bind(this));
         }
     },
     
@@ -764,18 +799,16 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
-            this._lastAction.lastEntry();
+            this._lastAction.lastEntry(this.reloadDialog.bind(this));
         }
     },
     
     _displaySpinnerOn: function (element) {
         this.$.spinner.style.removeProperty("display");
-        this.$.spinner.style.left = element.offsetLeft + (element.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
-        this.$.spinner.style.top = element.offsetTop + (element.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
-        element.parentElement.appendChild(this.$.spinner);
+        element.shadowRoot.appendChild(this.$.spinner);
         this.isNavigationActionInProgress = true;
     },
-    
+
     _getFirstEntryActionTooltip: function (_navigationType) {
         return "Get first " + _navigationType + ", Ctrl&nbsp+&nbsp<span style='font-size:18px;font-weight:bold'>&#8593</span>";
     },
@@ -850,27 +883,13 @@ Polymer({
      * Dialog resizing handler assigned to resizing button in bottom right corner of the dialog.
      */
     resizeDialog: function(event) {
-        const target = event.target || event.srcElement;
-        if (target === this.$.resizer) {
+        if (event.target === this.$.resizer) {
             switch (event.detail.state) {
                 case 'start':
                     document.styleSheets[0].insertRule('* { cursor: nwse-resize !important; }', 0); // override custom cursors in all application with resizing cursor
                     break;
                 case 'track':
-                    const resizedHeight = this.offsetHeight + event.detail.ddy;
-                    const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */ ;
-                    if (heightNeedsResize) {
-                        this.style.height = resizedHeight + 'px';
-                    }
-                    const resizedWidth = this.offsetWidth + event.detail.ddx;
-                    const widthNeedsResize = resizedWidth >= 60 /* reasonable minimum width of text */ + (16 * 2) /* padding left+right */ + (22 * 3) /* three buttons width */
-                    if (widthNeedsResize) {
-                        this.style.width = resizedWidth + 'px';
-                    }
-                    if (heightNeedsResize || widthNeedsResize) {
-                        this._saveCustomDim(this.style.width, this.style.height);
-                        this.notifyResize();
-                    }
+                    this.resizeComponent(event);
                     break;
                 case 'end':
                     document.styleSheets[0].deleteRule(0);
@@ -878,14 +897,6 @@ Polymer({
             }
         }
         tearDownEvent(event);
-    },
-
-    resetDimensions: function (event) {
-        if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
-            this._removePersistedPositionAndDimensions()
-            this.refit();
-            this.notifyResizeWithoutItselfAndAncestors();
-        }
     },
 
     _removePersistedPositionAndDimensions: function () {
@@ -1006,48 +1017,12 @@ Polymer({
     /**
      * Updates 'hidden' state of the menu toggler button and assigns _toogleMenu function.
      */
-    _updateMenuButton: function(event) {
-        const appearedAndFunc = event.detail;
-        this.$.menuToggler.hidden = !appearedAndFunc.appeared;
-        if (appearedAndFunc.appeared) {
-            this._toggleMenu = appearedAndFunc.func;
-            if (this.mobile && isIPhoneOs()) {
-                appearedAndFunc.drawer.drawer.align = 'right';
-            }
+    _updateMenuButton: function (menu, appeared) {
+        this.$.menuToggler.hidden = !appeared;
+        this._toggleMenu = appeared ? menu._toggleMenuBound : null;
+        if (appeared && this.mobile && isIPhoneOs()) {
+            menu.$.drawerPanel.drawer.align = 'right';
         }
-    },
-
-    _moveDialog: function(e) {
-        var target = e.target || e.srcElement;
-        if (target === this.$.titleBar && this._maximised === false) {
-            switch (e.detail.state) {
-                case 'start':
-                    this.$.titleBar.style.cursor = 'move';
-                    this._windowHeight = window.innerHeight;
-                    this._windowWidth = window.innerWidth;
-                    break;
-                case 'track':
-                    const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
-                    const leftNeedsChange = _titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx <= this._windowWidth - 44;
-                    if (leftNeedsChange) {
-                        this.style.left = _titleBarDimensions.left + e.detail.ddx + 'px';
-                    }
-                    const topNeedsChange = _titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight;
-                    if (topNeedsChange) {
-                        this.style.top = _titleBarDimensions.top + e.detail.ddy + 'px';
-                    }
-                    if (leftNeedsChange || topNeedsChange) {
-                        this._saveCustomPosition(
-                            topNeedsChange ? this.style.top : _titleBarDimensions.top + "px", 
-                            leftNeedsChange ? this.style.left : _titleBarDimensions.left + "px");
-                    }
-                    break;
-                case 'end':
-                    this.$.titleBar.style.removeProperty('cursor');
-                    break;
-            }
-        }
-        tearDownEvent(event);
     },
 
     _closeDialogAndIndicateActionCompletion: function() {
@@ -1064,6 +1039,13 @@ Polymer({
             }
             this._parentDialog = null;
         }
+        //Reset routes for compound masters those are in cache. It is needed in case if all some masters in cache were opened via navigation action,
+        //which tries to maintain previously opened menu item.
+        Object.values(this._cachedElements).forEach(element => {
+            if (element.$.menu) {
+                element.$.menu.route = undefined;
+            }
+        });
         this.close();
         this._removeFromDom();
     },
@@ -1076,12 +1058,12 @@ Polymer({
 
     /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
     _getElement: function(customAction) {
-        var self = this;
-        var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+        const self = this;
+        const key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
         // disabled chache (temprarily?) to support polymorphic masters
          if (self._cachedElements.hasOwnProperty(key)) {
             console.log("Reusing cached element:", key);
-            var element = self._cachedElements[key];
+            const element = self._cachedElements[key];
             self.$.elementLoader.insert(element);
             return Promise.resolve(element);
         } else { 
@@ -1110,7 +1092,7 @@ Polymer({
                 customAction.restoreActionState();
             }
         } else {
-            var self = this;
+            const self = this;
             if (self.isRunning === false) {
                 //Add this dialog to body before opening it. Dialog should be added to document DOM because it's 'ready' callback will be invoked immediately before first attaching.
                 //Also shadow DOM of dialog component won't be defined until dialog is attached for the first time. It is important because
@@ -1123,17 +1105,12 @@ Polymer({
 
                 self._getElement(customAction)
                     .then(function(element) {
-                        var promise = customAction._onExecuted(null, element, null);
+                        self._lastElement = element;
+                        const promise = customAction._onExecuted(null, element, null);
                         if (promise) {
                             return promise
                                 .then(function(ironRequest) {
-                                    var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
-                                    if (!self._cachedElements.hasOwnProperty(key)) {
-                                        if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
-                                            console.log("caching:", key);
-                                            self._cachedElements[key] = element;
-                                        }
-                                    }
+                                    self._cacheElement(element);
                                     if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
                                         return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, false));
                                     } else  if (ironRequest && ironRequest.response && ironRequest.response.ex && ironRequest.response.ex.continuationTypeStr) {
@@ -1157,18 +1134,65 @@ Polymer({
                     })
                     .catch(function(error) {
                         console.error(error);
-                        self.$.toaster.text = 'There was an error displaying the dialog.';
-                        self.$.toaster.hasMore = true;
-                        self.$.toaster.msgText = `There was an error displaying the dialog.<br><br>` +
-                                                  `<b>Error cause:</b><br>${error.message}`;
-                        self.$.toaster.showProgress = false;
-                        self.$.toaster.isCritical = true;
-                        self.$.toaster.show();
+                        self._showDisplayDialogErrorToast(error);
                         self._finishErroneousOpening();
                         throw new UnreportableError(error);
                     });
             }
         }
+    },
+
+    reloadDialog: function(elementLoaded) {
+        const self = this;
+        if (self._lastElement.tagName !== self._lastAction.elementName.toUpperCase()) {
+            //Call this method because entity master type changes, therefore dialog's dimension and position will be changed
+            self._handleMasterBeforeChange();
+            self._customiseAction(self._lastAction);
+            self.dynamicTitle = null;
+            return self._getElement(self._lastAction)
+                .then(element => {
+                    // Hide element loader that contains loaded element because it might cause flickering effect on moving from one master to another.
+                    this.$.elementLoader.style.display = 'none';
+                    self._lastElement = element;
+                    if (elementLoaded) {
+                        elementLoaded(element);
+                    }
+                    return self._lastAction._onExecuted(null, element, null).then(ironRequest => {
+                        self._cacheElement(element);
+                        if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
+                            return Promise.resolve(element);
+                        } else {
+                            return Promise.reject('Retrieval / saving promise was not successful.');
+                        }
+                    })
+                }).catch(error => {
+                    console.error(error);
+                    self._showDisplayDialogErrorToast(error);
+                    self._handleError({detail: error.message});
+                    throw new UnreportableError(error);
+                });
+        }
+        return Promise.reject("The entity master type didn't changed.");
+    },
+
+    _cacheElement: function(element) {
+        const key = this._lastAction.elementAlias ? this._lastAction.elementAlias : this._lastAction.elementName;
+        if (!this._cachedElements.hasOwnProperty(key)) {
+            if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
+                console.log("caching:", key);
+                this._cachedElements[key] = element;
+            }
+        }
+    },
+
+    _showDisplayDialogErrorToast: function(error) {
+        this.$.toaster.text = 'There was an error displaying the dialog.';
+        this.$.toaster.hasMore = true;
+        this.$.toaster.msgText = `There was an error displaying the dialog.<br><br>` +
+                                    `<b>Error cause:</b><br>${error.message}`;
+        this.$.toaster.showProgress = false;
+        this.$.toaster.isCritical = true;
+        this.$.toaster.show();
     },
 
     _addToDom: function () {
@@ -1190,6 +1214,9 @@ Polymer({
     
     // This method handles data-loaded-and-focused event. This event can be fired when dialog is opening or navigating to another entity and resets the spinner state and hides blocking layer.
     _handleDataLoaded: function () {
+        if (this._masterLayoutChanges && this.opened) {
+            this._masterLayoutChanges = false;
+        }
         this._dataLoaded = true;
         this._resetSpinner();
         this._hideBlockingPane();
@@ -1218,7 +1245,7 @@ Polymer({
         }
     },
     
-    // Inoked by navigation buttons it turns on spinner on navigation button and makes blocking layer visible. Also it resets error message if it is present due to previous navigation action.
+    // Invoked by navigation buttons it turns on spinner on navigation button and makes blocking layer visible. Also it resets error message if it is present due to previous navigation action.
     _handleActionNavigationInvoked: function (e) {
         //Reset dataLoaded property to ensure that blocking layer will work correctly and appropriate event handlers will be invoked.
         this._dataLoaded = false;
@@ -1252,8 +1279,6 @@ Polymer({
             return;
         }
         if (!_masterVisibilityChanges && !_masterLayoutChanges) {
-            //Animate dialog dimensions even if it was resized.
-            this._updateDialogDimensionsIfNotAnimating(this.prefDim, this._minimised, this._maximised);
             //Animate dialog position if it wasn't moved.
             if (!this._wasMoved()) {
                 this._updateDialogPositionWithPrefDim(this.prefDim, this._minimised, this._maximised);
@@ -1264,14 +1289,17 @@ Polymer({
     },
 
     /**
-     * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance. This method changes the dialog's dimension only when dialog is not animating anything.
+     * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance.
+     * This method changes the dialog's dimension only when dialog is not animating anything.
      */
-    _updateDialogDimensionsIfNotAnimating: function(prefDim, minimised, maximised) {
-        if (!allDefined(arguments)) {
+    _updateDialogDimensionsIfNotAnimating: function(_masterVisibilityChanges, _masterLayoutChanges, prefDim, minimised, maximised) {
+        if (prefDim === undefined || minimised === undefined || maximised === undefined) { // !allDefined(arguments)
             return;
         }
-        if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
+        if (!_masterVisibilityChanges && !_masterLayoutChanges) {
             this._setDialogDimensions(prefDim, minimised, maximised);
+            // Removes the optimisation hook if master size or position was changed.
+            this.$.elementLoader.style.removeProperty("display");
         }
     },
 
@@ -1313,8 +1341,6 @@ Polymer({
         }
         this.style.removeProperty("transition-property");
         this.style.removeProperty("transition-duration");
-        //Removes the optimisation hook if master size or position was changed.
-        this.$.elementLoader.style.removeProperty("display");
         // focuses dialog view after dialog resizing transition is completed;
         //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
         this._focusDialogView();
@@ -1322,8 +1348,16 @@ Polymer({
     },
     
     //Invoked when master is about to change it's type.
-    _handleMasterBeforeChange: function () {
-        if (this.opened && !this._minimised && !this._maximised) {
+    _handleMasterBeforeChange: function (e) {
+        //Check _masterLayoutChanges: if it is already true, there is no need to start the resize animation since it has already been initiated.
+        if (this.opened && !this._masterLayoutChanges && !this._minimised && !this._maximised) {
+            //Set new title
+            if (e && e.detail && e.detail.currType) {
+                const masterInfo = this._reflector.getType(e.detail.currType).entityMaster();
+                if (masterInfo && this._lastAction.dynamicAction) {
+                    this.staticTitle = this._lastAction._originalShortDesc || masterInfo.shortDesc;
+                }
+            }
             //First animate the blocking pane.
             this._showBlockingPane();
             //Indicate that master is about to change it's type
@@ -1336,13 +1370,6 @@ Polymer({
             //Then set dimension properties as transitional for dialog for futher animation.
             this.style.transitionProperty = "top, left, width, height";
             this.style.transitionDuration = "500ms";
-        }
-    },
-    
-    //Invoked when master has changed it's type, then _masterLayoutChanges property becomes false that should trigger resizing animation if blocking layer has finished animating.
-    _handleMasterChanged: function (e) {
-        if (this.opened) {
-            this._masterLayoutChanges = false;
         }
     },
     
@@ -1382,7 +1409,6 @@ Polymer({
     },
     
     _showMaster: function(action, element, closeEventChannel, closeEventTopics, actionWithContinuation) {
-        this._lastElement = element;
         const self = this;
         if (element.noUI === true) { // is this is the end of action execution?
             self._resetState();
@@ -1407,7 +1433,7 @@ Polymer({
             this._maximised = this._customMaximised();
         }
 
-        console.log(`--refiting fialog maximised state: ${this._maximised}--`);
+        console.log(`--refiting dialog maximised state: ${this._maximised}--`);
 
         if (this._dialogIsOutOfTheWindow()) {
             this._removePersistedPositionAndDimensions();
@@ -1552,12 +1578,12 @@ Polymer({
     _hideBlockingPane: function () {
         if (this._blockingPaneCounter > 0) {
             this._blockingPaneCounter--;
-        }
-        if (this._blockingPaneCounter === 0 && this.$.loadingPanel.classList.contains("visible")) {
-            //Indicate that blocking pane is changing it's visibility from visible to invisible.
-            this._masterVisibilityChanges = true;
-            this.$.loadingPanel.classList.remove("visible");
-            this.$.dialogLoader.classList.remove("hidden");
+            if (this._blockingPaneCounter === 0 && this.$.loadingPanel.classList.contains("visible")) {
+                //Indicate that blocking pane is changing it's visibility from visible to invisible.
+                this._masterVisibilityChanges = true;
+                this.$.loadingPanel.classList.remove("visible");
+                this.$.dialogLoader.classList.remove("hidden");
+            }
         }
     },
 
@@ -1682,7 +1708,7 @@ Polymer({
     _onIronResize: function() {
         // Check this._isAnimatingDimensions() in order to prevent refitting dialog if animation is in progress.
         // This should be done because loaded element in dialog might contain component that might trigger iron-resize event when attached.
-        if (!this._wasMoved() && !this._customDim() && !this._minimised && !this._isAnimatingDimensions()) {
+        if (!this._wasMoved() && !this._customDim() && !this._minimised && !this._maximised && !this._isAnimatingDimensions()) {
             IronOverlayBehaviorImpl._onIronResize.call(this);
         }
     },
@@ -1765,6 +1791,7 @@ Polymer({
      */
     _masterMenuAttached: function (event) {
         this._masterMenu = event.detail;
+        this._updateMenuButton(this._masterMenu, true);
         tearDownEvent(event);
     },
     
@@ -1772,6 +1799,7 @@ Polymer({
      * Function that handles detaching of tg-master-menu inside this dialog.
      */
     _masterMenuDetached: function (event) {
+        this._updateMenuButton(this._masterMenu, false);
         this._masterMenu = null;
         tearDownEvent(event);
     },

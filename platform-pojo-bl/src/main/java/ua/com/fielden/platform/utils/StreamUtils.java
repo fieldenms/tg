@@ -3,10 +3,10 @@ package ua.com.fielden.platform.utils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.types.tuples.T2;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
@@ -282,11 +282,12 @@ public class StreamUtils {
         return Stream.of(streams).flatMap(Function.identity());
     }
 
-    /**
-     * Applies a binary operator to all elements of the {@code stream}, going left to right.
-     */
-    public static <T> Optional<T> reduceLeft(final BaseStream<T, ?> stream,
-                                             final BiFunction<? super T, ? super T, T> fn) {
+    /// Applies a binary operator to all elements of the `stream`, going left to right.
+    ///
+    public static <T> Optional<T> reduceLeft(
+            final BaseStream<T, ?> stream,
+            final BiFunction<? super T, ? super T, T> fn)
+    {
         final var iter = stream.iterator();
         if (!iter.hasNext()) {
             return Optional.empty();
@@ -295,32 +296,37 @@ public class StreamUtils {
         return Optional.of(foldLeft_(iter, iter.next(), fn));
     }
 
-    /**
-     * Applies a binary function to a start value and all elements of a stream, going left to right.
-     *
-     * @param stream the stream to be folded.
-     * @param fn  the binary function that folds an element into the result
-     * @param z  the start value
-     * @return the result of applying {@code fn} to consecutive elements of the {@code stream}, going left to right with the start value {@code z} on the left:
-     *         {@code fn(...fn(z, x1), x2, ..., xn)} where {@code x1}, ..., {@code xn} are the elements of the stream. Returns {@code z} if the stream is empty.
-     */
-    public static <A, B> B foldLeft(final BaseStream<A, ?> stream,
-                                      final B z,
-                                      final BiFunction<? super B, ? super A, B> fn) {
+    /// Applies a binary function to a start value and all elements of a stream, going left to right.
+    ///
+    /// @param stream the stream to be folded.
+    /// @param fn  the binary function that folds an element into the result
+    /// @param z  the start value
+    /// @return the result of applying `fn` to consecutive elements of the `stream`, going left to right with the start value `z` on the left:
+    ///         `fn(...fn(z, x1), x2, ..., xn)` where `x1`, ..., `xn` are the elements of the stream.
+    ///         Returns `z` if the stream is empty.
+    ///
+    public static <A, B> B foldLeft(
+            final BaseStream<A, ?> stream,
+            final B z,
+            final BiFunction<? super B, ? super A, B> fn)
+    {
         return foldLeft_(stream.iterator(), z, fn);
     }
 
-    /**
-     * Helper function that actually performs folding.
-     *
-     * @param iter
-     * @param z
-     * @param fn
-     * @return
-     */
-    private static <A, B> B foldLeft_(final Iterator<A> iter,
-                                      final B z,
-                                      final BiFunction<? super B, ? super A, B> fn) {
+    /// Equivalent to [#foldLeft(BaseStream, Object, BiFunction)], but for [Iterable].
+    ///
+    public static <A, B> B foldLeft(
+            final Iterable<A> iterable,
+            final B z,
+            final BiFunction<? super B, ? super A, B> fn) {
+        return foldLeft_(iterable.iterator(), z, fn);
+    }
+
+    private static <A, B> B foldLeft_(
+            final Iterator<A> iter,
+            final B z,
+            final BiFunction<? super B, ? super A, B> fn)
+    {
         if (!iter.hasNext()) {
             return z;
         }

@@ -8,14 +8,14 @@ import java.lang.annotation.Target;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-/**
- * Annotation for specify a default controller for an domain entity.
- * 
- * @author TG Team
- * 
- */
+/// Annotates an entity type to specify its companion object.
+///
+/// @see CompanionIsGenerated
+///
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
 public @interface CompanionObject {
+
     Class<? extends IEntityDao<? extends AbstractEntity<?>>> value();
+
 }

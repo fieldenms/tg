@@ -1,17 +1,10 @@
 package ua.com.fielden.platform.security.user;
 
-import static ua.com.fielden.platform.entity.CollectionModificationUtils.toMapByKey;
-import static ua.com.fielden.platform.entity.CollectionModificationUtils.validateAction;
-
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
@@ -21,22 +14,22 @@ import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
-import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterCo;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.SecurityTokenInfo;
-import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
-import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterController;
 import ua.com.fielden.platform.types.tuples.T2;
 
-/** 
- * DAO implementation for companion object {@link UserRoleTokensUpdaterCo}.
- * 
- * @author Developers
- *
- */
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
+import static ua.com.fielden.platform.entity.CollectionModificationUtils.toMapByKey;
+import static ua.com.fielden.platform.entity.CollectionModificationUtils.validateAction;
+
+/// DAO implementation for companion object [UserRoleTokensUpdaterCo].
+///
 @EntityType(UserRoleTokensUpdater.class)
 public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpdater> implements UserRoleTokensUpdaterCo {
+
+    public static final String ERR_SECURITY_TOKEN_NOT_FOUND = "Security token [%s] could not be found.";
+
     private final EntityFactory factory;
     private final ISecurityTokenNodeTransformation tokenTransformation;
     private final ISecurityTokenProvider securityTokenProvider;
@@ -46,9 +39,8 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
             final IFilter filter, 
             final EntityFactory factory, 
             final ISecurityTokenNodeTransformation tokenTransformation,
-            final ISecurityTokenProvider securityTokenProvider
-    ) {
-        super(filter);
+            final ISecurityTokenProvider securityTokenProvider)
+    {
         this.factory = factory;
         this.tokenTransformation = tokenTransformation;
         this.securityTokenProvider = securityTokenProvider;
@@ -89,12 +81,8 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
     }
 
     private Class<? extends ISecurityToken> loadToken(final String name) {
-        final Class<? extends ISecurityToken> token;
-        try {
-            token = (Class<? extends ISecurityToken>) Class.forName(name);
-        } catch (final ClassNotFoundException e) {
-            throw Result.failure(new IllegalStateException(String.format("Security token [%s] could not be found.", name)));
-        }
-        return token;
+        return securityTokenProvider.getTokenByName(name)
+                .orElseThrow(() -> Result.failure(new InvalidStateException(ERR_SECURITY_TOKEN_NOT_FOUND.formatted(name))));
     }
+
 }

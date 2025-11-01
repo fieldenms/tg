@@ -2,10 +2,11 @@ package ua.com.fielden.platform.entity;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -22,7 +23,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.*;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -38,11 +38,11 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.StreamUtils;
 
-import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -407,7 +407,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     @Observable
-    public <ET extends AbstractEntity<K>> ET setDesc(final String desc) {
+    protected <ET extends AbstractEntity<K>> ET setDesc(final String desc) {
         this.desc = desc;
         return (ET) this;
     }
@@ -438,29 +438,27 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof AbstractEntity)) {
+        if (!(obj instanceof AbstractEntity<?> that)) {
             return false;
         }
-        // let's ensure that types match
-        final AbstractEntity<?> that = (AbstractEntity<?>) obj;
+
+        // Let's ensure that types match.
         if (this.getType() != that.getType()) {
             return false;
         }
 
-        // TODO need to carefully consider this bit of logic for comparing ID-only values
-        if (that.isIdOnlyProxy() && this.isIdOnlyProxy()) {
+        // If both or one of instances is an id-only proxy while the other is not mutated,
+        // then compare them by `id` values.
+        // N.B.: Only instances of persistent entities can be id-only proxies.
+        if ((that.isIdOnlyProxy() || this.isIdOnlyProxy())
+            && (!that.isInstrumented() || !that.isDirty())
+            && (!this.isInstrumented() || !this.isDirty()))
+        {
             return that.getId().equals(this.getId());
         }
-        // TODO need to carefully consider this bit of logic for comparing ID-only values
-        if (this.isPersistent() && (that.isIdOnlyProxy() || this.isIdOnlyProxy()) &&
-                (!that.isInstrumented() || !that.isDirty()) &&
-                (!this.isInstrumented() || !this.isDirty()) &&
-                that.getId().equals(this.getId())) {
-            return true;
-        }
-        // now can compare key values
-        final Object thatKey = that.getKey();
-        return getKey() != null && getKey().equals(thatKey) || getKey() == null && thatKey == null;
+
+        // Otherwise, compare instances by their key values.
+        return Objects.equals(this.getKey(), that.getKey());
     }
 
     @Override
@@ -518,7 +516,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
         try {
             return (T) dynamicPropertyAccess.getProperty(this, propertyName);
-        } catch (final Throwable ex) {
+        }
+        catch (final StrictProxyException ex) {
+            throw new StrictProxyException(ERR_CANNOT_GET_VALUE_FOR_PROXIED_PROPERTY.formatted(propertyName, getType().getName()), ex);
+        }
+        catch (final Throwable ex) {
             // There are cases where this.toString() may fail such as for non-initialized union entities.
             // Need to degrade gracefully to hide the original exception.
             // Also, do not try toString() if dynamic property access fails critically.
@@ -848,12 +850,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         annotations.addAll(collectValidationAnnotationsForKey(propField, isEntityPersistent, shouldNotSkipKeyChangeValidation));
         annotations.addAll(findValidationAnnotationsForProperty(propField, propType));
 
-        if (annotations.stream().noneMatch(at -> at.annotationType() == EntityExists.class)) {
-            final var atEntityExists = makeEntityExistsAnnotationIfApplicable(propField, propType);
-            if (atEntityExists != null) {
-                annotations.add(atEntityExists);
-            }
-        }
+        makeEntityExistsAnnotationIfApplicable(propField, propType).ifPresent(annotations::add);
 
         // Exclude handlers that should not be defined explicitly.
         // This is necessary to ensure the correct order of default validators.
@@ -937,13 +934,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
     }
 
-    private @Nullable Annotation makeEntityExistsAnnotationIfApplicable(final Field propField, final Class<?> propType) {
-        if (isEntityExistsValidationApplicable(getType(), propField)) {
-            return entityExistsAnnotation(getType(), propField.getName(), (Class<? extends AbstractEntity<?>>) propType);
-        }
-        else {
-            return null;
-        }
+    private Optional<Annotation> makeEntityExistsAnnotationIfApplicable(final Field propField, final Class<?> propType) {
+        return isEntityExistsValidationApplicable(getType(), propField)
+            ? of(entityExistsAnnotation(getType(), propField.getName(), (Class<? extends AbstractEntity<?>>) propType))
+            : empty();
     }
 
     /**

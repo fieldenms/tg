@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.serialisation.jackson.entities;
 
+import jakarta.annotation.Nonnull;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -8,8 +9,6 @@ import ua.com.fielden.platform.entity.validation.DefaultValidatorForValueTypeWit
 import ua.com.fielden.platform.entity.validation.UnhappyValidator;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.types.RichText;
-
-import javax.annotation.Nonnull;
 
 /**
  * Entity class used for testing.

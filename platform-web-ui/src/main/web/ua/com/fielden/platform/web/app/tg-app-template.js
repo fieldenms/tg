@@ -196,6 +196,10 @@ Polymer({
         },
         appTitle: String,
         ideaUri: String,
+        currencySymbol: {
+            type: String,
+            observer: '_currencySymbolChanged'
+        },
         entityType: String,
 
         _manager: {
@@ -250,6 +254,10 @@ Polymer({
         "menu-item-selected": "_showView",
         "menu-search-list-closed": "_restoreLastFocusedElement",
         "tg-module-menu-closed": "_restoreLastFocusedElement"
+    },
+
+    _currencySymbolChanged: function(newValue, oldValue) {
+        this._reflector().setCurrencySymbol(newValue);
     },
 
     _searchMenu: function (event) {
@@ -500,8 +508,7 @@ Polymer({
      * @param {Object} source 
      */
     _animationFinished: function (e, detail, source) {
-        const target = e.target || e.srcElement;
-        if (target === this.$.pages){
+        if (e.target === this.$.pages){
             this._selectedModule = this._routeData.moduleName;
             if (this._routeData.moduleName === 'master') {
                 this._selectedSubmodule = this._subroute.path;
@@ -600,6 +607,7 @@ Polymer({
         this.postRetrieved = function (entity, bindingEntity, customObject) {
             this.$.appConfig.setSiteAllowlist(entity.siteAllowlist.map(site => new RegExp(site)));
             this.$.appConfig.setDaysUntilSitePermissionExpires(entity.daysUntilSitePermissionExpires);
+            this.currencySymbol = entity.currencySymbol;
             entity.menu.forEach(menuItem => {
                 menuItem.actions.forEach(action => {
                     action._showDialog = this._showDialog;

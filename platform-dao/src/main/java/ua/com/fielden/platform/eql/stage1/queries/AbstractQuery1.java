@@ -23,13 +23,13 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
-import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
-import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtraction;
+import static ua.com.fielden.platform.eql.stage1.queries.KeyPropertyExpander.expand;
+import static ua.com.fielden.platform.eql.stage1.queries.KeyPropertyExpander.isExpandable;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CONDITIONS;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.conditions;
 import static ua.com.fielden.platform.eql.stage2.sundries.GroupBys2.EMPTY_GROUP_BYS;
@@ -117,8 +117,8 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
         final Conditions2 whereConditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context, whereConditions.transform(enhancedContext));
         final Yields2 yields2 = yields.transform(enhancedContext);
-        final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
-        final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
+        final GroupBys2 groups2 = enhanceGroupBys(groups.transform(enhancedContext));
+        final OrderBys2 orderings2 = enhanceOrderBys(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         // it is important to enhance yields after orderings to enable functioning of 'orderBy().yield(..)' in application to properties rather than true yields
         final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource()).yields;
         return new QueryComponents2(Optional.of(joinRoot2), whereConditions2, enhancedYields2, groups2, orderings2);
@@ -165,61 +165,59 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
         }
     }
 
-    protected static GroupBys2 enhance(final GroupBys2 groupBys) {
+    protected static GroupBys2 enhanceGroupBys(final GroupBys2 groupBys) {
         if (groupBys.equals(EMPTY_GROUP_BYS)) {
             return EMPTY_GROUP_BYS;
         }
 
-        final List<GroupBy2> enhanced = groupBys.groups().stream().map(AbstractQuery1::enhance).flatMap(List::stream).collect(Collectors.toList());
-        return new GroupBys2(enhanced);
+        return new GroupBys2(groupBys.groups().stream().flatMap(AbstractQuery1::enhanceGroupBy).collect(toImmutableList()));
     }
 
-    protected static OrderBys2 enhance(final OrderBys2 orderBys, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+    protected static OrderBys2 enhanceOrderBys(final OrderBys2 orderBys, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (orderBys.equals(EMPTY_ORDER_BYS)) {
             return EMPTY_ORDER_BYS;
         }
 
-        final List<OrderBy2> enhanced = new ArrayList<>();
-
-        for (final OrderBy2 original : orderBys.orderBys()) {
-            enhanced.addAll(original.operand() != null ? transformForOperand(original.operand(), original.isDesc()) :
-                transformForYield(original, yields, mainSource));
-        }
-
+        final var enhanced = orderBys.orderBys()
+                .stream()
+                .flatMap(orderBy -> orderBy.operand() != null
+                        ? transformOrderByOperand(orderBy.operand(), orderBy.isDesc())
+                        : transformOrderByYield(orderBy, yields, mainSource))
+                .collect(toImmutableList());
         return orderBys.updateOrderBys(enhanced);
     }
 
-    private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (yields.getYieldsMap().containsKey(original.yieldName())) {
-            final Yield2 yield = yields.getYieldsMap().get(original.yieldName());
-            if (yield.operand() instanceof Prop2 yieldedProp && needsExtraction(yieldedProp.lastPart(), yieldedProp.penultPart())) {
-                return transformForOperand(yieldedProp, original.isDesc());
-            } else {
-                return asList(original);
+    private static Stream<OrderBy2> transformOrderByYield(final OrderBy2 orderBy, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+        final var yieldsMap = yields.getYieldsMap();
+        if (yieldsMap.containsKey(orderBy.yieldName())) {
+            final var yield = yieldsMap.get(orderBy.yieldName());
+            if (yield.operand() instanceof Prop2 yieldedProp && isExpandable(yieldedProp.lastPart(), yieldedProp.penultPart())) {
+                return transformOrderByOperand(yieldedProp, orderBy.isDesc());
+            }
+            else {
+                return Stream.of(orderBy);
             }
         }
-
-        if (yields.getYieldsMap().isEmpty()) {
-            final PropResolution propResolution = Prop1.resolvePropAgainstSource(mainSource, new Prop1(original.yieldName(), false));
+        else if (yieldsMap.isEmpty()) {
+            final PropResolution propResolution = Prop1.resolvePropAgainstSource(mainSource, new Prop1(orderBy.yieldName(), false));
             if (propResolution != null) {
                 final List<AbstractQuerySourceItem<?>> path = enhancePath(propResolution.getPath());
-                return transformForOperand(new Prop2(mainSource, path), original.isDesc());
+                return transformOrderByOperand(new Prop2(mainSource, path), orderBy.isDesc());
             }
         }
-
-        throw new EqlStage1ProcessingException(ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY.formatted(original.yieldName()));
+        throw new EqlStage1ProcessingException(ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY.formatted(orderBy.yieldName()));
     }
 
-    private static List<OrderBy2> transformForOperand(final ISingleOperand2<?> operand, final boolean isDesc) {
-        return operand instanceof Prop2 operandAsProp
-                ? extract(operandAsProp).stream().map(keySubprop -> new OrderBy2(keySubprop, isDesc)).collect(toList())
-                : asList(new OrderBy2(operand, isDesc));
+    private static Stream<OrderBy2> transformOrderByOperand(final ISingleOperand2<?> operand, final boolean isDesc) {
+        return operand instanceof Prop2 prop
+                ? expand(prop).map(expProp -> new OrderBy2(expProp, isDesc))
+                : Stream.of(new OrderBy2(operand, isDesc));
     }
 
-    private static List<GroupBy2> enhance(final GroupBy2 original) {
-        return original.operand() instanceof Prop2 originalOperandAsProp
-                ? extract(originalOperandAsProp).stream().map(keySubprop -> new GroupBy2(keySubprop)).collect(toList())
-                : asList(original);
+    private static Stream<GroupBy2> enhanceGroupBy(final GroupBy2 groupBy) {
+        return groupBy.operand() instanceof Prop2 prop
+                ? expand(prop).map(GroupBy2::new)
+                : Stream.of(groupBy);
     }
 
     @Override

@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.sample.domain;
 
+import jakarta.annotation.Nonnull;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
-import javax.annotation.Nonnull;
 import java.util.SortedSet;
 import java.util.TreeSet;
 

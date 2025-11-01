@@ -52,6 +52,9 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     @Title("User name")
     private String userName;
 
+    @IsProperty
+    private String currencySymbol;
+
     @IsProperty(String.class)
     @Title(value = "Site Allow List", desc = "Site white list that user can visit without confirmation.")
     private final Set<String> siteAllowlist = new HashSet<>();
@@ -79,6 +82,16 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
 
     public Set<String> getSiteAllowlist() {
         return unmodifiableSet(siteAllowlist);
+    }
+
+    @Observable
+    public Menu setCurrencySymbol(final String currencySymbol) {
+        this.currencySymbol = currencySymbol;
+        return this;
+    }
+
+    public String getCurrencySymbol() {
+        return currencySymbol;
     }
 
     @Observable

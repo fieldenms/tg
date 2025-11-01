@@ -3,10 +3,12 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/components/rich-text/tg-rich-text-input.js';
 
 import { html } from '/resources/polymer/@polymer/polymer/polymer-element.js';
-import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
+import { GestureEventListeners } from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
-import { tearDownEvent, localStorageKey, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
+import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
+import { tearDownEvent, localStorageKey, getRelativePos, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -49,7 +51,8 @@ const additionalTemplate = html`
 const customInputTemplate = html`
     <tg-rich-text-input id="input" 
         class="custom-input paper-input-input"
-        disabled="[[_disabled]]" 
+        disabled="[[_disabled]]"
+        is-readonly="[[isReadonly]]" 
         value="{{_editingValue}}"
         toaster="[[toaster]]"
         change-event-handler="[[_onChange]]"
@@ -63,7 +66,7 @@ const customInputTemplate = html`
     <iron-icon id="resizer" icon="tg-icons:resize-bottom-right" on-tap="_resetHeight" on-down="_makeInputUnselectable" on-up="_makeInputSelectable" on-track="_resizeInput" tooltip-text="Drag to resize<br>Double tap to reset height" hidden$="[[autoResize]]"></iron-icon>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
-export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
+export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior], GestureEventListeners(TgEditor)) {
 
     static get template() { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
@@ -94,8 +97,17 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             },
 
             /**
+             * Determines whether this editor is in read-only mode.
+             * This state differs from `disabled` because it depends on the meta-state of the corresponding property in the bound entity.
+             */
+            isReadonly: {
+                type: Boolean,
+                computed: "_isReadonly(entity, propertyName)",
+                readOnly: true,
+            },
+
+            /**
              * OVERRIDDEN FROM TgEditor: this specific event is invoked after some key has been pressed.
-             *
              */
             _onKeydown: {
                 type: Function,
@@ -130,6 +142,14 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         }
     }
 
+    ready() {
+        super.ready();
+        this._resetHeight = this._createDoubleTapHandler("_lastResizerTap", (e) => {
+            localStorage.removeItem(this._generateKey());
+            this.$.input.height = this.height;
+        });
+    }
+
     disconnectedCallback() {
         super.disconnectedCallback();
         this._lastOpenedEntity =  null;
@@ -149,6 +169,23 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         return {coreText: '', 'formattedText': strValue};
     }
 
+    focusDecoratedInput() {
+        this.decoratedInput().focusInput();
+    }
+
+    get availableScanSeparators() {
+        return ['\n', ' ', '\t'];
+        
+    }
+
+    replaceText(text, start, end) {
+        this.decoratedInput().replaceText(text, start, end);
+    }
+
+    insertText(text, where) {
+        this.decoratedInput().insertText(text, where);
+    }
+
      /**
      * Overridden to calculate union value type title on each arrival of binding entity.
      */
@@ -157,6 +194,19 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         if (newValue) {
             this._lastOpenedEntity = newValue;
         }
+    }
+
+    /**
+     * Calculates the read-only state for this editor.
+     * 
+     * @param {Object} entity - The entity bound to this rich text editor.
+     * @param {String} propertyName - The name of the rich text property.
+     */
+    _isReadonly (entity, propertyName) {
+        if (allDefined(arguments)) {
+            return !this.reflector().isEntity(entity) || this.reflector().isDotNotated(propertyName) || !entity["@" + propertyName + "_editable"];
+        }
+        return true;
     }
 
     _lastOpenedEntityChanged (newValue, oldValue) {
@@ -240,13 +290,6 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         }
     }
 
-    _resetHeight(e) {
-        if (e.detail.sourceEvent.detail && e.detail.sourceEvent.detail === 2) {
-            localStorage.removeItem(this._generateKey());
-            this.$.input.height = this.height;
-        }
-    }
-
     _saveHeight(height) {
         localStorage.setItem(this._generateKey(), height);
     }
@@ -275,7 +318,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     _labelDownEventHandler (event) {
         if (!this.decoratedInput().shadowRoot.activeElement && !this._disabled) {
-            this.decoratedInput().focusInput();
+            this.focusDecoratedInput();
         }
         tearDownEvent(event);
     }

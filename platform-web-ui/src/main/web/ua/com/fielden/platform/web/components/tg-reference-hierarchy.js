@@ -238,8 +238,7 @@ Polymer({
         }.bind(this);
         this._runAction = function (e) {
             e.stopPropagation();
-            const target = e.target || e.srcElement;
-            this._actions[target.getAttribute("action-attr")](e);
+            this._actions[e.target.getAttribute("action-attr")](e);
         }.bind(this);
     },
 

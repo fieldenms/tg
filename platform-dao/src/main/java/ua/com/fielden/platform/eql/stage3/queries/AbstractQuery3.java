@@ -7,7 +7,6 @@ import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
@@ -19,6 +18,7 @@ import java.util.Optional;
 
 import static com.google.common.base.Predicates.or;
 import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
+import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 
 public abstract class AbstractQuery3 implements ToString.IFormattable {
 
@@ -39,11 +39,11 @@ public abstract class AbstractQuery3 implements ToString.IFormattable {
     }
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        return sql(metadata, dbVersion, Collections.nCopies(yields.getYields().size(), Yield3.NO_EXPECTED_TYPE));
+        return sql(metadata, dbVersion, Collections.nCopies(yields.getYields().size(), NULL_TYPE));
     }
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final List<PropType> expectedYieldTypes) {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append(yields.sql(metadata, dbVersion, expectedYieldTypes));
         sb.append(maybeJoinRoot.map(joinRoot -> "\nFROM\n" + joinRoot.sql(metadata, dbVersion))
                           .orElseGet(() -> dbVersion == ORACLE ? " FROM DUAL " : ""));

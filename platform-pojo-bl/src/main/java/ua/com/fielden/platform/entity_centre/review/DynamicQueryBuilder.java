@@ -139,7 +139,11 @@ public class DynamicQueryBuilder {
             this.type = analyser.getPropertyType();
             final Pair<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> collectionalTypes = analyser.getCollectionContainerAndItsParentType();
             final String propertyNameWithinCollectionalHierarchy;
-            this.inUnionHierarchy = analyser.isInUnionHierarchy();
+
+            // Turned off the recognition of union members in order to treat them as any other property.
+            // This results in combining conditions for union members with logical AND instead of OR.
+            // TODO: Once it is proven in practice that AND is indeed more practical, the code needs to be cleaned up by removing the union-specific logic.
+            this.inUnionHierarchy = false; // analyser.isInUnionHierarchy();
             if (this.inUnionHierarchy) {
                 this.collectionContainerType = null;
                 this.collectionContainerParentType = null;

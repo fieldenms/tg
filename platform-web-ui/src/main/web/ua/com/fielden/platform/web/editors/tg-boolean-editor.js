@@ -8,7 +8,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 
 const customLableTemplate = html`
-    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">[[propTitle]]</label>`;
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]" slot="label">[[propTitle]]</label>`;
 
 const additionalTemplate = html`
     <style>
@@ -81,7 +81,9 @@ const customInputTemplate = html`
             checked="[[_isBooleanChecked(_editingValue)]]"
             disabled$="[[_disabled]]"
             on-change="_onChange"
-            tooltip-text$="[[_getTooltip(_editingValue)]]"><span class="label truncate">[[propTitle]]</span></paper-checkbox>`;
+            on-focus="_onFocus"
+            on-blur="_outFocus"
+            tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]"><span class="label truncate">[[propTitle]]</span></paper-checkbox>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgBooleanEditor extends TgEditor {
@@ -108,10 +110,9 @@ export class TgBooleanEditor extends TgEditor {
 
         this._onChange = (function (e) {
             console.log("_onChange:", e);
-            var target = e.target || e.srcElement;
-            this._editingValue = this.convertToString(target.checked);
+            this._editingValue = this.convertToString(e.target.checked);
             
-            var parentFunction = TgEditor.properties._onChange.value.call(this);
+            const parentFunction = TgEditor.properties._onChange.value.call(this);
             parentFunction.call(this, e);
         }).bind(this);
         

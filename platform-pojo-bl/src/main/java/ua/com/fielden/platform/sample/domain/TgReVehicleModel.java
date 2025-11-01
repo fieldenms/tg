@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
  */
 @CompanionObject(ITgReVehicleModel.class)
 public class TgReVehicleModel extends TgVehicleModel {
+
     protected static final EntityResultQueryModel<TgReVehicleModel> model_ = select(TgVehicleModel.class)
             .yieldAll()
             .yield().caseWhen().val(true).eq().val(true).then().val(42).otherwise().val(42).endAsInt().as("intProp")

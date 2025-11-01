@@ -47,11 +47,11 @@ public abstract class AbstractAstVisitor implements IAstVisitor {
     }
 
     protected String relative2Absolute(final String property) {
-        return StringUtils.isEmpty(contextProperty) ? property : Reflector.fromRelative2AbsotulePath(contextProperty, property);
+        return StringUtils.isEmpty(contextProperty) ? property : Reflector.fromRelative2AbsolutePath(contextProperty, property);
     }
 
     protected String absolute2Relative(final String property) {
-        return StringUtils.isEmpty(contextProperty) ? property : Reflector.fromAbsotule2RelativePath(contextProperty, property);
+        return StringUtils.isEmpty(contextProperty) ? property : Reflector.fromAbsolute2RelativePath(contextProperty, property);
     }
 
     /**

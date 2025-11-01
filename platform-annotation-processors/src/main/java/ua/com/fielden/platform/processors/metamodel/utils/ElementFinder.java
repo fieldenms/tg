@@ -6,7 +6,6 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderExce
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 import ua.com.fielden.platform.utils.StreamUtils;
 
-import javax.annotation.Nullable;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.AnnotatedConstruct;
@@ -275,6 +274,13 @@ public class ElementFinder {
         return findField(typeElement, fieldName, (varEl) -> true);
     }
 
+    /// Strict version of [#findField(TypeElement, String)].
+    ///
+    public VariableElement getField(final TypeElement typeElement, final String fieldName) {
+        return findField(typeElement, fieldName)
+                .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(fieldName, typeElement)));
+    }
+
     /**
      * Returns an optional describing a variable element that represents a declared field named {@code fieldName} and matching {@code predicate}.
      *
@@ -432,7 +438,7 @@ public class ElementFinder {
     /**
      * Finds an annotation of the specified type that is directly present on the element.
      */
-    public Optional<? extends AnnotationMirror> findAnnotationMirror(final AnnotatedConstruct element, final Class<? extends Annotation> annotType) {
+    public static Optional<? extends AnnotationMirror> findAnnotationMirror(final AnnotatedConstruct element, final Class<? extends Annotation> annotType) {
         return element.getAnnotationMirrors().stream()
                 .filter(mirror -> isSameType(mirror.getAnnotationType(), annotType))
                 .findAny();
@@ -578,11 +584,11 @@ public class ElementFinder {
      * 
      * @throws ElementFinderException if no coresponding type element was found
      */
-    public boolean isSameType(final TypeMirror mirror, final Class<?> clazz) {
+    public static boolean isSameType(final TypeMirror mirror, final Class<?> clazz) {
         return mirror.accept(IS_SAME_TYPE_VISITOR, clazz);
     }
     // where
-    private final TypeKindVisitor14<Boolean, Class<?>> IS_SAME_TYPE_VISITOR = new TypeKindVisitor14<>() {
+    private static final TypeKindVisitor14<Boolean, Class<?>> IS_SAME_TYPE_VISITOR = new TypeKindVisitor14<>() {
         @Override
         protected Boolean defaultAction(TypeMirror e, Class<?> clazz) {
             return false;

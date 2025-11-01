@@ -21,11 +21,17 @@ import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.findByIdW
  * @param <T>
  */
 public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T>, IContextDecomposer {
+
+    public static final String ERR_UNEXPECTED_TYPE = "Unexpected type of property [%s.%s]. Expected: [%s] or supertype. Actual: [%s].";
+
     private final EntityFactory factory;
     protected final Class<T> entityType;
-    /** Instrumented reader to be used for producing of {@link #new_()} editable entities and for re-fetching ({@link #refetchInstrumentedEntityById(Long)}) of persisted editable entities. */
+    /// Instrumented reader to be used for producing of [#new_()] editable entities.
+    /// And for re-fetching ([#refetchInstrumentedEntityById(Long)]) of persisted editable entities.
+    ///
     private final Optional<IEntityReader<T>> reader;
-    /** Optional context for context-dependent entity producing logic. */
+    /// Optional context for context-dependent entity producing logic.
+    ///
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context;
     private final ICompanionObjectFinder coFinder;
     private final Map<Class<? extends AbstractEntity<?>>, IEntityReader<?>> coCache = new HashMap<>();
@@ -100,7 +106,9 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             producedEntity = compoundMasterEntity.isPersisted() ? refetchInstrumentedEntityById(compoundMasterEntity.getId()) : compoundMasterEntity; // but refetched when it is persisted
             // please also note that no custom logic (provideDefaultValues) will be applied to that entity, the process of its initiation is a sole prerogative of compound master opener's producer -- this is the only place where it should be produced (or retrieved)
         } else {
-            final T entity = new_();
+            // Instance-based continuation should be used as initial entity value, if it is present.
+            // Producer entity type will be exactly the same as 'instanceBasedContinuation' type.
+            final T entity = context != null && context.getInstanceBasedContinuation() != null ? (T) context.getInstanceBasedContinuation() : new_();
 
             if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
                 final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
@@ -183,7 +191,11 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * Returns uninstrumented instance.
      */
     protected final <M extends AbstractEntity<?>> M refetch(final Long id, final Class<M> entityType, final CharSequence property) {
-        return findByIdWithFiltering(id, co(entityType), reader.get().getFetchProvider().<M>fetchFor(property).fetchModel());
+        final var fetch = reader.get().getFetchProvider().<M>fetchFor(property).fetchModel();
+        if (!fetch.getEntityType().isAssignableFrom(entityType)) {
+            throw new EntityProducingException(ERR_UNEXPECTED_TYPE.formatted(this.entityType.getSimpleName(), property, entityType.getSimpleName(), fetch.getEntityType().getSimpleName()));
+        }
+        return findByIdWithFiltering(id, co(entityType), fetch);
     }
 
     /**

@@ -28,7 +28,7 @@ public class StartSecureJetty {
     private static final Logger logger = getLogger(StartSecureJetty.class);
 
     public static void main(final String[] args) throws Exception {
-        final String fileName = "src/main/resources/application.properties";
+        final String fileName = "src/main/resources/application-PostgreSql.properties";
 
         final Properties props = new Properties();
         try (final InputStream st = new FileInputStream(fileName)) {
@@ -49,8 +49,8 @@ public class StartSecureJetty {
             https.setSecurePort(port);
             https.setSecureScheme("https");
 
-            final SslContextFactory sslContextFactory = new SslContextFactory();
-            sslContextFactory.setKeyStorePath(ResourceLoader.getURL("tsl/ca-signed-keystore").getPath());
+            final var sslContextFactory = new SslContextFactory.Server();
+            sslContextFactory.setKeyStorePath(ResourceLoader.getURL("tls/ca-signed-keystore").getPath());
             sslContextFactory.setKeyStorePassword("changeit");
             sslContextFactory.setKeyManagerPassword("changeit");
 

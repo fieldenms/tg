@@ -2,31 +2,27 @@ package ua.com.fielden.platform.utils;
 
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.filtering.ActivatableEntityHasPropertyOfTypePredicate;
-import ua.com.fielden.platform.reflection.filtering.TypeFilter;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.isUnionMember;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.utils.EntityUtils.isDateOnly;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 public final class Validators {
     private Validators() {
@@ -146,59 +142,8 @@ public final class Validators {
         return findFirstOverlapping(entity, null, co, fromDateProperty, toDateProperty, matchProperties);
     }
 
-    /**
-     * Analyses all `entityTypes` on the subject of having an active dependency of `entity`.
-     * This implementation assumes that all involved entities have boolean property `active`.
-     */
-    public static <T extends AbstractEntity<?>> long countActiveDependencies(
-            final List<Class<? extends AbstractEntity<?>>> entityTypes,
-            final T entity,
-            final IEntityAggregatesOperations coAggregate)
-    {
-        // There should be exactly 0 active and persisted dependencies to not yet persisted entity
-        if (!entity.isPersisted()) {
-            return 0;
-        }
-
-        // Otherwise, count dependencies.
-        final var entityType = entity.getType();
-        // First analyse the domain tree.
-        final var relevantTypes = TypeFilter.filter(entityTypes, new ActivatableEntityHasPropertyOfTypePredicate(entityType));
-        // If there are no dependent entity types, then there is no reason to check the actual persisted entity instances.
-        if (relevantTypes.isEmpty()) {
-            return 0;
-        }
-        // Otherwise, need to compose a query that would count active dependencies.
-        // Self-references should be excluded.
-        else {
-            final var iter = relevantTypes.iterator();
-            final var firstDependentEntityType = iter.next();
-
-            // Start with making the counting query for the first dependent entity type -- there is at least one such type, if this code was reached.
-            // First find a list of properties matching the entity type of interest.
-            final var propsForFirstEntityType = Finder.findPropertiesOfSpecifiedType(firstDependentEntityType, entityType, MapTo.class);
-
-            // Make a counting query based on the obtained list.
-            var expressionModelInProgress = expr().model(mkQueryToCountReferencesInType(firstDependentEntityType, propsForFirstEntityType));
-            // Need to repeat the same operation with other dependent types in case there are more than one.
-            while (iter.hasNext()) {
-                final Class<? extends AbstractEntity<?>> nextDependentEntityType = iter.next();
-                final List<Field> propsForNextEntityType = Finder.findPropertiesOfSpecifiedType(nextDependentEntityType, entityType, MapTo.class);
-                expressionModelInProgress = expressionModelInProgress.add().model(mkQueryToCountReferencesInType(nextDependentEntityType, propsForNextEntityType));
-            }
-
-            final var propCount = "kount";
-            final var query = select(entityType).where().prop(ID).eq().val(entity).yield().expr(expressionModelInProgress.model()).as(propCount).modelAsAggregate();
-            final var qem = from(query).model();
-
-            final Number count = coAggregate.getEntity(qem).get(propCount);
-            return count.longValue();
-        }
-    }
-
-    /**
-     * Finds active deactivatable dependencies for `entity`.
-     */
+    /// Finds active deactivatable dependencies for `entity`, including indirect ones by virtual of being a union member.
+    ///
     public static <T extends ActivatableAbstractEntity<?>> List<? extends ActivatableAbstractEntity<?>> findActiveDeactivatableDependencies(
             final T entity,
             final ICompanionObjectFinder coFinder)
@@ -216,7 +161,9 @@ public final class Validators {
             final var props = new ArrayList<Field>();
             final var keyMembers = Finder.getKeyMembers(dependentType);
             for (final var keyMember : keyMembers) {
-                if (entityType.isAssignableFrom(keyMember.getType())) {
+                if (entityType.isAssignableFrom(keyMember.getType())
+                   || (isUnionEntityType(keyMember.getType()) && isUnionMember((Class<? extends AbstractUnionEntity>) keyMember.getType(), entityType)))
+                {
                     props.add(keyMember);
                 }
             }
@@ -234,37 +181,6 @@ public final class Validators {
             }
         }
         return result;
-    }
-
-    /**
-     * Makes an EQL query to count all instances of `entityType` that contain references to an entity of interest,
-     * expressed as properties `props` of that entity type.
-     *
-     * @param entityType  the owner of properties.
-     * @param props  properties in `entityType` of the same entity type (i.e., "entity of interest").
-     * @return  a primitive EQL query model to count dependencies.
-     */
-    private static <T extends AbstractEntity<?>> PrimitiveResultQueryModel mkQueryToCountReferencesInType(
-            final Class<? extends AbstractEntity<?>> entityType,
-            final List<Field> props)
-    {
-        if (props.isEmpty()) {
-            throw new InvalidArgumentException("At least one property is expected.");
-        }
-
-        // Add conditions to cover all properties of the referenced type using OR operation in case there are more than one
-        var partialQ = select(entityType).
-                           where().
-                           prop(ID).ne().extProp(ID).and(). // this is to prevent counting self-references, relies on throughout ID
-                           prop(ACTIVE).eq().val(true).and().
-                           begin();
-        for (int index = 0; index < props.size() - 1; index++) {
-            final var propName = props.get(index).getName();
-            partialQ = partialQ.prop(propName).eq().extProp(ID).or();
-        }
-        final var propName = props.getLast().getName();
-        final var endQ = partialQ.prop(propName).eq().extProp(ID).end();
-        return endQ.yield().countAll().modelAsPrimitive();
     }
 
     /**

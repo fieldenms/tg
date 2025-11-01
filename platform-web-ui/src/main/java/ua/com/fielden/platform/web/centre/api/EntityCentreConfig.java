@@ -50,13 +50,8 @@ import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherO
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.*;
 
-/**
- *
- * Represents a final structure of an entity centre as produced by means of using Entity Centre DSL.
- *
- * @author TG Team
- *
- */
+/// Represents a final structure of an entity centre as produced by means of using Entity Centre DSL.
+///
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     private final boolean egiHidden;
@@ -81,52 +76,48 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////////// TOP LEVEL ACTIONS /////////////
     /////////////////////////////////////////////
 
-    /**
-     * A list of top level actions represented as pairs of action configurations as keys and optional group names as values.
-     * <p>
-     * If an action belongs to a group then a corresponding value in the pair contains the name of that group. Otherwise, the pair value is empty. The order of actions in the list
-     * is important and should be honoured when building their UI representation.
-     */
+    /// A list of top level actions represented as pairs of action configurations as keys and optional group names as values.
+    ///
+    /// If an action belongs to a group then a corresponding value in the pair contains the name of that group. Otherwise, the pair value is empty. The order of actions in the list
+    /// is important and should be honoured when building their UI representation.
+    ///
     private final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = new ArrayList<>();
 
     /////////////////////////////////////////////
     //////// SELECTION CRITERIA ACTIONS /////////
     /////////////////////////////////////////////
 
-    /**
-     * A list of custom selection criteria actions.
-     */
+    /// A list of custom selection criteria actions.
+    ///
     private final List<EntityActionConfig> frontActions = new ArrayList<>();
 
     /////////////////////////////////////////////
     /////////// INSERTION POINT ACTIONS /////////
     /////////////////////////////////////////////
-    /**
-     * A list of functional actions that are associated with entity centre insertion points.
-     * <p>
-     * They do not have visual representation (such as an icon or a button) and are used only to instantiate insertion point views (action per view) and execute their own logic
-     * (method <code>save</code> of a corresponding functional entity).
-     */
+
+    /// A list of functional actions that are associated with entity centre insertion points.
+    ///
+    /// They do not have visual representation (such as an icon or a button) and are used only to instantiate insertion point views (action per view) and execute their own logic
+    /// (method `save` of a corresponding functional entity).
+    ///
     private final List<InsertionPointConfig> insertionPointConfigs = new ArrayList<>();
 
     /////////////////////////////////////////////
     ////////////// SELECTION CRIT ///////////////
     /////////////////////////////////////////////
 
-    /**
-     * A list of properties that have been added to selection criteria in the added sequential order.
-     * <p>
-     * It is not important whether a property was added as multi-valued, single-valued or range criterion simply because an appropriate selection criteria kind gets determined
-     * automatically from property declaration at the entity type level.
-     * <p>
-     * The part of Entity Centre DSL that provides developer with ability to pick the kind (i.e. <code>multi()</code>, <code>single()</code> or <code>range()</code>)is there only
-     * to facilitate definition fluency and readability.
-     */
+    /// A list of properties that have been added to selection criteria in the added sequential order.
+    ///
+    /// It is not important whether a property was added as multi-valued, single-valued or range criterion simply because an appropriate selection criteria kind gets determined
+    /// automatically from property declaration at the entity type level.
+    ///
+    /// The part of Entity Centre DSL that provides developer with ability to pick the kind (i.e. `multi()`, `single()` or `range()`)is there only
+    /// to facilitate definition fluency and readability.
+    ///
     private final List<String> selectionCriteria = new ArrayList<>();
 
-    /**
-     * Default value assigner for various kind and types of selection criteria.
-     */
+    /// Default value assigner for various kind and types of selection criteria.
+    ///
     private final Map<String, Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>>> defaultMultiValueAssignersForEntityAndStringSelectionCriteria = new HashMap<>();
     private final Map<String, Class<? extends IValueAssigner<MultiCritBooleanValueMnemonic, T>>> defaultMultiValueAssignersForBooleanSelectionCriteria = new HashMap<>();
 
@@ -141,9 +132,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<BigDecimal>, T>>> defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria = new HashMap<>();
     private final Map<String, Class<? extends IValueAssigner<SingleCritDateValueMnemonic, T>>> defaultSingleValueAssignersForDateSelectionCriteria = new HashMap<>();
 
-    /**
-     * Default values. At the DSL level default values and assigners are mutually exclusive.
-     */
+    /// Default values. At the DSL level default values and assigners are mutually exclusive.
+    ///
     private final Map<String, MultiCritStringValueMnemonic> defaultMultiValuesForEntityAndStringSelectionCriteria = new HashMap<>();
     private final Map<String, MultiCritBooleanValueMnemonic> defaultMultiValuesForBooleanSelectionCriteria = new HashMap<>();
 
@@ -158,111 +148,104 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final Map<String, SingleCritOtherValueMnemonic<BigDecimal>> defaultSingleValuesForBigDecimalAndMoneySelectionCriteria = new HashMap<>();
     private final Map<String, SingleCritDateValueMnemonic> defaultSingleValuesForDateSelectionCriteria = new HashMap<>();
 
-    /**
-     * Enumeration that contains options for specifying custom value matcher in selection criteria autocompleters.
-     */
+    /// Enumeration that contains options for specifying custom value matcher in selection criteria autocompleters.
+    ///
     public enum MatcherOptions {
-        /**
-         * Hides 'active only' toggle button in selection criteria autocompleter result dialogs for activatable properties.
-         * May be useful for autocompleters with custom matcher, that already filters out inactive values.
-         */
+
+        /// Hides 'active only' toggle button in selection criteria autocompleter result dialogs for activatable properties.
+        /// May be useful for autocompleters with custom matcher, that already filters out inactive values.
+        ///
         HIDE_ACTIVE_ONLY_ACTION;
     }
 
-    /**
-     * A map between selection criteria properties and their custom value matchers with context configuration and MatcherOptions. If a matcher for some criterion is not provided then a default instance of type
-     * {@link FallbackValueMatcherWithCentreContext} should be used.
-     */
+    /// A map between selection criteria properties and their custom value matchers with context configuration and MatcherOptions. If a matcher for some criterion is not provided then a default instance of type
+    /// [FallbackValueMatcherWithCentreContext] should be used.
+    ///
     private final Map<String, T3<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>, List<MatcherOptions>>> valueMatchersForSelectionCriteria = new HashMap<>();
 
-    /**
-     * A map between selection criteria properties that are associated with multi- or single-value autocompleter and the additional properties that should be set up for those
-     * autocompleters to be displayed as part of the autocompletion result list.
-     */
+    /// A map between selection criteria properties that are associated with multi- or single-value autocompleter and the additional properties that should be set up for those
+    /// autocompleters to be displayed as part of the autocompletion result list.
+    ///
     private final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
 
-    /**
-     * A map between selection criteria properties that are associated with multi- or -sinle-valued autocompleter and entity types that were provided in calls to <code>.autocompleter(type)</code>.
-     */
+    /// A map between selection criteria properties that are associated with multi- or -sinle-valued autocompleter and entity types that were provided in calls to `.autocompleter(type)`.
+    ///
     private final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria = new HashMap<>();
 
-    /**
-     * Represents the layout settings for selection criteria.
-     */
+    /// Represents the layout settings for selection criteria.
+    ///
     private final FlexLayout selectionCriteriaLayout;
 
-    /**
-     * Represents the layout settings for card-based resultset representation.
-     */
+    /// Represents the layout settings for card-based resultset representation.
+    ///
     protected final FlexLayout resultsetCollapsedCardLayout;
     protected final FlexLayout resultsetExpansionCardLayout;
 
     protected final FlexLayout resultsetSummaryCardLayout;
 
-    /**
-     * Enumeration that contains options for auto-runnable centres.
-     */
+    /// Enumeration that contains options for auto-runnable centres.
+    ///
     public enum RunAutomaticallyOptions {
-        /**
-         * If specified for either standalone or embedded centre, any selection criteria changes would get preserved upon auto-running.
-         * <p>
-         * Also, this parameter preserves any loaded save-as configurations upon auto-run.
-         * For example, if a user loads some save-as configuration for an embedded centre, that configuration would be used for auto-run until such time as user changes it (loads the default or any other save-as configuration).
-         * <p>
-         * Without this parameter the default behaviour is applied. More specifically the default configuration is always loaded before auto-run is performed.
-         */
+
+        /// If specified for either standalone or embedded centre, any selection criteria changes would get preserved upon auto-running.
+        ///
+        /// Also, this parameter preserves any loaded save-as configurations upon auto-run.
+        /// For example, if a user loads some save-as configuration for an embedded centre, that configuration would be used for auto-run until such time as user changes it (loads the default or any other save-as configuration).
+        ///
+        /// Without this parameter the default behaviour is applied. More specifically the default configuration is always loaded before auto-run is performed.
+        ///
         ALLOW_CUSTOMISED;
     }
 
-    /**
-     * Determines whether centre should run automatically or not.
-     */
+    /// Determines whether centre should run automatically or not.
+    ///
     private final boolean runAutomatically;
     private final Set<RunAutomaticallyOptions> runAutomaticallyOptions;
 
-    /**
-     * Determines the position of left and right splitters.
-     */
+    /// Determines the position of left and right splitters.
+    ///
     private final Integer leftSplitterPosition;
     private final Integer rightSplitterPosition;
 
-    /**
-     * Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).
-     */
+    /// Determines whether insertion points can be rearranged.
+    ///
+    private boolean insertionPointCustomLayoutEnabled;
+
+    /// Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).
+    ///
     private final boolean enforcePostSaveRefresh;
 
-    /** Identifies event source class that should be used as part of the topic for distributing server side event on client. If <code>null</code> is set then no SSE is required. */
+    /// Identifies event source class that should be used as part of the topic for distributing server side event on client. If `null` is set then no SSE is required.
     private final Class<? extends IEventSource> eventSourceClass;
-    /** The number of seconds before refresh on sse event. This value might be null, then refresh will be immediate.
-     *  If the value is zero, then user will have to make decision whether to refresh the center or to skip it.
-     *  if the value is greater then 0, then user will have a chance to skip refreshing the specified number of seconds.
-     *  After refreshCountdown seconds centre will be refreshed immediately.*/
+    /// The number of seconds before refresh on sse event. This value might be null, then refresh will be immediate.
+    /// If the value is zero, then user will have to make decision whether to refresh the center or to skip it.
+    /// if the value is greater then 0, then user will have a chance to skip refreshing the specified number of seconds.
+    /// After refreshCountdown seconds centre will be refreshed immediately.
+    ///
     private final Integer refreshCountdown;
 
     /////////////////////////////////////////////
     ////////////////// RESULT SET ///////////////
     /////////////////////////////////////////////
 
-    /**
-     * A list of result set property definitions, presented in the same order a specified using Entity Centre DSL. Natural (persistent or calculated) properties are intertwined
-     * with custom properties.
-     */
+    /// A list of result set property definitions, presented in the same order a specified using Entity Centre DSL. Natural (persistent or calculated) properties are intertwined
+    /// with custom properties.
+    ///
     private final List<ResultSetProp<T>> resultSetProperties = new ArrayList<>();
-    /**
-     * The key in this structure represent resultset properties that are considered to be originating for the associated with them summaries. Each key may reference several
-     * definitions of summary expressions, hence, the use of a multimap. More specifically, {@link ListMultimap} is used to preserve the order of summary expression as declared
-     * using Entity Centre DSL.
-     */
+
+    /// The key in this structure represent resultset properties that are considered to be originating for the associated with them summaries. Each key may reference several
+    /// definitions of summary expressions, hence, the use of a multimap. More specifically, [ListMultimap] is used to preserve the order of summary expression as declared
+    /// using Entity Centre DSL.
+    ///
     private final ListMultimap<String, SummaryPropDef> summaryExpressions = ArrayListMultimap.create();
 
-    /**
-     * A convenient structure to capture result set property definition. It includes either a property name that represents a natural (persistent or calculated) property, or a
-     * custom property definition. The structure guarantees that natural and custom properties are mutually exclusive.
-     * <p>
-     * In any of those cases, a custom action can be provided. The custom action value is optional and can be empty if there is no need to provide custom actions specific for
-     * represented in the result set properties. However, the default actions would still get associated with all properties without a custom action. In order to skip even the
-     * default action, a <code>no action</code> configuration needs to set as custom property action.
-     */
+    /// A convenient structure to capture result set property definition. It includes either a property name that represents a natural (persistent or calculated) property, or a
+    /// custom property definition. The structure guarantees that natural and custom properties are mutually exclusive.
+    ///
+    /// In any of those cases, a custom action can be provided. The custom action value is optional and can be empty if there is no need to provide custom actions specific for
+    /// represented in the result set properties. However, the default actions would still get associated with all properties without a custom action. In order to skip even the
+    /// default action, a <code>no action</code> configuration needs to set as custom property action.
+    ///
     public static class ResultSetProp<T extends AbstractEntity<?>> {
         public final Optional<String> propName;
         public final boolean presentByDefault;
@@ -274,24 +257,25 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<BiFunction<T, Optional<CentreContext<T, ?>>, Map>> renderingHintsProvider;
         public final Optional<AbstractWidget> widget;
         public final int width;
+        public final boolean wordWrap;
         public final boolean isFlexible;
 
         private Optional<EntityMultiActionConfig> propAction = empty();
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final boolean presentByDefault, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
-            return new ResultSetProp<>(propName, presentByDefault, empty(), empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final boolean presentByDefault, final int width, final boolean wordWrap, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
+            return new ResultSetProp<>(propName, presentByDefault, empty(), empty(), empty(), empty(), width, wordWrap, isFlexible, widget, tooltipProp, null, propAction);
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final boolean presentByDefault, final int width, final boolean isFlexible, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
-            return new ResultSetProp<>(null, presentByDefault, empty(), empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final boolean presentByDefault, final int width, final boolean wordWrap, final boolean isFlexible, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
+            return new ResultSetProp<>(null, presentByDefault, empty(), empty(), empty(), empty(), width, wordWrap, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final CharSequence collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName.toString(), true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), of(renderingHintsProvider), 0, false, empty(), null, null, empty());
+            return new ResultSetProp<>(collectionalPropertyName.toString(), true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), of(renderingHintsProvider), 0, false, false, empty(), null, null, empty());
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final CharSequence collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName.toString(), true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), empty(), 0, false, empty(), null, null, empty());
+            return new ResultSetProp<>(collectionalPropertyName.toString(), true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), empty(), 0, false, false, empty(), null, null, empty());
         }
 
         private ResultSetProp(
@@ -302,6 +286,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 final Optional<BiConsumer<T, Optional<CentreContext<T, ?>>>> entityPreProcessor,
                 final Optional<BiFunction<T, Optional<CentreContext<T, ?>>, Map>> renderingHintsProvider,
                 final int width,
+                final boolean wordWrap,
                 final boolean isFlexible,
                 final Optional<AbstractWidget> widget,
                 final String tooltipProp,
@@ -323,6 +308,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.propName = Optional.ofNullable(propName);
             this.presentByDefault = presentByDefault;
             this.width = width;
+            this.wordWrap = wordWrap;
             this.isFlexible = isFlexible;
             this.widget = widget;
             this.tooltipProp = Optional.ofNullable(tooltipProp);
@@ -342,13 +328,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return propAction;
         }
 
-        /**
-         * Returns the property name for specified {@link ResultSetProp} instance. The returned property name can be used for retrieving and altering data in
-         * {@link ICentreDomainTreeManager}.
-         *
-         * @param property
-         * @return
-         */
+        /// Returns the property name for specified [ResultSetProp] instance. The returned property name can be used for retrieving and altering data in
+        /// [ICentreDomainTreeManager].
+        ///
         public static <T extends AbstractEntity<?>> String derivePropName(final ResultSetProp<T> property) {
             if (property.propName.isPresent()) {
                 return treeName(property.propName.get());
@@ -362,10 +344,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         }
     }
 
-    /**
-     * This is just a convenience structure for capturing a summary property definition.
-     *
-     */
+    /// This is just a convenience structure for capturing a summary property definition.
+    ///
     public static class SummaryPropDef {
         public final String alias;
         public final String expression;
@@ -390,39 +370,33 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         }
     }
 
-    /**
-     * A map between properties to order by and the ordering direction. The order of elements in this map corresponds to the ordering sequence. That is, the first listed property
-     * should be the first in the resultant order statement, the second -- second, and so on.
-     */
+    /// A map between properties to order by and the ordering direction. The order of elements in this map corresponds to the ordering sequence. That is, the first listed property
+    /// should be the first in the resultant order statement, the second -- second, and so on.
+    ///
     private final LinkedHashMap<String, OrderDirection> resultSetOrdering = new LinkedHashMap<>();
 
-    /**
-     * This is just a helper enumeration to express result set ordering.
-     */
+    /// This is just a helper enumeration to express result set ordering.
+    ///
     public enum OrderDirection {
         DESC, ASC;
     }
 
-    /**
-     * A primary entity action configuration that is associated with every retrieved and present in the result set entity. It can be <code>null</code> if no primary entity action
-     * is needed.
-     */
+    /// A primary entity action configuration that is associated with every retrieved and present in the result set entity. It can be `null` if no primary entity action
+    /// is needed.
+    ///
     private final EntityMultiActionConfig resultSetPrimaryEntityAction;
 
-    /**
-     * A list of secondary action configurations that are associated with every retrieved and present in the result set entity. It can be empty if no secondary action are
-     * necessary.
-     */
+    /// A list of secondary action configurations that are associated with every retrieved and present in the result set entity. It can be empty if no secondary action are
+    /// necessary.
+    ///
     private final List<EntityMultiActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
 
-    /**
-     * Represents a type of a contract that is responsible for customisation of rendering for entities and their properties.
-     */
+    /// Represents a type of a contract that is responsible for customisation of rendering for entities and their properties.
+    ///
     private final Class<? extends IRenderingCustomiser<?>> resultSetRenderingCustomiserType;
 
-    /**
-     * Represents a type of a contract that is responsible for assigning values to custom properties as part of the data retrieval process.
-     */
+    /// Represents a type of a contract that is responsible for assigning values to custom properties as part of the data retrieval process.
+    ///
     private final Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType;
 
     ///////////////////////////////////////////////////////////
@@ -515,7 +489,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final Pair<Class<?>, Class<?>> generatorTypes,
-            final IFetchProvider<T> fetchProvider) {
+            final IFetchProvider<T> fetchProvider,
+            final boolean insertionPointCustomLayoutEnabled)
+    {
         this.egiHidden = egiHidden;
         this.gridViewIcon = gridViewIcon;
         this.gridViewIconStyle = gridViewIconStyle;
@@ -594,34 +570,27 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.queryEnhancerConfig = queryEnhancerConfig;
         this.generatorTypes = generatorTypes;
         this.fetchProvider = fetchProvider;
+        this.insertionPointCustomLayoutEnabled = insertionPointCustomLayoutEnabled;
     }
 
     ///////////////////////////////////////////
     /////////////// GETTERS ///////////////////
     ///////////////////////////////////////////
-    /**
-     * Provides access to the layout settings of selection criteria.
-     *
-     * @return
-     */
+
+    /// Provides access to the layout settings of selection criteria.
+    ///
     public FlexLayout getSelectionCriteriaLayout() {
         return selectionCriteriaLayout;
     }
 
-    /**
-     * Provides access to the layout of the top part of the result set card-based representation, which corresponds to the collapsed card state.
-     *
-     * @return
-     */
+    /// Provides access to the layout of the top part of the result set card-based representation, which corresponds to the collapsed card state.
+    ///
     public FlexLayout getResultsetCollapsedCardLayout() {
         return resultsetCollapsedCardLayout;
     }
 
-    /**
-     * Provides access to the layout of the expanded part of the resultset card-based representation.
-     *
-     * @return
-     */
+    /// Provides access to the layout of the expanded part of the resultset card-based representation.
+    ///
     public FlexLayout getResultsetExpansionCardLayout() {
         return resultsetExpansionCardLayout;
     }
@@ -660,6 +629,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public Optional<IFetchProvider<T>> getFetchProvider() {
         return Optional.ofNullable(fetchProvider);
+    }
+
+    public boolean isInsertionPointCustomLayoutEnabled() {
+        return insertionPointCustomLayoutEnabled;
     }
 
     public Optional<EntityMultiActionConfig> getResultSetPrimaryEntityAction() {
@@ -873,13 +846,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.ofNullable(resultSetCustomPropAssignmentHandlerType);
     }
 
-    /**
-     * Returns action configuration for concrete action kind and its number in that kind's space.
-     *
-     * @param actionKind
-     * @param actionNumber
-     * @return
-     */
+    /// Returns action configuration for concrete action kind and its number in that kind's space.
+    ///
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         if (TOP_LEVEL == actionKind) {
             // Top actions for entity centre consists of EGI's top action + alternative views actions.
@@ -935,13 +903,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }
 
-    /**
-     * Finds action configuration with {@code actionNumber} in the list of secondary actions/multi-actions, if it exists.
-     * The value of {@code actionNumber} represents an absolute index across all actions as if they were linear (i.e. regardless of how actions might be grouped by multi-actions).
-     *
-     * @param actionNumber
-     * @return
-     */
+    /// Finds action configuration with `actionNumber` in the list of secondary actions/multi-actions, if it exists.
+    /// The value of `actionNumber` represents an absolute index across all actions as if they were linear (i.e. regardless of how actions might be grouped by multi-actions).
+    ///
     private Optional<EntityActionConfig> getSecondaryActionFor(final int actionNumber) {
         int currentActionNumber = actionNumber;
         for (final EntityMultiActionConfig config: getResultSetSecondaryEntityActions()) {
@@ -1046,16 +1010,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return rowHeight;
     }
 
-    /**
-     * Indicates whether 'active only' action was deliberately hidden by specifying {@link MatcherOptions#HIDE_ACTIVE_ONLY_ACTION} option in following methods:<br>
-     * {@link ISingleValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)}<br>
-     * {@link ISingleValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)}<br>
-     * {@link IMultiValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)}<br>
-     * {@link IMultiValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)}
-     * 
-     * @param property
-     * @return
-     */
+    /// Indicates whether 'active only' action was deliberately hidden by specifying [MatcherOptions#HIDE_ACTIVE_ONLY_ACTION] option in following methods:\
+    /// [ISingleValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)]\
+    /// [ISingleValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)]\
+    /// [IMultiValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)]\
+    /// [IMultiValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)]
+    ///
     public boolean isActiveOnlyActionHidden(final String property) {
         return getValueMatchersForSelectionCriteria()
             .map(matchersInfo -> matchersInfo.get(property))

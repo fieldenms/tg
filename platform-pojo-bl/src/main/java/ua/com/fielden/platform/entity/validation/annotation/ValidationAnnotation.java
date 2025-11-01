@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.entity.validation.annotation;
 
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.annotation.Dynamic;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 
-import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 
 /**

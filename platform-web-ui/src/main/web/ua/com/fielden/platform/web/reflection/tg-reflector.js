@@ -31,6 +31,13 @@ const STANDARD_COLLECTION_SEPARATOR = ', ';
 
 const VALIDATION_RESULT = '_validationResult';
 
+// A variable that defines a currency symbol, used to represent monetary values as strings.
+// This variable is assigned only once.
+let currencySymbol = null;
+
+// A space used to separate a currency symbol from a numeric part of  when representing monetary value as strings
+export const CURRENCY_SYMBOL_SPACE = '\u200A';
+
 /**
  * Determines whether the result represents the error.
  */
@@ -46,7 +53,7 @@ const _simpleClassName = function (fullClassName) {
 };
 
 var _isContinuationError0 = function (result) {
-    return _isError0(result) && (typeof result.ex.continuationType !== 'undefined');
+    return _isError0(result) && (typeof result.ex.continuationTypeStr !== 'undefined');
 }
 
 /**
@@ -68,9 +75,10 @@ var _isInformative0 = function (result) {
  */
 var _createEntityTypePropPrototype = function () {
     ////////////////////////////////////////// THE PROTOTYPE FOR EntityTypeProp ////////////////////////////////////////// 
-    var EntityTypeProp = function (rawObject) {
+    var EntityTypeProp = function (name, rawObject) {
         Object.call(this);
-
+        //Set the name of property
+        this._name = name;
         // copy all properties from rawObject after deserialisation
         for (var prop in rawObject) {
             this[prop] = rawObject[prop];
@@ -78,6 +86,13 @@ var _createEntityTypePropPrototype = function () {
     };
     EntityTypeProp.prototype = Object.create(Object.prototype);
     EntityTypeProp.prototype.constructor = EntityTypeProp;
+
+    /**
+     * Returns the name of a property in the entity type.
+     */
+    EntityTypeProp.prototype.name = function () {
+        return this._name;
+    }
 
     /**
      * Returns property type.
@@ -139,6 +154,15 @@ var _createEntityTypePropPrototype = function () {
      */
     EntityTypeProp.prototype.isTime = function () {
         return typeof this._time === 'undefined' ? false : this._time;
+    }
+
+    /**
+     * Returns 'true' when the property carries entity type information for the master to be opened.
+     *
+     * IMPORTANT: do not use '_entityTypeCarrier' field directly!
+     */
+    EntityTypeProp.prototype.isEntityTypeCarrier = function () {
+        return typeof this._entityTypeCarrier === 'undefined' ? false : this._entityTypeCarrier;
     }
 
     /**
@@ -751,7 +775,10 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
                 for (var p in _props) {
                     if (_props.hasOwnProperty(p)) {
                         var val = _props[p];
-                        _props[p] = new EntityTypeProp(val);
+                        _props[p] = new EntityTypeProp(p, val);
+                        if (_props[p].isEntityTypeCarrier() && !this["#entityTypeCarrirerPropName#"]) {
+                            this["#entityTypeCarrirerPropName#"] = p;
+                        }
                     }
                 }
 
@@ -763,6 +790,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     };
     EntityType.prototype = Object.create(Object.prototype);
     EntityType.prototype.constructor = EntityType;
+
+    /**
+     * Returns entity type carrier property name if exists. Otherwise returns null
+     *
+     */
+    EntityType.prototype.entityTypeCarrierName = function () {
+        return this["#entityTypeCarrirerPropName#"] || null;
+    }
 
     /**
      * Returns full Java class name for the entity type.
@@ -874,6 +909,20 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
+     * Returns key title in case of composite / union entity type, 'undefined' otherwise.
+     */
+    EntityType.prototype.keyTitle = function () {
+        return this._keyTitle;
+    }
+
+    /**
+     * Returns key description in case of composite / union entity type, 'undefined' otherwise.
+     */
+    EntityType.prototype.keyDesc = function () {
+        return this._keyDesc;
+    }
+
+    /**
      * Returns 'true' if the entity type represents a persistent entity.
      *
      */
@@ -926,16 +975,34 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
         } else {
             const prop = typeof this._props !== 'undefined' && this._props && this._props[name];
             if (!prop && name === 'key') {
+                // Composite / union entity type serialisation excludes KEY property in case if it is of composite / union nature.
+                // See `Finder.streamRealProperties` and `EntitySerialiser.createCachedProperties` methods.
+                // That's why we provide "virtual" implementation for EntityTypeProp here.
                 if (this.isCompositeEntity()) {
-                    return { type: function () { return 'DynamicEntityKey'; } }
+                    return {
+                        type: () => 'DynamicEntityKey',
+                        title: this.keyTitle.bind(this),
+                        desc: this.keyDesc.bind(this)
+                    };
                 } else if (this.isUnionEntity()) { // the key type for union entities at the Java level is "String", but for JS its actual type is determined at runtime base on the active property
-                    return { type: function () { return 'String'; } }
+                    return {
+                        type: () => 'String',
+                        title: this.keyTitle.bind(this),
+                        desc: this.keyDesc.bind(this)
+                    }
                 }
             } else if (!prop && name === 'desc' && this.isUnionEntity()) { // the 'desc' type for union entities always return "String", even if there is no @DescTitle annotation on union type
                 return { type: function () { return 'String'; } }
             }
             return prop ? prop : null;
         }
+    }
+
+    /** 
+     * Returns an array of EntityTypeProp objects for this EntityType instance.
+     */
+    EntityType.prototype.props = function () {
+        return typeof this._props !== 'undefined' && this._props ? Object.values(this._props) : [];
     }
 
     /** 
@@ -1439,13 +1506,17 @@ const _formatDecimal = function (value, locale, scale, trailingZeros) {
     return '';
 };
 
+const _getCurrencySymbol = function() {
+    return currencySymbol || '$';
+}
+
 /**
  * Formats money number in to string based on locale. If the value is null then returns empty string.
  */
 const _formatMoney = function (value, locale, scale, trailingZeros) {
     if (value !== null) {
         const strValue = _formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros);
-        return (value.amount < 0 ? '-$' : '$') + strValue;
+        return (value.amount < 0 ? `-${_getCurrencySymbol()}` : `${_getCurrencySymbol()}`) + CURRENCY_SYMBOL_SPACE + strValue;
     }
     return '';
 };
@@ -1632,7 +1703,9 @@ export const TgReflector = Polymer({
         if (ex) {
             let causes = "<b>" + resultMessages(ex).extended + "</b>";
             printStackTrace(ex);
-            if (ex.cause !== null) {
+            // Result 'cause' is not serialised and that's why it is 'undefined'.
+            // Allow proper stack traces (empty) for such Results (e.g. see NeedMoreDataException).
+            if (ex.cause) {
                 causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")
             }
             return causes;
@@ -1872,6 +1945,17 @@ export const TgReflector = Polymer({
             return arrayOfEntityAndCustomObject[1];
         } else {
             return null;
+        }
+    },
+
+    /**
+     * Set the provided currency symbol if previous was empty and provided one is not empty. It means that currency symbol can be set only once. 
+     * 
+     * @param {String} newCurrencySymbol - currency symbol to set
+     */
+    setCurrencySymbol: function (newCurrencySymbol) {
+        if (!currencySymbol && newCurrencySymbol) {
+            currencySymbol = newCurrencySymbol;
         }
     },
 
@@ -2140,6 +2224,26 @@ export const TgReflector = Polymer({
             }
         }
         return context;
+    },
+
+    /**
+     * Loads all union subtypes in the system. Sort them descendingly by frequency of usages in union types.
+     */
+    loadUnionSubtypesAndSortByUsageFrequency: function() {
+        // Load all union subtypes from union types.
+        // These can have duplicates.
+        const allUnionSubtypes = Object.values(_typeTable)
+            .filter(type => type.isUnionEntity())
+            .flatMap(type => type.unionProps().map(unionProp => type.prop(unionProp).type()));
+        // Create a frequency of usage of those subtypes in union types.
+        const freqMap = new Map();
+        allUnionSubtypes.forEach(unionSubtype => {
+            freqMap.set(unionSubtype, freqMap.get(unionSubtype) ? freqMap.get(unionSubtype) + 1 : 1);
+        });
+        // Sort subtypes descendingly by frequency of usage; return array of subtypes only.
+        return Array.from(freqMap)
+            .toSorted((pair1, pair2) => pair2[1] - pair1[1])
+            .map(pair => pair[0]);
     },
 
     /**

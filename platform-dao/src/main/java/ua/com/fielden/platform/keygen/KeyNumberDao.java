@@ -1,65 +1,50 @@
 package ua.com.fielden.platform.keygen;
 
-import static java.lang.String.format;
-
-import java.util.Collections;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.IFilter;
 
-/**
- * Hibernate driven implementation of {@link IKeyNumberGenerator);
- *
- * @author TG Team
- */
+import java.util.Collections;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.stream.IntStream;
+
+import static java.util.stream.Collectors.toCollection;
+
+/// Db-driven implementation of [IKeyNumber].
+///
 @EntityType(KeyNumber.class)
 public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumber {
-    
-    private final EntityFactory factory;
-    
-    @Inject
-    protected KeyNumberDao(final IFilter filter, final EntityFactory factory) {
-        super(filter);
-        this.factory = factory;
-    }
 
-    /**
-     * This is a convenience method for retrieval of the next number.
-     */
+    public static final String ERR_NO_NUMBER_FOR_KEY = "No number associated with key [%s].";
+
+    /// {@inheritDoc}
+    ///
     @Override
     @SessionRequired
-    public Integer nextNumber(final String key) {
+    public Integer nextNumber(final String key, final int radix) {
         KeyNumber number = findByKey(key); // find an instance
         if (number != null) {
             // re-fetch instance with pessimistic write lock
-            number = (KeyNumber) getSession().load(KeyNumber.class, number.getId(), new LockOptions(LockMode.PESSIMISTIC_WRITE));
+            number = getSession().load(KeyNumber.class, number.getId(), new LockOptions(LockMode.PESSIMISTIC_WRITE));
         } else { // this would most likely never happen since the target legacy db should already have some values in table NUMBERS
-            number = factory.newByKey(KeyNumber.class, key).setValue("0");
+            number = new_().setKey(key).setValue("0");
         }
 
-        final Integer nextNo = Integer.parseInt(number.getValue()) + 1;
-        number.setValue(nextNo.toString());
+        final int nextNo = Integer.parseInt(number.getValue(), radix) + 1;
+        number.setValue(Integer.toString(nextNo, radix));
         save(number);
         return nextNo;
     }
 
+    /// {@inheritDoc}
+    ///
     @Override
     @SessionRequired
-    public SortedSet<Integer> nextNumbers(final String key, final int count) {
+    public SortedSet<Integer> nextNumbers(final String key, final int count, final int radix) {
         if (count < 1) {
             return Collections.emptySortedSet();
         }
@@ -67,27 +52,27 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
         KeyNumber number = findByKey(key); // find an instance
         if (number != null) {
             // re-fetch instance with pessimistic write lock
-            number = (KeyNumber) getSession().load(KeyNumber.class, number.getId(), new LockOptions(LockMode.PESSIMISTIC_WRITE));
+            number = getSession().load(KeyNumber.class, number.getId(), new LockOptions(LockMode.PESSIMISTIC_WRITE));
         } else { // this would most likely never happen since the target legacy db should already have some values in table NUMBERS
-            number = factory.newByKey(KeyNumber.class, key).setValue("0");
+            number = new_().setKey(key).setValue("0");
         }
 
-        final SortedSet<Integer> keys = IntStream.iterate(Integer.parseInt(number.getValue()) + 1, n -> n + 1).limit(count).boxed().collect(Collectors.toCollection(() -> new TreeSet<Integer>()));
-        number.setValue(keys.last().toString());
+        final SortedSet<Integer> keys = IntStream.iterate(Integer.parseInt(number.getValue(), radix) + 1, n -> n + 1).limit(count).boxed().collect(toCollection(TreeSet::new));
+        number.setValue(Integer.toString(keys.last(), radix));
         save(number);
         return keys;
     }
 
-    /**
-     * This is a convenience method for retrieval of the current number.
-     */
+    /// {@inheritDoc}
+    ///
     @Override
     @SessionRequired
-    public Integer currNumber(final String key) {
+    public Integer currNumber(final String key, final int radix) {
         final KeyNumber number = findByKey(key); // find an instance
         if (number == null) {
-            throw new EntityCompanionException(format("No number associated with key [%s].", key));
+            throw new EntityCompanionException(ERR_NO_NUMBER_FOR_KEY.formatted(key));
         }
-        return Integer.valueOf(number.getValue());
+        return Integer.valueOf(number.getValue(), radix);
     }
+
 }

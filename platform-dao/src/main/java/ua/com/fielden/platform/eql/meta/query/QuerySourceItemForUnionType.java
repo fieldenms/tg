@@ -1,15 +1,14 @@
 package ua.com.fielden.platform.eql.meta.query;
 
-import static java.util.Collections.unmodifiableSortedMap;
+import jakarta.annotation.Nullable;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
-
-import javax.annotation.Nullable;
+import static java.util.Collections.unmodifiableSortedMap;
 
 /**
  * A structure that represents a query source item of union type {@code T}.

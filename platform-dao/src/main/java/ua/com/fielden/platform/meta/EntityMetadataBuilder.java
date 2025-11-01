@@ -29,7 +29,7 @@ abstract class EntityMetadataBuilder<N extends EntityNature, D extends EntityNat
             case EntityMetadata.Persistent it ->
                     new Persistent(it.javaType(), it.nature(), it.data());
             case EntityMetadata.Synthetic it ->
-                    new Synthetic(it.javaType(), it.nature(), it.data());
+                    new Synthetic(it.javaType(), it.nature());
             case EntityMetadata.Union it ->
                     new Union(it.javaType(), it.nature(), it.data());
         };
@@ -71,8 +71,8 @@ abstract class EntityMetadataBuilder<N extends EntityNature, D extends EntityNat
     }
 
     static EntityMetadataBuilder<EntityNature.Synthetic, EntityNature.Synthetic.Data> syntheticEntity
-            (final Class<? extends AbstractEntity<?>> type, final EntityNature.Synthetic.Data data) {
-        return new Synthetic(type, EntityNature.SYNTHETIC, data);
+            (final Class<? extends AbstractEntity<?>> type) {
+        return new Synthetic(type, EntityNature.SYNTHETIC);
     }
 
     static EntityMetadataBuilder<EntityNature.Union, EntityNature.Union.Data> unionEntity
@@ -96,8 +96,8 @@ abstract class EntityMetadataBuilder<N extends EntityNature, D extends EntityNat
     static final class Synthetic
             extends EntityMetadataBuilder<EntityNature.Synthetic, EntityNature.Synthetic.Data>
     {
-        Synthetic(final Class<? extends AbstractEntity<?>> javaType, final EntityNature.Synthetic nature, final EntityNature.Synthetic.Data data) {
-            super(javaType, nature, data);
+        Synthetic(final Class<? extends AbstractEntity<?>> javaType, final EntityNature.Synthetic nature) {
+            super(javaType, nature, EntityNature.Synthetic.NO_DATA);
         }
 
         @Override

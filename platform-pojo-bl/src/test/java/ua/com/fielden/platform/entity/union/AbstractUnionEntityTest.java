@@ -2,36 +2,35 @@ package ua.com.fielden.platform.entity.union;
 
 import com.google.inject.Injector;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
-import ua.com.fielden.platform.sample.domain.EntityOne;
-import ua.com.fielden.platform.sample.domain.EntityThree;
-import ua.com.fielden.platform.sample.domain.EntityTwo;
-import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.ERR_MISSING_ACTIVE_PROP_TO_CHECK_MEMBERSHIP;
 import static ua.com.fielden.platform.entity.meta.MetaProperty.ERR_REQUIRED;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.reflection.exceptions.ReflectionException.ERR_NULL_ARGUMENT;
 
-/**
- * A test case covering union rules and definition of {@link AbstractUnionEntity} descendants.
- *
- * @author TG Team
- *
- */
+/// A test case covering union rules and definition of [AbstractUnionEntity] descendants.
+///
 public class AbstractUnionEntityTest {
     final Injector injector = new ApplicationInjectorFactory().add(new CommonEntityTestIocModuleWithPropertyFactory()).getInjector();
     final EntityFactory factory = injector.getInstance(EntityFactory.class);
@@ -82,37 +81,24 @@ public class AbstractUnionEntityTest {
     }
 
     @Test
+    public void commonMethods_identifies_getters_and_setters_for_all_common_properties() {
+        assertThat(AbstractUnionEntity.commonMethodNames(UnionEntity.class))
+                .containsExactlyInAnyOrder("getStringProperty", "setStringProperty",
+                                           "getEntityThree", "setEntityThree",
+                                           "getDesc", "setDesc",
+                                           "getKey", "setKey");
+    }
+
+    @Test
     public void commonProperties_identifies_all_common_properties_amongst_union_properties() {
         final Set<String> commonProps = AbstractUnionEntity.commonProperties(UnionEntity.class);
-        assertEquals("Incorrect number of common properties.", 2, commonProps.size());
-        assertTrue(commonProps.contains("desc"));
-        assertTrue(commonProps.contains("stringProperty"));
+        assertEquals(Set.of("desc", "stringProperty", "entityThree", "key"), commonProps);
     }
 
     @Test
     public void unionProperties_identifies_all_union_properties() {
-        final List<Field> unionPropertiesList = AbstractUnionEntity.unionProperties(UnionEntity.class);
-        assertEquals(2, unionPropertiesList.size());
-        assertTrue(Finder.getFieldNames(unionPropertiesList).contains("propertyOne"));
-        assertTrue(Finder.getFieldNames(unionPropertiesList).contains("propertyTwo"));
-    }
-
-    @Test
-    public void commonMethods_idenfities_getters_and_setters_for_all_common_properties() {
-        List<String> list = null;
-        try {
-            list = AbstractUnionEntity.commonMethodNames(UnionEntity.class);
-        } catch (final Exception e) {
-            fail("There shouldn't be any exception");
-        }
-        assertEquals("Incorrect number of common methods", 4, list.size());
-        assertTrue("List of common methods must contain the getPropertyOne method name", list.contains("getStringProperty"));
-        assertTrue("List of common methods must contain the getDesc method name", list.contains("getDesc"));
-
-        assertFalse("List of common methods must contain the getKey method name", list.contains("getKey"));
-        assertFalse("List of common methods must contain the setKey method name", list.contains("setKey"));
-        assertTrue("List of common methods must contain the setPropertyOne method name", list.contains("setStringProperty"));
-        assertTrue("List of common methods must contain the setDesc method name", list.contains("setDesc"));
+        final List<Field> unionProperties = AbstractUnionEntity.unionProperties(UnionEntity.class);
+        assertEquals(Set.of("propertyOne", "propertyTwo"), unionProperties.stream().map(Field::getName).collect(toSet()));
     }
 
     @Test
@@ -154,7 +140,7 @@ public class AbstractUnionEntityTest {
                          ex.getMessage());
         }
         try {
-            unionEntity.setPropertyTwo(factory.newEntity(EntityTwo.class, 1L, 12));
+            unionEntity.setPropertyTwo(factory.newEntity(EntityTwo.class, 1L, "A"));
             fail("Should not be able to set active property more than once.");
         } catch (final EntityException ex) {
             assertEquals("Invalid attempt to set property [propertyTwo] as active for union entity [UnionEntity] with active property [propertyOne].",
@@ -209,7 +195,7 @@ public class AbstractUnionEntityTest {
     @Test
     public void union_entities_with_same_key_representations_but_different_active_properties_arent_equal() {
         final UnionEntity unionEntity1 = factory.newEntity(UnionEntity.class).setPropertyOne(factory.newEntity(EntityOne.class, 1L, "1"));
-        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class).setPropertyTwo(factory.newEntity(EntityTwo.class, 2L, 1));
+        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class).setPropertyTwo(factory.newEntity(EntityTwo.class, 2L, "1"));
         assertNotEquals(unionEntity1, unionEntity2);
     }
 
@@ -219,7 +205,7 @@ public class AbstractUnionEntityTest {
     @Test
     public void union_entities_with_same_key_representations_and_same_ids_but_different_active_properties_arent_equal() {
         final UnionEntity unionEntity1 = factory.newEntity(UnionEntity.class).setPropertyOne(factory.newEntity(EntityOne.class, 1L, "1"));
-        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class).setPropertyTwo(factory.newEntity(EntityTwo.class, 1L, 1));
+        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class).setPropertyTwo(factory.newEntity(EntityTwo.class, 1L, "1"));
         assertNotEquals(unionEntity1, unionEntity2);
     }
 
@@ -262,7 +248,7 @@ public class AbstractUnionEntityTest {
         final UnionEntity unionEntity = factory.newEntity(UnionEntity.class);
         unionEntity.setUnionProperty(propOneValue);
 
-        final EntityTwo propTwoValue = factory.newEntity(EntityTwo.class, 2L, 1);
+        final EntityTwo propTwoValue = factory.newEntity(EntityTwo.class, 2L, "1");
         try {
             unionEntity.setUnionProperty(propTwoValue);
         } catch (final EntityException ex) {
@@ -293,6 +279,145 @@ public class AbstractUnionEntityTest {
     public void unionPropertyNameByType_returns_empty_result_if_no_matching_property_could_be_found() {
         final var maybePropName = AbstractUnionEntity.unionPropertyNameByType(UnionEntity.class, EntityThree.class);
         assertTrue(maybePropName.isEmpty());
+    }
+
+    @Test
+    public void union_entities_of_different_types_but_with_equal_active_entities_are_not_equal() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var union = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        final var otherUnion = factory.newEntity(UnionEntityWithoutSecondDescTitle.class).setPropertyOne(one);
+        assertNotEquals(union.getType(), otherUnion.getType());
+        assertEquals(union.activeEntity(), otherUnion.activeEntity());
+        assertNotEquals(union, otherUnion);
+    }
+
+    @Test
+    public void union_entities_of_different_types_with_active_entities_of_different_types_are_not_equal() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var union = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        final var three = factory.newEntity(EntityThree.class, 2L);
+        final var otherUnion = factory.newEntity(UnionEntityWithoutSecondDescTitle.class).setPropertyThree(three);
+        assertNotEquals(union.getType(), otherUnion.getType());
+        assertNotEquals(union.activeEntity().getType(), otherUnion.activeEntity().getType());
+        assertNotEquals(union, otherUnion);
+    }
+
+    @Test
+    public void union_entities_of_same_type_and_equal_active_entities_are_equal() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        final var union2 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        assertEquals(union1.getType(), union2.getType());
+        assertEquals(union1.activeEntity(), union2.activeEntity());
+        assertEquals(union1, union2);
+    }
+
+    @Test
+    public void union_entities_of_same_type_with_active_entities_of_same_type_but_with_different_active_entity_instances_are_not_equal() {
+        final var one1 = factory.newEntity(EntityOne.class, 1L, "01");
+        final var one2 = factory.newEntity(EntityOne.class, 2L, "02");
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one1);
+        final var union2 = factory.newEntity(UnionEntity.class).setPropertyOne(one2);
+        assertEquals(union1.getType(), union2.getType());
+        assertEquals(union1.activeEntity().getType(), union2.activeEntity().getType());
+        assertNotEquals(union1.activeEntity(), union2.activeEntity());
+        assertNotEquals(union1, union2);
+    }
+
+    @Test
+    public void union_entities_of_same_type_with_active_entities_of_different_types_are_not_equal() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var two = factory.newEntity(EntityTwo.class, 2L);
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        final var union2 = factory.newEntity(UnionEntity.class).setPropertyTwo(two);
+        assertEquals(union1.getType(), union2.getType());
+        assertNotEquals(union1.activeEntity().getType(), union2.activeEntity().getType());
+        assertNotEquals(union1, union2);
+    }
+
+    @Test
+    public void isUnionMember_recognises_membership_by_type() {
+        assertTrue(UnionEntity.isUnionMember(UnionEntity.class, EntityOne.class));
+        final var unionEntity = factory.newEntity(UnionEntity.class);
+        assertTrue(unionEntity.isUnionMember(EntityOne.class));
+
+        assertFalse(UnionEntity.isUnionMember(UnionEntity.class, EntityThree.class));
+        assertFalse(unionEntity.isUnionMember(EntityThree.class));
+    }
+
+    @Test
+    public void isUnionMember_recognises_membership_by_value() {
+        final var one = factory.newEntity(EntityOne.class, 1L, "01");
+        assertTrue(UnionEntity.isUnionMember(UnionEntity.class, one));
+        final var unionEntity = factory.newEntity(UnionEntity.class);
+        assertTrue(unionEntity.isUnionMember(one));
+
+        assertFalse(UnionEntity.isUnionMember(UnionEntity.class, EntityThree.class));
+        final var tree = factory.newEntity(EntityThree.class, 1L, 1);
+        assertFalse(unionEntity.isUnionMember(EntityThree.class));
+    }
+
+    @Test
+    public void isUnionMember_recognises_membership_by_value_of_active_property_of_another_union_entity() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+
+        assertTrue(UnionEntity.isUnionMember(UnionEntity.class, union1));
+        final var unionEntity = factory.newEntity(UnionEntity.class);
+        assertTrue(unionEntity.isUnionMember(union1));
+
+        final var three = factory.newEntity(EntityThree.class, 1L, 1);
+        final var union3 = factory.newEntity(UnionEntityWithoutSecondDescTitle.class).setPropertyThree(three);
+
+        assertFalse(UnionEntity.isUnionMember(UnionEntity.class, union3));
+        assertFalse(unionEntity.isUnionMember(union3));
+    }
+
+    @Test
+    public void isActivePropertyUnionMemberOf_recognises_membership() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        assertTrue(union1.isActivePropertyUnionMemberOf(UnionEntityWithoutSecondDescTitle.class));
+
+        final var three = factory.newEntity(EntityThree.class, 1L, 1);
+        final var union3 = factory.newEntity(UnionEntityWithoutSecondDescTitle.class).setPropertyThree(three);
+        assertFalse(union3.isActivePropertyUnionMemberOf(UnionEntity.class));
+    }
+
+
+    @Test
+    public void isUnionMember_does_not_permit_invalid_arguments() {
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(null, EntityOne.class))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("unionType"));
+
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(UnionEntity.class, (Class<? extends AbstractEntity<?>>) null))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("typeToCheckForMembership"));
+
+        final var one = factory.newEntity(EntityOne.class, 1L, "01");
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(null, one))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("unionType"));
+
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(UnionEntity.class, (AbstractEntity<?>) null))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("valueWithTypeToCheckForMembership"));
+
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(null, union1))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("unionType"));
+
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(UnionEntity.class, (AbstractUnionEntity) null))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("unionWithActivePropertyToCheckForMembership"));
+
+        final var union3WithoutActiveProp = factory.newEntity(UnionEntityWithoutSecondDescTitle.class);
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(UnionEntity.class, union3WithoutActiveProp))
+                .isInstanceOf(EntityException.class)
+                .hasMessage(ERR_MISSING_ACTIVE_PROP_TO_CHECK_MEMBERSHIP.formatted(UnionEntity.class.getSimpleName()));
+
     }
 
 }

@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.web.app.config;
 
-import java.util.Optional;
-import java.util.function.Supplier;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -10,6 +7,9 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * A contract for building a Web UI configuration.

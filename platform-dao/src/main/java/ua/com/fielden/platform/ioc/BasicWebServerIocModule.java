@@ -33,23 +33,17 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
 
-/**
- * Basic IoC module for server web applications, which should be extended by an application-specific IoC module.
- *
- * This IoC provides all the necessary bindings for:
- * <ul>
- * <li>Applications settings (refer {@link IApplicationSettings});
- * <li>Serialisation mechanism;
- * <li>Essential DAO interfaces {@link IUser}, {@link IAuthorisationModel}, and more;
- * <li>Provides application main menu configuration related DAO bindings.
- * </ul>
- * <p>
- * Instantiation of singletons occurs in accordance with <a href="https://github.com/google/guice/wiki/Scopes#eager-singletons">Guice Eager Singletons</a>,
- * where values of {@link Workflows} are mapped to {@link Stage}.
- *
- * @author TG Team
- *
- */
+/// Basic IoC module for server web applications, which should be extended by an application-specific IoC module.
+/// This IoC provides all the necessary bindings for:
+///
+/// - Applications settings (refer [IApplicationSettings]);
+/// - Serialisation mechanism;
+/// - Essential DAO interfaces [IUser], [IAuthorisationModel], and more;
+/// - Provides application main menu configuration related DAO bindings.
+///
+/// Instantiation of singletons occurs in accordance with [Guice Eager Singletons](https://github.com/google/guice/wiki/Scopes#eager-singletons),
+/// where values of [Workflows] are mapped to [Stage].
+///
 public class BasicWebServerIocModule extends CompanionIocModule {
     private static final Logger LOGGER = getLogger(BasicWebServerIocModule.class);
 
@@ -101,6 +95,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("independent.time.zone")).to(Boolean.parseBoolean(props.getProperty("independent.time.zone")));
         bindConstant().annotatedWith(Names.named("externalSites.allowlist")).to(props.getProperty("externalSites.allowlist", ""));
         bindConstant().annotatedWith(Names.named("externalSites.expiresIn")).to(props.getProperty("externalSites.expiresIn", ""));
+        bindConstant().annotatedWith(Names.named("currency.symbol")).to(props.getProperty("currency.symbol", "$"));
         final boolean enableWebApi = Boolean.parseBoolean(props.getProperty("web.api"));
         bindConstant().annotatedWith(Names.named("web.api")).to(enableWebApi);
         final var maxQueryDepthKey = "web.api.maxQueryDepth";
@@ -138,6 +133,8 @@ public class BasicWebServerIocModule extends CompanionIocModule {
             // ... bind Web API to platform-dao GraphQL-based implementation
             bind(IWebApi.class).to(GraphQLService.class);
         }
+
+        requestStaticInjection(MultiInheritanceEntityVerificationService.class);
     }
 
     public Properties getProps() {

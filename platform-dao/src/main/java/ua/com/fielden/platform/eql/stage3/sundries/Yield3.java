@@ -12,8 +12,7 @@ import java.util.Objects;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.sqlCastTypeName;
-import static ua.com.fielden.platform.eql.meta.PropType.propType;
-import static ua.com.fielden.platform.persistence.types.PlaceholderType.newPlaceholderType;
+import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 
 /**
  *
@@ -37,17 +36,15 @@ public record Yield3 (ISingleOperand3 operand, String alias, String column, Prop
         this(operand, alias, isEmpty(alias) ? null : "C_" + columnId, type);
     }
 
-    /**
-     * @param expectedType  unless equal to {@link #NO_EXPECTED_TYPE}, then the yielded value is cast to the given type
-     */
+    /// @param expectedType  unless it is the [PropType#NULL_TYPE], the yielded value is cast to the given type
+    ///
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final PropType expectedType) {
         final String operandSql = operand.sql(metadata, dbVersion);
         final var sb = new StringBuilder(operandSql.length());
 
         // Cast even if the expected type is the same as this type to cover the auto-yield case where a yielded null
         // can be represented as Prop3 "id" with type Long.
-        // Expected type should never be the null type but let's be vigilant.
-        if (dbVersion == POSTGRESQL && expectedType != NO_EXPECTED_TYPE && expectedType.isNotNull()) {
+        if (dbVersion == POSTGRESQL && expectedType.isNotNull()) {
             final var dialect = HibernateHelpers.getDialect(dbVersion);
             sb.append(POSTGRESQL.castSql(operandSql, sqlCastTypeName(expectedType.hibType(), dialect)));
         } else {
@@ -62,16 +59,8 @@ public record Yield3 (ISingleOperand3 operand, String alias, String column, Prop
         return sb.toString();
     }
 
-    /**
-     * A placeholder value to be used when there is no expectation of a particular type.
-     *
-     * @see #sql(IDomainMetadata, DbVersion, PropType)
-     *
-     */
-    public static final PropType NO_EXPECTED_TYPE = propType(String.class, newPlaceholderType("no_expected_type"));
-
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        return sql(metadata, dbVersion, NO_EXPECTED_TYPE);
+        return sql(metadata, dbVersion, NULL_TYPE);
     }
 
     @Override

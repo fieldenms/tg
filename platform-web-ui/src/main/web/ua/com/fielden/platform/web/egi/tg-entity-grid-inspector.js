@@ -36,6 +36,9 @@ import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 const EGI_BOTTOM_MARGIN = "15px";
 const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
 
+const LEFT_EGI_MASTER_ACTIONS_OFFSET = 16;
+const TOP_EGI_MASTER_ACTIONS_OFFSET = 35;
+
 const template = html`
     <style>
         :host {
@@ -67,18 +70,6 @@ const template = html`
             z-index: 1;
             position: relative;
         }
-        tg-responsive-toolbar[show-top-shadow]:after {
-            content: "";
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            right: 0;
-            height:4px;
-            background: transparent;
-            background: -moz-linear-gradient(bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%); 
-            background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
-            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%);
-        }
         paper-progress {
             position: absolute;
             top: 0;
@@ -92,39 +83,13 @@ const template = html`
         paper-progress.processing {
             --paper-progress-active-color: var(--paper-orange-500);
         }
-        #scrollableContainer {
+        #baseContainer {
             z-index: 0;
             min-height: 0;
             overflow:auto;
             @apply --layout-vertical;
             @apply --layout-flex;
             @apply --layout-relative;
-        }
-        #baseContainer {
-            display: grid;
-            grid-template-columns: min-content auto min-content;
-            grid-template-rows: min-content min-content auto;
-            min-width: fit-content;
-            min-height: fit-content;
-            z-index: 0;
-            @apply --layout-flex;
-        }
-        #bottom_left_egi, #bottom_egi, #bottom_right_egi {
-            align-self: end;
-        }
-        .noselect {
-            -webkit-touch-callout: none;
-            /* iOS Safari */
-            -webkit-user-select: none;
-            /* Safari */
-            -khtml-user-select: none;
-            /* Konqueror HTML */
-            -moz-user-select: none;
-            /* Firefox */
-            -ms-user-select: none;
-            /* Internet Explorer/Edge */
-            user-select: none;
-            /* Non-prefixed version, currently supported by Chrome and Opera */
         }
         .resizing-box {
             position: absolute;
@@ -140,6 +105,13 @@ const template = html`
         }
         .resizing-action {
              cursor: col-resize;
+        }
+        .fixed-columns-container {
+            @apply --layout-horizontal;
+        }
+        .scrollable-columns-container {
+            @apply --layout-horizontal;
+            @apply --layout-flex;
         }
         .table-header-row {
             line-height: 1rem;
@@ -188,6 +160,7 @@ const template = html`
             font-weight: 400;
             color: #212121;
             height: var(--egi-row-height, 1.5rem);
+            min-height: var(--egi-row-min-height, 1.5rem);
             border-bottom: thin solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
@@ -198,17 +171,12 @@ const template = html`
             flex-shrink: 0;
             @apply --layout-horizontal;
         }
-        .table-data-row[selected] {
-            background-color: #F5F5F5;
-        }
-        .table-data-row[over] {
-            background-color: #EEEEEE;
-        }
         .table-footer-row {
             z-index: 0;
             font-size: 0.9rem;
             color: #757575;
             height: var(--egi-row-height, 1.5rem);
+            min-height: var(--egi-row-min-height, 1.5rem);
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: -webkit-fit-content;
@@ -219,6 +187,7 @@ const template = html`
             @apply --layout-horizontal;
         }
         .egi-master {
+            z-index: 0;
             height: 4.1rem;
             font-size: 1rem;
             font-weight: 400;
@@ -270,6 +239,15 @@ const template = html`
             padding-bottom: ${EGI_BOTTOM_MARGIN_TEMPLATE};
             @apply --layout-vertical;
         }
+        .cell[over] {
+            background-color: #EEEEEE !important;
+        }
+        .cell[selected] {
+            background-color: #F5F5F5;
+        }
+        .cell {
+            background-color: white;
+        }
         .drag-anchor {
             width: var(--egi-drag-anchor-width, 1.5rem);
             --iron-icon-width: var(--egi-drag-anchor-width, 1.5rem);
@@ -279,7 +257,7 @@ const template = html`
             @apply --layout-center;
             @apply --layout-relative;
         }
-        .table-data-row[selected] .drag-anchor:hover {
+        .drag-anchor[selected]:hover {
             cursor: move;
             /* fallback if grab cursor is unsupported */
             cursor: grab;
@@ -287,7 +265,7 @@ const template = html`
             cursor: -webkit-grab;
             color: var(--paper-light-blue-700);
         }
-        .table-data-row[selected] .drag-anchor:active {
+        .drag-anchor[selected]:active {
             cursor: grabbing;
             cursor: -moz-grabbing;
             cursor: -webkit-grabbing;
@@ -319,6 +297,9 @@ const template = html`
             @apply --layout-horizontal;
             @apply --layout-relative;
             padding: 0 ${EGI_CELL_PADDING_TEMPLATE};
+        }
+        .table-master-cell {
+            z-index: 0; /*This should be done to create new z-index container because some editors may have their own z-index configured*/
         }
         .table-cell {
             @apply --layout-center;
@@ -359,11 +340,7 @@ const template = html`
             display: initial;
             pointer-events: none;
         }
-        .grid-layout-container {
-            background-color: white;
-            @apply --layout-vertical;
-        }
-        .grid-layout-container[show-top-shadow]:before {
+        [show-top-shadow]:before {
             content: "";
             position: absolute;
             bottom: -4px;
@@ -375,7 +352,7 @@ const template = html`
             background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
         }
-        .grid-layout-container[show-bottom-shadow]:before {
+        [show-bottom-shadow]:before {
             content: "";
             position: absolute;
             top: -4px;
@@ -387,7 +364,7 @@ const template = html`
             background: -webkit-linear-gradient(top, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to top, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
         }
-        .grid-layout-container[show-left-shadow]:after {
+        [show-left-shadow]:after {
             content: "";
             position: absolute;
             bottom: 0;
@@ -399,7 +376,7 @@ const template = html`
             background: -webkit-linear-gradient(right, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to right, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
         }
-        .grid-layout-container[show-right-shadow]:after {
+        [show-right-shadow]:after {
             content: "";
             position: absolute;
             bottom: 0;
@@ -410,22 +387,6 @@ const template = html`
             background: -moz-linear-gradient(left, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%); 
             background: -webkit-linear-gradient(left, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to left, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
-        }
-        .sticky-container {
-            position: sticky;
-            position: -webkit-sticky;
-        }
-        .z-index-0 {
-            z-index: 0;
-        }
-        .z-index-1 {
-            z-index: 1;
-        }
-        .z-index-2 {
-            z-index: 2;
-        }
-        .z-index-3 {
-            z-index: 3;
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
@@ -442,187 +403,127 @@ const template = html`
             <slot id="top_action_selctor" slot="entity-specific-action" name="entity-specific-action"></slot>
             <slot slot="standart-action" name="standart-action"></slot>
         </tg-responsive-toolbar>
-        <div id="scrollableContainer" on-scroll="_handleScrollEvent">
-            <div id="baseContainer">
-                <div id="top_left_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopLeftContainerStyle(headerFixed, dragAnchorFixed)]]">
-                    <div class="table-header-row"  on-touchmove="_handleTouchMove">
-                        <div class="drag-anchor cell" hidden$="[[!canDragFrom]]"></div>
-                        <div class="table-cell cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                            <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" semi-checked$="[[semiSelectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
-                        </div>
-                        <div class="action-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                            <!--Primary action stub header goes here-->
-                        </div>
-                        <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
-                            <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                                <div class="table-header-column-content">
-                                    <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
-                                    <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
-                                    <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
-                                        <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
-                                        <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
-                                    </div>
+        <div id="baseContainer" on-scroll="_handleScrollEvent" on-touchmove="_handleTouchMove">
+            <!-- Table header -->
+            <div id="top_egi" class="table-header-row" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcHeaderStyle(headerFixed)]]">
+                <div class="drag-anchor cell" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
+                <div class="table-cell cell" show-left-shadow$="[[_checkboxesShadowVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                    <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" semi-checked$="[[semiSelectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                </div>
+                <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
+                    <!--Primary action stub header goes here-->
+                </div>
+                <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
+                    <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
+                        <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                            <div class="table-header-column-content">
+                                <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
+                                <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
+                                    <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
+                                    <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
                                 </div>
-                                <div class="resizing-box"></div>
                             </div>
-                        </template>
-                    </div>
-                </div>
-                <div id="top_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcTopContainerStyle(headerFixed)]]">
-                    <div class="table-header-row"  on-touchmove="_handleTouchMove">
-                        <div class="table-cell cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                            <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" semi-checked$="[[semiSelectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
-                        </div>
-                        <div class="action-cell cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                            <!--Primary action stub header goes here-->
-                        </div>
-                        <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                                <div class="table-header-column-content">
-                                    <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
-                                    <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
-                                    <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
-                                        <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
-                                        <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
-                                    </div>
-                                </div>
-                                <div class="resizing-box"></div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-                <div id="top_right_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopRightContainerStyle(headerFixed, secondaryActionsFixed)]]">
-                    <div class="table-header-row" hidden$="[[secondaryActionPresent]]">    
-                        <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
-                                <!--Secondary actions header goes here-->
-                        </div>
-                    </div>
-                </div>
-                <div id="master_actions" class="master-actions">
-                    <slot name="cancel-button"></slot>
-                    <slot name="save-button"></slot>
-                </div>
-                <div id="left_egi" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcLeftContainerStyle(dragAnchorFixed)]]">
-                    <template id="left_egi_domRepeat" is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
-                        <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                            <div class="drag-anchor" draggable$="[[_isDraggable(egiEntity.selected)]]" hidden$="[[!canDragFrom]]">
-                                <iron-icon icon="tg-icons:dragVertical"></iron-icon>
-                            </div>
-                            <div class="table-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
-                                <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
-                            </div>
-                            <div class="action-cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
-                            </div>
-                            <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
-                            </template>
+                            <div class="resizing-box"></div>
                         </div>
                     </template>
-                    <div id="left_egi_master" style="display:none;" class="egi-master">
-                        <div class="drag-anchor" hidden$="[[!canDragFrom]]"></div>
-                        <div class="table-master-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
-                            <!--Checkbox stub for master goes here-->
+                </div>
+                <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]">
+                    <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                        <div class="table-header-column-content">
+                            <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                            <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
+                            <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
+                                <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
+                                <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
+                            </div>
                         </div>
-                        <div class="action-master-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                            <!--Primary action stub for master goes here-->
-                        </div>
+                        <div class="resizing-box"></div>
+                    </div>
+                </template>
+                <div class="action-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                        <!--Secondary actions header goes here-->
+                </div>
+            </div>
+            <div id="master_actions" class="master-actions">
+                <slot name="cancel-button"></slot>
+                <slot name="save-button"></slot>
+            </div>
+            <!--Table body-->
+            <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
+                <div class="table-data-row" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                    <div class="drag-anchor cell" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" draggable$="[[_isDraggable(egiEntity.selected)]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]">
+                        <iron-icon icon="tg-icons:dragVertical"></iron-icon>
+                    </div>
+                    <div class="table-cell cell" show-left-shadow$="[[_checkboxesShadowVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]" hidden$="[[!checkboxVisible]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
+                        <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
+                    </div>
+                    <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
+                        <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
+                    </div>
+                    <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                            <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
-                                <slot name$="[[_getSlotNameFor(column.property)]]"></slot>
-                            </div>
+                            <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
                         </template>
                     </div>
+                    <template is="dom-repeat" items="[[columns]]" as="column">
+                        <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                    </template>
+                    <div class="action-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
+                    </div>
                 </div>
-                <div id="centre_egi" class="grid-layout-container z-index-0">
-                    <template id="centre_egi_domRepeat" is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                        <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                            <div class="table-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
-                                <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
-                            </div>
-                            <div class="action-cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
-                            </div>
-                            <template is="dom-repeat" items="[[columns]]" as="column">
-                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+            </template>
+            <div id="egi_master_layout" style="display:none;" class="egi-master">
+                <div class="drag-anchor cell" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
+                <div class="table-master-cell cell" show-left-shadow$="[[_checkboxesShadowVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]">
+                    <!--Checkbox stub for master goes here-->
+                </div>
+                <div class="action-master-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
+                    <!--Primary action stub for master goes here-->
+                </div>
+                <div id="fixed_egi_master" class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
+                    <template is="dom-repeat" items="[[fixedColumns]]" as="column">
+                        <div class="table-master-cell cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
+                            <slot name$="[[_getSlotNameFor(column.property)]]"></slot>
+                        </div>
+                    </template>
+                </div>
+                <div id="scrollable_egi_master" class="scrollable-columns-container">
+                    <template is="dom-repeat" items="[[columns]]" as="column">
+                        <div class="table-master-cell cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
+                            <slot name$="[[column.property]]"></slot>
+                        </div>
+                    </template>
+                </div>
+                <div class="action-master-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                    <!--Secondary actions stub for master goes here-->
+                </div>
+            </div>
+            <!-- Table footer -->
+            <div id="bottom_egi" class="footer" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcFooterStyle(summaryFixed, fitToHeight)]]">
+                <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
+                    <div class="table-footer-row">
+                        <div class="drag-anchor cell" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
+                        <div class="table-cell cell" show-left-shadow$="[[_checkboxesShadowVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]" hidden$="[[!checkboxVisible]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]">
+                            <!--Footer's select checkbox stub goes here-->
+                        </div>
+                        <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
+                            <!--Footer's primary action stub goes here-->
+                        </div>
+                        <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
+                            <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
+                                <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                             </template>
                         </div>
-                    </template>
-                    <div id="centre_egi_master" style="display:none;" class="egi-master">
-                        <div class="table-master-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
-                            <!--Checkbox stub for master goes here-->
-                        </div>
-                        <div class="action-master-cell cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                            <!--Primary action stub for master goes here-->
-                        </div>
-                        <template is="dom-repeat" items="[[columns]]" as="column">
-                            <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
-                                <slot name$="[[column.property]]"></slot>
-                            </div>
+                        <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
+                            <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                         </template>
-                    </div>
-                </div>
-                <div id="right_egi" class="grid-layout-container sticky-container z-index-1" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
-                    <template id="right_egi_domRepeat" is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                        <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                            <div class="action-cell" hidden$="[[!_isSecondaryActionPresent]]">
-                                <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
-                            </div>
-                        </div>
-                    </template>
-                    <div id="right_egi_master" style="display:none;" class="egi-master" hidden$="[[secondaryActionPresent]]">    
-                        <div class="action-master-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
-                                <!--Secondary actions stub for master goes here-->
+                        <div class="action-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                            <!--Secondary actions footer goes here-->
                         </div>
                     </div>
-                </div>
-                <div id="bottom_left_egi" class="grid-layout-container sticky-container z-index-3" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" style$="[[_calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed)]]">
-                    <div class="footer">
-                        <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
-                            <div class="table-footer-row">
-                                <div class="drag-anchor" hidden$="[[!canDragFrom]]"></div>
-                                <div class="table-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
-                                    <!--Footer's select checkbox stub goes here-->
-                                </div>
-                                <div class="action-cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                    <!--Footer's primary action stub goes here-->
-                                </div>
-                                <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
-                                    <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
-                                </template>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-                <div id="bottom_egi" class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcBottomContainerStyle(summaryFixed)]]">
-                    <!-- Table footer -->
-                    <div class="footer">
-                        <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
-                            <div class="table-footer-row">
-                                <div class="table-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                                    <!--Footer's select checkbox stub goes here-->
-                                </div>
-                                <div class="action-cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                    <!--Footer's primary action stub goes here-->
-                                </div>
-                                <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
-                                    <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
-                                </template>
-                            </div>
-                        </template>
-                    </div>  
-                </div>
-                <div id="bottom_right_egi" class="grid-layout-container sticky-container z-index-3" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" style$="[[_calcBottomRightContainerStyle(summaryFixed, secondaryActionsFixed)]]">
-                    <div class="footer">
-                        <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
-                            <div class="table-footer-row">
-                                <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
-                                    <!--Secondary actions footer goes here-->
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
+                </template>
             </div>
         </div>
         <!-- table lock layer -->
@@ -682,6 +583,27 @@ function _insertMaster (container, egiMaster, entityIndex) {
     const row = container.querySelectorAll(".table-data-row")[entityIndex];
     container.insertBefore(egiMaster, row.nextSibling);
     egiMaster.style.display = null;
+};
+
+function _getFixedContainerLeftBound (egi) {
+    const columnElements = egi.$.baseContainer.querySelector(".table-header-row").querySelectorAll(".cell:not([hidden])");
+    let colIndexStart = -1;
+    colIndexStart += egi.canDragFrom && egi.dragAnchorFixed ? 1 : 0;
+    colIndexStart += egi.checkboxVisible && egi.checkboxesFixed ? 1 : 0;
+    colIndexStart += egi.primaryAction && egi.checkboxesWithPrimaryActionsFixed ? 1 : 0
+    colIndexStart += egi.numOfFixedCols;
+    if(colIndexStart >= 0 && colIndexStart < columnElements.length) {
+        return columnElements[colIndexStart].getBoundingClientRect().right;
+    }
+    return egi.$.baseContainer.getBoundingClientRect().left;
+};
+
+function _getFixedContainerRightBound (egi) {
+    const columnElements = egi.$.baseContainer.querySelector(".table-header-row").querySelectorAll(".cell:not([hidden])");
+    if (egi._isSecondaryActionPresent && egi.secondaryActionsFixed) {
+        return columnElements[columnElements.length - 1].getBoundingClientRect().left;
+    }
+    return egi.$.baseContainer.getBoundingClientRect().right;
 };
 
 Polymer({
@@ -986,8 +908,8 @@ Polymer({
         this._makeRowEditable = this._makeRowEditable.bind(this);
         this._acceptValuesFromMaster = this._acceptValuesFromMaster.bind(this);
         this._closeMaster = this._closeMaster.bind(this);
-        this.$.left_egi_master.addEventListener('focusin', this._scrollToVisibleLeftMaster.bind(this));
-        this.$.centre_egi_master.addEventListener('focusin', this._scrollToVisibleCentreMaster.bind(this));
+        this.$.fixed_egi_master.addEventListener('focusin', this._scrollToVisibleFixedMaster.bind(this));
+        this.$.scrollable_egi_master.addEventListener('focusin', this._scrollToVisibleScrollableMaster.bind(this));
 
         //Add event listener to know when egi has become visible
         this.addEventListener("tg-centre-page-was-selected", this._egiBecameSelected.bind(this))
@@ -1143,11 +1065,25 @@ Polymer({
         const type = entity && entity.constructor.prototype.type && entity.constructor.prototype.type.call(entity);
         if (type) {
             const propertyType = this._reflector.tg_determinePropertyType(type, column.getActualProperty());
-            if (propertyType instanceof this._reflector._getEntityTypePrototype() && propertyType.isUnionEntity() && entity.get(column.getActualProperty())) {
-                //Should consider whether it is correct for dynamic columns.
-                return entity.get(column.getActualProperty())._activeEntity().type().entityMaster();
-            } else if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
-                return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
+            // Only entity-typed columns can have default actions.
+            if (propertyType instanceof this._reflector._getEntityTypePrototype()) {
+                if (propertyType.isUnionEntity()) {
+                    if (entity.get(column.getActualProperty())) {
+                        // TODO Should consider whether it is correct for dynamic columns.
+                        return entity.get(column.getActualProperty())._activeEntity().type().entityMaster();
+                    }
+                    else {
+                        const title = type.prop(column.getActualProperty()).title();
+                        return {
+                            shortDesc: title,
+                            longDesc: 'Edit ' + title
+                        };
+                    }
+                }
+                else {
+                    // Only entity-typed columns, that have corresponding entity masters, can have default actions.
+                    return propertyType.entityMaster();
+                }
             }
         }
         return false;
@@ -1328,10 +1264,9 @@ Polymer({
             // Reading the values of these attributes requires access to the template's elements, which may have not been initialised at this stage.
             // Therefore, async call is needed. See render() method invocations for this.fixedColumns and this.columns.
             this.async(() => {
-                const fixedHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
-                const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
-                this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0"/*The index of fixed columns in summary row*/);
-                this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1"/*The index of scrollable columns in summary row*/);
+                const headers = [...this.$.top_egi.querySelectorAll(".table-header-column-title")];
+                this._setSortingFor(sortingConfig, this.fixedColumns, headers.slice(0, this.fixedColumns.length),"fixedColumns", "0"/*The index of fixed columns in summary row*/);
+                this._setSortingFor(sortingConfig, this.columns, headers.slice(this.fixedColumns.length), "columns", "1"/*The index of scrollable columns in summary row*/);
             });
         } else {
             this._postponedSortingConfig = sortingConfig;
@@ -1467,6 +1402,7 @@ Polymer({
             }
             this.fire("tg-egi-column-change", parameters);
         }
+        this._rowHeightChanged(this.rowHeight);
         this._updateTableSizeAsync();
     },
 
@@ -1483,12 +1419,14 @@ Polymer({
     },
 
     _handleScrollEvent: function () {
-        this._showLeftShadow = this.$.scrollableContainer.scrollLeft > 0;
-        this._showRightShadow = Math.ceil(this.$.scrollableContainer.clientWidth + this.$.scrollableContainer.scrollLeft) < this.$.scrollableContainer.scrollWidth;
-        this._showTopShadow = this.$.scrollableContainer.scrollTop > 0;
-        this._showBottomShadow = Math.ceil(this.$.scrollableContainer.clientHeight + this.$.scrollableContainer.scrollTop) < this.$.scrollableContainer.scrollHeight;
+        this._showLeftShadow = this.$.baseContainer.scrollLeft > 0;
+        this._showRightShadow = Math.ceil(this.$.baseContainer.clientWidth + this.$.baseContainer.scrollLeft) < this.$.baseContainer.scrollWidth;
+        this._showTopShadow = this.$.baseContainer.scrollTop > 0;
+        this._showBottomShadow = Math.ceil(this.$.baseContainer.clientHeight + this.$.baseContainer.scrollTop) < this.$.baseContainer.scrollHeight;
         if (this.isEditing()) {
-            this.$.master_actions.style.left = this.$.scrollableContainer.scrollLeft + 16/* The desired distance of master actions from the left border */ + "px";
+            const rowOffset = this.$.baseContainer.querySelectorAll(".table-data-row")[this.master.editableRow].offsetTop;
+            this.$.master_actions.style.top = (rowOffset - TOP_EGI_MASTER_ACTIONS_OFFSET) + "px";
+            this.$.master_actions.style.left = this.$.baseContainer.scrollLeft + LEFT_EGI_MASTER_ACTIONS_OFFSET+ "px";
         }
     },
 
@@ -1499,14 +1437,13 @@ Polymer({
     },
 
     _allSelectionChanged: function (e) {
-        const target = e.target || e.srcElement;
-        this.selectAll(target.checked);
+        this.selectAll(e.target.checked);
     },
 
     _selectionChanged: function (e) {
         if (this.egiModel) {
             const index = e.model.entityIndex;
-            var target = e.target || e.srcElement;
+            const target = e.target;
             //Perform selection range selection or single selection.
             if (target.checked && this._rangeSelection && this._lastSelectedIndex >= 0) {
                 this._selectRange(this._lastSelectedIndex, index);
@@ -1607,9 +1544,9 @@ Polymer({
         //this.style.cursor = "col-resize";
         e.currentTarget.classList.toggle("resizing-action", true);
         //Calculate all properties needed for column resizing logic and create appropriate resizing object
-        const columnElements = this._getHeaderColumns();
+        const columnElements = this.$.baseContainer.querySelector(".table-header-row").querySelectorAll(".cell");
         const leftFixedContainerWidth = calculateColumnWidthExcept (this, -1, columnElements, this.fixedColumns.length, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => false);
-        const containerWithoutFixedSecondaryActionWidth = this.$.scrollableContainer.clientWidth - (this._isSecondaryActionPresent && this.secondaryActionsFixed ? columnElements[columnElements.length - 1].offsetWidth : 0);
+        const containerWithoutFixedSecondaryActionWidth = this.$.baseContainer.clientWidth - (this._isSecondaryActionPresent && this.secondaryActionsFixed ? columnElements[columnElements.length - 1].offsetWidth : 0);
         this._columnResizingObject = {
             oldColumnWidth: e.model.item.width,
             oldColumnGrowFactor: e.model.item.growFactor,
@@ -1634,8 +1571,8 @@ Polymer({
             }
 
             //Correct width if fixed container has become bigger then scrollabel conatiner
-            if (newWidth + this._columnResizingObject.widthCorrection + this._columnResizingObject.otherFixedColumnWidth > this.$.scrollableContainer.clientWidth) {
-                newWidth = this.$.scrollableContainer.clientWidth - this._columnResizingObject.otherFixedColumnWidth - this._columnResizingObject.widthCorrection;
+            if (newWidth + this._columnResizingObject.widthCorrection + this._columnResizingObject.otherFixedColumnWidth > this.$.baseContainer.clientWidth) {
+                newWidth = this.$.baseContainer.clientWidth - this._columnResizingObject.otherFixedColumnWidth - this._columnResizingObject.widthCorrection;
             }
 
             //Correct width if additional dynamic width was added
@@ -1658,7 +1595,7 @@ Polymer({
             let newWidth = columnWidth + e.detail.ddx;
 
             //Correct size for mouse out of EGI.
-            const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.scrollableContainer);
+            const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.baseContainer);
             if (mousePos.x > this._columnResizingObject.containerWithoutFixedSecondaryActionWidth) {
                 newWidth += mousePos.x - this._columnResizingObject.containerWithoutFixedSecondaryActionWidth;
             } else if (mousePos.x < this._columnResizingObject.leftFixedContainerWidth) {
@@ -1666,10 +1603,10 @@ Polymer({
             }
 
             //Correct new width when dragging last column or other column and overall width is less then width of container.
-            if (this._columnResizingObject.otherColumnWidth + newWidth + this._columnResizingObject.widthCorrection < this.$.scrollableContainer.clientWidth) {
+            if (this._columnResizingObject.otherColumnWidth + newWidth + this._columnResizingObject.widthCorrection < this.$.baseContainer.clientWidth) {
                 console.log("widht is less");
                 if (e.model.index === this.columns.length - 1) {
-                    newWidth = this.$.scrollableContainer.clientWidth - this._columnResizingObject.otherColumnWidth - this._columnResizingObject.widthCorrection;
+                    newWidth = this.$.baseContainer.clientWidth - this._columnResizingObject.otherColumnWidth - this._columnResizingObject.widthCorrection;
                 } else {
                     if (!this._columnResizingObject.hasAnyFlex) {
                         console.log("should set flex");
@@ -1712,7 +1649,7 @@ Polymer({
                 this._updateTableSizeAsync();
                 //scroll if needed.
                 if (mousePos.x > this._columnResizingObject.containerWithoutFixedSecondaryActionWidth || mousePos.x < this._columnResizingObject.leftFixedContainerWidth) {
-                    this.$.scrollableContainer.scrollLeft += newWidth - columnWidth;
+                    this.$.baseContainer.scrollLeft += newWidth - columnWidth;
                 }
             }
 
@@ -1780,27 +1717,26 @@ Polymer({
         this._columnResizingObject = null;
     },
 
-    _makeEgiUnselectable: function (e) {
+    _setUpCursor: function (e) {
+        tearDownEvent(e);
         if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", true);
             console.log("set resizing action");
         }
-        this.$.baseContainer.classList.toggle("noselect", true);
         document.body.style["cursor"] = "col-resize";
     },
 
-    _makeEgiSelectable: function (e) {
+    _resetCursor: function (e) {
         if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", false);
         }
-        this.$.baseContainer.classList.toggle("noselect", false);
         document.body.style["cursor"] = "";
     },
 
     //Style calculator
     _calcMaterialStyle: function (showMarginAround) {
         if (showMarginAround) {
-            return "margin:10px;";
+            return "margin:5px 10px;";
         }
         return "";
     },
@@ -1809,76 +1745,58 @@ Polymer({
         return canDragFrom ? "padding-left: 8px;" : "";
     },
 
-    _calcTopLeftContainerStyle: function (headerFixed, dragAnchorFixed) {
-        return (headerFixed ? "top: 0;" : "") + (dragAnchorFixed ? "left: 0;" : "");
+    _calcHeaderStyle: function (headerFixed) {
+        return headerFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; top: 0;" : "";
     },
 
-    _calcTopContainerStyle: function (headerFixed) {
-        return headerFixed ? "top: 0;" : "";
+    _calcDragBoxStyle: function (dragAnchorFixed) {
+        return dragAnchorFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; left: 0;" : "";
     },
 
-    _calcTopRightContainerStyle: function (headerFixed, secondaryActionsFixed) {
-        return  (headerFixed ? "top: 0;" : "") + (secondaryActionsFixed ? "right: 0" : "");
+    _calcDragAnchorWidth: function (canDragFrom) {
+        return canDragFrom ? this.getComputedStyleValue('--egi-drag-anchor-width').trim() || "1.5rem" : "0px";
     },
 
-    _calcLeftContainerStyle: function (dragAnchorFixed) {
-        return dragAnchorFixed ? "left: 0;" : "";
+    _calcSelectCheckBoxStyle: function (canDragFrom, checkboxesFixed) {
+        let style = "";
+        if (checkboxesFixed) {
+            style += "position: sticky; position: -webkit-sticky; z-index: 1; left: " + this._calcDragAnchorWidth(canDragFrom) + ";"; 
+        }
+        return style + "width:18px; padding-left:" + (canDragFrom ? "0;" : EGI_CELL_PADDING);
     },
 
-    _calcRightContainerStyle: function (secondaryActionsFixed) {
-        return secondaryActionsFixed ? "right: 0;" : "";
+    _calcSelectionCheckboxWidth: function (canDragFrom, checkboxVisible) {
+        if (!checkboxVisible) {
+            return this._calcDragAnchorWidth(canDragFrom);
+        }
+        return this._calcDragAnchorWidth(canDragFrom) + " + 18px + " + EGI_CELL_PADDING + (canDragFrom ? "" : " * 2");
     },
 
-    _calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed) {
-        return  (summaryFixed ? "bottom: 0;" : "") + (dragAnchorFixed ? "left: 0" : "");
+    _calcPrimaryActionStyle: function (canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed) {
+        let style = "";
+        if (checkboxesWithPrimaryActionsFixed) {
+            let calcStyle = "calc(" + this._calcSelectionCheckboxWidth(canDragFrom, checkboxVisible) + ")";
+            style += "position: sticky; position: -webkit-sticky; z-index: 1; left: " + calcStyle + ";"; 
+        }
+        return style;
     },
 
-    _calcBottomContainerStyle: function (summaryFixed) {
-        return  summaryFixed ? "bottom: 0;" : "";
+    _calcPrimaryActionWidth: function(canDragFrom, checkboxVisible, primaryAction) {
+        if (!primaryAction) {
+            return this._calcSelectionCheckboxWidth(canDragFrom, checkboxVisible);
+        }
+        const actionWidth = this.getComputedStyleValue('--egi-action-cell-width').trim() || "20px";
+        const actionPadding = this.getComputedStyleValue('--egi-action-cell-padding').trim() || "0.3rem * 2";
+        return this._calcSelectionCheckboxWidth(canDragFrom, checkboxVisible) + " + " + actionWidth + " + " + actionPadding;
     },
 
-    _calcBottomRightContainerStyle: function (summaryFixed, secondaryActionsFixed) {
-        return (summaryFixed ? "bottom: 0;" : "") + (secondaryActionsFixed ? "right: 0" : "");
-    },
-
-    _checkboxFixedAndVisible: function (checkboxVisible, checkboxesFixed) {
-        return checkboxVisible && checkboxesFixed
-    },
-
-    _checkboxNotFixedAndVisible: function (checkboxVisible, checkboxesFixed) {
-        return checkboxVisible && !checkboxesFixed
-    },
-
-    _primaryActionFixedAndVisible: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
-        return primaryAction && checkboxesWithPrimaryActionsFixed;
-    },
-
-    _primaryActionNotFixedAndVisible: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
-        return primaryAction && !checkboxesWithPrimaryActionsFixed;
-    },
-
-    _calcSelectCheckBoxStyle: function (canDragFrom) {
-        return "width:18px; padding-left:" + (canDragFrom ? "0;" : EGI_CELL_PADDING);
-    },
-
-    _toolbarShadowVisible: function (_showTopShadow, headerFixed) {
-        return _showTopShadow && !headerFixed;
-    },
-
-    _topShadowVisible: function (_showTopShadow, headerFixed) {
-        return _showTopShadow && headerFixed;
-    },
-
-    _bottomShadowVisible: function (_showBottomShadow, summaryFixed) {
-        return _showBottomShadow && summaryFixed;
-    },
-
-    _leftShadowVisible: function (_showLeftShadow, dragAnchorFixed) {
-        return _showLeftShadow && dragAnchorFixed;
-    },
-
-    _rightShadowVisible: function (_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent) {
-        return _showRightShadow && secondaryActionsFixed && _isSecondaryActionPresent;
+    _calcFixedColumnContainerStyle: function (canDragFrom, checkboxVisible, primaryAction, numOfFixedCols) {
+        let style = "";
+        if (numOfFixedCols > 0) {
+            let calcStyle = "calc(" + this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction) + ")";
+            style += "position: sticky; position: -webkit-sticky; z-index: 1; left: " + calcStyle + ";";
+        }
+        return style;
     },
 
     _isDraggable: function (entitySelected) {
@@ -1906,6 +1824,15 @@ Polymer({
         return "";
     },
 
+    _calcSecondaryActionStyle: function (secondaryActionsFixed) {
+        return secondaryActionsFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; right: 0;" : "";
+    },
+
+    _calcFooterStyle: function (summaryFixed, fitToHeight) {
+        const style = summaryFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; bottom: 0;" : "";
+        return style + (fitToHeight ? "margin-top:auto;" : "");
+    },
+
     _isSortingVisible: function (sortable, sorting) {
         return sortable && typeof sorting !== 'undefined' && sorting !== null;
     },
@@ -1928,6 +1855,38 @@ Polymer({
             colStyle += "text-align: right;"
         }
         return colStyle;
+    },
+
+    _toolbarShadowVisible: function (_showTopShadow, headerFixed) {
+        return _showTopShadow && !headerFixed;
+    },
+
+    _topShadowVisible: function (_showTopShadow, headerFixed) {
+        return _showTopShadow && headerFixed;
+    },
+
+    _dragAnchorShadowVisible: function(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow) {
+        return _showLeftShadow && canDragFrom && dragAnchorFixed && !checkboxesFixed;
+    },
+
+    _checkboxesShadowVisible: function(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _showLeftShadow) {
+        return _showLeftShadow && checkboxVisible && checkboxesFixed && !checkboxesWithPrimaryActionsFixed;
+    },
+
+    _primaryActionShadowVisible: function(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow) {
+        return _showLeftShadow && primaryAction && checkboxesWithPrimaryActionsFixed && !numOfFixedCols;
+    },
+
+    _fixedColsShadowVisible: function (numOfFixedCols, _showLeftShadow) {
+        return _showLeftShadow && numOfFixedCols;
+    },
+
+    _rightShadowVisible: function(_isSecondaryActionPresent, _showRightShadow) {
+        return _showRightShadow && _isSecondaryActionPresent;
+    },
+
+    _bottomShadowVisible: function (_showBottomShadow, summaryFixed) {
+        return _showBottomShadow && summaryFixed;
     },
 
     // Observers
@@ -1958,7 +1917,12 @@ Polymer({
     },
 
     _rowHeightChanged: function (newValue) {
-        this.updateStyles({"--egi-row-height": newValue});
+        this.updateStyles({"--egi-row-min-height": newValue});
+        if (this.fixedColumns.concat(this.columns).find(col => col.wordWrap)) {
+            this.updateStyles({"--egi-row-height": 'auto'});
+        } else {
+            this.updateStyles({"--egi-row-height": newValue});
+        }
     },
 
     _numberOfHeaderLinesChanged: function (newValue) {
@@ -2021,8 +1985,8 @@ Polymer({
         //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
         this.$.paperMaterial.style.removeProperty("height");
         this.$.paperMaterial.style.removeProperty("min-height");
-        this.$.scrollableContainer.style.removeProperty("height");
-        this.$.scrollableContainer.style.removeProperty("max-height");
+        this.$.baseContainer.style.removeProperty("height");
+        this.$.baseContainer.style.removeProperty("max-height");
         if (constantHeight) { //Set the height for the egi
             this.$.paperMaterial.style["height"] = "calc(" + constantHeight + " - 20px)";
         } else if (visibleRowsCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
@@ -2030,9 +1994,9 @@ Polymer({
             const rowCount = visibleRowsCount + (summaryFixed ? _totalsRowCount : 0);
             const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + EGI_BOTTOM_MARGIN) : "") + ")";
             if (fitToHeight) {
-                this.$.scrollableContainer.style["height"] = height;
+                this.$.baseContainer.style["height"] = height;
             } else {
-                this.$.scrollableContainer.style["max-height"] = height;
+                this.$.baseContainer.style["max-height"] = height;
             }
         }
         this._updateTableSizeAsync();
@@ -2089,7 +2053,7 @@ Polymer({
         updateSelectAll(this, this.egiModel);
         //Scroll to the selected one if it is the only one and should scroll is true.
         if (newSelection.shouldScrollToSelected && numOfSelected === 1 && lastSelectedIndex >= 0) {
-            const entityRows = this.$.left_egi.querySelectorAll('.table-data-row');
+            const entityRows = this.$.baseContainer.querySelectorAll('.table-data-row');
             const entityRow = entityRows[lastSelectedIndex];
             if (entityRow) {
                 entityRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
@@ -2097,7 +2061,7 @@ Polymer({
                 const oldAction = this._scrollContainerEntitiesStampedCustomAction;
                 this._scrollContainerEntitiesStampedCustomAction = (function () {
                     oldAction();
-                    const entityRows = this.$.left_egi.querySelectorAll('.table-data-row');
+                    const entityRows = this.$.baseContainer.querySelectorAll('.table-data-row');
                     const entityRow = entityRows[lastSelectedIndex];
                     entityRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
                     this._scrollContainerEntitiesStampedCustomAction = oldAction;
@@ -2198,7 +2162,7 @@ Polymer({
     },
 
     _generateActionTooltip: function (action) {
-        const shortDesc = "<b>" + action.shortDesc + "</b>";
+        const shortDesc = action.shortDesc ? "<b>" + action.shortDesc + "</b>" : "";
         let longDesc;
         if (shortDesc) {
             longDesc = action.longDesc ? "<br>" + action.longDesc : "";
@@ -2208,7 +2172,7 @@ Polymer({
         const tooltip  = shortDesc + longDesc;
         
         return tooltip && `<div style='display:flex;'>
-            <div style='margin-right:10px;'>With action: </div> 
+            <div style='margin-right:10px;'>With action:</div>
             <div style='flex-grow:1;'>${tooltip}</div> 
             </div>`
     },
@@ -2291,24 +2255,6 @@ Polymer({
         }.bind(this), 1);
     },
 
-    _getHeaderColumns: function () {
-        const topLeftCells = this.$.top_left_egi.querySelector(".table-header-row").querySelectorAll(".cell");
-        const topCells = this.$.top_egi.querySelector(".table-header-row").querySelectorAll(".cell");
-        const topRightCells = this.$.top_right_egi.querySelector(".table-header-row").querySelectorAll(".cell");
-        const cells = [];
-        cells.push(topLeftCells[0]);
-        cells.push(topLeftCells[1].offsetParent ? topLeftCells[1] : topCells[0]);
-        cells.push(topLeftCells[2].offsetParent ? topLeftCells[2] : topCells[1]);
-        for(let i = 3; i < topLeftCells.length; i++) {
-            cells.push(topLeftCells[i]);
-        }
-        for (let i = 2; i < topCells.length; i++) {
-            cells.push(topCells[i]);
-        }
-        cells.push(topRightCells[0]);
-        return cells;
-    },
-
     //Drag from behavior implementation
     getElementToDragFrom: function (target) {
         const elem = document.createElement('div');
@@ -2341,7 +2287,7 @@ Polymer({
 
     /************ EGI MASTER RELATED FUNCTIONS ***************/
     isEditing: function () {
-        return this.$.centre_egi_master.offsetParent !== null;
+        return this.$.egi_master_layout.offsetParent !== null;
     },
 
     /**
@@ -2370,7 +2316,7 @@ Polymer({
         this.fire("tg-egi-finish-editing", this);
     },
 
-    _scrollToVisibleLeftMaster: function (e) {
+    _scrollToVisibleFixedMaster: function (e) {
         const topEgiBox = this.$.top_egi.getBoundingClientRect();
         const bottomEgiBox = this.$.bottom_egi.getBoundingClientRect();
         const targetBox = e.target.getBoundingClientRect();
@@ -2379,12 +2325,10 @@ Polymer({
         }
     },
 
-    _scrollToVisibleCentreMaster: function (e) {
-        const leftEgiBox = this.$.left_egi.getBoundingClientRect();
-        const rightEgiBox = this.$.right_egi.getBoundingClientRect();
+    _scrollToVisibleScrollableMaster: function (e) {
         const targetBox = e.target.getBoundingClientRect();
         let scrollHorizontally = false;
-        if (leftEgiBox.right >= targetBox.left || rightEgiBox.left <= targetBox.right) {
+        if (_getFixedContainerLeftBound(this) >= targetBox.left || _getFixedContainerRightBound(this) <= targetBox.right) {
             scrollHorizontally = true;
         }
         const topEgiBox = this.$.top_egi.getBoundingClientRect();
@@ -2422,12 +2366,10 @@ Polymer({
             if (entityIndex >= 0 && entityIndex < this.filteredEntities.length) {
                 this.master.resetMasterForNextEntity();
                 this.set("egiModel." + entityIndex + ".editing", true);
-                _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
-                _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
-                _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
-                const rowOffset = this.$.centre_egi.querySelectorAll(".table-data-row")[entityIndex].offsetTop;
-                this.$.master_actions.style.top = (rowOffset - 35/*The desired offset of master actions above the row*/) + "px";
-                this.$.master_actions.style.left = this.$.scrollableContainer.scrollLeft + 16/*Desired distance from left border of egi */ + "px";
+                _insertMaster(this.$.baseContainer, this.$.egi_master_layout, entityIndex);
+                const rowOffset = this.$.baseContainer.querySelectorAll(".table-data-row")[entityIndex].offsetTop;
+                this.$.master_actions.style.top = (rowOffset - TOP_EGI_MASTER_ACTIONS_OFFSET) + "px";
+                this.$.master_actions.style.left = this.$.baseContainer.scrollLeft + LEFT_EGI_MASTER_ACTIONS_OFFSET + "px";
                 this.$.master_actions.style.display = 'flex';
                 this.master.editableRow = entityIndex;
                 this.master.entityId = this.filteredEntities[entityIndex].get("id");
@@ -2447,9 +2389,7 @@ Polymer({
             delete this.master.editableRow;
         }
         this.$.master_actions.style.display = 'none';
-        this.$.left_egi_master.style.display = 'none';
-        this.$.centre_egi_master.style.display = 'none';
-        this.$.right_egi_master.style.display = 'none';
+        this.$.egi_master_layout.style.display = 'none';
     },
 
     _initMasterEditors: function () {

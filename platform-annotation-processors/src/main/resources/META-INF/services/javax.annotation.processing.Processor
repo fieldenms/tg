@@ -1,3 +1,4 @@
 ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor
 ua.com.fielden.platform.processors.verify.VerifyingProcessor
+ua.com.fielden.platform.processors.minheritance.MultiInheritanceProcessor
 ua.com.fielden.platform.processors.metamodel.MetaModelProcessor

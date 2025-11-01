@@ -2,6 +2,13 @@ package ua.com.fielden.platform.web.centre.api;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
+/**
+ * A contract for defining left splitter position within entity centre view.
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public interface IWithLeftSplitterPosition<T extends AbstractEntity<?>> extends IWithRightSplitterPosition<T> {
 
     /**

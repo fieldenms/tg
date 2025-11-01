@@ -1,25 +1,22 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
-
-import java.util.Optional;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
 import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewPreferred;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointConfig0;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointWithToolbar;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
+import ua.com.fielden.platform.web.centre.api.insertion_points.*;
 import ua.com.fielden.platform.web.centre.api.insertion_points.exception.InsertionPointConfigException;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
+
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 
 /**
  * Implementation for insertion point APIs.
@@ -28,7 +25,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
  *
  * @param <T>
  */
-public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements IInsertionPoints<T>, IInsertionPointConfig0<T> {
+public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements IInsertionPoints<T>, IInsertionPointConfig0<T>, IAlternativeView<T> {
 
     private static final String ERR_ALTERNATIVE_VIEW_CANNOT_BE_PREFERRED = "Insertion point for action %s cannot be preferred as it is not an alternative view.";
     private static final String ERR_ALTERNATIVE_VIEW_CANNOT_BE_RESIZABLE = "Insertion point for action %s, which is an alternative view, is not resizable by default. This option should not be specified explicitly.";
@@ -48,25 +45,19 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public EntityCentreConfig<T> build() {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
-                .setPreferred(preferred)
-                .setNoResizing(noResizing)
-                .setToolbar(toolbarConfig));
+        addInsertionPointToBuilder();
         return resultSetBuilder.build();
     }
 
     @Override
-    public IInsertionPoints<T> setToolbar(final IToolbarConfig toolbar) {
+    public IInsertionPointWithConfig<T> setToolbar(final IToolbarConfig toolbar) {
         this.toolbarConfig = ofNullable(toolbar);
         return this;
     }
 
     @Override
     public IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
-                .setPreferred(preferred)
-                .setNoResizing(noResizing)
-                .setToolbar(toolbarConfig));
+        addInsertionPointToBuilder();
         return new InsertionPointConfigBuilder<>(resultSetBuilder, actionConfig, whereToInsertView);
     }
 
@@ -83,19 +74,13 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
-                .setPreferred(preferred)
-                .setNoResizing(noResizing)
-                .setToolbar(toolbarConfig));
+        addInsertionPointToBuilder();
         return resultSetBuilder.withLeftSplitterPosition(percentage);
     }
 
     @Override
-    public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
-                .setPreferred(preferred)
-                .setNoResizing(noResizing)
-                .setToolbar(toolbarConfig));
+    public IInsertionPointsWithCustomLayout<T> withRightSplitterPosition(final int percentage) {
+        addInsertionPointToBuilder();
         return resultSetBuilder.withRightSplitterPosition(percentage);
     }
 
@@ -112,10 +97,25 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public IAlternativeViewPreferred<T> addAlternativeView(final EntityActionConfig actionConfig) {
+        addInsertionPointToBuilder();
+        return new AlternativeViewConfigBuilder<>(resultSetBuilder, actionConfig);
+    }
+
+    @Override
+    public IAlternativeView<T> withCustomisableLayout() {
+        addInsertionPointToBuilder();
+        return resultSetBuilder.withCustomisableLayout();
+    }
+
+    /**
+     * Adds last insertion point configuration into {@link ResultSetBuilder}.<br>
+     * This concludes insertion point configuration and either next insertion point will be added or splitter/customisable layout/alternative view will be configured next.
+     */
+    private void addInsertionPointToBuilder() {
         resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
                 .setPreferred(preferred)
                 .setNoResizing(noResizing)
                 .setToolbar(toolbarConfig));
-        return new AlternativeViewConfigBuilder<>(resultSetBuilder, actionConfig);
     }
+
 }

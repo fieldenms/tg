@@ -27,9 +27,7 @@ import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
 import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewPreferred;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointConfig0;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
+import ua.com.fielden.platform.web.centre.api.insertion_points.*;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.*;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
@@ -43,6 +41,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
+import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.CheckboxWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalRepresentorWidget;
@@ -68,21 +67,15 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
 
-/**
- * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
- *
- * @author TG Team
- *
- * @param <T>
- */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>{
+/// A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
+///
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointWithConfig<T> {
 
     private static final String ERR_SPLITTER_OVERLAPPING = "The left and right splitters are overlapping (i.e., left splitter position + right splitter position > 100).";
     private static final String ERR_SPLITTER_POSITION_OUT_OF_BOUNDS = "The splitter position should be greater than 0 and less than 100.";
@@ -101,6 +94,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private Optional<EntityMultiActionConfig> entityActionConfig = empty();
     private Integer orderSeq;
     private int width = 80;
+    private boolean wordWrap = false;
     private boolean isFlexible = true;
 
     public ResultSetBuilder(final EntityCentreBuilder<T> builder) {
@@ -112,13 +106,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return addProp(propName, true);
     }
 
-    /**
-     * Implementation used by both {@link IResultSetBuilder2Properties#addProp(CharSequence, boolean)} and deprecated {@link IResultSetBuilder2Properties#addProp(CharSequence)}.
-     *
-     * @param propName
-     * @param presentByDefault
-     * @return
-     */
+    /// Implementation used by both [IResultSetBuilder2Properties#addProp(CharSequence, boolean)] and deprecated [IResultSetBuilder2Properties#addProp(CharSequence)].
+    ///
     public IResultSetBuilder3Ordering<T> addProp(final CharSequence propName, final boolean presentByDefault) {
         if (StringUtils.isEmpty(propName)) {
             throw new EntityCentreConfigurationException("Property name should not be null.");
@@ -154,7 +143,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
         final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
         if (isEntityType(propertyType)) {
-            return of(new EntityAutocompletionWidget(pair("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType));
+            return of(new EntityAutocompletionWidget(pair("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType, false));
         } else if (isString(propertyType)) {
             return of(new SinglelineTextWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (isInteger(propertyType)) {
@@ -217,16 +206,22 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IWithTooltip<T> width(final int width) {
+    public IResultSetBuilder4bWordWrap<T> width(final int width) {
         this.width = width;
         this.isFlexible = false;
         return this;
     }
 
     @Override
-    public IWithTooltip<T> minWidth(final int minWidth) {
+    public IResultSetBuilder4bWordWrap<T> minWidth(final int minWidth) {
         this.width = minWidth;
         this.isFlexible = true;
+        return this;
+    }
+
+    @Override
+    public IWithTooltip<T> withWordWrap() {
+        this.wordWrap = true;
         return this;
     }
 
@@ -441,16 +436,15 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return this.builder.build();
     }
 
-    /**
-     * Constructs an instance of {@link EntityCentreConfig.ResultSetProp} if possible and adds it the result set list.
-     */
+    /// Constructs an instance of [EntityCentreConfig.ResultSetProp] if possible and adds it the result set list.
+    ///
     private void completePropIfNeeded() {
         // construct and add property to the builder
         if (propName.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), presentByDefault, width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), presentByDefault, width, wordWrap, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.addToResultSet(prop);
         } else if (propDef.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), presentByDefault, width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), presentByDefault, width, wordWrap, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.addToResultSet(prop);
         }
 
@@ -462,6 +456,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.orderSeq = null;
         this.entityActionConfig = empty();
         this.widget = empty();
+        this.wordWrap = false;
     }
 
     @Override
@@ -474,10 +469,15 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return this;
     }
 
-    /**
-     * A helper class to assist in name collision resolution.
-     */
-    private class ResultSetSecondaryActionsBuilder implements IAlsoSecondaryAction<T> {
+    @Override
+    public IAlternativeView<T> withCustomisableLayout() {
+        this.builder.insertionPointCustomLayoutEnabled = true;
+        return this;
+    }
+
+    /// A helper class to assist in name collision resolution.
+    ///
+    private class ResultSetSecondaryActionsBuilder implements IAlsoSecondaryAction<T>, IInsertionPointWithConfig<T> {
 
         @Override
         public IResultSetBuilder9RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler> handler) {
@@ -530,13 +530,18 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
+        public IInsertionPointsWithCustomLayout<T> withRightSplitterPosition(final int percentage) {
             return ResultSetBuilder.this.withRightSplitterPosition(percentage);
         }
 
         @Override
         public IAlternativeViewPreferred<T> addAlternativeView(final EntityActionConfig actionConfig) {
             return ResultSetBuilder.this.addAlternativeView(actionConfig);
+        }
+
+        @Override
+        public IAlternativeView<T> withCustomisableLayout() {
+            return ResultSetBuilder.this.withCustomisableLayout();
         }
     }
 
@@ -666,12 +671,19 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @SuppressWarnings("unchecked")
     @Override
     public IResultSetAutocompleterConfig<T> asAutocompleter() {
+        return createAutocompleter(Optional.empty());
+    }
+
+    @Override
+    public IResultSetAutocompleterConfig<T> asAutocompleter(final Class<? extends AbstractEntity<?>> entityType) {
+        return createAutocompleter(Optional.ofNullable(entityType));
+    }
+
+    private IResultSetAutocompleterConfig<T> createAutocompleter(Optional<Class<? extends AbstractEntity<?>>> optPropertyType) {
         final Class<? extends AbstractEntity<?>> root = this.builder.getEntityType();
         final String resultPropName = treeName(this.propName.get());
-        final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
-        final Class<?> propType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
         final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
-        final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(pair("", getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propType);
+        final EntityAutocompletionWidget editor = WidgetSelector.createAutocompleter(root, widgetPropName, optPropertyType);
         this.widget = of(editor);
         return new ResultSetAutocompleterConfig<>(this, editor);
     }
@@ -707,7 +719,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
+    public IInsertionPointsWithCustomLayout<T> withRightSplitterPosition(final int percentage) {
         if (percentage < 0 || percentage > 100) {
             throw new EntityCentreConfigurationException(ERR_SPLITTER_POSITION_OUT_OF_BOUNDS);
         }

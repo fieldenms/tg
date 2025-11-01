@@ -17,8 +17,15 @@ const extractActiveElement = function (path, thisElement) {
     }
     return elementPath[elemIdx].hasAttribute("tooltip-text") ? elementPath[elemIdx] : null;
 };
+
 //Adds tooltip element to document's body so that it only one for all tooltips.
 document.body.appendChild(toolTipElement);
+
+export const hideTooltip = function () {
+    if (toolTipElement) {
+        toolTipElement.hide();
+    }
+};
 
 export const TgTooltipBehavior = {
 

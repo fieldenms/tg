@@ -10,7 +10,6 @@ import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedP
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isCollectionOrInCollectionHierarchy;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.parentCollection;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.MAX_LENGTH;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -58,12 +57,8 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.ClassComparator;
 
-/**
- * The only {@link ICalculatedProperty} implementation, which can be binded to Expression Editor.
- *
- * @author TG Team
- *
- */
+/// This is the only [ICalculatedProperty] implementation that can be bound to Expression Editor.
+///
 @KeyType(DynamicEntityKey.class)
 @EntityTitle(value = "Calculated property", desc = "<i>Calculated property</i> entity")
 @DescTitle(value = "Description", desc = "Calculated property description")
@@ -684,7 +679,9 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         try {
             ast = cp.createAst(newContextualExpression);
         } catch (final Exception ex) {
-            throw new IncorrectCalcPropertyException(ex.getMessage());
+            throw new IncorrectCalcPropertyException(
+                    "Invalid expression for calculated property [%s] in [%s]: %s".formatted(cp.getCustomPropertyName(), cp.getRoot().getTypeName(), newContextualExpression),
+                    ex);
         }
 
         final int levelsToRaiseTheProperty = CalculatedProperty.levelsToRaiseTheProperty(cp.getRoot(), cp.getContextPath(), ast.getLevel());
@@ -776,7 +773,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         //	}
 
         final Class<?> managedType = cp.getEnhancer().getManagedType(cp.getRoot());
-        final String realOriginationProperty = Reflector.fromRelative2AbsotulePath(cp.getContextPath(), newOriginationProperty);
+        final String realOriginationProperty = Reflector.fromRelative2AbsolutePath(cp.getContextPath(), newOriginationProperty);
         validatePath(managedType, realOriginationProperty, "The origination property [" + newOriginationProperty + "] does not exist in type [" + managedType + "].");
 
         final Field field = StringUtils.isEmpty(realOriginationProperty) ? null : Finder.findFieldByName(managedType, realOriginationProperty);

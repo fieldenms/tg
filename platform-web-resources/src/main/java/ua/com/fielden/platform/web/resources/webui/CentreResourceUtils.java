@@ -46,10 +46,6 @@ import ua.com.fielden.platform.web.centre.*;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
-import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
-import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
-import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
-import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
@@ -81,6 +77,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.CHANGED;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.NONE;
@@ -1024,6 +1021,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             }
             context.setChosenProperty(chosenProperty);
             context.setCustomObject(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>());
+            context.setInstanceBasedContinuation(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains(INSTANCEBASEDCONTINUATION_PROPERTY_NAME) ? centreContextHolder.getInstanceBasedContinuation() : null);
             return Optional.of(context);
         } else {
             return Optional.empty();
@@ -1032,25 +1030,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     //////////////////////////////////////////////////// CREATE CENTRE CONTEXT FOR CENTRE-DEPENDENT FUNCTIONAL ENTITIES ////////////////////////////////////////////////////
 
-    /**
-     * Creates centre context based on serialisation {@link CentreContextHolder} entity.
-     * <p>
-     * Note: the control of which centreContext's parts should be initialised is provided by the client (there are generated meta-information like 'requireSelectedEntities',
-     * 'requireMasterEntity').
-     *
-     * @param actionConfig - the configuration of action for which this context is restored (used to restore computation function). It is not mandatory to
-     *  specify this parameter as non-empty -- at this stage only centre actions are enabled with 'computation' part of the context.
-     * @param centreContextHolder
-     *
-     * @return
-     */
+    /// Creates centre context based on the assets from [CentreContextHolder] serialisation entity.
+    ///
+    /// Note: the control of which centreContext's parts should be initialised is provided by the client
+    /// (generated meta-information like 'requireSelectedEntities', 'requireMasterEntity' etc.).
+    ///
+    /// @param config the configuration of action for which this context is restored (used to restore computation function).
+    ///                 It is not mandatory to specify this parameter as non-empty -- at this stage only centre actions
+    ///                 are enabled with 'computation' part of the context.
+    /// @param instanceBasedContinuation see [CentreContext#instanceBasedContinuation]
+    ///
     public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(
             final AbstractEntity<?> masterContext,
             final List<AbstractEntity<?>> selectedEntities,
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
             final Optional<EntityActionConfig> config,
             final String chosenProperty,
-            final Map<String, Object> customObject
+            final Map<String, Object> customObject,
+            final AbstractEntity<?> instanceBasedContinuation
     ) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
@@ -1061,6 +1058,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         context.setChosenProperty(chosenProperty);
         context.setCustomObject(customObject);
+        context.setInstanceBasedContinuation(instanceBasedContinuation);
         return context;
     }
 
@@ -1181,20 +1179,20 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return enhanceResultEntitiesWithDynamicPropertyValues(entities, resPropsWithContext);
     }
 
-    /**
-     * Complements {@code criteriaEntity} with some items those are necessary for fully fledged running / exporting.
-     * <p>
-     * The main and most important item is {@link IQueryEnhancer} with its {@link CentreContext}. This item impacts the number of returned instances.
-     * The context restoration will only occur iff there is {@link IQueryEnhancer} assigned to Centre DSL configuration with some context defined (see {@link IQueryEnhancerSetter#setQueryEnhancer(Class, CentreContextConfig)}).
-     * <p>
-     * There is also a similar item impacting returned instances count - {@code createdByUserConstraint}.
-     * This is only applicable iff there is {@link IGenerator} configuration assigned to Centre DSL configuration (see {@link ILayoutConfigWithResultsetSupport#withGenerator(Class, Class)}).
-     * <p>
-     * It is also important to use full fetch model to get proper entities' graph on running / exporting. This should include not only all Centre DSL columns,
-     * but also fetch parts from {@link IExtraFetchProviderSetter#setFetchProvider(ua.com.fielden.platform.entity.fetch.IFetchProvider)} and {@link IWithTooltip#withTooltip(CharSequence)} APIs.
-     */
-    public static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> complementCriteriaEntityBeforeRunning(
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> criteriaEntity,
+    /// Complements `criteriaEntity` with some items those are necessary for fully fledged running / exporting.
+    ///
+    /// The main and most important item is [IQueryEnhancer] with its [CentreContext]. This item impacts the number of returned instances.
+    /// The context restoration will only occur iff there is [IQueryEnhancer] assigned to Centre DSL configuration with some context defined (see [#setQueryEnhancer(Class,CentreContextConfig)]).
+    ///
+    /// There is also a similar item impacting returned instances count - `createdByUserConstraint`.
+    /// This is only applicable iff there is [IGenerator] configuration assigned to Centre DSL configuration (see [#withGenerator(Class,Class)]).
+    ///
+    /// It is also important to use full fetch model to get proper entities' graph on running / exporting. This should include not only all Centre DSL columns,
+    /// but also fetch parts from [#setFetchProvider(ua.com.fielden.platform.entity.fetch.IFetchProvider)] and [#withTooltip(CharSequence)] APIs.
+    ///
+    public static <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>
+    complementCriteriaEntityBeforeRunning(
+        final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
         final IWebUiConfig webUiConfig,
         final ICompanionObjectFinder companionFinder,
         final User user,
@@ -1204,13 +1202,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final EntityCentreConfigCo eccCompanion,
         final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
-        final ICentreConfigSharingModel sharingModel
-    ) {
-        final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(criteriaEntity.miType()); // get Centre DSL configuration for 'criteriaEntity'
+        final ICentreConfigSharingModel sharingModel)
+    {
+        final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(criteriaEntity.miType()); // get Centre DSL configuration for 'criteriaEntity'
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass()); // provide entity type to be able to run generated centres (with calculated properties, like totals)
 
-        centre.getAdditionalFetchProvider().ifPresent(fp -> criteriaEntity.setAdditionalFetchProvider(fp)); // additional fetch provider should be set if present in Centre DSL
-        centre.getAdditionalFetchProviderForTooltipProperties().ifPresent(fp -> criteriaEntity.setAdditionalFetchProviderForTooltipProperties(fp)); // tooltip props fetch provider should be set if there are such properties in Centre DSL
+        centre.getAdditionalFetchProvider().ifPresent(criteriaEntity::setAdditionalFetchProvider); // additional fetch provider should be set if present in Centre DSL
+        centre.getAdditionalFetchProviderForTooltipProperties().ifPresent(criteriaEntity::setAdditionalFetchProviderForTooltipProperties); // tooltip props fetch provider should be set if there are such properties in Centre DSL
 
         createQueryEnhancerAndContext(
             webUiConfig,

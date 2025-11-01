@@ -4,13 +4,10 @@ import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
-import java.lang.reflect.Method;
-import java.util.Optional;
 import java.util.*;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
@@ -263,25 +260,6 @@ public class TitlesDescsGetter {
             errorMsg = errorMsg.replace("{{prop-title}}", StringUtils.isEmpty(propTitle) ? propName : propTitle);
             errorMsg = errorMsg.replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey());
         }
-        return errorMsg;
-    }
-
-    public static String processEntityExistsErrorMsg(final String propName, final Object errouneousValue, final Class<? extends AbstractEntity<?>> entityType) {
-        String errorMsg = "";
-
-        try {
-            final Method setter = Reflector.obtainPropertySetter(entityType, propName);
-            if (AnnotationReflector.isAnnotationPresent(setter, EntityExists.class)) {
-                errorMsg = AnnotationReflector.getAnnotation(setter, EntityExists.class).errorMsg();
-                final String propTitle = TitlesDescsGetter.getTitleAndDesc(propName, entityType).getKey();
-                errorMsg = errorMsg.replace("{{prop-title}}", StringUtils.isEmpty(propTitle) ? propName : propTitle);
-                errorMsg = errorMsg.replace("{{prop-value}}", errouneousValue + "");
-                errorMsg = errorMsg.replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey());
-            }
-        } catch (final ReflectionException e) {
-            e.printStackTrace();
-        }
-
         return errorMsg;
     }
 
