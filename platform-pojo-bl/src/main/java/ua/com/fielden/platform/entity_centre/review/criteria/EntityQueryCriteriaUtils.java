@@ -9,14 +9,19 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPrope
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 
 import java.util.*;
 
@@ -27,7 +32,8 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getDateValuesFrom;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authorisePropertyReading;
+import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.*;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUtc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -56,6 +62,41 @@ public class EntityQueryCriteriaUtils {
         return "".equals(property)
             // Non-root property access is governed by *_CanRead_property_* tokens, where `property` part is never empty.
             || authorisePropertyReading(root, property, authorisationModel, securityTokenProvider).orElseGet(Result::successful).isSuccessful();
+    }
+
+    /// Creates Entity Centre query for a list of [QueryProperty] and other parameters.
+    ///
+    /// This method is used in:
+    ///  - CriteriaResource navigation, running and refreshing.
+    ///  - Stream-based exporting.
+    ///  - [ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer] actions,
+    ///     where subset of all criteria-conforming entities need to be processed.
+    ///
+    /// This method is subject to Can Read security.
+    ///
+    static <T extends AbstractEntity<?>> EntityQueryProgressiveInterfaces.ICompleted<T> createCompletedQuery(
+        final Class<T> type,
+        final Class<T> managedType,
+        final List<QueryProperty> queryProperties,
+        final Optional<IQueryEnhancer<T>> additionalQueryEnhancer,
+        final Optional<CentreContext<T, ?>> centreContextForQueryEnhancer,
+        final Optional<User> createdByUserConstraint,
+        final IDates dates
+    ) {
+        authoriseReading(type.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
+        authoriseCriteria(queryProperties, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
+        if (createdByUserConstraint.isPresent()) {
+            final QueryProperty queryProperty = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(managedType, "createdBy");
+            final List<String> createdByCriteria = new ArrayList<>();
+            createdByCriteria.add(createdByUserConstraint.get().toString());
+            queryProperty.setValue(createdByCriteria);
+            queryProperties.add(queryProperty);
+        }
+        if (additionalQueryEnhancer.isPresent()) {
+            return DynamicQueryBuilder.createQuery(managedType, queryProperties, Optional.of(new Pair<>(additionalQueryEnhancer.get(), centreContextForQueryEnhancer)), dates);
+        } else {
+            return DynamicQueryBuilder.createQuery(managedType, queryProperties, dates);
+        }
     }
 
     /// Separates total properties from fetch properties. The key of the pair is the list of fetch properties, the value of the pair is the list of totals.

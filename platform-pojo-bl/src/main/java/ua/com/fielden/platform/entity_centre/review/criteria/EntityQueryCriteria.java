@@ -25,7 +25,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
-import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.pagination.EmptyPage;
@@ -154,31 +153,16 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /// Creates the query model based on 'queryProperties' of the 'managedType' and on custom query enhancer (if any).
     ///
-    private static <T extends AbstractEntity<?>> EntityResultQueryModel<T> createQuery(final Class<T> managedType, final List<QueryProperty> queryProperties, final Optional<IQueryEnhancer<T>> additionalQueryEnhancer, final Optional<CentreContext<T, ?>> centreContextForQueryEnhancer, final Optional<User> createdByUserConstraint, final IDates dates) {
-        final EntityResultQueryModel<T> query = createCompletedQuery(managedType, queryProperties, additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates).model();
+    private static <T extends AbstractEntity<?>> EntityResultQueryModel<T> createQuery(final Class<T> type, final Class<T> managedType, final List<QueryProperty> queryProperties, final Optional<IQueryEnhancer<T>> additionalQueryEnhancer, final Optional<CentreContext<T, ?>> centreContextForQueryEnhancer, final Optional<User> createdByUserConstraint, final IDates dates) {
+        final EntityResultQueryModel<T> query = createCompletedQuery(type, managedType, queryProperties, additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates).model();
         query.setFilterable(true);
         return query;
-    }
-
-    private static <T extends AbstractEntity<?>> ICompleted<T> createCompletedQuery (final Class<T> managedType, final List<QueryProperty> queryProperties, final Optional<IQueryEnhancer<T>> additionalQueryEnhancer, final Optional<CentreContext<T, ?>> centreContextForQueryEnhancer, final Optional<User> createdByUserConstraint, final IDates dates) {
-        if (createdByUserConstraint.isPresent()) {
-            final QueryProperty queryProperty = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(managedType, "createdBy");
-            final List<String> createdByCriteria = new ArrayList<>();
-            createdByCriteria.add(createdByUserConstraint.get().toString());
-            queryProperty.setValue(createdByCriteria);
-            queryProperties.add(queryProperty);
-        }
-        if (additionalQueryEnhancer.isPresent()) {
-            return DynamicQueryBuilder.createQuery(managedType, queryProperties, Optional.of(new Pair<>(additionalQueryEnhancer.get(), centreContextForQueryEnhancer)), dates);
-        } else {
-            return DynamicQueryBuilder.createQuery(managedType, queryProperties, dates);
-        }
     }
 
     /// Generates an EQL model to the stage of [ICompleted], which can be conveniently complemented with custom yield instructions.
     ///
     public ICompleted<T> createQuery() {
-        return createCompletedQuery(getManagedType(), queryProperties.get(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
+        return createCompletedQuery(getEntityClass(), getManagedType(), queryProperties.get(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
     }
 
     /// Returns the parameter map for query.
@@ -283,7 +267,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = separateFetchAndTotalProperties(root, resultTickManager, enhancer);
         final Map<String, Object> paramMap = getParameters();
-        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), queryProperties.get(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
+        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getEntityClass(), getManagedType(), queryProperties.get(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
         final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties);
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
                 .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
@@ -422,7 +406,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = separateFetchAndTotalProperties(root, resultTickManager, enhancer);
-        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), queryProperties.get(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
+        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getEntityClass(), getManagedType(), queryProperties.get(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
         final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties);
         return adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
                 .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
