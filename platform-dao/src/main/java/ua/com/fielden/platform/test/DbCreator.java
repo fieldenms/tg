@@ -70,7 +70,7 @@ public abstract class DbCreator {
         if (execDdslScripts) {
             // recreate DB structures
             logger.debug("CREATING DB SCHEMA...");
-            config.getInstance(TransactionalExecution.class).exec(conn -> batchExecSql(maybeDdl, conn, BATCH_SIZE));
+            config.getInstance(TransactionalExecution.class).execStrict(conn -> batchExecSql(maybeDdl, conn, BATCH_SIZE));
             logger.debug(" DONE!");
         }
     }
@@ -100,11 +100,11 @@ public abstract class DbCreator {
         if (!dataScripts.isEmpty()) {
             // Apply the data population script.
             logger.debug("Executing data population script.");
-            config.getInstance(TransactionalExecution.class).exec(conn -> batchExecSql(new ArrayList<>(dataScripts), conn, BATCH_SIZE));
+            config.getInstance(TransactionalExecution.class).execStrict(conn -> batchExecSql(new ArrayList<>(dataScripts), conn, BATCH_SIZE));
         } else {
             try {
                 if (testCase.useSavedDataPopulationScript()) {
-                    config.getInstance(TransactionalExecution.class).exec(conn -> restoreDataFromFile(testCaseType, conn));
+                    config.getInstance(TransactionalExecution.class).execStrict(conn -> restoreDataFromFile(testCaseType, conn));
                 }
                 // Need to call populateDomain, which might have some initialization even if the actual data saving does not need to occur.
                 testCase.populateDomain();
@@ -115,7 +115,7 @@ public abstract class DbCreator {
             // Record data population statements.
             if (!testCase.useSavedDataPopulationScript() && dataScripts.isEmpty()) {
                 try {
-                    config.getInstance(TransactionalExecution.class).exec(conn -> recordDataPopulationScript(testCase, conn));
+                    config.getInstance(TransactionalExecution.class).execStrict(conn -> recordDataPopulationScript(testCase, conn));
                 } catch (final Exception ex) {
                     throw new DomainDrivenTestException("Could not record data population script.", ex);
                 }
@@ -136,7 +136,7 @@ public abstract class DbCreator {
     public final void clearData() {
         try {
             logger.debug("Executing tables truncation script.");
-            config.getInstance(TransactionalExecution.class).exec(conn -> batchExecSql(truncateScripts, conn, BATCH_SIZE));
+            config.getInstance(TransactionalExecution.class).execStrict(conn -> batchExecSql(truncateScripts, conn, BATCH_SIZE));
         } catch (final Exception ex) {
             throw new DomainDrivenTestException("Could not clear data.", ex);
         }

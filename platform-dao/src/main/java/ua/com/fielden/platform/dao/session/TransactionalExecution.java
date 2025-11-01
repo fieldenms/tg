@@ -112,7 +112,7 @@ public class TransactionalExecution extends WithTransaction {
     /// Executes the specified `action` transactionally, providing this instance of [ISessionEnabled], and returns its result.
     ///
     /// This is a **strict** execution method — it throws an exception if invoked within the scope of an existing session.
-    /// 
+    ///
     /// The return type `R` can be any type.
     /// Specify [Void] if the action does not return a result.
     ///
