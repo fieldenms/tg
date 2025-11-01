@@ -13,12 +13,8 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import java.util.List;
 
-/**
- * Should be used as a convenient base class for domain driven test cases.
- *
- * @author TG Team
- *
- */
+/// Should be used as a convenient base class for domain driven test cases.
+///
 @RunWith(H2OrPostgreSqlOrSqlServerContextSelector.class)
 public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
 
@@ -30,9 +26,9 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         return PlatformTestDomainTypes.entityTypes;
     }
 
-    /**
-     * Initialises a test user. Needs to be invoked in descendant classes.
-     */
+    /// Initialises a test user.
+    /// Needs to be invoked in descendant classes.
+    ///
     @Override
     protected void populateDomain() {
         resetIdGenerator();
