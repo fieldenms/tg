@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toList;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,7 +19,7 @@ import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
-import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
+import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 import ua.com.fielden.platform.utils.DbUtils;
 
 /**
@@ -78,7 +77,7 @@ public class H2DbCreator extends DbCreator {
                 }
             }
         } catch (final Exception ex) {
-            throw new DomainDriventTestException("Could not generate insert statements.", ex);
+            throw new DomainDrivenTestException("Could not generate insert statements.", ex);
         }
         return inserts;
     }
