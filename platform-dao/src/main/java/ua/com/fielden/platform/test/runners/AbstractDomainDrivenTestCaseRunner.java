@@ -13,7 +13,7 @@ import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test.WithDbVersion;
-import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
+import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
@@ -66,11 +66,11 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         super(klass);
         // assert if the provided test case is supported
         if (!AbstractDomainDrivenTestCase.class.isAssignableFrom(klass)) {
-            throw new DomainDriventTestException(format("Test case [%s] should extend [%s].", klass.getName(), AbstractDomainDrivenTestCase.class.getName()));
+            throw new DomainDrivenTestException(format("Test case [%s] should extend [%s].", klass.getName(), AbstractDomainDrivenTestCase.class.getName()));
         }
        
         if (dbCreatorType == null) {
-            throw new DomainDriventTestException("DbCreator type was not provided, but is required.");
+            throw new DomainDrivenTestException("DbCreator type was not provided, but is required.");
         }
         
         // databaseUri value should be specified in POM or come from the command line
@@ -170,7 +170,6 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
      * A routine to clean up the database once it is no longer needed. For example, in case of H2 the database file can be deleted.
      */
     public void dbCleanUp() {
-        dbCreator.closeConnetion();
     }
     
     /**
@@ -225,7 +224,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             final Constructor<IDomainDrivenTestCaseConfiguration> constructor = type.getConstructor(Properties.class);
             return constructor.newInstance(props);
         } catch (final Exception ex) {
-            throw new DomainDriventTestException("Could not create test configuration.", ex);
+            throw new DomainDrivenTestException("Could not create test configuration.", ex);
         }
     }
 
