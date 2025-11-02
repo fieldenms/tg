@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toList;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +19,7 @@ import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 import ua.com.fielden.platform.utils.DbUtils;
 
 /**
@@ -62,20 +62,22 @@ public class H2DbCreator extends DbCreator {
      * Scripts the test database once the test data has been populated, using H2's <code>SCRIPT</code> command.
      */
     @Override
-    public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) throws SQLException {
+    public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
         final List<String> inserts = new ArrayList<>();
         // create insert statements
         try (final Statement st = conn.createStatement(); final ResultSet rs = st.executeQuery("SCRIPT COLUMNS");) {
             while (rs.next()) {
                 final String result = rs.getString(1).trim();
                 final String upperCasedResult = result.toUpperCase();
-                // the SCRIPT command returns all the scripts to recreated the database
+                // the SCRIPT command returns all the scripts to create the database
                 // we're interested only in INSERT statements
                 if (upperCasedResult.startsWith("INSERT")) {
                     inserts.addAll(transformToIndividualInsertStmts(result));
                     //inserts.add(result);
                 }
             }
+        } catch (final Exception ex) {
+            throw new DomainDrivenTestException("Could not generate insert statements.", ex);
         }
         return inserts;
     }

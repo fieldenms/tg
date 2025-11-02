@@ -32,7 +32,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
+import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.DbUtils;
 
@@ -103,12 +103,12 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Override
     public <T extends AbstractEntity<?>> T save(final T instance) {
         if (instance == null) {
-            throw new DomainDriventTestException("Null instances cannot be saved.");
+            throw new DomainDrivenTestException("Null instances cannot be saved.");
         }
         @SuppressWarnings("unchecked")
         final IEntityDao<T> pp = coFinder.find((Class<T>) instance.getType());
         if (pp == null) {
-            throw new DomainDriventTestException(format("Could not find companion implementation for [%s].", instance.getType().getSimpleName()));
+            throw new DomainDrivenTestException(format("Could not find companion implementation for [%s].", instance.getType().getSimpleName()));
         }
         return pp.save(instance);
     }
@@ -166,7 +166,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
                 return DATE_FORMAT.parse(dateTime);
             }
         } catch (ParseException e) {
-            throw new DomainDriventTestException(format("Could not parse date [%s].", dateTime));
+            throw new DomainDrivenTestException(format("Could not parse date [%s].", dateTime));
         }
     }
 
@@ -220,7 +220,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
             // setting composite key fields
             final List<Field> fieldList = Finder.getKeyMembers(entityClass);
             if (fieldList.size() != keys.length) {
-                throw new DomainDriventTestException(format("Number of key values is %s but should be %s", keys.length, fieldList.size()));
+                throw new DomainDrivenTestException(format("Number of key values is %s but should be %s", keys.length, fieldList.size()));
             }
             for (int index = 0; index < fieldList.size(); index++) {
                 final Field keyField = fieldList.get(index);
@@ -247,7 +247,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Override
     public Session getSession() {
         if (session == null) {
-            throw new DomainDriventTestException("Session is missing, most likely, due to missing @SessionRequired annotation.");
+            throw new DomainDrivenTestException("Session is missing, most likely, due to missing @SessionRequired annotation.");
         }
         return session;
     }
@@ -260,7 +260,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Override
     public String getTransactionGuid() {
         if (StringUtils.isEmpty(transactionGuid)) {
-            throw new DomainDriventTestException("Transaction GUID is missing.");
+            throw new DomainDrivenTestException("Transaction GUID is missing.");
         }
         return transactionGuid;
     }
