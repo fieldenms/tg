@@ -74,7 +74,7 @@ public class EntityQueryCriteriaUtils {
     ///
     /// This method is subject to Can Read security.
     ///
-    static <T extends AbstractEntity<?>> EntityQueryProgressiveInterfaces.ICompleted<T> createCompletedQuery(
+    public static <T extends AbstractEntity<?>> EntityQueryProgressiveInterfaces.ICompleted<T> createCompletedQuery(
         final Class<T> type,
         final Class<T> managedType,
         final List<QueryProperty> queryProperties,
