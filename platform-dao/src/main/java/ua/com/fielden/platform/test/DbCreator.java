@@ -30,7 +30,7 @@ public abstract class DbCreator {
     public static final String baseDir = "./src/test/resources/db";
     public static final String ddlScriptFileName = format("%s/create-db-ddl.script", DbCreator.baseDir);
 
-    private static final int BATCH_SIZE = 1000;
+    public static final int BATCH_SIZE = 1000;
 
     public final IDomainDrivenTestCaseConfiguration config;
 
