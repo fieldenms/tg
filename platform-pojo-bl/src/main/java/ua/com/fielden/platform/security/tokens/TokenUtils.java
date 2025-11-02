@@ -16,6 +16,7 @@ import static java.util.Optional.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.security.tokens.Template.*;
 
@@ -78,7 +79,10 @@ public class TokenUtils {
 
     public static Optional<Result> authorisePropertyReading(final Class<?> entityType, final String propertyName, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
         return findPropertyTokenFromAnnotation(entityType, propertyName)
-            .or(() -> findPropertyToken(entityType.getSimpleName(), propertyName, READ_PROP, securityTokenProvider))
+            .or(() -> {
+                final var penultTypeAndProp = transform(entityType, propertyName);
+                return findPropertyToken(penultTypeAndProp.getKey().getSimpleName(), penultTypeAndProp.getValue(), READ_PROP, securityTokenProvider);
+            })
             .map(authorisation::authorise);
     }
 
