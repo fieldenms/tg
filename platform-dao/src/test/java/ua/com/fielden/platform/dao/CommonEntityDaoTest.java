@@ -948,7 +948,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
     @Override
     public boolean saveDataPopulationScriptToFile() {
-        return false;
+        return true;
     }
 
     @Override
