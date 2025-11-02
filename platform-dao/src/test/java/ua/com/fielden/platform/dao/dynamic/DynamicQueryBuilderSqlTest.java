@@ -32,6 +32,7 @@ import ua.com.fielden.platform.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.security.AuthorisationException;
 import ua.com.fielden.platform.security.interception.AuthenticationTestIocModule;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.IDates;
@@ -40,12 +41,15 @@ import java.io.ByteArrayInputStream;
 import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Optional.empty;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createCompletedQuery;
 
 /// A test for [DynamicQueryBuilder].
 ///
@@ -1428,31 +1432,29 @@ public class DynamicQueryBuilderSqlTest {
     }
 
     @Test
-    public void unauthorised_prop_should_not_be_present_in_query() {
+    public void unauthorised_prop_throws_authorisation_exception() {
         set_up();
+
         final QueryProperty property = queryProperties.get("unauthorisedProp");
         property.setValue(3);
         property.setValue2(7);
 
-        final String cbn = property.getConditionBuildingName();
-
-        final ICompleted<? extends AbstractEntity<?>> expected = iJoin; //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
-
-        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+        assertThrows(
+            "Permission denied.", AuthorisationException.class,
+            () -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates)
+        );
     }
 
     @Test
-    public void unauthorised_prop_initiate_with_mnemonics_should_not_be_present_in_query() {
+    public void unauthorised_prop_initiated_with_mnemonics_throws_authorisation_exception() {
         set_up();
+
         final QueryProperty property = queryProperties.get("unauthorisedProp");
         property.setOrNull(true);
 
-        final String cbn = property.getConditionBuildingName();
-
-        final ICompleted<? extends AbstractEntity<?>> expected = iJoin; //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
-
-        assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
+        assertThrows(
+            "Permission denied.", AuthorisationException.class,
+            () -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates)
+        );
     }
 }
