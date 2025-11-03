@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.utils;
 
-import static org.joda.time.DateTimeZone.getDefault;
-
-import java.util.Date;
-import java.util.Optional;
-
+import com.google.inject.ImplementedBy;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.google.inject.ImplementedBy;
+import java.time.LocalDate;
+import java.util.Date;
+import java.util.Optional;
+
+import static org.joda.time.DateTimeZone.getDefault;
 
 /**
  * Contract for time-zone-aware date handling.
@@ -33,6 +33,18 @@ public interface IDates {
      * @return
      */
     int finYearStartMonth();
+
+
+    /// Determines the financial year (FY) for the given `date`.
+    ///
+    /// If the financial year spans two calendar years, the ending year is returned.
+    ///
+    /// For example, for an FY from `01-Jul-2025` to `30-Jun-2026`,
+    /// the value `2026` would be returned for the date `03-Nov-2025`.
+    ///
+    default int finYearForDate(LocalDate date) {
+        return DateUtils.finYearForDate(finYearStartDay(), finYearStartMonth(), date);
+    }
 
     /**
      * Returns the number of the day that is a start of the week (1 - Monday, ..., 7 - Sunday)
