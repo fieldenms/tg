@@ -19,11 +19,11 @@ public class DynamicOrderingBuilder {
     /// Returns the ordering model for this query criteria.
     ///
     public static OrderingModel createOrderingModel(final Class<?> root, final List<Pair<String, Ordering>> orderedPairsWithUnauthorised) {
+        requireNotNullArgument(root, "root");
+        requireNotNullArgument(orderedPairsWithUnauthorised, "orderedPairsWithUnauthorised");
         final var orderedPairs = orderedPairsWithUnauthorised.stream()
             .filter(pair -> isPropertyAuthorised(root, pair.getKey()))
             .toList();
-        requireNotNullArgument(root, "root");
-        requireNotNullArgument(orderedPairs, "orderedPairs");
         IOrderingItemCloseable closeOrderable = null;
         for (final Pair<String, Ordering> orderPair : orderedPairs) {
             final var orderingItem = closeOrderable == null ? orderBy() : closeOrderable;
