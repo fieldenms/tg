@@ -2,8 +2,10 @@ package ua.com.fielden.platform.utils;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
 import java.math.BigDecimal;
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
@@ -144,5 +146,78 @@ public class DateUtilsTest {
         assertThat(compareDateOnly(new DateTime(2025, 9, 9, 10, 9).toDate(), new DateTime(2025, 9, 9, 10, 0).toDate())).isZero();
         assertThat(compareDateOnly(new DateTime(2025, 9, 9, 1, 2).toDate(), new DateTime(2025, 9, 9, 3, 4).toDate())).isZero();
     }
+
+    @Test
+    public void finYearForDate_in_second_half_of_calendar_year_returns_next_calendar_year_as_FY() {
+        final LocalDate date0 = LocalDate.of(2025, 7, 1);
+        assertEquals(2026, finYearForDate(1, 7, date0));
+
+        final LocalDate date1 = LocalDate.of(2025, 11, 3);
+        assertEquals(2026, finYearForDate(1, 7, date1));
+
+        final LocalDate date2 = LocalDate.of(2025, 12, 31);
+        assertEquals(2026, finYearForDate(1, 7, date2));
+    }
+
+    @Test
+    public void finYearForDate_in_first_half_of_calendar_year_returns_current_calendar_year_as_FY() {
+        final LocalDate date0 = LocalDate.of(2026, 1, 1);
+        assertEquals(2026, finYearForDate(1, 7, date0));
+
+        final LocalDate date1 = LocalDate.of(2026, 2, 14);
+        assertEquals(2026, finYearForDate(1, 7, date1));
+
+        final LocalDate date2 = LocalDate.of(2026, 6, 30);
+        assertEquals(2026, finYearForDate(1, 7, date2));
+    }
+
+    @Test
+    public void finYearForDate_throws_exceptions_for_invalid_arguments() {
+        final LocalDate date = LocalDate.of(2025, 7, 1);
+
+        try {
+            finYearForDate(-1, 7, date);
+            fail();
+        } catch (final InvalidArgumentException ex) {
+            assertEquals("Argument [finYearStartDay] should be between 1 and 31: -1.", ex.getMessage());
+        }
+
+        try {
+            finYearForDate(32, 7, date);
+            fail();
+        } catch (final InvalidArgumentException ex) {
+            assertEquals("Argument [finYearStartDay] should be between 1 and 31: 32.", ex.getMessage());
+        }
+
+        try {
+            finYearForDate(1, 0, date);
+            fail();
+        } catch (final InvalidArgumentException ex) {
+            assertEquals("Argument [finYearStartMonth] should be between 1 and 12: 0.", ex.getMessage());
+        }
+
+        try {
+            finYearForDate(1, 13, date);
+            fail();
+        } catch (final InvalidArgumentException ex) {
+            assertEquals("Argument [finYearStartMonth] should be between 1 and 12: 13.", ex.getMessage());
+        }
+
+        try {
+            finYearForDate(31, 02, date);
+            fail();
+        } catch (final DateTimeException ex) {
+            assertEquals("Invalid date 'FEBRUARY 31'", ex.getMessage());
+        }
+
+        try {
+            finYearForDate(1, 7, null);
+            fail();
+        } catch (final InvalidArgumentException ex) {
+            assertEquals("Argument [date] cannot be null.", ex.getMessage());
+        }
+
+    }
+
 
 }
