@@ -24,6 +24,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.tiny.EntityShareActionProducer;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -204,6 +205,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     return createRepresentation(entity);
                 } else {
                     final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
+
+                    if (producer instanceof EntityShareActionProducer shareEntityActionProducer) {
+                        shareEntityActionProducer.setCentreContextHolder(centreContextHolder);
+                    }
 
                     final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(true, webUiConfig, companionFinder, user, critGenerator, factory, centreContextHolder, 0, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
                     final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
