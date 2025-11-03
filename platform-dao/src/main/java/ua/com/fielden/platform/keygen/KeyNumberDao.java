@@ -35,7 +35,7 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
         }
 
         final int nextNo = Integer.parseInt(number.getValue(), radix) + 1;
-        number.setValue(Integer.toString(nextNo, radix));
+        number.setValue(Integer.toString(nextNo, radix).toUpperCase());
         save(number);
         return nextNo;
     }
@@ -58,7 +58,7 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
         }
 
         final SortedSet<Integer> keys = IntStream.iterate(Integer.parseInt(number.getValue(), radix) + 1, n -> n + 1).limit(count).boxed().collect(toCollection(TreeSet::new));
-        number.setValue(Integer.toString(keys.last(), radix));
+        number.setValue(Integer.toString(keys.last(), radix).toUpperCase());
         save(number);
         return keys;
     }
