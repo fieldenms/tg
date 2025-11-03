@@ -80,17 +80,8 @@ export function _removeAllLightDOMChildrenFrom (element) {
  * Returns the x and y coordinates relatively to specified container
  */
 export function getRelativePos (x, y, container) {
-    let reference = container;
-    let newPos = {
-        x: x,
-        y: y
-    }
-    while (reference) {
-        newPos.x -= reference.offsetLeft;
-        newPos.y -= reference.offsetTop;
-        reference = reference.offsetParent;
-    }
-    return newPos;
+    const containerRect = container.getBoundingClientRect();
+    return {x: x - containerRect.left, y: y - containerRect.top};
 };
 
 /**
