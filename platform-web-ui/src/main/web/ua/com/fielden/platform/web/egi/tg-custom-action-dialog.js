@@ -1845,6 +1845,7 @@ Polymer({
                 showNonCritical(this.$.toaster);
             });
         } else {
+            // TODO Invoke EntityShareAction.
             this.$.toaster.text = 'Please save and try again.';
             this.$.toaster.hasMore = false;
             this.$.toaster.msgText = '';
