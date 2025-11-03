@@ -123,6 +123,21 @@ public class KeyNumberTest extends AbstractDaoTestCase {
         assertEquals(nextNumber, coKeyNumber.currNumber(KEY_RADIX_36, 36));
     }
 
+    @Test
+    public void resetting_existing_keynumber_assigns_value_0() {
+        coKeyNumber.reset(KEY_RADIX_10);
+        assertEquals(Integer.valueOf(0), coKeyNumber.currNumber(KEY_RADIX_10));
+
+        coKeyNumber.reset(KEY_RADIX_36);
+        assertEquals(Integer.valueOf(0), coKeyNumber.currNumber(KEY_RADIX_36));
+    }
+
+    @Test
+    public void resetting_non_existing_keynumber_creates_it_with_value_0() {
+        coKeyNumber.reset("NON-EXISTING");
+        assertEquals(Integer.valueOf(0), coKeyNumber.currNumber("NON-EXISTING"));
+    }
+
 
     @Override
     protected void populateDomain() {

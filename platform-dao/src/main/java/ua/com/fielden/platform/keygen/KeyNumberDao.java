@@ -75,4 +75,19 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
         return Integer.valueOf(number.getValue(), radix);
     }
 
+    @Override
+    @SessionRequired
+    public void reset(final String key) {
+        KeyNumber number = findByKey(key); // find an instance
+        if (number != null) {
+            // re-fetch instance with pessimistic write lock
+            number = getSession().load(KeyNumber.class, number.getId(), new LockOptions(LockMode.PESSIMISTIC_WRITE));
+            number.setValue("0");
+        }
+        else {
+            number = new_().setKey(key).setValue("0");
+        }
+        save(number);
+    }
+
 }
