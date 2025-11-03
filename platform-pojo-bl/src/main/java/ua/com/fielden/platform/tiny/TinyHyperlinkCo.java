@@ -24,4 +24,6 @@ public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
 
     TinyHyperlink save(Class<? extends AbstractEntity<?>> entityType, SavingInfoHolder savingInfoHolder);
 
+    String toURL(TinyHyperlink tinyHyperlink);
+
 }

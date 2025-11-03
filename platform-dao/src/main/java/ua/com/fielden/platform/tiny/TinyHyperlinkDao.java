@@ -1,15 +1,18 @@
 package ua.com.fielden.platform.tiny;
 
 import jakarta.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.web.annotations.AppUri;
 
 import java.util.Map;
 
@@ -19,10 +22,12 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEn
 public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements TinyHyperlinkCo {
 
     private final ISerialiser serialiser;
+    private final String appUri;
 
     @Inject
-    TinyHyperlinkDao(final ISerialiser serialiser) {
+    TinyHyperlinkDao(final ISerialiser serialiser, final @AppUri String appUri) {
         this.serialiser = serialiser;
+        this.appUri = StringUtils.stripEnd(appUri, "/");
     }
 
     @Override
@@ -57,6 +62,15 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
                 .setUser(getUser())
                 .setCreatedDate(now().toDate());
         return save(link);
+    }
+
+    @Override
+    public String toURL(final TinyHyperlink tinyHyperlink) {
+        if (!tinyHyperlink.isPersisted()) {
+            throw new InvalidArgumentException("URLs can be created only for persisted instances of [%s].".formatted(TinyHyperlink.class.getSimpleName()));
+        }
+
+        return "%s/#/tiny/%s".formatted(appUri, tinyHyperlink.getId());
     }
 
 }
