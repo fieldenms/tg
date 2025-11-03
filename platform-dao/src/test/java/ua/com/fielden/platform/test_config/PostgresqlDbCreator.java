@@ -64,7 +64,7 @@ public class PostgresqlDbCreator extends DbCreator {
      * Tables <code>ENTITY_CENTRE_CONFIG</code>, <code>ENTITY_LOCATOR_CONFIG</code> and <code>ENTITY_MASTER_CONFIG</code> are included even though they contains <code>varbinary</code> columns.
      */
     @Override
-    public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) throws SQLException {
+    public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
         return entityMetadata.stream()
                 .map(em -> em.data().tableName())
                 .flatMap(table -> {
