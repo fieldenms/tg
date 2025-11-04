@@ -52,7 +52,7 @@ const additionalTemplate = html`
         .item.selected:focus {
             outline: 0;
         }
-        .resizing-box:not([is-dragging-item]):hover {
+        .resizing-box:not([drag-object-present]):hover {
             cursor: move; /* fallback if grab cursor is unsupported */
             cursor: grab;
             cursor: -moz-grab;
@@ -145,7 +145,7 @@ const customInputTemplate = html`
             <template>
                 <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]" selected$="[[selected]]" drag-element>
                     <div tabindex="0" class$="[[_computedClass(selected, item)]]" style$="[[_computeItemStyle(_forReview, canReorderItems)]]" is-dragging$="[[_isDraggingThisItem(item, _draggingItem)]]" on-tap="_selectionHandler">
-                        <iron-icon class="resizing-box" draggable="true" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" is-dragging-item$="[[_draggingItem]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
+                        <iron-icon class="resizing-box" draggable="true" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" drag-object-present$="[[_draggingItem]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
                         <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]" style$="[[_computeTitleStyle(canReorderItems)]]">
                             <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
                             <div class$="[[_computedDescriptionClass(item)]]" hidden$="[[!_calcItemText(item, descriptionPropertyName)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
@@ -347,7 +347,6 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             this._scrollBarWidth = this.$.input.offsetWidth - this.$.input.clientWidth;
         }.bind(this);
 
-        
         if (!isTouchEnabled()) { // TODO remove this check in #2323
             this.addEventListener('dragstart', this._startDrag.bind(this));
             this.addEventListener('dragover', this._dragOver.bind(this));
