@@ -349,9 +349,10 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
 
         
         if (!isTouchEnabled()) { // TODO remove this check in #2323
-            this.addEventListener('dragstart', this.startDrag.bind(this));
-            this.addEventListener('dragend', this.endDrag.bind(this));
-            this.addEventListener('dragover', this.dragOver.bind(this));
+            this.addEventListener('dragstart', this._startDrag.bind(this));
+            this.addEventListener('dragover', this._dragOver.bind(this));
+            this.addEventListener("drop", this._dragDrop);
+             this.addEventListener('dragend', this._endDrag.bind(this));
         }
     }
 
@@ -869,7 +870,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         this._disableSelectionListeners = false;
     }
 
-    startDrag (dragEvent) {
+    _startDrag (dragEvent) {
         const target = dragEvent.composedPath()[0];
         if (target.nodeType === Node.ELEMENT_NODE && target.getAttribute("draggable") === 'true') {
             const elementToDrag = getParentAnd(target, element => element.hasAttribute("drag-element"));
@@ -878,9 +879,11 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
                 dragEvent.dataTransfer.effectAllowed = "copyMove";
                 dragEvent.dataTransfer.setDragImage(elementToDrag, relMousePos.x, relMousePos.y);
                 hideTooltip();
+                const itemIndex = this._getIndexForElement(elementToDrag);
                 setTimeout(() => {
                     this._reorderingObject = {
-                        from: this._getIndexForElement(elementToDrag),
+                        origin: itemIndex,
+                        from: itemIndex,
                         x: dragEvent.clientX
                     }
                     this._draggingItem = this._entities[this._reorderingObject.from];
@@ -890,7 +893,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         }
     }
 
-    dragOver (dragEvent) {
+    _dragOver (dragEvent) {
         if (this._reorderingObject)  {
             tearDownEvent(dragEvent);
             const target = dragEvent.composedPath()[0];
@@ -917,7 +920,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         }
     }
 
-    endDrag (dragEvent) {
+    _dragDrop (dragEvent) {
         if (this._reorderingObject) {
             const chosenIds = this.entity.get("chosenIds");
             this.entity.setAndRegisterPropertyTouch("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
@@ -925,6 +928,14 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             this._draggingItem = null;
             // invoke validation after user has completed item reordering
             this._invokeValidation.bind(this)();
+        }
+    }
+
+    _endDrag (dragEvent) {
+        if (this._reorderingObject) {
+            this.moveItem(this._reorderingObject.from, this._reorderingObject.origin);
+            delete this._reorderingObject;
+            this._draggingItem = null;
         }
     }
 
