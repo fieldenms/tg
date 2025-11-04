@@ -2,14 +2,9 @@ package ua.com.fielden.platform.test_config;
 
 import org.joda.time.DateTime;
 import org.junit.runner.RunWith;
-import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
-import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
-import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
@@ -17,15 +12,9 @@ import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
-/**
- * Should be used as a convenient base class for domain driven test cases.
- *
- * @author TG Team
- *
- */
+/// Should be used as a convenient base class for domain driven test cases.
+///
 @RunWith(H2OrPostgreSqlOrSqlServerContextSelector.class)
 public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
 
@@ -37,9 +26,9 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         return PlatformTestDomainTypes.entityTypes;
     }
 
-    /**
-     * Initialises a test user. Needs to be invoked in descendant classes.
-     */
+    /// Initialises a test user.
+    /// Needs to be invoked in descendant classes.
+    ///
     @Override
     protected void populateDomain() {
         resetIdGenerator();
@@ -69,13 +58,10 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
 
             // provide access to all security tokens for the test role
             final ISecurityTokenProvider provider = getInstance(ISecurityTokenProvider.class);
-            final SortedSet<SecurityTokenNode> topNodes = new TreeSet<>();
-            topNodes.addAll(provider.getTopLevelSecurityTokenNodes());
-            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
-            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
-            for (final SecurityTokenNode securityNode : topNodes) {
-                alg.search(securityNode, predicate);
-            }
+            final SecurityRoleAssociationCo coSecurityRoleAssociation = co(SecurityRoleAssociation.class);
+            coSecurityRoleAssociation.addAssociations(provider.allSecurityTokens()
+                                                              .stream()
+                                                              .map(tok -> coSecurityRoleAssociation.new_().setRole(admin).setSecurityToken(tok)));
         }
 
         up.setUsername(testUser.getKey(), getInstance(IUser.class));

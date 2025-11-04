@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.utils;
 
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -128,6 +130,43 @@ public class DateUtils {
                 .toLocalDate();
 
         return date1.compareTo(date2);
+    }
+
+    /// Determines the financial year (FY) for the given `date`,
+    /// based on the FY’s start day and month.
+    ///
+    /// If the financial year spans two calendar years, the ending year is returned.
+    ///
+    /// For example, for an FY from `01-Jul-2025` to `30-Jun-2026`,
+    /// the value `2026` would be returned for the date `03-Nov-2025`
+    ///
+    public static int finYearForDate(final int finYearStartDay, final int finYearStartMonth, final LocalDate date) {
+        if (date == null) {
+            throw new InvalidArgumentException("Argument [date] cannot be null.");
+        }
+        if (finYearStartDay < 1 || finYearStartDay > 31) {
+            throw new InvalidArgumentException("Argument [finYearStartDay] should be between 1 and 31: %s.".formatted(finYearStartDay));
+        }
+        if (finYearStartMonth < 1 || finYearStartMonth > 12) {
+            throw new InvalidArgumentException("Argument [finYearStartMonth] should be between 1 and 12: %s.".formatted(finYearStartMonth));
+        }
+
+        final int currentYear = date.getYear();
+
+        // Create the start date of the financial year in the current calendar year.
+        final LocalDate currYearFinYearStart = LocalDate.of(currentYear, finYearStartMonth, finYearStartDay);
+
+        int finYearEnd;
+        // If current date is before the FY start, FY ends this calendar year.
+        if (date.isBefore(currYearFinYearStart)) {
+            finYearEnd = currentYear;
+        }
+        // Otherwise, FY ends the next calendar year.
+        else {
+            finYearEnd = currentYear + 1;
+        }
+
+        return finYearEnd;
     }
 
 }
