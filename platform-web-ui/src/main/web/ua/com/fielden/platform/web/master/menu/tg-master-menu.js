@@ -350,6 +350,7 @@ Polymer({
         }
         if (!isTouchEnabled()) { // TODO remove this check in #2323
             this.addEventListener('dragstart', this.startDrag.bind(this));
+            this.addEventListener('drop', this.dragDrop.bind(this));
             this.addEventListener('dragend', this.endDrag.bind(this));
             this.addEventListener('dragenter', this.dragEntered.bind(this));
             this.addEventListener('dragover', this.dragOver.bind(this));
@@ -482,37 +483,49 @@ Polymer({
         // Make sure the drag start event is triggered only on the draggable icon of the menu item.
         // This prevents dragging from other elements in the compound entity master.
         if (dragEvent.target.nodeType === Node.ELEMENT_NODE && dragEvent.target.getAttribute("draggable") === "true") {
-            this._menuItemToDrag = dragEvent.target.parentElement;
+            this._dragObject = {
+                menuItemToDrag: dragEvent.target.parentElement,
+                originSibling: dragEvent.target.parentElement.nextSibling
+            };
             this.async(() => {
-                if (this._menuItemToDrag) {
-                    this._menuItemToDrag.classList.add("dragging");
+                if (this._dragObject) {
+                    this._dragObject.menuItemToDrag.classList.add("dragging");
                     this.$.menu.classList.add("dragging");
                 }
             }, 1);
             dragEvent.dataTransfer.effectAllowed = "copyMove";
-            dragEvent.dataTransfer.setDragImage(this._menuItemToDrag, 12, 24);
+            dragEvent.dataTransfer.setDragImage(this._dragObject.menuItemToDrag, 12, 24);
             hideTooltip();
         }
     },
 
-    endDrag: function (dragEvent) {
-        if (this._menuItemToDrag) {
-            this._menuItemToDrag.classList.remove("dragging");
+    dragDrop: function (dragEvent) {
+        if (this._dragObject) {
+            this._dragObject.menuItemToDrag.classList.remove("dragging");
             this.$.menu.classList.remove("dragging");
             this._saveMenuOrder();
-            this._menuItemToDrag = null;
+            this._dragObject = null;
+        }
+    },
+
+    endDrag: function (dragEvent) {
+        if (this._dragObject) {
+            this._dragObject.menuItemToDrag.classList.remove("dragging");
+            this.$.menu.classList.remove("dragging");
+            this.insertBefore(this._dragObject.menuItemToDrag, this._dragObject.originSibling);
+            this._dragObject = null;
         }
     },
 
     dragOver: function (e) {
-        if (this._menuItemToDrag) {
+        if (this._dragObject) {
             tearDownEvent(e);
             const siblings = [...this.querySelectorAll("paper-item:not(.dragging):not(.notDraggable)")];
             const nextSibling = siblings.find(sibling => {
                 const siblingRect = sibling.getBoundingClientRect();
                 return e.clientY <= siblingRect.y + siblingRect.height / 2;
             });
-            this.insertBefore(this._menuItemToDrag, nextSibling);
+            this.insertBefore(this._dragObject.menuItemToDrag, nextSibling);
         }
     },
 

@@ -352,7 +352,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             this.addEventListener('dragstart', this._startDrag.bind(this));
             this.addEventListener('dragover', this._dragOver.bind(this));
             this.addEventListener("drop", this._dragDrop);
-             this.addEventListener('dragend', this._endDrag.bind(this));
+            this.addEventListener('dragend', this._endDrag.bind(this));
         }
     }
 
