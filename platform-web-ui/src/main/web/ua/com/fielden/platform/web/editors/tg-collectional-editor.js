@@ -351,7 +351,6 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         if (!isTouchEnabled()) { // TODO remove this check in #2323
             this.addEventListener('dragstart', this.startDrag.bind(this));
             this.addEventListener('dragend', this.endDrag.bind(this));
-            this.addEventListener('dragenter', this.dragEntered.bind(this));
             this.addEventListener('dragover', this.dragOver.bind(this));
         }
     }
@@ -870,7 +869,6 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         this._disableSelectionListeners = false;
     }
 
-    //Drag from behavior implementation
     startDrag (dragEvent) {
         const target = dragEvent.composedPath()[0];
         if (target.nodeType === Node.ELEMENT_NODE && target.getAttribute("draggable") === 'true') {
@@ -930,70 +928,8 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         }
     }
 
-    dragEntered (dropToEvent) {
-        // tearDownEvent(dropToEvent);
-    }
-    
-    //TODO remove after issue 2063 will be implemented
-    _changeItemOrder (e) {
-       switch (e.detail.state) {
-           case 'start':
-               this._startItemReordering(e);
-               break;
-            case 'track':
-               this._trackItemOrder(e);
-               break;
-            case 'end':
-               this._endItemReordering(e);
-               break;
-       }
-       tearDownEvent(e);
-    }
-    
     _disableScrolling (e) {
         tearDownEvent(e);
-    }
-    
-    _startItemReordering (e) {
-        if (e.model.selected) {
-            this._reorderingObject = {
-                from: e.model.index,
-                x: e.detail.x
-            }
-            this._draggingItem = e.model.item;
-        }
-    }
-
-    _trackItemOrder (e) {
-        if (this._reorderingObject)  {
-            const list = this.$.input;
-            let currentElementIndex = this._getIndexForElement(e.detail.hover());
-            if (currentElementIndex < 0) {
-                const listBoundingRect = list.getBoundingClientRect();
-                if (listBoundingRect.top > e.detail.y && e.detail.ddy < 0) {
-                    list.scrollTop -= listBoundingRect.top - e.detail.y;
-                    currentElementIndex = list.firstVisibleIndex > this._reorderingObject.from ? this._reorderingObject.from : list.firstVisibleIndex;
-                } else if (listBoundingRect.bottom < e.detail.y && e.detail.ddy > 0) {
-                    list.scrollTop += e.detail.y - listBoundingRect.bottom;
-                    currentElementIndex = list.lastVisibleIndex < this._reorderingObject.from ? this._reorderingObject.from: list.lastVisibleIndex;
-                } else {
-                    currentElementIndex = this._getIndexForElement(document.elementFromPoint(this._reorderingObject.x, e.detail.y)); 
-                }
-            }
-            if (currentElementIndex >= 0 && currentElementIndex < this._entities.length && this._reorderingObject.from !== currentElementIndex) {
-                this.moveItem(this._reorderingObject.from, currentElementIndex);
-                this._reorderingObject.from = currentElementIndex;
-            }
-        }
-    }
-
-    _endItemReordering (e) {
-        const chosenIds = this.entity.get("chosenIds");
-        this.entity.setAndRegisterPropertyTouch("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
-        delete this._reorderingObject;
-        this._draggingItem = null;
-        // invoke validation after user has completed item reordering
-        this._invokeValidation.bind(this)();
     }
     
     _getIndexForElement (element) {
