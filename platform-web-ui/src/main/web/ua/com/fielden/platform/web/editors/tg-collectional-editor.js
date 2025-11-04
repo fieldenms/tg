@@ -878,14 +878,14 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
                 dragEvent.dataTransfer.effectAllowed = "copyMove";
                 dragEvent.dataTransfer.setDragImage(elementToDrag, relMousePos.x, relMousePos.y);
                 hideTooltip();
-                const itemIndex = this._getIndexForElement(elementToDrag);
                 setTimeout(() => {
+                    const itemIndex = this._getIndexForElement(elementToDrag);
                     this._reorderingObject = {
                         origin: itemIndex,
                         from: itemIndex,
                         x: dragEvent.clientX
                     }
-                    this._draggingItem = this._entities[this._reorderingObject.from];
+                    this._draggingItem = this._entities[itemIndex];
                 }, 1);
                 
             }
