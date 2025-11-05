@@ -27,11 +27,14 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyApplicationErrorHandler;
 
 import java.util.Map;
 import java.util.Optional;
 
 import static java.util.Optional.empty;
+import static ua.com.fielden.platform.error.Result.warning;
+import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreEntityFrom;
 import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForMaster;
@@ -98,6 +101,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             final var entity = restoreEntityFrom(true,
                                                  savingInfoHolder,
                                                  entityType,
+                                                 PropertyApplicationErrorHandler.logging.and(propertyApplicationErrorHandler),
                                                  factory,
                                                  webUiConfig,
                                                  companionFinder,
@@ -113,6 +117,15 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             return createRepresentation(entity);
         }, restUtil);
     }
+
+    private static final PropertyApplicationErrorHandler propertyApplicationErrorHandler = (entity, property, _, _) -> {
+        // Ignore non-existing properties.
+        // Assign a warning if property application fails.
+        if (isPropertyPresent(entity.getType(), property)) {
+            // The meta-property should exist, but let's be defensive.
+            entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
+        }
+    };
 
     /// Creates [Representation] for an entity.
     ///
