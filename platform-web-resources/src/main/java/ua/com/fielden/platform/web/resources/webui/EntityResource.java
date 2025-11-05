@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.boot.archive.scan.spi.PackageInfoArchiveEntryHandler;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.restlet.Context;
@@ -40,6 +41,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyApplicationErrorHandler;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -184,7 +186,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     } catch (final ClassNotFoundException e) {
                         throw new IllegalStateException(e);
                     }
-                    final AbstractEntity<?> funcEntity = restoreEntityFrom(true, savingInfoHolder, funcEntityType, factory, webUiConfig, companionFinder, user, critGenerator, 0, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                    final AbstractEntity<?> funcEntity = restoreEntityFrom(true, savingInfoHolder, funcEntityType, PropertyApplicationErrorHandler.standard, factory, webUiConfig, companionFinder, user, critGenerator, 0, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null,
@@ -286,7 +288,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         final List<String> contProps = !savingInfoHolder.proxiedPropertyNames().contains("continuationProperties") ? savingInfoHolder.getContinuationProperties() : new ArrayList<>();
         final Map<String, IContinuationData> continuations = conts != null && !conts.isEmpty() ?
                 EntityResourceContinuationsHelper.createContinuationsMap(conts, contProps) : new LinkedHashMap<>();
-        final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+        final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, PropertyApplicationErrorHandler.standard, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
         return EntityResourceContinuationsHelper.saveWithContinuations(applied, continuations, companion);
     }
@@ -299,11 +301,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     /// @param disregardOriginallyProducedEntities indicates whether it is necessary to disregard originallyProducedEntity while restoring this entity and its parent functional entities
     /// @param savingInfoHolder                    the actual holder of information about functional entity
     /// @param functionalEntityType                the type of functional entity to be restored into
+    /// @param propApplicationErrorHandler         an error handler that applies only to the restoration of the resulting entity
     ///
     public static <T extends AbstractEntity<?>> T restoreEntityFrom(
             final boolean disregardOriginallyProducedEntities,
             final SavingInfoHolder savingInfoHolder,
             final Class<T> functionalEntityType,
+            final PropertyApplicationErrorHandler propApplicationErrorHandler,
             final EntityFactory entityFactory,
             final IWebUiConfig webUiConfig,
             final ICompanionObjectFinder companionFinder,
@@ -327,7 +331,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity restore...");
         final AbstractEntity<?> funcEntity = restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, critGenerator, entityFactory, centreContextHolder, tabCount + 1, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity has been restored.");
-        final T restored = restoreEntityFrom(disregardOriginallyProducedEntities, webUiConfig, user, savingInfoHolder, entityFactory, functionalEntityType, companion, entityProducer, companionFinder, critGenerator, funcEntity /* master context */, tabCount + 1, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+        final T restored = restoreEntityFrom(disregardOriginallyProducedEntities, webUiConfig, user, savingInfoHolder, propApplicationErrorHandler, entityFactory, functionalEntityType, companion, entityProducer, companionFinder, critGenerator, funcEntity /* master context */, tabCount + 1, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): duration: " + pd.getSeconds() + " s " + pd.getMillis() + " ms.");
@@ -366,7 +370,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             }
 
             if (entityType != null) {
-                entity = restoreEntityFrom(disregardOriginallyProducedEntities, outerContext, entityType, entityFactory, webUiConfig, companionFinder, user, critGenerator, tabCount + 1, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                entity = restoreEntityFrom(disregardOriginallyProducedEntities, outerContext, entityType, PropertyApplicationErrorHandler.standard, entityFactory, webUiConfig, companionFinder, user, critGenerator, tabCount + 1, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
             }
         }
         final DateTime end = new DateTime();
@@ -381,6 +385,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final IWebUiConfig webUiConfig,
             final User user,
             final SavingInfoHolder savingInfoHolder,
+            final PropertyApplicationErrorHandler propApplicationErrorHandler,
             final EntityFactory entityFactory,
             final Class<T> entityType,
             final IEntityDao<T> companion,
@@ -402,7 +407,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         final CentreContextHolder centreContextHolder = !savingInfoHolder.proxiedPropertyNames().contains("centreContextHolder") ? savingInfoHolder.getCentreContextHolder() : null;
         if (centreContextHolder == null) {
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder.");
-            applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, originallyProducedEntity, companion, producer, companionFinder).getKey();
+            applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, propApplicationErrorHandler, originallyProducedEntity, companion, producer, companionFinder).getKey();
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder finished.");
         } else {
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started.");
@@ -424,6 +429,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
 
             applied = EntityRestorationUtils.constructEntityWithContext(
                     modifiedPropertiesHolder,
+                    propApplicationErrorHandler,
                     originallyProducedEntity,
                     centreContext,
                     tabCount + 1,

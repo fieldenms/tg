@@ -19,6 +19,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyApplicationErrorHandler;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -94,7 +95,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
 
             final Map<String, Object> modifHolder = !centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<>();
             final CONTEXT originallyProducedEntity = !centreContextHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (CONTEXT) centreContextHolder.getOriginallyProducedEntity() : null;
-            final CONTEXT context = EntityRestorationUtils.constructEntity(modifHolder, originallyProducedEntity, companion, producer, coFinder).getKey();
+            final CONTEXT context = EntityRestorationUtils.constructEntity(modifHolder, PropertyApplicationErrorHandler.standard, originallyProducedEntity, companion, producer, coFinder).getKey();
             // logger.debug("context = " + context);
 
             valueMatcher.setContext(context);

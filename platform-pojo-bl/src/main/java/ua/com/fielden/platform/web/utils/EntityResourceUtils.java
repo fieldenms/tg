@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
@@ -165,6 +166,7 @@ public class EntityResourceUtils {
     public static <M extends AbstractEntity<?>> M apply(
             final Map<String, Object> modifiedPropertiesHolder,
             final M entity,
+            final PropertyApplicationErrorHandler errorHandler,
             final ICompanionObjectFinder coFinder)
     {
         final Class<M> type = (Class<M>) entity.getType();
@@ -179,14 +181,18 @@ public class EntityResourceUtils {
             if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */ && !touchedProps.contains(name)) {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) value;
                 // The 'modified' properties are marked using the existence of "val" sub-property.
-                if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    applyModifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                    // logPropertyApplication("   Apply untouched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
-                } else { // this is unmodified property
-                    // IMPORTANT:
-                    // Untouched properties should not be applied, but validation for conflicts should be performed.
-                    validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                    // logPropertyApplication("Validate untouched unmodified", false, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                try {
+                    if (valAndOrigVal.containsKey("val")) { // this is a modified property
+                        applyModifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                        // logPropertyApplication("   Apply untouched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                    } else { // this is unmodified property
+                        // IMPORTANT:
+                        // Untouched properties should not be applied, but validation for conflicts should be performed.
+                        validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                        // logPropertyApplication("Validate untouched unmodified", false, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                    }
+                } catch (final RuntimeException e) {
+                    errorHandler.handle(entity, name, valAndOrigVal, e);
                 }
             }
         });
@@ -196,17 +202,21 @@ public class EntityResourceUtils {
         for (final String touchedProp : touchedProps) {
             final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(touchedProp);
             // The 'modified' properties are marked using the existence of "val" sub-property.
-            if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                applyModifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched   modified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
-            } else { // this is unmodified property
-                // IMPORTANT:
-                // Unlike to the case of untouched properties, all touched properties should be applied,
-                //  even unmodified ones.
-                // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
-                //  to have the ACE handlers executed for all touched properties.
-                applyUnmodifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched unmodified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+            try {
+                if (valAndOrigVal.containsKey("val")) { // this is a modified property
+                    applyModifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                    // logPropertyApplication("   Apply   touched   modified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                } else { // this is unmodified property
+                    // IMPORTANT:
+                    // Unlike to the case of untouched properties, all touched properties should be applied,
+                    //  even unmodified ones.
+                    // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
+                    //  to have the ACE handlers executed for all touched properties.
+                    applyUnmodifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                    // logPropertyApplication("   Apply   touched unmodified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                }
+            } catch (final RuntimeException e) {
+                errorHandler.handle(entity, touchedProp, valAndOrigVal, e);
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -218,6 +228,35 @@ public class EntityResourceUtils {
         disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps, isCriteriaEntity);
 
         return entity;
+    }
+
+    /// Handles errors that occur in the process of restoring property values and assigning them.
+    ///
+    /// Restoration refers to the conversion from the format used by [SavingInfoHolder#modifHolder].
+    ///
+    /// The default implementation is [#standard].
+    ///
+    public interface PropertyApplicationErrorHandler {
+
+        /// Handles `error` that occured during restoration and assignment of `value` to `property` in `entity`.
+        ///
+        /// @param value a value in unspecified format
+        ///
+        void handle(AbstractEntity<?> entity, String property, Object value, RuntimeException error);
+
+        /// Returns a handler that first calls this handler and then calls `handler`.
+        ///
+        default PropertyApplicationErrorHandler and(final PropertyApplicationErrorHandler handler) {
+            return (entity, property, value, error) -> {
+                this.handle(entity, property, value, error);
+                handler.handle(entity, property, value, error);
+            };
+        }
+
+        PropertyApplicationErrorHandler throwing = (_, _, _, error) -> {throw error;};
+
+        PropertyApplicationErrorHandler standard = throwing;
+
     }
 
     /**
