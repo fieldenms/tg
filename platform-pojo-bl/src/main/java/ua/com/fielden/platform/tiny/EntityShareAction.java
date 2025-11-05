@@ -12,7 +12,9 @@ import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 @CompanionObject(EntityShareActionCo.class)
 public class EntityShareAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
-    public static final String HYPERLINK = "hyperlink";
+    public static final String
+            HYPERLINK = "hyperlink",
+            QR_CODE = "qrCode";
 
     protected EntityShareAction() {
         setKey(NO_KEY);
@@ -22,6 +24,21 @@ public class EntityShareAction extends AbstractFunctionalEntityWithCentreContext
     @Readonly
     @Title(value = "Hyperlink", desc = "A hyperlink to open the shared entity.")
     private Hyperlink hyperlink;
+
+    @IsProperty
+    @Readonly
+    @Title(value = "QR Code", desc = "A QR Code to open the shared entity (Base64).")
+    private String qrCode;
+
+    public String getQrCode() {
+        return qrCode;
+    }
+
+    @Observable
+    public EntityShareAction setQrCode(final String qrCode) {
+        this.qrCode = qrCode;
+        return this;
+    }
 
     public Hyperlink getHyperlink() {
         return hyperlink;

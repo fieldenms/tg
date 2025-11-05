@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
 
 public class EntityShareActionWebUiConfig {
@@ -29,6 +30,12 @@ public class EntityShareActionWebUiConfig {
     private static EntityMaster<EntityShareAction> createMaster(final Injector injector) {
         final var layout = cell(
                 cell(cell(CELL_LAYOUT).withGapBetweenCells(MARGIN))
+                // Embed the QR code.
+                .html("<img style='height: auto; width: 75%' src=data:image/png;base64,{{qrCode}} />",
+                      layout().withStyle("padding-top", MARGIN_PIX)
+                              .withStyle("display", "flex")
+                              .withStyle("justify-content", "center")
+                              .end())
                 , FLEXIBLE_LAYOUT_WITH_PADDING).toString();
 
         final var masterConfig = new SimpleMasterBuilder<EntityShareAction>().forEntity(EntityShareAction.class)
@@ -36,7 +43,7 @@ public class EntityShareActionWebUiConfig {
                 .addCancelAction().excludeNew().shortDesc("Close").longDesc("Close")
                 .setActionBarLayoutFor(DESKTOP, Optional.empty(), mkActionLayoutForMaster(1, MASTER_ACTION_DEFAULT_WIDTH))
                 .setLayoutFor(DESKTOP, Optional.empty(), layout)
-                .withDimensions(mkDim(SIMPLE_ONE_COLUMN_MASTER_DIM_WIDTH, 200))
+                .withDimensions(mkDim(540, 700))
                 .done();
 
         return new EntityMaster<>(EntityShareAction.class, EntityShareActionProducer.class, masterConfig, injector);

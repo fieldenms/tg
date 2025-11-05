@@ -10,6 +10,11 @@ import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
+import java.util.Base64;
+
+import static ua.com.fielden.platform.utils.QrCodeUtils.*;
+import static ua.com.fielden.platform.utils.QrCodeUtils.ImageFormat.PNG;
+
 /// A producer for [EntityShareAction].
 ///
 /// This producer requires an instance of [CentreContextHolder] that was used to construct the [CentreContext].
@@ -40,7 +45,9 @@ public class EntityShareActionProducer extends DefaultEntityProducerWithContext<
             final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
             // TODO Specify a minimal fetch model for refetching after save.
             final var tinyHyperlink = coTinyHyperlink.save(masterEntity.getType(), savingInfoHolder);
-            entity.setHyperlink(new Hyperlink(coTinyHyperlink.toURL(tinyHyperlink)));
+            final var hyperlink = new Hyperlink(coTinyHyperlink.toURL(tinyHyperlink));
+            entity.setHyperlink(hyperlink)
+                  .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(hyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));
         }
 
         return super.provideDefaultValues(entity);
