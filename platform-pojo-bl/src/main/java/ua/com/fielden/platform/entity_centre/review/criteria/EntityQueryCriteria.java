@@ -201,14 +201,20 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /// for the top-level entity, it overrides `.lightweight` in the query builder,
     /// and for properties, it overrides their specific fetch models.
     ///
-    protected static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> createFetchModelFrom(final Class<V> managedType, final Set<String> properties, final Optional<IFetchProvider<T>> additionalFetchProvider, final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties) {
-        final IFetchProvider<V> rootProvider = properties.contains("") ? EntityUtils.fetchNotInstrumentedWithKeyAndDesc(managedType)
-                : EntityUtils.fetchNotInstrumented(managedType);
+    protected static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V>
+    createFetchModelFrom(
+            final Class<V> managedType, final Set<String> properties,
+            final Optional<IFetchProvider<T>> additionalFetchProvider,
+            final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties)
+    {
+        final IFetchProvider<V> rootProvider = properties.contains("")
+                                               ? EntityUtils.fetchNotInstrumentedWithKeyAndDesc(managedType)
+                                               : EntityUtils.fetchNotInstrumented(managedType);
         final Set<String> authorisedProperties = properties.stream().filter(prop -> isPropertyAuthorised(managedType, prop)).collect(toCollection(LinkedHashSet::new));
-        // Analyse 'properties' and get all 'short collectional' properties if any.
-        // Then extend main fetch provider with key-fetched providers of short collection parents.
-        // This should be done in order to be able to correctly retrieve centre results with short collections
-        // (EQL retrieval sorts collection elements by keys and thus such enhancement is required).
+        // Analyse `properties` and collect all "short collectional" properties, if any.
+        // Then extend the main fetch provider with key-fetched providers of the short collection parents.
+        // This is necessary to correctly retrieve centre results containing short collections,
+        // since EQL retrieval sorts collection elements by keys, making this enhancement required.
         final IFetchProvider<V> rootProviderWithResultSetProperties = authorisedProperties.stream()
                 .filter(property -> isShortCollection(managedType, property))
                 .reduce(rootProvider.with(authorisedProperties), (fetchProvider, shortCollectionProp) -> {
