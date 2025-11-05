@@ -3,11 +3,12 @@ package ua.com.fielden.platform.web.resources.webui;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
+import org.restlet.data.Status;
 import org.restlet.representation.Representation;
+import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
@@ -89,7 +90,8 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             final TinyHyperlinkCo coTinyHyperlink = companionFinder.findAsReader(TinyHyperlink.class, true);
             final var tinyHyperlink = coTinyHyperlink.findById(tinyHyperlinkId, coTinyHyperlink.getFetchProvider().fetchModel());
             if (tinyHyperlink == null) {
-                throw new InvalidStateException("Tiny hyperlink with id [%s] was not found.".formatted(tinyHyperlinkId));
+                getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
+                return new StringRepresentation("The specified resource was not found. Please verify that you are accessing the correct resource.");
             }
             final var entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(tinyHyperlink.getEntityTypeName());
             final var savingInfoHolder = serialiser.deserialise(tinyHyperlink.getSavingInfoHolder(), SavingInfoHolder.class, SerialiserEngines.JACKSON);
