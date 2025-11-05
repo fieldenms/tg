@@ -48,7 +48,7 @@ public class EntityQueryCriteriaUtils {
     private static ISecurityTokenProvider securityTokenProvider;
 
     /// Returns the property names that the user is permitted to view or manipulate.
-    /// The set of accessible properties is determined by the specified authorization model.
+    /// The set of accessible properties is determined by the specified authorisation model.
     ///
     public static List<String> getAvailableProperties(Class<? extends AbstractEntity<?>> root, final List<String> properties) {
         return properties.stream()
@@ -66,7 +66,7 @@ public class EntityQueryCriteriaUtils {
     ///
     public static boolean isPropertyAuthorised(final Class<?> root, final String property) {
         // Root property (aka "entity itself") is always authorised.
-        return "".equals(property)
+        return property.isEmpty()
             // Non-root property access is governed by *_CanRead_property_* tokens, where the `property` part is never empty.
             || authorisePropertyReading(root, property, authorisationModel, securityTokenProvider).orElseGet(Result::successful).isSuccessful();
     }
