@@ -190,6 +190,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("require-master-entity", "null");
         }
 
+        conf().actionIdentifier.ifPresent(actionIdentifier -> attrs.put("action-id", actionIdentifier));
+
         return attrs;
     }
 
