@@ -23,6 +23,7 @@ import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCe
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -255,6 +256,10 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return masterConfig.propertyActionSelectors().entrySet().stream()
                 .map(entry -> t2(entry.getKey(), injector.getInstance(entry.getValue())))
                 .collect(toMap(tt -> tt._1, tt -> tt._2));
+    }
+
+    public Stream<EntityActionConfig> streamActions() {
+        return masterConfig.streamActionConfigs();
     }
 
 }
