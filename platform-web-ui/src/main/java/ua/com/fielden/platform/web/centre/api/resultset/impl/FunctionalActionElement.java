@@ -22,13 +22,10 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.join;
 
-/**
- * The implementation for functional entity actions (DOM element).
- *
- * @author TG Team
- *
- */
+/// Implementation for functional entity actions (DOM element).
+///
 public class FunctionalActionElement implements IRenderable, IImportable {
+
     private final String widgetName;
     private final String widgetPath;
     private boolean debug = false;
@@ -36,65 +33,43 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public final int numberOfAction;
     private final FunctionalActionKind functionalActionKind;
     private final String chosenProperty;
-    /** Should be <code>true</code> in case where functional action element is inside entity master, otherwise it is inside entity centre. */
+    /// `true` if the functional action element is inside an entity master, otherwise `false` and it is inside an entity centre.
     private boolean forMaster = false;
 
-    /**
-     * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
-     *
-     * @param entityActionConfig
-     */
+    /// Creates [FunctionalActionElement] from `entityActionConfig`.
+    ///
     public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final String chosenProperty) {
         this(entityActionConfig, numberOfAction, FunctionalActionKind.PROP, chosenProperty);
     }
 
-    /**
-     * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
-     *
-     * @param entityActionConfig
-     */
+    /// Creates [FunctionalActionElement] from `entityActionConfig`.
+    ///
     public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind) {
         this(entityActionConfig, numberOfAction, functionalActionKind, null);
     }
 
-    /**
-     * Creates an entity (aka primary) action for master.
-     *
-     * @param entityActionConfig
-     * @param numberOfAction
-     * @return
-     */
+    /// Creates an entity (aka primary) action for master.
+    ///
     public static FunctionalActionElement newEntityActionForMaster(final EntityActionConfig entityActionConfig, final int numberOfAction) {
         final FunctionalActionElement el = new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.PRIMARY_RESULT_SET);
         el.setForMaster(true);
         return el;
     }
 
-    /**
-     * Creates a property action for master.
-     *
-     * @param entityActionConfig
-     * @param numberOfAction
-     * @return
-     */
+    /// Creates a property action for master.
+    ///
     public static FunctionalActionElement newPropertyActionForMaster(final EntityActionConfig entityActionConfig, final int numberOfAction, final String propName) {
         final FunctionalActionElement el = new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.PRIMARY_RESULT_SET, propName);
         el.setForMaster(true);
         return el;
     }
 
-    /**
-     * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
-     *
-     * @param entityActionConfig
-     */
     private FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind, final String chosenProperty) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("actions/tg-ui-action");
         this.widgetPath = "actions/tg-ui-action";
         this.entityActionConfig = entityActionConfig;
         this.numberOfAction = numberOfAction;
         this.functionalActionKind = functionalActionKind;
-
         this.chosenProperty = chosenProperty;
     }
 
@@ -127,10 +102,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         attrs.put("ui-role", conf().role.toString());
         attrs.put("short-desc", getShortDesc());
-        attrs.put("long-desc", conf().longDesc.isPresent() ? conf().longDesc.get() : "");
-        if (conf().shortcut.isPresent()) {
-            attrs.put("shortcut", conf().shortcut.get());
-        }
+        attrs.put("long-desc", conf().longDesc.orElse(""));
+        conf().shortcut.ifPresent(s -> attrs.put("shortcut", s));
         attrs.put("icon", getIcon());
         attrs.put("icon-style", getIconStyle());
         attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
@@ -195,9 +168,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return attrs;
     }
 
-    /**
-     * Generates element name for corresponding functional Entity Master.
-     */
+    /// Generates an element name for the corresponding functional Entity Master.
+    ///
     public String generateElementName() {
         return generateElementName(conf());
     }
@@ -215,11 +187,11 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     }
 
     public String getDataRoute() {
-        return conf().functionalEntity.map(entityType -> entityType.getSimpleName()).orElse("");
+        return conf().functionalEntity.map(Class::getSimpleName).orElse("");
     }
 
     public String getIcon() {
-        return conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit";
+        return conf().icon.orElse("editor:mode-edit");
     }
 
     public String getIconStyle() {
@@ -227,18 +199,15 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     }
 
     public String getShortDesc() {
-        return conf().shortDesc.isPresent() ? conf().shortDesc.get() : "";
+        return conf().shortDesc.orElse("");
     }
 
-    /**
-     * Creates an attributes that will be used for widget component generation.
-     * <p>
-     * Please, implement this method in descendants (for concrete widgets) to extend the attributes set by widget-specific attributes.
-     *
-     * @return
-     */
+    /// Creates an attributes that will be used for widget component generation.
+    ///
+    /// Please, implement this method in descendants (for concrete widgets) to extend the attributes set by widget-specific attributes.
+    ///
     protected Map<String, Object> createCustomAttributes() {
-        return new LinkedHashMap<>();
+        return Map.of();
     }
 
     public EntityActionConfig conf() {
@@ -267,11 +236,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         this.debug = debug;
     }
 
-    /**
-     * Creates a string representation for the object which holds pre- and post-actions.
-     *
-     * @return
-     */
+    /// Creates a string representation for the object which holds pre- and post-actions.
+    ///
     public String createActionObject() {
         return createActionObject(conf());
     }
@@ -296,7 +262,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     }
 
     /// Generates JavaScript code for an object literal representing `config`.
-    /// This method exists to support generation of `tg-app-actions.js`>
+    /// This method exists to support generation of `tg-app-actions.js`.
     ///
     public static String createActionObjectForTgAppActions(final EntityActionConfig config) {
         final StringBuilder attrs = new StringBuilder("{\n");
@@ -357,13 +323,12 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return "[" + join(config.excludeInsertionPoints.stream().map(insertionPointType -> "'tg-" + insertionPointType.getSimpleName() + "-master'").collect(toList()), ",") + "]";
     }
 
-    /**
-     * Creates non-empty JS function string for {@code bodyOpt}. Generated function logs the {@code name} and {@code actionShortDescOpt} and executes the body.
-     *
-     * @param params -- string of parameters for the generated function
-     * @param codeOptIfEmptyBody -- code to be executed if body is empty
-     * @return
-     */
+    /// Creates a non-empty JS function string for `bodyOpt`.
+    /// The generated function logs the `name` and `actionShortDescOpt` and executes the body.
+    ///
+    /// @param params             string of parameters for the generated function
+    /// @param codeOptIfEmptyBody code to be executed if body is empty
+    ///
     private static String createFunctionBody(final Optional<? extends IAction> bodyOpt, final String name, final String params, final Optional<String> codeOptIfEmptyBody, final Optional<String> actionShortDescOpt) {
         final StringBuilder code = new StringBuilder();
         code.append(format("function (%s) {\n", params));
@@ -371,15 +336,14 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         if (bodyOpt.isPresent()) {
             code.append(bodyOpt.get().build().toString());
         } else {
-            codeOptIfEmptyBody.ifPresent((c) -> code.append(c));
+            codeOptIfEmptyBody.ifPresent(code::append);
         }
         code.append("}");
         return code.toString();
     }
 
-    /**
-     * Creates JS function for {@link IPreAction}.
-     */
+    /// Creates a JS function for [IPreAction].
+    ///
     public String createPreAction() {
         return createPreAction(conf());
     }
@@ -388,9 +352,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return createFunctionBody(config.preAction, "preAction", "action", of("    return Promise.resolve(true);\n"), config.shortDesc);
     }
 
-    /**
-     * Creates JS function for {@link IPostAction}.
-     */
+    /// Creates a JS function for [IPostAction].
+    ///
     public String createPostActionFunctionBody(final Optional<? extends IAction> actionFunction, final String name) {
         return createPostActionFunctionBody(conf(), actionFunction, name);
     }
@@ -399,9 +362,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return createFunctionBody(actionFunction, name, "functionalEntity, action, master", empty(), config.shortDesc);
     }
 
-    /**
-     * Creates JS function for successful {@link IPostAction}.
-     */
+    /// Creates a JS function for successful [IPostAction].
+    ///
     public String createPostActionSuccess() {
         return createPostActionSuccess(conf());
     }
@@ -410,9 +372,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return createPostActionFunctionBody(config, config.successPostAction, "postActionSuccess");
     }
 
-    /**
-     * Creates JS function for erroneous {@link IPostAction}.
-     */
+    /// Creates a JS function for erroneous [IPostAction].
+    ///
     public String createPostActionError() {
         return createPostActionFunctionBody(conf().errorPostAction, "postActionError");
     }
@@ -421,12 +382,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return createPostActionFunctionBody(config, config.errorPostAction, "postActionError");
     }
 
-    /**
-     * Creates action 'attrs' for generation ({@code asString} === false) or for client-side parsing in 'tg-app-template.postRetrieved' method ({@code asString} === true).
-     *
-     * @param asString
-     * @return
-     */
+    /// If `asString` is `false`, creates action `attrs` for generation.
+    /// Otherwise, creates them for client-side parsing in `tg-app-template.postRetrieved`.
+    ///
     public String createElementAttributes(final boolean asString) {
         return createElementAttributes(conf(), asString);
     }
