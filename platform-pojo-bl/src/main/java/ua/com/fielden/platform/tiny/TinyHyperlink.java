@@ -3,6 +3,7 @@ package ua.com.fielden.platform.tiny;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -32,6 +33,8 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
     @MapTo
     private String entityTypeName;
 
+    /// Serialised [SavingInfoHolder] that represents the shared entity state and its context.
+    ///
     @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
     private byte[] savingInfoHolder;
