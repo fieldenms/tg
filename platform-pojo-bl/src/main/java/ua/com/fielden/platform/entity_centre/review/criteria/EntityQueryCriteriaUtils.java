@@ -88,8 +88,8 @@ public class EntityQueryCriteriaUtils {
         final Optional<IQueryEnhancer<T>> additionalQueryEnhancer,
         final Optional<CentreContext<T, ?>> centreContextForQueryEnhancer,
         final Optional<User> createdByUserConstraint,
-        final IDates dates
-    ) {
+        final IDates dates)
+    {
         authoriseReading(type.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
         authoriseCriteria(queryProperties, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
         if (createdByUserConstraint.isPresent()) {
