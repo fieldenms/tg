@@ -33,6 +33,8 @@ import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/
 import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+
 let screenWidth = window.screen.availWidth;
 let screenHeight = window.screen.availHeight;
 
@@ -48,6 +50,7 @@ const template = html`
     <app-location id="location" no-decode dwell-time="-1" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></app-location>
     <app-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></app-route>
     <tg-message-panel></tg-message-panel>
+    <iron-ajax id="entityReconstructor" headers="[[_headers]]" method="GET" handle-as="json" reject-with-request></iron-ajax>
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]" idea-uri="[[ideaUri]]">
@@ -236,6 +239,17 @@ Polymer({
          */
         currentHistoryState: {
             type: Object
+        },
+
+        /**
+         * Additional headers for every 'iron-ajax' client-side requests. These only contain
+         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+         * to compute 'Now' moment properly.
+         */
+        _headers: {
+            type: String,
+            value: _timeZoneHeader
         }
     },
 
@@ -287,7 +301,64 @@ Polymer({
         const mainTypeName = entityInfo[0];
         const idStr = entityInfo[1];
         const menuItemTypeName = entityInfo[2];
-        if (entityInfo.length !== 2 && entityInfo.length !== 3) {
+        if (entityInfo.length === 1) {
+            const tinyId = parseInt(entityInfo);
+            this.$.entityReconstructor.url = `/tiny/${tinyId}`;
+            this.$.entityReconstructor.generateRequest().completes.then(ironRequest => {
+                const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
+                //console.error(deserialisedResult);
+
+                const self = this;
+
+                const action = document.createElement('tg-ui-action');
+                action.shortDesc = 'Copy';
+                action.longDesc = 'Copy Work Order';
+                // should-refresh-parent-centre-after-save
+                action.componentUri = '/master_ui/fielden.work.ui_actions.CopyWorkOrderAction';
+                action.elementName = 'tg-CopyWorkOrderAction-master';
+                // number-of-action='1' action-kind='TOP_LEVEL' element-alias='tg-CopyWorkOrderAction-master_1_TOP_LEVEL'
+                action.showDialog = this._showDialog;
+                action.toaster = this.toaster;
+                action.createContextHolder = this._createContextHolder;
+
+                action.preAction = function (action) {
+                    console.log('preAction: Copy');
+                    return Promise.resolve(true);
+                };
+                action.postActionSuccess = function (functionalEntity, action, master) {
+                    console.log('postActionSuccess: Copy');
+                    //self.$.egi.clearPageSelection();
+                    if (functionalEntity.get('copiedWorkOrder')) { // if a Wa copy was made, show the message and provide an option to open WorkOrder Master
+                        const openOption = 'Open WO #' + functionalEntity.get('copiedWorkOrder').get('number');
+                        self.confirm(functionalEntity.get('postActionMessage'), [{name:'Close', confirm:false}, {name:openOption, confirm:true, autofocus:true}])
+                            .then(details => master.openMaster())
+                    } else { // otherwise, if a new Work Order was not created or multiple copies were created, simply show the message
+                        self.confirm(functionalEntity.get('postActionMessage'), [{name:'Close', confirm:true, autofocus:true}]);
+                    }
+                };
+                action.attrs = {
+                    entityType: 'fielden.work.ui_actions.CopyWorkOrderAction',
+                    currentState: 'EDIT',
+                    centreUuid: 'unknown' // self.uuid
+                };
+                action.postActionError = function (functionalEntity, action, master) {
+                    console.log('postActionError: Copy');
+                };
+                action.requireSelectionCriteria = 'false';
+                action.requireSelectedEntities = 'ALL';
+                action.requireMasterEntity = 'false';
+
+                action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
+                    master._postRetrievedDefault(deserialisedResult.instance);
+                };
+
+                action._run();
+
+                //deserialisedResult
+
+            });
+        }
+        else if (entityInfo.length !== 2 && entityInfo.length !== 3) {
             this._openToastForError('URI error.', `The URI [${this._selectedSubmodule}] for master is incorrect. It should contain entity type and id [and optional type of compound menu item] separated with '/'.`, true);
         } else if (!typeOf(mainTypeName) || menuItemTypeName && !typeOf(menuItemTypeName)) {
             this._openToastForError('Entity type error.', `[${mainTypeName}]${menuItemTypeName ? ` or [${menuItemTypeName}]` : ''} entity type is not registered. Please make sure that entity type is correct.`, true);
@@ -510,7 +581,7 @@ Polymer({
     _animationFinished: function (e, detail, source) {
         if (e.target === this.$.pages){
             this._selectedModule = this._routeData.moduleName;
-            if (this._routeData.moduleName === 'master') {
+            if (['master', 'tiny'].includes(this._routeData.moduleName)) {
                 this._selectedSubmodule = this._subroute.path;
                 this._tgOpenMasterAction();
             } else if (this._selectedSubmodule === this._subroute.path) {
