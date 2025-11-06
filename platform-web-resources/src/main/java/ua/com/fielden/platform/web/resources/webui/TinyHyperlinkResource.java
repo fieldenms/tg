@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -33,8 +34,11 @@ import java.util.Map;
 import java.util.Optional;
 
 import static java.util.Optional.empty;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
+import static ua.com.fielden.platform.tiny.TinyHyperlink.ENTITY_TYPE_NAME;
+import static ua.com.fielden.platform.tiny.TinyHyperlink.SAVING_INFO_HOLDER;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreEntityFrom;
 import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForMaster;
@@ -91,7 +95,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
     public Representation save() {
         return handleUndesiredExceptions(getResponse(), () -> {
             final TinyHyperlinkCo coTinyHyperlink = companionFinder.findAsReader(TinyHyperlink.class, true);
-            final var tinyHyperlink = coTinyHyperlink.findById(tinyHyperlinkId, coTinyHyperlink.getFetchProvider().fetchModel());
+            final var tinyHyperlink = coTinyHyperlink.findById(tinyHyperlinkId, fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, SAVING_INFO_HOLDER));
             if (tinyHyperlink == null) {
                 getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
                 return new StringRepresentation("The specified resource was not found. Please verify that you are accessing the correct resource.");
