@@ -24,7 +24,6 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     private Injector injector;
     private IWebUiBuilder builder;
     private Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity;
-    private boolean withTinyHyperlink;
     private String actionIdentifier;
     private CentreContextConfig context;
     private String icon;
@@ -78,7 +77,6 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     public EntityActionConfig build() {
         return EntityActionConfig.createActionConfig(
             functionalEntity,
-            withTinyHyperlink,
             actionIdentifier,
             context,
             icon,
@@ -228,7 +226,6 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
             throw new InvalidArgumentException("[actionIdentifier] must be not null and not blank.");
         }
 
-        this.withTinyHyperlink = true;
         this.actionIdentifier = actionIdentifier;
         return this;
     }
