@@ -58,7 +58,7 @@ public class TokenUtils {
                .orElseGet(() -> failure(format(ERR_TOKEN_NOT_FOUND, readingKind, entityTypeSimpleName)));
     }
 
-    /// Validates the criteria values to determine whether they can be applied under the authorization model.
+    /// Validates the criteria values to determine whether they can be applied under the authorisation model.
     ///
     public static Result authoriseCriteria(final List<QueryProperty> queryProperties, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
         return queryProperties.stream()

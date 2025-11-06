@@ -49,11 +49,11 @@ public class FieldVisibility implements GraphqlFieldVisibility {
             final var rootAuthorised = authoriseReading(simpleName, READ_MODEL, authorisationModel, securityTokenProvider).isSuccessful();
             return fieldsContainer.getFieldDefinitions().stream()
                 .filter(def -> !rootAuthorised
-                    // At least one field should be accessible (ID was chosen for that purpose).
-                    // Otherwise, the type does not conform to GraphQL spec (and validations in GraphiQL editor become broken).
-                    ? ID.equals(def.getName())
-                    // Filter out unauthorised properties.
-                    : isPropertyAuthorised(domainTypes.get(simpleName), def.getName())
+                        // At least one field must be accessible (the ID field is used for this purpose).
+                        // Without it, the type would not conform to the GraphQL specification, causing validation issues in the GraphiQL editor.
+                        ? ID.equals(def.getName())
+                        // Filter out properties that the current user is not authorised to access.
+                        : isPropertyAuthorised(domainTypes.get(simpleName), def.getName())
                 )
                 .collect(toList());
         }
