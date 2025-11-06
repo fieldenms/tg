@@ -311,34 +311,34 @@ Polymer({
                 const self = this;
 
                 const action = document.createElement('tg-ui-action');
-                action.shortDesc = 'Email';
-                action.longDesc = 'Email a query to the Timesheet owner';
+                action.shortDesc = 'Work Order';
+                action.longDesc = 'Add new Work Order';
                 // should-refresh-parent-centre-after-save
-                action.componentUri = '/master_ui/fielden.work.ui_actions.TimesheetEmailQueryAction';
-                action.elementName = 'tg-TimesheetEmailQueryAction-master';
+                action.componentUri = '/master_ui/fielden.work.ui_actions.OpenWorkOrderMasterAction';
+                action.elementName = 'tg-OpenWorkOrderMasterAction-master';
                 // number-of-action='1' action-kind='TOP_LEVEL' element-alias='tg-CopyWorkOrderAction-master_1_TOP_LEVEL'
                 action.showDialog = this._showDialog;
                 action.toaster = this.toaster;
                 action.createContextHolder = this._createContextHolder;
 
                 action.preAction = function (action) {
-                    console.log('preAction: Email');
+                    console.log('preAction: Work Order');
                     return Promise.resolve(true);
                 };
                 action.postActionSuccess = function (functionalEntity, action, master) {
-                    console.log('postActionSuccess: Email');
-                    //self.$.egi.clearPageSelection();
+                    console.log('postActionSuccess: Work Order');
                 };
                 action.attrs = {
-                    entityType: 'fielden.work.ui_actions.TimesheetEmailQueryAction',
+                    entityType: 'fielden.work.ui_actions.OpenWorkOrderMasterAction',
                     currentState: 'EDIT',
-                    centreUuid: 'unknown' // self.uuid
+                    centreUuid: 'unknown', // self.uuid
+                    prefDim: {width: function() {return 1280}, height: function() {return 90}, widthUnit: 'px', heightUnit: '%'}
                 };
                 action.postActionError = function (functionalEntity, action, master) {
-                    console.log('postActionError: Email');
+                    console.log('postActionError: Work Order');
                 };
                 action.requireSelectionCriteria = 'true';
-                action.requireSelectedEntities = 'ALL';
+                action.requireSelectedEntities = 'NONE';
                 action.requireMasterEntity = 'false';
 
                 action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
