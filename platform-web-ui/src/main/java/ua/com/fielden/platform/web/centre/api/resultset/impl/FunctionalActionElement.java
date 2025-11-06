@@ -265,42 +265,48 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      * @return
      */
     public String createActionObject() {
+        return createActionObject(conf());
+    }
+
+    /// Generates JavaScript code for an object literal representing `config`.
+    ///
+    public static String createActionObject(final EntityActionConfig config) {
         final StringBuilder attrs = new StringBuilder("{\n");
-        if (conf().context.isPresent()) {
-            if (!conf().context.get().relatedContexts.isEmpty()) {
-                attrs.append("relatedContexts: ").append(createRelatedContexts(conf().context.get().relatedContexts)).append(",\n");
+        if (config.context.isPresent()) {
+            if (!config.context.get().relatedContexts.isEmpty()) {
+                attrs.append("relatedContexts: ").append(createRelatedContexts(config.context.get().relatedContexts)).append(",\n");
             }
-            conf().context.get().parentCentreContext.ifPresent(parentCentreContext -> {
+            config.context.get().parentCentreContext.ifPresent(parentCentreContext -> {
                 attrs.append("parentCentreContext: ").append(createParentCentreContext(parentCentreContext)).append(",\n");
             });
         }
-        attrs.append("preAction: ").append(createPreAction()).append(",\n");
-        attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
-        attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
-        attrs.append("postActionError: ").append(createPostActionError()).append("\n");
+        attrs.append("preAction: ").append(createPreAction(config)).append(",\n");
+        attrs.append("postActionSuccess: ").append(createPostActionSuccess(config)).append(",\n");
+        attrs.append("attrs: ").append(createElementAttributes(config, false)).append(",\n");
+        attrs.append("postActionError: ").append(createPostActionError(config)).append("\n");
         return attrs.append("}\n").toString();
     }
 
-    private String createParentCentreContext(final CentreContextConfig context) {
+    private static String createParentCentreContext(final CentreContextConfig context) {
         final StringBuilder attrs = new StringBuilder("{\n");
         attrs.append(createContextAttributes(context));
         return attrs.append("}").toString();
     }
 
-    private String createRelatedContexts(final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts) {
+    private static String createRelatedContexts(final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts) {
         final StringBuilder relatedContextsList = new StringBuilder("[");
         relatedContextsList.append(relatedContexts.entrySet().stream().map(relatedContext -> createRelatedContext(relatedContext.getKey(), relatedContext.getValue())).collect(joining(",")));
         return relatedContextsList.append("]").toString();
     }
 
-    private String createRelatedContext(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcType, final CentreContextConfig context) {
+    private static String createRelatedContext(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcType, final CentreContextConfig context) {
         final StringBuilder attrs = new StringBuilder("{\n");
         attrs.append("elementName: ").append("'" + format("tg-%s-master", funcType.getSimpleName()) + "'").append(",\n");
         attrs.append(createContextAttributes(context));
         return attrs.append("}").toString();
     }
 
-    private String createContextAttributes(final CentreContextConfig context) {
+    private static String createContextAttributes(final CentreContextConfig context) {
         final StringBuilder attrs = new StringBuilder("");
         if (!context.relatedContexts.isEmpty()) {
             attrs.append("relatedContexts: ").append(createRelatedContexts(context.relatedContexts)).append(",\n");
@@ -315,8 +321,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return attrs.toString();
     }
 
-    private String createExcludeInsertionPoints() {
-        return "[" + join(conf().excludeInsertionPoints.stream().map(insertionPointType -> "'tg-" + insertionPointType.getSimpleName() + "-master'").collect(toList()), ",") + "]";
+    private static String createExcludeInsertionPoints(final EntityActionConfig config) {
+        return "[" + join(config.excludeInsertionPoints.stream().map(insertionPointType -> "'tg-" + insertionPointType.getSimpleName() + "-master'").collect(toList()), ",") + "]";
     }
 
     /**
@@ -343,21 +349,33 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      * Creates JS function for {@link IPreAction}.
      */
     public String createPreAction() {
-        return createFunctionBody(conf().preAction, "preAction", "action", of("    return Promise.resolve(true);\n"), conf().shortDesc);
+        return createPreAction(conf());
+    }
+
+    private static String createPreAction(final EntityActionConfig config) {
+        return createFunctionBody(config.preAction, "preAction", "action", of("    return Promise.resolve(true);\n"), config.shortDesc);
     }
 
     /**
      * Creates JS function for {@link IPostAction}.
      */
     public String createPostActionFunctionBody(final Optional<? extends IAction> actionFunction, final String name) {
-        return createFunctionBody(actionFunction, name, "functionalEntity, action, master", empty(), conf().shortDesc);
+        return createPostActionFunctionBody(conf(), actionFunction, name);
+    }
+
+    private static String createPostActionFunctionBody(final EntityActionConfig config, final Optional<? extends IAction> actionFunction, final String name) {
+        return createFunctionBody(actionFunction, name, "functionalEntity, action, master", empty(), config.shortDesc);
     }
 
     /**
      * Creates JS function for successful {@link IPostAction}.
      */
     public String createPostActionSuccess() {
-        return createPostActionFunctionBody(conf().successPostAction, "postActionSuccess");
+        return createPostActionSuccess(conf());
+    }
+
+    private static String createPostActionSuccess(final EntityActionConfig config) {
+        return createPostActionFunctionBody(config, config.successPostAction, "postActionSuccess");
     }
 
     /**
@@ -367,6 +385,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return createPostActionFunctionBody(conf().errorPostAction, "postActionError");
     }
 
+    private static String createPostActionError(final EntityActionConfig config) {
+        return createPostActionFunctionBody(config, config.errorPostAction, "postActionError");
+    }
+
     /**
      * Creates action 'attrs' for generation ({@code asString} === false) or for client-side parsing in 'tg-app-template.postRetrieved' method ({@code asString} === true).
      *
@@ -374,20 +396,24 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      * @return
      */
     public String createElementAttributes(final boolean asString) {
+        return createElementAttributes(conf(), asString);
+    }
+
+    private static String createElementAttributes(final EntityActionConfig config, final boolean asString) {
         final StringBuilder code = new StringBuilder();
         final String keyQ = asString ? "\"" : "";
         final String valueQ = asString ? "\"" : "'";
         code.append("{\n");
-        conf().functionalEntity.ifPresent(entityType -> {
+        config.functionalEntity.ifPresent(entityType -> {
             code.append("    " + keyQ + "entityType" + keyQ + ": " + valueQ + entityType.getName() + valueQ + ",\n");
         });
-        if (!conf().excludeInsertionPoints.isEmpty()) {
-            code.append("    " + keyQ +"excludeInsertionPoints" + keyQ + ": " + keyQ + createExcludeInsertionPoints() + keyQ + ",\n");
+        if (!config.excludeInsertionPoints.isEmpty()) {
+            code.append("    " + keyQ +"excludeInsertionPoints" + keyQ + ": " + keyQ + createExcludeInsertionPoints(config) + keyQ + ",\n");
         }
         code.append("    " + keyQ + "currentState" + keyQ + ": " + valueQ + "EDIT" + valueQ + ",\n");
         code.append("    " + keyQ + "centreUuid" + keyQ + ": " + keyQ + "self.uuid" + keyQ); // value surrounded with "" -- will be interpreted in tg-app-template specifically
 
-        conf().prefDimForView.ifPresent(prefDim -> {
+        config.prefDimForView.ifPresent(prefDim -> {
             code.append(format(",\n    " +
                 keyQ + "prefDim" + keyQ + ": " + "{" +
                     keyQ + "width" + keyQ + ": " + keyQ + "function() {return %s}" + keyQ +", " + // value surrounded with "" -- will be interpreted in tg-app-template specifically

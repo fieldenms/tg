@@ -14,6 +14,7 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingCentreConfigurationException;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingCustomViewConfigurationException;
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
@@ -32,12 +34,14 @@ import static java.util.Collections.sort;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.basic.config.Workflows.deployment;
 import static ua.com.fielden.platform.basic.config.Workflows.vulcanizing;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
 import static ua.com.fielden.platform.utils.ResourceLoader.getText;
+import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
@@ -132,7 +136,16 @@ public class WebResourceLoader implements IWebResourceLoader {
     }
 
     private Optional<String> getAppActionsSource() {
-        throw new UnsupportedOperationException("TODO");
+        return ofNullable(getText("ua/com/fielden/platform/web/app/tg-app-actions-template.js"))
+                .map(src -> {
+                    final var actionsCode = distinct(Stream.concat(webUiConfig.getCentres().values().stream().flatMap(EntityCentre::streamActionConfigs),
+                                                                   webUiConfig.getMasters().values().stream().flatMap(EntityMaster::streamActions))
+                                                             .filter(action -> action.actionIdentifier.isPresent()),
+                                                     action -> action.actionIdentifier.get())
+                                            .map(action -> "'%s': %s".formatted(action.actionIdentifier.get(), FunctionalActionElement.createActionObject(action)))
+                                            .collect(joining(",\n", "{\n", "\n}"));
+                    return src.replace("@actions", actionsCode);
+                });
     }
 
     /// Extends types in `typeTable` with information about their masters.
