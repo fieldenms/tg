@@ -30,12 +30,14 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
     private String hash;
 
     @IsProperty
+    @Required
     @MapTo
     private String entityTypeName;
 
     /// Serialised [SavingInfoHolder] that represents the shared entity state and its context.
     ///
     @IsProperty(length = Integer.MAX_VALUE)
+    @Required
     @MapTo
     private byte[] savingInfoHolder;
 
