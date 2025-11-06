@@ -311,33 +311,34 @@ Polymer({
                 const self = this;
 
                 const action = document.createElement('tg-ui-action');
-                action.shortDesc = 'Add new Priority';
-                action.longDesc = 'Add new Priority';
+                action.shortDesc = 'Email';
+                action.longDesc = 'Email a query to the Timesheet owner';
                 // should-refresh-parent-centre-after-save
-                action.componentUri = '/master_ui/ua.com.fielden.platform.entity.EntityNewAction';
-                action.elementName = 'tg-EntityNewAction-master';
+                action.componentUri = '/master_ui/fielden.work.ui_actions.TimesheetEmailQueryAction';
+                action.elementName = 'tg-TimesheetEmailQueryAction-master';
                 // number-of-action='1' action-kind='TOP_LEVEL' element-alias='tg-CopyWorkOrderAction-master_1_TOP_LEVEL'
                 action.showDialog = this._showDialog;
                 action.toaster = this.toaster;
                 action.createContextHolder = this._createContextHolder;
 
                 action.preAction = function (action) {
-                    console.log('preAction: Add new Priority');
+                    console.log('preAction: Email');
                     return Promise.resolve(true);
                 };
                 action.postActionSuccess = function (functionalEntity, action, master) {
-                    console.log('postActionSuccess: Add new Priority');
+                    console.log('postActionSuccess: Email');
+                    //self.$.egi.clearPageSelection();
                 };
                 action.attrs = {
-                    entityType: 'ua.com.fielden.platform.entity.EntityNewAction',
+                    entityType: 'fielden.work.ui_actions.TimesheetEmailQueryAction',
                     currentState: 'EDIT',
                     centreUuid: 'unknown' // self.uuid
                 };
                 action.postActionError = function (functionalEntity, action, master) {
-                    console.log('postActionError: Add new Priority');
+                    console.log('postActionError: Email');
                 };
                 action.requireSelectionCriteria = 'true';
-                action.requireSelectedEntities = 'NONE';
+                action.requireSelectedEntities = 'ALL';
                 action.requireMasterEntity = 'false';
 
                 action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
