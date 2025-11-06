@@ -22,7 +22,7 @@ public final class EntityActionConfig {
 
     public final Optional<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> functionalEntity;
     public final boolean withTinyHyperlink;
-    public final String actionIdentifier;
+    public final Optional<String> actionIdentifier;
     public final Optional<CentreContextConfig> context;
     public final Optional<String> icon;
     public final Optional<String> iconStyle;
@@ -70,7 +70,7 @@ public final class EntityActionConfig {
         }
 
         this.withTinyHyperlink = withTinyHyperlink;
-        this.actionIdentifier = actionIdentifier;
+        this.actionIdentifier = Optional.ofNullable(actionIdentifier);
         this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave;
         this.functionalEntity = Optional.ofNullable(functionalEntity);
         this.context = Optional.ofNullable(context);
@@ -116,7 +116,7 @@ public final class EntityActionConfig {
         return new EntityActionConfig(
                         ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
                         ac.withTinyHyperlink,
-                        ac.actionIdentifier,
+                        ac.actionIdentifier.orElse(null),
                         cc,
                         ac.icon.isPresent() ? ac.icon.get() : null,
                         ac.iconStyle.orElse(null),
@@ -141,7 +141,7 @@ public final class EntityActionConfig {
         return new EntityActionConfig(
                 ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
                 ac.withTinyHyperlink,
-                ac.actionIdentifier,
+                ac.actionIdentifier.orElse(null),
                 ac.context.isPresent() ? ac.context.get() : null,
                 ac.icon.isPresent() ? ac.icon.get() : null,
                 ac.iconStyle.orElse(null),
@@ -169,7 +169,7 @@ public final class EntityActionConfig {
         return new EntityActionConfig(
                 ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
                 ac.withTinyHyperlink,
-                ac.actionIdentifier,
+                ac.actionIdentifier.orElse(null),
                 ac.context.isPresent() ? ac.context.get() : null,
                 ac.icon.isPresent() ? ac.icon.get() : null,
                 ac.iconStyle.orElse(null),
