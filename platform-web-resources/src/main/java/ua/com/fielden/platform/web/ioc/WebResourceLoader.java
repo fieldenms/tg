@@ -142,7 +142,7 @@ public class WebResourceLoader implements IWebResourceLoader {
                                                                    webUiConfig.getMasters().values().stream().flatMap(EntityMaster::streamActions))
                                                              .filter(action -> action.actionIdentifier.isPresent()),
                                                      action -> action.actionIdentifier.get())
-                                            .map(action -> "'%s': %s".formatted(action.actionIdentifier.get(), FunctionalActionElement.createActionObject(action)))
+                                            .map(action -> "'%s': %s".formatted(action.actionIdentifier.get(), FunctionalActionElement.createActionObjectForTgAppActions(action)))
                                             .collect(joining(",\n", "{\n", "\n}"));
                     return src.replace("@actions", actionsCode);
                 });

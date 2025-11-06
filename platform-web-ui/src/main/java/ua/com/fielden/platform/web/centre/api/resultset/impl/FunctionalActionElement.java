@@ -199,11 +199,19 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      * Generates element name for corresponding functional Entity Master.
      */
     public String generateElementName() {
-        return conf().functionalEntity.map(entityType -> "tg-" + entityType.getSimpleName() + "-master").orElse("");
+        return generateElementName(conf());
+    }
+
+    private static String generateElementName(final EntityActionConfig config) {
+        return config.functionalEntity.map(entityType -> "tg-" + entityType.getSimpleName() + "-master").orElse("");
     }
 
     private String generateComponentUri() {
-        return conf().functionalEntity.map(entityType -> "/master_ui/" + entityType.getName()).orElse("");
+        return generateComponentUri(conf());
+    }
+
+    private static String generateComponentUri(EntityActionConfig config) {
+        return config.functionalEntity.map(entityType -> "/master_ui/" + entityType.getName()).orElse("");
     }
 
     public String getDataRoute() {
@@ -280,6 +288,30 @@ public class FunctionalActionElement implements IRenderable, IImportable {
                 attrs.append("parentCentreContext: ").append(createParentCentreContext(parentCentreContext)).append(",\n");
             });
         }
+        attrs.append("preAction: ").append(createPreAction(config)).append(",\n");
+        attrs.append("postActionSuccess: ").append(createPostActionSuccess(config)).append(",\n");
+        attrs.append("attrs: ").append(createElementAttributes(config, false)).append(",\n");
+        attrs.append("postActionError: ").append(createPostActionError(config)).append("\n");
+        return attrs.append("}\n").toString();
+    }
+
+    /// Generates JavaScript code for an object literal representing `config`.
+    /// This method exists to support generation of `tg-app-actions.js`>
+    ///
+    public static String createActionObjectForTgAppActions(final EntityActionConfig config) {
+        final StringBuilder attrs = new StringBuilder("{\n");
+        if (config.context.isPresent()) {
+            if (!config.context.get().relatedContexts.isEmpty()) {
+                attrs.append("relatedContexts: ").append(createRelatedContexts(config.context.get().relatedContexts)).append(",\n");
+            }
+            config.context.get().parentCentreContext.ifPresent(parentCentreContext -> {
+                attrs.append("parentCentreContext: ").append(createParentCentreContext(parentCentreContext)).append(",\n");
+            });
+        }
+        attrs.append("shortDesc: ").append(jsString(config.shortDesc.orElse(""))).append(",\n");
+        attrs.append("longDesc: ").append(jsString(config.longDesc.orElse(""))).append(",\n");
+        attrs.append("componentUri: ").append(jsString(generateComponentUri(config))).append(",\n");
+        attrs.append("elementName: ").append(jsString(generateElementName(config))).append(",\n");
         attrs.append("preAction: ").append(createPreAction(config)).append(",\n");
         attrs.append("postActionSuccess: ").append(createPostActionSuccess(config)).append(",\n");
         attrs.append("attrs: ").append(createElementAttributes(config, false)).append(",\n");
@@ -434,4 +466,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public void setForMaster(final boolean forMaster) {
         this.forMaster = forMaster;
     }
+
+    private static String jsString(final String str) {
+        return "'%s'".formatted(str.replace("'", "\\'"));
+    }
+
 }
