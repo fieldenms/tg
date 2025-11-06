@@ -2,21 +2,28 @@ package ua.com.fielden.platform.tiny;
 
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
+import ua.com.fielden.platform.cypher.Checksum;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
 import java.util.Map;
+import java.util.Optional;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
+import static ua.com.fielden.platform.tiny.TinyHyperlink.HASH;
 
 @EntityType(TinyHyperlink.class)
 public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements TinyHyperlinkCo {
@@ -33,6 +40,28 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     @Override
     protected IFetchProvider<TinyHyperlink> createFetchProvider() {
         return FETCH_PROVIDER;
+    }
+
+    @Override
+    @SessionRequired
+    public TinyHyperlink save(final TinyHyperlink tinyHyperlink) {
+        return save(tinyHyperlink, Optional.of(FetchModelReconstructor.reconstruct(tinyHyperlink))).asRight().value();
+    }
+
+    @SessionRequired
+    @Override
+    protected Either<Long, TinyHyperlink> save(final TinyHyperlink tinyHyperlink, final Optional<fetch<TinyHyperlink>> maybeFetch) {
+        if (!tinyHyperlink.isPersisted()) {
+            final var hash = hash(tinyHyperlink);
+            // An instrumented instance is required for `save`.
+            final var existingTinyHyperlink = co$(TinyHyperlink.class).findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(HASH), hash);
+            if (existingTinyHyperlink != null) {
+                return super.save(existingTinyHyperlink, maybeFetch);
+            }
+            tinyHyperlink.setHash(hash);
+        }
+
+        return super.save(tinyHyperlink, maybeFetch);
     }
 
     @Override
@@ -71,6 +100,19 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         }
 
         return "%s/#/tiny/%s".formatted(appUri, tinyHyperlink.getId());
+    }
+
+    @Override
+    public String hash(final TinyHyperlink tinyHyperlink) {
+        if (tinyHyperlink.isPersisted()) {
+            return tinyHyperlink.getHash();
+        }
+
+        if (tinyHyperlink.getSavingInfoHolder() == null || tinyHyperlink.getSavingInfoHolder().length == 0) {
+            throw new InvalidArgumentException("[%s] is required to compute a hash.".formatted(TinyHyperlink.SAVING_INFO_HOLDER));
+        }
+
+        return Checksum.sha256(tinyHyperlink.getSavingInfoHolder());
     }
 
 }

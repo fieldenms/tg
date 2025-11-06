@@ -13,10 +13,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
 
     IFetchProvider<TinyHyperlink> FETCH_PROVIDER = fetch(TinyHyperlink.class).with(
+            TinyHyperlink.HASH,
             TinyHyperlink.USER,
-            TinyHyperlink.CREATED_DATE,
-            TinyHyperlink.ENTITY_TYPE_NAME,
-            TinyHyperlink.SAVING_INFO_HOLDER);
+            TinyHyperlink.CREATED_DATE);
 
     TinyHyperlink save(Class<? extends AbstractEntity<?>> entityType,
                        Map<String, Object> modifiedProperties,
@@ -25,5 +24,10 @@ public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
     TinyHyperlink save(Class<? extends AbstractEntity<?>> entityType, SavingInfoHolder savingInfoHolder);
 
     String toURL(TinyHyperlink tinyHyperlink);
+
+    /// Computes a hash for `tinyHyperlink`.
+    /// If it is persisted, returns the existing hash value.
+    ///
+    String hash(TinyHyperlink tinyHyperlink);
 
 }
