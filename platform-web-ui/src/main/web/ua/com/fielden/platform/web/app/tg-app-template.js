@@ -311,41 +311,33 @@ Polymer({
                 const self = this;
 
                 const action = document.createElement('tg-ui-action');
-                action.shortDesc = 'Copy';
-                action.longDesc = 'Copy Work Order';
+                action.shortDesc = 'Add new Priority';
+                action.longDesc = 'Add new Priority';
                 // should-refresh-parent-centre-after-save
-                action.componentUri = '/master_ui/fielden.work.ui_actions.CopyWorkOrderAction';
-                action.elementName = 'tg-CopyWorkOrderAction-master';
+                action.componentUri = '/master_ui/ua.com.fielden.platform.entity.EntityNewAction';
+                action.elementName = 'tg-EntityNewAction-master';
                 // number-of-action='1' action-kind='TOP_LEVEL' element-alias='tg-CopyWorkOrderAction-master_1_TOP_LEVEL'
                 action.showDialog = this._showDialog;
                 action.toaster = this.toaster;
                 action.createContextHolder = this._createContextHolder;
 
                 action.preAction = function (action) {
-                    console.log('preAction: Copy');
+                    console.log('preAction: Add new Priority');
                     return Promise.resolve(true);
                 };
                 action.postActionSuccess = function (functionalEntity, action, master) {
-                    console.log('postActionSuccess: Copy');
-                    //self.$.egi.clearPageSelection();
-                    if (functionalEntity.get('copiedWorkOrder')) { // if a Wa copy was made, show the message and provide an option to open WorkOrder Master
-                        const openOption = 'Open WO #' + functionalEntity.get('copiedWorkOrder').get('number');
-                        self.confirm(functionalEntity.get('postActionMessage'), [{name:'Close', confirm:false}, {name:openOption, confirm:true, autofocus:true}])
-                            .then(details => master.openMaster())
-                    } else { // otherwise, if a new Work Order was not created or multiple copies were created, simply show the message
-                        self.confirm(functionalEntity.get('postActionMessage'), [{name:'Close', confirm:true, autofocus:true}]);
-                    }
+                    console.log('postActionSuccess: Add new Priority');
                 };
                 action.attrs = {
-                    entityType: 'fielden.work.ui_actions.CopyWorkOrderAction',
+                    entityType: 'ua.com.fielden.platform.entity.EntityNewAction',
                     currentState: 'EDIT',
                     centreUuid: 'unknown' // self.uuid
                 };
                 action.postActionError = function (functionalEntity, action, master) {
-                    console.log('postActionError: Copy');
+                    console.log('postActionError: Add new Priority');
                 };
-                action.requireSelectionCriteria = 'false';
-                action.requireSelectedEntities = 'ALL';
+                action.requireSelectionCriteria = 'true';
+                action.requireSelectedEntities = 'NONE';
                 action.requireMasterEntity = 'false';
 
                 action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
