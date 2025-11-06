@@ -342,7 +342,9 @@ Polymer({
                 action.requireMasterEntity = 'false';
 
                 action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
-                    master._postRetrievedDefault(deserialisedResult.instance);
+                    master.addEventListener('data-loaded-and-focused', event => {
+                        event.detail._postRetrievedDefault(deserialisedResult.instance);
+                    }, { once: true });
                 };
 
                 action._run();
