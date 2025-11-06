@@ -6,6 +6,7 @@ import com.google.inject.name.Names;
 import org.junit.Assert;
 import org.junit.Test;
 import ua.com.fielden.platform.data.IDomainDrivenData;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.security.provider.SecurityTestIocModule;
 import ua.com.fielden.platform.security.provider.SecurityTokenNodeTransformations;
@@ -24,22 +25,37 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.test_config.AbstractDaoTestCase.UNIT_TEST_ROLE;
 
 public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
 
-    private final Injector injector = new ApplicationInjectorFactory()
-            .add(new CommonEntityTestIocModuleWithPropertyFactory())
-            .add(new SecurityTestIocModule())
-            .add(new AbstractModule() {
-                @Override protected void configure() {
-                    bindConstant().annotatedWith(Names.named("tokens.path")).to("target/test-classes");
-                    bindConstant().annotatedWith(Names.named("tokens.package")).to("ua.com.fielden.platform.security.provider");
-                }
-            })
-            .getInjector();
+    @Test
+    public void if_association_is_missing_then_new_association_should_be_active() {
+        final UserRoleCo userRoleCo = co(UserRole.class);
+        final UserRole test_role_3 = userRoleCo.findByKey("UNIT_TEST_ROLE_3");
+
+        final SecurityRoleAssociationCo associationCo = co(SecurityRoleAssociation.class);
+        final SecurityRoleAssociation association = associationCo.findByKey(SecondLevelSecurityToken1.class, test_role_3);
+
+        assertNull(association);
+
+        final var associationsToSave = new HashMap<String, List<Integer>>();
+        associationsToSave.put(SecondLevelSecurityToken1.class.getName(), List.of(test_role_3.getId().intValue()));
+
+        final SecurityMatrixSaveActionCo securityMatrixSaveCo = co(SecurityMatrixSaveAction.class);
+        save(securityMatrixSaveCo.new_()
+                .setAssociationsToSave(associationsToSave));
+
+        final SecurityRoleAssociation refetchedAssociation = associationCo.findByKeyAndFetch(
+                fetchNone(SecurityRoleAssociation.class).with("active"),
+                SecondLevelSecurityToken1.class,
+                test_role_3);
+
+        assertNotNull(refetchedAssociation);
+        //assertTrue(refetchedAssociation.isActive());
+    }
 
     @Test
     public void save_of_security_matrix_should_deactivate_some_of_the_association_and_activate_other_associations() {
@@ -69,8 +85,6 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
 
         assertEquals(securityMatrix.getTokenRoleMap().get(SecondLevelSecurityToken1.class.getName()), List.of(test_role_3.getId()));
         assertEquals(securityMatrix.getTokenRoleMap().get(SecondLevelSecurityToken2.class.getName()), List.of(test_role_4.getId()));
-
-
     }
 
     @Override

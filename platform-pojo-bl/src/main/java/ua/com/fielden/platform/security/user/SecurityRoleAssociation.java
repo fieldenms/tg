@@ -6,6 +6,9 @@ import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.types.markers.ISecurityTokenType;
 import ua.com.fielden.platform.utils.ClassComparator;
+import ua.com.fielden.platform.utils.Pair;
+
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 /// Entity that represents the association between the [ISecurityToken] and the [UserRole] entities.
 ///
@@ -13,6 +16,9 @@ import ua.com.fielden.platform.utils.ClassComparator;
 @MapEntityTo
 @CompanionObject(SecurityRoleAssociationCo.class)
 public class SecurityRoleAssociation extends AbstractPersistentEntity<DynamicEntityKey> {
+    private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(SecurityRoleAssociation.class);
+    public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
+    public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
     @IsProperty
     @CompositeKeyMember(1)

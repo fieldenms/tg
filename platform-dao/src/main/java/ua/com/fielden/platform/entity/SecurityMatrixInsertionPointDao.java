@@ -21,9 +21,11 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
+import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanRead_Token;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -45,6 +47,7 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
 
     @Override
     @SessionRequired
+    @Authorise(SecurityRoleAssociation_CanRead_Token.class)
     public SecurityMatrixInsertionPoint save(final SecurityMatrixInsertionPoint entity) {
         final List<SecurityTokenTreeNodeEntity> tokenEntities = tokenTransformation.transform(tokenProvider.getTopLevelSecurityTokenNodes()).stream().map(token -> createTokenNodeEntity(Optional.empty(), token)).collect(toList());
         final EntityResultQueryModel<UserRole> userRoleQueryModel = select(UserRole.class).model();

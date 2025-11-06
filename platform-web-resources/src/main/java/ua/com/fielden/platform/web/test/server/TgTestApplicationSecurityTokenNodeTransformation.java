@@ -41,7 +41,7 @@ public class TgTestApplicationSecurityTokenNodeTransformation implements ISecuri
                 UserMaster_CanOpen_Token.class);
 
         return SecurityTokenNodeTransformations
-                .compose(trans1, trans2, trans3)
+                .compose(trans1, trans2/*, trans3*/)
                 .transform(tree);
     }
 
