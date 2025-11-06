@@ -20,6 +20,7 @@ import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster
 import ua.com.fielden.platform.security.tokens.persistent.*;
 import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.*;
@@ -96,6 +97,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 UserRolesUpdater_CanExecute_Token.class,
                 UserRoleTokensUpdater_CanExecute_Token.class,
                 SecurityRoleAssociation_CanRead_Token.class,
+                SecurityRoleAssociation_CanSave_Token.class,
                 SecurityRoleAssociation_CanReadModel_Token.class,
                 Attachment_CanSave_Token.class,
                 Attachment_CanRead_Token.class,

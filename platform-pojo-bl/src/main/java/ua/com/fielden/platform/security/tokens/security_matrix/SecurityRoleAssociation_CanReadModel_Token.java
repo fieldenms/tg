@@ -11,5 +11,5 @@ import static java.lang.String.format;
 ///
 public class SecurityRoleAssociation_CanReadModel_Token implements ISecurityToken {
     public final static String TITLE = format(Template.READ_MODEL.forTitle(), SecurityRoleAssociation.ENTITY_TITLE);
-    public final static String DESC = format(Template.READ_MODEL.forDesc(), UserAndRoleAssociation.ENTITY_TITLE);
+    public final static String DESC = format(Template.READ_MODEL.forDesc(), SecurityRoleAssociation.ENTITY_TITLE);
 }

@@ -8,9 +8,11 @@ import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanSave_Token;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -38,6 +40,7 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
 
     @Override
     @SessionRequired
+    @Authorise(SecurityRoleAssociation_CanSave_Token.class)
     public SecurityMatrixSaveAction save(final SecurityMatrixSaveAction entity) {
         final Map<Long, UserRole> idRoleMap = getUserRoles(entity);
         if (!idRoleMap.isEmpty()) {
