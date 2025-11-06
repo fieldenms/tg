@@ -87,9 +87,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         final var serialisedSavingInfoHolder = serialiser.serialise(savingInfoHolder, SerialiserEngines.JACKSON);
         final var link = new_()
                 .setEntityTypeName(baseEntityType(entityType).getCanonicalName())
-                .setSavingInfoHolder(serialisedSavingInfoHolder)
-                .setUser(getUser())
-                .setCreatedDate(now().toDate());
+                .setSavingInfoHolder(serialisedSavingInfoHolder);
         return save(link);
     }
 

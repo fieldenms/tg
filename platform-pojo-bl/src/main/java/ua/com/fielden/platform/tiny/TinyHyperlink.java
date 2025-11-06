@@ -1,12 +1,9 @@
 package ua.com.fielden.platform.tiny;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
-import ua.com.fielden.platform.security.user.User;
-
-import java.util.Date;
 
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
@@ -14,15 +11,13 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 @MapEntityTo
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(TinyHyperlinkCo.class)
-public class TinyHyperlink extends AbstractEntity<DynamicEntityKey> {
+public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
 
     public static final String ENTITY_TITLE = getEntityTitleAndDesc(TinyHyperlink.class).getKey();
     public static final String ENTITY_DESC = getEntityTitleAndDesc(TinyHyperlink.class).getValue();
 
     public static final String
             HASH = "hash",
-            USER = "user",
-            CREATED_DATE = "createdDate",
             ENTITY_TYPE_NAME = "entityTypeName",
             SAVING_INFO_HOLDER = "savingInfoHolder";
 
@@ -40,16 +35,6 @@ public class TinyHyperlink extends AbstractEntity<DynamicEntityKey> {
     @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
     private byte[] savingInfoHolder;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "User", desc = "The user who created this hyperlink.")
-    private User user;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Creation Date", desc = "The date/time when this entity instace was created.")
-    private Date createdDate;
 
     public String getEntityTypeName() {
         return entityTypeName;
@@ -69,26 +54,6 @@ public class TinyHyperlink extends AbstractEntity<DynamicEntityKey> {
     public TinyHyperlink setSavingInfoHolder(final byte[] savingInfoHolder) {
         this.savingInfoHolder = savingInfoHolder;
         return this;
-    }
-
-    @Observable
-    public TinyHyperlink setUser(final User user) {
-        this.user = user;
-        return this;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    @Observable
-    public TinyHyperlink setCreatedDate(final Date createdDate) {
-        this.createdDate = createdDate;
-        return this;
-    }
-
-    public Date getCreatedDate() {
-        return createdDate;
     }
 
     @Observable
