@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.actions;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
@@ -12,6 +8,10 @@ import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+
 /**
  * Configuration of a specific entity action, which is associated with an entity on an entity centre.
  *
@@ -19,7 +19,10 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
  *
  */
 public final class EntityActionConfig {
+
     public final Optional<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> functionalEntity;
+    public final boolean withTinyHyperlink;
+    public final String actionIdentifier;
     public final Optional<CentreContextConfig> context;
     public final Optional<String> icon;
     public final Optional<String> iconStyle;
@@ -35,12 +38,14 @@ public final class EntityActionConfig {
 	public final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints = new HashSet<>();
 	public final UI_ROLE role;
 
-	public enum UI_ROLE {
+    public enum UI_ROLE {
 	    ICON, BUTTON;
 	}
 
     private EntityActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
+            final boolean withTinyHyperlink,
+            final String actionIdentifier,
             final CentreContextConfig context,
             final String icon,
             final String iconStyle,
@@ -54,8 +59,8 @@ public final class EntityActionConfig {
             final boolean shouldRefreshParentCentreAfterSave,
             final InsertionPoints whereToInsertView,
             final UI_ROLE role,
-            final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints) {
-
+            final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints)
+    {
         if (context == null) {
             throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
         }
@@ -64,6 +69,8 @@ public final class EntityActionConfig {
             throw new IllegalArgumentException("Dynamic action can be created only with current entity in context.");
         }
 
+        this.withTinyHyperlink = withTinyHyperlink;
+        this.actionIdentifier = actionIdentifier;
         this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave;
         this.functionalEntity = Optional.ofNullable(functionalEntity);
         this.context = Optional.ofNullable(context);
@@ -86,9 +93,10 @@ public final class EntityActionConfig {
         this.excludeInsertionPoints.addAll(excludeInsertionPoints);
     }
 
-
     private EntityActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
+            final boolean withTinyHyperlink,
+            final String actionIdentifier,
             final CentreContextConfig context,
             final String icon,
             final String iconStyle,
@@ -101,12 +109,14 @@ public final class EntityActionConfig {
             final PrefDim prefDimForView,
             final boolean shouldRefreshParentCentreAfterSave,
             final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints) {
-        this(functionalEntity, context, icon, iconStyle, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON, excludeInsertionPoints);
+        this(functionalEntity, withTinyHyperlink, actionIdentifier, context, icon, iconStyle, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON, excludeInsertionPoints);
     }
 
     public static EntityActionConfig withContext(final EntityActionConfig ac, final CentreContextConfig cc) {
         return new EntityActionConfig(
                         ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
+                        ac.withTinyHyperlink,
+                        ac.actionIdentifier,
                         cc,
                         ac.icon.isPresent() ? ac.icon.get() : null,
                         ac.iconStyle.orElse(null),
@@ -130,6 +140,8 @@ public final class EntityActionConfig {
     public static EntityActionConfig mkInsertionPoint(final EntityActionConfig ac, final InsertionPoints ip) {
         return new EntityActionConfig(
                 ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
+                ac.withTinyHyperlink,
+                ac.actionIdentifier,
                 ac.context.isPresent() ? ac.context.get() : null,
                 ac.icon.isPresent() ? ac.icon.get() : null,
                 ac.iconStyle.orElse(null),
@@ -156,6 +168,8 @@ public final class EntityActionConfig {
     public static EntityActionConfig setRole(final EntityActionConfig ac, final UI_ROLE role) {
         return new EntityActionConfig(
                 ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
+                ac.withTinyHyperlink,
+                ac.actionIdentifier,
                 ac.context.isPresent() ? ac.context.get() : null,
                 ac.icon.isPresent() ? ac.icon.get() : null,
                 ac.iconStyle.orElse(null),
@@ -187,6 +201,8 @@ public final class EntityActionConfig {
      */
     public static EntityActionConfig createActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
+            final boolean withTinyHyperlink,
+            final String actionIdentifier,
             final CentreContextConfig context,
             final String icon,
             final String iconStyle,
@@ -202,6 +218,8 @@ public final class EntityActionConfig {
             ) {
         return new EntityActionConfig(
                 functionalEntity,
+                withTinyHyperlink,
+                actionIdentifier,
                 context,
                 icon,
                 iconStyle,
