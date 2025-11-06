@@ -19,6 +19,7 @@ import ua.com.fielden.platform.web.ioc.exceptions.MissingCentreConfigurationExce
 import ua.com.fielden.platform.web.ioc.exceptions.MissingCustomViewConfigurationException;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingMasterConfigurationException;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
+import ua.com.fielden.platform.web.resources.webui.TgAppActionsResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 
@@ -95,6 +96,8 @@ public class WebResourceLoader implements IWebResourceLoader {
             return ofNullable(webUiConfig.genMainWebUIComponent());
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceUri)) {
             return getReflectorSource(webUiConfig, serialiser, (TgJackson) serialiser.getEngine(JACKSON));
+        } else if (TgAppActionsResource.PATH.equalsIgnoreCase(resourceUri)) {
+            return getAppActionsSource();
         } else if (resourceUri.startsWith("/master_ui")) {
             return ofNullable(getMasterSource(resourceUri.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig));
         } else if (resourceUri.startsWith("/centre_ui")) {
@@ -126,6 +129,10 @@ public class WebResourceLoader implements IWebResourceLoader {
     private static Optional<String> getReflectorSource(final IWebUiConfig webUiConfig, final ISerialiser serialiser, final TgJackson tgJackson) {
         final Optional<String> originalSource = ofNullable(getText("ua/com/fielden/platform/web/reflection/tg-reflector.js"));
         return originalSource.map(src -> src.replace("@typeTable", new String(serialiser.serialise(enhanceWithMasterInfo(webUiConfig, tgJackson.getTypeTable()), JACKSON), UTF_8)));
+    }
+
+    private Optional<String> getAppActionsSource() {
+        throw new UnsupportedOperationException("TODO");
     }
 
     /// Extends types in `typeTable` with information about their masters.
