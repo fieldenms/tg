@@ -35,6 +35,8 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
+import * as appActions from '/app/tg-app-actions.js';
+
 let screenWidth = window.screen.availWidth;
 let screenHeight = window.screen.availHeight;
 
@@ -307,36 +309,23 @@ Polymer({
             this.$.entityReconstructor.generateRequest().completes.then(ironRequest => {
                 const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
                 //console.error(deserialisedResult);
-
-                const self = this;
+                const customObject = deserialisedResult.instance[1];
+                const actionObject = appActions.actions(this)[customObject.actionIdentifier];
+                // TODO Report an error if actionObject is null.
 
                 const action = document.createElement('tg-ui-action');
-                action.shortDesc = 'Work Order';
-                action.longDesc = 'Add new Work Order';
-                // should-refresh-parent-centre-after-save
-                action.componentUri = '/master_ui/fielden.work.ui_actions.OpenWorkOrderMasterAction';
-                action.elementName = 'tg-OpenWorkOrderMasterAction-master';
-                // number-of-action='1' action-kind='TOP_LEVEL' element-alias='tg-CopyWorkOrderAction-master_1_TOP_LEVEL'
+                for (const name of ['shortDesc', 'longDesc', 'componentUri', 'elementName', 'preAction', 'postActionSuccess', 'postActionError']) {
+                    action[name] = actionObject[name]
+                }
+                action.attrs = {}
+                for (const name of ['entityType', 'currentState', 'prefDim']) {
+                    action.attrs[name] = actionObject.attrs[name]
+                }
+                action.attrs.centreUuid = this.uuid;
+
                 action.showDialog = this._showDialog;
                 action.toaster = this.toaster;
                 action.createContextHolder = this._createContextHolder;
-
-                action.preAction = function (action) {
-                    console.log('preAction: Work Order');
-                    return Promise.resolve(true);
-                };
-                action.postActionSuccess = function (functionalEntity, action, master) {
-                    console.log('postActionSuccess: Work Order');
-                };
-                action.attrs = {
-                    entityType: 'fielden.work.ui_actions.OpenWorkOrderMasterAction',
-                    currentState: 'EDIT',
-                    centreUuid: 'unknown', // self.uuid
-                    prefDim: {width: function() {return 1280}, height: function() {return 90}, widthUnit: 'px', heightUnit: '%'}
-                };
-                action.postActionError = function (functionalEntity, action, master) {
-                    console.log('postActionError: Work Order');
-                };
                 action.requireSelectionCriteria = 'true';
                 action.requireSelectedEntities = 'NONE';
                 action.requireMasterEntity = 'false';
@@ -348,9 +337,6 @@ Polymer({
                 };
 
                 action._run();
-
-                //deserialisedResult
-
             });
         }
         else if (entityInfo.length !== 2 && entityInfo.length !== 3) {
