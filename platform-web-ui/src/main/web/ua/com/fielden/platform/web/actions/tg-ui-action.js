@@ -10,7 +10,7 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent, getFirstEntityType, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getFirstEntityType, deepestActiveElement, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
@@ -63,6 +63,8 @@ const template = html`
     </paper-button>
     <paper-spinner id="spinner" active="[[isActionInProgress]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
+
+const SHARE_ACTION_SIMPLE_NAME = 'EntityShareAction';
 
 /**
  * Returns 'true' in case where obj is not defined (aka 'null', 'undefined' or not undefined), 'false' otherwise. 
@@ -744,7 +746,23 @@ Polymer({
             );
         }
         if (self.rootEntityType) {
-            this._reflector.setCustomProperty(context, '@@rootEntityType', self.rootEntityType);
+            self._reflector.setCustomProperty(context, '@@rootEntityType', self.rootEntityType);
+        }
+        // Determine whether the action represents special Share action for functional / new entities.
+        if (self.elementName === `tg-${SHARE_ACTION_SIMPLE_NAME}-master`) {
+            // Find a first dialog above that action (no support for insertion points for now).
+            const dialog = getParentAnd(self, e => e.matches('tg-custom-action-dialog'));
+            // Get dialog's last executed action. This action will represent the top most Entity Master:
+            //   1. WorkOrderCopyAction
+            //     -> returns <tg-ui-action> for WorkOrderCopyAction
+            //   2. EntityNewAction with Priority
+            //     -> returns <tg-ui-action> for EntityNewAction
+            //   3. OpenWorkOrderMasterAction with WorkOrderMaster_OpenMain_MenuItem with WorkOrder
+            //     -> returns <tg-ui-action> for OpenWorkOrderMasterAction
+            if (dialog && dialog._lastAction && dialog._lastAction.attrs && dialog._lastAction.attrs.actionId) {
+                // Put action identifier for that action into custom object of the context.
+                self._reflector.setCustomProperty(context, 'actionIdentifier', dialog._lastAction.attrs.actionId);
+            }
         }
         return context;
     },
