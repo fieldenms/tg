@@ -332,7 +332,21 @@ Polymer({
 
                 action.showDialog = this._showDialog;
                 action.toaster = this.toaster;
-                action.createContextHolder = this._createContextHolder;
+                const savingInfoHolder = this._serialiser().deserialise(JSON.parse(customObject.savingInfoHolder));
+                action.createContextHolder = () => {
+                    const typeName = action.componentUri.substring(action.componentUri.lastIndexOf('/') + 1);
+                    const type = this._reflector().getType(typeName);
+                    if (type && type._simpleClassName() === 'EntityNewAction') {
+                        return savingInfoHolder.centreContextHolder
+                            .masterEntity.centreContextHolder;
+                    }
+                    else if (type && type.compoundOpenerType()) {
+                        return savingInfoHolder.centreContextHolder
+                            .masterEntity.centreContextHolder
+                            .masterEntity.centreContextHolder;
+                    }
+                    return savingInfoHolder.centreContextHolder;
+                };
 
                 action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
                     master.addEventListener('data-loaded-and-focused', event => {
