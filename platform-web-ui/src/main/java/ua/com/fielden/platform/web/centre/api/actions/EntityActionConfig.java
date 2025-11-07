@@ -231,6 +231,7 @@ public final class EntityActionConfig {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((context == null) ? 0 : context.hashCode());
+        result = prime * result + ((actionIdentifier == null) ? 0 : actionIdentifier.hashCode());
         result = prime * result + ((errorPostAction == null) ? 0 : errorPostAction.hashCode());
         result = prime * result + ((functionalEntity == null) ? 0 : functionalEntity.hashCode());
         result = prime * result + ((icon == null) ? 0 : icon.hashCode());
@@ -272,6 +273,13 @@ public final class EntityActionConfig {
                 return false;
             }
         } else if (!functionalEntity.equals(other.functionalEntity)) {
+            return false;
+        }
+        if (actionIdentifier == null) {
+            if (other.actionIdentifier != null) {
+                return false;
+            }
+        } else if (!actionIdentifier.equals(other.actionIdentifier)) {
             return false;
         }
         if (icon == null) {
