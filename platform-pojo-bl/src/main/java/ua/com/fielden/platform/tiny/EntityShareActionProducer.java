@@ -12,6 +12,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 
 import java.util.Base64;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static ua.com.fielden.platform.utils.QrCodeUtils.*;
 import static ua.com.fielden.platform.utils.QrCodeUtils.ImageFormat.PNG;
 
@@ -40,11 +41,16 @@ public class EntityShareActionProducer extends DefaultEntityProducerWithContext<
             if (centreContextHolder == null) {
                 throw new InvalidStateException("[centreContextHolder] must be present.");
             }
+
+            final String actionIdentifier = getContext().getCustomObject() != null ? (String) getContext().getCustomObject().get("actionIdentifier") : null;
+            if (isBlank(actionIdentifier)) {
+                throw new InvalidStateException("[actionIdentifier] must be present.");
+            }
             final var savingInfoHolder = (SavingInfoHolder) centreContextHolder.getMasterEntity();
 
             final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
             // TODO Specify a minimal fetch model for refetching after save.
-            final var tinyHyperlink = coTinyHyperlink.save(masterEntity.getType(), savingInfoHolder);
+            final var tinyHyperlink = coTinyHyperlink.save(masterEntity.getType(), savingInfoHolder, actionIdentifier);
             final var hyperlink = new Hyperlink(coTinyHyperlink.toURL(tinyHyperlink));
             entity.setHyperlink(hyperlink)
                   .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(hyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));

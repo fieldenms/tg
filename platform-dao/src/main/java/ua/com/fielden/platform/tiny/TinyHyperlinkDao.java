@@ -52,9 +52,6 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     @Override
     protected Either<Long, TinyHyperlink> save(final TinyHyperlink tinyHyperlink, final Optional<fetch<TinyHyperlink>> maybeFetch) {
         if (!tinyHyperlink.isPersisted()) {
-            // TODO Get from context in EntityShareActionProducer.
-            tinyHyperlink.setActionIdentifier("StocktakeEntryAction");
-
             final var hash = hash(tinyHyperlink);
             // An instrumented instance is required for `save`.
             final var existingTinyHyperlink = co$(TinyHyperlink.class).findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(HASH), hash);
@@ -72,7 +69,8 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     public TinyHyperlink save(
             final Class<? extends AbstractEntity<?>> entityType,
             final Map<String, Object> modifiedProperties,
-            final CentreContextHolder centreContextHolder)
+            final CentreContextHolder centreContextHolder,
+            final String actionIdentifier)
     {
         // TODO Perform a transformation.
         //      `modifiedProperties` contains conventional property values, while `modifHolder` requires a special structure used in marshalling.
@@ -81,16 +79,20 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
                 .setModifHolder(modifHolder)
                 .setCentreContextHolder(centreContextHolder);
 
-        return save(entityType, savingInfoHolder);
+        return save(entityType, savingInfoHolder, actionIdentifier);
     }
 
     @Override
     @SessionRequired
-    public TinyHyperlink save(final Class<? extends AbstractEntity<?>> entityType, final SavingInfoHolder savingInfoHolder) {
+    public TinyHyperlink save(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final SavingInfoHolder savingInfoHolder,
+            final String actionIdentifier) {
         final var serialisedSavingInfoHolder = serialiser.serialise(savingInfoHolder, SerialiserEngines.JACKSON);
         final var link = new_()
                 .setEntityTypeName(baseEntityType(entityType).getCanonicalName())
-                .setSavingInfoHolder(serialisedSavingInfoHolder);
+                .setSavingInfoHolder(serialisedSavingInfoHolder)
+                .setActionIdentifier(actionIdentifier);
         return save(link);
     }
 
