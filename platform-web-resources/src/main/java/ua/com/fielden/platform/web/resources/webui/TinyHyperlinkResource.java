@@ -12,8 +12,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -31,14 +29,11 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyApplicationErrorHandler;
 
 import java.util.Map;
-import java.util.Optional;
 
-import static java.util.Optional.empty;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
-import static ua.com.fielden.platform.tiny.TinyHyperlink.ENTITY_TYPE_NAME;
-import static ua.com.fielden.platform.tiny.TinyHyperlink.SAVING_INFO_HOLDER;
+import static ua.com.fielden.platform.tiny.TinyHyperlink.*;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreEntityFrom;
 import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForMaster;
@@ -95,7 +90,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
     public Representation save() {
         return handleUndesiredExceptions(getResponse(), () -> {
             final TinyHyperlinkCo coTinyHyperlink = companionFinder.findAsReader(TinyHyperlink.class, true);
-            final var tinyHyperlink = coTinyHyperlink.findById(tinyHyperlinkId, fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, SAVING_INFO_HOLDER));
+            final var tinyHyperlink = coTinyHyperlink.findById(tinyHyperlinkId, fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, SAVING_INFO_HOLDER, ACTION_IDENTIFIER));
             if (tinyHyperlink == null) {
                 getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
                 return new StringRepresentation("The specified resource was not found. Please verify that you are accessing the correct resource.");
@@ -118,7 +113,9 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                                                  companionFinder.find(User.class),
                                                  sharingModel);
 
-            return createRepresentation(entity);
+            final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
+            customObject.put(ACTION_IDENTIFIER, tinyHyperlink.getActionIdentifier());
+            return restUtil.resultJSONRepresentation(restUtil.singleEntityResult(entity).extendResultWithCustomObject(customObject));
         }, restUtil);
     }
 
@@ -130,19 +127,5 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
         }
     };
-
-    /// Creates [Representation] for an entity.
-    ///
-    private Representation createRepresentation(final AbstractEntity<?> entity) {
-        return createRepresentation(entity, empty());
-    }
-
-    /// Creates [Representation] for an entity and [Optional] `exceptionOpt`.
-    ///
-    private Representation createRepresentation(final AbstractEntity<?> entity, final Optional<Exception> exceptionOpt) {
-        final Result result = restUtil.singleEntityResult(entity, exceptionOpt);
-        final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
-        return restUtil.resultJSONRepresentation(result.extendResultWithCustomObject(customObject));
-    }
 
 }
