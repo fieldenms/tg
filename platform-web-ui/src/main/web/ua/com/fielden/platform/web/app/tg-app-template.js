@@ -314,7 +314,11 @@ Polymer({
                 // TODO Report an error if actionObject is null.
 
                 const action = document.createElement('tg-ui-action');
-                for (const name of ['shortDesc', 'longDesc', 'componentUri', 'elementName', 'preAction', 'postActionSuccess', 'postActionError']) {
+                for (const name of [
+                    'shortDesc', 'longDesc', 'componentUri', 'elementName',
+                    'preAction', 'postActionSuccess', 'postActionError',
+                    'requireSelectionCriteria', 'requireSelectedEntities', 'requireMasterEntity'
+                ]) {
                     action[name] = actionObject[name]
                 }
                 action.attrs = {}

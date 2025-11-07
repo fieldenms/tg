@@ -273,6 +273,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             config.context.get().parentCentreContext.ifPresent(parentCentreContext -> {
                 attrs.append("parentCentreContext: ").append(createParentCentreContext(parentCentreContext)).append(",\n");
             });
+            attrs.append("requireSelectionCriteria: ").append(config.context.get().withSelectionCrit ? "'true'" : "'false'").append(",\n");
+            attrs.append("requireSelectedEntities: ").append(config.context.get().withCurrentEtity ? "'ONE'" : (config.context.get().withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
+            attrs.append("requireMasterEntity: ").append(config.context.get().withMasterEntity ? "'true'" : "'false'").append(",\n");
         }
         attrs.append("shortDesc: ").append(jsString(config.shortDesc.orElse(""))).append(",\n");
         attrs.append("longDesc: ").append(jsString(config.longDesc.orElse(""))).append(",\n");
