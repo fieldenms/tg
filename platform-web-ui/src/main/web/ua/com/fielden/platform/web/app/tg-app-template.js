@@ -330,9 +330,6 @@ Polymer({
                 action.showDialog = this._showDialog;
                 action.toaster = this.toaster;
                 action.createContextHolder = this._createContextHolder;
-                action.requireSelectionCriteria = 'true';
-                action.requireSelectedEntities = 'NONE';
-                action.requireMasterEntity = 'false';
 
                 action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
                     master.addEventListener('data-loaded-and-focused', event => {
