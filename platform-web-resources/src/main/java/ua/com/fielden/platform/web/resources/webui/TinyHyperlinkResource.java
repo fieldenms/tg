@@ -115,6 +115,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
 
             final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
             customObject.put(ACTION_IDENTIFIER, tinyHyperlink.getActionIdentifier());
+            customObject.put(SAVING_INFO_HOLDER, new String(tinyHyperlink.getSavingInfoHolder()));
             return restUtil.resultJSONRepresentation(restUtil.singleEntityResult(entity).extendResultWithCustomObject(customObject));
         }, restUtil);
     }
