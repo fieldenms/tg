@@ -13,6 +13,8 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
+
 /// Should be used as a convenient base class for domain driven test cases.
 ///
 @RunWith(H2OrPostgreSqlOrSqlServerContextSelector.class)
@@ -61,7 +63,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
             final SecurityRoleAssociationCo coSecurityRoleAssociation = co(SecurityRoleAssociation.class);
             coSecurityRoleAssociation.addAssociations(provider.allSecurityTokens()
                                                               .stream()
-                                                              .map(tok -> coSecurityRoleAssociation.new_().setRole(admin).setSecurityToken(tok)));
+                                                              .map(tok -> coSecurityRoleAssociation.new_().setRole(admin).setSecurityToken(tok)).collect(toList()));
         }
 
         up.setUsername(testUser.getKey(), getInstance(IUser.class));

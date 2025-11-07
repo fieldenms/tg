@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.security.user;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.security.ISecurityToken;
@@ -15,7 +16,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
 @CompanionObject(SecurityRoleAssociationCo.class)
-public class SecurityRoleAssociation extends AbstractPersistentEntity<DynamicEntityKey> {
+public class SecurityRoleAssociation extends ActivatableAbstractEntity<DynamicEntityKey> {
     private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(SecurityRoleAssociation.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
@@ -55,6 +56,13 @@ public class SecurityRoleAssociation extends AbstractPersistentEntity<DynamicEnt
     @Observable
     public SecurityRoleAssociation setRole(final UserRole role) {
         this.role = role;
+        return this;
+    }
+
+    @Override
+    @Observable
+    public SecurityRoleAssociation setActive(final boolean active) {
+        super.setActive(active);
         return this;
     }
 }

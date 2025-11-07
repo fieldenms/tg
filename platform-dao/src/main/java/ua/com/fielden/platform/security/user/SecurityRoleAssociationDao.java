@@ -1,20 +1,37 @@
 package ua.com.fielden.platform.security.user;
 
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanSave_Token;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.partitioningBy;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.security.provider.ISecurityTokenProvider.MissingSecurityTokenPlaceholder;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchEntityForPropOf;
 
 /// DAO implementation of [SecurityRoleAssociationCo].
 ///
@@ -78,14 +95,63 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     public void removeAssociations(final Collection<SecurityRoleAssociation> associations) {
-        SequentialGroupingStream.stream(associations.stream(), (assoc, group) -> group.size() < 1000)
-        .forEach(group -> createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), group).map(this::defaultBatchDelete));
+        fetchAssociationsAndModifyOrElse(
+                associations,
+                fetchedAssociation -> {
+                    fetchedAssociation.setActive(false);
+                    this.quickSave(fetchedAssociation);
+                },empty());
     }
 
     @Override
     @SessionRequired
-    public int addAssociations(final Stream<SecurityRoleAssociation> associations) {
-        return defaultBatchInsert(associations, 500);
+    public void addAssociations(final Collection<SecurityRoleAssociation> associations) {
+        fetchAssociationsAndModifyOrElse(
+                associations,
+                fetchedAssociation -> {
+                    fetchedAssociation.setActive(true);
+                    this.quickSave(fetchedAssociation);
+                },
+                of(notFoundAssociation -> {
+                    this.quickSave(notFoundAssociation);
+                }));
     }
 
+    private void fetchAssociationsAndModifyOrElse(
+            final Collection<SecurityRoleAssociation> associations,
+            final Consumer<SecurityRoleAssociation> modifier,
+            final Optional<Consumer<SecurityRoleAssociation>> orElseOpt) {
+
+        final TreeSet<SecurityRoleAssociation> notFoundAssociations = new TreeSet<>(associations);
+
+        SequentialGroupingStream.stream(associations.stream(), (association, group) -> group.size() < 500)
+                .forEach(group -> {
+                    final var query = queryForAssociations(group);
+                    try (final Stream<SecurityRoleAssociation> stream = stream(from(query).with(FETCH_MODEL).model())) {
+                        stream.forEach(association -> {
+                            modifier.accept(association);
+                            if (notFoundAssociations.contains(association)) {
+                                notFoundAssociations.remove(association);
+                            }
+                        });
+                    }
+                });
+
+        orElseOpt.ifPresent(orElse -> {
+            for (final SecurityRoleAssociation notFoundAssociation : notFoundAssociations) {
+                orElse.accept(notFoundAssociation);
+            }
+        });
+    }
+
+    private static EntityResultQueryModel<SecurityRoleAssociation> queryForAssociations(final List<SecurityRoleAssociation> group) {
+        return select(SecurityRoleAssociation.class).where()
+                .prop("securityToken").in().values(group.stream().map(a -> a.getSecurityToken().getName()).collect(toList())).and()
+                .prop("role").in().values(group.stream().map(a -> a.getRole()).collect(toList())).model();
+    }
+
+    @Override
+    public SecurityRoleAssociation new_() {
+        return super.new_().setActive(true);
+    }
 }
