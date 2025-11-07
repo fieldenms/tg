@@ -319,13 +319,15 @@ Polymer({
                     'preAction', 'postActionSuccess', 'postActionError',
                     'requireSelectionCriteria', 'requireSelectedEntities', 'requireMasterEntity'
                 ]) {
-                    action[name] = actionObject[name]
+                    action[name] = actionObject[name];
                 }
                 action.attrs = {}
                 for (const name of ['entityType', 'currentState', 'prefDim', 'actionId']) {
-                    action.attrs[name] = actionObject.attrs[name]
+                    if (actionObject.attrs[name]) { // prefDim may be undefined
+                        action.attrs[name] = actionObject.attrs[name];
+                    }
                 }
-                action.attrs.centreUuid = this.uuid;
+                action.attrs.centreUuid = 'unknown'; // this.uuid;
 
                 action.showDialog = this._showDialog;
                 action.toaster = this.toaster;
