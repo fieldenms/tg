@@ -468,7 +468,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                 throw new IllegalStateException(e);
             }
             final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(entityType);
-            actionConfig = of(master.actionConfig(
+            actionConfig = ofNullable(master.actionConfig(
                 valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
                 Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")))
             );
