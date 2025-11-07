@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.cypher;
 
-import static ua.com.fielden.platform.utils.Pair.pair;
+import ua.com.fielden.platform.cypher.exceptions.ChecksumException;
+import ua.com.fielden.platform.utils.Pair;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,8 +10,7 @@ import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 
-import ua.com.fielden.platform.cypher.exceptions.ChecksumException;
-import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
  * A utility class to calculate a checksum for an input stream and potentially other types of data.
@@ -55,9 +55,19 @@ public class Checksum {
      * @return
      */
     public static String sha256(final byte[] dataBytes) {
+        class $ { static final byte[] EMPTY = {}; }
+        return sha256(dataBytes, $.EMPTY);
+    }
+
+    /// Calculates a SHA256 code for the passed in byte array.
+    ///
+    public static String sha256(final byte[] bytes0, final byte[]... bytesRest) {
         try {
             final MessageDigest md = MessageDigest.getInstance("SHA256");
-            md.update(dataBytes);
+            md.update(bytes0);
+            for (final var bytes : bytesRest) {
+                md.update(bytes);
+            }
             final byte[] mdbytes = md.digest();
             return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
         } catch (final Exception ex) {

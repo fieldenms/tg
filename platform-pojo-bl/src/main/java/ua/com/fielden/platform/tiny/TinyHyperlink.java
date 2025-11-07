@@ -20,7 +20,8 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
     public static final String
             HASH = "hash",
             ENTITY_TYPE_NAME = "entityTypeName",
-            SAVING_INFO_HOLDER = "savingInfoHolder";
+            SAVING_INFO_HOLDER = "savingInfoHolder",
+            ACTION_IDENTIFIER = "actionIdentifier";
 
     @IsProperty(length = 64) // SHA256 is 32 bytes, hex encoding uses 2 characters per byte.
     @MapTo
@@ -40,6 +41,24 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
     @Required
     @MapTo
     private byte[] savingInfoHolder;
+
+    /// Corresponds to [ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig#actionIdentifier].
+    ///
+    @IsProperty
+    @Required
+    @MapTo
+    @Title(value = "Action Identifier", desc = "Identifier for the action that opened the entity master where this tiny hyperlink was created.")
+    private String actionIdentifier;
+
+    public String getActionIdentifier() {
+        return actionIdentifier;
+    }
+
+    @Observable
+    public TinyHyperlink setActionIdentifier(final String actionIdentifier) {
+        this.actionIdentifier = actionIdentifier;
+        return this;
+    }
 
     public String getEntityTypeName() {
         return entityTypeName;

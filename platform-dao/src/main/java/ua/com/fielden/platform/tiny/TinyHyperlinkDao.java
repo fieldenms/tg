@@ -52,6 +52,9 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     @Override
     protected Either<Long, TinyHyperlink> save(final TinyHyperlink tinyHyperlink, final Optional<fetch<TinyHyperlink>> maybeFetch) {
         if (!tinyHyperlink.isPersisted()) {
+            // TODO Get from context in EntityShareActionProducer.
+            tinyHyperlink.setActionIdentifier("StocktakeEntryAction");
+
             final var hash = hash(tinyHyperlink);
             // An instrumented instance is required for `save`.
             final var existingTinyHyperlink = co$(TinyHyperlink.class).findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(HASH), hash);
@@ -110,7 +113,11 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             throw new InvalidArgumentException("[%s] is required to compute a hash.".formatted(TinyHyperlink.SAVING_INFO_HOLDER));
         }
 
-        return Checksum.sha256(tinyHyperlink.getSavingInfoHolder());
+        if (tinyHyperlink.getActionIdentifier() == null || tinyHyperlink.getActionIdentifier().isEmpty()) {
+            throw new InvalidArgumentException("[%s] is required to compute a hash.".formatted(TinyHyperlink.ACTION_IDENTIFIER));
+        }
+
+        return Checksum.sha256(tinyHyperlink.getActionIdentifier().getBytes(), tinyHyperlink.getSavingInfoHolder());
     }
 
 }
