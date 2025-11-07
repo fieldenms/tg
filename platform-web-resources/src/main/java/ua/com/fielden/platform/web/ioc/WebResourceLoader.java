@@ -11,6 +11,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -26,7 +27,6 @@ import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 
 import java.io.InputStream;
 import java.util.*;
-import java.util.stream.Stream;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
@@ -138,8 +138,10 @@ public class WebResourceLoader implements IWebResourceLoader {
     private Optional<String> getAppActionsSource() {
         return ofNullable(getText("ua/com/fielden/platform/web/app/tg-app-actions-template.js"))
                 .map(src -> {
-                    final var actionsCode = distinct(Stream.concat(webUiConfig.getCentres().values().stream().flatMap(EntityCentre::streamActionConfigs),
-                                                                   webUiConfig.getMasters().values().stream().flatMap(EntityMaster::streamActions))
+                    final var actionsCode = distinct(StreamUtils.concat(webUiConfig.getCentres().values().stream().flatMap(EntityCentre::streamActionConfigs),
+                                                                        webUiConfig.getMasters().values().stream().flatMap(EntityMaster::streamActions),
+                                                                        webUiConfig.configDesktopMainMenu().streamActionConfigs(),
+                                                                        webUiConfig.configMobileMainMenu().streamActionConfigs())
                                                              .filter(action -> action.actionIdentifier.isPresent()),
                                                      action -> action.actionIdentifier.get())
                                             .map(action -> "'%s': %s".formatted(action.actionIdentifier.get(), FunctionalActionElement.createActionObjectForTgAppActions(action)))
