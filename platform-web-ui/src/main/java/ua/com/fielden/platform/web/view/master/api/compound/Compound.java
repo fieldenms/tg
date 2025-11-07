@@ -1,18 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.compound;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-
-import java.util.Optional;
-import java.util.function.BiFunction;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.inject.Injector;
-
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -29,6 +18,15 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMasterBuilder;
+
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
+
+import static java.util.Optional.*;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
 public class Compound {
 
@@ -230,7 +228,8 @@ public class Compound {
             final PrefDim prefDim) {
         return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().withComputation(computation).build());
     }
-    
+
+    public static ConcurrentHashMap<String, AtomicInteger> ids = new ConcurrentHashMap<>();
 
     private static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig open(
             final Class<OPEN_ACTION> openCompoundMasterActionType,
@@ -242,7 +241,10 @@ public class Compound {
             final PrefDim prefDim,
             final CentreContextConfig centreContextConfig
             ) {
-        final IEntityActionBuilder1<AbstractEntity<?>> actionPart = action(openCompoundMasterActionType).withContext(centreContextConfig);
+        final IEntityActionBuilder1<AbstractEntity<?>> actionPart = action(openCompoundMasterActionType)
+            .withTinyHyperlink(openCompoundMasterActionType.getSimpleName() + "_"
+                + ids.computeIfAbsent(openCompoundMasterActionType.getSimpleName(), k -> new AtomicInteger(0)).incrementAndGet())
+            .withContext(centreContextConfig);
         IEntityActionBuilder2<AbstractEntity<?>> actionWithPreAction;
         if (preAction.isPresent()) {
             actionWithPreAction = actionPart.preAction(preAction.get());

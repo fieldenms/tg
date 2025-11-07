@@ -20,6 +20,7 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+import ua.com.fielden.platform.web.view.master.api.compound.Compound;
 
 /**
  * Responds to GET request with a generated application specific index resource (for desktop and mobile web apps).
@@ -66,6 +67,7 @@ public class AppIndexResource extends AbstractWebResource {
         if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && isDebugMode() && currentUser != null) {
             // if application user hits refresh -- all configurations will be cleared. This is useful when using with JRebel / Eclipse Debug -- no need to restart server after 
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
+            Compound.ids.clear();
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
         }
