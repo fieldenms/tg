@@ -67,7 +67,6 @@ public class AppIndexResource extends AbstractWebResource {
         if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && isDebugMode() && currentUser != null) {
             // if application user hits refresh -- all configurations will be cleared. This is useful when using with JRebel / Eclipse Debug -- no need to restart server after 
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
-            Compound.ids.clear();
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
         }
