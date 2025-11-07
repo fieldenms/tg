@@ -413,6 +413,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
                 "}", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value
             ));
         });
+
+        config.actionIdentifier.ifPresent(actionIdentifier -> code.append(",\n").append("    " + keyQ + "actionId" + keyQ + ": " + valueQ + actionIdentifier + valueQ));
         code.append("\n}");
         return code.toString();
     }
