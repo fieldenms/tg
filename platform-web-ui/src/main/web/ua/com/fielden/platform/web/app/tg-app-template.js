@@ -318,7 +318,7 @@ Polymer({
                     action[name] = actionObject[name]
                 }
                 action.attrs = {}
-                for (const name of ['entityType', 'currentState', 'prefDim']) {
+                for (const name of ['entityType', 'currentState', 'prefDim', 'actionId']) {
                     action.attrs[name] = actionObject.attrs[name]
                 }
                 action.attrs.centreUuid = this.uuid;
