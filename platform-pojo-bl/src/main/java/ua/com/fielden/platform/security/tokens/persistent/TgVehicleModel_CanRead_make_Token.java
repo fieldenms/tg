@@ -9,6 +9,6 @@ import static java.lang.String.format;
 /// A security token for entity [TgVehicleModel] to guard Read property.
 ///
 public class TgVehicleModel_CanRead_make_Token implements ISecurityToken {
-    public final static String TITLE = format(Template.READ_PROP.forTitle(), "make", TgVehicleModel.ENTITY_TITLE);
+    public final static String TITLE = format(Template.READ_PROP.forTitle(), TgVehicleModel.ENTITY_TITLE, "make");
     public final static String DESC = format(Template.READ_PROP.forDesc(), TgVehicleModel.ENTITY_TITLE);
 }
