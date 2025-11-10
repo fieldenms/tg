@@ -32,7 +32,7 @@ import static ua.com.fielden.platform.test_config.AbstractDaoTestCase.UNIT_TEST_
 public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
 
     @Test
-    public void if_association_is_missing_then_new_association_should_be_active() {
+    public void new_security_role_association_becomes_active() {
         final UserRoleCo userRoleCo = co(UserRole.class);
         final UserRole test_role_3 = userRoleCo.findByKey("UNIT_TEST_ROLE_3");
 
@@ -58,7 +58,7 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void removed_security_role_association_should_become_inactive() {
+    public void removed_security_role_association_becomes_inactive() {
         final UserRoleCo userRoleCo = co(UserRole.class);
         final UserRole test_role_3 = userRoleCo.findByKey("UNIT_TEST_ROLE_3");
 
@@ -80,7 +80,7 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void previously_removed_security_role_association_and_added_again_should_become_active() {
+    public void added_again_security_role_association_becomes_active() {
         final UserRoleCo userRoleCo = co(UserRole.class);
         final UserRole test_role_3 = userRoleCo.findByKey("UNIT_TEST_ROLE_3");
 
