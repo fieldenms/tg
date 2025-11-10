@@ -7,12 +7,8 @@ import ua.com.fielden.platform.test.ioc.PlatformTestServerIocModule;
 
 import java.util.Properties;
 
-/**
- * Provides Platform specific implementation of {@link IDomainDrivenTestCaseConfiguration} for testing purposes, which is mainly related to construction of appropriate IoC modules.
- * 
- * @author TG Team
- * 
- */
+/// Provides Platform specific implementation of [IDomainDrivenTestCaseConfiguration] for testing purposes, which is mainly related to construction of appropriate IoC modules.
+///
 public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
     private final Injector injector;
 
@@ -28,7 +24,6 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
                     .getInjector();
 
         } catch (final Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }

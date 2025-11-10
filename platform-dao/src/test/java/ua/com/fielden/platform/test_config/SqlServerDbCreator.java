@@ -22,12 +22,8 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 import ua.com.fielden.platform.utils.DbUtils;
 
-/**
- * This is a DB creator implementation for running unit tests against SQL Server 2012 and up.
- *
- * @author TG Team
- *
- */
+/// This is a DB creator implementation for running unit tests against SQL Server 2012 and up.
+///
 public class SqlServerDbCreator extends DbCreator {
 
     public SqlServerDbCreator(
@@ -35,10 +31,10 @@ public class SqlServerDbCreator extends DbCreator {
             final Properties props,
             final IDomainDrivenTestCaseConfiguration config,
             final List<String> maybeDdl,
-            final boolean execDdslScripts)
+            final boolean execDdlScripts)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException
     {
-        super(testCaseType, props, config, maybeDdl, execDdslScripts);
+        super(testCaseType, props, config, maybeDdl, execDdlScripts);
     }
 
     /**

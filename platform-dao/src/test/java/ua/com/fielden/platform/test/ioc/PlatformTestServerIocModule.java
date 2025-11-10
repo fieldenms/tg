@@ -40,12 +40,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Serve IoC module for platform related testing.
- *
- * @author TG Team
- *
- */
+/// Serve IoC module for platform related testing.
+///
 public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
     private static final Logger LOGGER = LogManager.getLogger(PlatformTestServerIocModule.class);
