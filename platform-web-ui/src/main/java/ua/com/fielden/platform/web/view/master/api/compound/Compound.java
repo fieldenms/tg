@@ -14,7 +14,9 @@ import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder1;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder2;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder6;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMasterBuilder;
@@ -112,7 +114,7 @@ public class Compound {
             final PrefDim prefDim)
     {
         return open(openCompoundMasterActionType,
-                    actionIdentifierForNew(openCompoundMasterActionType),
+                    of(actionIdentifierForNew(openCompoundMasterActionType)),
                     empty(),
                     ofNullable(icon),
                     empty(),
@@ -143,7 +145,7 @@ public class Compound {
             final PrefDim prefDim)
     {
         return open(openCompoundMasterActionType,
-                    actionIdentifierForNew(openCompoundMasterActionType),
+                    of(actionIdentifierForNew(openCompoundMasterActionType)),
                     empty(),
                     ofNullable(icon),
                     ofNullable(iconStyle),
@@ -173,7 +175,7 @@ public class Compound {
             final PrefDim prefDim)
     {
         return open(openCompoundMasterActionType,
-                    actionIdentifierForNew(openCompoundMasterActionType),
+                    of(actionIdentifierForNew(openCompoundMasterActionType)),
                     empty(),
                     ofNullable(icon),
                     empty(),
@@ -197,7 +199,7 @@ public class Compound {
             final PrefDim prefDim)
     {
         return open(openCompoundMasterActionType,
-                    actionIdentifierForEdit(openCompoundMasterActionType),
+                    empty(),
                     of(new EntityNavigationPreAction(shortDesc)),
                     empty(),
                     empty(),
@@ -223,7 +225,7 @@ public class Compound {
             final PrefDim prefDim)
     {
         return open(openCompoundMasterActionType,
-                    actionIdentifierForEdit(openCompoundMasterActionType),
+                    empty(),
                     of(new EntityNavigationPreAction(shortDesc)),
                     empty(),
                     empty(),
@@ -251,7 +253,7 @@ public class Compound {
             final PrefDim prefDim)
     {
         return open(openCompoundMasterActionType,
-                    actionIdentifierForEdit(openCompoundMasterActionType),
+                    empty(),
                     of(new EntityNavigationPreAction(shortDesc)),
                     ofNullable(icon),
                     empty(),
@@ -281,7 +283,7 @@ public class Compound {
             final PrefDim prefDim)
     {
         return open(openCompoundMasterActionType,
-                    actionIdentifierForEdit(openCompoundMasterActionType),
+                    empty(),
                     of(new EntityNavigationPreAction(shortDesc)),
                     ofNullable(icon),
                     empty(),
@@ -293,7 +295,7 @@ public class Compound {
 
     private static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig open(
             final Class<OPEN_ACTION> openCompoundMasterActionType,
-            final String actionIdentifier,
+            final Optional<String> maybeActionIdentifier,
             final Optional<IPreAction> preAction,
             final Optional<String> icon,
             final Optional<String> iconStyle,
@@ -303,7 +305,7 @@ public class Compound {
             final CentreContextConfig centreContextConfig)
     {
         final IEntityActionBuilder1<AbstractEntity<?>> actionPart = action(openCompoundMasterActionType)
-            .withTinyHyperlink(actionIdentifier)
+            .withTinyHyperlink(maybeActionIdentifier)
             .withContext(centreContextConfig);
         IEntityActionBuilder2<AbstractEntity<?>> actionWithPreAction;
         if (preAction.isPresent()) {
@@ -335,10 +337,6 @@ public class Compound {
 
     private static String actionIdentifierForNew(final Class<?> actionType) {
         return "%s_OPEN_COMPOUND_NEW".formatted(actionType.getSimpleName());
-    }
-
-    private static String actionIdentifierForEdit(final Class<?> actionType) {
-        return "%s_OPEN_COMPOUND_EDIT".formatted(actionType.getSimpleName());
     }
 
 }
