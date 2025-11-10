@@ -16,6 +16,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.compound.Compound;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import static java.util.Arrays.asList;
@@ -228,6 +229,11 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
 
         this.actionIdentifier = actionIdentifier;
         return this;
+    }
+
+    @Override
+    public IEntityActionBuilder0b<T> withTinyHyperlink(final Optional<String> maybeActionIdentifier) {
+        return maybeActionIdentifier.map(this::withTinyHyperlink).orElse(this);
     }
 
 }
