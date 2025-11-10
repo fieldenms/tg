@@ -175,7 +175,7 @@ public class Compound {
             final PrefDim prefDim)
     {
         return open(openCompoundMasterActionType,
-                    of(actionIdentifierForNew(openCompoundMasterActionType)),
+                    of(actionIdentifierForNewWithMaster(openCompoundMasterActionType)),
                     empty(),
                     ofNullable(icon),
                     empty(),
@@ -337,6 +337,10 @@ public class Compound {
 
     private static String actionIdentifierForNew(final Class<?> actionType) {
         return "%s_OPEN_COMPOUND_NEW".formatted(actionType.getSimpleName());
+    }
+
+    private static String actionIdentifierForNewWithMaster(final Class<?> actionType) {
+        return "%s_OPEN_COMPOUND_NEW_WITH_MASTER".formatted(actionType.getSimpleName());
     }
 
 }
