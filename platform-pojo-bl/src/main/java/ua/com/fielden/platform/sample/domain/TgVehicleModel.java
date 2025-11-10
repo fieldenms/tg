@@ -4,6 +4,8 @@ import org.junit.Ignore;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.utils.Pair;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -14,6 +16,10 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 @Ignore
 @CompanionObject(ITgVehicleModel.class)
 public class TgVehicleModel extends AbstractEntity<String> {
+
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TgVehicleModel.class);
+    public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
+    public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
     @IsProperty
     @Required

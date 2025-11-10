@@ -5,9 +5,6 @@ import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenNodeTransformations;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.user.*;
-import ua.com.fielden.security.tokens.compound_master_menu.UserMaster_OpenMain_MenuItem_CanAccess_Token;
-import ua.com.fielden.security.tokens.compound_master_menu.UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token;
-import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_CanOpen_Token;
 
 import java.util.List;
 import java.util.SortedSet;
@@ -32,16 +29,16 @@ public class TgTestApplicationSecurityTokenNodeTransformation implements ISecuri
                         ReUser_CanRead_Token.class,
                         ReUser_CanReadModel_Token.class),
                 User_CanRead_Token.class);
-
-        final var trans3 = SecurityTokenNodeTransformations.setParentOf(
-                List.of(
-                        OpenUserMasterAction_CanOpen_Token.class,
-                        UserMaster_OpenMain_MenuItem_CanAccess_Token.class,
-                        UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token.class),
-                UserMaster_CanOpen_Token.class);
+        //Should be commented out to make test application work with simple User entity master.
+//        final var trans3 = SecurityTokenNodeTransformations.setParentOf(
+//                List.of(
+//                        OpenUserMasterAction_CanOpen_Token.class,
+//                        UserMaster_OpenMain_MenuItem_CanAccess_Token.class,
+//                        UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token.class),
+//                UserMaster_CanOpen_Token.class);
 
         return SecurityTokenNodeTransformations
-                .compose(trans1, trans2, trans3)
+                .compose(trans1, trans2/*, trans3*/)
                 .transform(tree);
     }
 

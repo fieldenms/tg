@@ -1,17 +1,16 @@
 package ua.com.fielden.platform.dao.dynamic;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.interception.AccessToken;
+import ua.com.fielden.platform.security.interception.NoAccessToken;
+import ua.com.fielden.platform.types.Money;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "dynamic query" testing.
@@ -58,6 +57,36 @@ public class MasterEntity extends AbstractEntity<String> {
     ///////// Collections /////////
     @IsProperty(SlaveEntity.class)
     private List<SlaveEntity> collection = new ArrayList<SlaveEntity>();
+
+    @IsProperty
+    @MapTo("AUTHORISED_PROP")
+    @Authorise(AccessToken.class)
+    private Money authorisedProp;
+
+    @IsProperty
+    @MapTo("UNAUTHORISED_PROP")
+    @Authorise(NoAccessToken.class)
+    private Money unauthorisedProp;
+
+    public Money getUnauthorisedProp() {
+        return unauthorisedProp;
+    }
+
+    @Observable
+    public MasterEntity setUnauthorisedProp(final Money unauthorisedProp) {
+        this.unauthorisedProp = unauthorisedProp;
+        return this;
+    }
+
+    public Money getAuthorisedProp() {
+        return authorisedProp;
+    }
+
+    @Observable
+    public MasterEntity setAuthorisedProp(final Money authorisedProp) {
+        this.authorisedProp = authorisedProp;
+        return this;
+    }
 
     public Integer getIntegerProp() {
         return integerProp;

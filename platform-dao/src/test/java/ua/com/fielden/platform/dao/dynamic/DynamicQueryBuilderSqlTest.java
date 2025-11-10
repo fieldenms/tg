@@ -32,6 +32,8 @@ import ua.com.fielden.platform.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.security.AuthorisationException;
+import ua.com.fielden.platform.security.interception.AuthenticationTestIocModule;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -39,12 +41,15 @@ import java.io.ByteArrayInputStream;
 import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Optional.empty;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createCompletedQuery;
 
 /// A test for [DynamicQueryBuilder].
 ///
@@ -53,6 +58,7 @@ public class DynamicQueryBuilderSqlTest {
 
     private final static Injector injector = new ApplicationInjectorFactory()
             .add(new CommonEntityTestIocModuleWithPropertyFactory())
+            .add(new AuthenticationTestIocModule())
             .getInjector();
     private final static EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
     private final static IDates dates = injector.getInstance(IDates.class);
@@ -117,6 +123,8 @@ public class DynamicQueryBuilderSqlTest {
                 "booleanProp",
                 "stringProp",
                 "entityProp",
+                "authorisedProp",
+                "unauthorisedProp",
                 "entityProp.masterEntityProp",
                 "entityProp.integerProp",
                 "entityProp.bigDecimalProp",
@@ -1417,4 +1425,36 @@ public class DynamicQueryBuilderSqlTest {
         assertEquals("Incorrect query model for union entities has been built.", expected.model(), actual.model());
     }
 
+    //////// property authorisation tests//////////////////////
+    @Test
+    public void authorised_prop_should_be_present_in_query() {
+        test_atomic_query_composition_for_range_type("authorisedProp");
+    }
+
+    @Test
+    public void unauthorised_prop_throws_authorisation_exception() {
+        set_up();
+
+        final QueryProperty property = queryProperties.get("unauthorisedProp");
+        property.setValue(3);
+        property.setValue2(7);
+
+        assertThrows(
+            "Permission denied.", AuthorisationException.class,
+            () -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates)
+        );
+    }
+
+    @Test
+    public void unauthorised_prop_initiated_with_mnemonics_throws_authorisation_exception() {
+        set_up();
+
+        final QueryProperty property = queryProperties.get("unauthorisedProp");
+        property.setOrNull(true);
+
+        assertThrows(
+            "Permission denied.", AuthorisationException.class,
+            () -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates)
+        );
+    }
 }
