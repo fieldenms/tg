@@ -12,13 +12,14 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
-import static java.util.Optional.*;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
-import static ua.com.fielden.platform.security.tokens.Template.*;
+import static ua.com.fielden.platform.security.tokens.Template.EXECUTE;
+import static ua.com.fielden.platform.security.tokens.Template.MASTER_OPEN;
 
 /// A set of utilities for security tokens.
 ///
@@ -78,29 +79,9 @@ public class TokenUtils {
     }
 
     public static Optional<Result> authorisePropertyReading(final Class<?> entityType, final String propertyName, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
-        return findPropertyTokenFromAnnotation(entityType, propertyName)
-            .or(() -> {
-                final var penultTypeAndProp = transform(entityType, propertyName);
-                return findPropertyToken(penultTypeAndProp.getKey().getSimpleName(), penultTypeAndProp.getValue(), READ_PROP, securityTokenProvider);
-            })
-            .map(authorisation::authorise);
-    }
-
-    private static <T extends ISecurityToken> Optional<Class<T>> findPropertyTokenFromAnnotation(final Class<?> entityType, final String propertyName) {
-        return ofNullable(getPropertyAnnotation(Authorise.class, entityType, propertyName))
-            .map(annotation -> (Class<T>) annotation.value());
-   }
-
-    /// Finds token in [ISecurityTokenProvider] for the specified `template`, if exists.
-    ///
-    /// @param templateParam1         a string param to inject into [#forClassName()] to form token's simple class name
-    /// @param templateParam2         a string param to inject into [#forClassName()] to form token's simple class name
-    /// @param template              a security token template
-    /// @param securityTokenProvider a security token provider, used to get a token class by name
-    ///
-    private static <T extends ISecurityToken> Optional<Class<T>> findPropertyToken(final String templateParam1, final String templateParam2, final Template template, final ISecurityTokenProvider securityTokenProvider) {
-        final String tokenSimpleClassName = format(template.forClassName(), templateParam1, templateParam2);
-        return securityTokenProvider.getTokenByName(tokenSimpleClassName);
+        return getPropertyAnnotationOptionally(Authorise.class, entityType, propertyName)
+               .map(annot -> (Class<? extends ISecurityToken>) annot.value())
+               .map(authorisation::authorise);
     }
 
     /// Finds token in [ISecurityTokenProvider] for the specified `template`, if exists.
