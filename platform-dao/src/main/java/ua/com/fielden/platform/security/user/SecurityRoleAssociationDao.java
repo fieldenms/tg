@@ -45,7 +45,9 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     public List<SecurityRoleAssociation> findAssociationsFor(final Class<? extends ISecurityToken> securityToken) {
-        final var model = select(SecurityRoleAssociation.class).where().prop("securityToken").eq().val(securityToken.getName()).model();
+        final var model = select(SecurityRoleAssociation.class).where()
+                .prop("securityToken").eq().val(securityToken.getName()).and()
+                .prop("active").eq().val(true).model();
         final var orderBy = orderBy().prop("role").asc().model();
         return getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).with(orderBy).model());
     }
@@ -54,7 +56,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @SessionRequired
     public Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations() {
 
-        final var model = select(SecurityRoleAssociation.class).model();
+        final var model = select(SecurityRoleAssociation.class).where().prop("active").eq().val(true).model();
 
         final Map<Boolean, List<SecurityRoleAssociation>> partitionedAssociations = getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).model()).stream()
                 .collect(partitioningBy(association -> !association.getSecurityToken().equals(MissingSecurityTokenPlaceholder.class)));
@@ -88,6 +90,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
         final var model = select(SecurityRoleAssociation.class).as("sra")
                 .where()
                 .prop("sra.securityToken").eq().val(token.getName())
+                .and().prop("sra.active").eq().val(true)
                 .and().exists(slaveModel).model();
         return count(model);
     }

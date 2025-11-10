@@ -9,7 +9,6 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 
 /**
  * DAO implementation for companion object {@link ISecurityRoleAssociationBatchAction}.
@@ -32,21 +31,9 @@ public class SecurityRoleAssociationBatchActionDao extends CommonEntityDao<Secur
     @Override
     @SessionRequired
     public SecurityRoleAssociationBatchAction save(final SecurityRoleAssociationBatchAction entity) {
-        processSaveAction(entity.getSaveEntities());
-        processSaveAction(entity.getUpdateEntities());
+        associationDao.addAssociations(entity.getSaveEntities());
+        associationDao.addAssociations(entity.getUpdateEntities());
         associationDao.removeAssociations(entity.getRemoveEntities());
         return entity;
     }
-
-    /**
-     * Saves the set of given associations.
-     * 
-     * @param associations
-     */
-    private void processSaveAction(final Set<SecurityRoleAssociation> associations) {
-        for (final SecurityRoleAssociation association : associations) {
-            associationDao.quickSave(association);
-        }
-    }
-
 }
