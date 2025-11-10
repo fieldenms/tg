@@ -33,7 +33,7 @@ Polymer({
             type: Boolean,
             value: false
         },
-        //Determines whether column should be hidden or not.
+        // Determines whether column should be hidden or not.
         isHidden: {
             type: Boolean,
             value: false
