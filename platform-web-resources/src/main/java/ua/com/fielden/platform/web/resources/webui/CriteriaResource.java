@@ -11,7 +11,6 @@ import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -91,9 +90,10 @@ import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.*;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.*;
 
-/// The web resource for criteria serves as a back-end mechanism of criteria retrieval. It provides a base implementation for handling the following methods:
+/// Web resource for selection criteria — a back-end mechanism for criteria retrieval.
+/// Provides the base implementation for handling the following requests:
 ///
-///   - retrieve entity -- GET request.
+/// - `GET` requests to retrieve an entity.
 ///
 public class CriteriaResource extends AbstractWebResource {
     private final static Logger LOGGER = LogManager.getLogger(CriteriaResource.class);
@@ -103,14 +103,17 @@ public class CriteriaResource extends AbstractWebResource {
     private static final String COULD_NOT_LOAD_CONFLICTING_SHARED_CONFIGURATION = "Cannot load a shared configuration with conflicting title [%s].";
     private static final String LINK_CONFIG_COULD_NOT_BE_LOADED = "A link configuration could not be loaded. Please try again.";
 
-    /// Map for user+miType based locks for centre running. It is used to emulate a queue for execution of run requests for the same user and centre (regardless of the `saveAsName` value).
+    /// A map of `user+miType`-based locks used for centre execution control (running).
+    /// It emulates a queue to ensure that run requests for the same user and centre
+    /// (regardless of the `saveAsName` value) are executed sequentially.
     ///
     private static final ConcurrentHashMap<T2<User, Class<? extends MiWithConfigurationSupport<?>>>, Lock> locks = new ConcurrentHashMap<>();
 
     /// Timeout in seconds to wait for an active lock.
-    /// It is expected that in practice there should less than 10 self-concurrent requests running for ~1 second each.
-    /// If this timeout is in insufficient then instead of throwing an exception, a running request gets executed anyway (concurrently), as it was originally before the locking mechanism was introduced.
-    /// Hypothetically specking such approach should be more appropriate from the user experience point of view.
+    /// In practice, there should be fewer than 10 concurrent self-requests, each running for roughly one second.
+    /// If this timeout is insufficient, the request will proceed concurrently (as it did before the locking mechanism was introduced),
+    /// instead of throwing an exception.
+    /// Hypothetically, this approach provides a better user experience.
     ///
     private static final long RUNNING_LOCK_TIMEOUT = 10;
 
@@ -162,7 +165,7 @@ public class CriteriaResource extends AbstractWebResource {
         this.securityTokenProvider = securityTokenProvider;
     }
 
-    /// Handles GET requests resulting from tg-selection-criteria `retrieve()` method (new entity).
+    /// Handles `GET` requests triggered by the `tg-selection-criteria.retrieve()` method for a new entity.
     ///
     @Get
     @Override
@@ -238,12 +241,12 @@ public class CriteriaResource extends AbstractWebResource {
         }, restUtil);
     }
 
-    /// Validates `configUuid` on the subject of configuration existence and general ability to share it with current `user`.
+    /// Validates `configUuid` to ensure the configuration exists and can be shared with the current `user`.
     ///
     private Either<Result, EntityCentreConfig> validateUuidAndGetUpstreamConfig(final String configUuid) {
         // we look only for owners; "owning" is indicated by presence of SAVED configuration with the specified uuid
-        final Optional<EntityCentreConfig> savedConfigOptForOtherUser = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, eccCompanion);
-        if (!savedConfigOptForOtherUser.isPresent()) {
+        final var savedConfigOptForOtherUser = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, eccCompanion);
+        if (savedConfigOptForOtherUser.isEmpty()) {
             // configuration does not exist (no SAVED surrogate centre) -- legitimate error; this can happen if configuration has been already deleted or didn't exist due to URI mistyping
             return left(failure(CONFIG_DOES_NOT_EXIST));
         } else if (user.isBase()) {
@@ -260,7 +263,7 @@ public class CriteriaResource extends AbstractWebResource {
         return right(savedConfigOptForOtherUser.get());
     }
 
-    /// Implements first time loading of configuration into `inherited from base / shared`.
+    /// Implements the first-time loading of a configuration into `inherited from base / shared`.
     ///
     private T2<Optional<String>, Boolean> firstTimeLoadingFrom(final EntityCentreConfig upstreamConfig) {
         final String configUuid = upstreamConfig.getConfigUuid();
@@ -289,7 +292,7 @@ public class CriteriaResource extends AbstractWebResource {
                 newDescription,
                 eccCompanion,
                 mmiCompanion,
-                ecc -> uuid.map(u -> ecc.setConfigUuid(u)).orElse(ecc).setRunAutomatically(runAutomatically)
+                ecc -> uuid.map(ecc::setConfigUuid).orElse(ecc).setRunAutomatically(runAutomatically)
             );
             final EntityCentreConfig freshConfigForCreator = findConfigOptByUuid(configUuid, upstreamConfigCreator, miType, device(), FRESH_CENTRE_NAME, eccCompanion).get(); // need to retrieve FRESH config to get 'desc' -- that's because SAVED centres haven't stored descriptions, only FRESH do; this config must be present, otherwise savedConfigForOtherUser would not exist
             createInheritedFromShared.apply(FRESH_CENTRE_NAME).apply(freshConfigForCreator.isRunAutomatically()).apply(freshConfigForCreator.getDesc()).accept(of(configUuid)); // update (FRESH only) with upstream description and configUuid during creation
@@ -298,12 +301,12 @@ public class CriteriaResource extends AbstractWebResource {
         }
     }
 
-    /// Determines name of inherited from shared configuration.
-    /// Usually it is the same as `preliminaryName` (if there is no config with this name).
+    /// Determines the name of a configuration inherited from the shared one.
+    /// Typically, it is the same as `preliminaryName` if no configuration with this name exists.
     ///
-    /// If there is conflicting name then '(shared)' suffix is added.
-    /// If even that did not work -- '(shared 1)' -> '(shared 9)' suffixes are tried.
-    /// If even that did not work -- error is thrown.
+    /// If a conflict occurs, suffix `(shared)` is added.
+    /// If that still conflicts, numeric suffixes `(shared 1)` through `(shared 9)` are attempted.
+    /// If no unique name can be generated, an error is thrown.
     ///
     private String determineNonConflictingName(final String preliminaryName, final int index) {
         final String name;
@@ -317,7 +320,8 @@ public class CriteriaResource extends AbstractWebResource {
             .orElse(name);
     }
 
-    /// Updates already loaded by `user` configuration with concrete `configUuid` from its upstream configuration (if it is inherited).
+    /// Updates a configuration already loaded by the `user` with the concrete `configUuid`
+    /// from its upstream configuration, if it is inherited.
     ///
     private T2<Optional<String>, Boolean> updateFromUpstream(final String configUuid, final Optional<String> saveAsName) {
         // look for config creator
@@ -351,7 +355,8 @@ public class CriteriaResource extends AbstractWebResource {
         return t2(saveAsName, false);
     }
 
-    /// Prepares FRESH / SAVED link configs if not yet created. Returns a pair of resultant saveAsName and configUuid.
+    /// Prepares FRESH / SAVED link configurations if they have not been created yet.
+    /// Returns a pair containing the resulting `saveAsName` and `configUuid`.
     ///
     private T2<Optional<String>, Optional<String>> prepareLinkConfigInfrastructure() {
         // 'link' configuration loading is not limited only to first time loading;
@@ -364,7 +369,7 @@ public class CriteriaResource extends AbstractWebResource {
         updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         // create configUuids there if not yet present
         final Optional<EntityCentreConfig> freshConfigOpt = findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"));
-        if (!freshConfigOpt.isPresent()) {
+        if (freshConfigOpt.isEmpty()) {
             throw failure(LINK_CONFIG_COULD_NOT_BE_LOADED); // this should never happen, but just in case return a little bit more meaningful message
         } else if (freshConfigOpt.get().getConfigUuid() == null) {
             // if FRESH config does not have uuid yet then it was created just recently;
@@ -381,7 +386,7 @@ public class CriteriaResource extends AbstractWebResource {
         }
     }
 
-    /// Returns whether FRESH config is changed from SAVED one.
+    /// Determines whether the FRESH configuration has been modified compared to the SAVED one.
     ///
     private boolean isCentreChanged(final Optional<String> actualSaveAsName) {
         return isFreshCentreChanged(
@@ -390,7 +395,7 @@ public class CriteriaResource extends AbstractWebResource {
         );
     }
 
-    /// Handles POST request resulting from tg-selection-criteria `validate()` method.
+    /// Handles `POST` requests triggered by the `tg-selection-criteria.validate()` method.
     ///
     @Post
     @Override
@@ -431,7 +436,8 @@ public class CriteriaResource extends AbstractWebResource {
             final EntityCentreConfigCo eccCompanion,
             final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
-            final ICentreConfigSharingModel sharingModel) {
+            final ICentreConfigSharingModel sharingModel)
+    {
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         return restUtil.rawListJsonRepresentation(
             appliedCriteriaEntity,
@@ -465,7 +471,8 @@ public class CriteriaResource extends AbstractWebResource {
             final EntityCentreConfigCo eccCompanion,
             final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
-            final ICentreConfigSharingModel sharingModel) {
+            final ICentreConfigSharingModel sharingModel)
+    {
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         return restUtil.rawListJsonRepresentation(
                 appliedCriteriaEntity,
@@ -480,7 +487,7 @@ public class CriteriaResource extends AbstractWebResource {
                         of(updatedFreshCentre.getPreferredView()),
                         user,
                         empty() // no need to update shareError on discarding
-                )//
+                )
         );
     }
 
@@ -513,13 +520,13 @@ public class CriteriaResource extends AbstractWebResource {
     }
 
     private Result authoriseCriteriaEntity(final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity) {
-        final Result entityAuthorisationResult = authoriseReading(getEntityType(miType).getSimpleName(), READ, authorisationModel, securityTokenProvider);
+        final var entityAuthorisationResult = authoriseReading(getEntityType(miType).getSimpleName(), READ, authorisationModel, securityTokenProvider);
         return entityAuthorisationResult.isSuccessful()
-            ? authoriseCriteria(criteriaEntity.queryProperties.get(), authorisationModel, securityTokenProvider)
-            : entityAuthorisationResult;
+               ? authoriseCriteria(criteriaEntity.queryProperties.get(), authorisationModel, securityTokenProvider)
+               : entityAuthorisationResult;
     }
 
-    /// Handles PUT request resulting from tg-selection-criteria `run()` method.
+    /// Handles `PUT` requests triggered by the `tg-selection-criteria.run()` method.
     ///
     @SuppressWarnings("unchecked")
     @Put
@@ -588,10 +595,10 @@ public class CriteriaResource extends AbstractWebResource {
                         LOGGER.debug("CRITERIA_RESOURCE: run failed (authorisation validation failed).");
                         final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                         return restUtil.resultJSONRepresentation(
-                            authorisationResult.copyWith(new ArrayList<>(Arrays.asList(
+                            authorisationResult.copyWith(List.of(
                                 freshCentreAppliedCriteriaEntity,
                                 updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication))
-                            )))
+                            ))
                         );
                     }
                 } else {
@@ -608,11 +615,11 @@ public class CriteriaResource extends AbstractWebResource {
                     final Class<? extends AbstractEntity<?>> generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();
 
                     // create and execute a generator instance
-                    final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
+                    final var generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
                     final Map<String, Optional<?>> params = freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
                             (final MetaProperty<?> mp) -> mp.getName(),
                             (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
-                    params.putAll(freshCentreAppliedCriteriaEntity.getParameters().entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey(), entry -> Optional.ofNullable(entry.getValue()))));
+                    params.putAll(freshCentreAppliedCriteriaEntity.getParameters().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> Optional.ofNullable(entry.getValue()))));
                     if (shouldForceRegeneration(customObject)) {
                         params.put(FORCE_REGENERATION_KEY, of(true));
                     }
@@ -623,7 +630,7 @@ public class CriteriaResource extends AbstractWebResource {
                     if (!generationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (generation failed).");
                         final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                        final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication)))));
+                        final Result result = generationResult.copyWith(List.of(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication))));
                         return restUtil.resultJSONRepresentation(result);
                     }
                 }
@@ -641,10 +648,10 @@ public class CriteriaResource extends AbstractWebResource {
                     if (!authorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: refresh failed (authorisation validation failed).");
                         return restUtil.resultJSONRepresentation(
-                            authorisationResult.copyWith(new ArrayList<>(Arrays.asList(
+                            authorisationResult.copyWith(List.of(
                                 previouslyRunCriteriaEntity,
                                 updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, previouslyRunCentre, new LinkedHashMap<>(), empty()))
-                            ))
+                            )
                         );
                     }
                 }
@@ -707,13 +714,13 @@ public class CriteriaResource extends AbstractWebResource {
                 //Enhance rendering hints with styles for each dynamic column.
                 processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
 
-                final ArrayList<Object> list = new ArrayList<>();
+                final var list = new ArrayList<Object>();
                 list.add(isRunning ? previouslyRunCriteriaEntity : null);
                 list.add(pair.getKey());
 
                 // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
                 // FIXME Need to investigate why this is the case.
-                processedEntities.forEach(entity -> list.add(entity));
+                processedEntities.forEach(list::add);
 
                 // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
                 // throw new IllegalStateException("Illegal state during criteria running.");
@@ -730,21 +737,25 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// A method to try acquiring a lock for running a centre.
     /// It should not throw any exceptions, but simply return `true` if the lock was acquired or `false` otherwise.
+    /// Attempts to acquire a lock for running a centre.
+    /// Does not throw exceptions.
+    ///
+    /// @return `true` if the lock was successfully acquired, or `false` otherwise.
     ///
     private boolean tryLocking(final Lock lock) {
         try {
-            // try acquiring an exclusive lock for running a miType centre for the current user
-            // wait for the lock at most RUNNING_LOCK_TIMEOUT seconds
+            // Attempt to acquire an exclusive lock for running an `miType` centre for the current user.
+            // Wait up to RUNNING_LOCK_TIMEOUT seconds to obtain the lock.
             return lock.tryLock(RUNNING_LOCK_TIMEOUT, SECONDS);
         } catch (final Exception ex) {
-            // any potential exception that could occur during the lock acquisition should be ignored to continue concurrent running (as it was before locking mechanism was introduced);
-            // in the future we may handle exceptions differently, e.g. by aborting the whole request
-            LOGGER.warn("Thread was an exception during the lock acquisition. But let's continue concurrent running of the [%s] centre and user [%s].".formatted(miType.getSimpleName(), user), ex);
+            // Any exceptions that occur during lock acquisition are ignored to allow concurrent execution (as was the case before the locking mechanism was introduced).
+            // In the future, exceptions may be handled differently, for example, by aborting the entire request.
+            LOGGER.warn(() -> "Thread was an exception during the lock acquisition. But let's continue concurrent running of the [%s] centre and user [%s].".formatted(miType.getSimpleName(), user), ex);
         }
         return false;
     }
 
-    /// Calculates rendering hints for `entities`.
+    /// Calculates rendering hints for the given `entities`.
     ///
     private List<Object> createRenderingHints(final List<AbstractEntity<?>> entities) {
         final Optional<IRenderingCustomiser<?>> renderingCustomiser = centre.getRenderingCustomiser();
@@ -752,10 +763,10 @@ public class CriteriaResource extends AbstractWebResource {
             final IRenderingCustomiser<?> renderer = renderingCustomiser.get();
             final List<Object> renderingHints = new ArrayList<>();
             for (final AbstractEntity<?> entity : entities) {
-                // Every entity must have a map of corresponding rendering hints, even if that map is empty.
-                // This is because association with renderings hints is index-based and depends on the order of entities.
-                // So, let's be defensive in case some implementation of a rendering customiser returns an empty optional (i.e., not containing even an empty map).
-                renderer.getCustomRenderingFor(entity).ifPresentOrElse(rend -> renderingHints.add(rend), () -> renderingHints.add(Collections.emptyMap()));
+                // Each entity must have a corresponding map of rendering hints, even if the map is empty.
+                // This is because the association with rendering hints is index-based and depends on the order of entities.
+                // Being defensive ensures that, if a rendering customiser returns an empty optional (i.e. no map at all), the code still behaves correctly.
+                renderer.getCustomRenderingFor(entity).ifPresentOrElse(renderingHints::add, () -> renderingHints.add(Collections.emptyMap()));
             }
             return renderingHints;
         } else {
@@ -763,7 +774,10 @@ public class CriteriaResource extends AbstractWebResource {
         }
     }
 
-    public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyValues(final Stream<AbstractEntity<?>> stream, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
+    public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyValues(
+            final Stream<AbstractEntity<?>> stream,
+            final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext)
+    {
         return stream.map(entity -> {
             resPropsWithContext.forEach(resPropWithContext -> {
                 resPropWithContext.getKey().entityPreProcessor.get().accept(entity, resPropWithContext.getValue());
@@ -772,7 +786,10 @@ public class CriteriaResource extends AbstractWebResource {
         });
     }
 
-    private Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyRenderingHints(Stream<AbstractEntity<?>> stream, List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext, List<Object> renderingHints) {
+    private Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyRenderingHints(
+            final Stream<AbstractEntity<?>> stream, List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
+            final List<Object> renderingHints)
+    {
         final AtomicInteger entityCount = new AtomicInteger(0);
         return stream.map(entity -> {
             final int idx = entityCount.getAndIncrement();
@@ -807,7 +824,8 @@ public class CriteriaResource extends AbstractWebResource {
             final EntityCentreConfigCo eccCompanion,
             final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
-            final ICentreConfigSharingModel sharingModel) {
+            final ICentreConfigSharingModel sharingModel)
+    {
         final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resList = new ArrayList<>();
         centre.getDynamicProperties().forEach(resProp -> {
             resProp.dynamicColBuilderType.ifPresent(propDefinerClass -> {
@@ -837,20 +855,22 @@ public class CriteriaResource extends AbstractWebResource {
     private Map<String, List<Map<String, Object>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
         final Map<String, List<Map<String, Object>>> dynamicColumns = new LinkedHashMap<>();
         resPropsWithContext.forEach(resPropWithContext -> {
-            centre.getDynamicColumnBuilderFor(resPropWithContext.getKey()).ifPresent(dynColumnBuilder ->
-                dynColumnBuilder.getColumnsConfig(resPropWithContext.getValue()).ifPresent(config -> dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", config.build()))
-            );
+            centre.getDynamicColumnBuilderFor(resPropWithContext.getKey())
+                    .flatMap(dynColumnBuilder -> dynColumnBuilder.getColumnsConfig(resPropWithContext.getValue()))
+                    .ifPresent(config -> dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", config.build()));
         });
         return dynamicColumns;
     }
 
-    /// Resultant custom object contains important result information such as 'centreDirty' (guards enablement of SAVE button) or 'metaValues'
-    /// (they bind to metaValues criteria editors) or information whether selection criteria is stale or changed (config button colour / tooltip).
+    /// The resultant custom object contains key result information, such as:
+    /// - `centreDirty` — indicates whether the SAVE button should be enabled
+    /// - `metaValues` — bind to metaValues criteria editors
+    /// - Information about whether the selection criteria is stale or changed (affects config button colour/tooltip)
     ///
-    /// This method updates such information just before returning resultant custom object to the client.
+    /// This method updates these details just before returning the custom object to the client.
     ///
-    /// @param maybeCriteriaIndication -- contains optional actual [CriteriaIndication] for currently loaded centre configuration and its result-set;
-    ///                                this indication will be promoted to 'Show selection criteria' button in EGI
+    /// @param maybeCriteriaIndication optional [CriteriaIndication] for the currently loaded centre configuration and its result set;
+    ///                                if present, it will be used to promote the 'Show selection criteria' button in EGI
     ///
     private static Map<String, Object> updateResultantCustomObject(
             final Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator,
@@ -858,7 +878,8 @@ public class CriteriaResource extends AbstractWebResource {
             final Optional<String> saveAsName,
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre,
             final Map<String, Object> resultantCustomObject,
-            final Optional<CriteriaIndication> maybeCriteriaIndication) {
+            final Optional<CriteriaIndication> maybeCriteriaIndication)
+    {
         resultantCustomObject.put(CENTRE_DIRTY, centreDirtyCalculator.apply(saveAsName).apply(() -> updatedFreshCentre));
         resultantCustomObject.put(META_VALUES, createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)));
 
@@ -909,13 +930,14 @@ public class CriteriaResource extends AbstractWebResource {
         }
     }
 
-    /// Assigns the values for custom properties.
+    /// Assigns values to the custom properties.
     ///
     public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithCustomPropertyValues(
             final EntityCentre<AbstractEntity<?>> centre,
             final Optional<List<ResultSetProp<AbstractEntity<?>>>> propertiesDefinitions,
             final Optional<Class<? extends ICustomPropsAssignmentHandler>> customPropertiesAsignmentHandler,
-            final Stream<AbstractEntity<?>> entities) {
+            final Stream<AbstractEntity<?>> entities)
+    {
 
         final Optional<Stream<AbstractEntity<?>>> assignedEntitiesOp = customPropertiesAsignmentHandler
                 .map(handlerType -> centre.createAssignmentHandlerInstance(handlerType))
