@@ -1,36 +1,33 @@
 package ua.com.fielden.platform.dao.dynamic;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
-import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.interception.AccessToken;
-import ua.com.fielden.platform.security.interception.NoAccessToken;
 import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
-/**
- * Entity for "dynamic query" testing.
- * 
- * @author TG Team
- * 
- */
-@KeyType(String.class)
-@MapEntityTo("MASTER_ENTITY")
-public class MasterEntity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
+/// Entity for "dynamic query" testing.
+///
+@KeyType(DynamicEntityKey.class)
+@MapEntityTo("EVEN_SLAVER_ENTITY")
+public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
+
+    @IsProperty
+    @CompositeKeyMember(1)
+    @MapTo("SLAVE_ENTITY_PROP")
+    private SlaveEntity slaveEntityProp;
 
     ////////// Range types //////////
     @IsProperty
+    @CompositeKeyMember(2)
     @MapTo("INTEGER_PROP")
     private Integer integerProp = null;
 
     @IsProperty
     @MapTo("BIG_DECIMAL_PROP")
-    private BigDecimal bigDecimalProp = new BigDecimal(0.0);
+    private BigDecimal bigDecimalProp;
 
     @IsProperty
     @MapTo("MONEY_PROP")
@@ -49,43 +46,13 @@ public class MasterEntity extends AbstractEntity<String> {
     @MapTo("STRING_PROP")
     private String stringProp;
 
-    ////////// Entity type //////////
-    @IsProperty
-    @MapTo("ENTITY_PROP")
-    private SlaveEntity entityProp;
-
-    ///////// Collections /////////
-    @IsProperty(SlaveEntity.class)
-    private List<SlaveEntity> collection = new ArrayList<SlaveEntity>();
-
-    @IsProperty
-    @MapTo("AUTHORISED_PROP")
-    @Authorise(AccessToken.class)
-    private Money authorisedProp;
-
-    @IsProperty
-    @MapTo("UNAUTHORISED_PROP")
-    @Authorise(NoAccessToken.class)
-    private Money unauthorisedProp;
-
-    public Money getUnauthorisedProp() {
-        return unauthorisedProp;
+    public SlaveEntity getSlaveEntityProp() {
+        return slaveEntityProp;
     }
 
     @Observable
-    public MasterEntity setUnauthorisedProp(final Money unauthorisedProp) {
-        this.unauthorisedProp = unauthorisedProp;
-        return this;
-    }
-
-    public Money getAuthorisedProp() {
-        return authorisedProp;
-    }
-
-    @Observable
-    public MasterEntity setAuthorisedProp(final Money authorisedProp) {
-        this.authorisedProp = authorisedProp;
-        return this;
+    public void setSlaveEntityProp(final SlaveEntity slaveEntityProp) {
+        this.slaveEntityProp = slaveEntityProp;
     }
 
     public Integer getIntegerProp() {
@@ -140,24 +107,5 @@ public class MasterEntity extends AbstractEntity<String> {
     @Observable
     public void setStringProp(final String stringProp) {
         this.stringProp = stringProp;
-    }
-
-    public SlaveEntity getEntityProp() {
-        return entityProp;
-    }
-
-    @Observable
-    public void setEntityProp(final SlaveEntity entityProp) {
-        this.entityProp = entityProp;
-    }
-
-    public List<SlaveEntity> getCollection() {
-        return collection;
-    }
-
-    @Observable
-    public void setCollection(final List<SlaveEntity> collection) {
-        this.collection.clear();
-        this.collection.addAll(collection);
     }
 }

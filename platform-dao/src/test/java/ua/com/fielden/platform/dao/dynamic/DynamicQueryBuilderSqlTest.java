@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.dao.dynamic;
 
-import com.google.inject.Injector;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
@@ -26,15 +25,18 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
 import ua.com.fielden.platform.eql.meta.EqlTables;
-import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.*;
-import ua.com.fielden.platform.security.AuthorisationException;
-import ua.com.fielden.platform.security.interception.AuthenticationTestIocModule;
-import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.interception.MasterEntity_CanRead_unauthorisedProp_Token;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
+import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.io.ByteArrayInputStream;
@@ -42,6 +44,7 @@ import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -50,25 +53,21 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createCompletedQuery;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 /// A test for [DynamicQueryBuilder].
 ///
 @SuppressWarnings({"unchecked"})
-public class DynamicQueryBuilderSqlTest {
+public class DynamicQueryBuilderSqlTest extends AbstractDaoTestCase {
 
-    private final static Injector injector = new ApplicationInjectorFactory()
-            .add(new CommonEntityTestIocModuleWithPropertyFactory())
-            .add(new AuthenticationTestIocModule())
-            .getInjector();
-    private final static EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
-    private final static IDates dates = injector.getInstance(IDates.class);
+    private IDates dates;
 
-    private final String alias;
-    private final Class<? extends AbstractEntity<?>> masterKlass, slaveCollectionType, evenSlaverCollectionType;
-    private final IJoin<? extends AbstractEntity<?>> iJoin;
-    private final Map<String, QueryProperty> queryProperties;
+    private String alias;
+    private Class<? extends AbstractEntity<?>> masterKlass, slaveCollectionType, evenSlaverCollectionType;
+    private IJoin<? extends AbstractEntity<?>> iJoin;
+    private Map<String, QueryProperty> queryProperties;
 
-    {
+    private void init(final EntityFactory entityFactory) {
         alias = "alias_for_main_criteria_type";
         // enhance domain with ALL / ANY calc properties
         final IDomainTreeEnhancer dte = new DomainTreeEnhancer(entityFactory, Set.of(MasterEntity.class));
@@ -174,6 +173,11 @@ public class DynamicQueryBuilderSqlTest {
 
     @Before
     public void set_up() {
+        final EntityFactory entityFactory = getInstance(EntityFactory.class);
+        dates = getInstance(IDates.class);
+
+        init(entityFactory);
+
         // make the values to be default for all properties before any test
         for (final var qp : queryProperties.values()) {
             qp.setValue(getEmptyValue(qp.getType(), qp.isSingle()));
@@ -659,11 +663,11 @@ public class DynamicQueryBuilderSqlTest {
     }
 
 
-    ////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////// 2. Property level (Negation / Null) /////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////
+    //---------------------------------------------------------------------------------------//
+    //------------------------------ 2. Property level (Negation / Null) --------------------//
+    //---------------------------------------------------------------------------------------//
 
-    ////////////////////////////////// 2.1. Is [Not] Null //////////////////////////////////////
+    //------------------------------- 2.1. Is [Not] Null ------------------------------------//
     @Test
     public void test_property_query_composition_with_missing_value() {
         final String propertyName = "dateProp";
@@ -703,7 +707,7 @@ public class DynamicQueryBuilderSqlTest {
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
-    ////////////////////////////////// 2.2. Direct conditions and Negation / Nulls //////////////////////////////////////
+    //-------------------- 2.2. Direct conditions and Negation / Nulls ----------------------//
 
     @Test
     public void test_property_query_composition_with_direct_condition() {
@@ -793,11 +797,11 @@ public class DynamicQueryBuilderSqlTest {
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////// 3. Conditions level /////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////
+    //---------------------------------------------------------------------------------------//
+    //-------------------------------- 3. Conditions level ----------------------------------//
+    //---------------------------------------------------------------------------------------//
 
-    ////////////////////////////////// 3.1. Non-collectional ///////////////////////////////////
+    //------------------------------- 3.1. Non-collectional ---------------------------------//
     @Test
     public void test_conditions_query_composition_with_a_couple_of_non_collectional_conditions() {
         queryProperties.get("bigDecimalProp").setValue(3);
@@ -1425,7 +1429,7 @@ public class DynamicQueryBuilderSqlTest {
         assertEquals("Incorrect query model for union entities has been built.", expected.model(), actual.model());
     }
 
-    //////// property authorisation tests//////////////////////
+    //-------------------------  property authorisation tests -------------------------------//
     @Test
     public void authorised_prop_should_be_present_in_query() {
         test_atomic_query_composition_for_range_type("authorisedProp");
@@ -1433,28 +1437,37 @@ public class DynamicQueryBuilderSqlTest {
 
     @Test
     public void unauthorised_prop_throws_authorisation_exception() {
-        set_up();
+        removeAccessTo(MasterEntity_CanRead_unauthorisedProp_Token.class);
 
         final QueryProperty property = queryProperties.get("unauthorisedProp");
         property.setValue(3);
         property.setValue2(7);
 
-        assertThrows(
-            "Permission denied.", AuthorisationException.class,
-            () -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates)
-        );
+        assertThatCode(() -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates))
+                .hasMessage("Permission denied due to token [Master Entity Can Read property [unauthorisedProp]] restriction.");
     }
 
     @Test
     public void unauthorised_prop_initiated_with_mnemonics_throws_authorisation_exception() {
-        set_up();
+        removeAccessTo(MasterEntity_CanRead_unauthorisedProp_Token.class);
 
         final QueryProperty property = queryProperties.get("unauthorisedProp");
         property.setOrNull(true);
 
-        assertThrows(
-            "Permission denied.", AuthorisationException.class,
-            () -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates)
-        );
+        assertThatCode(() -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates))
+                .hasMessage("Permission denied due to token [Master Entity Can Read property [unauthorisedProp]] restriction.");
+
     }
+
+    /// This is more like just in case `token` would get associated with `UNIT_TEST_ROLE` by the base test class logic.
+    ///
+    private void removeAccessTo(final Class<? extends ISecurityToken> token) {
+        final SecurityRoleAssociationCo co = co(SecurityRoleAssociation.class);
+        co.removeAssociations(setOf(
+                co.new_()
+                        .setRole(co(UserRole.class).findByKey(UNIT_TEST_ROLE))
+                        .setSecurityToken(token)
+        ));
+    }
+
 }
