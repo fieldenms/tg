@@ -154,9 +154,8 @@ public class EntityResourceUtils {
     /**
      * Determines the version that is shipped with {@code modifiedPropertiesHolder}.
      */
-    public static long getVersion(final Map<String, Object> modifiedPropertiesHolder) {
-        final Object arrivedVersionVal = modifiedPropertiesHolder.get(AbstractEntity.VERSION);
-        return ((Integer) arrivedVersionVal).longValue();
+    public static OptionalLong maybeVersion(final Map<String, Object> modifiedPropertiesHolder) {
+        return modifiedPropertiesHolder.get(AbstractEntity.VERSION) instanceof Integer n ? OptionalLong.of(n.longValue()) : OptionalLong.empty();
     }
 
     /**
@@ -170,10 +169,12 @@ public class EntityResourceUtils {
             final ICompanionObjectFinder coFinder)
     {
         final Class<M> type = (Class<M>) entity.getType();
-        final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
+        final boolean isEntityStale = entity.getVersion() > maybeVersion(modifiedPropertiesHolder).orElse(0);
         final boolean isCriteriaEntity = EntityQueryCriteria.class.isAssignableFrom(type);
 
-        final Set<String> touchedProps = unmodifiableSequencedSet(new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps")));
+        final Set<String> touchedProps = modifiedPropertiesHolder.containsKey("@@touchedProps")
+                ? unmodifiableSequencedSet(new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps")))
+                : Set.of();
 
         // iterate through untouched properties first:
         //  (the order of application does not really matter - untouched properties were really applied earlier through some definers, that originate from touched properties)
