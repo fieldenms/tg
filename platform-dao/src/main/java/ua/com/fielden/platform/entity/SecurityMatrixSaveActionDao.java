@@ -39,7 +39,6 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
 
     @Override
     @SessionRequired
-    @Authorise(SecurityRoleAssociation_CanSave_Token.class)
     public SecurityMatrixSaveAction save(final SecurityMatrixSaveAction entity) {
         final Map<Long, UserRole> idRoleMap = getUserRoles(entity);
         if (!idRoleMap.isEmpty()) {
@@ -51,11 +50,12 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
                     .map(entry -> createSecurityRoleAssociations(entry.getKey(), entry.getValue(), idRoleMap))
                     .flatMap(List::stream)
                     .collect(Collectors.toSet());
+            entity.setAssociationsToRemove(new HashMap<>()).setAssociationsToSave(new HashMap<>());
             SecurityRoleAssociationCo associationCo = co$(SecurityRoleAssociation.class);
             associationCo.addAssociations(addedAssociations);
             associationCo.removeAssociations(removedAssociations);
         }
-        return super.save(entity.setAssociationsToRemove(new HashMap<>()).setAssociationsToSave(new HashMap<>()));
+        return super.save(entity);
     }
 
     private List<SecurityRoleAssociation> createSecurityRoleAssociations(final String securityToken, final List<Integer> roleIds, final Map<Long, UserRole> idRoleMap) {

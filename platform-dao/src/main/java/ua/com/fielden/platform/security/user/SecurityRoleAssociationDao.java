@@ -98,6 +98,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     
     @Override
     @SessionRequired
+    @Authorise(SecurityRoleAssociation_CanSave_Token.class)
     public void removeAssociations(final Collection<SecurityRoleAssociation> associations) {
         fetchAssociationsAndModifyOrElse(
                 associations,
@@ -109,6 +110,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     @Override
     @SessionRequired
+    @Authorise(SecurityRoleAssociation_CanSave_Token.class)
     public void addAssociations(final Collection<SecurityRoleAssociation> associations) {
         fetchAssociationsAndModifyOrElse(
                 associations,
