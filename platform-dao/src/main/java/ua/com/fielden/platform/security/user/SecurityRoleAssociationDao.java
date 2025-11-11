@@ -6,6 +6,7 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
@@ -151,6 +152,11 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
         return select(SecurityRoleAssociation.class).where()
                 .prop("securityToken").in().values(group.stream().map(a -> a.getSecurityToken().getName()).collect(toList())).and()
                 .prop("role").in().values(group.stream().map(a -> a.getRole()).collect(toList())).model();
+    }
+
+    @Override
+    protected IFetchProvider<SecurityRoleAssociation> createFetchProvider() {
+        return FETCH_PROVIDER;
     }
 
     @Override

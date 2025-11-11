@@ -42,7 +42,7 @@ public class SecurityRoleAssociationTest extends AbstractDaoTestCase {
                 from(select(SecurityRoleAssociation.class).where()
                              .prop("role").eq().val(role)
                              .model())
-                .with(fetchIdOnly(SecurityRoleAssociation.class).with("securityToken"))
+                .with(SecurityRoleAssociationCo.FETCH_MODEL)
                 .model())
                 .stream()
                 .<Class<? extends ISecurityToken>>map(SecurityRoleAssociation::getSecurityToken)
