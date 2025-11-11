@@ -15,6 +15,7 @@ import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -118,6 +119,8 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres();
+
+    Collection<EntityActionConfig> getExtraActions();
 
     /**
      * Returns the map of custom views for this web application.

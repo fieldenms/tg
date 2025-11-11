@@ -161,4 +161,7 @@ public interface IWebUiBuilder {
      * @return
      */
     <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getOpenMasterAction(final Class<T> entityType);
+
+    IWebUiBuilder registerExtraAction(EntityActionConfig actionConfig);
+
 }

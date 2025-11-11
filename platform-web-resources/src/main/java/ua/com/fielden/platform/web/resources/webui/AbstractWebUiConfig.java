@@ -338,6 +338,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
+    public Collection<EntityActionConfig> getExtraActions() {
+        return webUiBuilder.getExtraActions();
+    }
+
+    @Override
     public Map<String, AbstractCustomView> getCustomViews() {
         return webUiBuilder.getCustomViews();
     }

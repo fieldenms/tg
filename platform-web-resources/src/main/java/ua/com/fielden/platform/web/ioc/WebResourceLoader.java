@@ -140,6 +140,7 @@ public class WebResourceLoader implements IWebResourceLoader {
                 .map(src -> {
                     final var actionsCode = distinct(StreamUtils.concat(webUiConfig.getCentres().values().stream().flatMap(EntityCentre::streamActionConfigs),
                                                                         webUiConfig.getMasters().values().stream().flatMap(EntityMaster::streamActions),
+                                                                        webUiConfig.getExtraActions().stream(),
                                                                         webUiConfig.configDesktopMainMenu().streamActionConfigs(),
                                                                         webUiConfig.configMobileMainMenu().streamActionConfigs())
                                                              .filter(action -> action.actionIdentifier.isPresent()),
