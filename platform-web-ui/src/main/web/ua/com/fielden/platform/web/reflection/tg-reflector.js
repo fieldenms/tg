@@ -3,11 +3,8 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { _formatInteger, _formatDecimal, _formatMoney, DEFAULT_SCALE } from '/resources/reflection/tg-numeric-utils.js';
 
-/**
- * Used for decimal and money formatting. If the scale value for formatting wasn't specified then the default one is used.
- */
-const DEFAULT_SCALE = 2;
 /**
  * If the precion for entity type property wasn't defined then the default one should be used.
  */
@@ -30,13 +27,6 @@ const KEY_NOT_ASSIGNED = "[key is not assigned]"; // closely resembles AbstractE
 const STANDARD_COLLECTION_SEPARATOR = ', ';
 
 const VALIDATION_RESULT = '_validationResult';
-
-// A variable that defines a currency symbol, used to represent monetary values as strings.
-// This variable is assigned only once.
-let currencySymbol = null;
-
-// A space used to separate a currency symbol from a numeric part of  when representing monetary value as strings
-export const CURRENCY_SYMBOL_SPACE = '\u200A';
 
 /**
  * Determines whether the result represents the error.
@@ -1482,46 +1472,6 @@ const _toStringForCollectionAsTooltip = function (bindingValue, rootEntityType, 
 };
 
 /**
- * Formats integer number in to string based on locale. If the value is null then returns empty string.
- */
-const _formatInteger = function (value, locale) {
-    if (value !== null) {
-        return value.toLocaleString(locale);
-    }
-    return '';
-};
-
-/**
- * Formats number with floating point in to string based on locale. If the value is null then returns empty string.
- */
-const _formatDecimal = function (value, locale, scale, trailingZeros) {
-    if (value !== null) {
-        const definedScale = typeof scale === 'undefined' || scale === null || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale*/ ? DEFAULT_SCALE : scale;
-        const options = { maximumFractionDigits: definedScale };
-        if (trailingZeros !== false) {
-            options.minimumFractionDigits = definedScale;
-        }
-        return value.toLocaleString(locale, options);
-    }
-    return '';
-};
-
-const _getCurrencySymbol = function() {
-    return currencySymbol || '$';
-}
-
-/**
- * Formats money number in to string based on locale. If the value is null then returns empty string.
- */
-const _formatMoney = function (value, locale, scale, trailingZeros) {
-    if (value !== null) {
-        const strValue = _formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros);
-        return (value.amount < 0 ? `-${_getCurrencySymbol()}` : `${_getCurrencySymbol()}`) + CURRENCY_SYMBOL_SPACE + strValue;
-    }
-    return '';
-};
-
-/**
  * Completes the process of type table preparation -- creates instances of EntityType objects for each entity type in type table.
  */
 var _providePrototypes = function (typeTable, EntityType) {
@@ -1945,17 +1895,6 @@ export const TgReflector = Polymer({
             return arrayOfEntityAndCustomObject[1];
         } else {
             return null;
-        }
-    },
-
-    /**
-     * Set the provided currency symbol if previous was empty and provided one is not empty. It means that currency symbol can be set only once. 
-     * 
-     * @param {String} newCurrencySymbol - currency symbol to set
-     */
-    setCurrencySymbol: function (newCurrencySymbol) {
-        if (!currencySymbol && newCurrencySymbol) {
-            currencySymbol = newCurrencySymbol;
         }
     },
 
