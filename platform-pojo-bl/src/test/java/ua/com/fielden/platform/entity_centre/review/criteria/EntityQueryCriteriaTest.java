@@ -1,43 +1,47 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import org.junit.Test;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.testing.*;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.security.interception.AuthenticationTestIocModule;
+import ua.com.fielden.platform.utils.EntityUtils;
+
+import java.util.List;
+import java.util.Set;
+
+import static java.util.Optional.empty;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria.createFetchModelFrom;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-
-import org.junit.Test;
-
-import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
-import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-import ua.com.fielden.platform.domaintree.testing.ShortEvenSlaverEntity;
-import ua.com.fielden.platform.domaintree.testing.ShortSlaveEntity;
-import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.utils.EntityUtils;
-
-/**
- * A test for {@link EntityQueryCriteria}.
- *
- * @author TG Team
- *
- */
+/// A test case for [EntityQueryCriteria].
+///
 public class EntityQueryCriteriaTest {
+
+    private final static Injector injector = new ApplicationInjectorFactory()
+            .add(new AuthenticationTestIocModule())
+            .add(new AbstractModule() {
+                @Override protected void configure() {
+                    bind(IApplicationDomainProvider.class).toInstance(List::of);
+                }
+            })
+            .getInjector();
 
     @Test
     public void absence_of_short_collection_in_root_type_does_not_require_fetching_of_parent_keys() {
-        final Set<String> properties = new HashSet<>();
-        final IFetchProvider<MasterEntity> actual = createFetchModelFrom(MasterEntity.class, properties, Optional.empty(), Optional.empty());
+        final var properties = Set.<String>of();
+        final IFetchProvider<MasterEntity> actual = createFetchModelFrom(MasterEntity.class, properties, empty(), empty());
         final IFetchProvider<MasterEntity> expected = EntityUtils.fetchNotInstrumented(MasterEntity.class);
         assertEquals(expected, actual);
     }
 
     @Test
     public void short_collection_in_root_type_ensures_fetching_of_parent_keys() {
-        final Set<String> properties = new HashSet<>();
-        properties.add("shortCollection");
-        final IFetchProvider<MasterEntity> actual = createFetchModelFrom(MasterEntity.class, properties, Optional.empty(), Optional.empty());
+        final var properties = Set.of("shortCollection");
+        final IFetchProvider<MasterEntity> actual = createFetchModelFrom(MasterEntity.class, properties, empty(), empty());
         final IFetchProvider<MasterEntity> expected = EntityUtils.fetchNotInstrumentedWithKeyAndDesc(MasterEntity.class).
                 with("shortCollection", EntityUtils.fetchNotInstrumentedWithKeyAndDesc(ShortSlaveEntity.class));
         assertEquals(expected, actual);
@@ -45,9 +49,8 @@ public class EntityQueryCriteriaTest {
 
     @Test
     public void short_collection_inside_inner_property_ensures_fetching_of_inner_property_keys() {
-        final Set<String> properties = new HashSet<>();
-        properties.add("entityProp.shortCollection");
-        final IFetchProvider<MasterEntity> actual = createFetchModelFrom(MasterEntity.class, properties, Optional.empty(), Optional.empty());
+        final var properties = Set.of("entityProp.shortCollection");
+        final IFetchProvider<MasterEntity> actual = createFetchModelFrom(MasterEntity.class, properties, empty(), empty());
         final IFetchProvider<MasterEntity> expected = EntityUtils.fetchNotInstrumented(MasterEntity.class).
                 with("entityProp", EntityUtils.fetchNotInstrumentedWithKeyAndDesc(SlaveEntity.class)
                         .with("shortCollection", EntityUtils.fetchNotInstrumentedWithKeyAndDesc(ShortEvenSlaverEntity.class)));
@@ -56,9 +59,8 @@ public class EntityQueryCriteriaTest {
 
     @Test
     public void short_collection_inside_two_level_inner_property_ensures_fetching_of_inner_property_keys() {
-        final Set<String> properties = new HashSet<>();
-        properties.add("entityProp.entityProp.shortCollection");
-        final IFetchProvider<MasterEntity> actual = createFetchModelFrom(MasterEntity.class, properties, Optional.empty(), Optional.empty());
+        final var properties = Set.of("entityProp.entityProp.shortCollection");
+        final IFetchProvider<MasterEntity> actual = createFetchModelFrom(MasterEntity.class, properties, empty(), empty());
         final IFetchProvider<MasterEntity> expected = EntityUtils.fetchNotInstrumented(MasterEntity.class).
                 with("entityProp", EntityUtils.fetchNotInstrumentedWithKeyAndDesc(SlaveEntity.class)
                         .with("entityProp", EntityUtils.fetchNotInstrumentedWithKeyAndDesc(EvenSlaverEntity.class)
@@ -67,4 +69,21 @@ public class EntityQueryCriteriaTest {
                 );
         assertEquals(expected, actual);
     }
+
+    @Test
+    public void authorised_prop_are_fetched() {
+        final var properties = Set.of("authorisedProp");
+        final var actual = createFetchModelFrom(AuthorisationTestEntity.class, properties, empty(), empty());
+        final var expected = EntityUtils.fetchNotInstrumented(AuthorisationTestEntity.class).with("authorisedProp");
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void unauthorised_prop_are_not_fetched() {
+        final var properties = Set.of("unauthorisedProp");
+        final IFetchProvider<AuthorisationTestEntity> actual = createFetchModelFrom(AuthorisationTestEntity.class, properties, empty(), empty());
+        final IFetchProvider<AuthorisationTestEntity> expected = EntityUtils.fetchNotInstrumented(AuthorisationTestEntity.class);
+        assertEquals(expected, actual);
+    }
+
 }
