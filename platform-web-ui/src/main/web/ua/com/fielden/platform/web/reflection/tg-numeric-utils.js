@@ -1,3 +1,6 @@
+import { TgAppConfig } from '/app/tg-app-config.js';
+
+const _appConfig = new TgAppConfig();
 // A variable that defines a currency symbol, used to represent monetary values as strings.
 // This variable is assigned only once.
 let currencySymbol = null;
@@ -38,7 +41,7 @@ export function random (max) {
  */
 export function _formatInteger (value, locale) {
     if (value !== null) {
-        return value.toLocaleString(locale);
+        return value.toLocaleString(locale || _appConfig.locale);
     }
     return '';
 }
@@ -53,7 +56,7 @@ export function _formatDecimal (value, locale, scale, trailingZeros) {
         if (trailingZeros !== false) {
             options.minimumFractionDigits = definedScale;
         }
-        return value.toLocaleString(locale, options);
+        return value.toLocaleString(locale || _appConfig.locale, options);
     }
     return '';
 }

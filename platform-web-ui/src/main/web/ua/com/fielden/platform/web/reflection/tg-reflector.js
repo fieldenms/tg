@@ -1731,7 +1731,9 @@ export const TgReflector = Polymer({
      * @param opts.bindingValue -- if true then 'value' represents binding value representation, otherwise -- fully-fledged value
      * 
      * @param opts.display -- if true then 'value' will be converted to "display" string representation, aka #F1F1F1 for colour or 10,000.50 and $37.7878 for numeric props, otherwise -- to editing value representation (F1F1F1 or 10000.5 and 37.7878)
-     * @param   opts.locale -- optional; works only for opts.display === true; application-wide server-driven locale; this is to be used for number properties conversion (BigDecimal, Integer / Long, Money) and can be omitted for other types
+     * @param   opts.locale -- optional; works only for opts.display === true;
+     *                         represents a custom locale; uses application-wide server-driven locale, if empty;
+     *                         this is to be used for number properties conversion (BigDecimal, Integer / Long, Money) and can be omitted for other types
      *    otherwise
      * @param opts.collection -- true if 'value' represents collection, false otherwise; this is to be used with custom parameters for collection conversion:
      * @param   opts.asTooltip -- if true then collection of entities will be converted to standard tooltip representation
