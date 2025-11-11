@@ -298,81 +298,94 @@ Polymer({
         if (this.tgOpenMasterAction.isActionInProgress || this.disableNextHistoryChange) {
             return;
         }
-        const entityInfo = this._selectedSubmodule.substring(1).split('/');
-        const typeOf = (name) => this._reflector().findTypeByName(name);
-        const mainTypeName = entityInfo[0];
-        const idStr = entityInfo[1];
-        const menuItemTypeName = entityInfo[2];
-        if (entityInfo.length === 1) {
-            const hash = entityInfo[0];
-            this.$.entityReconstructor.url = `/tiny/${hash}`;
-            this.$.entityReconstructor.generateRequest().completes.then(ironRequest => {
-                const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
-                //console.error(deserialisedResult);
-                const customObject = deserialisedResult.instance[1];
-                const actionObject = appActions.actions(this)[customObject.actionIdentifier];
-                // TODO Report an error if actionObject is null.
+        const prefix = this._subroute.prefix;
+        const suffix = this._subroute.path.substring(1).split('/');
+        if (prefix === '/tiny') {
+            const hash = suffix[0];
+            if (hash) {
+                this.$.entityReconstructor.url = `/tiny/${hash}`;
+                this.$.entityReconstructor.generateRequest().completes.then(ironRequest => {
+                    const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
+                    //console.error(deserialisedResult);
+                    const customObject = deserialisedResult.instance[1];
+                    const actionObject = appActions.actions(this)[customObject.actionIdentifier];
+                    // TODO Report an error if actionObject is null.
 
-                const action = document.createElement('tg-ui-action');
-                for (const name of [
-                    'shortDesc', 'longDesc', 'componentUri', 'elementName',
-                    'preAction', 'postActionSuccess', 'postActionError',
-                    'requireSelectionCriteria', 'requireSelectedEntities', 'requireMasterEntity'
-                ]) {
-                    action[name] = actionObject[name];
-                }
-                action.attrs = {}
-                for (const name of ['entityType', 'currentState', 'prefDim', 'actionId']) {
-                    // prefDim may be undefined.
-                    if (typeof actionObject.attrs[name] !== 'undefined') {
-                        action.attrs[name] = actionObject.attrs[name];
+                    const action = document.createElement('tg-ui-action');
+                    for (const name of [
+                        'shortDesc', 'longDesc', 'componentUri', 'elementName',
+                        'preAction', 'postActionSuccess', 'postActionError',
+                        'requireSelectionCriteria', 'requireSelectedEntities', 'requireMasterEntity'
+                    ]) {
+                        action[name] = actionObject[name];
                     }
-                }
-                action.attrs.centreUuid = 'unknown'; // this.uuid;
-
-                action.showDialog = this._showDialog;
-                action.toaster = this.toaster;
-                const savingInfoHolder = this._serialiser().deserialise(JSON.parse(customObject.savingInfoHolder));
-                action.createContextHolder = () => {
-                    const typeName = action.componentUri.substring(action.componentUri.lastIndexOf('/') + 1);
-                    const type = this._reflector().getType(typeName);
-                    if (type && type._simpleClassName() === 'EntityNewAction') {
-                        return savingInfoHolder.centreContextHolder
-                            .masterEntity.centreContextHolder;
+                    action.attrs = {}
+                    for (const name of ['entityType', 'currentState', 'prefDim', 'actionId']) {
+                        // prefDim may be undefined.
+                        if (typeof actionObject.attrs[name] !== 'undefined') {
+                            action.attrs[name] = actionObject.attrs[name];
+                        }
                     }
-                    else if (type && type.compoundOpenerType()) {
-                        return savingInfoHolder.centreContextHolder
-                            .masterEntity.centreContextHolder
-                            .masterEntity.centreContextHolder;
-                    }
-                    return savingInfoHolder.centreContextHolder;
-                };
+                    action.attrs.centreUuid = 'unknown'; // this.uuid;
 
-                action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
-                    master.addEventListener('data-loaded-and-focused', event => {
-                        event.detail._postRetrievedDefault(deserialisedResult.instance);
-                    }, { once: true });
-                };
+                    action.showDialog = this._showDialog;
+                    action.toaster = this.toaster;
+                    const savingInfoHolder = this._serialiser().deserialise(JSON.parse(customObject.savingInfoHolder));
+                    action.createContextHolder = () => {
+                        const typeName = action.componentUri.substring(action.componentUri.lastIndexOf('/') + 1);
+                        const type = this._reflector().getType(typeName);
+                        if (type && type._simpleClassName() === 'EntityNewAction') {
+                            return savingInfoHolder.centreContextHolder
+                                .masterEntity.centreContextHolder;
+                        }
+                        else if (type && type.compoundOpenerType()) {
+                            return savingInfoHolder.centreContextHolder
+                                .masterEntity.centreContextHolder
+                                .masterEntity.centreContextHolder;
+                        }
+                        return savingInfoHolder.centreContextHolder;
+                    };
 
-                action._run();
-            });
-        }
-        else if (entityInfo.length !== 2 && entityInfo.length !== 3) {
-            this._openToastForError('URI error.', `The URI [${this._selectedSubmodule}] for master is incorrect. It should contain entity type and id [and optional type of compound menu item] separated with '/'.`, true);
-        } else if (!typeOf(mainTypeName) || menuItemTypeName && !typeOf(menuItemTypeName)) {
-            this._openToastForError('Entity type error.', `[${mainTypeName}]${menuItemTypeName ? ` or [${menuItemTypeName}]` : ''} entity type is not registered. Please make sure that entity type is correct.`, true);
-        } else if (isNaN(Number(idStr))) {
-            this._openToastForError('Master entity ID error.', `The entity ID [${idStr}] for master is not integer number.`, true);
-        } else {
-            const entity = this._reflector().newEntity(mainTypeName);
-            entity['id'] = parseInt(idStr);
-            if (menuItemTypeName) {
-                this.tgOpenMasterAction.modifyFunctionalEntity = (bindingEntity) => {
-                    bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
-                    delete this.tgOpenMasterAction.modifyFunctionalEntity;
-                };
+                    action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
+                        master.addEventListener('data-loaded-and-focused', event => {
+                            event.detail._postRetrievedDefault(deserialisedResult.instance);
+                        }, { once: true });
+                    };
+
+                    action._run();
+                });
             }
-            this.tgOpenMasterAction._runDynamicAction(() => entity, null);
+            else {
+                this._openToastForError('URI error.', `The URI [${this._route.path}] is invalid.`, true);
+            }
+        }
+        else if (prefix === '/master') {
+            if (suffix.length === 2 || suffix.length === 3) {
+                const typeOf = (name) => this._reflector().findTypeByName(name);
+                const mainTypeName = suffix[0];
+                const idStr = suffix[1];
+                const menuItemTypeName = suffix[2];
+                if (!typeOf(mainTypeName) || menuItemTypeName && !typeOf(menuItemTypeName)) {
+                    this._openToastForError('Entity type error.', `[${mainTypeName}]${menuItemTypeName ? ` or [${menuItemTypeName}]` : ''} entity type is not registered. Please make sure that entity type is correct.`, true);
+                } else if (isNaN(Number(idStr))) {
+                    this._openToastForError('Master entity ID error.', `The entity ID [${idStr}] for master is not integer number.`, true);
+                } else {
+                    const entity = this._reflector().newEntity(mainTypeName);
+                    entity['id'] = parseInt(idStr);
+                    if (menuItemTypeName) {
+                        this.tgOpenMasterAction.modifyFunctionalEntity = (bindingEntity) => {
+                            bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
+                            delete this.tgOpenMasterAction.modifyFunctionalEntity;
+                        };
+                    }
+                    this.tgOpenMasterAction._runDynamicAction(() => entity, null);
+                }}
+            else {
+                this._openToastForError('URI error.', `The URI [${this._selectedSubmodule}] for master is incorrect. It should contain entity type and id [and optional type of compound menu item] separated with '/'.`, true);
+            }
+        }
+        else {
+            this._openToastForError('URI error.', `The URI [${this._route.path}] is invalid.`, true);
         }
     },
     
