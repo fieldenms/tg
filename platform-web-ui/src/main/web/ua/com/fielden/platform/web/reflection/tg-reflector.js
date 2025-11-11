@@ -3,7 +3,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
-import { _formatInteger, _formatDecimal, _formatMoney, DEFAULT_SCALE } from '/resources/reflection/tg-numeric-utils.js';
+import { formatInteger, formatDecimal, formatMoney, DEFAULT_SCALE } from '/resources/reflection/tg-numeric-utils.js';
 
 /**
  * If the precion for entity type property wasn't defined then the default one should be used.
@@ -1404,11 +1404,11 @@ const _toStringForDisplay = function (bindingValue, rootEntityType, property, lo
     if (propertyType === 'Colour') {
         return bindingValue === null ? '' : '#' + _toString(bindingValue, rootEntityType, property);
     } else if (propertyType === 'BigDecimal') {
-        return _formatDecimal(bindingValue, locale, prop.scale(), prop.trailingZeros());
+        return formatDecimal(bindingValue, locale, prop.scale(), prop.trailingZeros());
     } else if (propertyType === 'Integer' || propertyType === 'Long') {
-        return _formatInteger(bindingValue, locale);
+        return formatInteger(bindingValue, locale);
     } else if (propertyType === 'Money') {
-        return _formatMoney(bindingValue, locale, prop.scale(), prop.trailingZeros());
+        return formatMoney(bindingValue, locale, prop.scale(), prop.trailingZeros());
     } else {
         return _toString(bindingValue, rootEntityType, property);
     }
@@ -1838,21 +1838,21 @@ export const TgReflector = Polymer({
      * Formats integer number in to string based on locale. If the value is null then returns empty string.
      */
     tg_formatInteger: function (value, locale) {
-        return _formatInteger(value, locale);
+        return formatInteger(value, locale);
     },
 
     /**
      * Formats number with floating point in to string based on locale. If the value is null then returns empty string.
      */
     tg_formatDecimal: function (value, locale, scale, trailingZeros) {
-        return _formatDecimal(value, locale, scale, trailingZeros);
+        return formatDecimal(value, locale, scale, trailingZeros);
     },
 
     /**
      * Formats money number in to string based on locale. If the value is null then returns empty string.
      */
     tg_formatMoney: function (value, locale, scale, trailingZeros) {
-        return _formatMoney(value, locale, scale, trailingZeros);
+        return formatMoney(value, locale, scale, trailingZeros);
     },
 
     /**

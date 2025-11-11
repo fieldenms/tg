@@ -39,7 +39,7 @@ export function random (max) {
 /**
  * Formats integer number in to string based on locale. If the value is null then returns empty string.
  */
-export function _formatInteger (value, locale) {
+export function formatInteger (value, locale) {
     if (value !== null) {
         return value.toLocaleString(locale || _appConfig.locale);
     }
@@ -49,7 +49,7 @@ export function _formatInteger (value, locale) {
 /**
  * Formats number with floating point in to string based on locale. If the value is null then returns empty string.
  */
-export function _formatDecimal (value, locale, scale, trailingZeros) {
+export function formatDecimal (value, locale, scale, trailingZeros) {
     if (value !== null) {
         const definedScale = typeof scale === 'undefined' || scale === null || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale */ ? DEFAULT_SCALE : scale;
         const options = { maximumFractionDigits: definedScale };
@@ -75,9 +75,9 @@ export function setCurrencySymbol (newCurrencySymbol) {
 /**
  * Formats money number in to string based on locale. If the value is null then returns empty string.
  */
-export function _formatMoney (value, locale, scale, trailingZeros) {
+export function formatMoney (value, locale, scale, trailingZeros) {
     if (value !== null) {
-        const strValue = _formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros);
+        const strValue = formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros);
         return (value.amount < 0 ? `-${_getCurrencySymbol()}` : `${_getCurrencySymbol()}`) + CURRENCY_SYMBOL_SPACE + strValue;
     }
     return '';
