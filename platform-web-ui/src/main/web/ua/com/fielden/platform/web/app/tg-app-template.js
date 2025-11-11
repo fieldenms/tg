@@ -381,7 +381,7 @@ Polymer({
                     this.tgOpenMasterAction._runDynamicAction(() => entity, null);
                 }}
             else {
-                this._openToastForError('URI error.', `The URI [${this._selectedSubmodule}] for master is incorrect. It should contain entity type and id [and optional type of compound menu item] separated with '/'.`, true);
+                this._openToastForError('URI error.', `The URI [${this._subroute.path}] for master is incorrect. It should contain entity type and id [and optional type of compound menu item] separated with '/'.`, true);
             }
         }
         else {
