@@ -17,11 +17,13 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.TinyHyperlinkResource;
 
+import java.util.Objects;
+
 /// A factory for [TinyHyperlinkResource].
 ///
 public class TinyHyperlinkResourceFactory extends Restlet {
 
-    public static final String ENTITY_ID = "entity-id";
+    public static final String HASH = "hash";
 
     private final IWebUiConfig webUiConfig;
     private final RestServerUtil restUtil;
@@ -52,8 +54,7 @@ public class TinyHyperlinkResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            // TODO Error handling.
-            final var id = Long.parseLong(request.getAttributes().get(ENTITY_ID).toString());
+            final var hash = Objects.toString(request.getAttributes().get(HASH), null);
 
             new TinyHyperlinkResource(
                     factory,
@@ -69,7 +70,7 @@ public class TinyHyperlinkResourceFactory extends Restlet {
                     getContext(),
                     request,
                     response,
-                    id
+                    hash
             ).handle();
         }
     }

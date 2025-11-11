@@ -304,8 +304,8 @@ Polymer({
         const idStr = entityInfo[1];
         const menuItemTypeName = entityInfo[2];
         if (entityInfo.length === 1) {
-            const tinyId = parseInt(entityInfo);
-            this.$.entityReconstructor.url = `/tiny/${tinyId}`;
+            const hash = entityInfo[0];
+            this.$.entityReconstructor.url = `/tiny/${hash}`;
             this.$.entityReconstructor.generateRequest().completes.then(ironRequest => {
                 const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
                 //console.error(deserialisedResult);

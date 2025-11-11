@@ -9,6 +9,7 @@ import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
@@ -49,7 +50,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
     private final IUserProvider userProvider;
     private final EntityFactory factory;
     private final ICentreConfigSharingModel sharingModel;
-    private final Long tinyHyperlinkId;
+    private final String requestHash;
     private final ISerialiser serialiser;
 
     public TinyHyperlinkResource(
@@ -69,7 +70,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             final Request request,
             final Response response,
 
-            final Long tinyHyperlinkId)
+            final String requestHash)
     {
         super(context, request, response, deviceProvider, dates);
 
@@ -81,7 +82,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
         this.userProvider = userProvider;
         this.factory = entityFactory;
         this.sharingModel = sharingModel;
-        this.tinyHyperlinkId = tinyHyperlinkId;
+        this.requestHash = requestHash;
     }
 
     /// Handles a GET request to open a [TinyHyperlink].
@@ -89,8 +90,12 @@ public class TinyHyperlinkResource extends AbstractWebResource {
     @Get
     public Representation save() {
         return handleUndesiredExceptions(getResponse(), () -> {
+            if (requestHash == null || requestHash.isBlank()) {
+                throw new InvalidStateException("[requestHash] must be present.");
+            }
+
             final TinyHyperlinkCo coTinyHyperlink = companionFinder.findAsReader(TinyHyperlink.class, true);
-            final var tinyHyperlink = coTinyHyperlink.findById(tinyHyperlinkId, fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, SAVING_INFO_HOLDER, ACTION_IDENTIFIER));
+            final var tinyHyperlink = coTinyHyperlink.findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, SAVING_INFO_HOLDER, ACTION_IDENTIFIER), requestHash);
             if (tinyHyperlink == null) {
                 getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
                 return new StringRepresentation("The specified resource was not found. Please verify that you are accessing the correct resource.");

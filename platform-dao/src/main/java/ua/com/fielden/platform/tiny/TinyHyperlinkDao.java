@@ -102,7 +102,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             throw new InvalidArgumentException("URLs can be created only for persisted instances of [%s].".formatted(TinyHyperlink.class.getSimpleName()));
         }
 
-        return "%s/#/tiny/%s".formatted(appUri, tinyHyperlink.getId());
+        return "%s/#/tiny/%s".formatted(appUri, tinyHyperlink.getHash());
     }
 
     @Override
