@@ -38,6 +38,9 @@ export function random (max) {
 
 /**
  * Formats integer number in to string based on locale. If the value is null then returns empty string.
+ *
+ * @param locale - custom locale for Number formatting, if present;
+ *                 uses app-specific `WebUiBuilder.locale` otherwise.
  */
 export function formatInteger (value, locale) {
     if (value !== null) {
@@ -48,6 +51,9 @@ export function formatInteger (value, locale) {
 
 /**
  * Formats number with floating point in to string based on locale. If the value is null then returns empty string.
+ *
+ * @param locale - custom locale for Number formatting, if present;
+ *                 uses app-specific `WebUiBuilder.locale` otherwise.
  */
 export function formatDecimal (value, locale, scale, trailingZeros) {
     if (value !== null) {
@@ -74,6 +80,9 @@ export function setCurrencySymbol (newCurrencySymbol) {
 
 /**
  * Formats money number in to string based on locale. If the value is null then returns empty string.
+ *
+ * @param locale - custom locale for Number formatting, if present;
+ *                 uses app-specific `WebUiBuilder.locale` otherwise.
  */
 export function formatMoney (value, locale, scale, trailingZeros) {
     if (value !== null) {
