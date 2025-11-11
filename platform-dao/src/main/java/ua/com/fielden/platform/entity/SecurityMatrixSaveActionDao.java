@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanSave_Token;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -52,10 +51,9 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
                     .map(entry -> createSecurityRoleAssociations(entry.getKey(), entry.getValue(), idRoleMap))
                     .flatMap(List::stream)
                     .collect(Collectors.toSet());
-            final SecurityRoleAssociationBatchAction batchAction = new SecurityRoleAssociationBatchAction();
-            batchAction.setSaveEntities(addedAssociations);
-            batchAction.setRemoveEntities(removedAssociations);
-            co$(SecurityRoleAssociationBatchAction.class).save(batchAction);
+            SecurityRoleAssociationCo associationCo = co$(SecurityRoleAssociation.class);
+            associationCo.addAssociations(addedAssociations);
+            associationCo.removeAssociations(removedAssociations);
         }
         return super.save(entity.setAssociationsToRemove(new HashMap<>()).setAssociationsToSave(new HashMap<>()));
     }

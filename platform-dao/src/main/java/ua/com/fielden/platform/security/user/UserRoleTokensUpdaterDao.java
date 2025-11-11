@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
@@ -70,12 +69,10 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
             final SecurityRoleAssociation assoc = factory.newByKey(SecurityRoleAssociation.class, token, userRoleBeingUpdated);
             removedAssociations.add(assoc);
         }
-        
-        final SecurityRoleAssociationBatchAction batchAction = new SecurityRoleAssociationBatchAction();
-        batchAction.setSaveEntities(addedAssociations);
-        batchAction.setRemoveEntities(removedAssociations);
-        co$(SecurityRoleAssociationBatchAction.class).save(batchAction);
-        
+        SecurityRoleAssociationCo associationCo = co$(SecurityRoleAssociation.class);
+        associationCo.addAssociations(addedAssociations);
+        associationCo.removeAssociations(removedAssociations);
+
         // after the association changes were successfully saved, the action should also be saved:
         return super.save(actionToSave);
     }
