@@ -14,6 +14,7 @@ import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ServerAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
@@ -135,6 +136,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         }
 
         requestStaticInjection(MultiInheritanceEntityVerificationService.class);
+        requestStaticInjection(EntityQueryCriteriaUtils.class);
     }
 
     public Properties getProps() {

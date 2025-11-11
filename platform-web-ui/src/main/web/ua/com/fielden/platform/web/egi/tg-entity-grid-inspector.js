@@ -931,12 +931,14 @@ Polymer({
             const result = [];
             for (let index = 0; index < this.allColumns.length; index++) {
                 const column = this.allColumns[index];
-                const entry = {
-                    dotNotation: column.property,
-                    value: this.getBindedValue(entity, column),
-                    column: column
-                };
-                result.push(entry);
+                if (!column.isHidden) { // Checks whether the column is authorized and therefore visible.
+                    const entry = {
+                        dotNotation: column.property,
+                        value: this.getBindedValue(entity, column),
+                        column: column
+                    };
+                    result.push(entry);
+                }
             }
             return result;
         }).bind(this);
@@ -1238,6 +1240,18 @@ Polymer({
         this._updateTableSizeAsync();
     },
 
+    /**
+     * Updates the available columns list according to security configuration.
+     * 
+     * @param {Array} availableColumns the list of authorised columns.
+     */
+    adjustColumnAvailability: function(availableColumns) {
+        this.allColumns.forEach(col => {
+                col.isHidden = !availableColumns.includes(col.property);
+        });
+        this._updateColumns(this.fixedColumns.concat(this.columns));
+    },
+
     /** 
      * Updates the column visibility 
      */
@@ -1387,8 +1401,10 @@ Polymer({
     },
 
     _updateColumns: function (resultantColumns) {
-        this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
-        this.columns = resultantColumns;
+        // First filter the columns to include only authorized (i.e., visible) columns.
+        const availableColumns = resultantColumns.filter(col => !col.isHidden);
+        this.fixedColumns = availableColumns.splice(0, this.numOfFixedCols);
+        this.columns = availableColumns;
         // Need to initiate DOM rendering as soon as possible due to the need to process resultant DOM in method _setSortingFor.
         this.$.fixedHeadersTemplate.render();
         this.$.scrollableHeadersTemplate.render();

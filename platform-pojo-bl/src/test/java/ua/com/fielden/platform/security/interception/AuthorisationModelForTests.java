@@ -4,6 +4,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.AbstractAuthorisationModel;
 import ua.com.fielden.platform.security.AuthorisationException;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.tokens._CanRead_Token;
 
 /**
  * This is an authorisation model implementation, which is used for testing purposes. It restricts access to {@link NoAccessToken}.
@@ -21,6 +22,8 @@ public class AuthorisationModelForTests extends AbstractAuthorisationModel {
         if (NoAccessToken.class.equals(token)) {
             return new Result(token, new AuthorisationException("Permission denied.", token));
         } else if (AccessToken.class.equals(token)) {
+            return new Result(token, "Access granted.");
+        } else if (_CanRead_Token.class.equals(token)) {
             return new Result(token, "Access granted.");
         }
 

@@ -1548,7 +1548,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .lightDesc()
                 //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
                 .also()
-                .addCrit("bigDecimalProp").asRange().decimal()
+                .addCrit("moneyProp").asRange().decimal()
                 //*    */.setDefaultValue(range().decimal().not().setFromValueExclusive(new BigDecimal(3).setScale(5) /* TODO scale does not give appropriate effect on centres -- the prop becomes 'changed by other user' -- investigate generated crit property */).setToValueExclusive(new BigDecimal(4).setScale(5)).canHaveNoValue().value())
                 .also()
                 .addCrit("booleanProp").asMulti().bool()
@@ -1865,7 +1865,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .minWidth(42)
                 .also()
             .addEditableProp("bigDecimalProp")
-                .minWidth(68);
+                .minWidth(68)
+                .also()
+            .addProp("moneyProp")
+                .minWidth(100);
 
         final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
             .withContext(context().withSelectedEntities().build())
