@@ -1,8 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-input/iron-input.js'
 
-import '/app/tg-app-config.js'
-
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { createEditorTemplate } from '/resources/editors/tg-editor.js';
@@ -26,8 +24,7 @@ const additionalTemplate = html`
             white-space: nowrap;
             overflow: hidden;
         }
-    </style>
-    <tg-app-config id="appConfig"></tg-app-config>`;
+    </style>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
         <input
