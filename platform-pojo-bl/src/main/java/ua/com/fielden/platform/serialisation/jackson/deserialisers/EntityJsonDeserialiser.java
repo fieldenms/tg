@@ -22,6 +22,7 @@ import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
+import ua.com.fielden.platform.serialisation.jackson.PropertyDeserialisationErrorHandler;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -154,21 +155,26 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 .map(JsonNode::asText) // for defined node, set its textual representation
                 .ifPresent(preferredProperty -> entity.setPreferredProperty(preferredProperty));
 
+            final var propErrorHandler = context.getPropDeserialisationErrorHandler().orElse(PropertyDeserialisationErrorHandler.standard);
             node.fields().forEachRemaining(childNameAndNode -> { // iterate over all "fields" (i.e., present child nodes) in the order of the original source
                 final String childName = childNameAndNode.getKey();
                 final JsonNode childNode = childNameAndNode.getValue();
                 if (childNode != null) { // for safety, still check whether JsonNode is present
                     final CachedProperty prop = properties.get(childName);
                     if (prop != null) { // only consider child nodes present in the CachedProperty map (i.e., properties defined in the entity type)
-                        final Object value = determineValue(childNode, prop.field());
                         try {
-                            prop.field().set(entity, value); // at this stage the field should be already accessible
-                        } catch (final Exception ex) {
-                            throw new EntityDeserialisationException("Could not modify field [%s] in %s [%s].".formatted(versionField.getName(), entity.getType().getCanonicalName(), entity), ex);
-                        }
-                        final Optional<MetaProperty<?>> metaPropertyOpt = entity.getPropertyOptionally(childName);
-                        if (metaPropertyOpt.isPresent()) {
-                            deserialiseMetaProperty((MetaProperty<Object>) metaPropertyOpt.get(), node.get("@" + childName), prop.field());
+                            final Object value = determineValue(childNode, prop.field());
+                            try {
+                                prop.field().set(entity, value); // at this stage the field should be already accessible
+                            } catch (final Exception ex) {
+                                throw new EntityDeserialisationException("Could not modify field [%s] in %s [%s].".formatted(versionField.getName(), entity.getType().getCanonicalName(), entity), ex);
+                            }
+                            final Optional<MetaProperty<?>> metaPropertyOpt = entity.getPropertyOptionally(childName);
+                            if (metaPropertyOpt.isPresent()) {
+                                deserialiseMetaProperty((MetaProperty<Object>) metaPropertyOpt.get(), node.get("@" + childName), prop.field());
+                            }
+                        } catch (final RuntimeException ex) {
+                            propErrorHandler.handle(entity, prop.field().getName(), childNode::toString, ex);
                         }
                     }
                 }
