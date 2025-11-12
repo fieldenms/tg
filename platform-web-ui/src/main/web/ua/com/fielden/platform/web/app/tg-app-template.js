@@ -309,7 +309,9 @@ Polymer({
                     //console.error(deserialisedResult);
                     const customObject = deserialisedResult.instance[1];
                     const actionObject = appActions.actions(this)[customObject.actionIdentifier];
-                    // TODO Report an error if actionObject is null.
+                    if (!actionObject) {
+                        throw new Error(`Action object [${customObject.actionIdentifier}] was not found.`);
+                    }
 
                     const action = document.createElement('tg-ui-action');
                     for (const name of [
