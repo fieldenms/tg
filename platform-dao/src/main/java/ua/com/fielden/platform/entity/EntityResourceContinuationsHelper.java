@@ -64,14 +64,13 @@ public class EntityResourceContinuationsHelper {
     /// Validates entity skipping required checks for its properties that are both [CritOnly] and [Required], and not skipping these checks for other properties.
     ///
     private static <T extends AbstractEntity<?>> boolean validateWithoutCritOnlyRequired(final T entity) {
-        // iterate over properties in search of the first invalid one with required checks, but not for @CritOnly properties
+        // Iterate over properties in search of the first invalid one with required checks, but not for @CritOnly properties.
         final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
                 .filter(mp -> !mp.isValidWithRequiredCheck(true) && mp.getFirstFailure() != null)
-                .findFirst().map(mp -> mp.getFirstFailure());
+                .findFirst().map(MetaProperty::getFirstFailure);
         
-        // returns first failure if exists or successful result if there was no failure.
-        final Result isValid = firstFailure.isPresent() ? firstFailure.get() : Result.successful(entity);
-        return isValid.isSuccessful();
+        // Returns the first failure if present or a successful result otherwise.
+        return firstFailure.orElseGet(Result::successful).isSuccessful();
     }
     
     /// Performs saving of `validatedEntity`.
