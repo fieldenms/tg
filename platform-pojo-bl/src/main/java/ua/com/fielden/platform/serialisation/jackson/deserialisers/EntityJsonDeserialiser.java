@@ -144,10 +144,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 final Long version = versionJsonNode.asLong();
                 try {
                     versionField.set(entity, version); // at this stage the field should be already accessible
-                } catch (final IllegalAccessException ex) {
-                    throw new EntityDeserialisationException("The field [" + versionField + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", ex);
-                } catch (final IllegalArgumentException ex) {
-                    throw new EntityDeserialisationException("The field [" + versionField + "] is not declared in entity with type [" + entityType.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
+                } catch (final Exception ex) {
+                    throw new EntityDeserialisationException("Could not modify field [%s] in %s [%s].".formatted(versionField.getName(), entity.getType().getCanonicalName(), entity), ex);
                 }
             }
 
@@ -165,10 +163,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                         final Object value = determineValue(childNode, prop.field());
                         try {
                             prop.field().set(entity, value); // at this stage the field should be already accessible
-                        } catch (final IllegalAccessException ex) {
-                            throw new EntityDeserialisationException("The field [" + prop.field() + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", ex);
-                        } catch (final IllegalArgumentException ex) {
-                            throw new EntityDeserialisationException("The field [" + prop.field() + "] is not declared in entity with type [" + entityType.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
+                        } catch (final Exception ex) {
+                            throw new EntityDeserialisationException("Could not modify field [%s] in %s [%s].".formatted(versionField.getName(), entity.getType().getCanonicalName(), entity), ex);
                         }
                         final Optional<MetaProperty<?>> metaPropertyOpt = entity.getPropertyOptionally(childName);
                         if (metaPropertyOpt.isPresent()) {
