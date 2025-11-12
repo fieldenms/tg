@@ -25,38 +25,34 @@ public class EntityResourceContinuationsHelper {
     /// Could throw continuations exceptions, a "no changes" exception, or validation exceptions.
     ///
     private static <T extends AbstractEntity<?>> T saveWithContinuations(final T entity, final Map<String, IContinuationData> continuations, final CommonEntityDao<T> co) {
-        final boolean continuationsPresent = !continuations.isEmpty();
-        
-        if (validateWithoutCritOnlyRequired(entity)) {
-            if (entity.warnings().stream().anyMatch(EntityResourceUtils::isNonConflicting)) {
-                final String acknowledgementContinuationName = "_acknowledgedForTheFirstTime";
-                if (!continuationsPresent || continuations.get(acknowledgementContinuationName) == null) {
-                    throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, acknowledgementContinuationName);
-                } else if (continuationsPresent && continuations.get(acknowledgementContinuationName) != null) {
-                    entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
-                }
+        if (validateWithoutCritOnlyRequired(entity)
+            && entity.warnings().stream().anyMatch(EntityResourceUtils::isNonConflicting))
+        {
+            final String acknowledgementContinuationName = "_acknowledgedForTheFirstTime";
+            if (continuations.get(acknowledgementContinuationName) == null) {
+                throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, acknowledgementContinuationName);
+            } else {
+                entity.nonProxiedProperties().forEach(MetaProperty::clearWarnings);
             }
         }
         
-        // 1) non-persistent entities should always be saved (isDirty will always be true)
-        // 2) persistent but not persisted (new) entities should always be saved (isDirty will always be true)
-        // 3) persistent+persisted+dirty (by means of dirty properties existence) entities should always be saved
-        // 4) persistent+persisted+notDirty+inValid entities should always be saved: passed to companion 'save' method to process validation errors in domain-driven way by companion object itself
-        // 5) persistent+persisted+notDirty+valid entities saving should be skipped – simply return the entity
-        if (!entity.isDirty() && validateWithoutCritOnlyRequired(entity)) { // this isValid validation does not really do additional validation (but, perhaps, cleared warnings could appear again), but is provided for additional safety
+        // 1. Non-persistent entities should always be saved (`isDirty` will always be true).
+        // 2. Persistent but not persisted (new) entities should always be saved (isDirty will always be true).
+        // 3. Persistent+persisted+dirty (by means of dirty properties existence) entities should always be saved.
+        // 4. Persistent+persisted+notDirty+inValid entities should always be saved: passed to companion 'save' method to process validation errors in domain-driven way by companion object itself.
+        // 5. Persistent+persisted+notDirty+valid entities saving should be skipped – simply return the entity.
+        if (!entity.isDirty() && validateWithoutCritOnlyRequired(entity)) { // `validateWithoutCritOnlyRequired` does not perform validation, it only checks the current validation results
             return entity;
         }
         
-        if (continuationsPresent) {
+        try {
+            // Set continuations before saving, even when the map is empty.
             co.setMoreData(continuations);
-        } else {
+            return co.save(entity);
+        } finally {
+            // Clear continuations regardless of whether the save operation succeeds or fails.
             co.clearMoreData();
         }
-        final T saved = co.save(entity);
-        if (continuationsPresent) {
-            co.clearMoreData();
-        }
-        return saved;
     }
     
     /// Validates entity skipping required checks for its properties that are both [CritOnly] and [Required], and not skipping these checks for other properties.
@@ -89,7 +85,7 @@ public class EntityResourceContinuationsHelper {
             savedEntity = saveWithContinuations(validatedEntity, continuations, (CommonEntityDao<T>) companion);
         } catch (final Exception exception) {
             // Some exception can be thrown inside 1) its companion 'save' method OR 2) CommonEntityDao 'save' during its internal validation.
-            // Return entity back to the client after its unsuccessful save with the exception that was thrown during saving
+            // Return entity back to the client after its unsuccessful save with the exception that was thrown during saving.
             return pair(validatedEntity, Optional.of(exception));
         }
     
