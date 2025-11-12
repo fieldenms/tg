@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Charsets;
+import jakarta.inject.Inject;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.continuation.NeedMoreDataException;
@@ -62,6 +63,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     
     //private final LRUMap<?, ?> cachedFCAsToClear; EXPERIMENTAL
 
+    @Inject
     public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.module = new TgJacksonModule(this);
         this.factory = entityFactory;
