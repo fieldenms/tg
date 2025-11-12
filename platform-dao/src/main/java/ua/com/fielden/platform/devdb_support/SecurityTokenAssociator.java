@@ -27,10 +27,8 @@ public class SecurityTokenAssociator implements ITreeNodePredicate<Class<? exten
 
     @Override
     public boolean eval(final SecurityTokenNode node) {
-        final EntityFactory factory = role.getEntityFactory();
-        final SecurityRoleAssociation assoc = factory.newByKey(SecurityRoleAssociation.class, node.state(), role);
+        final SecurityRoleAssociation assoc = controller.new_().setSecurityToken(node.state()).setRole(role);
         controller.save(assoc);
-
         return false;
     }
 

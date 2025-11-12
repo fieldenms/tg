@@ -37,7 +37,6 @@ public class SecurityRoleAssociation extends ActivatableAbstractEntity<DynamicEn
         final DynamicEntityKey key = new DynamicEntityKey(this);
         key.addKeyMemberComparator(1, new ClassComparator());
         setKey(key);
-        setActive(true);
     }
 
     public Class<? extends ISecurityToken> getSecurityToken() {
