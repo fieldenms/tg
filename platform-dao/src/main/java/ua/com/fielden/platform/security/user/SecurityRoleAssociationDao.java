@@ -95,31 +95,42 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
                 .and().exists(slaveModel).model();
         return count(model);
     }
-    
+
     @Override
     @SessionRequired
-    @Authorise(SecurityRoleAssociation_CanSave_Token.class)
-    public void removeAssociations(final Collection<SecurityRoleAssociation> associations) {
-        fetchAssociationsAndModifyOrElse(
-                associations,
-                fetchedAssociation -> {
-                    fetchedAssociation.setActive(false);
-                    this.quickSave(fetchedAssociation);
-                },empty());
+    public SecurityRoleAssociation save(final SecurityRoleAssociation entity) {
+        return save(entity, Optional.of(FETCH_MODEL)).asRight().value();
     }
 
     @Override
     @SessionRequired
     @Authorise(SecurityRoleAssociation_CanSave_Token.class)
+    protected Either<Long, SecurityRoleAssociation> save(final SecurityRoleAssociation entity, final Optional<fetch<SecurityRoleAssociation>> maybeFetch) {
+        return super.save(entity, maybeFetch);
+    }
+
+    @Override
+    @SessionRequired
+    public void removeAssociations(final Collection<SecurityRoleAssociation> associations) {
+        fetchAssociationsAndModifyOrElse(
+                associations,
+                fetchedAssociation -> {
+                    fetchedAssociation.setActive(false);
+                    this.save(fetchedAssociation, empty());
+                },empty());
+    }
+
+    @Override
+    @SessionRequired
     public void addAssociations(final Collection<SecurityRoleAssociation> associations) {
         fetchAssociationsAndModifyOrElse(
                 associations,
                 fetchedAssociation -> {
                     fetchedAssociation.setActive(true);
-                    this.quickSave(fetchedAssociation);
+                    this.save(fetchedAssociation, empty());
                 },
                 of(notFoundAssociation -> {
-                    this.quickSave(notFoundAssociation);
+                    this.save(notFoundAssociation, empty());
                 }));
     }
 
