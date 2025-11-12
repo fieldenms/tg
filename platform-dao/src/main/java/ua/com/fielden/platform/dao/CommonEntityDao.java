@@ -426,8 +426,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     /// A map to hold the "more data" gathered by means of continuations.
     private final Map<String, IContinuationData> moreData = new HashMap<>();
-    // indicates whether continuations are supported to provide "more data" in the caller's context
-    private boolean continuationSupported = false;
 
     /// Replaces any previously provided "more data" with new "more data".
     /// This is a bulk operation that is mainly needed for the infrastructural integration.
@@ -469,14 +467,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return Collections.unmodifiableMap(moreData);
     }
 
-    public CommonEntityDao<T> setContinuationSupported(final boolean supported) {
-        this.continuationSupported = supported;
-        return this;
-    }
-
-    public boolean isContinuationSupported() {
-        return this.continuationSupported;
-    }
     //-------------------------------------------------------------------//
     //------------------ Before and After save methods ------------------//
     //-------------------------------------------------------------------//
