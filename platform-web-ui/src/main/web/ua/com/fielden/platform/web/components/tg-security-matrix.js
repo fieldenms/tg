@@ -391,9 +391,11 @@ Polymer({
             this._currBindingEntity['associationsToRemove'] = associationsToRemove;
             this.save();
         }.bind(this);
-        this.postSaved = function () {
-            this.entities.forEach(entity => entity.clearCurrentState());
-            this._toggleButtonStates();
+        this.postSaved = function (savedOrNew, newBindingEntity) {
+            if (!savedOrNew.exceptionOccurred()) {
+                this.entities.forEach(entity => entity.clearCurrentState());
+                this._toggleButtonStates();
+            }
         }.bind(this);
         this._toggleButtonStates = function () {
             const changed = this.entities.some(entity => entity.isChanged());
