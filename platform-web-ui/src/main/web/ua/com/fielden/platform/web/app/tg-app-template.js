@@ -548,7 +548,7 @@ Polymer({
             const currentlySelectedElement = currentlySelected && this.shadowRoot.querySelector("[name='" + currentlySelected + "']");
             //If module to select is the same as currently selected then just open selected menu item (e.i open entity centre or master)
             if (currentlySelected === moduleToSelect) {
-                if (selected === 'master') {
+                if (['master', 'tiny'].includes(selected)) {
                     this._selectedSubmodule = this._subroute.path;
                     this._tgOpenMasterAction();
                 } else if (this._selectedSubmodule === this._subroute.path) {
