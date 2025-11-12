@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 @MapEntityTo
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(TinyHyperlinkCo.class)
+@DenyIntrospection
 public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
 
     public static final String ENTITY_TITLE = getEntityTitleAndDesc(TinyHyperlink.class).getKey();
