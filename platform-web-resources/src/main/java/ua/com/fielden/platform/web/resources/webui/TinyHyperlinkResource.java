@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -13,11 +15,15 @@ import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
+import ua.com.fielden.platform.serialisation.jackson.PropertyDeserialisationErrorHandler;
 import ua.com.fielden.platform.tiny.TinyHyperlink;
 import ua.com.fielden.platform.tiny.TinyHyperlinkCo;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
@@ -31,6 +37,7 @@ import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyApplication
 
 import java.util.Map;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
@@ -41,6 +48,8 @@ import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.creat
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 
 public class TinyHyperlinkResource extends AbstractWebResource {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final RestServerUtil restUtil;
 
@@ -95,13 +104,33 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             }
 
             final TinyHyperlinkCo coTinyHyperlink = companionFinder.findAsReader(TinyHyperlink.class, true);
-            final var tinyHyperlink = coTinyHyperlink.findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, SAVING_INFO_HOLDER, ACTION_IDENTIFIER), requestHash);
+            final var tinyHyperlink = coTinyHyperlink.findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, HASH, SAVING_INFO_HOLDER, ACTION_IDENTIFIER), requestHash);
             if (tinyHyperlink == null) {
                 getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
                 return new StringRepresentation("The specified resource was not found. Please verify that you are accessing the correct resource.");
             }
+
+            final PropertyDeserialisationErrorHandler propDeserialisationErrorHandler = (entity, property, inputValueSupplier, error) -> {
+                LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during deserialisation: %s",
+                                         tinyHyperlink.getHash(),
+                                         PropertyDeserialisationErrorHandler.makeMessage(entity, property, inputValueSupplier)),
+                            error);
+                // Ignore non-existing properties.
+                // Assign a warning if property deserialisation fails.
+                if (Finder.isPropertyPresent(entity.getType(), property)) {
+                    entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(Result.warning("The configured value could not be used.")));
+                }
+            };
+
+            final SavingInfoHolder savingInfoHolder;
+            EntitySerialiser.getContext().setPropDeserialisationErrorHandler(propDeserialisationErrorHandler);
+            try {
+                savingInfoHolder = serialiser.deserialise(tinyHyperlink.getSavingInfoHolder(), SavingInfoHolder.class, SerialiserEngines.JACKSON);
+            } finally {
+                EntitySerialiser.getContext().removePropDeserialisationErrorHandler();
+            }
+
             final var entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(tinyHyperlink.getEntityTypeName());
-            final var savingInfoHolder = serialiser.deserialise(tinyHyperlink.getSavingInfoHolder(), SavingInfoHolder.class, SerialiserEngines.JACKSON);
             final var entity = restoreEntityFrom(true,
                                                  savingInfoHolder,
                                                  entityType,
@@ -120,7 +149,11 @@ public class TinyHyperlinkResource extends AbstractWebResource {
 
             final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
             customObject.put(ACTION_IDENTIFIER, tinyHyperlink.getActionIdentifier());
-            customObject.put(SAVING_INFO_HOLDER, new String(tinyHyperlink.getSavingInfoHolder()));
+            // Send the deserialised `savingInfoHolder` to the client instead of the original `tinyHyperlink.savingInfoHolder`.
+            // Since we skip properties that could not be deserialised (via a custom error handler), the deserialised form will be free of erroneous elements.
+            // If we sent the original form, the client could use it for subsequent requests to other resources that do not use a lenient error handler for deserialisation,
+            // ultimately causing unexpected errors.
+            customObject.put(SAVING_INFO_HOLDER, new String(serialiser.serialise(savingInfoHolder, SerialiserEngines.JACKSON)));
             return restUtil.resultJSONRepresentation(restUtil.singleEntityResult(entity).extendResultWithCustomObject(customObject));
         }, restUtil);
     }
