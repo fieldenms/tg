@@ -97,7 +97,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
     /// Handles a GET request to open a [TinyHyperlink].
     ///
     @Get
-    public Representation save() {
+    public Representation get() {
         return handleUndesiredExceptions(getResponse(), () -> {
             if (requestHash == null || requestHash.isBlank()) {
                 throw new InvalidStateException("[requestHash] must be present.");
