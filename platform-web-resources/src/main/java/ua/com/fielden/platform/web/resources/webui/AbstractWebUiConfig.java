@@ -18,6 +18,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -45,6 +46,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -338,6 +340,15 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
+    public Stream<EntityActionConfig> streamActionConfigs() {
+        return StreamUtils.concat(getCentres().values().stream().flatMap(EntityCentre::streamActionConfigs),
+                                  getMasters().values().stream().flatMap(EntityMaster::streamActions),
+                                  getExtraActions().stream(),
+                                  configDesktopMainMenu().streamActionConfigs(),
+                                  configMobileMainMenu().streamActionConfigs());
+    }
+
+    @Override
     public Collection<EntityActionConfig> getExtraActions() {
         return webUiBuilder.getExtraActions();
     }
@@ -462,6 +473,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             .withNoParentCentreRefresh()
             .build()
         );
+    }
+
+    @Override
+    public Optional<EntityActionConfig> findAction(final String actionIdentifier) {
+        return streamActionConfigs().filter(config -> config.actionIdentifier.filter(actionIdentifier::equals).isPresent()).findAny();
     }
 
     @Override

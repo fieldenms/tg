@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Represent a contract for Web UI configuring.
@@ -119,6 +120,10 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres();
+
+    Stream<EntityActionConfig> streamActionConfigs();
+
+    Optional<EntityActionConfig> findAction(String actionIdentifier);
 
     Collection<EntityActionConfig> getExtraActions();
 
@@ -222,4 +227,5 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     List<EntityActionConfig> centreConfigShareActions();
+
 }

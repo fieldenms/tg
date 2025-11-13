@@ -448,7 +448,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     ///
     public static <T extends AbstractEntity<?>> Optional<EntityActionConfig> restoreActionConfig(final IWebUiConfig webUiConfig, final CentreContextHolder centreContextHolder) {
         final Optional<EntityActionConfig> actionConfig;
-        if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
+        if (centreContextHolder.getCustomObject().get("@@actionIdentifier") != null) {
+            actionConfig = webUiConfig.findAction((String) centreContextHolder.getCustomObject().get("@@actionIdentifier"));
+        }
+        else if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
             final Class<? extends MiWithConfigurationSupport<?>> miType;
             try {
                 miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getCustomObject().get("@@miType"));

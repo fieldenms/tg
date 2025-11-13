@@ -18,6 +18,7 @@ import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -87,7 +88,25 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     public TinyHyperlink save(
             final Class<? extends AbstractEntity<?>> entityType,
             final SavingInfoHolder savingInfoHolder,
-            final String actionIdentifier) {
+            final String actionIdentifier)
+    {
+        // Normally, `CentreContextHolder.customObject` stores the position of an action (e.g. `@@actionNumber`),
+        // which the server uses to locate the corresponding EntityActionConfig in the Web UI configuration.
+        // This works for actions invoked directly, but fails for actions shared via tiny hyperlinks:
+        //
+        // 1. A tiny hyperlink is saved for a top-level centre action in position 0.
+        // 2. Later, the configuration changes and that action moves to position 2.
+        // 3. Opening the saved hyperlink now points to the old position, resolving to a wrong or missing action.
+        //
+        // Since correct action lookup is essential for obtaining the right computation object,
+        // we instead capture the action identifier, which uniquely locates the action configuration.
+        final var centreContextHolder = savingInfoHolder.getCentreContextHolder() != null
+                ? savingInfoHolder.getCentreContextHolder()
+                : co$(CentreContextHolder.class).new_();
+        final var newCustomObject = new HashMap<>(centreContextHolder.getCustomObject());
+        newCustomObject.put("@@actionIdentifier", actionIdentifier);
+        centreContextHolder.setCustomObject(newCustomObject);
+
         final var serialisedSavingInfoHolder = serialiser.serialise(savingInfoHolder, SerialiserEngines.JACKSON);
         final var link = new_()
                 .setEntityTypeName(baseEntityType(entityType).getCanonicalName())
