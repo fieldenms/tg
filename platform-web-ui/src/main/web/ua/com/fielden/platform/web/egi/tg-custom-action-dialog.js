@@ -469,7 +469,20 @@ Polymer({
             type: Object,
             value: null
         },
-        
+
+        /**
+         * The deepest embedded Entity Master.
+         *
+         * For compound masters it represents the master of loaded persistent entity under Main / one-2-one menu item.
+         * For simple persistent masters (including those embedded by EntityEditAction / EntityNewAction)
+         *   it represents the master of actual persistent entity.
+         * Otherwise (i.e. for functional masters) it represents the master of that functional entity.
+         */
+        _deepestMaster: {
+            type: Object,
+            value: null
+        },
+
         /**
          * Represents the ID of the currently bound persisted entity (of type derived from _mainEntityType) or 'null' if the entity is not yet persisted or not yet loaded.
          * Should only be used if '_mainEntityType' is present.
@@ -1752,6 +1765,9 @@ Polymer({
             if (this._embeddedMasterType === null && !entityType.isCompoundMenuItem() && !entityMaster.masterWithMaster) {
                 this._embeddedMasterType = entityType;
             }
+            if (this._deepestMaster === null && !entityType.compoundOpenerType() && !entityType.isCompoundMenuItem() && !entityMaster.masterWithMaster) {
+                this._deepestMaster = entityMaster;
+            }
             if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
             } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item
@@ -1775,6 +1791,9 @@ Polymer({
         if (entityType) {
             if (this._embeddedMasterType !== null && entityType === this._embeddedMasterType) {
                 this._embeddedMasterType = null;
+            }
+            if (this._deepestMaster !== null && entityMaster === this._deepestMaster) {
+                this._deepestMaster = null;
             }
             if (this._mainEntityType !== null && entityType === this._mainEntityType) {
                 this._mainEntityType = null;
@@ -1816,6 +1835,25 @@ Polymer({
         }
         tearDownEvent(event);
     },
+
+    /**
+     * Copies non-empty link to clipboard and shows informational toast.
+     */
+    _copyLinkToClipboard: function (link, showNonCritical) {
+        if (link) {
+            // Writing into clipboard is always permitted for currently open tab
+            //   (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText)
+            //   -- that's why promise error should never occur.
+            // If for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user.
+            // Also, global handler will report that to the server.
+            navigator.clipboard.writeText(link).then(() => {
+                this.$.toaster.text = 'Copied to clipboard.';
+                this.$.toaster.hasMore = true;
+                this.$.toaster.msgText = link;
+                showNonCritical(this.$.toaster);
+            });
+        }
+    },
     
     /**
      * Generates a link to entity master for persisted entity opened in this dialog; copies it to the clipboard; shows informational dialog with ability to review link (MORE button).
@@ -1835,21 +1873,45 @@ Polymer({
             const url = new URL(window.location.href);
             const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
             url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
-            const link = url.href;
-            // Writing into clipboard is always permitted for currently open tab (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) -- that's why promise error should never occur;
-            // if for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user and global handler will report that to the server.
-            navigator.clipboard.writeText(link).then(() => {
-                this.$.toaster.text = 'Copied to clipboard.';
-                this.$.toaster.hasMore = true;
-                this.$.toaster.msgText = link;
-                showNonCritical(this.$.toaster);
-            });
+            this._copyLinkToClipboard(url.href, showNonCritical);
         } else {
-            // TODO Invoke EntityShareAction.
-            this.$.toaster.text = 'Please save and try again.';
-            this.$.toaster.hasMore = false;
-            this.$.toaster.msgText = '';
-            showNonCritical(this.$.toaster);
+            // Initialise dynamic share action if not yet initialised.
+            if (!this._shareAction) {
+                // Find a deepest embdedded master, which will contain master entity for share action.
+                const deepestMaster = this._deepestMaster;
+
+                // Create the element dynamically.
+                this._shareAction = document.createElement('tg-ui-action');
+
+                // Provide only the necessary attributes.
+                // Avoid centreUuid and shouldRefreshParentCentreAfterSave, because there is no need to refresh parent master.
+                this._shareAction.shortDesc = 'Share';
+                this._shareAction.componentUri = '/master_ui/ua.com.fielden.platform.tiny.EntityShareAction';
+                this._shareAction.elementName = 'tg-EntityShareAction-master';
+                this._shareAction.showDialog = deepestMaster._showDialog;
+                this._shareAction.createContextHolder = deepestMaster._createContextHolder;
+                this._shareAction.toaster = this.$.toaster;
+                this._shareAction.attrs = {
+                    entityType: 'ua.com.fielden.platform.tiny.EntityShareAction',
+                    currentState: 'EDIT',
+                    centreUuid: deepestMaster.uuid
+                };
+                this._shareAction.requireSelectionCriteria = 'false';
+                this._shareAction.requireSelectedEntities = 'NONE';
+                this._shareAction.requireMasterEntity = 'true';
+
+                // Persist reference to the dialog to easily get it in `tg-ui-action._createContextHolderForAction`.
+                this._shareAction._dialog = this;
+
+                // Copy link to a clipboard on successful action completion (which is performed in retrieval request).
+                this._shareAction.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
+                    if (_currBindingEntity && _currBindingEntity.get('hyperlink')) {
+                        this._copyLinkToClipboard(_currBindingEntity.get('hyperlink').value, showNonCritical);
+                    }
+                };
+            }
+            // Run cached dynamic share action.
+            this._shareAction._run();
         }
     },
     

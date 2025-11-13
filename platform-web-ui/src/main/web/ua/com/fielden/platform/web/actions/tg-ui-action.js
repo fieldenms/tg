@@ -10,7 +10,7 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent, getFirstEntityType, deepestActiveElement, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getFirstEntityType, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
@@ -750,8 +750,8 @@ Polymer({
         }
         // Determine whether the action represents special Share action for functional / new entities.
         if (self.elementName === `tg-${SHARE_ACTION_SIMPLE_NAME}-master`) {
-            // Find a first dialog above that action (no support for insertion points for now).
-            const dialog = getParentAnd(self, e => e.matches('tg-custom-action-dialog'));
+            // Get a dialog, that induced creation of the action (no support for insertion points for now).
+            const dialog = self._dialog;
             // Get dialog's last executed action. This action will represent the top most Entity Master:
             //   1. WorkOrderCopyAction
             //     -> returns <tg-ui-action> for WorkOrderCopyAction
