@@ -1,12 +1,10 @@
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
-import { TgAppConfig } from '/app/tg-app-config.js';
 
 export const TgEgiDataRetrievalBehavior = {
 
     created: function () {
         this._reflector = new TgReflector();
-        this._appConfig = new TgAppConfig();
     },
 
     isHyperlinkProp: function (entity, column) {
@@ -94,7 +92,7 @@ export const TgEgiDataRetrievalBehavior = {
             return '';
         } else {
             try {
-                return this._reflector.tg_toString(entity.get(property), entity.constructor.prototype.type.call(entity), property, { display: true, locale: this._appConfig.locale });
+                return this._reflector.tg_toString(entity.get(property), entity.constructor.prototype.type.call(entity), property, { display: true });
             } catch (e) {
                 return '';
             }
