@@ -23,10 +23,15 @@ import ua.com.fielden.platform.web.annotations.AppUri;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.error.Result.failuref;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
-import static ua.com.fielden.platform.tiny.TinyHyperlink.HASH;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.tiny.TinyHyperlink.*;
 
 @EntityType(TinyHyperlink.class)
 public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements TinyHyperlinkCo {
@@ -56,9 +61,8 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     @SessionRequired
     @Override
     protected Either<Long, TinyHyperlink> save(final TinyHyperlink tinyHyperlink, final Optional<fetch<TinyHyperlink>> maybeFetch) {
-        tinyHyperlink.isValid().ifFailure(Result::throwRuntime);
-
         if (!tinyHyperlink.isPersisted()) {
+            validateRequiredProperties(tinyHyperlink).ifFailure(Result::throwRuntime);
             final var hash = hash(tinyHyperlink);
             // An instrumented instance is required for `save`.
             final var existingTinyHyperlink = co$(TinyHyperlink.class).findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(HASH), hash);
@@ -156,6 +160,16 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
 
             return Checksum.sha256(tinyHyperlink.getActionIdentifier().getBytes(), tinyHyperlink.getSavingInfoHolder());
         }
+    }
+
+    private Result validateRequiredProperties(final TinyHyperlink tiny) {
+        final var ok = (tiny.getTarget() == null && tiny.getEntityTypeName() != null && tiny.getSavingInfoHolder() != null && tiny.getActionIdentifier() != null)
+                       || (tiny.getTarget() != null && tiny.getEntityTypeName() == null && tiny.getSavingInfoHolder() == null && tiny.getActionIdentifier() == null);
+        return ok ? successful() : failuref("Either %s or all of [%s] must be specified.",
+                                            getTitleAndDesc(TARGET, TinyHyperlink.class).getKey(),
+                                            Stream.of(ENTITY_TYPE_NAME, SAVING_INFO_HOLDER, ACTION_IDENTIFIER)
+                                                    .map(prop -> getTitleAndDesc(prop, TinyHyperlink.class).getKey())
+                                                    .collect(joining(", ")));
     }
 
 }

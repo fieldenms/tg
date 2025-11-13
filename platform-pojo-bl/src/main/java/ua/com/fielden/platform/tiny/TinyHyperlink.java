@@ -5,15 +5,9 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Hyperlink;
 
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.joining;
-import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 
 /// A tiny hyperlink is a short URL that provides access to an application resource.
 ///
@@ -56,6 +50,7 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
+    @Final(nullIsValueForPersisted = true)
     // @Required If `target` is null.
     private String entityTypeName;
 
@@ -63,6 +58,7 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
     ///
     @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
+    @Final(nullIsValueForPersisted = true)
     // @Required If `target` is null.
     private byte[] savingInfoHolder;
 
@@ -70,6 +66,7 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
     ///
     @IsProperty
     @MapTo
+    @Final(nullIsValueForPersisted = true)
     // @Required If `target` is null.
     @Title(value = "Action Identifier", desc = "Identifier for the action that opened the entity master where this tiny hyperlink was created.")
     private String actionIdentifier;
@@ -78,27 +75,10 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
+    @Final(nullIsValueForPersisted = true)
     // @Required If `entityTypeName`, `savingInfoHolder` and `actionIdentifier` are null.
     @Title(value = "Target Hyperlink", desc = "A hyperlink that this tiny hyperlink points to.")
     private Hyperlink target;
-
-    @Override
-    protected Result validate() {
-        final var superResult = super.validate();
-        if (superResult.isSuccessful()) {
-            final var ok = (target == null && entityTypeName != null && savingInfoHolder != null && actionIdentifier != null)
-                           || (target != null && entityTypeName == null && savingInfoHolder == null && actionIdentifier == null);
-            if (!ok) {
-                return failuref("Either %s or all of [%s] must be specified.",
-                                getTitleAndDesc(TARGET, TinyHyperlink.class).getKey(),
-                                Stream.of(ENTITY_TYPE_NAME, SAVING_INFO_HOLDER, ACTION_IDENTIFIER)
-                                        .map(prop -> getTitleAndDesc(prop, TinyHyperlink.class).getKey())
-                                        .collect(joining(", ")));
-            }
-        }
-
-        return superResult;
-    }
 
     public Hyperlink getTarget() {
         return target;
