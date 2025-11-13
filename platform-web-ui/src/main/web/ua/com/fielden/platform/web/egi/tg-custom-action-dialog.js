@@ -181,7 +181,7 @@ const template = html`
             </div>
             <div class="layout horizontal center">
                 <!-- Get A Link button -->
-                <paper-icon-button hidden$="[[!_mainEntityType]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
+                <paper-icon-button class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
                 <paper-icon-button hidden$="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
@@ -1830,7 +1830,7 @@ Polymer({
      */
     _entityReceived: function (event) {
         const entity = event.detail;
-        if (entity.type() === this._mainEntityType) {
+        if (entity.type() === this._mainEntityType) { // _mainEntityType can be null for functional entities
             this._mainEntityId = entity.type().compoundOpenerType() ? entity.get('key').get('id') : entity.get('id');
         }
         tearDownEvent(event);
@@ -1863,15 +1863,15 @@ Polymer({
      * This functionality is only available for persistent entities.
      */
     _getLink: function () {
-        const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
         const showNonCritical = toaster => {
             toaster.showProgress = false;
             toaster.isCritical = false;
             toaster.show();
         };
-        if (this._mainEntityId !== null) {
+        if (this._mainEntityType !== null && this._mainEntityId !== null) {
             const url = new URL(window.location.href);
             const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
+            const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
             url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
             this._copyLinkToClipboard(url.href, showNonCritical);
         } else {
