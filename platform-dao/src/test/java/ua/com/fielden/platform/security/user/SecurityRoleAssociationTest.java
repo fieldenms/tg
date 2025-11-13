@@ -21,7 +21,7 @@ public class SecurityRoleAssociationTest extends AbstractDaoTestCase {
 
     @Test
     public void addAssociations_creates_records_for_all_specified_assocations() {
-        final var userRole = save(new_(UserRole.class, "TEST_ROLE_01", "Test role 01"));
+        final var userRole = save(new_(UserRole.class, "TEST_ROLE_01", "Test role 01").setActive(true));
         final SecurityRoleAssociationCo coSecurityRoleAssociation = co(SecurityRoleAssociation.class);
 
         final var tokens1 = List.of(User_CanSave_Token.class, User_CanRead_Token.class);

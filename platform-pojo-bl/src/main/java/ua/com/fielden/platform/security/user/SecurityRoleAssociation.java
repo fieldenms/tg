@@ -31,6 +31,7 @@ public class SecurityRoleAssociation extends ActivatableAbstractEntity<DynamicEn
     @CompositeKeyMember(2)
     @MapTo
     @SkipEntityExistsValidation
+    @Dependent("active")
     private UserRole role;
 
     protected SecurityRoleAssociation() {
