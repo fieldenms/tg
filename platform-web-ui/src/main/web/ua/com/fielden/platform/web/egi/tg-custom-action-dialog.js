@@ -181,7 +181,7 @@ const template = html`
             </div>
             <div class="layout horizontal center">
                 <!-- Get A Link button -->
-                <paper-icon-button class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
+                <paper-icon-button hidden$="[[_shareHidden(_mainEntityType, _lastAction)]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
                 <paper-icon-button hidden$="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
@@ -1735,6 +1735,19 @@ Polymer({
      */
     _closerHidden: function(_lastAction, mobile) {
         return (_lastAction && _lastAction.continuous) || mobile;
+    },
+
+    /**
+     * Returns 'true' if Share button is hidden, 'false' otherwise.
+     */
+    _shareHidden: function (_mainEntityType, _lastAction) {
+        return !(
+            // Visible for all persistent masters either with NEW or persisted instance.
+            // This covers simple and compound masters. Action identifier should always be there.
+            _mainEntityType
+            // Visible also for all functional masters with explicit action identifier.
+            || _lastAction && _lastAction.attrs && _lastAction.attrs.actionId
+        );
     },
 
     _minimisedIcon: function (_minimised) {
