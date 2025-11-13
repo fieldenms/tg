@@ -1882,51 +1882,58 @@ Polymer({
             toaster.isCritical = false;
             toaster.show();
         };
-        if (this._mainEntityType !== null && this._mainEntityId !== null) {
-            const url = new URL(window.location.href);
-            const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
-            const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
-            url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
-            this._copyLinkToClipboard(url.href, showNonCritical);
-        }
-        else if (this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionId) {
-            // Initialise dynamic share action if not yet initialised.
-            if (!this._shareAction) {
-                // Find a deepest embdedded master, which will contain master entity for share action.
-                const deepestMaster = this._deepestMaster;
+        if (
+            this._mainEntityType !== null && this._mainEntityId !== null
+            || this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionId
+        ) {
+            // Find a deepest embdedded master, which will contain master entity for share action.
+            const deepestMaster = this._deepestMaster;
 
-                // Create the element dynamically.
-                this._shareAction = document.createElement('tg-ui-action');
+            // Create dynamic share action.
+            const shareAction = document.createElement('tg-ui-action');
 
-                // Provide only the necessary attributes.
-                // Avoid centreUuid and shouldRefreshParentCentreAfterSave, because there is no need to refresh parent master.
-                this._shareAction.shortDesc = 'Share';
-                this._shareAction.componentUri = '/master_ui/ua.com.fielden.platform.tiny.EntityShareAction';
-                this._shareAction.elementName = 'tg-EntityShareAction-master';
-                this._shareAction.showDialog = deepestMaster._showDialog;
-                this._shareAction.createContextHolder = deepestMaster._createContextHolder;
-                this._shareAction.toaster = this.$.toaster;
-                this._shareAction.attrs = {
-                    entityType: 'ua.com.fielden.platform.tiny.EntityShareAction',
-                    currentState: 'EDIT',
-                    centreUuid: deepestMaster.uuid
-                };
-                this._shareAction.requireSelectionCriteria = 'false';
-                this._shareAction.requireSelectedEntities = 'NONE';
-                this._shareAction.requireMasterEntity = 'true';
+            // Provide only the necessary attributes.
+            // Avoid centreUuid and shouldRefreshParentCentreAfterSave, because there is no need to refresh parent master.
+            shareAction.shortDesc = 'Share';
+            shareAction.componentUri = '/master_ui/ua.com.fielden.platform.tiny.EntityShareAction';
+            shareAction.elementName = 'tg-EntityShareAction-master';
+            shareAction.showDialog = deepestMaster ? deepestMaster._showDialog : (() => {}); // TODO embedded centres
+            shareAction.createContextHolder = deepestMaster ? deepestMaster._createContextHolder : (() => this._reflector.createContextHolder(
+                null, null, null,
+                null, null, null
+            ));
+            shareAction.toaster = this.$.toaster;
+            shareAction.attrs = {
+                entityType: 'ua.com.fielden.platform.tiny.EntityShareAction',
+                currentState: 'EDIT',
+                centreUuid: deepestMaster ? deepestMaster.uuid : null
+            };
+            shareAction.requireSelectionCriteria = 'false';
+            shareAction.requireSelectedEntities = 'NONE';
+            shareAction.requireMasterEntity = 'true';
 
-                // Persist reference to the dialog to easily get it in `tg-ui-action._createContextHolderForAction`.
-                this._shareAction._dialog = this;
+            // Persist reference to the dialog to easily get it in `tg-ui-action._createContextHolderForAction`.
+            shareAction._dialog = this;
 
-                // Copy link to a clipboard on successful action completion (which is performed in retrieval request).
-                this._shareAction.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
-                    if (_currBindingEntity && _currBindingEntity.get('hyperlink')) {
-                        this._copyLinkToClipboard(_currBindingEntity.get('hyperlink').value, showNonCritical);
-                    }
-                };
+            // Copy link to a clipboard on successful action completion (which is performed in retrieval request).
+            shareAction.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
+                if (_currBindingEntity && _currBindingEntity.get('hyperlink')) {
+                    this._copyLinkToClipboard(_currBindingEntity.get('hyperlink').value, showNonCritical);
+                }
+            };
+
+            if (this._mainEntityType !== null && this._mainEntityId !== null) {
+                const url = new URL(window.location.href);
+                const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
+                const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
+                url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
+                shareAction._persistedEntityUri = url.href;
             }
-            // Run cached dynamic share action.
-            this._shareAction._run();
+            else {
+                shareAction._persistedEntityUri = null;
+            }
+            // Run dynamic share action.
+            shareAction._run();
         }
         else {
             this.$.toaster.text = 'Please save and try again.';

@@ -12,6 +12,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 
 import java.util.Base64;
+import java.util.Optional;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -43,14 +44,14 @@ public class EntityShareActionProducer extends DefaultEntityProducerWithContext<
 
     @Override
     protected EntityShareAction provideDefaultValues(final EntityShareAction entity) {
+        final Optional<String> maybeUrl = contextNotEmpty() ? Optional.ofNullable((String) getContext().getCustomObject().get("persistedEntityUri")) : Optional.empty();
         if (masterEntityNotEmpty()) {
             final var masterEntity = masterEntity();
 
             // Is this action invoked on a persisted entity master?
             if (masterEntity.isPersisted()) {
                 // Create and save a tiny hyperlink that points to the respective entity master.
-
-                final var masterUrl = masterUrlProvider.masterUrlFor(masterEntity)
+                final var masterUrl = maybeUrl.or(() -> masterUrlProvider.masterUrlFor(masterEntity))
                         .orElseThrow(() -> new InvalidStateException(format(ERR_NO_MASTER, masterEntity, masterEntity.getType().getCanonicalName())));
                 final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
                 // TODO Specify a minimal fetch model for refetching after save.
@@ -81,6 +82,7 @@ public class EntityShareActionProducer extends DefaultEntityProducerWithContext<
                         .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(hyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));
             }
         }
+        // else TODO embedded centres
 
         return super.provideDefaultValues(entity);
     }
