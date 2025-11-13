@@ -37,6 +37,10 @@ public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssoci
     /// Returns a total number of active user roles associated with the token.
     ///
     int countActiveAssociations(final User user, final Class<? extends ISecurityToken> securityTokenClass);
+
+    /// Returns a list of active user roles associated with the tokens.
+    ///
+    List<SecurityRoleAssociation> findActiveAssociationsForUser(final User user, final Class<? extends ISecurityToken>... tokens);
     
     /// Deletes a collection of [SecurityRoleAssociation]s.
     ///

@@ -8,33 +8,38 @@ import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanSave_Token;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.UserRole;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 @EntityType(SecurityMatrixSaveAction.class)
 public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixSaveAction> implements SecurityMatrixSaveActionCo{
 
     public static final String ERR_SECURITY_TOKEN_NOT_FOUND = "Security token [%s] could not be found.";
+    public static final String ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING = "Unchecking [%s] security tokens will block access to the Security Matrix".formatted(SecurityRoleAssociation_CanRead_Token.TITLE);
+    public static final String ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING = "Unchecking [%s] security tokens will prevent you from editing the Security Matrix".formatted(SecurityRoleAssociation_CanSave_Token.TITLE);
+
 
     private final ISecurityTokenProvider securityTokenProvider;
+    private final IUserProvider userProvider;
 
     @Inject
-    protected SecurityMatrixSaveActionDao(final IFilter filter, final ISecurityTokenProvider securityTokenProvider) {
+    protected SecurityMatrixSaveActionDao(final IFilter filter, final ISecurityTokenProvider securityTokenProvider, final IUserProvider userProvider) {
         this.securityTokenProvider = securityTokenProvider;
+        this.userProvider = userProvider;
     }
 
     @Override
@@ -51,11 +56,48 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
                     .flatMap(List::stream)
                     .collect(Collectors.toSet());
             entity.setAssociationsToRemove(new HashMap<>()).setAssociationsToSave(new HashMap<>());
+            // Check whether security matrix read / edit tokens can be deleted for current user.
+            final String error = checkWhetherCanRemoveSecurityMatrixRelatedAssociations(removedAssociations);
+            if (!error.isEmpty()) {
+                throw new SecurityException(error);
+            }
+            //Save associations
             SecurityRoleAssociationCo associationCo = co$(SecurityRoleAssociation.class);
             associationCo.addAssociations(addedAssociations);
             associationCo.removeAssociations(removedAssociations);
         }
         return super.save(entity);
+    }
+
+    private String checkWhetherCanRemoveSecurityMatrixRelatedAssociations(final Set<SecurityRoleAssociation> removedAssociations) {
+        final StringBuilder errorMsg = new StringBuilder();
+        if (hasSecurityMatrixRelatedAssociations(removedAssociations)) {
+            final SecurityRoleAssociationCo associationCo = co(SecurityRoleAssociation.class);
+            final List<SecurityRoleAssociation> matrixRelatedAssociationsForCurrentUser = associationCo.findActiveAssociationsForUser(
+                    userProvider.getUser(),
+                    SecurityRoleAssociation_CanRead_Token.class,
+                    SecurityRoleAssociation_CanSave_Token.class);
+            if (removedAssociations.containsAll(extractAssociationsFor(SecurityRoleAssociation_CanRead_Token.class, matrixRelatedAssociationsForCurrentUser))) {
+                errorMsg.append(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING);
+            }
+            if (removedAssociations.containsAll(extractAssociationsFor(SecurityRoleAssociation_CanSave_Token.class, matrixRelatedAssociationsForCurrentUser))) {
+                if (!errorMsg.isEmpty()) {
+                    errorMsg.append("<br>");
+                }
+                errorMsg.append(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING);
+            }
+        }
+        return errorMsg.toString();
+    }
+
+    private boolean hasSecurityMatrixRelatedAssociations(final Collection<SecurityRoleAssociation> associations) {
+        return associations.stream().anyMatch(association ->
+                SecurityRoleAssociation_CanSave_Token.class.equals(association.getSecurityToken()) ||
+                        SecurityRoleAssociation_CanRead_Token.class.equals(association.getSecurityToken()));
+    }
+
+    private List<SecurityRoleAssociation> extractAssociationsFor(Class<? extends ISecurityToken> token, List<SecurityRoleAssociation> associations) {
+        return associations.stream().filter(association -> token.equals(association.getSecurityToken())).collect(toList());
     }
 
     private List<SecurityRoleAssociation> createSecurityRoleAssociations(final String securityToken, final List<Integer> roleIds, final Map<Long, UserRole> idRoleMap) {
