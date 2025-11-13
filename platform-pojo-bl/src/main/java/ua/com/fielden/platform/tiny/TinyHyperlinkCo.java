@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.types.Hyperlink;
 
 import java.util.Map;
 
@@ -22,6 +23,10 @@ public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
     TinyHyperlink save(Class<? extends AbstractEntity<?>> entityType,
                        SavingInfoHolder savingInfoHolder,
                        String actionIdentifier);
+
+    /// Saves a tiny hyperlink whose [TinyHyperlink#target] is `hyperlink`.
+    ///
+    TinyHyperlink saveWithTarget(Hyperlink hyperlink);
 
     String toURL(TinyHyperlink tinyHyperlink);
 

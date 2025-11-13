@@ -13,8 +13,10 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
@@ -49,9 +51,13 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         return save(tinyHyperlink, Optional.of(FetchModelReconstructor.reconstruct(tinyHyperlink))).asRight().value();
     }
 
+    /// The definitive save method.
+    ///
     @SessionRequired
     @Override
     protected Either<Long, TinyHyperlink> save(final TinyHyperlink tinyHyperlink, final Optional<fetch<TinyHyperlink>> maybeFetch) {
+        tinyHyperlink.isValid().ifFailure(Result::throwRuntime);
+
         if (!tinyHyperlink.isPersisted()) {
             final var hash = hash(tinyHyperlink);
             // An instrumented instance is required for `save`.
@@ -116,6 +122,12 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     }
 
     @Override
+    public TinyHyperlink saveWithTarget(final Hyperlink hyperlink) {
+        final var tiny = new_().setTarget(hyperlink);
+        return save(tiny);
+    }
+
+    @Override
     public String toURL(final TinyHyperlink tinyHyperlink) {
         if (!tinyHyperlink.isPersisted()) {
             throw new InvalidArgumentException("URLs can be created only for persisted instances of [%s].".formatted(TinyHyperlink.class.getSimpleName()));
@@ -130,15 +142,20 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             return tinyHyperlink.getHash();
         }
 
-        if (tinyHyperlink.getSavingInfoHolder() == null || tinyHyperlink.getSavingInfoHolder().length == 0) {
-            throw new InvalidArgumentException("[%s] is required to compute a hash.".formatted(TinyHyperlink.SAVING_INFO_HOLDER));
+        if (tinyHyperlink.getTarget() != null) {
+            return Checksum.sha256(tinyHyperlink.getTarget().value.getBytes());
         }
+        else {
+            if (tinyHyperlink.getSavingInfoHolder() == null || tinyHyperlink.getSavingInfoHolder().length == 0) {
+                throw new InvalidArgumentException("[%s] is required to compute a hash.".formatted(TinyHyperlink.SAVING_INFO_HOLDER));
+            }
 
-        if (tinyHyperlink.getActionIdentifier() == null || tinyHyperlink.getActionIdentifier().isEmpty()) {
-            throw new InvalidArgumentException("[%s] is required to compute a hash.".formatted(TinyHyperlink.ACTION_IDENTIFIER));
+            if (tinyHyperlink.getActionIdentifier() == null || tinyHyperlink.getActionIdentifier().isEmpty()) {
+                throw new InvalidArgumentException("[%s] is required to compute a hash.".formatted(TinyHyperlink.ACTION_IDENTIFIER));
+            }
+
+            return Checksum.sha256(tinyHyperlink.getActionIdentifier().getBytes(), tinyHyperlink.getSavingInfoHolder());
         }
-
-        return Checksum.sha256(tinyHyperlink.getActionIdentifier().getBytes(), tinyHyperlink.getSavingInfoHolder());
     }
 
 }

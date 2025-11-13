@@ -5,9 +5,27 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.types.Hyperlink;
 
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 
+/// A tiny hyperlink is a short URL that provides access to an application resource.
+///
+/// In principle, tiny hyperlinks can represent any resource, but currently they are used for:
+/// * Executing a shared action entity, including actions that open masters.
+/// * Opening a master for a persisted entity.
+/// * Opening a menu item within a compound master.
+///
+/// Only property [#hash] may be of interest to application developers.
+///
+/// Properties [#savingInfoHolder], [#actionIdentifier] and [#entityTypeName] are mutually exclusive with [#target].
+///
 @EntityTitle("Tiny Hyperlink")
 @MapEntityTo
 @KeyType(DynamicEntityKey.class)
@@ -22,7 +40,8 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
             HASH = "hash",
             ENTITY_TYPE_NAME = "entityTypeName",
             SAVING_INFO_HOLDER = "savingInfoHolder",
-            ACTION_IDENTIFIER = "actionIdentifier";
+            ACTION_IDENTIFIER = "actionIdentifier",
+            TARGET = "target";
 
     @IsProperty(length = 64) // SHA256 is 32 bytes, hex encoding uses 2 characters per byte.
     @MapTo
@@ -31,25 +50,65 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
     @CompositeKeyMember(1)
     private String hash;
 
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Properties that represent a shared entity.
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
     @IsProperty
-    @Required
     @MapTo
+    // @Required If `target` is null.
     private String entityTypeName;
 
     /// Serialised [SavingInfoHolder] that represents the shared entity state and its context.
     ///
     @IsProperty(length = Integer.MAX_VALUE)
-    @Required
     @MapTo
+    // @Required If `target` is null.
     private byte[] savingInfoHolder;
 
     /// Corresponds to [ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig#actionIdentifier].
     ///
     @IsProperty
-    @Required
     @MapTo
+    // @Required If `target` is null.
     @Title(value = "Action Identifier", desc = "Identifier for the action that opened the entity master where this tiny hyperlink was created.")
     private String actionIdentifier;
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    @IsProperty
+    @MapTo
+    // @Required If `entityTypeName`, `savingInfoHolder` and `actionIdentifier` are null.
+    @Title(value = "Target Hyperlink", desc = "A hyperlink that this tiny hyperlink points to.")
+    private Hyperlink target;
+
+    @Override
+    protected Result validate() {
+        final var superResult = super.validate();
+        if (superResult.isSuccessful()) {
+            final var ok = (target == null && entityTypeName != null && savingInfoHolder != null && actionIdentifier != null)
+                           || (target != null && entityTypeName == null && savingInfoHolder == null && actionIdentifier == null);
+            if (!ok) {
+                return failuref("Either %s or all of [%s] must be specified.",
+                                getTitleAndDesc(TARGET, TinyHyperlink.class).getKey(),
+                                Stream.of(ENTITY_TYPE_NAME, SAVING_INFO_HOLDER, ACTION_IDENTIFIER)
+                                        .map(prop -> getTitleAndDesc(prop, TinyHyperlink.class).getKey())
+                                        .collect(joining(", ")));
+            }
+        }
+
+        return superResult;
+    }
+
+    public Hyperlink getTarget() {
+        return target;
+    }
+
+    @Observable
+    public TinyHyperlink setTarget(final Hyperlink target) {
+        this.target = target;
+        return this;
+    }
 
     public String getActionIdentifier() {
         return actionIdentifier;
