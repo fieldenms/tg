@@ -1743,7 +1743,8 @@ Polymer({
     _shareHidden: function (_mainEntityType, _lastAction) {
         return !(
             // Visible for all persistent masters either with NEW or persisted instance.
-            // This covers simple and compound masters. Action identifier should always be there.
+            // This covers simple and compound masters.
+            // Action identifier can be empty for NEW (custom action) -- it then shows info message `Please save and try again.`
             _mainEntityType
             // Visible also for all functional masters with explicit action identifier.
             || _lastAction && _lastAction.attrs && _lastAction.attrs.actionId
@@ -1887,7 +1888,8 @@ Polymer({
             const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
             url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
             this._copyLinkToClipboard(url.href, showNonCritical);
-        } else {
+        }
+        else if (this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionId) {
             // Initialise dynamic share action if not yet initialised.
             if (!this._shareAction) {
                 // Find a deepest embdedded master, which will contain master entity for share action.
@@ -1925,6 +1927,12 @@ Polymer({
             }
             // Run cached dynamic share action.
             this._shareAction._run();
+        }
+        else {
+            this.$.toaster.text = 'Please save and try again.';
+            this.$.toaster.hasMore = false;
+            this.$.toaster.msgText = '';
+            showNonCritical(this.$.toaster);
         }
     },
     
