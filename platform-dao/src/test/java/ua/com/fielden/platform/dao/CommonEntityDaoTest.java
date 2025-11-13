@@ -34,7 +34,7 @@ import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityVali
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 
-/// This test case ensures correct implementation of the common DAO functionality in conjunction with Session injection by means of method intercepter.
+/// This test case ensures correct implementation of the common DAO functionality in conjunction with Session injection by means of method interceptor.
 ///
 public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
@@ -57,7 +57,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         co(EntityWithMoney.class).stream(from(select(EntityWithMoney.class).model()).model());
     }
 
-        @Test
+    @Test
     public void test_that_entity_with_simple_key_is_handled_correctly() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
