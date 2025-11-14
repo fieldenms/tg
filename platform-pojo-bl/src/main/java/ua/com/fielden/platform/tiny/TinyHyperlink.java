@@ -37,6 +37,8 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
             ACTION_IDENTIFIER = "actionIdentifier",
             TARGET = "target";
 
+    public static final String CUSTOM_OBJECT_SHARED_URI = "sharedUri";
+
     @IsProperty(length = 64) // SHA256 is 32 bytes, hex encoding uses 2 characters per byte.
     @MapTo
     @Final

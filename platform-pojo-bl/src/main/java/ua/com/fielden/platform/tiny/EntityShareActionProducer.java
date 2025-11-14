@@ -16,6 +16,7 @@ import java.util.Optional;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.tiny.TinyHyperlink.CUSTOM_OBJECT_SHARED_URI;
 import static ua.com.fielden.platform.tiny.TinyHyperlink.HASH;
 import static ua.com.fielden.platform.utils.QrCodeUtils.*;
 import static ua.com.fielden.platform.utils.QrCodeUtils.ImageFormat.PNG;
@@ -43,10 +44,10 @@ public class EntityShareActionProducer extends DefaultEntityProducerWithContext<
     protected EntityShareAction provideDefaultValues(final EntityShareAction entity) {
         if (contextNotEmpty()) {
             // Is this action invoked on a persisted entity master?
-            ofNullable((String) getContext().getCustomObject().get("persistedEntityUri")).ifPresentOrElse(masterUrl -> {
+            ofNullable((String) getContext().getCustomObject().get(CUSTOM_OBJECT_SHARED_URI)).ifPresentOrElse(sharedUri -> {
                 // Create and save a tiny hyperlink that points to the respective entity master.
                 final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
-                final var tinyHyperlink = coTinyHyperlink.saveWithTarget(new Hyperlink(masterUrl), Optional.of(fetchIdOnly(TinyHyperlink.class).with(HASH))).asRight().value();
+                final var tinyHyperlink = coTinyHyperlink.saveWithTarget(new Hyperlink(sharedUri), Optional.of(fetchIdOnly(TinyHyperlink.class).with(HASH))).asRight().value();
                 final var tinyUrlHyperlink = new Hyperlink(coTinyHyperlink.toURL(tinyHyperlink));
                 entity.setHyperlink(tinyUrlHyperlink)
                         .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(tinyUrlHyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));

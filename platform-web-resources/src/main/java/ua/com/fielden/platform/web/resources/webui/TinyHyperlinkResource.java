@@ -113,7 +113,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             }
 
             if (tinyHyperlink.getSavingInfoHolder() == null) {
-                final Map<String, Object> customObject = linkedMapOf(t2("persistedEntityUri", tinyHyperlink.getTarget().value));
+                final Map<String, Object> customObject = linkedMapOf(t2(CUSTOM_OBJECT_SHARED_URI, tinyHyperlink.getTarget().value));
                 return restUtil.resultJSONRepresentation(successful().extendResultWithCustomObject(customObject));
             }
 

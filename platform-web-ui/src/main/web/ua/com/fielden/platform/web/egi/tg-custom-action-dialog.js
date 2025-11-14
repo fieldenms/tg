@@ -1963,10 +1963,10 @@ Polymer({
                 const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
                 const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
                 url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
-                shareAction._persistedEntityUri = url.href;
+                shareAction._sharedUri = url.href;
             }
             else {
-                shareAction._persistedEntityUri = null;
+                shareAction._sharedUri = null;
             }
             // Run dynamic share action.
             shareAction._run();

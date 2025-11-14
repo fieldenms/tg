@@ -763,8 +763,8 @@ Polymer({
                 // Put action identifier for that action into custom object of the context.
                 self._reflector.setCustomProperty(context, 'actionIdentifier', dialog._lastAction.attrs.actionId);
             }
-            if (self._persistedEntityUri) {
-                self._reflector.setCustomProperty(context, 'persistedEntityUri', self._persistedEntityUri);
+            if (self._sharedUri) {
+                self._reflector.setCustomProperty(context, 'sharedUri', self._sharedUri);
             }
         }
         return context;

@@ -309,10 +309,10 @@ Polymer({
                 this.$.entityReconstructor.generateRequest().completes.then(ironRequest => {
                     const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
                     const customObject = deserialisedResult.instance[1];
-                    const persistedEntityUri = customObject['persistedEntityUri'];
-                    if (persistedEntityUri) {
-                        window.history.replaceState(this.currentHistoryState, '', persistedEntityUri);
-                        window.location.replace(persistedEntityUri);
+                    const sharedUri = customObject['sharedUri'];
+                    if (sharedUri) {
+                        window.history.replaceState(this.currentHistoryState, '', sharedUri);
+                        window.location.replace(sharedUri);
                     }
                     else {
                         const actionObject = appActions.actions(this)[customObject.actionIdentifier];
