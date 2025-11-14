@@ -49,6 +49,35 @@ public class NeedMoreDataStorageTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void putMoreData_null_as_value_removes_key_entry() {
+        assertTrue("Each test starts in a new scope with empty NeedMoreDataStorage.", NeedMoreDataStorage.moreData().isEmpty());
+
+        final var coWarnings = co$(AcknowledgeWarnings.class);
+        final var warnings = coWarnings.new_();
+
+        NeedMoreDataStorage.putMoreData("TEST_KEY", warnings);
+        assertEquals(warnings, NeedMoreDataStorage.moreData("TEST_KEY").orElseThrow());
+
+        NeedMoreDataStorage.putMoreData("TEST_KEY", null);
+        assertFalse(NeedMoreDataStorage.moreData("TEST_KEY").isPresent());
+    }
+
+    @Test
+    public void putMoreData_for_existing_key_replaces_value() {
+        assertTrue("Each test starts in a new scope with empty NeedMoreDataStorage.", NeedMoreDataStorage.moreData().isEmpty());
+
+        final var coWarnings = co$(AcknowledgeWarnings.class);
+        final var warnings = coWarnings.new_();
+
+        NeedMoreDataStorage.putMoreData("TEST_KEY", warnings);
+        assertSame(warnings, NeedMoreDataStorage.moreData("TEST_KEY").orElseThrow());
+
+        final var anotherWarnings = coWarnings.new_();
+        NeedMoreDataStorage.putMoreData("TEST_KEY", anotherWarnings);
+        assertSame(anotherWarnings, NeedMoreDataStorage.moreData("TEST_KEY").orElseThrow());
+    }
+
+    @Test
     @SkipNeedMoreDataStorageBinding
     public void running_op_with_NeedMoreDataStorage_makes_more_data_available_to_it() {
         assertFalse("NeedMoreDataStorage is not bound.", NeedMoreDataStorage.isBound());

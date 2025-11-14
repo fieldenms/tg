@@ -79,6 +79,7 @@ public class NeedMoreDataStorage {
     }
 
     /// A convenient method to add a single “more data” entry for the specified key.
+    /// If `moreData == null`, the value associated with `key` is removed.
     ///
     /// **WARNING:**
     /// This method mutates the scoped storage.
@@ -93,7 +94,12 @@ public class NeedMoreDataStorage {
     ///
     public static void putMoreData(final String key, final IContinuationData moreData) {
         if (STORAGE.isBound()) {
-            STORAGE.get().put(key, moreData);
+            if (moreData == null) {
+                STORAGE.get().remove(key);
+            }
+            else {
+                STORAGE.get().put(key, moreData);
+            }
         } else {
             throw new ContinuationException(ERR_CANNOT_ADD_MORE_DATA);
         }
