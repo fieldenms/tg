@@ -134,6 +134,9 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         //
         // Since correct action lookup is essential for obtaining the right computation object,
         // we instead capture the action identifier, which uniquely locates the action configuration.
+
+        // TODO #2422 For EntityNewAction and Open*MasterAction, a nested `CentreContextHolder` must be modified, not the top-level one.
+        //      See `_tgOpenMasterAction` in `tg-app-template.js`.
         final var centreContextHolder = savingInfoHolder.getCentreContextHolder() != null
                 ? savingInfoHolder.getCentreContextHolder()
                 : co$(CentreContextHolder.class).new_();
