@@ -16,8 +16,7 @@ import java.util.Optional;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
-import static ua.com.fielden.platform.tiny.TinyHyperlink.CUSTOM_OBJECT_SHARED_URI;
-import static ua.com.fielden.platform.tiny.TinyHyperlink.HASH;
+import static ua.com.fielden.platform.tiny.TinyHyperlink.*;
 import static ua.com.fielden.platform.utils.QrCodeUtils.*;
 import static ua.com.fielden.platform.utils.QrCodeUtils.ImageFormat.PNG;
 
@@ -60,9 +59,9 @@ public class EntityShareActionProducer extends DefaultEntityProducerWithContext<
                         throw new InvalidStateException("[centreContextHolder] must be present.");
                     }
 
-                    final String actionIdentifier = getContext().getCustomObject() != null ? (String) getContext().getCustomObject().get("actionIdentifier") : null;
+                    final String actionIdentifier = getContext().getCustomObject() != null ? (String) getContext().getCustomObject().get(CUSTOM_OBJECT_ACTION_IDENTIFIER) : null;
                     if (isBlank(actionIdentifier)) {
-                        throw new InvalidStateException("[actionIdentifier] must be present.");
+                        throw new InvalidStateException("[%s] must be present.".formatted(CUSTOM_OBJECT_ACTION_IDENTIFIER));
                     }
                     final var savingInfoHolder = (SavingInfoHolder) centreContextHolder.getMasterEntity();
 

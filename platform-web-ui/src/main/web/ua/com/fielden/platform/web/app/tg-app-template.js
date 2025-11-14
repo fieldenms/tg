@@ -309,15 +309,16 @@ Polymer({
                 this.$.entityReconstructor.generateRequest().completes.then(ironRequest => {
                     const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
                     const customObject = deserialisedResult.instance[1];
-                    const sharedUri = customObject['sharedUri'];
+                    const sharedUri = customObject['@@sharedUri'];
                     if (sharedUri) {
                         window.history.replaceState(this.currentHistoryState, '', sharedUri);
                         window.location.replace(sharedUri);
                     }
                     else {
-                        const actionObject = appActions.actions(this)[customObject.actionIdentifier];
+                        const actionIdentifier = customObject['@@actionIdentifier'];
+                        const actionObject = appActions.actions(this)[actionIdentifier];
                         if (!actionObject) {
-                            throw new Error(`Action object [${customObject.actionIdentifier}] was not found.`);
+                            throw new Error(`Action object [${actionIdentifier}] was not found.`);
                         }
 
                         const action = document.createElement('tg-ui-action');

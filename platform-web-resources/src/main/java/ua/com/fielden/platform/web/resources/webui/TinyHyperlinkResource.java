@@ -155,7 +155,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                                                  sharingModel);
 
             final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
-            customObject.put(ACTION_IDENTIFIER, tinyHyperlink.getActionIdentifier());
+            customObject.put(CUSTOM_OBJECT_ACTION_IDENTIFIER, tinyHyperlink.getActionIdentifier());
             // Send the deserialised `savingInfoHolder` to the client instead of the original `tinyHyperlink.savingInfoHolder`.
             // Since we skip properties that could not be deserialised (via a custom error handler), the deserialised form will be free of erroneous elements.
             // If we sent the original form, the client could use it for subsequent requests to other resources that do not use a lenient error handler for deserialisation,

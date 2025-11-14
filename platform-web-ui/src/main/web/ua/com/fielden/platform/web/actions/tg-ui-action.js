@@ -761,10 +761,10 @@ Polymer({
             //     -> returns <tg-ui-action> for OpenWorkOrderMasterAction
             if (dialog && dialog._lastAction && dialog._lastAction.attrs && dialog._lastAction.attrs.actionId) {
                 // Put action identifier for that action into custom object of the context.
-                self._reflector.setCustomProperty(context, 'actionIdentifier', dialog._lastAction.attrs.actionId);
+                self._reflector.setCustomProperty(context, '@@actionIdentifier', dialog._lastAction.attrs.actionId);
             }
             if (self._sharedUri) {
-                self._reflector.setCustomProperty(context, 'sharedUri', self._sharedUri);
+                self._reflector.setCustomProperty(context, '@@sharedUri', self._sharedUri);
             }
         }
         return context;
