@@ -28,11 +28,12 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
 import { TgBackButtonBehavior } from '/resources/views/tg-back-button-behavior.js'
-import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
+import { createDialog } from '/resources/egi/tg-dialog-util.js';
 
 const ST_WIDTH = '_width';
 const ST_HEIGHT = '_height';
@@ -512,7 +513,18 @@ Polymer({
         _masterMenu: {
             type: Object,
             value: null
+        },
+
+        /**
+         * A dialog instance that is used for displaying entity (functional and not) masters as part of dialog actions logic.
+         * This dialog is of type tg-custom-action-dialog and gets created on demand when needed i.e. on first _showDialog invocation.
+         * It is appended to document.body just before dialog opening and is removed just after dialog closing.
+         */
+        _actionDialog: {
+            type: Object,
+            value: null
         }
+
     },
 
     observers: ["_updateDialogDimensionsIfNotAnimating(_masterVisibilityChanges, _masterLayoutChanges, prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
@@ -551,6 +563,7 @@ Polymer({
         this._handleActionNavigationChange = this._handleActionNavigationChange.bind(this);
         this._handleActionNavigationInvoked = this._handleActionNavigationInvoked.bind(this);
         this._handleViewLoaded = this._handleViewLoaded.bind(this);
+        this._showDialog = this._showDialog.bind(this);
 
         this._setIsRunning(false);
 
@@ -598,6 +611,8 @@ Polymer({
         this.$.spinner.style.setProperty('--paper-spinner-layer-2-color', 'white');
         this.$.spinner.style.setProperty('--paper-spinner-layer-3-color', 'white');
         this.$.spinner.style.setProperty('--paper-spinner-layer-4-color', 'white');
+
+        this.uuid = this.is + '/' + generateUUID();
     },
 
     attached: function() {
@@ -1085,6 +1100,21 @@ Polymer({
             self.$.elementLoader.attrs = customAction.attrs;
             return self.$.elementLoader.reload();
         }
+    },
+
+    _showDialog: function (action) {
+        //Calculate close event channel for dialog. It should be the same as action's centreUuid.
+        //This is done because action's centreUuid is set into centreUuid of the master opened by specified action and inserted into
+        //opening dialog. Then the master's centreUuid is used as closeEventChannel for tg-action.
+        //|| this.uuid is used as fallback in case if action's centreUuid wasn't defined.
+        const closeEventChannel = action.attrs.centreUuid || this.uuid;
+        const closeEventTopics = ['save.post.success', 'refresh.post.success'];
+        this.async(() => {
+            if (this._actionDialog === null) {
+                this._actionDialog = createDialog(this.uuid);
+            }
+            this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+        }, 1);
     },
 
     /*
@@ -1888,16 +1918,18 @@ Polymer({
         ) {
             // Find a deepest embdedded master, which will contain master entity for share action.
             const deepestMaster = this._deepestMaster;
+            // this dialog's `uuid` to be used for action.
+            const uuid = this.uuid;
 
             // Create dynamic share action.
             const shareAction = document.createElement('tg-ui-action');
 
             // Provide only the necessary attributes.
-            // Avoid centreUuid and shouldRefreshParentCentreAfterSave, because there is no need to refresh parent master.
+            // Avoid shouldRefreshParentCentreAfterSave, because there is no need to refresh parent master.
             shareAction.shortDesc = 'Share';
             shareAction.componentUri = '/master_ui/ua.com.fielden.platform.tiny.EntityShareAction';
             shareAction.elementName = 'tg-EntityShareAction-master';
-            shareAction.showDialog = deepestMaster ? deepestMaster._showDialog : (() => {}); // TODO embedded centres
+            shareAction.showDialog = this._showDialog;
             shareAction.createContextHolder = deepestMaster ? deepestMaster._createContextHolder : (() => this._reflector.createContextHolder(
                 null, null, null,
                 null, null, null
@@ -1906,7 +1938,8 @@ Polymer({
             shareAction.attrs = {
                 entityType: 'ua.com.fielden.platform.tiny.EntityShareAction',
                 currentState: 'EDIT',
-                centreUuid: deepestMaster ? deepestMaster.uuid : null
+                // `centreUuid` is important to be able to close master through CANCEL (aka CLOSE) `tg-action`.
+                centreUuid: uuid
             };
             shareAction.requireSelectionCriteria = 'false';
             shareAction.requireSelectedEntities = 'NONE';
