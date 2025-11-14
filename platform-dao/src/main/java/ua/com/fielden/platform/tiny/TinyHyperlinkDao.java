@@ -6,6 +6,7 @@ import ua.com.fielden.platform.cypher.Checksum;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
@@ -16,23 +17,28 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.web.annotations.AppUri;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isCollectional;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.tiny.TinyHyperlink.*;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 @EntityType(TinyHyperlink.class)
 public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements TinyHyperlinkCo {
@@ -80,7 +86,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     @SessionRequired
     public TinyHyperlink save(
             final Class<? extends AbstractEntity<?>> entityType,
-            final Map<String, Object> modifiedProperties,
+            final Map<? extends CharSequence, Object> modifiedProperties,
             final CentreContextHolder centreContextHolder,
             final String actionIdentifier)
     {
@@ -91,14 +97,25 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     @SessionRequired
     public Either<Long, TinyHyperlink> save(
             final Class<? extends AbstractEntity<?>> entityType,
-            final Map<String, Object> modifiedProperties,
+            final Map<? extends CharSequence, Object> modifiedProperties,
             final CentreContextHolder centreContextHolder,
             final String actionIdentifier,
             final Optional<fetch<TinyHyperlink>> maybeFetch)
     {
-        // TODO Perform a transformation.
-        //      `modifiedProperties` contains conventional property values, while `modifHolder` requires a special structure used in marshalling.
-        final var modifHolder = modifiedProperties;
+        // `modifiedProperties` contains conventional property values, while `modifHolder` requires a special structure used in marshalling.
+        final Map<String, Object> modifHolder;
+        if (modifiedProperties.isEmpty()) {
+            modifHolder = Map.of();
+        }
+        else {
+            modifHolder = new HashMap<>();
+            modifiedProperties.forEach((name, value) -> {
+                final var propObject = makeModifHolderPropObject(entityType, name.toString(), value);
+                modifHolder.put(name.toString(), propObject);
+            });
+            modifHolder.put("@@touchedProps", modifiedProperties.keySet().stream().map(CharSequence::toString).toList());
+        }
+
         final var savingInfoHolder = getEntityFactory().newEntity(SavingInfoHolder.class)
                 .setModifHolder(modifHolder)
                 .setCentreContextHolder(centreContextHolder);
@@ -143,6 +160,16 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         final var newCustomObject = new HashMap<>(centreContextHolder.getCustomObject());
         newCustomObject.put("@@actionIdentifier", actionIdentifier);
         centreContextHolder.setCustomObject(newCustomObject);
+
+        // TODO #2422 Support "open new" actions for simple and compound masters.
+        //      For such actions, `savingInfoHolder` should have from additional levels of depth.
+        //      For simple masters:
+        //      1. savingInfoHolder -- entityType.
+        //      2. savingInfoHolder.centreContextHolder.masterEntity -- `EntityNewAction`.
+        //      For compound masters:
+        //      1. savingInfoHolder -- entityType.
+        //      2. savingInfoHolder.centreContextHolder.masterEntity -- compound menu item entity.
+        //      3. savingInfoHolder.centreContextHolder.masterEntity.*.masterEntity -- Open*MasterAction entity.
 
         final var serialisedSavingInfoHolder = serialiser.serialise(savingInfoHolder, SerialiserEngines.JACKSON);
         final var link = new_()
@@ -204,6 +231,87 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
                                             Stream.of(ENTITY_TYPE_NAME, SAVING_INFO_HOLDER, ACTION_IDENTIFIER)
                                                     .map(prop -> getTitleAndDesc(prop, TinyHyperlink.class).getKey())
                                                     .collect(joining(", ")));
+    }
+
+    /// Transforms a native property value into a format suitable for [CentreContextHolder#modifHolder].
+    ///
+    /// TODO: This method is an inverse of [EntityResourceUtils#convert] and must be aligned with it.
+    ///
+    private Map<Object, Object> makeModifHolderPropObject(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final String prop,
+            final Object value)
+    {
+        class $ {
+            static Map<Object, Object> val(final Object v) {
+                final var map = new HashMap<>(1);
+                map.put("val", v);
+                return map;
+            }
+        }
+
+        if (isCollectional(entityType, prop)) {
+            throw new InvalidArgumentException("Collectional properties cannot be shared with tiny hyperlinks.");
+        }
+
+        if (value == null) {
+            return $.val(null);
+        }
+
+        final Class<?> propertyType = determinePropertyType(entityType, prop);
+
+        // Below, `origVal` is not assigned at all, since the resulting modifHolder will apply only to new entity instances.
+
+        if (isEntityType(propertyType)) {
+            final var entity = (AbstractEntity<?>) value;
+            final var object = new HashMap<>();
+            object.put("val", Objects.toString(entity.getKey(), null));
+            object.put("valId", entity.getId());
+            if (isUnionEntityType(propertyType)) {
+                final var unionValue = (AbstractUnionEntity) value;
+                // TODO #2466 This assertion will be subject to removal.
+                if (unionValue.activePropertyName() == null) {
+                    throw new InvalidArgumentException(format(
+                            "Invalid union value specified for property [%s]. Could not access the union's active property. Please ensure that the union value is instrumented.",
+                            prop));
+                }
+                object.put("activeProperty", unionValue.activePropertyName());
+            }
+            return object;
+        }
+        else if (isDate(propertyType)) {
+            final Date date = (Date) value;
+            return $.val(date.getTime());
+        }
+        else if (Money.class.isAssignableFrom(propertyType)) {
+            final var money = (Money) value;
+            final var object = new HashMap<>();
+            object.put("amount", money.getAmount());
+            object.put("currency", money.getCurrency());
+            object.put("taxPercent", money.getTaxPercent());
+            return $.val(object);
+        }
+        else if (Colour.class.isAssignableFrom(propertyType)) {
+            final var colour = (Colour) value;
+            return $.val(Map.of(Colour.HASHLESS_UPPERCASED_COLOUR_VALUE, colour.hashlessUppercasedColourValue));
+        }
+        else if (Hyperlink.class.isAssignableFrom(propertyType)) {
+            final var hyperlink = (Hyperlink) value;
+            return $.val(Map.of(Hyperlink.VALUE, hyperlink.value));
+        }
+        else if (RichText.class.isAssignableFrom(propertyType)) {
+            return value instanceof RichText.Invalid invalid
+                    ? $.val(Map.of(RichText.VALIDATION_RESULT, Map.of(Result.MESSAGE, invalid.isValid().getMessage())))
+                    : $.val(Map.of(RichText.FORMATTED_TEXT, ((RichText) value).formattedText()));
+        }
+        else if (Class.class.isAssignableFrom(propertyType)) {
+            final var klass = (Class<?>) value;
+            return $.val(klass.getName());
+        }
+        // Identity function for: Map, String, Integer, boolean, BigDecimal
+        else {
+            return $.val(value);
+        }
     }
 
 }

@@ -39,7 +39,7 @@ public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
     ///
     TinyHyperlink save(
             Class<? extends AbstractEntity<?>> entityType,
-            Map<String, Object> modifiedProperties,
+            Map<? extends CharSequence, Object> modifiedProperties,
             CentreContextHolder centreContextHolder,
             String actionIdentifier);
 
@@ -49,7 +49,7 @@ public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
     ///
     Either<Long, TinyHyperlink> save(
             Class<? extends AbstractEntity<?>> entityType,
-            Map<String, Object> modifiedProperties,
+            Map<? extends CharSequence, Object> modifiedProperties,
             CentreContextHolder centreContextHolder,
             String actionIdentifier,
             Optional<fetch<TinyHyperlink>> maybeFetch);
