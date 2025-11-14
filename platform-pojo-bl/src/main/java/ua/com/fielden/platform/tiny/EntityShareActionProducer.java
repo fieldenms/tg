@@ -9,12 +9,11 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 
 import java.util.Base64;
 import java.util.Optional;
 
-import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.tiny.TinyHyperlink.HASH;
@@ -23,66 +22,57 @@ import static ua.com.fielden.platform.utils.QrCodeUtils.ImageFormat.PNG;
 
 /// A producer for [EntityShareAction].
 ///
-/// This producer requires an instance of [CentreContextHolder] that was used to construct the [CentreContext].
+/// For new instances, this producer requires an instance of [CentreContextHolder] that was used to construct the [CentreContext].
 /// Since [CentreContextHolder] is not assigned to producers by default, **it must be assigned explicitly** via [#setCentreContextHolder(CentreContextHolder)].
 ///
+/// For persisted instances, it only requires URL of that instance (optionally, with compound master menu item suffix).
+///
 public class EntityShareActionProducer extends DefaultEntityProducerWithContext<EntityShareAction> {
-
-    private static final String ERR_NO_MASTER = "Share action was invoked for an entity without a registered master. Entity: [%s] of type [%s].";
-
-    private final IEntityMasterUrlProvider masterUrlProvider;
 
     private CentreContextHolder centreContextHolder;
 
     @Inject
     EntityShareActionProducer(
             final EntityFactory factory,
-            final ICompanionObjectFinder companionFinder,
-            final IEntityMasterUrlProvider masterUrlProvider)
+            final ICompanionObjectFinder companionFinder)
     {
         super(factory, EntityShareAction.class, companionFinder);
-        this.masterUrlProvider = masterUrlProvider;
     }
 
     @Override
     protected EntityShareAction provideDefaultValues(final EntityShareAction entity) {
-        final Optional<String> maybeUrl = contextNotEmpty() ? Optional.ofNullable((String) getContext().getCustomObject().get("persistedEntityUri")) : Optional.empty();
-        if (masterEntityNotEmpty()) {
-            final var masterEntity = masterEntity();
-
+        if (contextNotEmpty()) {
             // Is this action invoked on a persisted entity master?
-            if (masterEntity.isPersisted()) {
+            ofNullable((String) getContext().getCustomObject().get("persistedEntityUri")).ifPresentOrElse(masterUrl -> {
                 // Create and save a tiny hyperlink that points to the respective entity master.
-                final var masterUrl = maybeUrl.or(() -> masterUrlProvider.masterUrlFor(masterEntity))
-                        .orElseThrow(() -> new InvalidStateException(format(ERR_NO_MASTER, masterEntity, masterEntity.getType().getCanonicalName())));
                 final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
                 final var tinyHyperlink = coTinyHyperlink.saveWithTarget(new Hyperlink(masterUrl), Optional.of(fetchIdOnly(TinyHyperlink.class).with(HASH))).asRight().value();
                 final var tinyUrlHyperlink = new Hyperlink(coTinyHyperlink.toURL(tinyHyperlink));
                 entity.setHyperlink(tinyUrlHyperlink)
-                      .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(tinyUrlHyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));
-            }
-            // This action must have been invoked on a master for a new persistent entity or an action entity.
-            else {
-                // Create and save a tiny hyperlink that captures the shared entity state and the context of this action.
+                        .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(tinyUrlHyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));
+            }, () -> {
+                // This action must have been invoked on a master for a new persistent entity or an action entity.
+                if (masterEntityNotEmpty()) {
+                    final var masterEntity = masterEntity();
+                    // Create and save a tiny hyperlink that captures the shared entity state and the context of this action.
+                    if (centreContextHolder == null) {
+                        throw new InvalidStateException("[centreContextHolder] must be present.");
+                    }
 
-                if (centreContextHolder == null) {
-                    throw new InvalidStateException("[centreContextHolder] must be present.");
+                    final String actionIdentifier = getContext().getCustomObject() != null ? (String) getContext().getCustomObject().get("actionIdentifier") : null;
+                    if (isBlank(actionIdentifier)) {
+                        throw new InvalidStateException("[actionIdentifier] must be present.");
+                    }
+                    final var savingInfoHolder = (SavingInfoHolder) centreContextHolder.getMasterEntity();
+
+                    final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
+                    final var tinyHyperlink = coTinyHyperlink.save(masterEntity.getType(), savingInfoHolder, actionIdentifier, Optional.of(fetchIdOnly(TinyHyperlink.class).with(HASH))).asRight().value();
+                    final var hyperlink = new Hyperlink(coTinyHyperlink.toURL(tinyHyperlink));
+                    entity.setHyperlink(hyperlink)
+                            .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(hyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));
                 }
-
-                final String actionIdentifier = getContext().getCustomObject() != null ? (String) getContext().getCustomObject().get("actionIdentifier") : null;
-                if (isBlank(actionIdentifier)) {
-                    throw new InvalidStateException("[actionIdentifier] must be present.");
-                }
-                final var savingInfoHolder = (SavingInfoHolder) centreContextHolder.getMasterEntity();
-
-                final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
-                final var tinyHyperlink = coTinyHyperlink.save(masterEntity.getType(), savingInfoHolder, actionIdentifier, Optional.of(fetchIdOnly(TinyHyperlink.class).with(HASH))).asRight().value();
-                final var hyperlink = new Hyperlink(coTinyHyperlink.toURL(tinyHyperlink));
-                entity.setHyperlink(hyperlink)
-                        .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(hyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));
-            }
+            });
         }
-        // else TODO embedded centres
 
         return super.provideDefaultValues(entity);
     }

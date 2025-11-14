@@ -1912,8 +1912,9 @@ Polymer({
             toaster.isCritical = false;
             toaster.show();
         };
+        const persistedEntitySharing = this._mainEntityType !== null && this._mainEntityId !== null;
         if (
-            this._mainEntityType !== null && this._mainEntityId !== null
+            persistedEntitySharing
             || this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionId
         ) {
             // Find a deepest embdedded master, which will contain master entity for share action.
@@ -1930,10 +1931,12 @@ Polymer({
             shareAction.componentUri = '/master_ui/ua.com.fielden.platform.tiny.EntityShareAction';
             shareAction.elementName = 'tg-EntityShareAction-master';
             shareAction.showDialog = this._showDialog;
-            shareAction.createContextHolder = deepestMaster ? deepestMaster._createContextHolder : (() => this._reflector.createContextHolder(
-                null, null, null,
-                null, null, null
-            ));
+            shareAction.createContextHolder = !persistedEntitySharing && deepestMaster
+                ? deepestMaster._createContextHolder
+                : (() => this._reflector.createContextHolder(
+                    null, null, null,
+                    null, null, null
+                ));
             shareAction.toaster = this.$.toaster;
             shareAction.attrs = {
                 entityType: 'ua.com.fielden.platform.tiny.EntityShareAction',
@@ -1955,7 +1958,7 @@ Polymer({
                 }
             };
 
-            if (this._mainEntityType !== null && this._mainEntityId !== null) {
+            if (persistedEntitySharing) {
                 const url = new URL(window.location.href);
                 const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
                 const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
