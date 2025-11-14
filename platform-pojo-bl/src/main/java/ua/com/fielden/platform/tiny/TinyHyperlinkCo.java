@@ -21,6 +21,8 @@ public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
 
     /// Creates and saves a tiny hyperlink that executes a shared action entity.
     ///
+    /// **Note**: standard "open new" actions for persistent entities, with either simple or compound masters, are currently unsupported by this API.
+    ///
     /// @param entityType
     ///        The entity type associated with the action’s master.
     ///        For standard "open new" actions, this must be a persistent domain entity type (e.g., `Person`).

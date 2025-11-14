@@ -116,6 +116,16 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             modifHolder.put("@@touchedProps", modifiedProperties.keySet().stream().map(CharSequence::toString).toList());
         }
 
+        // TODO #2422 Support "open new" actions for simple and compound masters.
+        //      For such actions, `savingInfoHolder` should have additional levels of depth.
+        //      For simple masters:
+        //      1. savingInfoHolder -- entityType.
+        //      2. savingInfoHolder.centreContextHolder.masterEntity -- `EntityNewAction`.
+        //      For compound masters:
+        //      1. savingInfoHolder -- entityType.
+        //      2. savingInfoHolder.centreContextHolder.masterEntity -- compound menu item entity.
+        //      3. savingInfoHolder.centreContextHolder.masterEntity.*.masterEntity -- Open*MasterAction entity.
+
         final var savingInfoHolder = getEntityFactory().newEntity(SavingInfoHolder.class)
                 .setModifHolder(modifHolder)
                 .setCentreContextHolder(centreContextHolder);
@@ -160,16 +170,6 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         final var newCustomObject = new HashMap<>(centreContextHolder.getCustomObject());
         newCustomObject.put("@@actionIdentifier", actionIdentifier);
         centreContextHolder.setCustomObject(newCustomObject);
-
-        // TODO #2422 Support "open new" actions for simple and compound masters.
-        //      For such actions, `savingInfoHolder` should have from additional levels of depth.
-        //      For simple masters:
-        //      1. savingInfoHolder -- entityType.
-        //      2. savingInfoHolder.centreContextHolder.masterEntity -- `EntityNewAction`.
-        //      For compound masters:
-        //      1. savingInfoHolder -- entityType.
-        //      2. savingInfoHolder.centreContextHolder.masterEntity -- compound menu item entity.
-        //      3. savingInfoHolder.centreContextHolder.masterEntity.*.masterEntity -- Open*MasterAction entity.
 
         final var serialisedSavingInfoHolder = serialiser.serialise(savingInfoHolder, SerialiserEngines.JACKSON);
         final var link = new_()
