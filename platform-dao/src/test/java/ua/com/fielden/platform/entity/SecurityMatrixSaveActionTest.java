@@ -37,28 +37,32 @@ import static ua.com.fielden.platform.test_config.AbstractDaoTestCase.UNIT_TEST_
 
 public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
 
+    private static final String TEST_ROLE_1 = "UNIT_TEST_ROLE_1";
+    private static final String TEST_ROLE_2 = "UNIT_TEST_ROLE_2";
+    private static final String TEST_ROLE_3 = "UNIT_TEST_ROLE_3";
+    private static final String TEST_ROLE_4 = "UNIT_TEST_ROLE_4";
+
     @Test
     public void new_security_role_association_becomes_active() {
         final UserRoleCo userRoleCo = co(UserRole.class);
-        final UserRole test_role_3 = userRoleCo.findByKey("UNIT_TEST_ROLE_3");
-
-        final SecurityRoleAssociationCo associationCo$ = co$(SecurityRoleAssociation.class);
-        final SecurityRoleAssociation association = associationCo$.findByKey(SecondLevelSecurityToken1.class, test_role_3);
-
+        final UserRole test_role_3 = userRoleCo.findByKey(TEST_ROLE_3);
+        // Find the desired association.
+        final SecurityRoleAssociationCo associationCo = co(SecurityRoleAssociation.class);
+        final SecurityRoleAssociation association = associationCo.findByKey(SecondLevelSecurityToken1.class, test_role_3);
+        // Verify that the desired association doesn't exist.
         assertNull(association);
-
+        // Create the missing desired association and save it using SecurityMatrixSaveAction.
         final var associationsToSave = new HashMap<String, List<Integer>>();
         associationsToSave.put(SecondLevelSecurityToken1.class.getName(), List.of(test_role_3.getId().intValue()));
-
         final SecurityMatrixSaveActionCo securityMatrixSaveCo = co(SecurityMatrixSaveAction.class);
         save(securityMatrixSaveCo.new_()
                 .setAssociationsToSave(associationsToSave));
-
-        final SecurityRoleAssociation refetchedAssociation = associationCo$.findByKeyAndFetch(
+        // Find the desired association again.
+        final SecurityRoleAssociation refetchedAssociation = associationCo.findByKeyAndFetch(
                 fetchNone(SecurityRoleAssociation.class).with("active"),
                 SecondLevelSecurityToken1.class,
                 test_role_3);
-
+        // Verify that the desired association exists and is active.
         assertNotNull(refetchedAssociation);
         assertTrue(refetchedAssociation.isActive());
     }
@@ -66,21 +70,20 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
     @Test
     public void removed_security_role_association_becomes_inactive() {
         final UserRoleCo userRoleCo = co(UserRole.class);
-        final UserRole test_role_3 = userRoleCo.findByKey("UNIT_TEST_ROLE_3");
-
+        final UserRole test_role_3 = userRoleCo.findByKey(TEST_ROLE_3);
+        // Create a new association and save it using SecurityMatrixSaveAction.
         final var associations = new HashMap<String, List<Integer>>();
         associations.put(SecondLevelSecurityToken1.class.getName(), List.of(test_role_3.getId().intValue()));
-
         final SecurityMatrixSaveActionCo securityMatrixSaveCo = co(SecurityMatrixSaveAction.class);
         save(securityMatrixSaveCo.new_()
                 .setAssociationsToSave(associations));
-
+        // Remove the previously saved association using SecurityMatrixSaveAction.
         save(securityMatrixSaveCo.new_()
                 .setAssociationsToRemove(associations));
-
-        final SecurityRoleAssociationCo associationCo$ = co$(SecurityRoleAssociation.class);
-        final SecurityRoleAssociation association = associationCo$.findByKey(SecondLevelSecurityToken1.class, test_role_3);
-
+        // Try to find the removed association.
+        final SecurityRoleAssociationCo associationCo = co(SecurityRoleAssociation.class);
+        final SecurityRoleAssociation association = associationCo.findByKey(SecondLevelSecurityToken1.class, test_role_3);
+        // Verify that the removed association exist but is inactive.
         assertNotNull(association);
         assertFalse(association.isActive());
     }
@@ -88,16 +91,16 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
     @Test
     public void added_again_security_role_association_becomes_active() {
         final UserRoleCo userRoleCo = co(UserRole.class);
-        final UserRole test_role_3 = userRoleCo.findByKey("UNIT_TEST_ROLE_3");
-
-        final SecurityRoleAssociationCo associationCo$ = co$(SecurityRoleAssociation.class);
-        final SecurityRoleAssociation association = associationCo$.findByKey(SecondLevelSecurityToken1.class, test_role_3);
-        //Check whether previously association existed
+        final UserRole test_role_3 = userRoleCo.findByKey(TEST_ROLE_3);
+        // Find the desired association.
+        final SecurityRoleAssociationCo associationCo = co(SecurityRoleAssociation.class);
+        final SecurityRoleAssociation association = associationCo.findByKey(SecondLevelSecurityToken1.class, test_role_3);
+        // Verify that the desired association doesn't exist.
         assertNull(association);
-
+        // Configure the association to test.
         final var associations = new HashMap<String, List<Integer>>();
         associations.put(SecondLevelSecurityToken1.class.getName(), List.of(test_role_3.getId().intValue()));
-
+        //  Save the association, remove it, then add it again to verify its active status.
         final SecurityMatrixSaveActionCo securityMatrixSaveCo = co(SecurityMatrixSaveAction.class);
         save(securityMatrixSaveCo.new_()
                 .setAssociationsToSave(associations));
@@ -105,9 +108,9 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
                 .setAssociationsToRemove(associations));
         save(securityMatrixSaveCo.new_()
                 .setAssociationsToSave(associations));
-
-        final SecurityRoleAssociation refetchedAssociation = associationCo$.findByKey(SecondLevelSecurityToken1.class, test_role_3);
-
+        // Try to find the re-added association.
+        final SecurityRoleAssociation refetchedAssociation = associationCo.findByKey(SecondLevelSecurityToken1.class, test_role_3);
+        // Verify that the re-added association exists and is active.
         assertNotNull(refetchedAssociation);
         assertTrue(refetchedAssociation.isActive());
     }
@@ -115,29 +118,28 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
     @Test
     public void security_matrix_shows_only_active_security_role_associations() {
         final SecurityMatrixSaveActionCo securityMatrixSaveCo = co(SecurityMatrixSaveAction.class);
-
+        // Find the desired user roles to use in associations with security tokens.
         final UserRoleCo userRoleCo = co(UserRole.class);
-        final UserRole test_role_1 = userRoleCo.findByKey("UNIT_TEST_ROLE_1");
-        final UserRole test_role_2 = userRoleCo.findByKey("UNIT_TEST_ROLE_2");
-        final UserRole test_role_3 = userRoleCo.findByKey("UNIT_TEST_ROLE_3");
-        final UserRole test_role_4 = userRoleCo.findByKey("UNIT_TEST_ROLE_4");
-
+        final UserRole test_role_1 = userRoleCo.findByKey(TEST_ROLE_1);
+        final UserRole test_role_2 = userRoleCo.findByKey(TEST_ROLE_2);
+        final UserRole test_role_3 = userRoleCo.findByKey(TEST_ROLE_3);
+        final UserRole test_role_4 = userRoleCo.findByKey(TEST_ROLE_4);
+        // Configure the associations to be added and those to be removed.
         final var associationsToSave = new HashMap<String, List<Integer>>();
         associationsToSave.put(SecondLevelSecurityToken1.class.getName(), List.of(test_role_3.getId().intValue()));
         associationsToSave.put(SecondLevelSecurityToken2.class.getName(), List.of(test_role_4.getId().intValue()));
-
         final var associationsToRemove = new HashMap<String, List<Integer>>();
         associationsToRemove.put(FirstLevelSecurityToken1.class.getName(), List.of(test_role_1.getId().intValue()));
         associationsToRemove.put(FirstLevelSecurityToken2.class.getName(), List.of(test_role_2.getId().intValue()));
-
+        // Save the configured associations using SecurityMatrixSaveAction.
         save(securityMatrixSaveCo.new_()
                 .setAssociationsToSave(associationsToSave)
                 .setAssociationsToRemove(associationsToRemove));
-
+        // Fetch Security Matrix using SecurityMatrixInsertionPoint.
         SecurityMatrixInsertionPoint securityMatrix = save(co(SecurityMatrixInsertionPoint.class).new_());
+        // Verify the Security Matrix that the user will see.
         assertNull(securityMatrix.getTokenRoleMap().get(FirstLevelSecurityToken1.class.getName()));
         assertNull(securityMatrix.getTokenRoleMap().get(FirstLevelSecurityToken2.class.getName()));
-
         assertEquals(securityMatrix.getTokenRoleMap().get(SecondLevelSecurityToken1.class.getName()), List.of(test_role_3.getId()));
         assertEquals(securityMatrix.getTokenRoleMap().get(SecondLevelSecurityToken2.class.getName()), List.of(test_role_4.getId()));
     }
@@ -145,16 +147,15 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
     @Test
     public void removing_view_access_tokens_throws_exception() {
         final SecurityMatrixSaveActionCo securityMatrixSaveCo = co(SecurityMatrixSaveAction.class);
-
         final UserRoleCo userRoleCo = co(UserRole.class);
         final UserRole admin_role = userRoleCo.findByKey(UNIT_TEST_ROLE);
-
+        // Configure the association between SecurityRoleAssociation_CanRead_Token and UNIT_TEST_ROLE.
         final var associationsToRemove = new HashMap<String, List<Integer>>();
         associationsToRemove.put(SecurityRoleAssociation_CanRead_Token.class.getName(), List.of(admin_role.getId().intValue()));
-
+        // Try to remove the configured association. A SecurityException is expected.
         try {
-            save(securityMatrixSaveCo.new_()
-                    .setAssociationsToRemove(associationsToRemove));
+            save(securityMatrixSaveCo.new_().setAssociationsToRemove(associationsToRemove));
+            fail("Expected SecurityException.");
         } catch (final SecurityException ex) {
             assertEquals(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING, ex.getMessage());
         }
@@ -163,16 +164,15 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
     @Test
     public void removing_save_tokens_throws_exception() {
         final SecurityMatrixSaveActionCo securityMatrixSaveCo = co(SecurityMatrixSaveAction.class);
-
         final UserRoleCo userRoleCo = co(UserRole.class);
         final UserRole admin_role = userRoleCo.findByKey(UNIT_TEST_ROLE);
-
+        // Configure the association between SecurityRoleAssociation_CanSave_Token and UNIT_TEST_ROLE.
         final var associationsToRemove = new HashMap<String, List<Integer>>();
         associationsToRemove.put(SecurityRoleAssociation_CanSave_Token.class.getName(), List.of(admin_role.getId().intValue()));
-
+        // Try to remove the configured association. A SecurityException is expected.
         try {
-            save(securityMatrixSaveCo.new_()
-                    .setAssociationsToRemove(associationsToRemove));
+            save(securityMatrixSaveCo.new_().setAssociationsToRemove(associationsToRemove));
+            fail("Expected SecurityException.");
         } catch (final SecurityException ex) {
             assertEquals(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING, ex.getMessage());
         }
@@ -181,17 +181,16 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
     @Test
     public void removing_read_and_save_tokens_throws_exception() {
         final SecurityMatrixSaveActionCo securityMatrixSaveCo = co(SecurityMatrixSaveAction.class);
-
         final UserRoleCo userRoleCo = co(UserRole.class);
         final UserRole admin_role = userRoleCo.findByKey(UNIT_TEST_ROLE);
-
+        // Configure the association to remove.
         final var associationsToRemove = new HashMap<String, List<Integer>>();
         associationsToRemove.put(SecurityRoleAssociation_CanRead_Token.class.getName(), List.of(admin_role.getId().intValue()));
         associationsToRemove.put(SecurityRoleAssociation_CanSave_Token.class.getName(), List.of(admin_role.getId().intValue()));
-
+        // Attempt to remove them. A SecurityException is expected.
         try {
-            save(securityMatrixSaveCo.new_()
-                    .setAssociationsToRemove(associationsToRemove));
+            save(securityMatrixSaveCo.new_().setAssociationsToRemove(associationsToRemove));
+            fail("Expected SecurityException.");
         } catch (final SecurityException ex) {
             final String expectedError = ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING + "<br>" + ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING;
             assertEquals(expectedError, ex.getMessage());
@@ -202,10 +201,10 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
     protected void populateDomain() {
         super.populateDomain();
 
-        final UserRole test_role_1 = save(new_(UserRole.class, "UNIT_TEST_ROLE_1", "Test role 1").setActive(true));
-        final UserRole test_role_2 = save(new_(UserRole.class, "UNIT_TEST_ROLE_2", "Test role 2").setActive(true));
-        save(new_(UserRole.class, "UNIT_TEST_ROLE_3", "Test role 3").setActive(true));
-        save(new_(UserRole.class, "UNIT_TEST_ROLE_4", "Test role 4").setActive(true));
+        final UserRole test_role_1 = save(new_(UserRole.class, TEST_ROLE_1, "Test role 1").setActive(true));
+        final UserRole test_role_2 = save(new_(UserRole.class, TEST_ROLE_2, "Test role 2").setActive(true));
+        save(new_(UserRole.class, TEST_ROLE_3, "Test role 3").setActive(true));
+        save(new_(UserRole.class, TEST_ROLE_4, "Test role 4").setActive(true));
 
         final SecurityRoleAssociationCo coSecurityRoleAssociation$ = co$(SecurityRoleAssociation.class);
         coSecurityRoleAssociation$.addAssociations(List.of(

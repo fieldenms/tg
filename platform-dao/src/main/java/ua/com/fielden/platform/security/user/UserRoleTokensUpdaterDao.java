@@ -52,29 +52,29 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
         final T2<UserRoleTokensUpdater, UserRole> actionAndUserRoleBeingUpdated = validateAction(action, this, String.class, new UserRoleTokensUpdaterController(factory, co(UserRole.class), co$(UserRoleTokensUpdater.class), tokenTransformation, securityTokenProvider));
         final UserRoleTokensUpdater actionToSave = actionAndUserRoleBeingUpdated._1;
         
-        // after all validations have passed -- the association changes could be saved:
+        // After all validations have passed -- the association changes could be saved:
         final UserRole userRoleBeingUpdated = actionAndUserRoleBeingUpdated._2;
         final Map<Object, SecurityTokenInfo> availableTokens = toMapByKey(actionToSave.getTokens());
         final SecurityRoleAssociationCo associationCo$ = co$(SecurityRoleAssociation.class);
-        //Initiate associations to add
+        // Initiate associations to add.
         final Set<SecurityRoleAssociation> addedAssociations = new LinkedHashSet<>();
         for (final String addedId : actionToSave.getAddedIds()) {
             final Class<? extends ISecurityToken> token = loadToken(availableTokens.get(addedId).getKey());
             final SecurityRoleAssociation assoc = associationCo$.new_().setSecurityToken(token).setRole(userRoleBeingUpdated);
             addedAssociations.add(assoc);
         }
-        //Initiate associations to remove
+        // Initiate associations to remove.
         final Set<SecurityRoleAssociation> removedAssociations = new LinkedHashSet<>();
         for (final String removedId : actionToSave.getRemovedIds()) {
             final Class<? extends ISecurityToken> token = loadToken(availableTokens.get(removedId).getKey());
             final SecurityRoleAssociation assoc = associationCo$.new_().setSecurityToken(token).setRole(userRoleBeingUpdated);
             removedAssociations.add(assoc);
         }
-        //Save associations
+        // Save associations.
         associationCo$.addAssociations(addedAssociations);
         associationCo$.removeAssociations(removedAssociations);
 
-        // after the association changes were successfully saved, the action should also be saved:
+        // After the association changes were successfully saved, the action should also be saved:
         return super.save(actionToSave);
     }
 

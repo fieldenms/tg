@@ -392,6 +392,7 @@ Polymer({
             this.save();
         }.bind(this);
         this.postSaved = function (savedOrNew, newBindingEntity) {
+            // Reset the security matrix state if the save was successful.
             if (!savedOrNew.exceptionOccurred()) {
                 this.entities.forEach(entity => entity.clearCurrentState());
                 this._toggleButtonStates();

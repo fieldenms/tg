@@ -171,16 +171,16 @@ public class UserAndRoleAndTokenAssociationTestCase extends AbstractDaoTestCase 
 
     @Test
     public void count_associations_between_users_and_tokens_takes_into_account_active_association() {
-        //Find user1
+        // Find user1.
         final IUser coUser = co$(User.class);
         final User user1 = coUser.findUserByKeyWithRoles("USER1");
-        //Create new ROLE9
+        // Create new ROLE9.
         final UserRole role9 = save(new_(UserRole.class, "ROLE9", "role desc 9").setActive(true));
-        //Associate new role9 with USER1
+        // Associate new role9 with USER1.
         save(new_composite(UserAndRoleAssociation.class, user1, role9));
-        //Create inactive security token - role association
+        // Create inactive security token - role association.
         save(new_composite(SecurityRoleAssociation.class).setRole(role9).setSecurityToken(FirstLevelSecurityToken1.class).setActive(false));
-        // Test how many user tokens are associated with 
+        // Test how many user tokens are associated with .
         assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), FirstLevelSecurityToken1.class));
         assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken1.class));
         assertEquals("Incorrect number of associations between user and token.", 0, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken2.class));

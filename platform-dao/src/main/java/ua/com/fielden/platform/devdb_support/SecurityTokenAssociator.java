@@ -8,13 +8,9 @@ import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 
-/**
- * A predicate, which saves associations between nodes' state as security token and the specified role while traversing the tree. Its primary purpose is to create associations
- * between the specified role and all security tokens.
- * 
- * @author TG Team
- * 
- */
+/// A predicate, which saves associations between nodes' state as security token and the specified role while traversing the tree. Its primary purpose is to create associations
+/// between the specified role and all security tokens.
+///
 public class SecurityTokenAssociator implements ITreeNodePredicate<Class<? extends ISecurityToken>, SecurityTokenNode> {
 
     private final UserRole role;

@@ -5,7 +5,6 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.ISecurityToken;
@@ -19,25 +18,25 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.UserRole;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 @EntityType(SecurityMatrixSaveAction.class)
 public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixSaveAction> implements SecurityMatrixSaveActionCo{
 
     public static final String ERR_SECURITY_TOKEN_NOT_FOUND = "Security token [%s] could not be found.";
-    public static final String ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING = "Unchecking [%s] security tokens will block access to the Security Matrix".formatted(SecurityRoleAssociation_CanRead_Token.TITLE);
-    public static final String ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING = "Unchecking [%s] security tokens will prevent you from editing the Security Matrix".formatted(SecurityRoleAssociation_CanSave_Token.TITLE);
+    public static final String ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING = "Removing the [%s] security token from all your user roles will block access to the Security Matrix.".formatted(SecurityRoleAssociation_CanRead_Token.TITLE);
+    public static final String ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING = "Removing the [%s] security token from all your user roles will prevent you from editing the Security Matrix.".formatted(SecurityRoleAssociation_CanSave_Token.TITLE);
 
 
     private final ISecurityTokenProvider securityTokenProvider;
     private final IUserProvider userProvider;
 
     @Inject
-    protected SecurityMatrixSaveActionDao(final IFilter filter, final ISecurityTokenProvider securityTokenProvider, final IUserProvider userProvider) {
+    protected SecurityMatrixSaveActionDao(final ISecurityTokenProvider securityTokenProvider, final IUserProvider userProvider) {
         this.securityTokenProvider = securityTokenProvider;
         this.userProvider = userProvider;
     }
@@ -50,21 +49,22 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
             final Set<SecurityRoleAssociation> addedAssociations = entity.getAssociationsToSave().entrySet().stream()
                 .map(entry -> createSecurityRoleAssociations(entry.getKey(), entry.getValue(), idRoleMap))
                 .flatMap(List::stream)
-                .collect(Collectors.toSet());
+                .collect(toSet());
             final Set<SecurityRoleAssociation> removedAssociations = entity.getAssociationsToRemove().entrySet().stream()
-                    .map(entry -> createSecurityRoleAssociations(entry.getKey(), entry.getValue(), idRoleMap))
-                    .flatMap(List::stream)
-                    .collect(Collectors.toSet());
-            entity.setAssociationsToRemove(new HashMap<>()).setAssociationsToSave(new HashMap<>());
-            // Check whether security matrix read / edit tokens can be deleted for current user.
+                .map(entry -> createSecurityRoleAssociations(entry.getKey(), entry.getValue(), idRoleMap))
+                .flatMap(List::stream)
+                .collect(toSet());
+            // Set empty associations for both save and remove operations to prevent client-side conversion errors if the save fails.
+            entity.setAssociationsToRemove(Map.of()).setAssociationsToSave(Map.of());
+            // Verify whether the security matrix read and edit tokens can be deleted for the current user.
             final String error = checkWhetherCanRemoveSecurityMatrixRelatedAssociations(removedAssociations);
-            if (!error.isEmpty()) {
+            if (isNotEmpty(error)) {
                 throw new SecurityException(error);
             }
-            //Save associations
-            SecurityRoleAssociationCo associationCo = co$(SecurityRoleAssociation.class);
-            associationCo.addAssociations(addedAssociations);
-            associationCo.removeAssociations(removedAssociations);
+            // Save associations.
+            SecurityRoleAssociationCo associationCo$ = co$(SecurityRoleAssociation.class);
+            associationCo$.addAssociations(addedAssociations);
+            associationCo$.removeAssociations(removedAssociations);
         }
         return super.save(entity);
     }
@@ -73,7 +73,7 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
         final StringBuilder errorMsg = new StringBuilder();
         if (hasSecurityMatrixRelatedAssociations(removedAssociations)) {
             final SecurityRoleAssociationCo associationCo = co(SecurityRoleAssociation.class);
-            final List<SecurityRoleAssociation> matrixRelatedAssociationsForCurrentUser = associationCo.findActiveAssociationsForUser(
+            final List<SecurityRoleAssociation> matrixRelatedAssociationsForCurrentUser = associationCo.findActiveAssociations(
                     userProvider.getUser(),
                     SecurityRoleAssociation_CanRead_Token.class,
                     SecurityRoleAssociation_CanSave_Token.class);
@@ -97,22 +97,22 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
     }
 
     private List<SecurityRoleAssociation> extractAssociationsFor(Class<? extends ISecurityToken> token, List<SecurityRoleAssociation> associations) {
-        return associations.stream().filter(association -> token.equals(association.getSecurityToken())).collect(toList());
+        return associations.stream().filter(association -> token.equals(association.getSecurityToken())).toList();
     }
 
     private List<SecurityRoleAssociation> createSecurityRoleAssociations(final String securityToken, final List<Integer> roleIds, final Map<Long, UserRole> idRoleMap) {
         final Class<? extends ISecurityToken> token = loadToken(securityToken);
         final SecurityRoleAssociationCo associationCo = co$(SecurityRoleAssociation.class);
-        return roleIds.stream().map(id -> associationCo.new_().setRole(idRoleMap.get(id.longValue())).setSecurityToken(token)).collect(Collectors.toList());
+        return roleIds.stream().map(id -> associationCo.new_().setRole(idRoleMap.get(id.longValue())).setSecurityToken(token)).toList();
     }
 
     private Map<Long, UserRole> getUserRoles(final SecurityMatrixSaveAction entity) {
         final Set<Integer> userRoleIds = Stream.concat(entity.getAssociationsToSave().values().stream().flatMap(List::stream),
-                                    entity.getAssociationsToRemove().values().stream().flatMap(List::stream)).collect(Collectors.toSet());
+                                    entity.getAssociationsToRemove().values().stream().flatMap(List::stream)).collect(toSet());
         if (!userRoleIds.isEmpty()) {
             final EntityResultQueryModel<UserRole> userRolesQuery = select(UserRole.class).where().prop("id").in().values(userRoleIds.toArray()).model();
             try (Stream<UserRole> stream = co(UserRole.class).stream(from(userRolesQuery).with(fetchKeyAndDescOnly(UserRole.class)).model())) {
-                return stream.collect(Collectors.toMap(UserRole::getId, role -> role));
+                return stream.collect(toMap(UserRole::getId, role -> role));
             }
         }
         return new HashMap<>();

@@ -10,11 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.security.user.User.EMAIL;
-import static ua.com.fielden.platform.security.user.User.SSO_ONLY;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
 /// Interface that defines the API for retrieving saving and removing the [SecurityRoleAssociation] instances.
@@ -40,13 +36,13 @@ public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssoci
 
     /// Returns a list of active user roles associated with the tokens.
     ///
-    List<SecurityRoleAssociation> findActiveAssociationsForUser(final User user, final Class<? extends ISecurityToken>... tokens);
+    List<SecurityRoleAssociation> findActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens);
     
     /// Deletes a collection of [SecurityRoleAssociation]s.
     ///
     void removeAssociations(final Collection<SecurityRoleAssociation> associations);
 
-    /// Creates and saves all associations in the stream.
+    /// Creates or activates all associations in the collection.
     ///
     void addAssociations(Collection<SecurityRoleAssociation> associations);
 

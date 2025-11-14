@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.security.user;
 
-import com.google.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -10,7 +9,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanSave_Token;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.types.either.Either;
@@ -25,7 +23,6 @@ import static java.util.stream.Collectors.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.security.provider.ISecurityTokenProvider.MissingSecurityTokenPlaceholder;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchEntityForPropOf;
 
 /// DAO implementation of [SecurityRoleAssociationCo].
 ///
@@ -33,6 +30,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetchEntityForPropOf;
 public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAssociation> implements SecurityRoleAssociationCo {
 
     private static final Logger LOGGER = getLogger();
+    private static final int MAX_NUMBER_OF_PARAMS = 500;
 
     public static final String MSG_DELETED_SECURITY_ROLE_ASSOCIATIONS_WITH_NON_EXISTING_TOKENS = "Deleted [%s] security role associations with non-existing tokens.";
 
@@ -81,7 +79,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     @Override
     @SessionRequired
-    public List<SecurityRoleAssociation> findActiveAssociationsForUser(final User user, final Class<? extends ISecurityToken>... tokens) {
+    public List<SecurityRoleAssociation> findActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens) {
         return getAllEntities(from(createActiveAssociationsModel(user, tokens)).with(FETCH_MODEL).model());
     }
 
@@ -93,7 +91,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
                 .and().prop("userRole.id").eq().prop("sra.role.id").model();
         return select(SecurityRoleAssociation.class).as("sra")
                 .where()
-                .prop("sra.securityToken").in().values(Stream.of(tokens).map(Class::getName).collect(toList()))
+                .prop("sra.securityToken").in().values(Stream.of(tokens).map(Class::getName).toList())
                 .and().prop("sra.active").eq().val(true)
                 .and().exists(slaveModel).model();
     }
@@ -101,7 +99,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     public SecurityRoleAssociation save(final SecurityRoleAssociation entity) {
-        return save(entity, Optional.of(FETCH_MODEL)).asRight().value();
+        return save(entity, of(FETCH_MODEL)).asRight().value();
     }
 
     @Override
@@ -132,6 +130,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
                     this.save(fetchedAssociation, empty());
                 },
                 of(notFoundAssociation -> {
+                    notFoundAssociation.setActive(true);
                     this.save(notFoundAssociation, empty());
                 }));
     }
@@ -141,9 +140,9 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
             final Consumer<SecurityRoleAssociation> modifier,
             final Optional<Consumer<SecurityRoleAssociation>> orElseOpt) {
 
-        final TreeSet<SecurityRoleAssociation> notFoundAssociations = new TreeSet<>(associations);
+        final Set<SecurityRoleAssociation> notFoundAssociations = new HashSet<>(associations);
 
-        SequentialGroupingStream.stream(associations.stream(), (association, group) -> group.size() < 500)
+        SequentialGroupingStream.stream(associations.stream(), (association, group) -> group.size() < MAX_NUMBER_OF_PARAMS)
                 .forEach(group -> {
                     final var query = queryForAssociations(group);
                     try (final Stream<SecurityRoleAssociation> stream = stream(from(query).with(FETCH_MODEL).model())) {
@@ -165,8 +164,9 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     private static EntityResultQueryModel<SecurityRoleAssociation> queryForAssociations(final List<SecurityRoleAssociation> group) {
         return select(SecurityRoleAssociation.class).where()
-                .prop("securityToken").in().values(group.stream().map(a -> a.getSecurityToken().getName()).collect(toList())).and()
-                .prop("role").in().values(group.stream().map(a -> a.getRole()).collect(toList())).model();
+                .prop("securityToken").in().values(group.stream().map(a -> a.getSecurityToken().getName()).toList()).and()
+                .prop("role").in().values(group.stream().map(SecurityRoleAssociation::getRole).toList())
+                .model();
     }
 
     @Override
