@@ -47,7 +47,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     private final String appUri;
 
     @Inject
-    TinyHyperlinkDao(final ISerialiser serialiser, final @AppUri String appUri) {
+    protected TinyHyperlinkDao(final ISerialiser serialiser, final @AppUri String appUri) {
         this.serialiser = serialiser;
         this.appUri = StringUtils.stripEnd(appUri, "/");
     }
