@@ -372,7 +372,7 @@ Polymer({
 
                         action._run();
                     }
-                }).catch(e => processResponseError(e.request, e.error, this._reflector(), this._serialiser(), null, this.toaster));
+                }, e => processResponseError(e.request, e.error, this._reflector(), this._serialiser(), null, this.toaster));
             }
             else {
                 this._openToastForError('URI error.', `The URI [${this._route.path}] is invalid.`, true);
