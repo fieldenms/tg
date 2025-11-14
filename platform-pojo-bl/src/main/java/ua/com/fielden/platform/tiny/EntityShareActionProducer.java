@@ -16,6 +16,8 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.tiny.TinyHyperlink.HASH;
 import static ua.com.fielden.platform.utils.QrCodeUtils.*;
 import static ua.com.fielden.platform.utils.QrCodeUtils.ImageFormat.PNG;
 
@@ -54,8 +56,7 @@ public class EntityShareActionProducer extends DefaultEntityProducerWithContext<
                 final var masterUrl = maybeUrl.or(() -> masterUrlProvider.masterUrlFor(masterEntity))
                         .orElseThrow(() -> new InvalidStateException(format(ERR_NO_MASTER, masterEntity, masterEntity.getType().getCanonicalName())));
                 final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
-                // TODO Specify a minimal fetch model for refetching after save.
-                final var tinyHyperlink = coTinyHyperlink.saveWithTarget(new Hyperlink(masterUrl));
+                final var tinyHyperlink = coTinyHyperlink.saveWithTarget(new Hyperlink(masterUrl), Optional.of(fetchIdOnly(TinyHyperlink.class).with(HASH))).asRight().value();
                 final var tinyUrlHyperlink = new Hyperlink(coTinyHyperlink.toURL(tinyHyperlink));
                 entity.setHyperlink(tinyUrlHyperlink)
                       .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(tinyUrlHyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));
@@ -75,8 +76,7 @@ public class EntityShareActionProducer extends DefaultEntityProducerWithContext<
                 final var savingInfoHolder = (SavingInfoHolder) centreContextHolder.getMasterEntity();
 
                 final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
-                // TODO Specify a minimal fetch model for refetching after save.
-                final var tinyHyperlink = coTinyHyperlink.save(masterEntity.getType(), savingInfoHolder, actionIdentifier);
+                final var tinyHyperlink = coTinyHyperlink.save(masterEntity.getType(), savingInfoHolder, actionIdentifier, Optional.of(fetchIdOnly(TinyHyperlink.class).with(HASH))).asRight().value();
                 final var hyperlink = new Hyperlink(coTinyHyperlink.toURL(tinyHyperlink));
                 entity.setHyperlink(hyperlink)
                         .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(hyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));

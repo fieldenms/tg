@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -83,6 +84,18 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             final CentreContextHolder centreContextHolder,
             final String actionIdentifier)
     {
+        return save(entityType, modifiedProperties, centreContextHolder, actionIdentifier, Optional.of(fetch(TinyHyperlink.class))).asRight().value();
+    }
+
+    @Override
+    @SessionRequired
+    public Either<Long, TinyHyperlink> save(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final Map<String, Object> modifiedProperties,
+            final CentreContextHolder centreContextHolder,
+            final String actionIdentifier,
+            final Optional<fetch<TinyHyperlink>> maybeFetch)
+    {
         // TODO Perform a transformation.
         //      `modifiedProperties` contains conventional property values, while `modifHolder` requires a special structure used in marshalling.
         final var modifHolder = modifiedProperties;
@@ -90,7 +103,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
                 .setModifHolder(modifHolder)
                 .setCentreContextHolder(centreContextHolder);
 
-        return save(entityType, savingInfoHolder, actionIdentifier);
+        return save(entityType, savingInfoHolder, actionIdentifier, maybeFetch);
     }
 
     @Override
@@ -99,6 +112,17 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             final Class<? extends AbstractEntity<?>> entityType,
             final SavingInfoHolder savingInfoHolder,
             final String actionIdentifier)
+    {
+        return save(entityType, savingInfoHolder, actionIdentifier, Optional.of(fetch(TinyHyperlink.class))).asRight().value();
+    }
+
+    @Override
+    @SessionRequired
+    public Either<Long, TinyHyperlink> save(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final SavingInfoHolder savingInfoHolder,
+            final String actionIdentifier,
+            final Optional<fetch<TinyHyperlink>> maybeFetch)
     {
         // Normally, `CentreContextHolder.customObject` stores the position of an action (e.g. `@@actionNumber`),
         // which the server uses to locate the corresponding EntityActionConfig in the Web UI configuration.
@@ -122,13 +146,20 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
                 .setEntityTypeName(baseEntityType(entityType).getCanonicalName())
                 .setSavingInfoHolder(serialisedSavingInfoHolder)
                 .setActionIdentifier(actionIdentifier);
-        return save(link);
+        return save(link, maybeFetch);
     }
 
     @Override
+    @SessionRequired
     public TinyHyperlink saveWithTarget(final Hyperlink hyperlink) {
+        return saveWithTarget(hyperlink, Optional.of(fetch(TinyHyperlink.class))).asRight().value();
+    }
+
+    @Override
+    @SessionRequired
+    public Either<Long, TinyHyperlink> saveWithTarget(final Hyperlink hyperlink, final Optional<fetch<TinyHyperlink>> maybeFetch) {
         final var tiny = new_().setTarget(hyperlink);
-        return save(tiny);
+        return save(tiny, maybeFetch);
     }
 
     @Override
