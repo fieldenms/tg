@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.companion.*;
+import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.continuation.NeedMoreDataStorage;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -447,6 +448,33 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     ///
     public Map<String, IContinuationData> moreData() {
         return NeedMoreDataStorage.moreData();
+    }
+
+    /// A convenient helper for creating unique values for [NeedMoreData] keys.
+    /// Use this method when defining keys for continuation data in a consistent,
+    /// type-safe manner suitable for storage in the continuation context.
+    ///
+    /// This method is intended for initialising static constants that represent
+    /// continuation-data keys.
+    ///
+    /// For example:
+    /// ```java
+    /// public static final String
+    ///     MDK_CERTIFICATION = mkMoreDataKey(CertificationValidation.class);
+    /// ```
+    ///
+    /// @param moreDataType the type of the continuation data.
+    /// @return a newly generated continuation-data key
+    ///
+    public static String mkMoreDataKey(final Class<? extends IContinuationData> moreDataType) {
+        try {
+            final var fullClassName = Thread.currentThread().getStackTrace()[2].getClassName();
+            final var simpleName = fullClassName.substring(fullClassName.lastIndexOf('.') + 1);
+            return simpleName + "-" + moreDataType.getSimpleName();
+        } catch (final Exception ex) {
+            // A fallback just in case.
+            return UUID.randomUUID().toString();
+        }
     }
 
     //-------------------------------------------------------------------//

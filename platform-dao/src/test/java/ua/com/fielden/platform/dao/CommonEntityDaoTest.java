@@ -6,6 +6,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -29,6 +30,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.companion.AbstractEntityReader.ERR_MISSING_ID_VALUE;
+import static ua.com.fielden.platform.dao.CommonEntityDao.mkMoreDataKey;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
@@ -944,6 +946,12 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
             // previously associated session was already closed when an attempt to use is made
             assertEquals("Session is closed, most likely, due to missing @SessionRequired annotation.", ex.getMessage());
         }
+    }
+
+    private static final String MDK_TEST = mkMoreDataKey(AcknowledgeWarnings.class);
+    @Test
+    public void mkMoreDataKey_makes_values_that_match_expected_pattern() {
+        assertEquals("CommonEntityDaoTest-AcknowledgeWarnings", MDK_TEST);
     }
 
     @Override
