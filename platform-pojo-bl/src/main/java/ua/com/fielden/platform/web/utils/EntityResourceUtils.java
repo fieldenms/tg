@@ -650,6 +650,8 @@ public class EntityResourceUtils {
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (isEntityType(propertyType)) {
             if (isCollectional(type, propertyName)) {
+                // No conversion is needed for a collection with entity-typed elements.
+                // Such properties are never editable, so the returned value should never be used for assignment.
                 return reflectedValue;
             }
 
