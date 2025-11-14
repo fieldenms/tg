@@ -307,7 +307,6 @@ Polymer({
                 this.$.entityReconstructor.url = `/tiny/${hash}`;
                 this.$.entityReconstructor.generateRequest().completes.then(ironRequest => {
                     const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
-                    //console.error(deserialisedResult);
                     const customObject = deserialisedResult.instance[1];
                     const actionObject = appActions.actions(this)[customObject.actionIdentifier];
                     if (!actionObject) {
@@ -322,7 +321,7 @@ Polymer({
                     ]) {
                         action[name] = actionObject[name];
                     }
-                    action.attrs = {}
+                    action.attrs = {};
                     for (const name of ['entityType', 'currentState', 'prefDim', 'actionId']) {
                         // prefDim may be undefined.
                         if (typeof actionObject.attrs[name] !== 'undefined') {
@@ -335,7 +334,11 @@ Polymer({
                     // Changing of the parent `tg-app-template` master would work as expected then.
                     action.attrs.centreUuid = this.uuid;
                     action.showDialog = this._showDialog;
+
+                    // Also use toaster from parent `tg-app-template` master.
                     action.toaster = this.toaster;
+
+                    // Provide correct context for the action to be opened.
                     const savingInfoHolder = this._serialiser().deserialise(JSON.parse(customObject.savingInfoHolder));
                     action.createContextHolder = () => {
                         const typeName = action.componentUri.substring(action.componentUri.lastIndexOf('/') + 1);
@@ -352,6 +355,7 @@ Polymer({
                         return savingInfoHolder.centreContextHolder;
                     };
 
+                    // Bind fully restored entity after initial loading of empty produced instance.
                     action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
                         master.addEventListener('data-loaded-and-focused', event => {
                             event.detail._postRetrievedDefault(deserialisedResult.instance);
