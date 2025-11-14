@@ -39,9 +39,11 @@ import java.util.Map;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.tiny.TinyHyperlink.*;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreEntityFrom;
 import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForMaster;
@@ -104,10 +106,15 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             }
 
             final TinyHyperlinkCo coTinyHyperlink = companionFinder.findAsReader(TinyHyperlink.class, true);
-            final var tinyHyperlink = coTinyHyperlink.findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, HASH, SAVING_INFO_HOLDER, ACTION_IDENTIFIER), requestHash);
+            final var tinyHyperlink = coTinyHyperlink.findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, HASH, SAVING_INFO_HOLDER, ACTION_IDENTIFIER, TARGET), requestHash);
             if (tinyHyperlink == null) {
                 getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
                 return new StringRepresentation("The specified resource was not found. Please verify that you are accessing the correct resource.");
+            }
+
+            if (tinyHyperlink.getSavingInfoHolder() == null) {
+                final Map<String, Object> customObject = linkedMapOf(t2("persistedEntityUri", tinyHyperlink.getTarget().value));
+                return restUtil.resultJSONRepresentation(successful().extendResultWithCustomObject(customObject));
             }
 
             final PropertyDeserialisationErrorHandler propDeserialisationErrorHandler = (entity, property, inputValueSupplier, error) -> {

@@ -309,61 +309,68 @@ Polymer({
                 this.$.entityReconstructor.generateRequest().completes.then(ironRequest => {
                     const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
                     const customObject = deserialisedResult.instance[1];
-                    const actionObject = appActions.actions(this)[customObject.actionIdentifier];
-                    if (!actionObject) {
-                        throw new Error(`Action object [${customObject.actionIdentifier}] was not found.`);
+                    const persistedEntityUri = customObject['persistedEntityUri'];
+                    if (persistedEntityUri) {
+                        window.history.replaceState(this.currentHistoryState, '', persistedEntityUri);
+                        window.location.replace(persistedEntityUri);
                     }
+                    else {
+                        const actionObject = appActions.actions(this)[customObject.actionIdentifier];
+                        if (!actionObject) {
+                            throw new Error(`Action object [${customObject.actionIdentifier}] was not found.`);
+                        }
 
-                    const action = document.createElement('tg-ui-action');
-                    for (const name of [
-                        'shortDesc', 'longDesc', 'componentUri', 'elementName',
-                        'preAction', 'postActionSuccess', 'postActionError',
-                        'requireSelectionCriteria', 'requireSelectedEntities', 'requireMasterEntity'
-                    ]) {
-                        action[name] = actionObject[name];
+                        const action = document.createElement('tg-ui-action');
+                        for (const name of [
+                            'shortDesc', 'longDesc', 'componentUri', 'elementName',
+                            'preAction', 'postActionSuccess', 'postActionError',
+                            'requireSelectionCriteria', 'requireSelectedEntities', 'requireMasterEntity'
+                        ]) {
+                            action[name] = actionObject[name];
+                        }
+                        action.attrs = {};
+                        for (const name of ['entityType', 'currentState', 'prefDim', 'actionId']) {
+                            // prefDim may be undefined.
+                            if (typeof actionObject.attrs[name] !== 'undefined') {
+                                action.attrs[name] = actionObject.attrs[name];
+                            }
+                        }
+
+                        // refs #2128 Use predictable parent `tg-app-template` master uuid for dialog closing (and other postal events).
+                        // Even though some arbitrary `centreUuid` value would also work, it is better to maintain hierarchy exactly as for other actions.
+                        // Changing of the parent `tg-app-template` master would work as expected then.
+                        action.attrs.centreUuid = this.uuid;
+                        action.showDialog = this._showDialog;
+
+                        // Also use toaster from parent `tg-app-template` master.
+                        action.toaster = this.toaster;
+
+                        // Provide correct context for the action to be opened.
+                        const savingInfoHolder = this._serialiser().deserialise(JSON.parse(customObject.savingInfoHolder));
+                        action.createContextHolder = () => {
+                            const typeName = action.componentUri.substring(action.componentUri.lastIndexOf('/') + 1);
+                            const type = this._reflector().getType(typeName);
+                            if (type && type._simpleClassName() === 'EntityNewAction') {
+                                return savingInfoHolder.centreContextHolder
+                                    .masterEntity.centreContextHolder;
+                            }
+                            else if (type && type.compoundOpenerType()) {
+                                return savingInfoHolder.centreContextHolder
+                                    .masterEntity.centreContextHolder
+                                    .masterEntity.centreContextHolder;
+                            }
+                            return savingInfoHolder.centreContextHolder;
+                        };
+
+                        // Bind fully restored entity after initial loading of empty produced instance.
+                        action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
+                            master.addEventListener('data-loaded-and-focused', event => {
+                                event.detail._postRetrievedDefault(deserialisedResult.instance);
+                            }, { once: true });
+                        };
+
+                        action._run();
                     }
-                    action.attrs = {};
-                    for (const name of ['entityType', 'currentState', 'prefDim', 'actionId']) {
-                        // prefDim may be undefined.
-                        if (typeof actionObject.attrs[name] !== 'undefined') {
-                            action.attrs[name] = actionObject.attrs[name];
-                        }
-                    }
-
-                    // refs #2128 Use predictable parent `tg-app-template` master uuid for dialog closing (and other postal events).
-                    // Even though some arbitrary `centreUuid` value would also work, it is better to maintain hierarchy exactly as for other actions.
-                    // Changing of the parent `tg-app-template` master would work as expected then.
-                    action.attrs.centreUuid = this.uuid;
-                    action.showDialog = this._showDialog;
-
-                    // Also use toaster from parent `tg-app-template` master.
-                    action.toaster = this.toaster;
-
-                    // Provide correct context for the action to be opened.
-                    const savingInfoHolder = this._serialiser().deserialise(JSON.parse(customObject.savingInfoHolder));
-                    action.createContextHolder = () => {
-                        const typeName = action.componentUri.substring(action.componentUri.lastIndexOf('/') + 1);
-                        const type = this._reflector().getType(typeName);
-                        if (type && type._simpleClassName() === 'EntityNewAction') {
-                            return savingInfoHolder.centreContextHolder
-                                .masterEntity.centreContextHolder;
-                        }
-                        else if (type && type.compoundOpenerType()) {
-                            return savingInfoHolder.centreContextHolder
-                                .masterEntity.centreContextHolder
-                                .masterEntity.centreContextHolder;
-                        }
-                        return savingInfoHolder.centreContextHolder;
-                    };
-
-                    // Bind fully restored entity after initial loading of empty produced instance.
-                    action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
-                        master.addEventListener('data-loaded-and-focused', event => {
-                            event.detail._postRetrievedDefault(deserialisedResult.instance);
-                        }, { once: true });
-                    };
-
-                    action._run();
                 }).catch(e => processResponseError(e.request, e.error, this._reflector(), this._serialiser(), null, this.toaster));
             }
             else {
