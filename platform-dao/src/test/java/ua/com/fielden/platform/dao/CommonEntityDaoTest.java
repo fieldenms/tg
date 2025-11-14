@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.companion.AbstractEntityReader.ERR_MISSING_ID_VALUE;
-import static ua.com.fielden.platform.dao.CommonEntityDao.mkMoreDataKey;
+import static ua.com.fielden.platform.dao.CommonEntityDao.moreDataKey;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
@@ -948,9 +948,9 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         }
     }
 
-    private static final String MDK_TEST = mkMoreDataKey(AcknowledgeWarnings.class);
+    private static final String MDK_TEST = moreDataKey(AcknowledgeWarnings.class);
     @Test
-    public void mkMoreDataKey_makes_values_that_match_expected_pattern() {
+    public void moreDataKey_makes_values_that_match_expected_pattern() {
         assertEquals("CommonEntityDaoTest-AcknowledgeWarnings", MDK_TEST);
     }
 

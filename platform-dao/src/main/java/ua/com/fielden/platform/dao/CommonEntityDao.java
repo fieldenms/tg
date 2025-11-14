@@ -466,7 +466,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     /// @param moreDataType the type of the continuation data.
     /// @return a newly generated continuation-data key
     ///
-    public static String mkMoreDataKey(final Class<? extends IContinuationData> moreDataType) {
+    public static String moreDataKey(final Class<? extends IContinuationData> moreDataType) {
         try {
             final var fullClassName = Thread.currentThread().getStackTrace()[2].getClassName();
             final var simpleName = fullClassName.substring(fullClassName.lastIndexOf('.') + 1);
