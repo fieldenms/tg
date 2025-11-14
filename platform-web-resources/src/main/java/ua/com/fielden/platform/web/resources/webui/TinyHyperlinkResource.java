@@ -112,7 +112,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                 return new StringRepresentation("The specified resource was not found. Please verify that you are accessing the correct resource.");
             }
 
-            if (tinyHyperlink.getSavingInfoHolder() == null) {
+            if (tinyHyperlink.getTarget() != null) {
                 final Map<String, Object> customObject = linkedMapOf(t2(CUSTOM_OBJECT_SHARED_URI, tinyHyperlink.getTarget().value));
                 return restUtil.resultJSONRepresentation(successful().extendResultWithCustomObject(customObject));
             }
