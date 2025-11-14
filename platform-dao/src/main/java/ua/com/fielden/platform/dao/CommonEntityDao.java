@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.companion.*;
+import ua.com.fielden.platform.continuation.NeedMoreDataStorage;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -421,33 +422,15 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     //-------------------------------------------------------------------//
-    //----------- Continuation related structures and methods -----------//
+    //--------------------- Continuation related methods ----------------//
     //-------------------------------------------------------------------//
-
-    /// A map to hold the "more data" gathered by means of continuations.
-    private final Map<String, IContinuationData> moreData = new HashMap<>();
-
-    /// Replaces any previously provided "more data" with new "more data".
-    /// This is a bulk operation that is mainly needed for the infrastructural integration.
-    ///
-    public CommonEntityDao<T> setMoreData(final Map<String, IContinuationData> moreData) {
-        clearMoreData();
-        this.moreData.putAll(moreData);
-        return this;
-    }
 
     /// A convenient method to set a single "more data" instance for a given key.
     /// Mostly useful for unit tests.
     ///
     public CommonEntityDao<T> setMoreData(final String key, final IContinuationData moreData) {
-        this.moreData.put(key, moreData);
+        NeedMoreDataStorage.putMoreData(key, moreData);
         return this;
-    }
-
-    /// Clears continuations in this companion object.
-    ///
-    public void clearMoreData() {
-        this.moreData.clear();
     }
 
     /// A convenient way to obtain “more data” by key.
@@ -456,15 +439,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     /// @param key a companion object property that identifies the continuation
     /// @return an optional containing the requested data if found; otherwise, empty
     ///
-    @SuppressWarnings("unchecked")
     public <E extends IContinuationData> Optional<E> moreData(final String key) {
-        return Optional.ofNullable((E) this.moreData.get(key));
+        return NeedMoreDataStorage.moreData(key);
     }
 
     /// A convenient way to obtain all "more data" by keys.
     ///
     public Map<String, IContinuationData> moreData() {
-        return Collections.unmodifiableMap(moreData);
+        return NeedMoreDataStorage.moreData();
     }
 
     //-------------------------------------------------------------------//

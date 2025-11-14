@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import ua.com.fielden.platform.continuation.NeedMoreData;
+import ua.com.fielden.platform.continuation.NeedMoreDataStorage;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -35,7 +36,7 @@ public class EntityResourceContinuationsHelper {
                 entity.nonProxiedProperties().forEach(MetaProperty::clearWarnings);
             }
         }
-        
+
         // 1. Non-persistent entities should always be saved (`isDirty` will always be true).
         // 2. Persistent but not persisted (new) entities should always be saved (isDirty will always be true).
         // 3. Persistent+persisted+dirty (by means of dirty properties existence) entities should always be saved.
@@ -44,15 +45,8 @@ public class EntityResourceContinuationsHelper {
         if (!entity.isDirty() && validateWithoutCritOnlyRequired(entity)) { // `validateWithoutCritOnlyRequired` does not perform validation, it only checks the current validation results
             return entity;
         }
-        
-        try {
-            // Set continuations before saving, even when the map is empty.
-            co.setMoreData(continuations);
-            return co.save(entity);
-        } finally {
-            // Clear continuations regardless of whether the save operation succeeds or fails.
-            co.clearMoreData();
-        }
+
+        return NeedMoreDataStorage.callWithMoreData(continuations, () -> co.save(entity));
     }
     
     /// Validates entity skipping required checks for its properties that are both [CritOnly] and [Required], and not skipping these checks for other properties.

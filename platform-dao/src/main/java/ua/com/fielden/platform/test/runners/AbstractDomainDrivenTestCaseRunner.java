@@ -6,6 +6,9 @@ import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import ua.com.fielden.platform.continuation.NeedMoreDataStorage;
+import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
@@ -181,6 +184,22 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
                 dbCleanUp();
             };
         };
+    }
+
+    /// Runs an individual test within the scope of an empty [NeedMoreDataStorage],
+    /// unless the test is annotated with [SkipNeedMoreDataStorageBinding].
+    ///
+    /// This ensures that tests using [CommonEntityDao#setMoreData(String, IContinuationData)]
+    /// do not fail due to the absence of a bound scoped storage.
+    ///
+    @Override
+    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
+        if (method.getAnnotation(SkipNeedMoreDataStorageBinding.class) == null) {
+            NeedMoreDataStorage.runWithMoreData(Map.of(), () -> super.runChild(method, notifier));
+        }
+        else {
+            super.runChild(method, notifier);
+        }
     }
 
     @Override
