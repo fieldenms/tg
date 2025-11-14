@@ -17,6 +17,7 @@ import '/resources/master/tg-entity-master.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/tg-message-panel.js';
 import '/resources/components/tg-global-error-handler.js';
+import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -363,7 +364,7 @@ Polymer({
                     };
 
                     action._run();
-                });
+                }).catch(e => processResponseError(e.request, e.error, this._reflector(), this._serialiser(), null, this.toaster));
             }
             else {
                 this._openToastForError('URI error.', `The URI [${this._route.path}] is invalid.`, true);
