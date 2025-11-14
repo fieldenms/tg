@@ -121,10 +121,16 @@ public interface IWebUiConfig extends IMenuRetriever {
      */
     Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres();
 
+    /// Creates a stream of all action configurations in the whole Web UI configuration.
+    ///
     Stream<EntityActionConfig> streamActionConfigs();
 
+    /// Searches the whole Web UI configuration for an action with the specified identifier.
+    ///
     Optional<EntityActionConfig> findAction(String actionIdentifier);
 
+    /// Returns all registered "extra" actions, which are not exposed in the UI, but exist for other server-side purposes.
+    ///
     Collection<EntityActionConfig> getExtraActions();
 
     /**
