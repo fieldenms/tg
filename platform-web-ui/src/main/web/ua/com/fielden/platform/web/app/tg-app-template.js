@@ -329,8 +329,11 @@ Polymer({
                             action.attrs[name] = actionObject.attrs[name];
                         }
                     }
-                    action.attrs.centreUuid = 'unknown'; // this.uuid;
 
+                    // refs #2128 Use predictable parent `tg-app-template` master uuid for dialog closing (and other postal events).
+                    // Even though some arbitrary `centreUuid` value would also work, it is better to maintain hierarchy exactly as for other actions.
+                    // Changing of the parent `tg-app-template` master would work as expected then.
+                    action.attrs.centreUuid = this.uuid;
                     action.showDialog = this._showDialog;
                     action.toaster = this.toaster;
                     const savingInfoHolder = this._serialiser().deserialise(JSON.parse(customObject.savingInfoHolder));
