@@ -142,6 +142,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
         final Set<SecurityRoleAssociation> notFoundAssociations = new HashSet<>(associations);
 
+        // First, update all existing associations.
         SequentialGroupingStream.stream(associations.stream(), (association, group) -> group.size() < MAX_NUMBER_OF_PARAMS)
                 .forEach(group -> {
                     final var query = queryForAssociations(group);
@@ -154,7 +155,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
                         });
                     }
                 });
-
+        // Then, perform action on those that weren’t fetched.
         orElseOpt.ifPresent(orElse -> {
             for (final SecurityRoleAssociation notFoundAssociation : notFoundAssociations) {
                 orElse.accept(notFoundAssociation);

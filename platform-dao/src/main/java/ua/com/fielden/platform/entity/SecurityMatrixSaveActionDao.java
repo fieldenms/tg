@@ -71,15 +71,18 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
 
     private String checkWhetherCanRemoveSecurityMatrixRelatedAssociations(final Set<SecurityRoleAssociation> removedAssociations) {
         final StringBuilder errorMsg = new StringBuilder();
+        // Check whether the associations to be removed include any associations related to Security Matrix tokens.
         if (hasSecurityMatrixRelatedAssociations(removedAssociations)) {
             final SecurityRoleAssociationCo associationCo = co(SecurityRoleAssociation.class);
             final List<SecurityRoleAssociation> matrixRelatedAssociationsForCurrentUser = associationCo.findActiveAssociations(
                     userProvider.getUser(),
                     SecurityRoleAssociation_CanRead_Token.class,
                     SecurityRoleAssociation_CanSave_Token.class);
+            // Append an error message if the user is about to remove all associations between his roles and SecurityRoleAssociation_CanRead_Token.
             if (removedAssociations.containsAll(extractAssociationsFor(SecurityRoleAssociation_CanRead_Token.class, matrixRelatedAssociationsForCurrentUser))) {
                 errorMsg.append(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING);
             }
+            // Append an error message if the user is about to remove all associations between his roles and SecurityRoleAssociation_CanSave_Token.
             if (removedAssociations.containsAll(extractAssociationsFor(SecurityRoleAssociation_CanSave_Token.class, matrixRelatedAssociationsForCurrentUser))) {
                 if (!errorMsg.isEmpty()) {
                     errorMsg.append("<br>");
