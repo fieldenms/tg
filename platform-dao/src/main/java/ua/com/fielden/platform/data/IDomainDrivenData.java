@@ -12,8 +12,6 @@ import ua.com.fielden.platform.security.user.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import static java.util.stream.Collectors.toList;
-
 public interface IDomainDrivenData {
 
     public static final String ADMIN = "ADMIN";
@@ -89,7 +87,7 @@ public interface IDomainDrivenData {
                 coSecurityRoleAssociation.addAssociations(SecurityTokenNodeTransformations.flatten(transformedTree)
                                                                   .map(node -> coSecurityRoleAssociation.new_()
                                                                           .setRole(admin)
-                                                                          .setSecurityToken(node.getToken())).collect(toList()));
+                                                                          .setSecurityToken(node.getToken())).toList());
             } catch (final Exception e) {
                 throw new IllegalStateException(e);
             }
