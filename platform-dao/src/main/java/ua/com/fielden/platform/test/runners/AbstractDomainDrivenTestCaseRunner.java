@@ -6,6 +6,9 @@ import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import ua.com.fielden.platform.continuation.NeedMoreDataStorage;
+import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
@@ -19,39 +22,34 @@ import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.function.Function;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Reflector.assignStatic;
 import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 
-/**
- * The domain test case runner that is responsible of instantiation and initialisation of domain test cases.
- * 
- * @author TG Team
- *
- */
+/// The domain test case runner responsible for instantiating and initializing domain test cases.
+///
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
-    private static final String INFO_TEST_IGNORED_DUE_TO_DB_VERSION =
-            "Test [%s] is ignored because it requires one of databases %s while the current one is [%s].";
+    private static final String
+            INFO_TEST_IGNORED_DUE_TO_DB_VERSION = "Test [%s] is ignored because it requires one of databases %s while the current one is [%s].",
+            ERR_INVALID_TYPE = "Test case [%s] should extend [%s].",
+            ERR_MISSING_DB_CREATOR = "DbCreator type was not provided, but is required.",
+            ERR_FAILED_TO_CREATE_TEST_CONFIGURATION = "Could not create test configuration.";
 
-    public final Logger logger = getLogger(getClass());
+    public final Logger logger = getLogger();
     
-    // the following two properties must be static to perform their allocation only once due to its memory and CPU intencity
-    private static Properties dbProps; // mainly used for db creation and population at the time of loading the test case classes
+    // The following two properties must be static to perform their initialisation only once due to its memory and CPU intensity.
+    private static Properties dbProps; // Mainly used for db creation and population at the time of loading the test case classes
     private static IDomainDrivenTestCaseConfiguration config;
     
-    /** 
-     * Need one DDL script for all instances of all test cases.
-     * The intent is to create and cache it as a static variable upon instantiation of the first runner instance.
-     * This should be safe for a single threaded execution of tests -- parallelisation should occur by means of forking JVM processes. 
-     */
+    /// A single DDL script is needed for all instances of all test cases.
+    /// The intent is to create and cache it as a static variable upon instantiation of the first runner instance.
+    /// This approach is safe for single-threaded test execution; parallelisation should be achieved by forking JVM processes.
+    ///
     private static final List<String> ddlScript = new ArrayList<>();
     
-    /**
-     * The name of the database to be used for testing.
-     */
+    /// The name of the database to be used for testing.
     public final String databaseUri;
     
     private final DbCreator dbCreator;
@@ -66,11 +64,11 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         super(klass);
         // assert if the provided test case is supported
         if (!AbstractDomainDrivenTestCase.class.isAssignableFrom(klass)) {
-            throw new DomainDrivenTestException(format("Test case [%s] should extend [%s].", klass.getName(), AbstractDomainDrivenTestCase.class.getName()));
+            throw new DomainDrivenTestException(ERR_INVALID_TYPE.formatted(klass.getName(), AbstractDomainDrivenTestCase.class.getName()));
         }
        
         if (dbCreatorType == null) {
-            throw new DomainDrivenTestException("DbCreator type was not provided, but is required.");
+            throw new DomainDrivenTestException(ERR_MISSING_DB_CREATOR);
         }
         
         // databaseUri value should be specified in POM or come from the command line
@@ -104,7 +102,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             loadDataScriptFromFile = Boolean.parseBoolean(System.getProperty("loadDataScriptFromFile"));
         }
 
-        logger.info(format("Running [%s] with loadDdlScriptFromFile = [%s], saveScriptsToFile = [%s], loadDataScriptFromFile = [%s] and  databaseUri = [%s]", klass, loadDdlScriptFromFile, saveScriptsToFile, loadDataScriptFromFile, databaseUri));
+        logger.info(() -> "Running [%s] with loadDdlScriptFromFile = [%s], saveScriptsToFile = [%s], loadDataScriptFromFile = [%s] and  databaseUri = [%s]".formatted(klass, loadDdlScriptFromFile, saveScriptsToFile, loadDataScriptFromFile, databaseUri));
 
         // let's construct and assign test configuration
         // this should occur only once per JVM instance as this is a computationally intensive operation
@@ -123,16 +121,16 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         }
 
         // try loading the DDL script if applicable
-        final boolean execDdslScripts = ddlScript.isEmpty();
+        final boolean execDdlScripts = ddlScript.isEmpty();
         if (ddlScript.isEmpty() && loadDdlScriptFromFile) {
-            logger.info(format("Loading DDL scripts from [%s]... ", ddlScriptFileName));
+            logger.info(() -> "Loading DDL scripts from [%s]... ".formatted(ddlScriptFileName));
             ddlScript.addAll(DbCreator.loadScriptFromFile(ddlScriptFileName));
-            logger.info(format("Loaded [%s] DDL scripts... if 0 then it will be generated...", ddlScript.size()));
+            logger.info(() -> "Loaded [%s] DDL scripts... if 0 then it will be generated...".formatted(ddlScript.size()));
         }
 
         // get constructor for instantiation of DB creator and instantiate it 
         final Constructor<? extends DbCreator> constructor = dbCreatorType.getConstructor(klass.getClass(), Properties.class, IDomainDrivenTestCaseConfiguration.class, List.class, boolean.class);
-        this.dbCreator = constructor.newInstance(klass, dbProps, config, ddlScript, execDdslScripts);
+        this.dbCreator = constructor.newInstance(klass, dbProps, config, ddlScript, execDdlScripts);
 
         if (saveScriptsToFile) {
             saveDdlScript();
@@ -140,42 +138,38 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     }
 
     private AbstractDomainDrivenTestCaseRunner saveDdlScript() {
-        logger.info(format("Saving [%s] DDL scripts to [%s].", ddlScript.size(), ddlScriptFileName));
+        logger.info(() -> "Saving [%s] DDL scripts to [%s].".formatted(ddlScript.size(), ddlScriptFileName));
         DbCreator.saveScriptToFile(ddlScript, ddlScriptFileName);
         return this;
     }
 
-    /**
-     * Creates db connectivity properties in terms of Hibernate properties.
-     * The value for property <code>hibernate.connection.url</code> should contain <code>%s</code> as a place holder for the database location and name.
-     * For example:
-     * <ul>
-     * <li><code>jdbc:sqlserver:%s;queryTimeout=30</code>, where <code>%s</code> would be replaced with something like <code>//192.168.1.142:1433;database=TEST_DB</code>.
-     * <li><code>jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE</code>, where <code>%s</code> would be replaced with something like <code>./src/test/resources/db/TEST_DB</code>.
-     * </ul> 
-     * @param dbUri -- the database location and name
-     * 
-     * @return
-     */
+    /// Creates DB connectivity properties in terms of Hibernate properties.
+    /// The value for the property `hibernate.connection.url` should include `%s` as a placeholder for the database location and name.
+    ///
+    /// Examples:
+    /// - `jdbc:sqlserver:%s;queryTimeout=30`, where `%s` is replaced with a value like `//192.168.1.142:1433;database=TEST_DB`
+    /// - `jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE`, where `%s` is replaced with a value like `./src/test/resources/db/TEST_DB`
+    ///
+    /// @param dbUri the database location and name
+    ///
     protected abstract Properties mkDbProps(final String dbUri);
 
     @Override
-    public Object createTest() throws Exception {
+    public Object createTest() {
         final Class<?> testCaseType = getTestClass().getJavaClass();
         final AbstractDomainDrivenTestCase testCase = (AbstractDomainDrivenTestCase) config.getInstance(testCaseType);
         return testCase.setDbCreator(dbCreator);
     }
-    
-    /**
-     * A routine to clean up the database once it is no longer needed. For example, in case of H2 the database file can be deleted.
-     */
+
+    /// A routine to clean up the database when it is no longer needed.
+    /// For example, in the case of H2, the database file can be deleted.
+    ///
     public void dbCleanUp() {
     }
-    
-    /**
-     * Override to add custom logic at the very end of test case execution.
-     * Mainly this is needed to do the clean up work.
-     */
+
+    /// Override to add custom logic at the very end of test case execution.
+    /// This is primarily used to perform clean-up tasks.
+    ///
     @Override
     protected Statement classBlock(final RunNotifier notifier) {
         final Statement defaultSt = super.classBlock(notifier);
@@ -183,13 +177,29 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                // execute the dafault work, which includes running all the tests
+                // Execute the default work, which includes running all the tests.
                 defaultSt.evaluate();
                 
                 // now let's do some clean up work...
                 dbCleanUp();
             };
         };
+    }
+
+    /// Runs an individual test within the scope of an empty [NeedMoreDataStorage],
+    /// unless the test is annotated with [SkipNeedMoreDataStorageBinding].
+    ///
+    /// This ensures that tests using [CommonEntityDao#setMoreData(String, IContinuationData)]
+    /// do not fail due to the absence of a bound scoped storage.
+    ///
+    @Override
+    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
+        if (method.getAnnotation(SkipNeedMoreDataStorageBinding.class) == null) {
+            NeedMoreDataStorage.runWithMoreData(Map.of(), () -> super.runChild(method, notifier));
+        }
+        else {
+            super.runChild(method, notifier);
+        }
     }
 
     @Override
@@ -201,22 +211,18 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         final var atWithDbVersion = child.getAnnotation(WithDbVersion.class);
         final var dbVersionMatches = atWithDbVersion == null || ArrayUtils.contains(atWithDbVersion.value(), dbVersionProvider.dbVersion());
         if (!dbVersionMatches) {
-            logger.info(INFO_TEST_IGNORED_DUE_TO_DB_VERSION.formatted(
-                    "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName()),
-                    Arrays.toString(atWithDbVersion.value()),
-                    dbVersionProvider.dbVersion()));
+            logger.info(() -> INFO_TEST_IGNORED_DUE_TO_DB_VERSION.formatted(
+                              "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName()),
+                              Arrays.toString(atWithDbVersion.value()),
+                              dbVersionProvider.dbVersion()));
             return true;
         }
 
         return false;
     }
 
-    /**
-     * A helper function to instantiate test case configuration as specified in {@code props}, property {@code "config.domain"}.
-     * 
-     * @param props
-     * @return
-     */
+    /// A helper function to instantiate a test case configuration as specified in `props` under the property `"config.domain"`.
+    ///
     private static IDomainDrivenTestCaseConfiguration createConfig(final Properties props) {
         try {
             final String configClassName = props.getProperty("config.domain");
@@ -224,7 +230,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             final Constructor<IDomainDrivenTestCaseConfiguration> constructor = type.getConstructor(Properties.class);
             return constructor.newInstance(props);
         } catch (final Exception ex) {
-            throw new DomainDrivenTestException("Could not create test configuration.", ex);
+            throw new DomainDrivenTestException(ERR_FAILED_TO_CREATE_TEST_CONFIGURATION, ex);
         }
     }
 

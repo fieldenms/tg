@@ -6,6 +6,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -29,12 +30,13 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.companion.AbstractEntityReader.ERR_MISSING_ID_VALUE;
+import static ua.com.fielden.platform.dao.CommonEntityDao.moreDataKey;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 
-/// This test case ensures correct implementation of the common DAO functionality in conjunction with Session injection by means of method intercepter.
+/// This test case ensures correct implementation of the common DAO functionality in conjunction with Session injection by means of method interceptor.
 ///
 public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
@@ -57,7 +59,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         co(EntityWithMoney.class).stream(from(select(EntityWithMoney.class).model()).model());
     }
 
-        @Test
+    @Test
     public void test_that_entity_with_simple_key_is_handled_correctly() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
@@ -944,6 +946,12 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
             // previously associated session was already closed when an attempt to use is made
             assertEquals("Session is closed, most likely, due to missing @SessionRequired annotation.", ex.getMessage());
         }
+    }
+
+    private static final String MDK_TEST = moreDataKey(AcknowledgeWarnings.class);
+    @Test
+    public void moreDataKey_makes_values_that_match_expected_pattern() {
+        assertEquals("CommonEntityDaoTest-AcknowledgeWarnings", MDK_TEST);
     }
 
     @Override
