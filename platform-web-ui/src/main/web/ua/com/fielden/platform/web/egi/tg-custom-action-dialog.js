@@ -1900,11 +1900,14 @@ Polymer({
     },
     
     /**
-     * Generates a link to entity master for persisted entity opened in this dialog; copies it to the clipboard; shows informational dialog with ability to review link (MORE button).
-     * or
-     * Shows informational dialog for not-yet-persisted entity opened in this dialog -- 'Please save and try again.'.
-     * 
-     * This functionality is only available for persistent entities.
+     * 1. If a master for a persisted entity is opened in this dialog, generates a link to it, copies it to the clipboard,
+     *    and shows an informational dialog with the ability to review the link (MORE button).
+     *    If the master is compound, the generated link will point to the currenly open menu item.
+     *
+     * 2. If the action that opened this dialog has an identifier (i.e., supports tiny hyperlinks), then `ShareAction` will be invoked,
+     *    and the resulting tiny hyperlink will be presented to the user.
+     *
+     * 3. Otherwise, link generation is not supported, and a corresponding message will be displayed.
      */
     _getLink: function () {
         const showNonCritical = toaster => {
@@ -1912,11 +1915,10 @@ Polymer({
             toaster.isCritical = false;
             toaster.show();
         };
-        const persistedEntitySharing = this._mainEntityType !== null && this._mainEntityId !== null;
-        if (
-            persistedEntitySharing
-            || this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionIdentifier
-        ) {
+        const isPersistedEntity = this._mainEntityType !== null && this._mainEntityId !== null;
+        if (isPersistedEntity
+            || this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionIdentifier)
+        {
             // Find a deepest embdedded master, which will contain master entity for share action.
             const deepestMaster = this._deepestMaster;
             // this dialog's `uuid` to be used for action.
@@ -1931,7 +1933,7 @@ Polymer({
             shareAction.componentUri = '/master_ui/ua.com.fielden.platform.share.ShareAction';
             shareAction.elementName = 'tg-ShareAction-master';
             shareAction.showDialog = this._showDialog;
-            shareAction.createContextHolder = !persistedEntitySharing && deepestMaster
+            shareAction.createContextHolder = !isPersistedEntity && deepestMaster
                 ? deepestMaster._createContextHolder
                 : (() => this._reflector.createContextHolder(
                     null, null, null,
@@ -1958,7 +1960,7 @@ Polymer({
                 }
             };
 
-            if (persistedEntitySharing) {
+            if (isPersistedEntity) {
                 const url = new URL(window.location.href);
                 const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
                 const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
