@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -112,10 +111,12 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                 return new StringRepresentation("The specified resource was not found. Please verify that you are accessing the correct resource.");
             }
 
+            // If this tiny hyperlink points to another URL.
             if (tinyHyperlink.getTarget() != null) {
                 final Map<String, Object> customObject = linkedMapOf(t2(CUSTOM_OBJECT_SHARED_URI, tinyHyperlink.getTarget().value));
                 return restUtil.resultJSONRepresentation(successful().extendResultWithCustomObject(customObject));
             }
+            // Otherwise, it represents a shared entity.
 
             final PropertyDeserialisationErrorHandler propDeserialisationErrorHandler = (entity, property, inputValueSupplier, error) -> {
                 LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during deserialisation: %s",
@@ -125,7 +126,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                 // Ignore non-existing properties.
                 // Assign a warning if property deserialisation fails.
                 if (Finder.isPropertyPresent(entity.getType(), property)) {
-                    entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(Result.warning("The configured value could not be used.")));
+                    entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
                 }
             };
 
