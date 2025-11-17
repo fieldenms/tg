@@ -9,15 +9,14 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Configuration of a specific entity action, which is associated with an entity on an entity centre.
- *
- * @author TG Team
- *
- */
+/// Represents the configuration of an action in the Web UI configuration.
+///
+/// Multiple configurations may exist for any given action entity (e.g., one for the standalone centre, another one for an embedded centre).
+///
 public final class EntityActionConfig {
 
     public final Optional<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> functionalEntity;
@@ -104,95 +103,93 @@ public final class EntityActionConfig {
             final IPostAction errorPostAction,
             final PrefDim prefDimForView,
             final boolean shouldRefreshParentCentreAfterSave,
-            final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints) {
+            final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints)
+    {
         this(functionalEntity,
-             actionIdentifier, context, icon, iconStyle, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON, excludeInsertionPoints);
+             actionIdentifier,
+             context,
+             icon,
+             iconStyle,
+             shortDesc,
+             longDesc,
+             shortcut,
+             preAction,
+             successPostAction,
+             errorPostAction,
+             prefDimForView,
+             shouldRefreshParentCentreAfterSave,
+             null,
+             UI_ROLE.ICON,
+             excludeInsertionPoints);
     }
 
+    /// Creates a new configuration based on `ac` but with the specified centre context.
+    ///
     public static EntityActionConfig withContext(final EntityActionConfig ac, final CentreContextConfig cc) {
         return new EntityActionConfig(
-                        ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
-                        ac.actionIdentifier.orElse(null),
-                        cc,
-                        ac.icon.isPresent() ? ac.icon.get() : null,
-                        ac.iconStyle.orElse(null),
-                        ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
-                        ac.longDesc.isPresent() ? ac.longDesc.get() : null,
-                        ac.shortcut.isPresent() ? ac.shortcut.get() : null,
-                        ac.preAction.isPresent() ? ac.preAction.get() : null,
-                        ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
-                        ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
-                        ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
-                        ac.shouldRefreshParentCentreAfterSave,
-                        ac.whereToInsertView.isPresent() ? ac.whereToInsertView.get() : null,
-                        ac.role,
-                        ac.excludeInsertionPoints);
+                ac.functionalEntity.orElse(null),
+                ac.actionIdentifier.orElse(null),
+                cc,
+                ac.icon.orElse(null),
+                ac.iconStyle.orElse(null),
+                ac.shortDesc.orElse(null),
+                ac.longDesc.orElse(null),
+                ac.shortcut.orElse(null),
+                ac.preAction.orElse(null),
+                ac.successPostAction.orElse(null),
+                ac.errorPostAction.orElse(null),
+                ac.prefDimForView.orElse(null),
+                ac.shouldRefreshParentCentreAfterSave,
+                ac.whereToInsertView.orElse(null),
+                ac.role,
+                ac.excludeInsertionPoints);
     }
 
 
-    /**
-     * Makes a new configuration based on the passed in configuration to become as associated with the specified insertion point.
-     */
+    /// Creates a new configuration based on `ac` but with the specified insertion point.
+    ///
     public static EntityActionConfig mkInsertionPoint(final EntityActionConfig ac, final InsertionPoints ip) {
         return new EntityActionConfig(
-                ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
+                ac.functionalEntity.orElse(null),
                 ac.actionIdentifier.orElse(null),
-                ac.context.isPresent() ? ac.context.get() : null,
-                ac.icon.isPresent() ? ac.icon.get() : null,
+                ac.context.orElse(null),
+                ac.icon.orElse(null),
                 ac.iconStyle.orElse(null),
-                ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
-                ac.longDesc.isPresent() ? ac.longDesc.get() : null,
-                ac.shortcut.isPresent() ? ac.shortcut.get() : null,
-                ac.preAction.isPresent() ? ac.preAction.get() : null,
-                ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
-                ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
-                ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
+                ac.shortDesc.orElse(null),
+                ac.longDesc.orElse(null),
+                ac.shortcut.orElse(null),
+                ac.preAction.orElse(null),
+                ac.successPostAction.orElse(null),
+                ac.errorPostAction.orElse(null),
+                ac.prefDimForView.orElse(null),
                 ac.shouldRefreshParentCentreAfterSave,
                 ip,
                 UI_ROLE.ICON,
                 ac.excludeInsertionPoints);
     }
 
-    /**
-     * Makes a new configuration based on the current one, but with the specified role.
-     *
-     * @param ac
-     * @param role
-     * @return
-     */
+    /// Creates a new configuration based on the current one, but with the specified role.
+    ///
     public static EntityActionConfig setRole(final EntityActionConfig ac, final UI_ROLE role) {
         return new EntityActionConfig(
-                ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
+                ac.functionalEntity.orElse(null),
                 ac.actionIdentifier.orElse(null),
-                ac.context.isPresent() ? ac.context.get() : null,
-                ac.icon.isPresent() ? ac.icon.get() : null,
+                ac.context.orElse(null),
+                ac.icon.orElse(null),
                 ac.iconStyle.orElse(null),
-                ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
-                ac.longDesc.isPresent() ? ac.longDesc.get() : null,
-                ac.shortcut.isPresent() ? ac.shortcut.get() : null,
-                ac.preAction.isPresent() ? ac.preAction.get() : null,
-                ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
-                ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
-                ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
+                ac.shortDesc.orElse(null),
+                ac.longDesc.orElse(null),
+                ac.shortcut.orElse(null),
+                ac.preAction.orElse(null),
+                ac.successPostAction.orElse(null),
+                ac.errorPostAction.orElse(null),
+                ac.prefDimForView.orElse(null),
                 ac.shouldRefreshParentCentreAfterSave,
-                ac.whereToInsertView.isPresent() ? ac.whereToInsertView.get() : null,
+                ac.whereToInsertView.orElse(null),
                 role,
                 ac.excludeInsertionPoints);
     }
 
-    /**
-     * A factory method that creates a configuration for the required action.
-     *
-     * @param functionalEntity
-     * @param context
-     * @param icon
-     * @param shortDesc
-     * @param longDesc
-     * @param preAction
-     * @param successPostAction
-     * @param errorPostAction
-     * @return
-     */
     public static EntityActionConfig createActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
             final String actionIdentifier,
@@ -230,107 +227,35 @@ public final class EntityActionConfig {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((context == null) ? 0 : context.hashCode());
-        result = prime * result + ((actionIdentifier == null) ? 0 : actionIdentifier.hashCode());
-        result = prime * result + ((errorPostAction == null) ? 0 : errorPostAction.hashCode());
-        result = prime * result + ((functionalEntity == null) ? 0 : functionalEntity.hashCode());
-        result = prime * result + ((icon == null) ? 0 : icon.hashCode());
-        result = prime * result + ((longDesc == null) ? 0 : longDesc.hashCode());
-        result = prime * result + ((shortcut == null) ? 0 : shortcut.hashCode());
-        result = prime * result + ((preAction == null) ? 0 : preAction.hashCode());
-        result = prime * result + ((shortDesc == null) ? 0 : shortDesc.hashCode());
-        result = prime * result + ((successPostAction == null) ? 0 : successPostAction.hashCode());
-        result = prime * result + ((whereToInsertView == null) ? 0 : whereToInsertView.hashCode());
+        result = prime * result + context.hashCode();
+        result = prime * result + actionIdentifier.hashCode();
+        result = prime * result + errorPostAction.hashCode();
+        result = prime * result + functionalEntity.hashCode();
+        result = prime * result + icon.hashCode();
+        result = prime * result + longDesc.hashCode();
+        result = prime * result + shortcut.hashCode();
+        result = prime * result + preAction.hashCode();
+        result = prime * result + shortDesc.hashCode();
+        result = prime * result + successPostAction.hashCode();
+        result = prime * result + whereToInsertView.hashCode();
         return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof EntityActionConfig)) {
-            return false;
-        }
-
-        final EntityActionConfig other = (EntityActionConfig) obj;
-        if (context == null) {
-            if (other.context != null) {
-                return false;
-            }
-        } else if (!context.equals(other.context)) {
-            return false;
-        }
-        if (errorPostAction == null) {
-            if (other.errorPostAction != null) {
-                return false;
-            }
-        } else if (!errorPostAction.equals(other.errorPostAction)) {
-            return false;
-        }
-        if (functionalEntity == null) {
-            if (other.functionalEntity != null) {
-                return false;
-            }
-        } else if (!functionalEntity.equals(other.functionalEntity)) {
-            return false;
-        }
-        if (actionIdentifier == null) {
-            if (other.actionIdentifier != null) {
-                return false;
-            }
-        } else if (!actionIdentifier.equals(other.actionIdentifier)) {
-            return false;
-        }
-        if (icon == null) {
-            if (other.icon != null) {
-                return false;
-            }
-        } else if (!icon.equals(other.icon)) {
-            return false;
-        }
-        if (longDesc == null) {
-            if (other.longDesc != null) {
-                return false;
-            }
-        } else if (!longDesc.equals(other.longDesc)) {
-            return false;
-        }
-        if (shortcut == null) {
-            if (other.shortcut != null) {
-                return false;
-            }
-        } else if (!shortcut.equals(other.shortcut)) {
-            return false;
-        }
-        if (preAction == null) {
-            if (other.preAction != null) {
-                return false;
-            }
-        } else if (!preAction.equals(other.preAction)) {
-            return false;
-        }
-        if (shortDesc == null) {
-            if (other.shortDesc != null) {
-                return false;
-            }
-        } else if (!shortDesc.equals(other.shortDesc)) {
-            return false;
-        }
-        if (successPostAction == null) {
-            if (other.successPostAction != null) {
-                return false;
-            }
-        } else if (!successPostAction.equals(other.successPostAction)) {
-            return false;
-        }
-        if (whereToInsertView == null) {
-            if (other.whereToInsertView != null) {
-                return false;
-            }
-        } else if (!whereToInsertView.equals(other.whereToInsertView)) {
-            return false;
-        }
-        return true;
+        return this == obj
+                || obj instanceof EntityActionConfig that
+                   && Objects.equals(context, that.context)
+                   && Objects.equals(errorPostAction, that.errorPostAction)
+                   && Objects.equals(functionalEntity, that.functionalEntity)
+                   && Objects.equals(actionIdentifier, that.actionIdentifier)
+                   && Objects.equals(icon, that.icon)
+                   && Objects.equals(longDesc, that.longDesc)
+                   && Objects.equals(shortcut, that.shortcut)
+                   && Objects.equals(preAction, that.preAction)
+                   && Objects.equals(shortDesc, that.shortDesc)
+                   && Objects.equals(successPostAction, that.successPostAction)
+                   && Objects.equals(whereToInsertView, that.whereToInsertView);
     }
+
 }
