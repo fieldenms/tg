@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import com.google.inject.Injector;
-import ua.com.fielden.platform.tiny.ShareAction;
-import ua.com.fielden.platform.tiny.ShareActionProducer;
+import ua.com.fielden.platform.share.ShareAction;
+import ua.com.fielden.platform.share.ShareActionProducer;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 

@@ -1928,7 +1928,7 @@ Polymer({
             // Provide only the necessary attributes.
             // Avoid shouldRefreshParentCentreAfterSave, because there is no need to refresh parent master.
             shareAction.shortDesc = 'Share';
-            shareAction.componentUri = '/master_ui/ua.com.fielden.platform.tiny.ShareAction';
+            shareAction.componentUri = '/master_ui/ua.com.fielden.platform.share.ShareAction';
             shareAction.elementName = 'tg-ShareAction-master';
             shareAction.showDialog = this._showDialog;
             shareAction.createContextHolder = !persistedEntitySharing && deepestMaster
@@ -1939,7 +1939,7 @@ Polymer({
                 ));
             shareAction.toaster = this.$.toaster;
             shareAction.attrs = {
-                entityType: 'ua.com.fielden.platform.tiny.ShareAction',
+                entityType: 'ua.com.fielden.platform.share.ShareAction',
                 currentState: 'EDIT',
                 // `centreUuid` is important to be able to close master through CANCEL (aka CLOSE) `tg-action`.
                 centreUuid: uuid

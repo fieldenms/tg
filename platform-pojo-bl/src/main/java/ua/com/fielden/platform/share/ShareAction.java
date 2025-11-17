@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.tiny;
+package ua.com.fielden.platform.share;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.NoKey;

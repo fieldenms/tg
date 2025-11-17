@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.tiny;
+package ua.com.fielden.platform.share;
 
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
@@ -7,6 +7,8 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.tiny.TinyHyperlink;
+import ua.com.fielden.platform.tiny.TinyHyperlinkCo;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
