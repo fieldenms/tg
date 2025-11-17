@@ -64,7 +64,7 @@ const template = html`
     <paper-spinner id="spinner" active="[[isActionInProgress]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
-const SHARE_ACTION_SIMPLE_NAME = 'EntityShareAction';
+const SHARE_ACTION_SIMPLE_NAME = 'ShareAction';
 
 /**
  * Returns 'true' in case where obj is not defined (aka 'null', 'undefined' or not undefined), 'false' otherwise. 

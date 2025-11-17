@@ -218,7 +218,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
         final EntityMaster<UserDefinableHelp> userDefinableHelpMaster = StandardMastersWebUiConfig.createUserDefinableHelpMaster(injector());
         final EntityMaster<PersistentEntityInfo> persistentEntityInfoMaster = StandardMastersWebUiConfig.createPersistentEntityInfoMaster(injector());
-        final var shareEntityActionWebUiConfig = EntityShareActionWebUiConfig.register(injector());
+        final var shareEntityActionWebUiConfig = ShareActionWebUiConfig.register(injector());
 
         AcknowledgeWarningsWebUiConfig.register(injector(), configApp()); // generic TG functionality for warnings acknowledgement
 

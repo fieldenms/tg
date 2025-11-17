@@ -55,7 +55,7 @@ import ua.com.fielden.platform.security.user.locator.UserLocator;
 import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenMain_MenuItem;
 import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenUserAndRoleAssociation_MenuItem;
 import ua.com.fielden.platform.security.user.ui_actions.OpenUserMasterAction;
-import ua.com.fielden.platform.tiny.EntityShareAction;
+import ua.com.fielden.platform.tiny.ShareAction;
 import ua.com.fielden.platform.tiny.TinyHyperlink;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
@@ -121,7 +121,7 @@ public class PlatformDomainTypes {
         types.add(AttachmentUploader.class);
         types.add(AttachmentsUploadAction.class);
         types.add(TinyHyperlink.class);
-        types.add(EntityShareAction.class);
+        types.add(ShareAction.class);
         types.add(KeyNumber.class);
         types.add(CentreContextHolder.class);
         types.add(SavingInfoHolder.class);

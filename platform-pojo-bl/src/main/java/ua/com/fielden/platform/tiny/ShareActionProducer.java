@@ -20,27 +20,27 @@ import static ua.com.fielden.platform.tiny.TinyHyperlink.*;
 import static ua.com.fielden.platform.utils.QrCodeUtils.*;
 import static ua.com.fielden.platform.utils.QrCodeUtils.ImageFormat.PNG;
 
-/// A producer for [EntityShareAction].
+/// A producer for [ShareAction].
 ///
 /// For new instances, this producer requires an instance of [CentreContextHolder] that was used to construct the [CentreContext].
 /// Since [CentreContextHolder] is not assigned to producers by default, **it must be assigned explicitly** via [#setCentreContextHolder(CentreContextHolder)].
 ///
 /// For persisted instances, it only requires URL of that instance (optionally, with compound master menu item suffix).
 ///
-public class EntityShareActionProducer extends DefaultEntityProducerWithContext<EntityShareAction> {
+public class ShareActionProducer extends DefaultEntityProducerWithContext<ShareAction> {
 
     private CentreContextHolder centreContextHolder;
 
     @Inject
-    EntityShareActionProducer(
+    ShareActionProducer(
             final EntityFactory factory,
             final ICompanionObjectFinder companionFinder)
     {
-        super(factory, EntityShareAction.class, companionFinder);
+        super(factory, ShareAction.class, companionFinder);
     }
 
     @Override
-    protected EntityShareAction provideDefaultValues(final EntityShareAction entity) {
+    protected ShareAction provideDefaultValues(final ShareAction entity) {
         if (contextNotEmpty()) {
             // Is this action invoked on a persisted entity master?
             ofNullable((String) getContext().getCustomObject().get(CUSTOM_OBJECT_SHARED_URI)).ifPresentOrElse(sharedUri -> {
@@ -77,7 +77,7 @@ public class EntityShareActionProducer extends DefaultEntityProducerWithContext<
         return super.provideDefaultValues(entity);
     }
 
-    public EntityShareActionProducer setCentreContextHolder(final CentreContextHolder centreContextHolder) {
+    public ShareActionProducer setCentreContextHolder(final CentreContextHolder centreContextHolder) {
         this.centreContextHolder = centreContextHolder;
         return this;
     }

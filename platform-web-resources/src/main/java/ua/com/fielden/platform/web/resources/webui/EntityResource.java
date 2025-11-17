@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.boot.archive.scan.spi.PackageInfoArchiveEntryHandler;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.restlet.Context;
@@ -25,7 +24,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.tiny.EntityShareActionProducer;
+import ua.com.fielden.platform.tiny.ShareActionProducer;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -208,7 +207,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                 } else {
                     final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
-                    if (producer instanceof EntityShareActionProducer shareEntityActionProducer) {
+                    if (producer instanceof ShareActionProducer shareEntityActionProducer) {
                         shareEntityActionProducer.setCentreContextHolder(centreContextHolder);
                     }
 
