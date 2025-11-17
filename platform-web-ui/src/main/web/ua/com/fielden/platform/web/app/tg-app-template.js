@@ -330,7 +330,7 @@ Polymer({
                             action[name] = actionObject[name];
                         }
                         action.attrs = {};
-                        for (const name of ['entityType', 'currentState', 'prefDim', 'actionId']) {
+                        for (const name of ['entityType', 'currentState', 'prefDim', 'actionIdentifier']) {
                             // prefDim may be undefined.
                             if (typeof actionObject.attrs[name] !== 'undefined') {
                                 action.attrs[name] = actionObject.attrs[name];

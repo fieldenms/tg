@@ -1777,7 +1777,7 @@ Polymer({
             // Action identifier can be empty for NEW (custom action) -- it then shows info message `Please save and try again.`
             _mainEntityType
             // Visible also for all functional masters with explicit action identifier.
-            || _lastAction && _lastAction.attrs && _lastAction.attrs.actionId
+            || _lastAction && _lastAction.attrs && _lastAction.attrs.actionIdentifier
         );
     },
 
@@ -1915,7 +1915,7 @@ Polymer({
         const persistedEntitySharing = this._mainEntityType !== null && this._mainEntityId !== null;
         if (
             persistedEntitySharing
-            || this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionId
+            || this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionIdentifier
         ) {
             // Find a deepest embdedded master, which will contain master entity for share action.
             const deepestMaster = this._deepestMaster;
