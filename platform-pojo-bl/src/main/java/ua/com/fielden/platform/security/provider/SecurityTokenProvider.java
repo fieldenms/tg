@@ -109,10 +109,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 KeyNumber_CanReadModel_Token.class,
                 GraphiQL_CanExecute_Token.class,
                 UserDefinableHelp_CanSave_Token.class,
-                PersistentEntityInfo_CanExecute_Token.class,
-                TinyHyperlink_CanRead_Token.class,
-                TinyHyperlink_CanReadModel_Token.class,
-                TinyHyperlinkMaster_CanOpen_Token.class);
+                PersistentEntityInfo_CanExecute_Token.class);
         final Set<Class<? extends ISecurityToken>> allTokens = new HashSet<>(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class));
         allTokens.addAll(platformLevelTokens);
         allTokens.addAll(extraTokens);
