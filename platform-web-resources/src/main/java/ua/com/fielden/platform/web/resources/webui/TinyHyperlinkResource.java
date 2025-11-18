@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -125,7 +124,20 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                             error);
                 // Ignore non-existing properties.
                 // Assign a warning if property deserialisation fails.
-                if (Finder.isPropertyPresent(entity.getType(), property)) {
+                if (isPropertyPresent(entity.getType(), property)) {
+                    entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
+                }
+            };
+
+            final PropertyApplicationErrorHandler propApplicationErrorHandler = (entity, property, value, error) -> {
+                LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during property application: %s",
+                                         tinyHyperlink.getHash(),
+                                         PropertyApplicationErrorHandler.makeMessage(entity, property, value)),
+                            error);
+                // Ignore non-existing properties.
+                // Assign a warning if property application fails.
+                if (isPropertyPresent(entity.getType(), property)) {
+                    // The meta-property should exist, but let's be defensive.
                     entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
                 }
             };
@@ -142,7 +154,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             final var entity = restoreEntityFrom(true,
                                                  savingInfoHolder,
                                                  entityType,
-                                                 PropertyApplicationErrorHandler.logging.and(propertyApplicationErrorHandler),
+                                                 propApplicationErrorHandler,
                                                  factory,
                                                  webUiConfig,
                                                  companionFinder,
@@ -165,14 +177,5 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             return restUtil.resultJSONRepresentation(restUtil.singleEntityResult(entity).extendResultWithCustomObject(customObject));
         }, restUtil);
     }
-
-    private static final PropertyApplicationErrorHandler propertyApplicationErrorHandler = (entity, property, _, _) -> {
-        // Ignore non-existing properties.
-        // Assign a warning if property application fails.
-        if (isPropertyPresent(entity.getType(), property)) {
-            // The meta-property should exist, but let's be defensive.
-            entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
-        }
-    };
 
 }

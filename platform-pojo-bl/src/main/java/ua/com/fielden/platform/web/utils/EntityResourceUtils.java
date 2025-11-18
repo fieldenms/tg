@@ -256,10 +256,11 @@ public class EntityResourceUtils {
 
         PropertyApplicationErrorHandler throwing = (_, _, _, error) -> {throw error;};
 
-        PropertyApplicationErrorHandler logging = (entity, prop, value, error) ->
-                logger.error(() -> "Failed to apply a value to property [%s.%s]. Value: %s".formatted(entity.getType().getSimpleName(), prop, value), error);
-
         PropertyApplicationErrorHandler standard = throwing;
+
+        static String makeMessage(final AbstractEntity<?> entity, final String prop, final Object value) {
+            return "Failed to apply a value to property [%s.%s]. Value: %s".formatted(entity.getType().getSimpleName(), prop, value);
+        }
 
     }
 
