@@ -46,8 +46,10 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 import java.util.*;
 
-import static java.util.Optional.*;
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.tiny.TinyHyperlink.CUSTOM_OBJECT_ACTION_IDENTIFIER;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
@@ -447,8 +449,12 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     ///
     public static <T extends AbstractEntity<?>> Optional<EntityActionConfig> restoreActionConfig(final IWebUiConfig webUiConfig, final CentreContextHolder centreContextHolder) {
         final Optional<EntityActionConfig> actionConfig;
-        if (centreContextHolder.getCustomObject().get("@@actionIdentifier") != null) {
-            actionConfig = webUiConfig.findAction((String) centreContextHolder.getCustomObject().get("@@actionIdentifier"));
+        if (centreContextHolder.getCustomObject().get(CUSTOM_OBJECT_ACTION_IDENTIFIER) != null) {
+            final var actionIdentifier = (String) centreContextHolder.getCustomObject().get(CUSTOM_OBJECT_ACTION_IDENTIFIER);
+            actionConfig = webUiConfig.findAction(actionIdentifier);
+            if (actionConfig.isEmpty()) {
+                LOGGER.warn(() -> "Action configuration [%s] was not found.".formatted(actionIdentifier));
+            }
         }
         else if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
             final Class<? extends MiWithConfigurationSupport<?>> miType;
