@@ -64,7 +64,7 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
     @MapTo
     @Final(nullIsValueForPersisted = true)
     // @Required If `target` is null.
-    private byte[] savingInfoHolder;
+    private String savingInfoHolder;
 
     /// Corresponds to [ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig#actionIdentifier].
     ///
@@ -114,12 +114,12 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
         return this;
     }
 
-    public byte[] getSavingInfoHolder() {
+    public String getSavingInfoHolder() {
         return savingInfoHolder;
     }
 
     @Observable
-    public TinyHyperlink setSavingInfoHolder(final byte[] savingInfoHolder) {
+    public TinyHyperlink setSavingInfoHolder(final String savingInfoHolder) {
         this.savingInfoHolder = savingInfoHolder;
         return this;
     }

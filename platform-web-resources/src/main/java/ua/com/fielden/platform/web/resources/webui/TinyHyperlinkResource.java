@@ -145,7 +145,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             final SavingInfoHolder savingInfoHolder;
             EntitySerialiser.getContext().setPropDeserialisationErrorHandler(propDeserialisationErrorHandler);
             try {
-                savingInfoHolder = serialiser.deserialise(tinyHyperlink.getSavingInfoHolder(), SavingInfoHolder.class, SerialiserEngines.JACKSON);
+                savingInfoHolder = serialiser.deserialise(tinyHyperlink.getSavingInfoHolder().getBytes(), SavingInfoHolder.class, SerialiserEngines.JACKSON);
             } finally {
                 EntitySerialiser.getContext().removePropDeserialisationErrorHandler();
             }
