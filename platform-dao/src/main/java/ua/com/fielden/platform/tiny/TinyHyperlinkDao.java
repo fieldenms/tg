@@ -171,6 +171,9 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         newCustomObject.put("@@actionIdentifier", actionIdentifier);
         centreContextHolder.setCustomObject(newCustomObject);
 
+        // Not needed, as shared entity restoration always goes through a producer.
+        savingInfoHolder.setOriginallyProducedEntity(null);
+
         final var serialisedSavingInfoHolder = serialiser.serialise(savingInfoHolder, SerialiserEngines.JACKSON);
         final var link = new_()
                 .setEntityTypeName(baseEntityType(entityType).getCanonicalName())
