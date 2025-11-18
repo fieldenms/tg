@@ -744,13 +744,6 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], 
         return str;
     }
 
-    /* 
-     * Invokes _search with '*' and ignores the input text, which forces to search for values as if wildcard was typed.
-     */
-    // _searchOnTap (e) {
-    //     this._search('*', null, true);
-    // }
-
     /**
      * Loads more matching values.
      * Skips this action if previous searching is still in progress.

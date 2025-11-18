@@ -30,7 +30,7 @@ export const TgViewWithHelpBehavior = {
         this._longHelpTapHandler = (e) => {
             this.getOpenHelpMasterAction().chosenProperty = "showMaster";
             this.getOpenHelpMasterAction()._run();
-        }
+        };
         this._shortHelpTapHandler = (e) => {
             this.getOpenHelpMasterAction()._openLinkInAnotherWindow = true;
             this.getOpenHelpMasterAction().chosenProperty = null;
@@ -42,7 +42,7 @@ export const TgViewWithHelpBehavior = {
             }
             //Run action
             this.getOpenHelpMasterAction()._run();
-        }
+        };
         this._postOpenHelpMasterAction = this._postOpenHelpMasterAction.bind(this);
         this._modifyHelpEntity = this._modifyHelpEntity.bind(this);
         this._showHelpDialog = this._showHelpDialog.bind(this);

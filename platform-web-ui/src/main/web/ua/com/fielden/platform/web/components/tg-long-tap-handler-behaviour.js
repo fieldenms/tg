@@ -8,8 +8,8 @@ const _mouseDownEventHandler = function (e) {
     if (e.button == 0 || e.type.startsWith("touch")) {
         // Start 'long tap' action timer:
         _longTapElement = e.composedPath()[0];
-        _longTapTimer = setTimeout(() => { // assigns positive integer id into  e.target['$_longTapTimer$'], hence it can be simply checked like `if (e.target['$_longTapTimer$']) {...}`
-            // Perform 'long tap' action:
+        _longTapTimer = setTimeout(() => { // assigns positive integer id into _longTapTimer, hence it can be simply checked like `if (_longTapTimer) {...}`
+            // Perform 'long tap' action by dispatching custom tg-long-tap event
             _longTapElement && _longTapElement.dispatchEvent(new CustomEvent("tg-long-tap", {
                 detail: {sourceEvent: e, longTapElement: _longTapElement},
                 bubbles: true, 
@@ -18,10 +18,10 @@ const _mouseDownEventHandler = function (e) {
             // Cancel long tap
             _cancelLongTap();
         }, LONG_TAP_DURATION);
-        // Assign mouseleave listener to prevent 'long press' action if mouse pointer has been moved outside the button.
+        // Assign mouseleave listener to prevent 'long tap' action if mouse pointer has been moved outside the button.
         // The same is applicable for tap devices.
-        // Small finger movement will prevent 'long press' from actioning.
-        // But it does not impede intentional 'long press' behavior.
+        // Small finger movement will prevent 'long tap' from actioning.
+        // But it does not impede intentional 'long tap' behaviour.
         if (_longTapElement) {
             _longTapElement.addEventListener('mouseleave', _mouseLeaveEventHandler);
             _longTapElement.addEventListener('touchmove', _mouseLeaveEventHandler);
@@ -31,10 +31,10 @@ const _mouseDownEventHandler = function (e) {
 
 const _mouseUpEventHandler = function (e) {
     if (_longTapElement && (e.button == 0 || e.type.startsWith("touch"))) {
-        // Check whether e.target['$_longTapTimer$'] timer is still in progress.
-        // If not -- do nothing, because 1) action started outside, but ended on a button OR 2) 'long tap' action has already been performed after a timer.
+        // Check whether _longTapTimer timer is still in progress.
+        // If not -- do nothing, because 1) action started outside, but ended on a another element OR 2) 'long tap' action has already been performed after a timer.
         if (_longTapTimer) {
-            // Perform 'short tap' action:
+            // Perform 'short tap' action by dispatching custom tg-short-tap event
             _longTapElement.dispatchEvent(new CustomEvent("tg-short-tap", {
                 detail: {sourceEvent: e, longTapElement: _longTapElement},
                 bubbles: true, 
@@ -48,7 +48,7 @@ const _mouseUpEventHandler = function (e) {
 };   
 
 /**
- * Listener that prevents 'long tap' action if mouse leaves element with this handler.
+ * Listener that prevents 'long tap' action if mouse leaves element that started long tap event.
  */
 const _mouseLeaveEventHandler = function (e) {
     if (_longTapElement && (e.button == 0 || e.type.startsWith("touch"))) {
