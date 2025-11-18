@@ -162,19 +162,21 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         // Since correct action lookup is essential for obtaining the right computation object,
         // we instead capture the action identifier, which uniquely locates the action configuration.
 
+        final var ourSavingInfoHolder = savingInfoHolder.copy(SavingInfoHolder.class);
+
         // TODO #2422 For EntityNewAction and Open*MasterAction, a nested `CentreContextHolder` must be modified, not the top-level one.
         //      See `_tgOpenMasterAction` in `tg-app-template.js`.
-        if (savingInfoHolder.getCentreContextHolder() == null) {
-            savingInfoHolder.setCentreContextHolder(co$(CentreContextHolder.class).new_());
-        }
-        final var newCustomObject = new HashMap<>(savingInfoHolder.getCentreContextHolder().getCustomObject());
+        ourSavingInfoHolder.setCentreContextHolder(ourSavingInfoHolder.getCentreContextHolder() == null
+                                                           ? co$(CentreContextHolder.class).new_()
+                                                           : ourSavingInfoHolder.getCentreContextHolder().copy(CentreContextHolder.class));
+        final var newCustomObject = new HashMap<>(ourSavingInfoHolder.getCentreContextHolder().getCustomObject());
         newCustomObject.put("@@actionIdentifier", actionIdentifier);
-        savingInfoHolder.getCentreContextHolder().setCustomObject(newCustomObject);
+        ourSavingInfoHolder.getCentreContextHolder().setCustomObject(newCustomObject);
 
         // Not needed, as shared entity restoration always goes through a producer.
-        savingInfoHolder.setOriginallyProducedEntity(null);
+        ourSavingInfoHolder.setOriginallyProducedEntity(null);
 
-        final var serialisedSavingInfoHolder = serialiser.serialise(savingInfoHolder, SerialiserEngines.JACKSON);
+        final var serialisedSavingInfoHolder = serialiser.serialise(ourSavingInfoHolder, SerialiserEngines.JACKSON);
         final var link = new_()
                 .setEntityTypeName(baseEntityType(entityType).getCanonicalName())
                 .setSavingInfoHolder(new String(serialisedSavingInfoHolder))
