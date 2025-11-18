@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.serialisation.api;
 
+import com.google.inject.ImplementedBy;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 
 /**
@@ -13,6 +15,7 @@ import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
  * @author TG Team
  *
  */
+@ImplementedBy(SerialisationTypeEncoder.class)
 public interface ISerialisationTypeEncoder {
     
     /**
