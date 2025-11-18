@@ -2,6 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
+import { TgLongTouchHandlerBehaviour } from '/resources/components/tg-long-touch-handler-behaviour.js';
 import { getFirstEntityType, getParentAnd, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
@@ -165,6 +166,12 @@ const TgEntityCentreTemplateBehaviorImpl = {
         this._preOpenHelpMasterAction = function (action) {
             action.shortDesc = this._reflector.getType(this.entityType).entityTitle() + " Centre Help";
         }.bind(this);
+        /////////////////////////////////////////////////////////////////////////////////
+
+        /////////////////////Init help button with long touch event handler//////////////
+        if (this.$.helpButton) {
+            this.enhanceWithLongTouchEventHandlers(this.$.helpButton, this._longHelpTouchHandler, this._shortHelpTouchHandler);
+        }
         /////////////////////////////////////////////////////////////////////////////////
     },
 
@@ -420,5 +427,6 @@ const TgEntityCentreTemplateBehaviorImpl = {
 export const TgEntityCentreTemplateBehavior = [
     TgEntityCentreBehavior,
     TgViewWithHelpBehavior,
+    TgLongTouchHandlerBehaviour,
     TgEntityCentreTemplateBehaviorImpl
 ];
