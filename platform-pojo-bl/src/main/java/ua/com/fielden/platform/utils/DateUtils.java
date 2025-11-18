@@ -154,16 +154,17 @@ public class DateUtils {
         final int currentYear = date.getYear();
 
         // Create the start date of the financial year in the current calendar year.
-        final LocalDate currYearFinYearStart = LocalDate.of(currentYear, finYearStartMonth, finYearStartDay);
+        final var currYearFinYearStart = LocalDate.of(currentYear, finYearStartMonth, finYearStartDay);
 
         int finYearEnd;
         // If current date is before the FY start, FY ends this calendar year.
         if (date.isBefore(currYearFinYearStart)) {
             finYearEnd = currentYear;
         }
-        // Otherwise, FY ends the next calendar year.
+        // Otherwise, FY ends in the calendar year 12 months from the start - 1 day.
         else {
-            finYearEnd = currentYear + 1;
+            final var currYearFinYearEnd = currYearFinYearStart.plusYears(1).minusDays(1);
+            finYearEnd = currYearFinYearEnd.getYear();
         }
 
         return finYearEnd;
