@@ -170,7 +170,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
                                                            ? co$(CentreContextHolder.class).new_()
                                                            : ourSavingInfoHolder.getCentreContextHolder().copy(CentreContextHolder.class));
         final var newCustomObject = new HashMap<>(ourSavingInfoHolder.getCentreContextHolder().getCustomObject());
-        newCustomObject.put("@@actionIdentifier", actionIdentifier);
+        newCustomObject.put(CUSTOM_OBJECT_ACTION_IDENTIFIER, actionIdentifier);
         ourSavingInfoHolder.getCentreContextHolder().setCustomObject(newCustomObject);
 
         // Not needed, as shared entity restoration always goes through a producer.
