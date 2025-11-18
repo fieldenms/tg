@@ -583,7 +583,15 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTouchHandlerBehaviour]
 
     ready () {
         super.ready();
-        this.enhanceWithLongTouchEventHandlers(this.$.searcherButton, (e) => {this._search('*', null, false);}, (e) => {this._search('*', null, true);});
+        this.enhanceWithLongTouchEventHandlers(this.$.searcherButton, 
+            (e) => {this._search('*', null, false);}, 
+            (e) => {
+                let ignoreInputText = true;
+                if (e.altKey) {
+                    ignoreInputText = false;   
+                }
+                this._search('*', null, ignoreInputText);
+            });
     }
 
     /**

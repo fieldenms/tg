@@ -1,11 +1,16 @@
 const LONG_TOUCH_DURATION = 1000;
 
+let _longTouchElement = null;
+
 /**
- * Cancels existing active non-empty 'long press' timer.
+ * Cancels existing active non-empty 'long touch' timer.
  */
-const _cancelLongPress = function (e) {
-    clearTimeout(e.target['$_longTouchTimer$']);
-    delete e.target['$_longTouchTimer$'];
+const _cancelLongTouch = function (e) {
+    if (_longTouchElement) {
+        clearTimeout(_longTouchElement['$_longTouchTimer$']);
+        delete _longTouchElement['$_longTouchTimer$'];
+        _longTouchElement = null;
+    }
 };
 
 export const TgLongTouchHandlerBehaviour = {
@@ -19,10 +24,10 @@ export const TgLongTouchHandlerBehaviour = {
             element.addEventListener('mouseup', this._mouseUpEventHandler);
             element.addEventListener('mouseleave', this._mouseLeaveEventHandler);
             element.addEventListener('touchstart', this._mouseDownEventHandler);
-            // Assign mouseleave listener to prevent 'long press' action if mouse pointer has been moved outside the button.
+            // Assign mouseleave listener to prevent 'long touch' action if mouse pointer has been moved outside the button.
             //  The same is applicable for touch devices.
-            //  Small finger movement will prevent 'long press' from actioning.
-            //  But it does not impede intentional 'long press' behavior.
+            //  Small finger movement will prevent 'long touch' from actioning.
+            //  But it does not impede intentional 'long touch' behavior.
             element.addEventListener('touchend', this._mouseUpEventHandler);
             element.addEventListener('touchmove', this._mouseLeaveEventHandler);
         }
@@ -33,42 +38,45 @@ export const TgLongTouchHandlerBehaviour = {
         if (typeof e.target['$_longTouchHandler$'] === 'function' && (e.button == 0 || e.type.startsWith("touch"))) {
             e.preventDefault();
 
-            // Start 'long press' action timer:
-            e.target['$_longTouchTimer$'] = setTimeout(() => { // assigns positive integer id into  e.target['$_longTouchTimer$'], hence it can be simply checked like `if (e.target['$_longTouchTimer$']) {...}`
-                // Remove 'long press' action timer (it is already cleared here):
-                delete e.target['$_longTouchTimer$'];
+            // Start 'long touch' action timer:
+            _longTouchElement = e.target;
+            _longTouchElement['$_longTouchTimer$'] = setTimeout(() => { // assigns positive integer id into  e.target['$_longTouchTimer$'], hence it can be simply checked like `if (e.target['$_longTouchTimer$']) {...}`
+                // Remove 'long touch' action timer (it is already cleared here):
+                delete _longTouchElement['$_longTouchTimer$'];
 
-                // Perform 'long press' action:
-                e.target['$_longTouchHandler$'](e);
+                // Perform 'long touch' action:
+                _longTouchElement['$_longTouchHandler$'](e);
+                //Reset lonh touch element. Similar as it done in cancelLongTouch.
+                _longTouchElement = null;
             }, LONG_TOUCH_DURATION);
         }
     },
 
     _mouseUpEventHandler: function (e) {
-        if (typeof e.target['$_longTouchHandler$'] === 'function' && (e.button == 0 || e.type.startsWith("touch"))) {
+        if (_longTouchElement && (e.button == 0 || e.type.startsWith("touch"))) {
             e.preventDefault();
 
             // Check whether e.target['$_longTouchTimer$'] timer is still in progress.
-            // If not -- do nothing, because 1) action started outside, but ended on a button OR 2) 'long press' action has already been performed after a timer.
-            if (e.target['$_longTouchTimer$']) {
-                // Cancel 'long press' action:
-                _cancelLongPress(e);
+            // If not -- do nothing, because 1) action started outside, but ended on a button OR 2) 'long touch' action has already been performed after a timer.
+            if (_longTouchElement['$_longTouchTimer$']) {
+                // Perform 'short touch' action:
+                _longTouchElement['$_shortTouchHandler$'](e);
 
-                // Perform 'short press' action:
-                e.target['$_shortTouchHandler$'](e);
+                // Cancel 'long touch' action:
+                _cancelLongTouch(e);
             }
         }
     },
 
     /**
-     * Listener for Help button to prevent 'long press' action outside the button.
+     * Listener for Help button to prevent 'long touch' action outside the button.
      */
     _mouseLeaveEventHandler: function (e) {
-        if (typeof e.target['$_longTouchHandler$'] === 'function' && (e.button == 0 || e.type.startsWith("touch"))) {
+        if (_longTouchElement && (e.button == 0 || e.type.startsWith("touch"))) {
             e.preventDefault();
 
-            if (e.target['$_longTouchTimer$']) {
-                _cancelLongPress(e);
+            if (_longTouchElement['$_longTouchTimer$']) {
+                _cancelLongTouch(e);
             }
         }
     }
