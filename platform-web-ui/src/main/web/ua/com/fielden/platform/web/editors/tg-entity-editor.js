@@ -587,7 +587,7 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], 
 
     _shortSearchTap (e) {
         let ignoreInputText = true;
-        if (e.detail.sourceEvent.altKey) {
+        if (e && e.detail && e.detail.sourceEvent && e.detail.sourceEvent.altKey) {
             ignoreInputText = false;   
         }
         this._search('*', null, ignoreInputText);
