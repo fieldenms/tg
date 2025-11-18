@@ -26,6 +26,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
+import { TgLongTouchHandlerBehaviour } from '/resources/components/tg-long-touch-handler-behaviour.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
@@ -53,10 +54,6 @@ const template = html`
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]" idea-uri="[[ideaUri]]">
                 <paper-icon-button id="helpAction" slot="helpAction" icon="icons:help-outline" tabindex="1"
-                    on-mousedown="_helpMouseDownEventHandler" 
-                    on-touchstart="_helpMouseDownEventHandler" 
-                    on-mouseup="_helpMouseUpEventHandler" 
-                    on-touchend="_helpMouseUpEventHandler" 
                     tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link.">
                 </paper-icon-button>
             </tg-app-menu>
@@ -242,7 +239,7 @@ Polymer({
 
     observers: ['_routeChanged(_route.path)'],
 
-    behaviors: [TgEntityMasterBehavior, TgViewWithHelpBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
+    behaviors: [TgEntityMasterBehavior, TgLongTouchHandlerBehaviour, TgViewWithHelpBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
     
     keyBindings: {
         'f3': '_searchMenu',
@@ -589,6 +586,7 @@ Polymer({
         this._currentEntityForHelp = () => {
             return this._reflector().newEntity(this._currEntity.type().notEnhancedFullClassName());
         }
+        this.enhanceWithLongTouchEventHandlers(this.$.helpAction, this._longHelpTouchHandler, this._shortHelpTouchHandler);
 
         //Configuring menu visibility save functionality.
         this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {

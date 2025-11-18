@@ -591,7 +591,8 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTouchHandlerBehaviour]
                     ignoreInputText = false;   
                 }
                 this._search('*', null, ignoreInputText);
-            });
+            }
+        );
     }
 
     /**
