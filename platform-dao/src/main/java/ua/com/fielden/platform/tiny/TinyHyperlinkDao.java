@@ -164,12 +164,12 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
 
         // TODO #2422 For EntityNewAction and Open*MasterAction, a nested `CentreContextHolder` must be modified, not the top-level one.
         //      See `_tgOpenMasterAction` in `tg-app-template.js`.
-        final var centreContextHolder = savingInfoHolder.getCentreContextHolder() != null
-                ? savingInfoHolder.getCentreContextHolder()
-                : co$(CentreContextHolder.class).new_();
-        final var newCustomObject = new HashMap<>(centreContextHolder.getCustomObject());
+        if (savingInfoHolder.getCentreContextHolder() == null) {
+            savingInfoHolder.setCentreContextHolder(co$(CentreContextHolder.class).new_());
+        }
+        final var newCustomObject = new HashMap<>(savingInfoHolder.getCentreContextHolder().getCustomObject());
         newCustomObject.put("@@actionIdentifier", actionIdentifier);
-        centreContextHolder.setCustomObject(newCustomObject);
+        savingInfoHolder.getCentreContextHolder().setCustomObject(newCustomObject);
 
         // Not needed, as shared entity restoration always goes through a producer.
         savingInfoHolder.setOriginallyProducedEntity(null);
