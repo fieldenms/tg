@@ -94,6 +94,8 @@ public class CentreToolbar implements IToolbarConfig {
                 .id("helpButton")
                 .style("color:#727272")
                 .attr("slot", "standart-action")
+                .attr("on-tg-long-tap", "_longHelpTapHandler")
+                .attr("on-tg-short-tap", "_shortHelpTapHandler")
                 .attr("icon", "icons:help-outline")
                 .attr("tooltip-text", "Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link.");
     }

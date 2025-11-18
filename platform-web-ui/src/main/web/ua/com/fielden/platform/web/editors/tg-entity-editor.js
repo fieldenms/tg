@@ -19,7 +19,7 @@ import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { tearDownEvent, allDefined, isTouchEnabled, localStorageKey } from '/resources/reflection/tg-polymer-utils.js'
 import { composeEntityValue } from '/resources/editors/tg-entity-formatter.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
-import { TgLongTouchHandlerBehaviour } from '/resources/components/tg-long-touch-handler-behaviour.js';
+import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-handler-behaviour.js';
 
 const AUTOCOMPLETE_ACTIVE_ONLY_KEY = '@@activeOnly';
 const AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = '@@activeOnlyChanged';
@@ -113,7 +113,7 @@ const inputLayerTemplate = html`
         <span style="color:#737373" hidden$="[[!_hasDesc(entity, propertyName)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity, propertyName)]]</i></span>
     </div>`;
 const customIconButtonsTemplate = html`
-    <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" icon="search" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
+    <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" icon="search" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" on-tg-long-tap="_longSearchTap" on-tg-short-tap="_shortSearchTap" tooltip-text="Show search result"></paper-icon-button>
     <paper-icon-button id="acceptButton" hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
     <paper-spinner id="progressSpinner" active hidden$="[[!searching]]" class="custom-icon-buttons" tabindex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
@@ -171,7 +171,7 @@ function copyToClipboard(inputLayerText, showCheckIconAndToast) {
     }
 }
 
-export class TgEntityEditor extends mixinBehaviors([TgLongTouchHandlerBehaviour], TgEditor) {
+export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], TgEditor) {
 
     static get template() { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, customIconButtonsTemplate, propertyActionTemplate, customLabelTemplate);
@@ -581,18 +581,16 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTouchHandlerBehaviour]
         }.bind(this);
     }
 
-    ready () {
-        super.ready();
-        this.enhanceWithLongTouchEventHandlers(this.$.searcherButton, 
-            (e) => {this._search('*', null, false);}, 
-            (e) => {
-                let ignoreInputText = true;
-                if (e.altKey) {
-                    ignoreInputText = false;   
-                }
-                this._search('*', null, ignoreInputText);
-            }
-        );
+    _longSearchTap (e) {
+        this._search('*', null, false);
+    }
+
+    _shortSearchTap (e) {
+        let ignoreInputText = true;
+        if (e.detail.sourceEvent.altKey) {
+            ignoreInputText = false;   
+        }
+        this._search('*', null, ignoreInputText);
     }
 
     /**

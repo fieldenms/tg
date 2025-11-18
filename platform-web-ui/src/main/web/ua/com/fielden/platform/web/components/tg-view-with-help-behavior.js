@@ -16,9 +16,9 @@ export const TgViewWithHelpBehavior = {
             value: null
         },
 
-        _longHelpTouchHandler: Function,
+        _longHelpTapHandler: Function,
 
-        _shortHelpTouchHandler: Function,
+        _shortHelpTapHandler: Function,
 
         /**
          * Attributes for the action that opens help entity master for the view that implements this behavior.
@@ -27,17 +27,17 @@ export const TgViewWithHelpBehavior = {
     },
 
     ready: function () {
-        this._longHelpTouchHandler = (e) => {
+        this._longHelpTapHandler = (e) => {
             this.getOpenHelpMasterAction().chosenProperty = "showMaster";
             this.getOpenHelpMasterAction()._run();
         }
-        this._shortHelpTouchHandler = (e) => {
+        this._shortHelpTapHandler = (e) => {
             this.getOpenHelpMasterAction()._openLinkInAnotherWindow = true;
             this.getOpenHelpMasterAction().chosenProperty = null;
             //Config action props according to key pressed and type of action (e.a. long or short).
-            if (e.altKey) {
+            if (e.detail.sourceEvent.altKey) {
                 this.getOpenHelpMasterAction().chosenProperty = "showMaster";
-            } else if (e.ctrlKey || e.metaKey) {
+            } else if (e.detail.sourceEvent.ctrlKey || e.detail.sourceEvent.metaKey) {
                 this.getOpenHelpMasterAction()._openLinkInAnotherWindow = false;
             }
             //Run action
