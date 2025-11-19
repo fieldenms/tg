@@ -87,7 +87,7 @@ public class ConfirmationPreAction implements IPreAction {
             """ : "") + """
                 return self.confirm('%s', [%s]%s);
             """.formatted(
-                message,
+                message.replace("'", "\\'"),
                 join(buttons, ","),
                 withProgress ? ", { withProgress: true }" : ""
             )
