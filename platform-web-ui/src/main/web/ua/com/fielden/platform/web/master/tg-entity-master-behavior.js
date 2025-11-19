@@ -1580,9 +1580,15 @@ const TgEntityMasterBehaviorImpl = {
         }));
     },
 
-    confirm: function (message, buttons) {
+    closeConfirmationDialog: function () {
+        if (this.$ && this.$.masterDom && this.$.masterDom.closeConfirmationDialog) {
+            return this.$.masterDom.closeConfirmationDialog();
+        }
+    },
+
+    confirm: function (message, buttons, options) {
         if (this.$ && this.$.masterDom && this.$.masterDom.confirm) {
-            return this.$.masterDom.confirm(message, buttons);
+            return this.$.masterDom.confirm(message, buttons, options);
         }
     },
 };

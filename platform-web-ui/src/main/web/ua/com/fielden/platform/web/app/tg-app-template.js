@@ -370,6 +370,14 @@ Polymer({
                             }, { once: true });
                         };
 
+                        // Add to the DOM to fully initialise Polymer element.
+                        // This is needed for correct functioning of observers, particularly `isActionInProgressObserver`.
+                        // See `ConfirmationPreAction.build` for more details on `withProgress: true` option observer logic.
+                        document.body.appendChild(action);
+                        // `action` is now fully initialised and can be removed immediately.
+                        // Flickering can neither be observed nor expected here, as this should happen in the same microtask.
+                        document.body.removeChild(action);
+
                         action._run();
                     }
                 }, e => processResponseError(e.request, e.error, this._reflector(), this._serialiser(), null, this.toaster));
