@@ -9,7 +9,6 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Put;
-import org.restlet.resource.ResourceException;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -20,17 +19,16 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -43,7 +41,7 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends AbstractWebResource {
 
     private static final Logger LOGGER = LogManager.getLogger(FileProcessingResource.class);
-    private static final String ERR_CLIENT_NOT_REGISTERED = "The client should have been registered for SSE communication.";
+    private static final String WARN_CLIENT_NOT_REGISTERED = "The client should have been registered for SSE communication.";
 
     protected final IEntityDao<T> companion;
     private final EntityFactory factory;
@@ -76,7 +74,8 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             final ISerialiser serialiser,
             final Context context,
             final Request request,
-            final Response response) {
+            final Response response)
+    {
         super(context, request, response, deviceProvider, dates);
         this.eseRegister = eseRegister;
         this.companion = companion;
@@ -178,27 +177,48 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     ///
     private Representation tryToProcess(final InputStream stream, final String mime) {
 
-        final IEventSourceEmitter emitter = eseRegister.getEmitter(user, sseUid);
-        if (emitter == null) {
-            throw new InvalidUiConfigException(ERR_CLIENT_NOT_REGISTERED);
-        }
-
+        final Optional<IEventSourceEmitter> maybeEmitter = getEmitterWithRetry();
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
         final ProcessingProgressEventSource eventSource = new ProcessingProgressEventSource(subject, jobUid, serialiser);
 
         try {
-            eventSource.connect(emitter);
+            maybeEmitter.ifPresent(eventSource::connect);
             final T entity = entityCreator.apply(factory);
             entity.setOrigFileName(origFileName);
             entity.setLastModified(fileLastModified);
             entity.setInputStream(stream);
-            entity.setEventSourceSubject(subject);
+            maybeEmitter.ifPresent(_ -> entity.setEventSourceSubject(subject));
             entity.setMime(mime);
 
             final T applied = saveRaw(entity);
             return restUtil.singleJsonRepresentation(applied);
         } finally {
             eventSource.disconnect();
+        }
+    }
+
+    private Optional<IEventSourceEmitter> getEmitterWithRetry() {
+        try {
+            int count = 1;
+            IEventSourceEmitter emitter = eseRegister.getEmitter(user, sseUid);
+            while (emitter == null && count <= 3) {
+                count++;
+                LOGGER.info("Retrying to get an SSE emitter [{}].", count);
+                try {
+                    Thread.sleep(500);
+                } catch (final InterruptedException e) {
+                    LOGGER.warn("Thread sleep interrupted.", e);
+                }
+                emitter = eseRegister.getEmitter(user, sseUid);
+
+            }
+            if (emitter == null) {
+                LOGGER.warn(WARN_CLIENT_NOT_REGISTERED);
+            }
+            return Optional.ofNullable(emitter);
+        } catch (Exception ex) {
+            LOGGER.error("Error while obtaining an SSE event source emitter.", ex);
+            return Optional.empty();
         }
     }
 

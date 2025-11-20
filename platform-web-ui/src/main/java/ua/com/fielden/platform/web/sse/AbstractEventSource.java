@@ -106,7 +106,11 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
     public void disconnect() {
         logger.debug("Client subscription is being disconnected.");
         if (subscription != null) {
-            subscription.unsubscribe();
+            try {
+                subscription.unsubscribe();
+            } catch (final Exception ex) {
+               logger.warn("Error while disconnecting form SSE subscription.", ex);
+            }
         }
     }
 
