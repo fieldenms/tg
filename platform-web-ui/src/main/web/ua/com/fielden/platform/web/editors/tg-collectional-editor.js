@@ -143,9 +143,10 @@ const customInputTemplate = html`
     <div class="layout vertical flex relative">
         <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection="[[_multiSelection]]">
             <template>
-                <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]" selected$="[[selected]]" drag-element>
+                <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]" selected$="[[selected]]" drag-element draggable$="[[_calcDraggable(selected, canReorderItems)]]">
                     <div tabindex="0" class$="[[_computedClass(selected, item)]]" style$="[[_computeItemStyle(_forReview, canReorderItems)]]" is-dragging$="[[_isDraggingThisItem(item, _draggingItem)]]" on-tap="_selectionHandler">
-                        <iron-icon class="resizing-box" draggable="true" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" drag-object-present$="[[_draggingItem]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
+                        <iron-icon class="resizing-box" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" drag-object-present$="[[_draggingItem]]"></iron-icon>
+                        <!-- on-touchstart="_disableScrolling" on-touchmove="_disableScrolling" -->
                         <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]" style$="[[_computeTitleStyle(canReorderItems)]]">
                             <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
                             <div class$="[[_computedDescriptionClass(item)]]" hidden$="[[!_calcItemText(item, descriptionPropertyName)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
@@ -347,12 +348,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             this._scrollBarWidth = this.$.input.offsetWidth - this.$.input.clientWidth;
         }.bind(this);
 
-        if (!isTouchEnabled()) { // TODO remove this check in #2323
+        //if (!isTouchEnabled()) { // TODO remove this check in #2323
             this.addEventListener('dragstart', this._startDrag.bind(this));
             this.addEventListener('dragover', this._dragOver.bind(this));
             this.addEventListener("drop", this._dragDrop);
             this.addEventListener('dragend', this._endDrag.bind(this));
-        }
+        //}
     }
 
     connectedCallback () {
@@ -869,6 +870,10 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         this._disableSelectionListeners = false;
     }
 
+    _calcDraggable (selected, canReorderItems) {
+        return selected && canReorderItems ? "true" : "false";
+    }
+
     _startDrag (dragEvent) {
         const target = dragEvent.composedPath()[0];
         if (target.nodeType === Node.ELEMENT_NODE && target.getAttribute("draggable") === 'true') {
@@ -876,7 +881,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             if (elementToDrag && elementToDrag.hasAttribute("selected")) {
                 const relMousePos = getRelativePos(dragEvent.clientX, dragEvent.clientY, elementToDrag);
                 dragEvent.dataTransfer.effectAllowed = "copyMove";
-                dragEvent.dataTransfer.setDragImage(elementToDrag, relMousePos.x, relMousePos.y);
+                dragEvent.dataTransfer.setDragImage(elementToDrag, relMousePos.x, relMousePos.y); 
                 hideTooltip();
                 setTimeout(() => {
                     const itemIndex = this._getIndexForElement(elementToDrag);
