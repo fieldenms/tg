@@ -4,6 +4,10 @@ import org.junit.Ignore;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.tokens.persistent.TgVehicleModel_CanRead_make_Token;
+import ua.com.fielden.platform.utils.Pair;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -15,10 +19,15 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 @CompanionObject(ITgVehicleModel.class)
 public class TgVehicleModel extends AbstractEntity<String> {
 
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TgVehicleModel.class);
+    public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
+    public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
+
     @IsProperty
     @Required
     @MapTo
     @Title(value = "Test vehicle model", desc = "Test vehicle model")
+    @Authorise(TgVehicleModel_CanRead_make_Token.class)
     private TgVehicleMake make;
     
     @IsProperty

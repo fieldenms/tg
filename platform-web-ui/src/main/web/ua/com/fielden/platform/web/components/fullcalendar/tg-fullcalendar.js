@@ -247,7 +247,7 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
     getTooltipForDateProp(entity, dateProp) {
         return {
             title: this._reflector.getEntityTypeProp(entity, dateProp).title(),
-            value: "<b>" + this._reflector.tg_toString(entity.get(dateProp), entity.type(), dateProp, { display: true, locale: this._appConfig.locale }) + "</b>"
+            value: "<b>" + this._reflector.tg_toString(entity.get(dateProp), entity.type(), dateProp, { display: true }) + "</b>"
         };
     }
 

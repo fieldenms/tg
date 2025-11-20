@@ -1,7 +1,5 @@
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 
-import {generateUUID} from '/resources/reflection/tg-polymer-utils.js';
-
 import '/resources/components/postal-lib.js';
 import moment from '/resources/polymer/lib/moment-lib.js';
 
@@ -34,7 +32,7 @@ let timerIdForReconnection = null;
  *  Registers new single event source for this client.
  */
 const registerEventSource = function () {
-    const uid = generateUUID();
+    const uid = crypto.randomUUID();
     const source = {initialised: false, sseUid: uid, uri: `/sse/${uid}`, shouldReconnectWhenError: true, errorReconnectionDelay: 15000};
     console.log('Determine if EventSrouce needs polyfilling: ', window.EventSource)
     if (window.EventSource == undefined) {

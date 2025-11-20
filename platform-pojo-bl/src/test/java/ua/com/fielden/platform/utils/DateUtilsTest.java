@@ -148,7 +148,7 @@ public class DateUtilsTest {
     }
 
     @Test
-    public void finYearForDate_in_second_half_of_calendar_year_returns_next_calendar_year_as_FY() {
+    public void finYearForDate_in_second_half_of_calendar_year_returns_next_calendar_year_as_FY_for_FY_spanning_2_years() {
         final LocalDate date0 = LocalDate.of(2025, 7, 1);
         assertEquals(2026, finYearForDate(1, 7, date0));
 
@@ -160,7 +160,7 @@ public class DateUtilsTest {
     }
 
     @Test
-    public void finYearForDate_in_first_half_of_calendar_year_returns_current_calendar_year_as_FY() {
+    public void finYearForDate_in_first_half_of_calendar_year_returns_current_calendar_year_as_FY_for_FY_spanning_2_years() {
         final LocalDate date0 = LocalDate.of(2026, 1, 1);
         assertEquals(2026, finYearForDate(1, 7, date0));
 
@@ -169,6 +169,30 @@ public class DateUtilsTest {
 
         final LocalDate date2 = LocalDate.of(2026, 6, 30);
         assertEquals(2026, finYearForDate(1, 7, date2));
+    }
+
+    @Test
+    public void finYearForDate_in_first_half_of_calendar_year_returns_current_calendar_year_as_FY_for_FY_spanning_1_years() {
+        final LocalDate date0 = LocalDate.of(2025, 1, 1);
+        assertEquals(2025, finYearForDate(1, 1, date0));
+
+        final LocalDate date1 = LocalDate.of(2025, 2, 14);
+        assertEquals(2025, finYearForDate(1, 1, date1));
+
+        final LocalDate date2 = LocalDate.of(2025, 6, 30);
+        assertEquals(2025, finYearForDate(1, 1, date2));
+    }
+
+    @Test
+    public void finYearForDate_in_second_half_of_calendar_year_returns_next_calendar_year_as_FY_for_FY_spanning_1_year() {
+        final LocalDate date0 = LocalDate.of(2025, 7, 1);
+        assertEquals(2025, finYearForDate(1, 1, date0));
+
+        final LocalDate date1 = LocalDate.of(2025, 11, 3);
+        assertEquals(2025, finYearForDate(1, 1, date1));
+
+        final LocalDate date2 = LocalDate.of(2025, 12, 31);
+        assertEquals(2025, finYearForDate(1, 1, date2));
     }
 
     @Test
