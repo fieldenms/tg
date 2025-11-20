@@ -197,6 +197,12 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         }
     }
 
+    /// Attempts to retrieve an [IEventSourceEmitter] from the emitter registry with retries.
+    ///
+    /// If no emitter is found after retries, a warning is logged.
+    ///
+    /// @return an [Optional] containing the emitter if available; otherwise empty.
+    ///
     private Optional<IEventSourceEmitter> getEmitterWithRetry() {
         try {
             int count = 1;
