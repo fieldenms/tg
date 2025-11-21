@@ -240,7 +240,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
 
     /// Transforms a native property value into a format suitable for [CentreContextHolder#modifHolder].
     ///
-    /// TODO: This method is an inverse of [EntityResourceUtils#convert] and must be aligned with it.
+    /// This method is an inverse of [EntityResourceUtils#convert] and must be aligned with it.
     ///
     private Map<Object, Object> makeModifHolderPropObject(
             final Class<? extends AbstractEntity<?>> entityType,
