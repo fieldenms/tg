@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.continuation;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.continuation.exceptions.ContinuationException;
 import ua.com.fielden.platform.entity.IContinuationData;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,7 +74,8 @@ public class NeedMoreDataStorage {
     ///
     public static Map<String, IContinuationData> moreData() {
         if (STORAGE.isBound()) {
-            return Collections.unmodifiableMap(STORAGE.get());
+            final var storage = STORAGE.get();
+            return storage.isEmpty() ? ImmutableMap.of() : Collections.unmodifiableMap(new HashMap<>(storage));
         } else {
             throw new ContinuationException(ERR_CANNOT_ADD_MORE_DATA);
         }
