@@ -163,8 +163,6 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("require-master-entity", "null");
         }
 
-        conf().actionIdentifier.ifPresent(actionIdentifier -> attrs.put("action-id", actionIdentifier));
-
         return attrs;
     }
 
@@ -417,7 +415,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             ));
         });
 
-        config.actionIdentifier.ifPresent(actionIdentifier -> code.append(",\n").append("    " + keyQ + "actionId" + keyQ + ": " + valueQ + actionIdentifier + valueQ));
+        config.actionIdentifier.ifPresent(actionIdentifier -> code.append(",\n").append("    " + keyQ + "actionIdentifier" + keyQ + ": " + valueQ + actionIdentifier + valueQ));
         code.append("\n}");
         return code.toString();
     }

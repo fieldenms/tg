@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.tiny;
+package ua.com.fielden.platform.share;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.NoKey;
@@ -7,27 +7,27 @@ import ua.com.fielden.platform.types.Hyperlink;
 
 import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
-@EntityTitle("Share Entity")
+@EntityTitle("Share")
 @KeyType(NoKey.class)
-@CompanionObject(EntityShareActionCo.class)
-public class EntityShareAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
+@CompanionObject(ShareActionCo.class)
+public class ShareAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     public static final String
             HYPERLINK = "hyperlink",
             QR_CODE = "qrCode";
 
-    protected EntityShareAction() {
+    protected ShareAction() {
         setKey(NO_KEY);
     }
 
     @IsProperty
     @Readonly
-    @Title(value = "Hyperlink", desc = "A hyperlink to open the shared entity.")
+    @Title(value = "Hyperlink", desc = "A hyperlink to the shared resource.")
     private Hyperlink hyperlink;
 
     @IsProperty
     @Readonly
-    @Title(value = "QR Code", desc = "A QR Code to open the shared entity (Base64).")
+    @Title(value = "QR Code", desc = "QR Code for the hyperlink (Base64).")
     private String qrCode;
 
     public String getQrCode() {
@@ -35,7 +35,7 @@ public class EntityShareAction extends AbstractFunctionalEntityWithCentreContext
     }
 
     @Observable
-    public EntityShareAction setQrCode(final String qrCode) {
+    public ShareAction setQrCode(final String qrCode) {
         this.qrCode = qrCode;
         return this;
     }
@@ -45,7 +45,7 @@ public class EntityShareAction extends AbstractFunctionalEntityWithCentreContext
     }
 
     @Observable
-    public EntityShareAction setHyperlink(final Hyperlink hyperlink) {
+    public ShareAction setHyperlink(final Hyperlink hyperlink) {
         this.hyperlink = hyperlink;
         return this;
     }

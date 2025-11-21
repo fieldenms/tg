@@ -162,6 +162,8 @@ public interface IWebUiBuilder {
      */
     <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getOpenMasterAction(final Class<T> entityType);
 
+    /// Register `actionConfig` as an "extra" action that is not exposed in the UI, but exists for other server-side purposes.
+    ///
     IWebUiBuilder registerExtraAction(EntityActionConfig actionConfig);
 
 }

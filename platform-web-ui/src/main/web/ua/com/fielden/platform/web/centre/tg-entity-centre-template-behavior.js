@@ -197,9 +197,15 @@ const TgEntityCentreTemplateBehaviorImpl = {
         }
     },
 
-    confirm: function (message, buttons) {
+    closeConfirmationDialog: function () {
         if (!this.$.egi.isEditing()) {
-            return this._dom()._confirmationDialog().showConfirmationDialog(message, buttons);
+            return this._dom().closeConfirmationDialog();
+        }
+    },
+
+    confirm: function (message, buttons, options) {
+        if (!this.$.egi.isEditing()) {
+            return this._dom()._confirmationDialog().showConfirmationDialog(message, buttons, options);
         }
         return this._saveOrCancelPromise();
     },

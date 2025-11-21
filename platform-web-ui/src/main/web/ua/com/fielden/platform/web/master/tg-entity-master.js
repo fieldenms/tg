@@ -150,8 +150,12 @@ Polymer({
         this.$.actionContainer.addEventListener('layout-finished', this._actionBarLayoutFinished);
     },
 
-    confirm: function (message, buttons) {
-        return this.$.confirmationDialog.showConfirmationDialog(message, buttons);
+    closeConfirmationDialog: function () {
+        return this.$.confirmationDialog.close();
+    },
+
+    confirm: function (message, buttons, options) {
+        return this.$.confirmationDialog.showConfirmationDialog(message, buttons, options);
     },
 
     _bodyLayoutFinished: function (e) {

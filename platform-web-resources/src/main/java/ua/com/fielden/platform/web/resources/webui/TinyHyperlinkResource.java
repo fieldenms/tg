@@ -15,9 +15,7 @@ import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -39,9 +37,11 @@ import java.util.Map;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.tiny.TinyHyperlink.*;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreEntityFrom;
 import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForMaster;
@@ -97,18 +97,25 @@ public class TinyHyperlinkResource extends AbstractWebResource {
     /// Handles a GET request to open a [TinyHyperlink].
     ///
     @Get
-    public Representation save() {
+    public Representation get() {
         return handleUndesiredExceptions(getResponse(), () -> {
             if (requestHash == null || requestHash.isBlank()) {
                 throw new InvalidStateException("[requestHash] must be present.");
             }
 
             final TinyHyperlinkCo coTinyHyperlink = companionFinder.findAsReader(TinyHyperlink.class, true);
-            final var tinyHyperlink = coTinyHyperlink.findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, HASH, SAVING_INFO_HOLDER, ACTION_IDENTIFIER), requestHash);
+            final var tinyHyperlink = coTinyHyperlink.findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, HASH, SAVING_INFO_HOLDER, ACTION_IDENTIFIER, TARGET), requestHash);
             if (tinyHyperlink == null) {
                 getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
                 return new StringRepresentation("The specified resource was not found. Please verify that you are accessing the correct resource.");
             }
+
+            // If this tiny hyperlink points to another URL.
+            if (tinyHyperlink.getTarget() != null) {
+                final Map<String, Object> customObject = linkedMapOf(t2(CUSTOM_OBJECT_SHARED_URI, tinyHyperlink.getTarget().value));
+                return restUtil.resultJSONRepresentation(successful().extendResultWithCustomObject(customObject));
+            }
+            // Otherwise, it represents a shared entity.
 
             final PropertyDeserialisationErrorHandler propDeserialisationErrorHandler = (entity, property, inputValueSupplier, error) -> {
                 LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during deserialisation: %s",
@@ -117,15 +124,28 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                             error);
                 // Ignore non-existing properties.
                 // Assign a warning if property deserialisation fails.
-                if (Finder.isPropertyPresent(entity.getType(), property)) {
-                    entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(Result.warning("The configured value could not be used.")));
+                if (isPropertyPresent(entity.getType(), property)) {
+                    entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
+                }
+            };
+
+            final PropertyApplicationErrorHandler propApplicationErrorHandler = (entity, property, value, error) -> {
+                LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during property application: %s",
+                                         tinyHyperlink.getHash(),
+                                         PropertyApplicationErrorHandler.makeMessage(entity, property, value)),
+                            error);
+                // Ignore non-existing properties.
+                // Assign a warning if property application fails.
+                if (isPropertyPresent(entity.getType(), property)) {
+                    // The meta-property should exist, but let's be defensive.
+                    entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
                 }
             };
 
             final SavingInfoHolder savingInfoHolder;
             EntitySerialiser.getContext().setPropDeserialisationErrorHandler(propDeserialisationErrorHandler);
             try {
-                savingInfoHolder = serialiser.deserialise(tinyHyperlink.getSavingInfoHolder(), SavingInfoHolder.class, SerialiserEngines.JACKSON);
+                savingInfoHolder = serialiser.deserialise(tinyHyperlink.getSavingInfoHolder().getBytes(), SavingInfoHolder.class, SerialiserEngines.JACKSON);
             } finally {
                 EntitySerialiser.getContext().removePropDeserialisationErrorHandler();
             }
@@ -134,7 +154,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             final var entity = restoreEntityFrom(true,
                                                  savingInfoHolder,
                                                  entityType,
-                                                 PropertyApplicationErrorHandler.logging.and(propertyApplicationErrorHandler),
+                                                 propApplicationErrorHandler,
                                                  factory,
                                                  webUiConfig,
                                                  companionFinder,
@@ -148,7 +168,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                                                  sharingModel);
 
             final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
-            customObject.put(ACTION_IDENTIFIER, tinyHyperlink.getActionIdentifier());
+            customObject.put(CUSTOM_OBJECT_ACTION_IDENTIFIER, tinyHyperlink.getActionIdentifier());
             // Send the deserialised `savingInfoHolder` to the client instead of the original `tinyHyperlink.savingInfoHolder`.
             // Since we skip properties that could not be deserialised (via a custom error handler), the deserialised form will be free of erroneous elements.
             // If we sent the original form, the client could use it for subsequent requests to other resources that do not use a lenient error handler for deserialisation,
@@ -157,14 +177,5 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             return restUtil.resultJSONRepresentation(restUtil.singleEntityResult(entity).extendResultWithCustomObject(customObject));
         }, restUtil);
     }
-
-    private static final PropertyApplicationErrorHandler propertyApplicationErrorHandler = (entity, property, _, _) -> {
-        // Ignore non-existing properties.
-        // Assign a warning if property application fails.
-        if (isPropertyPresent(entity.getType(), property)) {
-            // The meta-property should exist, but let's be defensive.
-            entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
-        }
-    };
 
 }

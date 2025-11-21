@@ -8,6 +8,8 @@ import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js';
 import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-repeat.js';
+import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
+import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import { containsRestrictedTags } from '/resources/reflection/tg-polymer-utils.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
@@ -28,6 +30,9 @@ const confirmationDialogStyle = html`
             .confirm-dialog paper-button:hover {
                 background: var(--paper-light-blue-50);
             }
+            .confirm-dialog paper-button[disabled] {
+                color: var(--paper-grey-500);
+            }
             .confirm-dialog paper-button.red {
                 color: var(--google-red-500);
                 --paper-button-flat-focus-color: var(--google-red-100);
@@ -45,6 +50,20 @@ const confirmationDialogStyle = html`
                 margin-bottom: 15px;
                 --paper-checkbox-checked-color: var(--paper-light-blue-700);
                 --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+            }
+            #spinner {
+                position: absolute;
+                top: 50%;/*position Y halfway in*/
+                left: 50%;/*position X halfway in*/
+                transform: translate(-50%,-50%);/*move it halfway back(x,y)*/
+                padding: 2px;
+                margin: 0px;
+                width: 24px;
+                height: 24px;
+                --paper-spinner-layer-1-color: var(--paper-blue-500);
+                --paper-spinner-layer-2-color: var(--paper-blue-500);
+                --paper-spinner-layer-3-color: var(--paper-blue-500);
+                --paper-spinner-layer-4-color: var(--paper-blue-500);
             }
         </style>
     </custom-style>`;
@@ -73,7 +92,10 @@ dialogModel.innerHTML = `
             </paper-dialog-scrollable>
             <div class="buttons">
                 <template is="dom-repeat" items="[[buttons]]">
-                    <paper-button class$="[[item.classes]]" style$="[[item.style]]" dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>
+                    <paper-button class$="[[item.classes]]" disabled$="[[spinnerActive]]" style$="[[item.style]]" dialog-confirm$="[[_dialogConfirm(item.confirm, withProgress)]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">
+                        <span>[[item.name]]</span>
+                        <paper-spinner id="spinner" hidden$="[[_spinnerHidden(item.confirm, spinnerActive)]]" active="[[spinnerActive]]" alt="in progress"></paper-spinner>
+                    </paper-button>
                 </template>
             </div>
         </paper-dialog>
@@ -147,6 +169,13 @@ export const TgConfirmationDialog = Polymer({
             dialogModel._action = function (e) {
                 const button = e.model.item;
                 if (button.confirm) {
+                    // If confirmation dialog has `withProgress` option...
+                    if (dialogModel.withProgress) {
+                        // Turn on spinner (and disable buttons).
+                        dialogModel.spinnerActive = true;
+                        // Disallow cancelling using ESC key.
+                        dialogModel.$.confirmDialog.noCancelOnEscKey = true;
+                    }
                     resolve(dialogModel.options ? getOptions(dialogModel.options) : button.name);
                 } else {
                     reject(new ExpectedError(button.name));
@@ -164,27 +193,52 @@ export const TgConfirmationDialog = Polymer({
             
             dialogModel.buttons = buttons;
 
+            // Only mark buttons with `dialog-confirm` (which closes dialog) if not configured with `withProgress` option.
+            dialogModel._dialogConfirm = (confirm, withProgress) => confirm && !withProgress;
+            // Hide (and stop) spinner for all non-confirming buttons and for confirming ones if they are not currently in progress.
+            dialogModel._spinnerHidden = (confirm, spinnerActive) => !confirm || !spinnerActive;
+
+            // Dialog's `withProgress` is false by default.
+            dialogModel.withProgress = false;
             if (options) {
-                dialogModel.options = options.options.map(option => {
-                    return {checked: false, msg: option};
-                });
-                dialogModel._optionChanged = function (e) {
-                    const index = e.model.index;
-                    const target = e.target || e.srcElement;
-                    dialogModel.set(`options.${index}.checked`, target.checked);
-                    if (options.single && target.checked) {
-                        dialogModel.options.forEach((opt, idx) => {
-                            if (idx !== index) {
-                                dialogModel.set(`options.${idx}.checked`, false);
-                            }
-                        });
-                    }
-                }.bind(dialogModel);
+                if (options.withProgress) {
+                    // Propagate `withProgress` from `options` to `dialog`.
+                    dialogModel.withProgress = options.withProgress;
+                    dialogModel.options = null;
+                }
+                // If boolean `options` are present, configure them in `dialog`.
+                else if (options.options) {
+                    dialogModel.options = options.options.map(option => {
+                        return {checked: false, msg: option};
+                    });
+                    dialogModel._optionChanged = function (e) {
+                        const index = e.model.index;
+                        const target = e.target || e.srcElement;
+                        dialogModel.set(`options.${index}.checked`, target.checked);
+                        if (options.single && target.checked) {
+                            dialogModel.options.forEach((opt, idx) => {
+                                if (idx !== index) {
+                                    dialogModel.set(`options.${idx}.checked`, false);
+                                }
+                            });
+                        }
+                    }.bind(dialogModel);
+                }
             } else {
                 dialogModel.options = null;
             }
 
             dialogModel.showDialog();
         });
+    },
+
+    /// Manually closes confirmation dialog.
+    /// Resets progress indicator (spinner) and other `withProgress` configuration.
+    ///
+    close: function () {
+        dialogModel.$.confirmDialog.close();
+        dialogModel.spinnerActive = false;
+        dialogModel.$.confirmDialog.noCancelOnEscKey = false;
     }
+
 });

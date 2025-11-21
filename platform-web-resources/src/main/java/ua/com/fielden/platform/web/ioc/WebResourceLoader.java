@@ -138,12 +138,7 @@ public class WebResourceLoader implements IWebResourceLoader {
     private Optional<String> getAppActionsSource() {
         return ofNullable(getText("ua/com/fielden/platform/web/app/tg-app-actions-template.js"))
                 .map(src -> {
-                    final var actionsCode = distinct(StreamUtils.concat(webUiConfig.getCentres().values().stream().flatMap(EntityCentre::streamActionConfigs),
-                                                                        webUiConfig.getMasters().values().stream().flatMap(EntityMaster::streamActions),
-                                                                        webUiConfig.getExtraActions().stream(),
-                                                                        webUiConfig.configDesktopMainMenu().streamActionConfigs(),
-                                                                        webUiConfig.configMobileMainMenu().streamActionConfigs())
-                                                             .filter(action -> action.actionIdentifier.isPresent()),
+                    final var actionsCode = distinct(webUiConfig.streamActionConfigs().filter(action -> action.actionIdentifier.isPresent()),
                                                      action -> action.actionIdentifier.get())
                                             .map(action -> "'%s': %s".formatted(action.actionIdentifier.get(), FunctionalActionElement.createActionObjectForTgAppActions(action)))
                                             .collect(joining(",\n", "{\n", "\n}"));

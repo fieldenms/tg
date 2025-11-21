@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import io.nayuki.qrcodegen.DataTooLongException;
 import io.nayuki.qrcodegen.QrCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,6 +29,8 @@ public final class QrCodeUtils {
     /// @param darkColour  hex colour for the dark squares (e.g., "0x000000")
     /// @return            bytes that constitute the image in the specified format
     ///
+    /// @throws InputTooLongException if the input is too long to fit in a QR code
+    ///
     public static byte[] qrCodeImage(
             final CharSequence input,
             final ImageFormat imageFormat,
@@ -37,7 +40,13 @@ public final class QrCodeUtils {
             final String lightColour,
             final String darkColour)
     {
-        final var img = toImage(QrCode.encodeText(input, QrCode.Ecc.QUARTILE), width, height, border, lightColour, darkColour);
+        final QrCode qr;
+        try {
+            qr = QrCode.encodeText(input, QrCode.Ecc.HIGH);
+        } catch (final DataTooLongException ex) {
+            throw new InputTooLongException(ex);
+        }
+        final var img = toImage(qr, width, height, border, lightColour, darkColour);
         final var formatName = switch (imageFormat) {
             case PNG -> "png";
         };
@@ -52,6 +61,14 @@ public final class QrCodeUtils {
 
     public enum ImageFormat {
         PNG
+    }
+
+    public static class InputTooLongException extends InvalidArgumentException {
+
+        private InputTooLongException(final Throwable cause) {
+            super("The input is too long to fit in a QR code.", cause);
+        }
+
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
