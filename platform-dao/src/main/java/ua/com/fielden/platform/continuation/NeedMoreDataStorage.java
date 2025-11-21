@@ -36,6 +36,7 @@ public class NeedMoreDataStorage {
 
     public static final String
             ERR_CANNOT_ADD_MORE_DATA = "Cannot add more data because the storage is not bound in this context.",
+            ERR_CANNOT_GET_MORE_DATA = "Cannot access more data because the storage is not bound in this context.",
             WARN_UNBOUND_STORAGE = "The need more data storage is not bound in this context. This likely indicates a programming error.";
 
     private NeedMoreDataStorage() {}
@@ -77,7 +78,7 @@ public class NeedMoreDataStorage {
             final var storage = STORAGE.get();
             return storage.isEmpty() ? ImmutableMap.of() : Collections.unmodifiableMap(new HashMap<>(storage));
         } else {
-            throw new ContinuationException(ERR_CANNOT_ADD_MORE_DATA);
+            throw new ContinuationException(ERR_CANNOT_GET_MORE_DATA);
         }
     }
 
