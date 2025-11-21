@@ -310,11 +310,26 @@ Polymer({
                     const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
                     const customObject = deserialisedResult.instance[1];
                     const sharedUri = customObject['@@sharedUri'];
-                    if (sharedUri) {
-                        window.history.replaceState(this.currentHistoryState, '', sharedUri);
-                        window.location.replace(sharedUri);
-                    }
-                    else {
+
+                    // Any tiny link should be rewritten to some form that wouldn't allow user to go by to that '/tiny/...' link.
+                    // If that link represents some other link (e.g. '/master/...'), let's rewrite to that other link.
+                    //   It would be consistent for opening such other links directly.
+                    // Otherwise, rewrite to the main menu link because Entity Master for NEW instances are opened there.
+                    const rewrittenUri = sharedUri || this._urlForMainMenu();
+
+                    // First, enforce correct current history entry with the same state, but new URI.
+                    window.history.replaceState(this.currentHistoryState, '', rewrittenUri);
+                    // Then perform transition using <app-location> 'location-changed' event (see element docs).
+                    // `window.location.replace()` is not suitable because it messes up the `window.history.state` in our case
+                    //   (see `_routeChanged` observer with `if (!window.history.state) {...` branch).
+                    window.dispatchEvent(new CustomEvent('location-changed', {
+                        detail: {
+                            // The state was manually rewritten above -- prevent automatic rewrite.
+                            avoidStateAdjusting: true
+                        }
+                    }));
+
+                    if (!sharedUri) {
                         const actionIdentifier = customObject['@@actionIdentifier'];
                         const actionObject = appActions.actions(this)[actionIdentifier];
                         if (!actionObject) {
@@ -467,7 +482,7 @@ Polymer({
     _loadApplicationInfrastructureIntoHistory: function () {
         if (this._route.path) {
             const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
-            const urlForMenu = new URL("/#/menu", window.location.protocol + '//' + window.location.host).href;
+            const urlForMenu = this._urlForMainMenu();
             const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
             window.history.replaceState({currIndex: 0}, '', urlForRoot);
             window.history.pushState({currIndex: 1}, '', urlForMenu);
@@ -476,7 +491,14 @@ Polymer({
             this._routeChanged();
         }
     },
-    
+
+    /// Returns a `String` URL for main menu view of the application.
+    /// Main menu view is suitable for opening Entity Master links, both "tiny" and '/master/...' ones for persisted entities.
+    ///
+    _urlForMainMenu: function () {
+        return new URL('/#/menu', window.location.protocol + '//' + window.location.host).href;
+    },
+
     /**
      * Actually changes the page; if the page is about to change to 'root' page (for e.g. https://tgdev.com:8091), then it moves forward to corresponding menu,
      * which should definitely exist (https://tgdev.com:8091/#/menu).
