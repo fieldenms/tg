@@ -19,7 +19,7 @@ public class NeedMoreDataStorageTest extends AbstractDaoTestCase {
     public void adding_continuation_data_to_companions_populates_scoped_NeedMoreDataStorage() {
         assertTrue("Each test starts in a new scope with empty NeedMoreDataStorage.", NeedMoreDataStorage.moreData().isEmpty());
 
-        // Create companion, set more data for it and observer NeedMoreDataStorage change.
+        // Create companion, set more data for it and observe NeedMoreDataStorage change.
         final EntityWithMoneyDao co = co$(EntityWithMoney.class);
         assertTrue(co.moreData().isEmpty());
 
@@ -38,7 +38,7 @@ public class NeedMoreDataStorageTest extends AbstractDaoTestCase {
         final EntityWithMoneyDao co = co$(EntityWithMoney.class);
         assertTrue(co.moreData().isEmpty());
 
-        // Put more data into storage and observe is availability in companions.
+        // Put more data into storage and observe its availability in companions.
         final var coWarnings = co$(AcknowledgeWarnings.class);
         final var warnings = coWarnings.new_();
         NeedMoreDataStorage.putMoreData("TEST_KEY", warnings);
@@ -84,12 +84,10 @@ public class NeedMoreDataStorageTest extends AbstractDaoTestCase {
 
         final var coWarnings = co$(AcknowledgeWarnings.class);
         final var warnings = coWarnings.new_();
-        NeedMoreDataStorage.runWithMoreData(Map.of("TEST_KEY", warnings), () ->
-            {
-                final EntityWithMoneyDao co = co$(EntityWithMoney.class);
-                assertEquals(warnings, co.moreData("TEST_KEY").orElseThrow());
-            }
-        );
+        NeedMoreDataStorage.runWithMoreData(Map.of("TEST_KEY", warnings), () -> {
+            final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+            assertEquals(warnings, co.moreData("TEST_KEY").orElseThrow());
+        });
 
         assertFalse("NeedMoreDataStorage is not bound.", NeedMoreDataStorage.isBound());
     }
@@ -101,18 +99,16 @@ public class NeedMoreDataStorageTest extends AbstractDaoTestCase {
 
         final var coWarnings = co$(AcknowledgeWarnings.class);
         final var warnings = coWarnings.new_();
-        NeedMoreDataStorage.runWithMoreData(Map.of("TEST_KEY", warnings), () ->
-            {
-                final EntityWithMoneyDao co = co$(EntityWithMoney.class);
-                assertEquals(1, NeedMoreDataStorage.moreData().size());
+        NeedMoreDataStorage.runWithMoreData(Map.of("TEST_KEY", warnings), () -> {
+            final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+            assertEquals(1, NeedMoreDataStorage.moreData().size());
+            assertEquals(warnings, co.moreData("TEST_KEY").orElseThrow());
+            NeedMoreDataStorage.runWithMoreData(Map.of("TEST_KEY1", warnings), () -> {
+                assertEquals(2, NeedMoreDataStorage.moreData().size());
                 assertEquals(warnings, co.moreData("TEST_KEY").orElseThrow());
-                NeedMoreDataStorage.runWithMoreData(Map.of("TEST_KEY1", warnings), () -> {
-                    assertEquals(2, NeedMoreDataStorage.moreData().size());
-                    assertEquals(warnings, co.moreData("TEST_KEY").orElseThrow());
-                    assertEquals(warnings, co.moreData("TEST_KEY1").orElseThrow());
-                });
-            }
-        );
+                assertEquals(warnings, co.moreData("TEST_KEY1").orElseThrow());
+            });
+        });
 
         assertFalse("NeedMoreDataStorage is not bound.", NeedMoreDataStorage.isBound());
     }
@@ -124,12 +120,10 @@ public class NeedMoreDataStorageTest extends AbstractDaoTestCase {
 
         final var coWarnings = co$(AcknowledgeWarnings.class);
         final var warnings = coWarnings.new_();
-        final var result = NeedMoreDataStorage.callWithMoreData(Map.of("TEST_KEY", warnings), () ->
-            {
-                final EntityWithMoneyDao co = co$(EntityWithMoney.class);
-                return co.moreData("TEST_KEY").orElseThrow();
-            }
-        );
+        final var result = NeedMoreDataStorage.callWithMoreData(Map.of("TEST_KEY", warnings), () -> {
+            final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+            return co.moreData("TEST_KEY").orElseThrow();
+        });
 
         assertEquals(warnings, result);
         assertFalse("NeedMoreDataStorage is not bound.", NeedMoreDataStorage.isBound());
@@ -142,18 +136,16 @@ public class NeedMoreDataStorageTest extends AbstractDaoTestCase {
 
         final var coWarnings = co$(AcknowledgeWarnings.class);
         final var warnings = coWarnings.new_();
-        final var result = NeedMoreDataStorage.callWithMoreData(Map.of("TEST_KEY", warnings), () ->
-            {
-                final EntityWithMoneyDao co = co$(EntityWithMoney.class);
-                assertEquals(1, NeedMoreDataStorage.moreData().size());
+        final var result = NeedMoreDataStorage.callWithMoreData(Map.of("TEST_KEY", warnings), () -> {
+            final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+            assertEquals(1, NeedMoreDataStorage.moreData().size());
+            assertEquals(warnings, co.moreData("TEST_KEY").orElseThrow());
+            return NeedMoreDataStorage.callWithMoreData(Map.of("TEST_KEY1", warnings), () -> {
+                assertEquals(2, NeedMoreDataStorage.moreData().size());
                 assertEquals(warnings, co.moreData("TEST_KEY").orElseThrow());
-                return NeedMoreDataStorage.callWithMoreData(Map.of("TEST_KEY1", warnings), () -> {
-                    assertEquals(2, NeedMoreDataStorage.moreData().size());
-                    assertEquals(warnings, co.moreData("TEST_KEY").orElseThrow());
-                    return co.moreData("TEST_KEY1").orElseThrow();
-                });
-            }
-        );
+                return co.moreData("TEST_KEY1").orElseThrow();
+            });
+        });
 
         assertEquals(warnings, result);
         assertFalse("NeedMoreDataStorage is not bound.", NeedMoreDataStorage.isBound());
