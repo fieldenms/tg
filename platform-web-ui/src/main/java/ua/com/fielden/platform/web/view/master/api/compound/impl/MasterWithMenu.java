@@ -93,7 +93,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                     .add(new DomElement("iron-icon")
                             .attr("icon", "tg-icons:dragVertical")
                             .clazz("drag-anchor")
-                            .style("cursor: grab", "visibility: var(--icon-visibility)", "display: var(--icon-display)"))
+                            .style("margin-left:-8px", "cursor: grab", "visibility: var(--icon-visibility)", "display: var(--icon-display)"))
                     .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 32px"))
                     .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc()))));
         }

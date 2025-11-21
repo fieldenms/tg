@@ -43,7 +43,6 @@ const template = html`
             --paper-listbox-background-color: #fff;
         }
         #menu ::slotted(paper-item) {
-            margin-left: -8px;
             padding-left: 0;
             --icon-display: inherit;
             --icon-visibility: hidden;
@@ -52,6 +51,9 @@ const template = html`
             margin-left: 0;
             padding-left: 16px;
             --icon-display: none;
+        }
+        #menu ::slotted(paper-item.dragging-element) {
+            background-color: #ECEFF1;
         }
         #menu ::slotted(paper-item.dragging) {
             opacity: 0;
@@ -486,6 +488,7 @@ Polymer({
                 menuItemToDrag: elementToDrag,
                 originSibling: elementToDrag.nextSibling
             };
+            this._dragObject.menuItemToDrag.classList.add("dragging-element");
             this.async(() => {
                 if (this._dragObject) {
                     this._dragObject.menuItemToDrag.classList.add("dragging");
@@ -500,6 +503,7 @@ Polymer({
 
     dragDrop: function (dragEvent) {
         if (this._dragObject) {
+            this._dragObject.menuItemToDrag.classList.remove("dragging-element");
             this._dragObject.menuItemToDrag.classList.remove("dragging");
             this.$.menu.classList.remove("dragging");
             this._saveMenuOrder();
@@ -509,6 +513,7 @@ Polymer({
 
     endDrag: function (dragEvent) {
         if (this._dragObject) {
+            this._dragObject.menuItemToDrag.classList.remove("dragging-element");
             this._dragObject.menuItemToDrag.classList.remove("dragging");
             this.$.menu.classList.remove("dragging");
             this.insertBefore(this._dragObject.menuItemToDrag, this._dragObject.originSibling);
