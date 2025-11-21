@@ -563,31 +563,50 @@ Polymer({
         }
     },
 
-    /**
-     * Selects the specified view. If the view is opened in different module then play transition animation between modules.
-     * 
-     * @param {String} selected 
-     */
+    /// Perform transition to a path (new or the same).
+    ///
+    /// The transition logic should be no different whether it occurs with animation (module menu <=> module menu item <=>
+    ///   <=> main menu) or without animation (main menu <=> tiny link master <=> persisted link master).
+    ///
+    /// Please note, that some links (/tiny/...) are getting rewritten and will not be left in a history.
+    /// And it does not mean that transitions to that links are prohibited, it just means that further user transitions
+    ///   to previously transitioned such links through Back / Forward buttons will not occur.
+    ///
+    _performTransition: function (selected, getCurrentlySelectedElement) {
+        // Is transition targeted to some Entity Master link?
+        if (['master', 'tiny'].includes(selected)) {
+            // Perform transition.
+            this._selectedSubmodule = this._subroute.path;
+            // Open an Entity Master conforming to that transition.
+            this._tgOpenMasterAction();
+        }
+        // If transitioned to the same item? (e.g. on mobile during Entity Master closing through Back button we use 'formward()' call)
+        else if (this._selectedSubmodule === this._subroute.path) {
+            const currentlySelectedElement = getCurrentlySelectedElement();
+            // Activate it.
+            if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
+                currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
+            }
+        } else {
+            // Perform regular transition.
+            this._selectedSubmodule = this._subroute.path;
+        }
+    },
+
+    /// Selects the specified view.
+    /// If the view is opened in different module then play transition animation between modules.
+    ///
     _setSelected: function (selected) {
         if (this.menuConfig) {
             const moduleToSelect = findModule(selected, this.menuConfig);
             const currentlySelected = this.$.pages.selected;
             const currentlySelectedElement = currentlySelected && this.shadowRoot.querySelector("[name='" + currentlySelected + "']");
-            //If module to select is the same as currently selected then just open selected menu item (e.i open entity centre or master)
+            // If module to select is the same as currently selected then just open selected menu item (i.e. open entity centre or master).
             if (currentlySelected === moduleToSelect) {
-                if (selected === 'master') {
-                    this._selectedSubmodule = this._subroute.path;
-                    this._tgOpenMasterAction();
-                } else if (this._selectedSubmodule === this._subroute.path) {
-                    if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
-                        currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
-                    }
-                } else {
-                    this._selectedSubmodule = this._subroute.path;
-                }
+                this._performTransition(selected, () => currentlySelectedElement);
                 return;
             }
-            //Otherwise configure exit animation on currently selected module and entry animation on module to select
+            // Otherwise, configure exit animation on currently selected module and entry animation on module to select.
             const elementToSelect = moduleToSelect && this.shadowRoot.querySelector("[name='" + moduleToSelect + "']");
             if (currentlySelectedElement) {
                 currentlySelectedElement.configureExitAnimation(moduleToSelect);
@@ -601,7 +620,7 @@ Polymer({
                 return;
             }
         }
-        //Play the transition animation. The view will be selected on animation finish event handler
+        // Play the transition animation. The view will be selected on animation finish event handler.
         this.selectAfterRender = selected;
     },
     
@@ -610,26 +629,13 @@ Polymer({
         return e.returnValue;
     },
 
-    /**
-     * Animation finish event handler. This handler opens master or centre if module transition occurred because of user action.
-     * 
-     * @param {Event} e 
-     * @param {Object} detail 
-     * @param {Object} source 
-     */
+     /// Animation finish event handler.
+     /// This handler opens master or centre if module transition occurred because of user action.
+     ///
     _animationFinished: function (e, detail, source) {
-        if (e.target === this.$.pages){
+        if (e.target === this.$.pages) {
             this._selectedModule = this._routeData.moduleName;
-            if (['master', 'tiny'].includes(this._routeData.moduleName)) {
-                this._selectedSubmodule = this._subroute.path;
-                this._tgOpenMasterAction();
-            } else if (this._selectedSubmodule === this._subroute.path) {
-                if (detail.toPage.selectSubroute) {
-                    detail.toPage.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
-                }
-            } else {
-                this._selectedSubmodule = this._subroute.path;
-            }
+            this._performTransition(this._routeData.moduleName, () => detail.toPage);
         }
     },
 
@@ -759,7 +765,7 @@ Polymer({
         //Add iron-resize event listener
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
         
-        //Add URI (location) change event handler to set history state. 
+        // Add URI (location) change event handler to set history state.
         window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
 
         //Add resize listener that checks whether screen resolution changed
