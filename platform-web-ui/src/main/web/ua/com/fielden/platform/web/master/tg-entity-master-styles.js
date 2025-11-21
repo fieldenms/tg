@@ -19,6 +19,18 @@ styleElement.innerHTML = `
             tg-entity-master {
                 min-height: 0;
             }
+            .drag-anchor {
+                margin-left:-8px;
+                cursor: move; /* fallback if grab cursor is unsupported */
+                cursor: grab;
+                cursor: -moz-grab;
+                cursor: -webkit-grab;
+            }
+            .drag-anchor:active {
+                cursor: grabbing;
+                cursor: -moz-grabbing;
+                cursor: -webkit-grabbing;
+            }
             .property-action-icon {
                 --tg-ui-action-icon-button-width: 24px;
                 --tg-ui-action-icon-button-height: 24px;

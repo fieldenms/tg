@@ -30,6 +30,7 @@ const additionalTemplate = html`
             @apply --layout-flex;
         }
         .search-controls-wrapper {
+            padding-left:16px;
             @apply --layout-horizontal;
             @apply --layout-center;
         }
@@ -48,30 +49,29 @@ const additionalTemplate = html`
         .item:hover {
             background-color: var(--google-grey-100);
         }
+        iron-list:not([drag-mode]) .item:hover .drag-anchor{
+            visibility: visible;
+        }
         .item:focus,
         .item.selected:focus {
             outline: 0;
         }
-        .resizing-box:not([drag-object-present]):hover {
+        [is-dragging-item] {
+            visibility: hidden;
+        }
+        .drag-anchor {
+            visibility: hidden;
+            margin-left:-8px;
             cursor: move; /* fallback if grab cursor is unsupported */
             cursor: grab;
             cursor: -moz-grab;
             cursor: -webkit-grab;
-            color: var(--paper-light-blue-700);
+            color: var(--paper-grey-400);
         }
-        .resizing-box:active { 
+        .drag-anchor:active {
             cursor: grabbing;
             cursor: -moz-grabbing;
             cursor: -webkit-grabbing;
-        }
-        .resizing-box {
-            margin: 0 5px;
-            min-width: 32px;
-            min-height: 32px;
-            color: var(--paper-grey-400);
-        }
-        [is-dragging] {
-            visibility: hidden;
         }
         paper-checkbox {
             --paper-checkbox-checked-color: var(--paper-light-blue-700);
@@ -133,19 +133,18 @@ const additionalTemplate = html`
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>`;
 const customInputTemplate = html`
-    <div class="search-controls-wrapper" style$="[[_computeInputStyle(_forReview, canReorderItems)]]">
-        <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
+    <div class="search-controls-wrapper" style$="[[_computeInputStyle(_forReview)]]">
         <iron-input bind-value="{{_phraseForSearching}}" class="custom-input-wrapper" >
             <input id="searchInput" class="custom-input" placeholder="Type to search..." on-input="_onInput" on-mouseup="_onMouseUp" on-mousedown="_onMouseDown" on-blur="_eventHandler" autocomplete="off">
         </iron-input>
         <paper-checkbox class="select-all-checkbox" style$="[[_computeSelectAllCheckboxStyle(_scrollBarWidth, _multiSelection)]]" id="selectAllCheckbox" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
     </div>
     <div class="layout vertical flex relative">
-        <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection="[[_multiSelection]]">
+        <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection="[[_multiSelection]]" drag-mode$="[[_draggingItem]]">
             <template>
-                <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]" selected$="[[selected]]" drag-element draggable$="[[_calcDraggable(selected, canReorderItems)]]">
-                    <div tabindex="0" class$="[[_computedClass(selected, item)]]" style$="[[_computeItemStyle(_forReview, canReorderItems)]]" is-dragging$="[[_isDraggingThisItem(item, _draggingItem)]]" on-tap="_selectionHandler">
-                        <iron-icon class="resizing-box" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" drag-object-present$="[[_draggingItem]]"></iron-icon>
+                <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]" selected$="[[selected]]" drag-element draggable$="[[_calcItemDraggable(selected, canReorderItems, _touchEnabled)]]">
+                    <div tabindex="0" class$="[[_computedClass(selected, item)]]" style$="[[_computeItemStyle(_forReview)]]" is-dragging-item$="[[_isDraggingThisItem(item, _draggingItem)]]" on-tap="_selectionHandler">
+                        <iron-icon class="drag-anchor" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForDragAnchor(selected, _touchEnabled)]]" draggable$="[[_calcIconDraggable(selected, canReorderItems, _touchEnabled)]]"></iron-icon>
                         <!-- on-touchstart="_disableScrolling" on-touchmove="_disableScrolling" -->
                         <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]" style$="[[_computeTitleStyle(canReorderItems)]]">
                             <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
@@ -198,6 +197,14 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
              * Indicates whether order of arrived entities remains the same even if some of items are selected.
              */
             staticOrder: {
+                type: Boolean,
+                value: false
+            },
+
+            /**
+             * Determines whether collectional editor is on touch device.
+             */
+            _touchEnabled: {
                 type: Boolean,
                 value: false
             },
@@ -348,12 +355,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             this._scrollBarWidth = this.$.input.offsetWidth - this.$.input.clientWidth;
         }.bind(this);
 
-        //if (!isTouchEnabled()) { // TODO remove this check in #2323
-            this.addEventListener('dragstart', this._startDrag.bind(this));
-            this.addEventListener('dragover', this._dragOver.bind(this));
-            this.addEventListener("drop", this._dragDrop);
-            this.addEventListener('dragend', this._endDrag.bind(this));
-        //}
+        this.addEventListener('dragstart', this._startDrag.bind(this));
+        this.addEventListener('dragover', this._dragOver.bind(this));
+        this.addEventListener("drop", this._dragDrop);
+        this.addEventListener('dragend', this._endDrag.bind(this));
+
+        this._touchEnabled = isTouchEnabled();
     }
 
     connectedCallback () {
@@ -593,10 +600,8 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         return !_forReview;
     }
 
-    _computeInputStyle (_forReview, canReorderItems) {
-        let style = canReorderItems ? "" : "padding-left:16px;";
-        style += _forReview ? "" : "padding-bottom: 20px;";
-        return style;
+    _computeInputStyle (_forReview) {
+        return _forReview ? "" : "padding-bottom: 20px;";
     }
 
     _computeSelectAllCheckboxStyle (_scrollBarWidth, _multiSelection) {
@@ -611,13 +616,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         return style;
     }
     
-    _computeItemStyle (_forReview, canReorderItems) {
-        let style = _forReview ? '' : 'cursor: pointer;';
-        return style;
+    _computeItemStyle (_forReview) {
+        return _forReview ? '' : 'cursor: pointer;';
     }
 
-    _computeStyleForResizingBox (selected) {
-        return !selected ? "visibility: hidden;" : ""; 
+    _computeStyleForDragAnchor (selected, _touchEnabled) {
+        return !selected || _touchEnabled ? "visibility: hidden;" : ""; 
     }
 
     _computeTitleStyle (canReorderItems) {
@@ -870,8 +874,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         this._disableSelectionListeners = false;
     }
 
-    _calcDraggable (selected, canReorderItems) {
-        return selected && canReorderItems ? "true" : "false";
+    _calcIconDraggable (selected, canReorderItems, _touchEnabled) {
+        return selected && canReorderItems && !_touchEnabled ? "true" : "false";
+    }
+
+    _calcItemDraggable (selected, canReorderItems, _touchEnabled) {
+        return selected && canReorderItems && _touchEnabled ? "true" : "false";
     }
 
     _startDrag (dragEvent) {
