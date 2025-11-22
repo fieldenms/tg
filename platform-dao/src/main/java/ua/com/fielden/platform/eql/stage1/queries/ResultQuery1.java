@@ -100,6 +100,9 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
         final boolean isNotTopFetch = retrievalModel != null && !retrievalModel.isTopLevel();
         final var enhancedYields = mainSource.querySourceInfo().getProps().values().stream()
                 // Narrow down the set of yields to those included in the fetch model.
+                // NOTE: If `retrievalModel` is null and the result type is a union entity, this code may add yields for common properties, which will fail during instantiation.
+                //       However, this is unlikely to occur in practice.
+                //       `retrievalModel` may be null only in low-level platform code that should know what it is doing.
                 .filter(level1Prop -> retrievalModel == null || retrievalModel.containsProp(level1Prop.name))
                 // prop -> stream of prop path components
                 .flatMap(level1Prop -> {

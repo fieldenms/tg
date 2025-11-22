@@ -2,6 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
+import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-handler-behaviour.js';
 import { getFirstEntityType, getParentAnd, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
@@ -374,7 +375,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 }
                 return action._countActualEntities() > 0;
             }.bind(this);
-            action.hasNextEntry = function(entitiesCount, entityIndex) {
+            action.hasNextEntry = function () {
                 const thisPageInd = this.$.egi.findFilteredEntityIndex(action.currentEntity());
                 if (thisPageInd >= 0) {
                     const lastEntity = action._findLastEntity();
@@ -420,5 +421,6 @@ const TgEntityCentreTemplateBehaviorImpl = {
 export const TgEntityCentreTemplateBehavior = [
     TgEntityCentreBehavior,
     TgViewWithHelpBehavior,
+    TgLongTapHandlerBehaviour,
     TgEntityCentreTemplateBehaviorImpl
 ];

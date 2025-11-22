@@ -931,12 +931,14 @@ Polymer({
             const result = [];
             for (let index = 0; index < this.allColumns.length; index++) {
                 const column = this.allColumns[index];
-                const entry = {
-                    dotNotation: column.property,
-                    value: this.getBindedValue(entity, column),
-                    column: column
-                };
-                result.push(entry);
+                if (!column.isHidden) { // Checks whether the column is authorized and therefore visible.
+                    const entry = {
+                        dotNotation: column.property,
+                        value: this.getBindedValue(entity, column),
+                        column: column
+                    };
+                    result.push(entry);
+                }
             }
             return result;
         }).bind(this);
@@ -1065,11 +1067,25 @@ Polymer({
         const type = entity && entity.constructor.prototype.type && entity.constructor.prototype.type.call(entity);
         if (type) {
             const propertyType = this._reflector.tg_determinePropertyType(type, column.getActualProperty());
-            if (propertyType instanceof this._reflector._getEntityTypePrototype() && propertyType.isUnionEntity() && entity.get(column.getActualProperty())) {
-                //Should consider whether it is correct for dynamic columns.
-                return entity.get(column.getActualProperty())._activeEntity().type().entityMaster();
-            } else if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
-                return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
+            // Only entity-typed columns can have default actions.
+            if (propertyType instanceof this._reflector._getEntityTypePrototype()) {
+                if (propertyType.isUnionEntity()) {
+                    if (entity.get(column.getActualProperty())) {
+                        // TODO Should consider whether it is correct for dynamic columns.
+                        return entity.get(column.getActualProperty())._activeEntity().type().entityMaster();
+                    }
+                    else {
+                        const title = type.prop(column.getActualProperty()).title();
+                        return {
+                            shortDesc: title,
+                            longDesc: 'Edit ' + title
+                        };
+                    }
+                }
+                else {
+                    // Only entity-typed columns, that have corresponding entity masters, can have default actions.
+                    return propertyType.entityMaster();
+                }
             }
         }
         return false;
@@ -1224,6 +1240,18 @@ Polymer({
         this._updateTableSizeAsync();
     },
 
+    /**
+     * Updates the available columns list according to security configuration.
+     * 
+     * @param {Array} availableColumns the list of authorised columns.
+     */
+    adjustColumnAvailability: function(availableColumns) {
+        this.allColumns.forEach(col => {
+                col.isHidden = !availableColumns.includes(col.property);
+        });
+        this._updateColumns(this.fixedColumns.concat(this.columns));
+    },
+
     /** 
      * Updates the column visibility 
      */
@@ -1373,8 +1401,10 @@ Polymer({
     },
 
     _updateColumns: function (resultantColumns) {
-        this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
-        this.columns = resultantColumns;
+        // First filter the columns to include only authorized (i.e., visible) columns.
+        const availableColumns = resultantColumns.filter(col => !col.isHidden);
+        this.fixedColumns = availableColumns.splice(0, this.numOfFixedCols);
+        this.columns = availableColumns;
         // Need to initiate DOM rendering as soon as possible due to the need to process resultant DOM in method _setSortingFor.
         this.$.fixedHeadersTemplate.render();
         this.$.scrollableHeadersTemplate.render();

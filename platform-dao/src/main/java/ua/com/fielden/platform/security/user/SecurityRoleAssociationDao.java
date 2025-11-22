@@ -8,6 +8,7 @@ import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.partitioningBy;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -79,6 +80,12 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     public void removeAssociations(final Collection<SecurityRoleAssociation> associations) {
         SequentialGroupingStream.stream(associations.stream(), (assoc, group) -> group.size() < 1000)
         .forEach(group -> createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), group).map(this::defaultBatchDelete));
+    }
+
+    @Override
+    @SessionRequired
+    public int addAssociations(final Stream<SecurityRoleAssociation> associations) {
+        return defaultBatchInsert(associations, 500);
     }
 
 }

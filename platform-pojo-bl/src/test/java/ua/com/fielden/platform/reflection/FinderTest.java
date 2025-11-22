@@ -23,9 +23,11 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.reflection.Finder.streamUnionMembersWithSubProperty;
+import static ua.com.fielden.platform.reflection.Finder.streamUnionSubProperties;
 
 /**
  * Test case for {@link Finder}.
@@ -650,7 +652,7 @@ public class FinderTest {
     @Test
     public void commonPropertiesForUnion_identifies_all_common_properties_amongst_union_properties() {
         final Set<String> commonProps = Finder.commonPropertiesForUnion(UnionEntity.class);
-        assertEquals(Set.of("desc", "stringProperty", "key"), commonProps);
+        assertEquals(Set.of("desc", "stringProperty", "entityThree", "key"), commonProps);
     }
 
     @Test
@@ -694,6 +696,38 @@ public class FinderTest {
         assertEquals(properties.size(), realProperties.size() + 1);
         assertTrue(properties.contains(KEY));
         assertFalse(realProperties.contains(KEY));
+    }
+
+    @Test
+    public void streamUnionMembersWithSubProperty_returns_all_union_members_that_have_the_subProperty() {
+        assertThat(streamUnionMembersWithSubProperty(UnionEntity.class, "entityThree").toList())
+                .containsExactlyInAnyOrder("propertyOne", "propertyTwo");
+        assertThat(streamUnionMembersWithSubProperty(UnionEntity.class, "unrelatedProperty").toList())
+                .isEmpty();
+        assertThat(streamUnionMembersWithSubProperty(UnionEntity.class, "integerProperty").toList())
+                .containsExactlyInAnyOrder("propertyTwo");
+        assertThat(streamUnionMembersWithSubProperty(UnionEntity.class, KEY).toList())
+                .containsExactlyInAnyOrder("propertyOne", "propertyTwo");
+        assertThat(streamUnionMembersWithSubProperty(UnionEntity.class, ID).toList())
+                .containsExactlyInAnyOrder("propertyOne", "propertyTwo");
+        assertThat(streamUnionMembersWithSubProperty(UnionEntity.class, DESC).toList())
+                .containsExactlyInAnyOrder("propertyOne", "propertyTwo");
+    }
+
+    @Test
+    public void streamUnionSubProperties_returns_all_paths_to_the_subProperty() {
+        assertThat(streamUnionSubProperties(UnionEntity.class, "entityThree").toList())
+                .containsExactlyInAnyOrder("propertyOne.entityThree", "propertyTwo.entityThree");
+        assertThat(streamUnionSubProperties(UnionEntity.class, "unrelatedProperty").toList())
+                .isEmpty();
+        assertThat(streamUnionSubProperties(UnionEntity.class, "integerProperty").toList())
+                .containsExactlyInAnyOrder("propertyTwo.integerProperty");
+        assertThat(streamUnionSubProperties(UnionEntity.class, KEY).toList())
+                .containsExactlyInAnyOrder("propertyOne.key", "propertyTwo.key");
+        assertThat(streamUnionSubProperties(UnionEntity.class, ID).toList())
+                .containsExactlyInAnyOrder("propertyOne.id", "propertyTwo.id");
+        assertThat(streamUnionSubProperties(UnionEntity.class, DESC).toList())
+                .containsExactlyInAnyOrder("propertyOne.desc", "propertyTwo.desc");
     }
 
 }

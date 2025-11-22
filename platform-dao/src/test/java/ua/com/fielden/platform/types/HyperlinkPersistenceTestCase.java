@@ -17,7 +17,7 @@ import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-public class HyperlinkPersistanceTestCase extends AbstractDaoTestCase {
+public class HyperlinkPersistenceTestCase extends AbstractDaoTestCase {
 
     @Test
     public void hyperlinks_can_be_persisted() {

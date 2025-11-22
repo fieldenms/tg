@@ -4,12 +4,10 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackPropertyDescriptorMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -29,8 +27,8 @@ import java.util.Optional;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableProperty;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
@@ -127,17 +125,43 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
 
     /// Creates value matcher instance.
     ///
+    /// First, takes a manually registered value matcher instance.
+    ///
+    /// If empty, uses [IMaster#getAutocompleterAssociatedType(Class, String)] and creates default matcher for it.
+    /// Please note, that [IMaster#getAutocompleterAssociatedType(Class, String)] may have been overridden.
+    /// For example, it is overridden for String-typed entity editors (#2510).
+    ///
+    /// If still empty (unlikely), creates default matcher for it.
+    ///
     public IValueMatcherWithContext<T, ?> createValueMatcher(final String propertyName) {
         return masterConfig.matcherTypeFor(propertyName)
                 .<IValueMatcherWithContext<T, ?>> map(injector::getInstance)
                 .or(() -> masterConfig.getAutocompleterAssociatedType(entityType, propertyName)
-                                      .map(it -> createDefaultValueMatcherForPropType(it, coFinder)))
+                                      .map(it -> createDefaultValueMatcherForPropType(it, propertyName, entityType, coFinder)))
                 .orElseGet(() -> createDefaultValueMatcher(propertyName, entityType, coFinder));
     }
 
-    private IValueMatcherWithContext<T, ?> createDefaultValueMatcherForPropType(final Class<? extends AbstractEntity<?>> propertyType, final ICompanionObjectFinder coFinder) {
-        final IEntityDao<?> co = coFinder.find(propertyType);
-        return new FallbackValueMatcherWithContext<>(co, false);
+    /// Creates a default Entity Master value matcher for concrete property type.
+    /// The type may come from standard entity-typed properties with no custom matchers specified.
+    /// Or it may come from String-typed properties with entity editor configurations (#2510).
+    ///
+    private static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createDefaultValueMatcherForPropType(
+            final Class<V> propertyType,
+            final String propertyName,
+            final Class<T> entityType,
+            final ICompanionObjectFinder coFinder)
+    {
+        // Create standard fallback `PropertyDescriptor` matcher, if the type is applicable.
+        if (isPropertyDescriptor(propertyType)) {
+            return (IValueMatcherWithContext<T, V>) new FallbackPropertyDescriptorMatcherWithContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, entityType, propertyName).value());
+        }
+        // Otherwise, create standard fallback matcher for all other types.
+        else {
+            // Filtering out of inactive values by default should only happen for activatable properties.
+            // See `isActivatableProperty` for more.
+            // Here, activatable unions are included, but @SkipEntityExistsValidation(skipActiveOnly) props excluded.
+            return new FallbackValueMatcherWithContext<>(coFinder.find(propertyType), isActivatableProperty(entityType, propertyName));
+        }
     }
 
     /// Creates fetch model for entity-typed autocompleted values. Fetches only properties specified in Master DSL configuration.
@@ -157,16 +181,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
 
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
         final Class<V> propertyType = (Class<V>) (isEntityItself ? entityType : determinePropertyType(entityType, propertyName));
-        if (isPropertyDescriptor(propertyType)) {
-            return (IValueMatcherWithContext<T, V>) new FallbackPropertyDescriptorMatcherWithContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, entityType, propertyName).value());
-        } else {
-            final IEntityDao<V> co = coFinder.find(propertyType);
-            // filtering out of inactive should only happen for activatable properties without SkipEntityExistsValidation present
-            final boolean activeOnly =
-                    ActivatableAbstractEntity.class.isAssignableFrom(propertyType) &&
-                    !findFieldByName(entityType, propertyName).isAnnotationPresent(SkipEntityExistsValidation.class);
-            return new FallbackValueMatcherWithContext<>(co, activeOnly);
-        }
+        return createDefaultValueMatcherForPropType(propertyType, propertyName, entityType, coFinder);
     }
 
     @Override

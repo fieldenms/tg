@@ -40,14 +40,13 @@ import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
-/**
- * {@link IWebResourceLoader} implementation.
- *
- * @author TG Team
- *
- */
+/// [IWebResourceLoader] implementation.
+///
 @Singleton
 public class WebResourceLoader implements IWebResourceLoader {
+    public static final String ERR_UNKNOWN_URI = "URI is unknown: [%s].";
+    public static final String ERR_BLANK_URI = "Blank URI is invalid.";
+
     private final IWebUiConfig webUiConfig;
     private final ISerialiser serialiser;
     private static final Logger logger = LogManager.getLogger(WebResourceLoader.class);
@@ -71,10 +70,17 @@ public class WebResourceLoader implements IWebResourceLoader {
 
     @Override
     public InputStream loadStream(final String resourceUri) {
-        return ofNullable(getStream(resourceUri)).orElseThrow(() -> new MissingWebResourceException(format("URI is unknown: [%s].", resourceUri)));
+        if (StringUtils.isBlank(resourceUri)) {
+            throw new MissingWebResourceException(ERR_BLANK_URI);
+        }
+        return ofNullable(getStream(resourceUri)).orElseThrow(() -> new MissingWebResourceException(ERR_UNKNOWN_URI.formatted(resourceUri)));
     }
 
     private Optional<String> getSource(final String resourceUri) {
+        if (StringUtils.isBlank(resourceUri)) {
+            throw new MissingWebResourceException(ERR_BLANK_URI);
+        }
+
         if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceUri)) {
             return getApplicationStartupResourcesSource(webUiConfig);
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceUri)) {
@@ -98,38 +104,35 @@ public class WebResourceLoader implements IWebResourceLoader {
         } else if (resourceUri.startsWith("/resources/")) {
             return getFileSource(resourceUri, webUiConfig.resourcePaths());
         } else {
-            final String msg = format("URI is unknown: [%s].", resourceUri);
+            final String msg = ERR_UNKNOWN_URI.formatted(resourceUri);
             logger.error(msg);
             return empty();
         }
     }
 
     @Override
-    public Optional<String> checksum(final String resourceURI) {
-        return webUiConfig.checksum(resourceURI);
+    public Optional<String> checksum(final String resourceUri) {
+        if (StringUtils.isBlank(resourceUri)) {
+            throw new MissingWebResourceException(ERR_BLANK_URI);
+        }
+
+        return webUiConfig.checksum(resourceUri);
     }
 
-    /**
-     * Generates 'tg-reflector' resource with type table containing master configurations.
-     *
-     * @param webUiConfig -- web UI configuration containing information about all entity masters
-     * @param serialiser
-     * @param tgJackson
-     * @return
-     */
+    /// Generates 'tg-reflector' resource with type table containing master configurations.
+    ///
+    /// @param webUiConfig a WebUI configuration containing information about all entity masters
+    ///
     private static Optional<String> getReflectorSource(final IWebUiConfig webUiConfig, final ISerialiser serialiser, final TgJackson tgJackson) {
         final Optional<String> originalSource = ofNullable(getText("ua/com/fielden/platform/web/reflection/tg-reflector.js"));
         return originalSource.map(src -> src.replace("@typeTable", new String(serialiser.serialise(enhanceWithMasterInfo(webUiConfig, tgJackson.getTypeTable()), JACKSON), UTF_8)));
     }
 
-    /**
-     * Extends types in {@code typeTable} with information about their masters.
-     * The type can have no master -- in this case {@link EntityType#get_entityMaster()} will be empty ({@code null}).
-     *
-     * @param webUiConfig -- web UI configuration containing information about all entity masters
-     * @param typeTable
-     * @return
-     */
+    /// Extends types in `typeTable` with information about their masters.
+    /// The type can have no master -- in this case [#get_entityMaster()] will be empty (`null`).
+    ///
+    /// @param webUiConfig a WebUI configuration containing information about all entity masters
+    ///
     private static Map<String, EntityType> enhanceWithMasterInfo(final IWebUiConfig webUiConfig, final Map<String, EntityType> typeTable) {
         final MasterInfoProvider masterInfoProvider = new MasterInfoProvider(webUiConfig);
         typeTable.forEach((typeName, entityType) -> {
@@ -139,13 +142,9 @@ public class WebResourceLoader implements IWebResourceLoader {
         return typeTable;
     }
 
-    /**
-     * Injects service worker registration script with lazy tags loading after sw registration (deployment mode).
-     * Injects lazy tags loading (development mode).
-     *
-     * @param originalSource
-     * @return
-     */
+    /// Injects service worker registration script with lazy tags loading after sw registration (deployment mode).
+    /// Injects lazy tags loading (development mode).
+    ///
     private Optional<String> injectServiceWorkerScriptInto(final String originalSource) {
         return ofNullable(originalSource.replace("@service-worker",
                           this.deploymentMode
@@ -176,13 +175,8 @@ public class WebResourceLoader implements IWebResourceLoader {
                .map(src -> vulcanizingMode || deploymentMode ? appendMastersAndCentresImportURIs(src, webUiConfig) : src);
     }
 
-    /**
-     * Appends the import URIs for all masters / centres, registered in WebUiConfig, that were not already included in <code>source</code>.
-     *
-     * @param source
-     * @param webUiConfig
-     * @return
-     */
+    /// Appends the import URIs for all masters / centres, registered in WebUiConfig, that were not already included in <code>source</code>.
+    ///
     private static String appendMastersAndCentresImportURIs(final String source, final IWebUiConfig webUiConfig) {
         final StringBuilder sb = new StringBuilder();
         sb.append(source);
@@ -215,13 +209,8 @@ public class WebResourceLoader implements IWebResourceLoader {
         return sb.toString();
     }
 
-    /**
-     * Checks whether the master or centre, associated with type <code>name</code>, was already included in 'application-startup-resources' file with <code>source</code>.
-     *
-     * @param name
-     * @param source
-     * @return
-     */
+    /// Checks whether the master or centre, associated with type `name`, was already included in `application-startup-resources` file with `source`.
+    ///
     private static boolean alreadyIncluded(final String name, final String source) {
         return source.contains(name);
     }

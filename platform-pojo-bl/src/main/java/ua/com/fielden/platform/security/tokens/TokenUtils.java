@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.security.tokens;
 
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -12,6 +15,9 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.security.tokens.Template.EXECUTE;
 import static ua.com.fielden.platform.security.tokens.Template.MASTER_OPEN;
 
@@ -51,6 +57,31 @@ public class TokenUtils {
                .or(() -> findDefaultToken(readingKind, securityTokenProvider))
                .map(authorisation::authorise)
                .orElseGet(() -> failure(format(ERR_TOKEN_NOT_FOUND, readingKind, entityTypeSimpleName)));
+    }
+
+    /// Validates the criteria values to determine whether they can be applied under the authorisation model.
+    ///
+    public static Result authoriseCriteria(final List<QueryProperty> queryProperties, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
+        return queryProperties.stream()
+            .map(queryProperty -> {
+                // Criterion without any conditions is authorised.
+                // Root property (aka "entity itself") is always authorised.
+                if (!queryProperty.isEmptyWithoutMnemonics() && !"".equals(queryProperty.getPropertyName())) {
+                    final var originalType = getOriginalType(stripIfNeeded(queryProperty.getEntityClass()));
+                    return authorisePropertyReading(originalType, queryProperty.getPropertyName(), authorisation, securityTokenProvider);
+                }
+                return Optional.<Result>empty();
+            })
+            .flatMap(Optional::stream)
+            .filter(res -> !res.isSuccessful())
+            .findFirst()
+            .orElseGet(Result::successful);
+    }
+
+    public static Optional<Result> authorisePropertyReading(final Class<?> entityType, final String propertyName, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
+        return getPropertyAnnotationOptionally(Authorise.class, entityType, propertyName)
+               .map(annot -> (Class<? extends ISecurityToken>) annot.value())
+               .map(authorisation::authorise);
     }
 
     /// Finds token in [ISecurityTokenProvider] for the specified `template`, if exists.

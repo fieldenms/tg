@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /// Interface that defines the API for retrieving saving and removing the [SecurityRoleAssociation] instances.
 ///
@@ -27,5 +28,9 @@ public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssoci
     /// Deletes a collection of [SecurityRoleAssociation]s.
     ///
     void removeAssociations(final Collection<SecurityRoleAssociation> associations);
+
+    /// Creates and saves all assocations in the stream.
+    ///
+    int addAssociations(Stream<SecurityRoleAssociation> associations);
 
 }
