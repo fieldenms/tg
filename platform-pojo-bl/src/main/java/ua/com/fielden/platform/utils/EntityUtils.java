@@ -37,9 +37,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
-import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -90,13 +88,10 @@ public class EntityUtils {
     @Deprecated(forRemoval = true, since = "2.2.0")
     public static final String dateWithoutTimeFormat = "dd/MM/yyyy";
 
-    /**
-     * Convenient method for value to {@link String} conversion
-     *
-     * @param value
-     * @param valueType
-     * @return
-     */
+    /// Convenient method for value to [String] conversion.
+    ///
+    /// Returns an empty string if `value` is `null`.
+    ///
     public static String toString(final Object value, final Class<?> valueType) {
         if (value == null) {
             return "";
@@ -105,9 +100,10 @@ public class EntityUtils {
             return NumberFormat.getInstance().format(value);
         } else if (Number.class.isAssignableFrom(valueType) || valueType == double.class) {
             return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
-        } else if (Date.class.isAssignableFrom(valueType) || DateTime.class.isAssignableFrom(valueType)) {
-            final Date date = Date.class.isAssignableFrom(valueType) ? (Date) value : ((DateTime) value).toDate();
+        } else if (value instanceof Date date) {
             return dates.toString(date);
+        } else if (value instanceof DateTime dateTime) {
+            return dates.toString(dateTime.toDate());
         } else if (Money.class.isAssignableFrom(valueType)) {
             return value instanceof Number ? new Money(value.toString()).toString() : value.toString();
         } else if (valueType == BigDecimalWithTwoPlaces.class) {
@@ -252,29 +248,6 @@ public class EntityUtils {
             }
         }
         return -1;
-    }
-
-    /**
-     * Formats passeed value according to its type.
-     *
-     * @param value
-     * @param valueType
-     * @return
-     */
-    public static String formatTooltip(final Object value, final Class<?> valueType) {
-        if (value == null) {
-            return "";
-        }
-        if (valueType == Integer.class) {
-            return NumberFormat.getInstance().format(value);
-        } else if (Number.class.isAssignableFrom(valueType)) {
-            return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
-        } else if (valueType == Date.class || valueType == DateTime.class) {
-            final Object convertedValue = value instanceof DateTime ? ((DateTime) value).toDate() : value;
-            return new SimpleDateFormat(dateWithoutTimeFormat).format(convertedValue) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(convertedValue);
-        } else {
-            return value.toString();
-        }
     }
 
     /**
