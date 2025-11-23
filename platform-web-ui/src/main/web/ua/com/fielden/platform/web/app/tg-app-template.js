@@ -27,6 +27,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
+import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-handler-behaviour.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
@@ -59,10 +60,8 @@ const template = html`
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]" idea-uri="[[ideaUri]]">
                 <paper-icon-button id="helpAction" slot="helpAction" icon="icons:help-outline" tabindex="1"
-                    on-mousedown="_helpMouseDownEventHandler" 
-                    on-touchstart="_helpMouseDownEventHandler" 
-                    on-mouseup="_helpMouseUpEventHandler" 
-                    on-touchend="_helpMouseUpEventHandler" 
+                    on-tg-long-tap="_longHelpTapHandler"
+                    on-tg-short-tap="_shortHelpTapHandler"
                     tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link.">
                 </paper-icon-button>
             </tg-app-menu>
@@ -259,7 +258,7 @@ Polymer({
 
     observers: ['_routeChanged(_route.path)'],
 
-    behaviors: [TgEntityMasterBehavior, TgViewWithHelpBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
+    behaviors: [TgEntityMasterBehavior, TgLongTapHandlerBehaviour, TgViewWithHelpBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
     
     keyBindings: {
         'f3': '_searchMenu',
@@ -310,11 +309,26 @@ Polymer({
                     const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
                     const customObject = deserialisedResult.instance[1];
                     const sharedUri = customObject['@@sharedUri'];
-                    if (sharedUri) {
-                        window.history.replaceState(this.currentHistoryState, '', sharedUri);
-                        window.location.replace(sharedUri);
-                    }
-                    else {
+
+                    // Any tiny link should be rewritten to some form that wouldn't allow user to go by to that '/tiny/...' link.
+                    // If that link represents some other link (e.g. '/master/...'), let's rewrite to that other link.
+                    //   It would be consistent for opening such other links directly.
+                    // Otherwise, rewrite to the main menu link because Entity Master for NEW instances are opened there.
+                    const rewrittenUri = sharedUri || this._urlForMainMenu();
+
+                    // First, enforce correct current history entry with the same state, but new URI.
+                    window.history.replaceState(this.currentHistoryState, '', rewrittenUri);
+                    // Then perform transition using <app-location> 'location-changed' event (see element docs).
+                    // `window.location.replace()` is not suitable because it messes up the `window.history.state` in our case
+                    //   (see `_routeChanged` observer with `if (!window.history.state) {...` branch).
+                    window.dispatchEvent(new CustomEvent('location-changed', {
+                        detail: {
+                            // The state was manually rewritten above -- prevent automatic rewrite.
+                            avoidStateAdjusting: true
+                        }
+                    }));
+
+                    if (!sharedUri) {
                         const actionIdentifier = customObject['@@actionIdentifier'];
                         const actionObject = appActions.actions(this)[actionIdentifier];
                         if (!actionObject) {
@@ -467,7 +481,7 @@ Polymer({
     _loadApplicationInfrastructureIntoHistory: function () {
         if (this._route.path) {
             const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
-            const urlForMenu = new URL("/#/menu", window.location.protocol + '//' + window.location.host).href;
+            const urlForMenu = this._urlForMainMenu();
             const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
             window.history.replaceState({currIndex: 0}, '', urlForRoot);
             window.history.pushState({currIndex: 1}, '', urlForMenu);
@@ -476,7 +490,14 @@ Polymer({
             this._routeChanged();
         }
     },
-    
+
+    /// Returns a `String` URL for main menu view of the application.
+    /// Main menu view is suitable for opening Entity Master links, both "tiny" and '/master/...' ones for persisted entities.
+    ///
+    _urlForMainMenu: function () {
+        return new URL('/#/menu', window.location.protocol + '//' + window.location.host).href;
+    },
+
     /**
      * Actually changes the page; if the page is about to change to 'root' page (for e.g. https://tgdev.com:8091), then it moves forward to corresponding menu,
      * which should definitely exist (https://tgdev.com:8091/#/menu).
@@ -563,31 +584,50 @@ Polymer({
         }
     },
 
-    /**
-     * Selects the specified view. If the view is opened in different module then play transition animation between modules.
-     * 
-     * @param {String} selected 
-     */
+    /// Perform transition to a path (new or the same).
+    ///
+    /// The transition logic should be no different whether it occurs with animation (module menu <=> module menu item <=>
+    ///   <=> main menu) or without animation (main menu <=> tiny link master <=> persisted link master).
+    ///
+    /// Please note, that some links (/tiny/...) are getting rewritten and will not be left in a history.
+    /// And it does not mean that transitions to that links are prohibited, it just means that further user transitions
+    ///   to previously transitioned such links through Back / Forward buttons will not occur.
+    ///
+    _performTransition: function (selected, getCurrentlySelectedElement) {
+        // Is transition targeted to some Entity Master link?
+        if (['master', 'tiny'].includes(selected)) {
+            // Perform transition.
+            this._selectedSubmodule = this._subroute.path;
+            // Open an Entity Master conforming to that transition.
+            this._tgOpenMasterAction();
+        }
+        // If transitioned to the same item? (e.g. on mobile during Entity Master closing through Back button we use 'formward()' call)
+        else if (this._selectedSubmodule === this._subroute.path) {
+            const currentlySelectedElement = getCurrentlySelectedElement();
+            // Activate it.
+            if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
+                currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
+            }
+        } else {
+            // Perform regular transition.
+            this._selectedSubmodule = this._subroute.path;
+        }
+    },
+
+    /// Selects the specified view.
+    /// If the view is opened in different module then play transition animation between modules.
+    ///
     _setSelected: function (selected) {
         if (this.menuConfig) {
             const moduleToSelect = findModule(selected, this.menuConfig);
             const currentlySelected = this.$.pages.selected;
             const currentlySelectedElement = currentlySelected && this.shadowRoot.querySelector("[name='" + currentlySelected + "']");
-            //If module to select is the same as currently selected then just open selected menu item (e.i open entity centre or master)
+            // If module to select is the same as currently selected then just open selected menu item (i.e. open entity centre or master).
             if (currentlySelected === moduleToSelect) {
-                if (selected === 'master') {
-                    this._selectedSubmodule = this._subroute.path;
-                    this._tgOpenMasterAction();
-                } else if (this._selectedSubmodule === this._subroute.path) {
-                    if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
-                        currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
-                    }
-                } else {
-                    this._selectedSubmodule = this._subroute.path;
-                }
+                this._performTransition(selected, () => currentlySelectedElement);
                 return;
             }
-            //Otherwise configure exit animation on currently selected module and entry animation on module to select
+            // Otherwise, configure exit animation on currently selected module and entry animation on module to select.
             const elementToSelect = moduleToSelect && this.shadowRoot.querySelector("[name='" + moduleToSelect + "']");
             if (currentlySelectedElement) {
                 currentlySelectedElement.configureExitAnimation(moduleToSelect);
@@ -601,7 +641,7 @@ Polymer({
                 return;
             }
         }
-        //Play the transition animation. The view will be selected on animation finish event handler
+        // Play the transition animation. The view will be selected on animation finish event handler.
         this.selectAfterRender = selected;
     },
     
@@ -610,26 +650,13 @@ Polymer({
         return e.returnValue;
     },
 
-    /**
-     * Animation finish event handler. This handler opens master or centre if module transition occurred because of user action.
-     * 
-     * @param {Event} e 
-     * @param {Object} detail 
-     * @param {Object} source 
-     */
+     /// Animation finish event handler.
+     /// This handler opens master or centre if module transition occurred because of user action.
+     ///
     _animationFinished: function (e, detail, source) {
-        if (e.target === this.$.pages){
+        if (e.target === this.$.pages) {
             this._selectedModule = this._routeData.moduleName;
-            if (['master', 'tiny'].includes(this._routeData.moduleName)) {
-                this._selectedSubmodule = this._subroute.path;
-                this._tgOpenMasterAction();
-            } else if (this._selectedSubmodule === this._subroute.path) {
-                if (detail.toPage.selectSubroute) {
-                    detail.toPage.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
-                }
-            } else {
-                this._selectedSubmodule = this._subroute.path;
-            }
+            this._performTransition(this._routeData.moduleName, () => detail.toPage);
         }
     },
 
@@ -759,7 +786,7 @@ Polymer({
         //Add iron-resize event listener
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
         
-        //Add URI (location) change event handler to set history state. 
+        // Add URI (location) change event handler to set history state.
         window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
 
         //Add resize listener that checks whether screen resolution changed
