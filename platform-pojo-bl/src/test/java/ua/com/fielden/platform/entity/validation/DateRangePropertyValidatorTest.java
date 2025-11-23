@@ -128,7 +128,7 @@ public class DateRangePropertyValidatorTest {
 
         entity.setToDateTimeOnly(toTime1);
         assertFalse(mpToDateTimeOnly.isValid());
-        assertEquals("Property [To Date Time Only] (value [18:00]) cannot be before property [From Date Time Only] (value [17:30]).", mpToDateTimeOnly.getFirstFailure().getMessage());
+        assertEquals("Property [To Date Time Only] (value [17:30]) cannot be before property [From Date Time Only] (value [18:00]).", mpToDateTimeOnly.getFirstFailure().getMessage());
     }
 
     @Test
@@ -189,7 +189,7 @@ public class DateRangePropertyValidatorTest {
 
         entity.setToDateDateOnly(toDate1);
         assertFalse(mpToDateDateOnly.isValid());
-        assertEquals("Property [To Date Date Only] (value [09/09/2025]) cannot be before property [From Date Date Only] (value [08/09/2025]).", mpToDateDateOnly.getFirstFailure().getMessage());
+        assertEquals("Property [To Date Date Only] (value [08/09/2025]) cannot be before property [From Date Date Only] (value [09/09/2025]).", mpToDateDateOnly.getFirstFailure().getMessage());
     }
 
     @Test
@@ -222,7 +222,7 @@ public class DateRangePropertyValidatorTest {
 
         entity.setToDate(toDate1);
         assertFalse(mpToDate.isValid());
-        assertEquals("Property [To Date] (value [09/09/2025 15:00:23.000]) cannot be before property [From Date] (value [08/09/2025 14:00]).", mpToDate.getFirstFailure().getMessage());
+        assertEquals("Property [To Date] (value [08/09/2025 14:00]) cannot be before property [From Date] (value [09/09/2025 15:00:23.000]).", mpToDate.getFirstFailure().getMessage());
     }
 
 }

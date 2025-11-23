@@ -87,8 +87,8 @@ public final class GePropertyValidator<T> implements IBeforeChangeEventHandler<T
                         strEndValue = dates.toString((Date) endValue);
                     }
                     yield failuref("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).",
-                                   endProperty.getTitle(), strStartValue,
-                                   startProperty.getTitle(), strEndValue);
+                                   endProperty.getTitle(), strEndValue,
+                                   startProperty.getTitle(), strStartValue);
                 } else {
                     yield failuref("%s cannot be less than %s.", endProperty.getTitle(), startProperty.getTitle());
                 }
