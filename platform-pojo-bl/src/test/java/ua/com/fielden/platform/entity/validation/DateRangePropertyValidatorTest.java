@@ -4,10 +4,13 @@ import com.google.inject.Injector;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithRangeProperties;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
+
+import java.util.Date;
 
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.utils.DateUtils.compareDateOnly;
@@ -96,6 +99,39 @@ public class DateRangePropertyValidatorTest {
     }
 
     @Test
+    public void LeProperty_and_GeProperty_validators_for_time_only_date_periods_report_errors_without_the_date_components() {
+        final var entity = factory.newByKey(EntityWithRangeProperties.class, "key");
+        final var fromTime1 = new DateTime("2025-09-07T16:30").toDate();
+        final var toTime1 = new DateTime("2025-09-07T17:30").toDate();
+
+        final MetaProperty<Date> mpFromDateTimeOnly = entity.getProperty("fromDateTimeOnly");
+        final MetaProperty<Date> mpToDateTimeOnly = entity.getProperty("toDateTimeOnly");
+
+        assertTrue(mpFromDateTimeOnly.isValid());
+        assertTrue(mpToDateTimeOnly.isValid());
+
+        entity.setFromDateTimeOnly(fromTime1);
+        entity.setToDateTimeOnly(toTime1);
+
+        assertTrue(mpFromDateTimeOnly.isValid());
+        assertTrue(mpToDateTimeOnly.isValid());
+
+        final var fromTime2 = new DateTime("2025-09-07T18:00").toDate();
+        entity.setFromDateTimeOnly(fromTime2);
+        assertFalse(mpFromDateTimeOnly.isValid());
+        assertEquals("Property [From Date Time Only] (value [18:00]) cannot be after property [To Date Time Only] (value [17:30]).", mpFromDateTimeOnly.getFirstFailure().getMessage());
+
+        final var toTime2 = new DateTime("2025-09-07T18:30").toDate();
+        entity.setToDateTimeOnly(toTime2);
+        assertTrue(mpFromDateTimeOnly.isValid());
+        assertTrue(mpToDateTimeOnly.isValid());
+
+        entity.setToDateTimeOnly(toTime1);
+        assertFalse(mpToDateTimeOnly.isValid());
+        assertEquals("Property [To Date Time Only] (value [18:00]) cannot be before property [From Date Time Only] (value [17:30]).", mpToDateTimeOnly.getFirstFailure().getMessage());
+    }
+
+    @Test
     public void date_only_dates_compare_by_date_component_only() {
         final var entity = factory.newByKey(EntityWithRangeProperties.class, "key");
         final var sameDateWithLaterTime = new DateTime(2025, 9, 7, 16, 30, 0, 0).toDate();
@@ -121,6 +157,72 @@ public class DateRangePropertyValidatorTest {
 
         assertEquals(sameDateWithEarlierTime, entity.getFromDateDateOnly());
         assertEquals(sameDateWithLaterTime, entity.getToDateDateOnly());
+    }
+
+    @Test
+    public void LeProperty_and_GeProperty_validators_for_date_only_date_periods_report_errors_without_the_time_components() {
+        final var entity = factory.newByKey(EntityWithRangeProperties.class, "key");
+        final var fromDate1 = new DateTime("2025-09-07").toDate();
+        final var toDate1 = new DateTime("2025-09-08").toDate();
+
+        final MetaProperty<Date> mpFromDateDateOnly = entity.getProperty("fromDateDateOnly");
+        final MetaProperty<Date> mpToDateDateOnly = entity.getProperty("toDateDateOnly");
+
+        assertTrue(mpFromDateDateOnly.isValid());
+        assertTrue(mpToDateDateOnly.isValid());
+
+        entity.setFromDateDateOnly(fromDate1);
+        entity.setToDateDateOnly(toDate1);
+
+        assertTrue(mpFromDateDateOnly.isValid());
+        assertTrue(mpToDateDateOnly.isValid());
+
+        final var fromDate2 = new DateTime("2025-09-09").toDate();
+        entity.setFromDateDateOnly(fromDate2);
+        assertFalse(mpFromDateDateOnly.isValid());
+        assertEquals("Property [From Date Date Only] (value [09/09/2025]) cannot be after property [To Date Date Only] (value [08/09/2025]).", mpFromDateDateOnly.getFirstFailure().getMessage());
+
+        final var toDate2 = new DateTime("2025-09-10").toDate();
+        entity.setToDateDateOnly(toDate2);
+        assertTrue(mpFromDateDateOnly.isValid());
+        assertTrue(mpToDateDateOnly.isValid());
+
+        entity.setToDateDateOnly(toDate1);
+        assertFalse(mpToDateDateOnly.isValid());
+        assertEquals("Property [To Date Date Only] (value [09/09/2025]) cannot be before property [From Date Date Only] (value [08/09/2025]).", mpToDateDateOnly.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void LeProperty_and_GeProperty_validators_for_date_and_time_periods_report_errors_with_both_the_date_and_time_components() {
+        final var entity = factory.newByKey(EntityWithRangeProperties.class, "key");
+        final var fromDate1 = new DateTime("2025-09-07T13:00").toDate();
+        final var toDate1 = new DateTime("2025-09-08T14:00").toDate();
+
+        final MetaProperty<Date> mpFromDate = entity.getProperty("fromDate");
+        final MetaProperty<Date> mpToDate = entity.getProperty("toDate");
+
+        assertTrue(mpFromDate.isValid());
+        assertTrue(mpToDate.isValid());
+
+        entity.setFromDate(fromDate1);
+        entity.setToDate(toDate1);
+
+        assertTrue(mpFromDate.isValid());
+        assertTrue(mpToDate.isValid());
+
+        final var fromDate2 = new DateTime("2025-09-09T15:00:23.000").toDate();
+        entity.setFromDate(fromDate2);
+        assertFalse(mpFromDate.isValid());
+        assertEquals("Property [From Date] (value [09/09/2025 15:00:23.000]) cannot be after property [To Date] (value [08/09/2025 14:00]).", mpFromDate.getFirstFailure().getMessage());
+
+        final var toDate2 = new DateTime("2025-09-10T16:00").toDate();
+        entity.setToDate(toDate2);
+        assertTrue(mpFromDate.isValid());
+        assertTrue(mpToDate.isValid());
+
+        entity.setToDate(toDate1);
+        assertFalse(mpToDate.isValid());
+        assertEquals("Property [To Date] (value [09/09/2025 15:00:23.000]) cannot be before property [From Date] (value [08/09/2025 14:00]).", mpToDate.getFirstFailure().getMessage());
     }
 
 }
