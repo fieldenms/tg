@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.inject.Inject;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -75,13 +76,18 @@ public class EntityUtils {
 
     public static final String ERR_PERSISTENT_NATURE_OF_ENTITY_TYPE = "Could not determine persistent nature of entity type [%s].";
 
+    @Inject
+    private static IDates dates;
+
     /** Private default constructor to prevent instantiation. */
     private EntityUtils() {
     }
 
-    /**
-     * dd/MM/yyyy format instance
-     */
+    /// dd/MM/yyyy format.
+    ///
+    /// **DEPRECATED:** Use [IDates#dateFormat()] instead.
+    ///
+    @Deprecated(forRemoval = true, since = "2.2.0")
     public static final String dateWithoutTimeFormat = "dd/MM/yyyy";
 
     /**
@@ -101,7 +107,7 @@ public class EntityUtils {
             return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
         } else if (Date.class.isAssignableFrom(valueType) || DateTime.class.isAssignableFrom(valueType)) {
             final Date date = Date.class.isAssignableFrom(valueType) ? (Date) value : ((DateTime) value).toDate();
-            return new SimpleDateFormat(dateWithoutTimeFormat).format(date) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
+            return dates.toString(date);
         } else if (Money.class.isAssignableFrom(valueType)) {
             return value instanceof Number ? new Money(value.toString()).toString() : value.toString();
         } else if (valueType == BigDecimalWithTwoPlaces.class) {
@@ -1582,24 +1588,34 @@ public class EntityUtils {
         return result;
     }
 
-    /**
-     * A convenient method checking whether entity values should be enlisted in descending (key) order.
-     *
-     * @param type
-     * @return
-     */
+    /// A convenient method checking whether entity values should be enlisted in descending (key) order.
+    ///
     public static boolean isNaturalOrderDescending(final Class<? extends AbstractEntity<?>> type) {
-        return AnnotationReflector.getAnnotation(type, KeyType.class).descendingOrder();
+        return AnnotationReflector.getAnnotationOptionally(type, KeyType.class).map(KeyType::descendingOrder).orElse(false);
     }
 
-    /**
-     * Returns true if propertyName in entityType has {@link DateOnly} annotation.
-     *
-     * @param entityType
-     * @param propertyName
-     * @return
-     */
+    /// Determines if `propertyName` in `entityType` is a [DateOnly] property.
+    ///
     public static boolean isDateOnly(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
         return isAnnotationPresent(findFieldByName(entityType, propertyName), DateOnly.class);
     }
+
+    /// Determines if [MetaProperty] `mp` represents a [DateOnly] property.
+    ///
+    public static boolean isDateOnly(final MetaProperty<Date> mp) {
+        return isAnnotationPresent(findFieldByName(mp.getEntity().getType(), mp.getName()), DateOnly.class);
+    }
+
+    /// Determines if `propertyName` in `entityType` is a [TimeOnly] property.
+    ///
+    public static boolean isTimeOnly(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
+        return isAnnotationPresent(findFieldByName(entityType, propertyName), TimeOnly.class);
+    }
+
+    /// Determines if [MetaProperty] `mp` represents a [TimeOnly] property.
+    ///
+    public static boolean isTimeOnly(final MetaProperty<Date> mp) {
+        return isAnnotationPresent(findFieldByName(mp.getEntity().getType(), mp.getName()), TimeOnly.class);
+    }
+
 }
