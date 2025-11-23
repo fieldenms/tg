@@ -225,4 +225,42 @@ public class DateRangePropertyValidatorTest {
         assertEquals("Property [To Date] (value [08/09/2025 14:00]) cannot be before property [From Date] (value [09/09/2025 15:00:23.000]).", mpToDate.getFirstFailure().getMessage());
     }
 
+    @Test
+    public void strict_less_than_is_enforced_for_LeProperty_with_lt() {
+        final var entity = factory.newByKey(EntityWithRangeProperties.class, "key");
+        final var fromDate1 = new DateTime("2025-09-07T13:00").toDate();
+        final var toDate1 = new DateTime("2025-09-08T14:00").toDate();
+
+        final MetaProperty<Date> mpFromDateStrict = entity.getProperty("fromDateStrict");
+        final MetaProperty<Date> mpToDateStrict = entity.getProperty("toDateStrict");
+
+        entity.setFromDateStrict(fromDate1);
+        entity.setToDateStrict(toDate1);
+        assertTrue(mpFromDateStrict.isValid());
+        assertTrue(mpToDateStrict.isValid());
+
+        entity.setFromDateStrict(toDate1);
+        assertFalse(mpFromDateStrict.isValid());
+        assertEquals("Property [From Date Strict] (value [08/09/2025 14:00]) cannot be after or equal to property [To Date Strict] (value [08/09/2025 14:00]).", mpFromDateStrict.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void strict_greater_than_is_enforced_for_GeProperty_with_gt() {
+        final var entity = factory.newByKey(EntityWithRangeProperties.class, "key");
+        final var fromDate1 = new DateTime("2025-09-07T13:00").toDate();
+        final var toDate1 = new DateTime("2025-09-08T14:00").toDate();
+
+        final MetaProperty<Date> mpFromDateStrict = entity.getProperty("fromDateStrict");
+        final MetaProperty<Date> mpToDateStrict = entity.getProperty("toDateStrict");
+
+        entity.setFromDateStrict(fromDate1);
+        entity.setToDateStrict(toDate1);
+        assertTrue(mpFromDateStrict.isValid());
+        assertTrue(mpToDateStrict.isValid());
+
+        entity.setToDateStrict(fromDate1);
+        assertFalse(mpToDateStrict.isValid());
+        assertEquals("Property [To Date Strict] (value [07/09/2025 13:00]) cannot be before or equal to property [From Date Strict] (value [07/09/2025 13:00]).", mpToDateStrict.getFirstFailure().getMessage());
+    }
+
 }
