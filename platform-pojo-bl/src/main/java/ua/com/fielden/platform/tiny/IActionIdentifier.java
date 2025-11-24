@@ -35,7 +35,20 @@ public interface IActionIdentifier extends CharSequence {
     ///
     static IActionIdentifier of(final CharSequence name) {
         requireNotNullArgument(name, "name");
-        return () -> name;
+
+        final var str = name.toString();
+
+        return new IActionIdentifier() {
+            @Override
+            public CharSequence name() {
+                return str;
+            }
+
+            @Override
+            public String toString() {
+                return str;
+            }
+        };
     }
 
     @Override
