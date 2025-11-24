@@ -10,6 +10,7 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { openShareAction } from '/resources/reflection/tg-share-utils.js';
 
 /**
  * A local insertion point manager for the entity centre to manage detached or maximized insertion points.
@@ -743,6 +744,22 @@ const TgEntityCentreBehaviorImpl = {
 
     _computeShareButtonDisabled: function (_buttonDisabled, embedded) {
         return _buttonDisabled || embedded;
+    },
+
+    /// Opens share action master with tiny URL and QR code for currently loaded centre configuration.
+    ///
+    _openShareAction: function () {
+        openShareAction(
+            this.toaster,
+            this.$.selection_criteria._toastGreeting(),
+            this.uuid,
+            this._showDialog,
+            () => this._reflector.createContextHolder(
+                null, null, null,
+                null, null, null
+            ),
+            () => window.location.href
+        );
     },
 
     _computeViewerDisabled: function (_buttonDisabled, _wasRun) {

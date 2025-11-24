@@ -34,6 +34,7 @@ import { UnreportableError } from '/resources/components/tg-global-error-handler
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
 import { createDialog } from '/resources/egi/tg-dialog-util.js';
+import { openShareAction } from '/resources/reflection/tg-share-utils.js';
 
 const ST_WIDTH = '_width';
 const ST_HEIGHT = '_height';
@@ -1881,27 +1882,6 @@ Polymer({
     },
 
     /**
-     * Copies non-empty link to clipboard and shows informational toast.
-     */
-    _copyLinkToClipboard: function (link) {
-        if (link) {
-            // Writing into clipboard is always permitted for currently open tab
-            //   (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText)
-            //   -- that's why promise error should never occur.
-            // If for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user.
-            // Also, global handler will report that to the server.
-            navigator.clipboard.writeText(link).then(() => {
-                this.$.toaster.text = 'Copied to clipboard.';
-                this.$.toaster.hasMore = true;
-                this.$.toaster.msgText = link;
-                this.$.toaster.showProgress = false;
-                this.$.toaster.isCritical = false;
-                this.$.toaster.show();
-            });
-        }
-    },
-    
-    /**
      * 1. If a master for a persisted entity is opened in this dialog, generates a link to it, copies it to the clipboard,
      *    and shows an informational dialog with the ability to review the link (MORE button).
      *    If the master is compound, the generated link will point to the currenly open menu item.
@@ -1921,54 +1901,34 @@ Polymer({
             // this dialog's `uuid` to be used for action.
             const uuid = this.uuid;
 
-            // Create dynamic share action.
-            const shareAction = document.createElement('tg-ui-action');
-
-            // Provide only the necessary attributes.
-            // Avoid shouldRefreshParentCentreAfterSave, because there is no need to refresh parent master.
-            shareAction.shortDesc = 'Share';
-            shareAction.componentUri = '/master_ui/ua.com.fielden.platform.share.ShareAction';
-            shareAction.elementName = 'tg-ShareAction-master';
-            shareAction.showDialog = this._showDialog;
-            shareAction.createContextHolder = !isPersistedEntity && deepestMaster
-                ? deepestMaster._createContextHolder
-                : (() => this._reflector.createContextHolder(
-                    null, null, null,
-                    null, null, null
-                ));
-            shareAction.toaster = this.$.toaster;
-            shareAction.attrs = {
-                entityType: 'ua.com.fielden.platform.share.ShareAction',
-                currentState: 'EDIT',
-                // `centreUuid` is important to be able to close master through CANCEL (aka CLOSE) `tg-action`.
-                centreUuid: uuid
-            };
-            shareAction.requireSelectionCriteria = 'false';
-            shareAction.requireSelectedEntities = 'NONE';
-            shareAction.requireMasterEntity = 'true';
-
-            // Persist reference to the dialog to easily get it in `tg-ui-action._createContextHolderForAction`.
-            shareAction._dialog = this;
-
-            // Copy link to a clipboard on successful action completion (which is performed in retrieval request).
-            shareAction.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
-                if (_currBindingEntity && _currBindingEntity.get('hyperlink')) {
-                    this._copyLinkToClipboard(_currBindingEntity.get('hyperlink').value);
+            openShareAction(
+                this.$.toaster,
+                this.$.toaster,
+                uuid,
+                this._showDialog,
+                !isPersistedEntity && deepestMaster
+                    ? deepestMaster._createContextHolder
+                    : (() => this._reflector.createContextHolder(
+                        null, null, null,
+                        null, null, null
+                    )),
+                () => {
+                    if (isPersistedEntity) {
+                        const url = new URL(window.location.href);
+                        const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
+                        const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
+                        url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
+                        return url.href;
+                    }
+                    else {
+                        return null;
+                    }
+                },
+                shareAction => {
+                    // Persist reference to the dialog to easily get it in `tg-ui-action._createContextHolderForAction`.
+                    shareAction._dialog = this;
                 }
-            };
-
-            if (isPersistedEntity) {
-                const url = new URL(window.location.href);
-                const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
-                const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
-                url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
-                shareAction._sharedUri = url.href;
-            }
-            else {
-                shareAction._sharedUri = null;
-            }
-            // Run dynamic share action.
-            shareAction._run();
+            );
         }
         else {
             this.$.toaster.text = 'Please save and try again.';
