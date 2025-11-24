@@ -650,6 +650,18 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void toString_converts_dates_to_strings_with_both_date_and_time_components_where_time_contains_seconds_and_millis_if_either_seconds_or_millis_are_present() {
+        final var dateWithMinutes = new DateTime("2025-11-23T22:05").toDate();
+        assertEquals("23/11/2025 22:05", EntityUtils.toString(dateWithMinutes));
+
+        final var dateWithSeconds = new DateTime("2025-11-23T22:05:19").toDate();
+        assertEquals("23/11/2025 22:05:19.000", EntityUtils.toString(dateWithSeconds));
+
+        final var dateWithMillis = new DateTime("2025-11-23T22:05:00.900").toDate();
+        assertEquals("23/11/2025 22:05:00.900", EntityUtils.toString(dateWithMillis));
+    }
+
+    @Test
     public void only_a_specific_subset_of_platform_level_entities_have_introspection_allowed() {
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> filtered = PlatformDomainTypes.types.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toCollection(LinkedHashSet::new));
         assertThat(filtered).containsExactlyInAnyOrder(

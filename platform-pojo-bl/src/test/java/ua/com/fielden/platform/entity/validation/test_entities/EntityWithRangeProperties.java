@@ -31,6 +31,16 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     private Integer toInt;
 
     @IsProperty
+    @Dependent("toIntStrict")
+    @LeProperty(value = "toIntStrict", lt = true)
+    private Integer fromIntStrict;
+
+    @IsProperty
+    @Dependent("fromIntStrict")
+    @GeProperty(value = "fromIntStrict", gt = true)
+    private Integer toIntStrict;
+
+    @IsProperty
     @Dependent("toNumber")
     @LeProperty("toNumber")
     private BigDecimal fromNumber;
@@ -47,6 +57,16 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     @GeProperty("fromDate")
     @Dependent("fromDate")
     private Date toDate;
+
+    @IsProperty
+    @Dependent("toDateStrict")
+    @LeProperty(value = "toDateStrict", lt = true)
+    private Date fromDateStrict;
+
+    @IsProperty
+    @Dependent("fromDateStrict")
+    @GeProperty(value = "fromDateStrict", gt = true)
+    private Date toDateStrict;
 
     @IsProperty
     @Dependent("toDateTime")
@@ -89,6 +109,46 @@ public class EntityWithRangeProperties extends AbstractEntity<String> {
     @Dependent("fromDateDateOnly")
     @GeProperty("fromDateDateOnly")
     private Date toDateDateOnly;
+
+    @Observable
+    public EntityWithRangeProperties setFromDateStrict(final Date fromDateStrict) {
+        this.fromDateStrict = fromDateStrict;
+        return this;
+    }
+
+    public Date getFromDateStrict() {
+        return fromDateStrict;
+    }
+
+    @Observable
+    public EntityWithRangeProperties setToDateStrict(final Date toDateStrict) {
+        this.toDateStrict = toDateStrict;
+        return this;
+    }
+
+    public Date getToDateStrict() {
+        return toDateStrict;
+    }
+
+    @Observable
+    public EntityWithRangeProperties setFromIntStrict(final Integer fromIntStrict) {
+        this.fromIntStrict = fromIntStrict;
+        return this;
+    }
+
+    public Integer getFromIntStrict() {
+        return fromIntStrict;
+    }
+
+    @Observable
+    public EntityWithRangeProperties setToIntStrict(final Integer toIntStrict) {
+        this.toIntStrict = toIntStrict;
+        return this;
+    }
+
+    public Integer getToIntStrict() {
+        return toIntStrict;
+    }
 
     @Observable
     public EntityWithRangeProperties setFromDateDateOnly(final Date fromDateDateOnly) {

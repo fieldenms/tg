@@ -194,7 +194,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     ///
     @Override
     protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-        if (method.getAnnotation(SkipNeedMoreDataStorageBinding.class) == null) {
+        if (!method.getMethod().isAnnotationPresent(SkipNeedMoreDataStorageBinding.class)) {
             NeedMoreDataStorage.runWithMoreData(Map.of(), () -> super.runChild(method, notifier));
         }
         else {
