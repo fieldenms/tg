@@ -629,14 +629,15 @@ public class EntityResourceUtils {
         return propertyType;
     }
 
-    /**
-     * Converts a raw reflected value to a value that matches the property's type.
-     *
-     * @param type  type that owns the property
-     * @param reflectedValue  raw reflected value to be converted
-     * @param reflectedValueId  if a property is entity-typed, represent an ID of the entity-typed value returned from the client application
-     * @param optActiveProp  if a property has a union entity type, represents the active property's name in the entity-typed value
-     */
+    /// Converts a raw reflected value to a value that matches the property's type.
+    ///
+    /// **Maintenance note**: Keep the conversion logic in sync with [ua.com.fielden.platform.tiny.TinyHyperlinkDao#makeModifHolderPropObject].
+    ///
+    /// @param type  type that owns the property
+    /// @param reflectedValue  raw reflected value to be converted
+    /// @param reflectedValueId  if a property is entity-typed, represent an ID of the entity-typed value returned from the client application
+    /// @param optActiveProp  if a property has a union entity type, represents the active property's name in the entity-typed value
+    ///
     private static <M extends AbstractEntity<?>> Object convert(
             final Class<M> type, final String propertyName,
             final Object reflectedValue, final Optional<Long> reflectedValueId,
