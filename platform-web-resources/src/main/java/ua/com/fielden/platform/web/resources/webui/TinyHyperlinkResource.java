@@ -34,6 +34,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyApplicationErrorHandler;
 
 import java.util.Map;
+import java.util.Objects;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
@@ -77,9 +78,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
 
             final Context context,
             final Request request,
-            final Response response,
-
-            final String requestHash)
+            final Response response)
     {
         super(context, request, response, deviceProvider, dates);
 
@@ -91,7 +90,10 @@ public class TinyHyperlinkResource extends AbstractWebResource {
         this.userProvider = userProvider;
         this.factory = entityFactory;
         this.sharingModel = sharingModel;
-        this.requestHash = requestHash;
+        this.requestHash = Objects.toString(request.getAttributes().get(HASH), null);
+        if (requestHash == null || requestHash.isBlank()) {
+            throw new InvalidStateException("[requestHash] must be present.");
+        }
     }
 
     /// Handles a GET request to open a [TinyHyperlink].
@@ -99,10 +101,6 @@ public class TinyHyperlinkResource extends AbstractWebResource {
     @Get
     public Representation get() {
         return handleUndesiredExceptions(getResponse(), () -> {
-            if (requestHash == null || requestHash.isBlank()) {
-                throw new InvalidStateException("[requestHash] must be present.");
-            }
-
             final TinyHyperlinkCo coTinyHyperlink = companionFinder.findAsReader(TinyHyperlink.class, true);
             final var tinyHyperlink = coTinyHyperlink.findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, HASH, SAVING_INFO_HOLDER, ACTION_IDENTIFIER, TARGET), requestHash);
             if (tinyHyperlink == null) {

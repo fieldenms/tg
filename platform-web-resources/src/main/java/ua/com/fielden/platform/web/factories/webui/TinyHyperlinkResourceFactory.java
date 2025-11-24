@@ -17,8 +17,6 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.TinyHyperlinkResource;
 
-import java.util.Objects;
-
 /// A factory for [TinyHyperlinkResource].
 ///
 public class TinyHyperlinkResourceFactory extends Restlet {
@@ -54,8 +52,6 @@ public class TinyHyperlinkResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            final var hash = Objects.toString(request.getAttributes().get(HASH), null);
-
             new TinyHyperlinkResource(
                     factory,
                     restUtil,
@@ -69,9 +65,8 @@ public class TinyHyperlinkResourceFactory extends Restlet {
                     sharingModel,
                     getContext(),
                     request,
-                    response,
-                    hash
-            ).handle();
+                    response)
+                    .handle();
         }
     }
 }
