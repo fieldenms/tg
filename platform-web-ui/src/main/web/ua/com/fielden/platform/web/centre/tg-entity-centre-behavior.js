@@ -750,7 +750,6 @@ const TgEntityCentreBehaviorImpl = {
     ///
     _openShareAction: function () {
         openShareAction(
-            this.toaster,
             this.$.selection_criteria._toastGreeting(),
             this.uuid,
             this._showDialog,

@@ -2,7 +2,6 @@ import '/resources/actions/tg-ui-action.js';
 
 /// Opens share action master with tiny URL and QR code.
 ///
-/// @param toaster - object containing toast related methods (can be <tg-toast> itself)
 /// @param toast - <tg-toast> for displaying informational toasts
 /// @param parentUuid - uuid of the parent element
 /// @param showDialog - showDialog function of the parent element
@@ -10,18 +9,21 @@ import '/resources/actions/tg-ui-action.js';
 /// @param calculateSharedUri - function to calculate TinyHyperlink.target link; provide null if not needed
 /// @param enhanceAction - mutator function of resultant action to be performed before _run()
 ///
-export function openShareAction (toaster, toast, parentUuid, showDialog, createContextHolder, calculateSharedUri, enhanceAction) {
+export function openShareAction (toast, parentUuid, showDialog, createContextHolder, calculateSharedUri, enhanceAction) {
     // Create dynamic share action.
     const shareAction = document.createElement('tg-ui-action');
 
     // Provide only the necessary attributes.
     // Avoid shouldRefreshParentCentreAfterSave, because there is no need to refresh parent master.
+    // Avoid also `toaster` object in `tg-ui-action`.
+    // It is only used for dynamic actions. That's why this object setting can be skipped here.
+    // See `tg-entity-binder-behavior.toaster = ...` initialisation for more details on how toaster object looks
+    //   (different from <tg-toast> elements).
     shareAction.shortDesc = 'Share';
     shareAction.componentUri = '/master_ui/ua.com.fielden.platform.share.ShareAction';
     shareAction.elementName = 'tg-ShareAction-master';
     shareAction.showDialog = showDialog;
     shareAction.createContextHolder = createContextHolder;
-    shareAction.toaster = toaster;
     shareAction.attrs = {
         entityType: 'ua.com.fielden.platform.share.ShareAction',
         currentState: 'EDIT',

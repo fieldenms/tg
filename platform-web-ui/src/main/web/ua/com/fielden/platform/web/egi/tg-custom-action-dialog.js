@@ -1903,7 +1903,6 @@ Polymer({
 
             openShareAction(
                 this.$.toaster,
-                this.$.toaster,
                 uuid,
                 this._showDialog,
                 !isPersistedEntity && deepestMaster
