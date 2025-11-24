@@ -132,7 +132,6 @@ const entityCentreTemplate = html`
             <!--@top_insertion_points-->
         </div>
         <!--@alternative_view_insertion_points-->
-    <tg-toast id="toaster"></tg-toast>
     </tg-entity-centre>
 `;
 

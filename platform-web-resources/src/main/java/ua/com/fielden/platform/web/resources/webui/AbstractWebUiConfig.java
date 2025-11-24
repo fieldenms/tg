@@ -461,7 +461,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
                     null, null, null,
                     null, null, null
                 ));
-                shareAction.toaster = self.$.toaster;
+                shareAction.toaster = action.toaster;
+                const toast = self.$.selection_criteria._toastGreeting();
                 shareAction.attrs = {
                   entityType: 'ua.com.fielden.platform.share.ShareAction',
                   currentState: 'EDIT',
@@ -483,12 +484,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
                             // If for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user.
                             // Also, global handler will report that to the server.
                             navigator.clipboard.writeText(link).then(() => {
-                                self.$.toaster.text = 'Copied to clipboard.';
-                                self.$.toaster.hasMore = true;
-                                self.$.toaster.msgText = link;
-                                self.$.toaster.showProgress = false;
-                                self.$.toaster.isCritical = false;
-                                self.$.toaster.show();
+                                toast.text = 'Copied to clipboard.';
+                                toast.hasMore = true;
+                                toast.msgText = link;
+                                toast.showProgress = false;
+                                toast.isCritical = false;
+                                toast.show();
                             });
                         }
                   }
