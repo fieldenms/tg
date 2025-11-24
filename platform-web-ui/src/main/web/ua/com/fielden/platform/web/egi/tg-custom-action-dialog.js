@@ -1883,7 +1883,7 @@ Polymer({
     /**
      * Copies non-empty link to clipboard and shows informational toast.
      */
-    _copyLinkToClipboard: function (link, showNonCritical) {
+    _copyLinkToClipboard: function (link) {
         if (link) {
             // Writing into clipboard is always permitted for currently open tab
             //   (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText)
@@ -1894,7 +1894,9 @@ Polymer({
                 this.$.toaster.text = 'Copied to clipboard.';
                 this.$.toaster.hasMore = true;
                 this.$.toaster.msgText = link;
-                showNonCritical(this.$.toaster);
+                this.$.toaster.showProgress = false;
+                this.$.toaster.isCritical = false;
+                this.$.toaster.show();
             });
         }
     },
@@ -1910,11 +1912,6 @@ Polymer({
      * 3. Otherwise, link generation is not supported, and a corresponding message will be displayed.
      */
     _getLink: function () {
-        const showNonCritical = toaster => {
-            toaster.showProgress = false;
-            toaster.isCritical = false;
-            toaster.show();
-        };
         const isPersistedEntity = this._mainEntityType !== null && this._mainEntityId !== null;
         if (isPersistedEntity
             || this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionIdentifier)
@@ -1956,7 +1953,7 @@ Polymer({
             // Copy link to a clipboard on successful action completion (which is performed in retrieval request).
             shareAction.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
                 if (_currBindingEntity && _currBindingEntity.get('hyperlink')) {
-                    this._copyLinkToClipboard(_currBindingEntity.get('hyperlink').value, showNonCritical);
+                    this._copyLinkToClipboard(_currBindingEntity.get('hyperlink').value);
                 }
             };
 
@@ -1977,7 +1974,9 @@ Polymer({
             this.$.toaster.text = 'Please save and try again.';
             this.$.toaster.hasMore = false;
             this.$.toaster.msgText = '';
-            showNonCritical(this.$.toaster);
+            this.$.toaster.showProgress = false;
+            this.$.toaster.isCritical = false;
+            this.$.toaster.show();
         }
     },
     
