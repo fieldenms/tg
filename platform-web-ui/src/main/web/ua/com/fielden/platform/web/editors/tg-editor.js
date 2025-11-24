@@ -1062,6 +1062,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                 qrCodeScanner.toaster = null;
                 qrCodeScanner.closeCallback = null;
                 qrCodeScanner.applyCallback = null;
+                //Respect preferred property if entity was changed (maybe due to validation processesd triggerd by auto-commit editor)
                 if (wasFocused && (entity === this.entity || !this.entity['@@origin'].preferredProperty())) {
                     this.focusDecoratedInput();
                 }
