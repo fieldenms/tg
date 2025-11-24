@@ -445,15 +445,61 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * <p>
      * It copies currently loaded configuration URL (window.location.href) to the clipboard and shows informational message about it (if sharing validation was successful).
      */
-    protected static JsCode copyToClipboardForSuccessfulShare() {
-        return jsCode(
-              "if (!self.shareError) { // 'self' is enclosing centre \n"
-            + "    const link = window.location.href;\n"
-            + "    navigator && navigator.clipboard && navigator.clipboard.writeText(link).then(() => { // Writing into clipboard is always permitted for currently open tab (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) -- that's why promise error should never occur; \n"
-            + "        action.toaster.openToastWithoutEntity('Copied to clipboard.', true, link, false); // if for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user and global handler will report that to the server. \n"
-            + "    });\n"
-            + "}\n"
-        );
+    protected static JsCode onSuccessfulShare() {
+        return jsCode("""
+            if (!self.shareError) { // 'self' is enclosing centre
+                // Create dynamic share action.
+                const shareAction = document.createElement('tg-ui-action');
+
+                // Provide only the necessary attributes.
+                // Avoid shouldRefreshParentCentreAfterSave, because there is no need to refresh parent master.
+                shareAction.shortDesc = 'Share';
+                shareAction.componentUri = '/master_ui/ua.com.fielden.platform.share.ShareAction';
+                shareAction.elementName = 'tg-ShareAction-master';
+                shareAction.showDialog = self._showDialog;
+                shareAction.createContextHolder = (() => this._reflector.createContextHolder(
+                    null, null, null,
+                    null, null, null
+                ));
+                shareAction.toaster = self.$.toaster;
+                shareAction.attrs = {
+                  entityType: 'ua.com.fielden.platform.share.ShareAction',
+                  currentState: 'EDIT',
+                  // `centreUuid` is important to be able to close master through CANCEL (aka CLOSE) `tg-action`.
+                  centreUuid: self.uuid
+                };
+                shareAction.requireSelectionCriteria = 'false';
+                shareAction.requireSelectedEntities = 'NONE';
+                shareAction.requireMasterEntity = 'true';
+
+                // Copy link to the clipboard on successful action completion (which is performed in retrieval request).
+                shareAction.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
+                  if (_currBindingEntity && _currBindingEntity.get('hyperlink')) {
+                        const link = _currBindingEntity.get('hyperlink').value;
+                        if (link) {
+                            // Writing into clipboard is always permitted for currently open tab
+                            //   (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText)
+                            //   -- that's why promise error should never occur.
+                            // If for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user.
+                            // Also, global handler will report that to the server.
+                            navigator.clipboard.writeText(link).then(() => {
+                                self.$.toaster.text = 'Copied to clipboard.';
+                                self.$.toaster.hasMore = true;
+                                self.$.toaster.msgText = link;
+                                self.$.toaster.showProgress = false;
+                                self.$.toaster.isCritical = false;
+                                self.$.toaster.show();
+                            });
+                        }
+                  }
+                };
+
+                shareAction._sharedUri = window.location.href;
+
+                // Run dynamic share action.
+                shareAction._run();
+            }
+            """);
     }
 
     @Override
@@ -464,7 +510,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return asList(
             action(CentreConfigShareAction.class)
             .withContext(context().withSelectionCrit().build())
-            .preAction(() -> jsCode(showToastForShareError().toString() + copyToClipboardForSuccessfulShare().toString() + "return Promise.reject('Share action completed.');\n"))
+            .preAction(() -> jsCode(showToastForShareError().toString() + onSuccessfulShare().toString() + "return Promise.reject('Share action completed.');\n"))
             .icon("tg-icons:share")
             .shortDesc("Share")
             .longDesc("Share centre configuration")
