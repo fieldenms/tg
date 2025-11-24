@@ -1048,7 +1048,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         }
         if (qrCodeScanner) {
             qrCodeScanner.toaster = this.toaster;
-            qrCodeScanner.closeCallback = this._closeScanner(this.focused);
+            qrCodeScanner.closeCallback = this._closeScanner(this.focused, this.entity);
             qrCodeScanner.applyCallback = this._applyScannerValue(this.focused).bind(this);
             qrCodeScanner.open();
         } else {
@@ -1056,13 +1056,13 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         }
     }
 
-    _closeScanner (wasFocused) {
+    _closeScanner (wasFocused, entity) {
         return () => {
             if (qrCodeScanner) {
                 qrCodeScanner.toaster = null;
                 qrCodeScanner.closeCallback = null;
                 qrCodeScanner.applyCallback = null;
-                if (wasFocused) {
+                if (wasFocused && (entity === this.entity || !this.entity['@@origin'].preferredProperty())) {
                     this.focusDecoratedInput();
                 }
             }
