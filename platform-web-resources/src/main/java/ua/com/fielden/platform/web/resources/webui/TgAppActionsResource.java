@@ -16,7 +16,8 @@ import static ua.com.fielden.platform.web.resources.webui.FileResource.createRep
 ///
 public class TgAppActionsResource extends AbstractWebResource {
 
-    public static final String PATH = "/app/tg-app-actions.js";
+    public static final String JS_FILE_NAME = "tg-app-actions.js";
+    public static final String PATH = "/app/%s".formatted(JS_FILE_NAME);
 
     private final IWebResourceLoader webResourceLoader;
 
