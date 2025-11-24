@@ -7,7 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/// An annotation for tests to skip their exeuction in a context of a bound [NeedMoreDataStorage].
+/// An annotation for tests to skip their execution in a context of a bound [NeedMoreDataStorage].
 ///
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

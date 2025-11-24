@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.continuation;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.continuation.exceptions.ContinuationException;
 import ua.com.fielden.platform.entity.IContinuationData;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,14 +31,15 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 /// will mutate the existing bound value by adding entries from the provided map.
 ///
 public class NeedMoreDataStorage {
+
     private final static Logger LOGGER = getLogger();
 
     public static final String
             ERR_CANNOT_ADD_MORE_DATA = "Cannot add more data because the storage is not bound in this context.",
+            ERR_CANNOT_GET_MORE_DATA = "Cannot access more data because the storage is not bound in this context.",
             WARN_UNBOUND_STORAGE = "The need more data storage is not bound in this context. This likely indicates a programming error.";
 
-    private NeedMoreDataStorage() {
-    }
+    private NeedMoreDataStorage() {}
 
     private static final ScopedValue<Map<String, IContinuationData>> STORAGE = ScopedValue.newInstance();
 
@@ -67,14 +70,15 @@ public class NeedMoreDataStorage {
         return storage;
     }
 
-    /// Returns an immutable map of continuation data if a storage is bound in the current invocation context. Otherwise, throws a [ContinuationException], indicating an
-    /// invalid operation due to missing storage binding.
+    /// Returns an immutable map of continuation data if a storage is bound in the current invocation context.
+    /// Otherwise, throws a [ContinuationException], indicating an invalid operation due to missing storage binding.
     ///
     public static Map<String, IContinuationData> moreData() {
         if (STORAGE.isBound()) {
-            return Collections.unmodifiableMap(STORAGE.get());
+            final var storage = STORAGE.get();
+            return storage.isEmpty() ? ImmutableMap.of() : Collections.unmodifiableMap(new HashMap<>(storage));
         } else {
-            throw new ContinuationException(ERR_CANNOT_ADD_MORE_DATA);
+            throw new ContinuationException(ERR_CANNOT_GET_MORE_DATA);
         }
     }
 
@@ -105,11 +109,11 @@ public class NeedMoreDataStorage {
         }
     }
 
-    /// A convenient way to obtain “more data” associated with the specified key. Returns an empty optional if no corresponding data is found, or if the “need more data”
-    /// storage is not bound in the current context — the latter case likely indicates a programming error.
+    /// A convenient way to obtain “more data” associated with the specified key.
+    /// Returns an empty optional if no corresponding data is found, or if the “need more data” storage is not bound
+    /// in the current context — the latter case likely indicates a programming error.
     ///
-    /// @param key
-    ///         the companion object property identifying the continuation
+    /// @param key the companion object property identifying the continuation
     /// @return an optional containing the requested data if found; otherwise, empty
     ///
     @SuppressWarnings("unchecked")
@@ -125,7 +129,7 @@ public class NeedMoreDataStorage {
     /// A predicate that determines whether a scoped storage is bound in the current context.
     ///
     public static boolean isBound() {
-        return  STORAGE.isBound();
+        return STORAGE.isBound();
     }
 
 }
