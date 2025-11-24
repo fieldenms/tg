@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.tiny.IActionIdentifier;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -222,17 +223,17 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     }
 
     @Override
-    public IEntityActionBuilder0b<T> withTinyHyperlink(final String actionIdentifier) {
-        if (actionIdentifier == null || actionIdentifier.isBlank()) {
+    public IEntityActionBuilder0b<T> withTinyHyperlink(final IActionIdentifier actionIdentifier) {
+        if (actionIdentifier == null || actionIdentifier.toString().isBlank()) {
             throw new InvalidArgumentException("[actionIdentifier] must be not null and not blank.");
         }
 
-        this.actionIdentifier = actionIdentifier;
+        this.actionIdentifier = actionIdentifier.toString();
         return this;
     }
 
     @Override
-    public IEntityActionBuilder0b<T> withTinyHyperlink(final Optional<String> maybeActionIdentifier) {
+    public IEntityActionBuilder0b<T> withTinyHyperlink(final Optional<IActionIdentifier> maybeActionIdentifier) {
         return maybeActionIdentifier.map(this::withTinyHyperlink).orElse(this);
     }
 

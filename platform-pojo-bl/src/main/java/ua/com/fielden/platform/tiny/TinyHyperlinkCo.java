@@ -46,7 +46,7 @@ public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
             Class<? extends AbstractEntity<?>> entityType,
             Map<? extends CharSequence, Object> modifiedProperties,
             CentreContextHolder centreContextHolder,
-            String actionIdentifier);
+            IActionIdentifier actionIdentifier);
 
     /// Overloads [#save(Class, Map, CentreContextHolder, String, Optional)].
     ///
@@ -56,26 +56,28 @@ public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
             Class<? extends AbstractEntity<?>> entityType,
             Map<? extends CharSequence, Object> modifiedProperties,
             CentreContextHolder centreContextHolder,
-            String actionIdentifier,
+            IActionIdentifier actionIdentifier,
             Optional<fetch<TinyHyperlink>> maybeFetch);
 
     /// Creates and saves a tiny hyperlink that executes a shared action entity.
     ///
-    /// This method is primarily for platform use.
+    /// **Important**: This method is primarily for platform use.
     ///
     TinyHyperlink save(
             Class<? extends AbstractEntity<?>> entityType,
             SavingInfoHolder savingInfoHolder,
-            String actionIdentifier);
+            IActionIdentifier actionIdentifier);
 
     /// Overloads [#save(Class, SavingInfoHolder, String)].
+    ///
+    /// **Important**: This method is primarily for platform use.
     ///
     /// @param maybeFetch The fetch model for the returned tiny hyperlink.
     ///
     Either<Long, TinyHyperlink> save(
             Class<? extends AbstractEntity<?>> entityType,
             SavingInfoHolder savingInfoHolder,
-            String actionIdentifier,
+            IActionIdentifier actionIdentifier,
             Optional<fetch<TinyHyperlink>> maybeFetch);
 
     /// Creates and saves a tiny hyperlink whose [TinyHyperlink#target] is `hyperlink`.

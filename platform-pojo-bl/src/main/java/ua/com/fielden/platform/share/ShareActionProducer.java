@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.tiny.IActionIdentifier;
 import ua.com.fielden.platform.tiny.TinyHyperlink;
 import ua.com.fielden.platform.tiny.TinyHyperlinkCo;
 import ua.com.fielden.platform.types.Hyperlink;
@@ -61,14 +62,14 @@ public class ShareActionProducer extends DefaultEntityProducerWithContext<ShareA
                         throw new InvalidStateException("[centreContextHolder] must be present.");
                     }
 
-                    final String actionIdentifier = getContext().getCustomObject() != null ? (String) getContext().getCustomObject().get(CUSTOM_OBJECT_ACTION_IDENTIFIER) : null;
-                    if (isBlank(actionIdentifier)) {
+                    final var actionIdentifierName = getContext().getCustomObject() != null ? (String) getContext().getCustomObject().get(CUSTOM_OBJECT_ACTION_IDENTIFIER) : null;
+                    if (isBlank(actionIdentifierName)) {
                         throw new InvalidStateException("[%s] must be present.".formatted(CUSTOM_OBJECT_ACTION_IDENTIFIER));
                     }
                     final var savingInfoHolder = (SavingInfoHolder) centreContextHolder.getMasterEntity();
 
                     final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
-                    final var tinyHyperlink = coTinyHyperlink.save(masterEntity.getType(), savingInfoHolder, actionIdentifier, Optional.of(fetchIdOnly(TinyHyperlink.class).with(HASH))).asRight().value();
+                    final var tinyHyperlink = coTinyHyperlink.save(masterEntity.getType(), savingInfoHolder, IActionIdentifier.of(actionIdentifierName), Optional.of(fetchIdOnly(TinyHyperlink.class).with(HASH))).asRight().value();
                     final var hyperlink = new Hyperlink(coTinyHyperlink.toURL(tinyHyperlink));
                     entity.setHyperlink(hyperlink)
                             .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(hyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));

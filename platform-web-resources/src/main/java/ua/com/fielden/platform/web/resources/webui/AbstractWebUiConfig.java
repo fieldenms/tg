@@ -474,8 +474,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public Optional<EntityActionConfig> findAction(final String actionIdentifier) {
-        return streamActionConfigs().filter(config -> config.actionIdentifier.filter(actionIdentifier::equals).isPresent()).findAny();
+    public Optional<EntityActionConfig> findAction(final CharSequence actionIdentifier) {
+        return streamActionConfigs().filter(config -> config.actionIdentifier.filter(it -> it.contentEquals(actionIdentifier)).isPresent()).findAny();
     }
 
     @Override

@@ -42,7 +42,7 @@ public final class EntityActionConfig {
 
     private EntityActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
-            final String actionIdentifier,
+            final CharSequence actionIdentifier,
             final CentreContextConfig context,
             final String icon,
             final String iconStyle,
@@ -66,7 +66,7 @@ public final class EntityActionConfig {
             throw new IllegalArgumentException("Dynamic action can be created only with current entity in context.");
         }
 
-        this.actionIdentifier = Optional.ofNullable(actionIdentifier);
+        this.actionIdentifier = Optional.ofNullable(actionIdentifier).map(CharSequence::toString);
         this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave;
         this.functionalEntity = Optional.ofNullable(functionalEntity);
         this.context = Optional.ofNullable(context);
@@ -91,7 +91,7 @@ public final class EntityActionConfig {
 
     private EntityActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
-            final String actionIdentifier,
+            final CharSequence actionIdentifier,
             final CentreContextConfig context,
             final String icon,
             final String iconStyle,
@@ -192,7 +192,7 @@ public final class EntityActionConfig {
 
     public static EntityActionConfig createActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
-            final String actionIdentifier,
+            final CharSequence actionIdentifier,
             final CentreContextConfig context,
             final String icon,
             final String iconStyle,

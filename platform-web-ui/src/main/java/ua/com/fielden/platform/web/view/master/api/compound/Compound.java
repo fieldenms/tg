@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.tiny.IActionIdentifier;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -293,7 +294,7 @@ public class Compound {
 
     private static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig open(
             final Class<OPEN_ACTION> openCompoundMasterActionType,
-            final Optional<String> maybeActionIdentifier,
+            final Optional<IActionIdentifier> maybeActionIdentifier,
             final Optional<IPreAction> preAction,
             final Optional<String> icon,
             final Optional<String> iconStyle,
@@ -333,12 +334,12 @@ public class Compound {
         }
     }
 
-    private static String actionIdentifierForNew(final Class<?> actionType) {
-        return "%s_OPEN_COMPOUND_NEW".formatted(actionType.getSimpleName());
+    private static IActionIdentifier actionIdentifierForNew(final Class<?> actionType) {
+        return IActionIdentifier.of("%s_OPEN_COMPOUND_NEW".formatted(actionType.getSimpleName()));
     }
 
-    private static String actionIdentifierForNewWithMaster(final Class<?> actionType) {
-        return "%s_OPEN_COMPOUND_NEW_WITH_MASTER".formatted(actionType.getSimpleName());
+    private static IActionIdentifier actionIdentifierForNewWithMaster(final Class<?> actionType) {
+        return IActionIdentifier.of("%s_OPEN_COMPOUND_NEW_WITH_MASTER".formatted(actionType.getSimpleName()));
     }
 
 }

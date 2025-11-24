@@ -127,7 +127,7 @@ public interface IWebUiConfig extends IMenuRetriever {
 
     /// Searches the whole Web UI configuration for an action with the specified identifier.
     ///
-    Optional<EntityActionConfig> findAction(String actionIdentifier);
+    Optional<EntityActionConfig> findAction(CharSequence actionIdentifier);
 
     /// Returns all registered "extra" actions, which are not exposed in the UI, but exist for other server-side purposes.
     ///
