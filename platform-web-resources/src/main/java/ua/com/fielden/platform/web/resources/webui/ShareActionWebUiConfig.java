@@ -31,7 +31,7 @@ public class ShareActionWebUiConfig {
         final var layout = cell(
                 cell(cell(CELL_LAYOUT).withGapBetweenCells(MARGIN))
                 // Embed the QR code.
-                .html("<img style='height: auto; width: 75%' src=data:image/png;base64,{{qrCode}} />",
+                .html("<img style='height: auto; width: 75%' src='data:image/png;base64,{{qrCode}}' />",
                       layout().withStyle("padding-top", MARGIN_PIX)
                               .withStyle("display", "flex")
                               .withStyle("justify-content", "center")
