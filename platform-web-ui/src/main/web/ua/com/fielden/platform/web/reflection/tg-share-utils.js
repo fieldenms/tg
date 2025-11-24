@@ -56,7 +56,7 @@ function _copyLinkToClipboard (link, toast) {
         //   -- that's why promise error should never occur.
         // If for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user.
         // Also, global handler will report that to the server.
-        navigator.clipboard.writeText(link).then(() => {
+        navigator.clipboard && navigator.clipboard.writeText(link).then(() => {
             toast.text = 'Copied to clipboard.';
             toast.hasMore = true;
             toast.msgText = link;
