@@ -61,6 +61,7 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
     /// Serialised [SavingInfoHolder] that represents the shared entity state and its context.
     ///
     @IsProperty(length = Integer.MAX_VALUE)
+    @PersistentType("nstring") // To support applications with non-UTF databases.
     @MapTo
     @Final(nullIsValueForPersisted = true)
     // @Required If `target` is null.
