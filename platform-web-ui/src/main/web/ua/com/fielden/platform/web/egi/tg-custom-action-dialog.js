@@ -1901,33 +1901,30 @@ Polymer({
             // this dialog's `uuid` to be used for action.
             const uuid = this.uuid;
 
+            let getSharedUri;
+            if (isPersistedEntity) {
+                const url = new URL(window.location.href);
+                const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
+                const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
+                url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
+                getSharedUri = () => url.href;
+            }
+            else {
+                getSharedUri = null;
+            }
+
             openShareAction(
                 this.$.toaster,
                 uuid,
                 this._showDialog,
                 !isPersistedEntity && deepestMaster
                     ? deepestMaster._createContextHolder
-                    : (() => this._reflector.createContextHolder(
-                        null, null, null,
-                        null, null, null
-                    )),
-                () => {
-                    if (isPersistedEntity) {
-                        const url = new URL(window.location.href);
-                        const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
-                        const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
-                        url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
-                        return url.href;
-                    }
-                    else {
-                        return null;
-                    }
-                },
+                    : (() => this._reflector.createContextHolder(null, null, null, null, null, null)),
+                getSharedUri,
                 shareAction => {
                     // Persist reference to the dialog to easily get it in `tg-ui-action._createContextHolderForAction`.
                     shareAction._dialog = this;
-                }
-            );
+                });
         }
         else {
             this.$.toaster.text = 'Please save and try again.';

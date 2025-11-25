@@ -2,15 +2,15 @@ import '/resources/actions/tg-ui-action.js';
 
 /// Opens share action master with tiny URL and QR code.
 ///
-/// @param toast - <tg-toast> for displaying informational toasts
-/// @param parentUuid - uuid of the parent element
-/// @param showDialog - showDialog function of the parent element
-/// @param createContextHolder - createContextHolder function of the parent element or some other custom logic for parent context creation
-/// @param calculateSharedUri - function to calculate TinyHyperlink.target link; provide null if not needed
-/// @param enhanceAction - mutator function of resultant action to be performed before _run()
+/// @param {TgToast} toast - <tg-toast> for displaying informational toasts
+/// @param {String} parentUuid - uuid of the parent element
+/// @param {Function} showDialog - showDialog function of the parent element
+/// @param {Function} createContextHolder - createContextHolder function of the parent element or some other custom logic for parent context creation
+/// @param {Function} [calculateSharedUri] - optional function that produces a URL to be recorded as TinyHyperlink.target
+/// @param {Function} [enhanceAction] - mutator function of resultant action to be performed before _run()
 ///
 export function openShareAction (toast, parentUuid, showDialog, createContextHolder, calculateSharedUri, enhanceAction) {
-    // Create dynamic share action.
+    // Create a dynamic share action.
     const shareAction = document.createElement('tg-ui-action');
 
     // Provide only the necessary attributes.
@@ -36,20 +36,25 @@ export function openShareAction (toast, parentUuid, showDialog, createContextHol
 
     enhanceAction && enhanceAction(shareAction);
 
-    // Copy link to a clipboard on successful action completion (which is performed in retrieval request).
+    // Copy `ShareAction.hyperlink` to the clipboard on successful action completion (which is performed in the retrieval request).
     shareAction.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
         if (_currBindingEntity && _currBindingEntity.get('hyperlink')) {
             _copyLinkToClipboard(_currBindingEntity.get('hyperlink').value, toast);
         }
     };
 
-    shareAction._sharedUri = calculateSharedUri();
+    if (calculateSharedUri) {
+        const uri = calculateSharedUri();
+        if (uri === null) {
+            throw new Error("The result of [calculateSharedUri] must not be null.");
+        }
+        shareAction._sharedUri = uri;
+    }
 
-    // Run dynamic share action.
     shareAction._run();
 }
 
-/// Copies non-empty link to clipboard and shows informational toast.
+/// Copies `link` to the clipboard, if non-empty, and shows an informational toast.
 ///
 function _copyLinkToClipboard (link, toast) {
     if (link) {
