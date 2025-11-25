@@ -21,10 +21,13 @@ public final class QrCodeUtils {
 
     /// Creates a QR code image for the content in `input`.
     ///
+    /// The image size will be exactly `width` x `height`.
+    /// The larger the value of `border`, the less area will be allocated to the QR code.
+    ///
     /// @param imageFormat the image format to use
     /// @param width       width of the image, in pixels
     /// @param height      height of the image, in pixels
-    /// @param border      size of the border around the image, in pixels
+    /// @param border      size of the border on each side
     /// @param lightColour hex colour for the light squares (e.g., "0xFFFFFF")
     /// @param darkColour  hex colour for the dark squares (e.g., "0x000000")
     /// @return            bytes that constitute the image in the specified format
@@ -94,6 +97,9 @@ public final class QrCodeUtils {
         if (border < 0) {
             throw new InvalidArgumentException("Border must be >= 0, but was %s.".formatted(border));
         }
+        if (border >= width || border >= height) {
+            throw new InvalidArgumentException("Border must not be >= than width or height.");
+        }
 
         int lightColourRgb;
         try {
@@ -111,37 +117,57 @@ public final class QrCodeUtils {
             LOGGER.warn(() -> "Invalid colour specified: [%s]. Using a default colour.".formatted(darkColour));
         }
 
-        final int qrSide = qr.size;
-        int widthScale = width / qrSide;
-        int heightScale = height / qrSide;
+        // The QR code is unlikely to perfectly fit the specified width and height.
+        // It is more likely to occupy a slightly smaller area.
+        // E.g., in a 512x512 image, a QR code with 53x53 modules will occupy 477 pixels (9 pixels per each module).
+        // The remaining pixels will be integrated into the border area.
+
+        final int remWidth = Integer.remainderUnsigned(width - border*2, qr.size);
+        final int remHeight = Integer.remainderUnsigned(height - border*2, qr.size);
+
+        // The area occupied by the QR code.
+        int qrWidth = width - border*2 - remWidth;
+        int qrHeight = height - border*2 - remHeight;
+
+        int realBorderX = border + (remWidth / 2);
+        int realBorderY = border + (remHeight / 2);
+
+        // Number of pixels per module.
+        int widthScale = qrWidth / qr.size;
+        int heightScale = qrHeight / qr.size;
 
         // Readjust the image size if the specified size is too small to contain the QR code.
         // 4 pixels per one QR code module should be enough.
 
         if (widthScale == 0) {
-            LOGGER.warn("Specified image width [%s] is too small for QR code with size [%s]. Using a default width.".formatted(width, qrSide));
+            LOGGER.warn("Specified image width [%s] is too small for QR code with size [%s]. Using a default width.".formatted(width, qr.size));
             widthScale = 4;
-            width = qrSide * widthScale;
+            qrWidth = width = qr.size * widthScale;
+            realBorderX = 0;
         }
 
         if (heightScale == 0) {
-            LOGGER.warn("Specified image height [%s] is too small for QR code with size [%s]. Using a default height.".formatted(height, qrSide));
+            LOGGER.warn("Specified image height [%s] is too small for QR code with size [%s]. Using a default height.".formatted(height, qr.size));
             heightScale = 4;
-            height = qrSide * heightScale;
+            qrHeight = height = qr.size * heightScale;
+            realBorderY = 0;
         }
 
-        final var image = new BufferedImage(width + border*2, height + border*2, BufferedImage.TYPE_INT_RGB);
+        final var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        // Fill with light colour.
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
-                if (x < border || x >= width + border || y < border || y >= height + border) {
-                    image.setRGB(x, y, lightColourRgb);
-                }
-                else {
-                    final boolean color = qr.getModule((x - border) / widthScale, (y - border) / heightScale);
-                    image.setRGB(x, y, color ? darkColourRgb : lightColourRgb);
-                }
+                image.setRGB(x, y, lightColourRgb);
             }
         }
+        // Draw the QR code.
+        for (int y = 0; y < qrHeight; y++) {
+            for (int x = 0; x < qrWidth; x++) {
+                final boolean color = qr.getModule(x / widthScale, y / heightScale);
+                image.setRGB(x + realBorderX, y + realBorderY, color ? darkColourRgb : lightColourRgb);
+            }
+        }
+
         return image;
     }
 
