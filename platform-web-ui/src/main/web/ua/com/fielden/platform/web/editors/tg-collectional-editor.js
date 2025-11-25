@@ -145,7 +145,6 @@ const customInputTemplate = html`
                 <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]" selected$="[[selected]]" drag-element draggable$="[[_calcItemDraggable(selected, canReorderItems, _touchEnabled)]]">
                     <div tabindex="0" class$="[[_computedClass(selected, item)]]" style$="[[_computeItemStyle(_forReview)]]" is-dragging-item$="[[_isDraggingThisItem(item, _draggingItem)]]" on-tap="_selectionHandler">
                         <iron-icon class="drag-anchor" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForDragAnchor(selected, _touchEnabled)]]" draggable$="[[_calcIconDraggable(selected, canReorderItems, _touchEnabled)]]"></iron-icon>
-                        <!-- on-touchstart="_disableScrolling" on-touchmove="_disableScrolling" -->
                         <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]" style$="[[_computeTitleStyle(canReorderItems)]]">
                             <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
                             <div class$="[[_computedDescriptionClass(item)]]" hidden$="[[!_calcItemText(item, descriptionPropertyName)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
@@ -949,10 +948,6 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             delete this._reorderingObject;
             this._draggingItem = null;
         }
-    }
-
-    _disableScrolling (e) {
-        tearDownEvent(e);
     }
     
     _getIndexForElement (element) {
