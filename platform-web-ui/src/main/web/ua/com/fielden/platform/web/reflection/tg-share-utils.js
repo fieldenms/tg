@@ -1,4 +1,5 @@
 import '/resources/actions/tg-ui-action.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 /// Opens share action master with tiny URL and QR code.
 ///
@@ -58,18 +59,24 @@ export function openShareAction (toast, parentUuid, showDialog, createContextHol
 ///
 function _copyLinkToClipboard (link, toast) {
     if (link) {
-        // Writing into clipboard is always permitted for currently open tab
-        //   (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText)
-        //   -- that's why promise error should never occur.
-        // If for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user.
-        // Also, global handler will report that to the server.
-        navigator.clipboard && navigator.clipboard.writeText(link).then(() => {
-            toast.text = 'Copied to clipboard.';
-            toast.hasMore = true;
-            toast.msgText = link;
-            toast.showProgress = false;
-            toast.isCritical = false;
-            toast.show();
-        });
+        // Writing into clipboard is mostly permitted for currently open tab
+        //   (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText).
+        // Unless it is a Safari-based browser and the action is performed asynchronously to the user input
+        //   (`NotAllowedError: The request is not allowed by the user agent or the platform in the current context, possibly because the user denied permission.`).
+        // Writing errors should not be shown to the user, but let's log them to the console and server logger.
+        navigator.clipboard && navigator.clipboard.writeText(link).then(
+            () => {
+                toast.text = 'Copied to clipboard.';
+                toast.hasMore = true;
+                toast.msgText = link;
+                toast.showProgress = false;
+                toast.isCritical = false;
+                toast.show();
+            },
+            error => {
+                console.error(error);
+                throw new UnreportableError(error);
+            }
+        );
     }
 }
