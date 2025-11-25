@@ -37,6 +37,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.lang.String.format;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
@@ -108,7 +109,11 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         final JsonNode node = jp.readValueAsTree();
         // final int reference = IntSerializer.get(buffer, true);
 
-        if (node.isObject() && node.get("@id_ref") != null) {
+        if (!node.isObject()) {
+            throw new EntityDeserialisationException("Invalid serialised entity: must be an object node, but was %s.".formatted(node.getNodeType()));
+        }
+
+        if (node.get("@id_ref") != null) {
             final String reference = node.get("@id_ref").asText();
             return (T) references.getEntity(reference);
         } else {
@@ -204,8 +209,10 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             } else {
                 try {
                     value = mapper.readValue(valueNode.traverse(mapper), concreteType);
-                } catch (final IOException ex) {
-                    throw new EntityDeserialisationException("Validation result deserialisation failed.", ex);
+                } catch (final Exception ex) {
+                    throw new EntityDeserialisationException(format(
+                            "Failed to deserialise property [%s.%s].", propertyField.getDeclaringClass().getTypeName(), propertyField.getName()),
+                            ex);
                 }
             }
         }
@@ -246,8 +253,10 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 assertNonEmptyNode(validationResultNode);
                 try {
                     metaProperty.setDomainValidationResult(validationResultNode.traverse(mapper).readValueAs(Result.class));
-                } catch (final IOException ex) {
-                    throw new EntityDeserialisationException("Validation result deserialisation failed.", ex);
+                } catch (final Exception ex) {
+                    throw new EntityDeserialisationException(
+                            format("Failed to deserialise domain validation result for meta-property [%s.%s].", propField.getDeclaringClass().getTypeName(), propField.getName()),
+                            ex);
                 }
             }
         }
