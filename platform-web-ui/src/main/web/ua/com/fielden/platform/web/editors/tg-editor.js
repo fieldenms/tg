@@ -1062,7 +1062,18 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                 qrCodeScanner.toaster = null;
                 qrCodeScanner.closeCallback = null;
                 qrCodeScanner.applyCallback = null;
-                //Respect preferred property if entity was changed (maybe due to validation processesd triggerd by auto-commit editor)
+                // The editor that opened the scanner dialog should be focused again if:
+                // 1) The editor was focused before the scanner dialog was opened, and
+                // 2) Either the binding entity did not change, or the new entity has a preferred property.
+                //
+                // The binding entity may change because the scanner dialog can be closed after the validation
+                // process has already updated the editor’s entity — these two processes are asynchronous.
+                //
+                // The condition `entity === this.entity` determines which happened first: the validation process
+                // or the closeScanner action.
+                //
+                // The second part of the OR condition is evaluated when the validation process happened first.
+                // It checks whether the new entity has a specified preferred property.
                 if (wasFocused && (entity === this.entity || !this.entity['@@origin'].preferredProperty())) {
                     this.focusDecoratedInput();
                 }
