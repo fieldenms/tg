@@ -865,18 +865,17 @@ Polymer({
 
     /************************* Insertion point drag & drop related events ******************************/
     _insertionPointCustomLayoutEnabledChanged: function (newValue) {
-        if (!isTouchEnabled()) { // TODO remove this check in #2323
-            if (newValue) {
-                this.$.centreResultContainer.addEventListener("dragstart", this._startDrag);
-                this.$.centreResultContainer.addEventListener("dragend", this._endDrag);
-                this.$.centreResultContainer.addEventListener("drop", this._dragDrop);
-                this.$.centreResultContainer.addEventListener("dragover", this._dragOver);
-            } else {
-                this.$.centreResultContainer.removeEventListener("dragstart", this._startDrag);
-                this.$.centreResultContainer.removeEventListener("dragend", this._endDrag);
-                this.$.centreResultContainer.removeEventListener("drop", this._dragDrop);
-                this.$.centreResultContainer.removeEventListener("dragover", this._dragOver);
-            }
+        if (newValue) {
+            this.$.centreResultContainer.addEventListener("touchstart", (e) => {console.log("result view touchstart", e);});
+            this.$.centreResultContainer.addEventListener("dragstart", this._startDrag);
+            this.$.centreResultContainer.addEventListener("dragend", this._endDrag);
+            this.$.centreResultContainer.addEventListener("drop", this._dragDrop);
+            this.$.centreResultContainer.addEventListener("dragover", this._dragOver);
+        } else {
+            this.$.centreResultContainer.removeEventListener("dragstart", this._startDrag);
+            this.$.centreResultContainer.removeEventListener("dragend", this._endDrag);
+            this.$.centreResultContainer.removeEventListener("drop", this._dragDrop);
+            this.$.centreResultContainer.removeEventListener("dragover", this._dragOver);
         }
     },
 
@@ -930,14 +929,15 @@ Polymer({
                 }
             }
             const mousePos = getRelativePos(dragEvent.clientX, dragEvent.clientY, scrollContainer);
+            const addressBarHeight = document.body.offsetHeight - window.innerHeight;
             if (scrollContainer && scrollContainer.offsetHeight !== scrollContainer.scrollHeight) { // scroll container has scrollbar and is scrollable
                 if (mousePos.y < 20 /* minimal distance to the edge */) { // mouse is close to the top edge
                     const scrollDistance = Math.min(20 - mousePos.y, scrollContainer.scrollTop);
                     if (scrollDistance > 0) { // if scrollbar is not on the top then scroll to the top
                         scrollContainer.scrollTop -= scrollDistance;
                     }
-                } else if (mousePos.y > scrollContainer.offsetHeight - 20 /* minimal distance to the edge */) { // mouse is close to the bottom edge
-                    const scrollDistance = Math.min(mousePos.y - scrollContainer.offsetHeight + 20, scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.offsetHeight);
+                } else if (mousePos.y > scrollContainer.offsetHeight - addressBarHeight - 20 /* minimal distance to the edge */) { // mouse is close to the bottom edge
+                    const scrollDistance = Math.min(mousePos.y - scrollContainer.offsetHeight + addressBarHeight + 20, scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.offsetHeight);
                     if (scrollDistance > 0) { // if scrollbar is not on the bottom then scroll to the bottom
                         scrollContainer.scrollTop += scrollDistance;
                     }

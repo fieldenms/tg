@@ -493,11 +493,9 @@ Polymer({
         //  Use 'useCapture = true' (capturing phase, not bubbling, see https://www.quirksmode.org/js/events_order.html) as a parameter to ensure event dispatching before
         //   1. the start-drag event on parent centre element (tg-entity-centre._startDrag => this.$.centreResultContainer.on-dragstart) and
         //   2. the move event on this element (this.moveComponent => this.$.titleBar.on-track)
-        if (!isTouchEnabled()) {
-            // Be careful when adding mousedown events (and other mouse events).
-            // On touch devices such events will also be generated on touch, unless we add 'touchstart' with `e => e.preventDefault()` handler.
-            this.$.titleBar.addEventListener("mousedown", this._handleDraggable.bind(this), true); // TODO remove !isTouchEnabled() check and use clickEvent ('touchstart') to enable D'n'D support in #2323
-        }
+        // Be careful when adding mousedown events (and other mouse events).
+        // On touch devices such events will also be generated on touch, unless we add 'touchstart' with `e => e.preventDefault()` handler.
+        this.$.titleBar.addEventListener("mousedown", this._handleDraggable.bind(this), true);
     },
 
     attached: function () {
