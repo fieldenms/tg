@@ -72,7 +72,7 @@ public class ShareActionProducer extends DefaultEntityProducerWithContext<ShareA
                     final var tinyHyperlink = coTinyHyperlink.save(masterEntity.getType(), savingInfoHolder, IActionIdentifier.of(actionIdentifierName), Optional.of(fetchIdOnly(TinyHyperlink.class).with(HASH))).asRight().value();
                     final var hyperlink = new Hyperlink(coTinyHyperlink.toURL(tinyHyperlink));
                     entity.setHyperlink(hyperlink)
-                            .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(hyperlink.value, PNG, 512, 512, 24, WHITE, BLACK)));
+                            .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(hyperlink.value, PNG, 512, 512, 12, WHITE, BLACK)));
                 }
             });
         }
