@@ -61,11 +61,10 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
     /// Serialised [SavingInfoHolder] that represents the shared entity state and its context.
     ///
     @IsProperty(length = Integer.MAX_VALUE)
-    @PersistentType("nstring") // To support applications with non-UTF databases.
     @MapTo
     @Final(nullIsValueForPersisted = true)
     // @Required If `target` is null.
-    private String savingInfoHolder;
+    private byte[] savingInfoHolder;
 
     /// Corresponds to [ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig#actionIdentifier].
     ///
@@ -115,12 +114,12 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
         return this;
     }
 
-    public String getSavingInfoHolder() {
+    public byte[] getSavingInfoHolder() {
         return savingInfoHolder;
     }
 
     @Observable
-    public TinyHyperlink setSavingInfoHolder(final String savingInfoHolder) {
+    public TinyHyperlink setSavingInfoHolder(final byte[] savingInfoHolder) {
         this.savingInfoHolder = savingInfoHolder;
         return this;
     }

@@ -179,7 +179,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         final var serialisedSavingInfoHolder = serialiser.serialise(ourSavingInfoHolder, SerialiserEngines.JACKSON);
         final var link = new_()
                 .setEntityTypeName(baseEntityType(entityType).getCanonicalName())
-                .setSavingInfoHolder(new String(serialisedSavingInfoHolder))
+                .setSavingInfoHolder(serialisedSavingInfoHolder)
                 .setActionIdentifier(actionIdentifier.name().toString());
         return save(link, maybeFetch);
     }
@@ -216,7 +216,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             return Checksum.sha256(tinyHyperlink.getTarget().value.getBytes());
         }
         else {
-            if (tinyHyperlink.getSavingInfoHolder() == null || tinyHyperlink.getSavingInfoHolder().isEmpty()) {
+            if (tinyHyperlink.getSavingInfoHolder() == null || tinyHyperlink.getSavingInfoHolder().length == 0) {
                 throw new InvalidArgumentException("[%s] is required to compute a hash.".formatted(TinyHyperlink.SAVING_INFO_HOLDER));
             }
 
@@ -224,7 +224,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
                 throw new InvalidArgumentException("[%s] is required to compute a hash.".formatted(TinyHyperlink.ACTION_IDENTIFIER));
             }
 
-            return Checksum.sha256(tinyHyperlink.getActionIdentifier().getBytes(), tinyHyperlink.getSavingInfoHolder().getBytes());
+            return Checksum.sha256(tinyHyperlink.getActionIdentifier().getBytes(), tinyHyperlink.getSavingInfoHolder());
         }
     }
 
