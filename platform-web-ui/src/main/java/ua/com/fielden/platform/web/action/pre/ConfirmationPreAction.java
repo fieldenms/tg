@@ -81,7 +81,7 @@ public class ConfirmationPreAction implements IPreAction {
                         isActionInProgressChanged(newValue, oldValue);
                         // If action progress has been stopped.
                         if (newValue === false && oldValue === true) {
-                            self.confirmationDialog(dialog => dialog.enableActions());
+                            self.confirmationDialog(dialog => dialog.enableActions(action));
                         }
                     }).bind(action);
                     action.isActionSuccessfulChanged = (newValue, oldValue) => {
