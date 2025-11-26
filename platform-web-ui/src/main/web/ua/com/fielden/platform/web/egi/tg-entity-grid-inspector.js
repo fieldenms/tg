@@ -1351,7 +1351,7 @@ Polymer({
             if (this.isHyperlinkProp(entity, column) === false) {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
-                    this.downloadAttachment(attachment);
+                    this.downloadAttachment(attachment).catch(e => {});
                 } else if (this.hasDefaultAction(entity, column)) {
                     column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
