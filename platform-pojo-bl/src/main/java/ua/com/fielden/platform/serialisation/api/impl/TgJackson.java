@@ -49,7 +49,6 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 /// Specifically, the "type table" at the server and client side should be identical (most likely should be sent to the client during client application startup).
 ///
 public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
-    private static final long serialVersionUID = 8131371701442950310L;
     private static final Logger logger = getLogger();
 
     public static final String ERR_RESTRICTED_TYPE_SERIALISATION = "Type [%s] is not permitted for serialisation.";
