@@ -245,6 +245,10 @@ export const TgConfirmationDialog = Polymer({
     enableActions: function (action) {
         dialogModel.spinnerActive = false;
         dialogModel.$.confirmDialog.noCancelOnEscKey = false;
+        // Automatic auto-focusing of button does not occur, because it only occurs when <paper-dialog> opens.
+        // Find the button manually and focus it to be able to use keyboard Enter key multiple times without tapping.
+        const firstAutoFocusButton = dialogModel.$.confirmDialog.querySelector('[autofocus]');
+        firstAutoFocusButton && firstAutoFocusButton.focus();
 
         if (action) {
             // Override YES / OK affirmative buttons tapping to actually perform an action.
