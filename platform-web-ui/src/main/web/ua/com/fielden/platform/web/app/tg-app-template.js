@@ -394,7 +394,15 @@ Polymer({
 
                         action._run();
                     }
-                }, e => processResponseError(e.request, e.error, this._reflector(), this._serialiser(), null, this.toaster));
+                }, e => processResponseError(e.request, e.error, this._reflector(), this._serialiser(), _ => { // _ result or message to be dismissed
+                    if (e.request && e.request.xhr && e.request.xhr.status === 404 && e.request.xhr.response) {
+                        const deserialisedResult = this._serialiser().deserialise(e.request.xhr.response);
+                        if (this._reflector().isError(deserialisedResult)) {
+                            // Override standard >=400 toast message `Service Error (404).` by custom one from server.
+                            this.toaster && this.toaster.openToastForErrorResult(deserialisedResult, true);
+                        }
+                    }
+                }, this.toaster));
             }
             else {
                 this._openToastForError('URI error.', `The URI [${this._route.path}] is invalid.`, true);

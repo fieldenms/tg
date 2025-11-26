@@ -105,7 +105,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             final var tinyHyperlink = coTinyHyperlink.findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(ENTITY_TYPE_NAME, HASH, SAVING_INFO_HOLDER, ACTION_IDENTIFIER, TARGET), requestHash);
             if (tinyHyperlink == null) {
                 getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-                return new StringRepresentation("The specified resource was not found. Please verify that you are accessing the correct resource.");
+                return restUtil.errorJsonRepresentation("The resource you're looking for can't be found.\nPlease check the link or contact support if you need assistance.");
             }
 
             // If this tiny hyperlink points to another URL.
