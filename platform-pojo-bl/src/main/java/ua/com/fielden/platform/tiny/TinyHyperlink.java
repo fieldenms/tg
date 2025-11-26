@@ -52,7 +52,7 @@ public class TinyHyperlink extends AbstractPersistentEntity<DynamicEntityKey> {
     // : Properties that represent a shared entity.
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    @IsProperty
+    @IsProperty(length = 1024)
     @MapTo
     @Final(nullIsValueForPersisted = true)
     // @Required If `target` is null.
