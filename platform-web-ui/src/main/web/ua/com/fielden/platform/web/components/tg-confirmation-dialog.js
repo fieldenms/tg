@@ -232,11 +232,15 @@ export const TgConfirmationDialog = Polymer({
         });
     },
 
-    /// Manually closes confirmation dialog.
-    /// Resets progress indicator (spinner) and other `withProgress` configuration.
+    /// Manually closes confirmation dialog (`withProgress` preAction dialogs).
     ///
     close: function () {
         dialogModel.$.confirmDialog.close();
+    },
+
+    /// Manually resets progress indicator (spinner) and other configuration (`withProgress` preAction dialogs).
+    ///
+    enableActions: function () {
         dialogModel.spinnerActive = false;
         dialogModel.$.confirmDialog.noCancelOnEscKey = false;
     }

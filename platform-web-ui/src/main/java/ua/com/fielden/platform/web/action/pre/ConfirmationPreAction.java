@@ -79,10 +79,17 @@ public class ConfirmationPreAction implements IPreAction {
                     const isActionInProgressChanged = action.isActionInProgressChanged.bind(action);
                     action.isActionInProgressChanged = (function (newValue, oldValue) {
                         isActionInProgressChanged(newValue, oldValue);
+                        // If action progress has been stopped.
                         if (newValue === false && oldValue === true) {
-                            self.closeConfirmationDialog();
+                            self.confirmationDialog(dialog => dialog.enableActions());
                         }
                     }).bind(action);
+                    action.isActionSuccessfulChanged = (newValue, oldValue) => {
+                        // If action has become successful.
+                        if (newValue && !oldValue) {
+                            self.confirmationDialog(dialog => dialog.close());
+                        }
+                    };
                 }
             """ : "") + """
                 return self.confirm('%s', [%s]%s);
