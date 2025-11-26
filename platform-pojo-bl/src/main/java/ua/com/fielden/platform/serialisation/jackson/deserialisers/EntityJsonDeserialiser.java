@@ -251,8 +251,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JsonNode validationResultNode = metaPropNode.get(VALIDATION_RESULT);
             if (validationResultNode != null) {
                 assertNonEmptyNode(validationResultNode);
-                try {
-                    metaProperty.setDomainValidationResult(validationResultNode.traverse(mapper).readValueAs(Result.class));
+                try (final var parser = validationResultNode.traverse(mapper)) {
+                    metaProperty.setDomainValidationResult(parser.readValueAs(Result.class));
                 } catch (final Exception ex) {
                     throw new EntityDeserialisationException(
                             format("Failed to deserialise domain validation result for meta-property [%s.%s].", propField.getDeclaringClass().getTypeName(), propField.getName()),
