@@ -48,15 +48,13 @@ public class Checksum {
         }
     }
 
-    /**
-     * Calculates a SHA256 code for the passed in byte array.
-     * 
-     * @param dataBytes
-     * @return
-     */
+
+
+    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+    /// Calculates a SHA256 code for the passed in byte array.
+    ///
     public static String sha256(final byte[] dataBytes) {
-        class $ { static final byte[] EMPTY = {}; }
-        return sha256(dataBytes, $.EMPTY);
+        return sha256(dataBytes, EMPTY_BYTE_ARRAY);
     }
 
     /// Calculates a SHA256 code for the passed in byte array.
