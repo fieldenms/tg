@@ -237,7 +237,9 @@ class TgAttachmentPreview extends PolymerElement {
             }
             this._startSpinnerTimer = setTimeout(this._startSpinnerCallback.bind(this), 700);
             this._working = true;
-            this.downloadAttachment(this.entity.attachment).catch(e => {}).finally(() => {
+            this.downloadAttachment(this.entity.attachment).catch(e => {
+                // No action needed; errors are gracefully handled within the downloadAttachment function.
+            }).finally(() => {
                 this._working = false;
                 // Clear timeout to prevent not yet activated spinner from activating.
                 if (this._startSpinnerTimer) {
