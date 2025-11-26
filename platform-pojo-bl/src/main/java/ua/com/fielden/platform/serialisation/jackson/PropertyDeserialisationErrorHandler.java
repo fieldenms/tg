@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 ///
 public interface PropertyDeserialisationErrorHandler {
 
+    String ERR_DESERIALISATION = "Failed to deserialise property [%s.%s]. Serialised property value: [%s].";
+
     /// Handles `error` that occured during deserialisation and assignment of a value to `property` in `entity`.
     ///
     /// @param inputValueSupplier computes a string representation of the input for property deserialisation
@@ -30,7 +32,7 @@ public interface PropertyDeserialisationErrorHandler {
     PropertyDeserialisationErrorHandler standard = throwing;
 
     static String makeMessage(final AbstractEntity<?> entity, final String property, final Supplier<String> inputValueSupplier) {
-        return "Failed to deserialise property [%s.%s]. Serialised property value: %s".formatted(entity.getType().getSimpleName(), property, inputValueSupplier.get());
+        return ERR_DESERIALISATION.formatted(entity.getType().getSimpleName(), property, inputValueSupplier.get());
     }
 
 }
