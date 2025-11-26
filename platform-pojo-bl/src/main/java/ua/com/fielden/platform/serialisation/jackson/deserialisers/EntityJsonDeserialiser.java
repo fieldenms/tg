@@ -161,7 +161,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 .ifPresent(preferredProperty -> entity.setPreferredProperty(preferredProperty));
 
             final var propErrorHandler = context.getPropDeserialisationErrorHandler().orElse(PropertyDeserialisationErrorHandler.standard);
-            node.fields().forEachRemaining(childNameAndNode -> { // iterate over all "fields" (i.e., present child nodes) in the order of the original source
+            node.properties().forEach(childNameAndNode -> { // iterate over all "fields" (i.e., present child nodes) in the order of the original source
                 final String childName = childNameAndNode.getKey();
                 final JsonNode childNode = childNameAndNode.getValue();
                 if (childNode != null) { // for safety, still check whether JsonNode is present
