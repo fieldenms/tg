@@ -43,7 +43,7 @@ public class ShareActionWebUiConfig {
                 .addCancelAction().excludeNew().shortDesc("Close").longDesc("Close")
                 .setActionBarLayoutFor(DESKTOP, Optional.empty(), mkActionLayoutForMaster(1, MASTER_ACTION_DEFAULT_WIDTH))
                 .setLayoutFor(DESKTOP, Optional.empty(), layout)
-                .withDimensions(mkDim(540, 700))
+                .withDimensions(mkDim(540, 580))
                 .done();
 
         return new EntityMaster<>(ShareAction.class, ShareActionProducer.class, masterConfig, injector);
