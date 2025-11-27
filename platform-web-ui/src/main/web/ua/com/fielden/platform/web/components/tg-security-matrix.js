@@ -376,30 +376,32 @@ Polymer({
             entity._check(property, value);
         };
         this._resetSecurityMatrix = function () {
-            this.entities.forEach(entity => entity.reset());
+            this.entities && this.entities.forEach(entity => entity.reset());
             this.$.cancelButton.postAction();
             this._toggleButtonStates();
         }.bind(this);
         this._postResetSecurityMatrix = function () {};
         this._postResetSecurityMatrixError = function () {};
         this._saveSecurityMatrix = function () {
-            const associationsToSave = {};
-            const associationsToRemove = {};
-            this.entities.forEach(entity => entity.getAssociationsToSave(associationsToSave));
-            this.entities.forEach(entity => entity.getAssociationsToRemove(associationsToRemove));
-            this._currBindingEntity['associationsToSave'] = associationsToSave;
-            this._currBindingEntity['associationsToRemove'] = associationsToRemove;
+            if (this.entities) {
+                const associationsToSave = {};
+                const associationsToRemove = {};
+                this.entities.forEach(entity => entity.getAssociationsToSave(associationsToSave));
+                this.entities.forEach(entity => entity.getAssociationsToRemove(associationsToRemove));
+                this._currBindingEntity['associationsToSave'] = associationsToSave;
+                this._currBindingEntity['associationsToRemove'] = associationsToRemove;
+            }
             this.save();
         }.bind(this);
         this.postSaved = function (savedOrNew, newBindingEntity) {
             // Reset the security matrix state if the save was successful.
             if (!savedOrNew.exceptionOccurred()) {
-                this.entities.forEach(entity => entity.clearCurrentState());
+                this.entities && this.entities.forEach(entity => entity.clearCurrentState());
                 this._toggleButtonStates();
             }
         }.bind(this);
         this._toggleButtonStates = function () {
-            const changed = this.entities.some(entity => entity.isChanged());
+            const changed = !!(this. entities && this.entities.some(entity => entity.isChanged()));
             this.$.saveButton.outerEnabled = changed;
             this.$.cancelButton.outerEnabled = changed;
         }.bind(this);
@@ -414,7 +416,7 @@ Polymer({
     },
     
     canLeave: function () {
-        if (this.entities.some(entity => entity.isChanged())) {
+        if (this.entities && this.entities.some(entity => entity.isChanged())) {
             return {
                 msg: "Please save or cancel changes."
             };
@@ -422,11 +424,15 @@ Polymer({
     },
 
     filterTokens: function (text) {
-        this.$.securityMatrix.filterTokens(text.replace(/\s*,\s*/, "|"));
+        if (this.entities) {
+            this.$.securityMatrix.filterTokens(text.replace(/\s*,\s*/, "|"));
+        }
     },
 
     filterRoles: function (text) {
-        this.$.securityMatrix.filterRoles(text.replace(/\s*,\s*/, "|"));
+        if (this.columns) {
+            this.$.securityMatrix.filterRoles(text.replace(/\s*,\s*/, "|"));
+        }
     },
 
     _isNecessaryForConversion: function (propertyName) {
@@ -466,17 +472,13 @@ Polymer({
                 });
             });
             //In order to reset filter state if reload button was pressed.
-            if (this.columns) {
-                this.filterRoles("");
-            }
-            if (this.entities) {
-                this.filterTokens("");
-            }
+            this.filterRoles("");
+            this.filterTokens("");
             //Set new columns and entities
             this.columns = columnList;
             this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList.slice().splice(1), this._toggleButtonStates));
-            this._toggleButtonStates();
         }
+        this._toggleButtonStates();
     },
 
     _masterDom: function () {
