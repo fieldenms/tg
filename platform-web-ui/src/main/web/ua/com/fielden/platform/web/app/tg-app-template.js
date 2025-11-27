@@ -245,10 +245,9 @@ Polymer({
         },
 
         /**
-         * Additional headers for every 'iron-ajax' client-side requests. These only contain
-         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
-         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
-         * to compute 'Now' moment properly.
+         * Additional headers for every 'iron-ajax' client-side requests.
+         * These only contain our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able to compute 'Now' moment properly.
          */
         _headers: {
             type: String,
@@ -312,7 +311,7 @@ Polymer({
 
                     // Any tiny link should be rewritten to some form that wouldn't allow user to go by to that '/tiny/...' link.
                     // If that link represents some other link (e.g. '/master/...'), let's rewrite to that other link.
-                    //   It would be consistent for opening such other links directly.
+                    // It would be consistent for opening such other links directly.
                     // Otherwise, rewrite to the main menu link because Entity Master for NEW instances are opened there.
                     const rewrittenUri = sharedUri || this._urlForMainMenu();
 
@@ -320,7 +319,7 @@ Polymer({
                     window.history.replaceState(this.currentHistoryState, '', rewrittenUri);
                     // Then perform transition using <app-location> 'location-changed' event (see element docs).
                     // `window.location.replace()` is not suitable because it messes up the `window.history.state` in our case
-                    //   (see `_routeChanged` observer with `if (!window.history.state) {...` branch).
+                    // (see `_routeChanged` observer with `if (!window.history.state) {...` branch).
                     window.dispatchEvent(new CustomEvent('location-changed', {
                         detail: {
                             // The state was manually rewritten above -- prevent automatic rewrite.

@@ -477,7 +477,7 @@ Polymer({
          *
          * For compound masters it represents the master of loaded persistent entity under Main / one-2-one menu item.
          * For simple persistent masters (including those embedded by EntityEditAction / EntityNewAction)
-         *   it represents the master of actual persistent entity.
+         * it represents the master of actual persistent entity.
          * Otherwise (i.e. for functional masters) it represents the master of that functional entity.
          */
         _deepestMaster: {
@@ -486,7 +486,9 @@ Polymer({
         },
 
         /**
-         * Represents the ID of the currently bound persisted entity (of type derived from _mainEntityType) or 'null' if the entity is not yet persisted or not yet loaded.
+         * Represents the ID of the currently bound persisted entity (of type derived from _mainEntityType) or 'null',
+         * if the entity is not yet persisted or not yet loaded.
+         *
          * Should only be used if '_mainEntityType' is present.
          */
         _mainEntityId: {
@@ -1104,10 +1106,11 @@ Polymer({
     },
 
     _showDialog: function (action) {
-        //Calculate close event channel for dialog. It should be the same as action's centreUuid.
-        //This is done because action's centreUuid is set into centreUuid of the master opened by specified action and inserted into
-        //opening dialog. Then the master's centreUuid is used as closeEventChannel for tg-action.
-        //|| this.uuid is used as fallback in case if action's centreUuid wasn't defined.
+        // Calculate close event channel for dialog.
+        // It should be the same as action's centreUuid.
+        // This is done because action's centreUuid is set into centreUuid of the master opened by specified action and inserted into opening dialog.
+        // Then the master's `centreUuid` is used as `closeEventChannel` for `tg-action`.
+        // Expression `|| this.uuid` is used as a fallback in case where action's `centreUuid` wasn't defined.
         const closeEventChannel = action.attrs.centreUuid || this.uuid;
         const closeEventTopics = ['save.post.success', 'refresh.post.success'];
         this.async(() => {
