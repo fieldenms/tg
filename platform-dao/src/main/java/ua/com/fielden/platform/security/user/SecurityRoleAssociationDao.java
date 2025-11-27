@@ -39,6 +39,29 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     public static final String MSG_DELETED_SECURITY_ROLE_ASSOCIATIONS_WITH_NON_EXISTING_TOKENS = "Deleted [%s] security role associations with non-existing tokens.";
 
     @Override
+    public SecurityRoleAssociation new_() {
+        return super.new_().setActive(true);
+    }
+
+    @Override
+    protected IFetchProvider<SecurityRoleAssociation> createFetchProvider() {
+        return FETCH_PROVIDER;
+    }
+
+    @Override
+    @SessionRequired
+    public SecurityRoleAssociation save(final SecurityRoleAssociation entity) {
+        return save(entity, of(FetchModelReconstructor.reconstruct(entity))).asRight().value();
+    }
+
+    @Override
+    @SessionRequired
+    @Authorise(SecurityRoleAssociation_CanSave_Token.class)
+    protected Either<Long, SecurityRoleAssociation> save(final SecurityRoleAssociation entity, final Optional<fetch<SecurityRoleAssociation>> maybeFetch) {
+        return super.save(entity, maybeFetch);
+    }
+
+    @Override
     @SessionRequired
     public List<SecurityRoleAssociation> findAssociationsFor(final Class<? extends ISecurityToken> securityToken) {
         final var model = select(SecurityRoleAssociation.class).where()
@@ -97,19 +120,6 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     @Override
     @SessionRequired
-    public SecurityRoleAssociation save(final SecurityRoleAssociation entity) {
-        return save(entity, of(FetchModelReconstructor.reconstruct(entity))).asRight().value();
-    }
-
-    @Override
-    @SessionRequired
-    @Authorise(SecurityRoleAssociation_CanSave_Token.class)
-    protected Either<Long, SecurityRoleAssociation> save(final SecurityRoleAssociation entity, final Optional<fetch<SecurityRoleAssociation>> maybeFetch) {
-        return super.save(entity, maybeFetch);
-    }
-
-    @Override
-    @SessionRequired
     public void removeAssociations(final Collection<SecurityRoleAssociation> associations) {
         // Update all existing associations.
         StreamUtils.windowed(associations.stream(), MAX_NUMBER_OF_PARAMS)
@@ -145,13 +155,4 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
         }
     }
 
-    @Override
-    protected IFetchProvider<SecurityRoleAssociation> createFetchProvider() {
-        return FETCH_PROVIDER;
-    }
-
-    @Override
-    public SecurityRoleAssociation new_() {
-        return super.new_().setActive(true);
-    }
 }

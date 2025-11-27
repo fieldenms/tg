@@ -14,22 +14,19 @@ import java.util.LinkedHashSet;
 
 import static java.util.stream.Collectors.toCollection;
 
-/**
- * A producer for new instances of entity {@link UserRoleTokensUpdater}.
- *
- * @author TG Team
- *
- */
+/// A producer for new instances of entity [UserRoleTokensUpdater].
+///
 public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<UserRole, UserRoleTokensUpdater, String, SecurityTokenInfo> {
 
     private final ICollectionModificationController<UserRole, UserRoleTokensUpdater, String, SecurityTokenInfo> controller;
 
     @Inject
-    public UserRoleTokensUpdaterProducer(
+    protected UserRoleTokensUpdaterProducer(
             final EntityFactory factory, 
             final ICompanionObjectFinder companionFinder, 
             final ISecurityTokenNodeTransformation tokenTransformation,
-            final ISecurityTokenProvider securityTokenProvider) {
+            final ISecurityTokenProvider securityTokenProvider)
+    {
         super(factory, UserRoleTokensUpdater.class, companionFinder);
         this.controller = new UserRoleTokensUpdaterController(factory, co(UserRole.class), co$(UserRoleTokensUpdater.class), tokenTransformation, securityTokenProvider);
     }

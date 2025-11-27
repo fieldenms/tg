@@ -106,8 +106,8 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
 
     private List<SecurityRoleAssociation> createSecurityRoleAssociations(final String securityToken, final List<Integer> roleIds, final Map<Long, UserRole> idRoleMap) {
         final Class<? extends ISecurityToken> token = loadToken(securityToken);
-        final SecurityRoleAssociationCo associationCo = co$(SecurityRoleAssociation.class);
-        return roleIds.stream().map(id -> associationCo.new_().setRole(idRoleMap.get(id.longValue())).setSecurityToken(token)).toList();
+        final SecurityRoleAssociationCo co$Association = co$(SecurityRoleAssociation.class);
+        return roleIds.stream().map(id -> co$Association.new_().setRole(idRoleMap.get(id.longValue())).setSecurityToken(token)).toList();
     }
 
     private Map<Long, UserRole> getUserRoles(final SecurityMatrixSaveAction entity) {
