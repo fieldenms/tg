@@ -1,12 +1,18 @@
 package ua.com.fielden.platform.entity;
 
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import com.google.inject.Inject;
+import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.provider.SecurityTokenNode;
+import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanRead_Token;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
+import ua.com.fielden.platform.security.user.UserRole;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -14,21 +20,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.google.inject.Inject;
-
-import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.provider.SecurityTokenNode;
-import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanRead_Token;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 @EntityType(SecurityMatrixInsertionPoint.class)
 public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMatrixInsertionPoint> implements SecurityMatrixInsertionPointCo {
@@ -37,10 +31,10 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
     private final ISecurityTokenNodeTransformation tokenTransformation;
 
     @Inject
-    public SecurityMatrixInsertionPointDao(final IFilter filter,
+    protected SecurityMatrixInsertionPointDao(
             final ISecurityTokenNodeTransformation tokenTransformation,
-            final ISecurityTokenProvider securityTokenProvider) {
-        super(filter);
+            final ISecurityTokenProvider securityTokenProvider)
+    {
         this.tokenProvider = securityTokenProvider;
         this.tokenTransformation = tokenTransformation;
     }

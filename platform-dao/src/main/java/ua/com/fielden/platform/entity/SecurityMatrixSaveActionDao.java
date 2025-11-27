@@ -25,12 +25,7 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 
 @EntityType(SecurityMatrixSaveAction.class)
-public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixSaveAction> implements SecurityMatrixSaveActionCo{
-
-    public static final String ERR_SECURITY_TOKEN_NOT_FOUND = "Security token [%s] could not be found.";
-    public static final String ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING = "Removing the [%s] security token from all your user roles will block access to the Security Matrix.".formatted(SecurityRoleAssociation_CanRead_Token.TITLE);
-    public static final String ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING = "Removing the [%s] security token from all your user roles will prevent you from editing the Security Matrix.".formatted(SecurityRoleAssociation_CanSave_Token.TITLE);
-
+public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixSaveAction> implements SecurityMatrixSaveActionCo {
 
     private final ISecurityTokenProvider securityTokenProvider;
     private final IUserProvider userProvider;
