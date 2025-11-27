@@ -28,7 +28,6 @@ import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
@@ -42,6 +41,13 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 @EntityType(TinyHyperlink.class)
 public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements TinyHyperlinkCo {
+
+    public static final String
+            ERR_INVALID_STATE_TO_COMPUTE_HASH = "[%s] is required to compute a hash.",
+            ERR_REQUIRED_PROPS_VALIDATION = "Either %s or all of [%s] must be specified.",
+            ERR_INVALID_UNION_VALUE = "Invalid union value specified for property [%s]. Could not access the union's active property. Please ensure that the union value is instrumented.",
+            ERR_NO_SUPPORT_FOR_COLLECTIONAL_PROPS = "Collectional properties cannot be shared with tiny hyperlinks.",
+            ERR_URLS_FOR_PERSISTED_ONLY = "URLs can be created only for persisted instances of [%s].";
 
     private final ISerialiser serialiser;
     private final String appUri;
@@ -200,7 +206,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     @Override
     public String toURL(final TinyHyperlink tinyHyperlink) {
         if (!tinyHyperlink.isPersisted()) {
-            throw new InvalidArgumentException("URLs can be created only for persisted instances of [%s].".formatted(TinyHyperlink.class.getSimpleName()));
+            throw new InvalidArgumentException(ERR_URLS_FOR_PERSISTED_ONLY.formatted(TinyHyperlink.class.getSimpleName()));
         }
 
         return "%s/#/tiny/%s".formatted(appUri, tinyHyperlink.getHash());
@@ -217,11 +223,11 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         }
         else {
             if (tinyHyperlink.getSavingInfoHolder() == null || tinyHyperlink.getSavingInfoHolder().length == 0) {
-                throw new InvalidArgumentException("[%s] is required to compute a hash.".formatted(TinyHyperlink.SAVING_INFO_HOLDER));
+                throw new InvalidArgumentException(ERR_INVALID_STATE_TO_COMPUTE_HASH.formatted(TinyHyperlink.SAVING_INFO_HOLDER));
             }
 
             if (tinyHyperlink.getActionIdentifier() == null || tinyHyperlink.getActionIdentifier().isEmpty()) {
-                throw new InvalidArgumentException("[%s] is required to compute a hash.".formatted(TinyHyperlink.ACTION_IDENTIFIER));
+                throw new InvalidArgumentException(ERR_INVALID_STATE_TO_COMPUTE_HASH.formatted(TinyHyperlink.ACTION_IDENTIFIER));
             }
 
             return Checksum.sha256(tinyHyperlink.getActionIdentifier().getBytes(), tinyHyperlink.getSavingInfoHolder());
@@ -231,7 +237,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
     private Result validateRequiredProperties(final TinyHyperlink tiny) {
         final var ok = (tiny.getTarget() == null && tiny.getEntityTypeName() != null && tiny.getSavingInfoHolder() != null && tiny.getActionIdentifier() != null)
                        || (tiny.getTarget() != null && tiny.getEntityTypeName() == null && tiny.getSavingInfoHolder() == null && tiny.getActionIdentifier() == null);
-        return ok ? successful() : failuref("Either %s or all of [%s] must be specified.",
+        return ok ? successful() : failuref(ERR_REQUIRED_PROPS_VALIDATION,
                                             getTitleAndDesc(TARGET, TinyHyperlink.class).getKey(),
                                             Stream.of(ENTITY_TYPE_NAME, SAVING_INFO_HOLDER, ACTION_IDENTIFIER)
                                                     .map(prop -> getTitleAndDesc(prop, TinyHyperlink.class).getKey())
@@ -256,7 +262,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         }
 
         if (isCollectional(entityType, prop)) {
-            throw new InvalidArgumentException("Collectional properties cannot be shared with tiny hyperlinks.");
+            throw new InvalidArgumentException(ERR_NO_SUPPORT_FOR_COLLECTIONAL_PROPS);
         }
 
         if (value == null) {
@@ -276,9 +282,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
                 final var unionValue = (AbstractUnionEntity) value;
                 // TODO #2466 This assertion will be subject to removal.
                 if (unionValue.activePropertyName() == null) {
-                    throw new InvalidArgumentException(format(
-                            "Invalid union value specified for property [%s]. Could not access the union's active property. Please ensure that the union value is instrumented.",
-                            prop));
+                    throw new InvalidArgumentException(ERR_INVALID_UNION_VALUE.formatted(prop));
                 }
                 object.put("activeProperty", unionValue.activePropertyName());
             }
