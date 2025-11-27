@@ -1,11 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
-import static java.util.stream.Collectors.toCollection;
-
-import java.util.LinkedHashSet;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -14,6 +9,10 @@ import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
+
+import java.util.LinkedHashSet;
+
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * A producer for new instances of entity {@link UserRoleTokensUpdater}.
@@ -44,7 +43,11 @@ public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCo
     @Authorise(UserRoleTokensUpdater_CanExecute_Token.class)
     protected UserRoleTokensUpdater provideCurrentlyAssociatedValues(final UserRoleTokensUpdater entity, final UserRole masterEntity) {
         controller.setAvailableItems(entity, controller.refetchAvailableItems(masterEntity));
-        entity.setChosenIds(masterEntity.getTokens().stream().map(item -> item.getSecurityToken().getName()).collect(toCollection(LinkedHashSet::new)));
+        entity.setChosenIds(masterEntity.getTokens()
+                                    .stream()
+                                    .filter(SecurityRoleAssociation::isActive)
+                                    .map(item -> item.getSecurityToken().getName())
+                                    .collect(toCollection(LinkedHashSet::new)));
         return entity;
     }
     
