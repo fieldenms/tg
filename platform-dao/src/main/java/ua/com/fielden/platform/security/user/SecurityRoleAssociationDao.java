@@ -21,6 +21,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.partitioningBy;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.security.provider.ISecurityTokenProvider.MissingSecurityTokenPlaceholder;
@@ -113,8 +114,11 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
         // Update all existing associations.
         StreamUtils.windowed(associations.stream(), MAX_NUMBER_OF_PARAMS)
                 .forEach(window -> {
-                    getAllEntities(from(queryForAssociations(window)).with(FETCH_MODEL).model())
-                        .forEach(assoc -> save(assoc.setActive(false), empty()));
+                    createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), window)
+                            .ifPresent(query -> {
+                                getAllEntities(from(query).with(FETCH_MODEL).model())
+                                        .forEach(assoc -> save(assoc.setActive(false), empty()));
+                            });
                 });
     }
 
@@ -126,9 +130,12 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
         // Update all existing associations.
         StreamUtils.windowed(associations.stream(), MAX_NUMBER_OF_PARAMS)
             .forEach(window -> {
-                final var foundAssociations = getAllEntities(from(queryForAssociations(window)).with(FETCH_MODEL).model());
-                foundAssociations.forEach(assoc -> save(assoc.setActive(true), empty()));
-                notFoundAssociations.removeAll(foundAssociations);
+                createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), window)
+                        .ifPresent(query -> {
+                            final var foundAssociations = getAllEntities(from(query).with(FETCH_MODEL).model());
+                            foundAssociations.forEach(assoc -> save(assoc.setActive(true), empty()));
+                            notFoundAssociations.removeAll(foundAssociations);
+                        });
             });
 
         // Create all non-existing associations.
@@ -136,13 +143,6 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
             association.setActive(true);
             this.save(association, empty());
         }
-    }
-
-    private static EntityResultQueryModel<SecurityRoleAssociation> queryForAssociations(final List<SecurityRoleAssociation> group) {
-        return select(SecurityRoleAssociation.class).where()
-                .prop(SECURITY_TOKEN).in().values(group.stream().map(a -> a.getSecurityToken().getName()).toList()).and()
-                .prop(ROLE).in().values(group.stream().map(SecurityRoleAssociation::getRole).toList())
-                .model();
     }
 
     @Override
