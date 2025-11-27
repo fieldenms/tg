@@ -38,10 +38,10 @@ public class AuthorisationInterceptor implements MethodInterceptor {
             return invocation.proceed();
         } else { // this is the first intercepted method call requiring authorisation
             getModel().start();
-            final Method method = invocation.getMethod();
-            final Authorise annotation = AnnotationReflector.getAnnotation(method, Authorise.class);
-            final Result result = getModel().authorise(annotation.value());
             try {
+                final Method method = invocation.getMethod();
+                final Authorise annotation = AnnotationReflector.getAnnotation(method, Authorise.class);
+                final Result result = getModel().authorise(annotation.value());
                 if (result.isSuccessful()) {
                     return invocation.proceed();
                 }
