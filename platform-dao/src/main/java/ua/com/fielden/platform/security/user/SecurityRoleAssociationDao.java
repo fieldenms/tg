@@ -4,6 +4,7 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -99,7 +100,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     public SecurityRoleAssociation save(final SecurityRoleAssociation entity) {
-        return save(entity, of(FETCH_MODEL)).asRight().value();
+        return save(entity, of(FetchModelReconstructor.reconstruct(entity))).asRight().value();
     }
 
     @Override
