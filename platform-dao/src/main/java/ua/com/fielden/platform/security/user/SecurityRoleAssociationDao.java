@@ -11,11 +11,10 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanSave_Token;
-import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
@@ -111,55 +110,32 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     public void removeAssociations(final Collection<SecurityRoleAssociation> associations) {
-        fetchAssociationsAndModifyOrElse(
-                associations,
-                fetchedAssociation -> {
-                    fetchedAssociation.setActive(false);
-                    this.save(fetchedAssociation, empty());
-                },empty());
+        // Update all existing associations.
+        StreamUtils.windowed(associations.stream(), MAX_NUMBER_OF_PARAMS)
+                .forEach(window -> {
+                    getAllEntities(from(queryForAssociations(window)).with(FETCH_MODEL).model())
+                        .forEach(assoc -> save(assoc.setActive(false), empty()));
+                });
     }
 
     @Override
     @SessionRequired
     public void addAssociations(final Collection<SecurityRoleAssociation> associations) {
-        fetchAssociationsAndModifyOrElse(
-                associations,
-                fetchedAssociation -> {
-                    fetchedAssociation.setActive(true);
-                    this.save(fetchedAssociation, empty());
-                },
-                of(notFoundAssociation -> {
-                    notFoundAssociation.setActive(true);
-                    this.save(notFoundAssociation, empty());
-                }));
-    }
-
-    private void fetchAssociationsAndModifyOrElse(
-            final Collection<SecurityRoleAssociation> associations,
-            final Consumer<SecurityRoleAssociation> modifier,
-            final Optional<Consumer<SecurityRoleAssociation>> orElseOpt) {
-
         final Set<SecurityRoleAssociation> notFoundAssociations = new HashSet<>(associations);
 
-        // First, update all existing associations.
-        SequentialGroupingStream.stream(associations.stream(), (association, group) -> group.size() < MAX_NUMBER_OF_PARAMS)
-                .forEach(group -> {
-                    final var query = queryForAssociations(group);
-                    try (final Stream<SecurityRoleAssociation> stream = stream(from(query).with(FETCH_MODEL).model())) {
-                        stream.forEach(association -> {
-                            modifier.accept(association);
-                            if (notFoundAssociations.contains(association)) {
-                                notFoundAssociations.remove(association);
-                            }
-                        });
-                    }
-                });
-        // Then, perform action on those that weren’t fetched.
-        orElseOpt.ifPresent(orElse -> {
-            for (final SecurityRoleAssociation notFoundAssociation : notFoundAssociations) {
-                orElse.accept(notFoundAssociation);
-            }
-        });
+        // Update all existing associations.
+        StreamUtils.windowed(associations.stream(), MAX_NUMBER_OF_PARAMS)
+            .forEach(window -> {
+                final var foundAssociations = getAllEntities(from(queryForAssociations(window)).with(FETCH_MODEL).model());
+                foundAssociations.forEach(assoc -> save(assoc.setActive(true), empty()));
+                notFoundAssociations.removeAll(foundAssociations);
+            });
+
+        // Create all non-existing associations.
+        for (final var association : notFoundAssociations) {
+            association.setActive(true);
+            this.save(association, empty());
+        }
     }
 
     private static EntityResultQueryModel<SecurityRoleAssociation> queryForAssociations(final List<SecurityRoleAssociation> group) {
