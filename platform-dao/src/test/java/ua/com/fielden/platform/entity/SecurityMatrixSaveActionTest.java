@@ -1,17 +1,6 @@
 package ua.com.fielden.platform.entity;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.name.Names;
-import org.junit.Assert;
 import org.junit.Test;
-import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
-import ua.com.fielden.platform.data.IDomainDrivenData;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
-import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.security.exceptions.SecurityException;
-import ua.com.fielden.platform.security.provider.SecurityTestIocModule;
-import ua.com.fielden.platform.security.provider.SecurityTokenNodeTransformations;
 import ua.com.fielden.platform.security.tokens.FirstLevelSecurityToken1;
 import ua.com.fielden.platform.security.tokens.FirstLevelSecurityToken2;
 import ua.com.fielden.platform.security.tokens.SecondLevelSecurityToken1;
@@ -22,18 +11,17 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRoleCo;
-import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao.ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING;
 import static ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao.ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
-import static ua.com.fielden.platform.test_config.AbstractDaoTestCase.UNIT_TEST_ROLE;
 
 public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
 
@@ -149,16 +137,11 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
         final SecurityMatrixSaveActionCo securityMatrixSaveCo = co(SecurityMatrixSaveAction.class);
         final UserRoleCo userRoleCo = co(UserRole.class);
         final UserRole admin_role = userRoleCo.findByKey(UNIT_TEST_ROLE);
-        // Configure the association between SecurityRoleAssociation_CanRead_Token and UNIT_TEST_ROLE.
-        final var associationsToRemove = new HashMap<String, List<Integer>>();
-        associationsToRemove.put(SecurityRoleAssociation_CanRead_Token.class.getName(), List.of(admin_role.getId().intValue()));
-        // Try to remove the configured association. A SecurityException is expected.
-        try {
-            save(securityMatrixSaveCo.new_().setAssociationsToRemove(associationsToRemove));
-            fail("Expected SecurityException.");
-        } catch (final SecurityException ex) {
-            assertEquals(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING, ex.getMessage());
-        }
+
+        final var securityMatrixSaveAction = securityMatrixSaveCo.new_()
+                .setAssociationsToRemove(Map.of(SecurityRoleAssociation_CanRead_Token.class.getName(), List.of(admin_role.getId().intValue())));
+        assertThatThrownBy(() -> save(securityMatrixSaveAction))
+                .hasMessage(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING);
     }
 
     @Test
@@ -166,16 +149,11 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
         final SecurityMatrixSaveActionCo securityMatrixSaveCo = co(SecurityMatrixSaveAction.class);
         final UserRoleCo userRoleCo = co(UserRole.class);
         final UserRole admin_role = userRoleCo.findByKey(UNIT_TEST_ROLE);
-        // Configure the association between SecurityRoleAssociation_CanSave_Token and UNIT_TEST_ROLE.
-        final var associationsToRemove = new HashMap<String, List<Integer>>();
-        associationsToRemove.put(SecurityRoleAssociation_CanSave_Token.class.getName(), List.of(admin_role.getId().intValue()));
-        // Try to remove the configured association. A SecurityException is expected.
-        try {
-            save(securityMatrixSaveCo.new_().setAssociationsToRemove(associationsToRemove));
-            fail("Expected SecurityException.");
-        } catch (final SecurityException ex) {
-            assertEquals(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING, ex.getMessage());
-        }
+
+        final var securityMatrixSaveAction = securityMatrixSaveCo.new_()
+                .setAssociationsToRemove(Map.of(SecurityRoleAssociation_CanSave_Token.class.getName(), List.of(admin_role.getId().intValue())));
+        assertThatThrownBy(() -> save(securityMatrixSaveAction))
+                .hasMessage(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING);
     }
 
     @Test
@@ -184,17 +162,12 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
         final UserRoleCo userRoleCo = co(UserRole.class);
         final UserRole admin_role = userRoleCo.findByKey(UNIT_TEST_ROLE);
         // Configure the association to remove.
-        final var associationsToRemove = new HashMap<String, List<Integer>>();
-        associationsToRemove.put(SecurityRoleAssociation_CanRead_Token.class.getName(), List.of(admin_role.getId().intValue()));
-        associationsToRemove.put(SecurityRoleAssociation_CanSave_Token.class.getName(), List.of(admin_role.getId().intValue()));
-        // Attempt to remove them. A SecurityException is expected.
-        try {
-            save(securityMatrixSaveCo.new_().setAssociationsToRemove(associationsToRemove));
-            fail("Expected SecurityException.");
-        } catch (final SecurityException ex) {
-            final String expectedError = ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING + "<br>" + ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING;
-            assertEquals(expectedError, ex.getMessage());
-        }
+
+        final var securityMatrixSaveAction = securityMatrixSaveCo.new_()
+                .setAssociationsToRemove(Map.of(SecurityRoleAssociation_CanRead_Token.class.getName(), List.of(admin_role.getId().intValue()),
+                                                SecurityRoleAssociation_CanSave_Token.class.getName(), List.of(admin_role.getId().intValue())));
+        assertThatThrownBy(() -> save(securityMatrixSaveAction))
+                .hasMessage(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING + "<br>" + ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING);
     }
 
     @Override

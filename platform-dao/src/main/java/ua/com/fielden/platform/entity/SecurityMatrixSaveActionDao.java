@@ -79,11 +79,13 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
                     SecurityRoleAssociation_CanRead_Token.class,
                     SecurityRoleAssociation_CanSave_Token.class);
             // Append an error message if the user is about to remove all associations between his roles and SecurityRoleAssociation_CanRead_Token.
-            if (removedAssociations.containsAll(extractAssociationsFor(SecurityRoleAssociation_CanRead_Token.class, matrixRelatedAssociationsForCurrentUser))) {
+            final var readAssociationsForCurrUser = extractAssociationsFor(SecurityRoleAssociation_CanRead_Token.class, matrixRelatedAssociationsForCurrentUser);
+            if (!readAssociationsForCurrUser.isEmpty() && removedAssociations.containsAll(readAssociationsForCurrUser)) {
                 errorMsg.append(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING);
             }
             // Append an error message if the user is about to remove all associations between his roles and SecurityRoleAssociation_CanSave_Token.
-            if (removedAssociations.containsAll(extractAssociationsFor(SecurityRoleAssociation_CanSave_Token.class, matrixRelatedAssociationsForCurrentUser))) {
+            final var saveAssocationsForCurrUser = extractAssociationsFor(SecurityRoleAssociation_CanSave_Token.class, matrixRelatedAssociationsForCurrentUser);
+            if (!saveAssocationsForCurrUser.isEmpty() && removedAssociations.containsAll(saveAssocationsForCurrUser)) {
                 if (!errorMsg.isEmpty()) {
                     errorMsg.append("<br>");
                 }
