@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
@@ -153,9 +154,8 @@ public class EntityResourceUtils {
     /**
      * Determines the version that is shipped with {@code modifiedPropertiesHolder}.
      */
-    public static long getVersion(final Map<String, Object> modifiedPropertiesHolder) {
-        final Object arrivedVersionVal = modifiedPropertiesHolder.get(AbstractEntity.VERSION);
-        return ((Integer) arrivedVersionVal).longValue();
+    public static OptionalLong maybeVersion(final Map<String, Object> modifiedPropertiesHolder) {
+        return modifiedPropertiesHolder.get(AbstractEntity.VERSION) instanceof Integer n ? OptionalLong.of(n.longValue()) : OptionalLong.empty();
     }
 
     /**
@@ -165,13 +165,16 @@ public class EntityResourceUtils {
     public static <M extends AbstractEntity<?>> M apply(
             final Map<String, Object> modifiedPropertiesHolder,
             final M entity,
+            final PropertyAssignmentErrorHandler errorHandler,
             final ICompanionObjectFinder coFinder)
     {
         final Class<M> type = (Class<M>) entity.getType();
-        final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
+        final boolean isEntityStale = entity.getVersion() > maybeVersion(modifiedPropertiesHolder).orElse(0);
         final boolean isCriteriaEntity = EntityQueryCriteria.class.isAssignableFrom(type);
 
-        final Set<String> touchedProps = unmodifiableSequencedSet(new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps")));
+        final Set<String> touchedProps = modifiedPropertiesHolder.containsKey("@@touchedProps")
+                ? unmodifiableSequencedSet(new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps")))
+                : Set.of();
 
         // iterate through untouched properties first:
         //  (the order of application does not really matter - untouched properties were really applied earlier through some definers, that originate from touched properties)
@@ -179,14 +182,18 @@ public class EntityResourceUtils {
             if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */ && !touchedProps.contains(name)) {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) value;
                 // The 'modified' properties are marked using the existence of "val" sub-property.
-                if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    applyModifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                    // logPropertyApplication("   Apply untouched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
-                } else { // this is unmodified property
-                    // IMPORTANT:
-                    // Untouched properties should not be applied, but validation for conflicts should be performed.
-                    validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                    // logPropertyApplication("Validate untouched unmodified", false, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                try {
+                    if (valAndOrigVal.containsKey("val")) { // this is a modified property
+                        applyModifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                        // logPropertyApplication("   Apply untouched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                    } else { // this is unmodified property
+                        // IMPORTANT:
+                        // Untouched properties should not be applied, but validation for conflicts should be performed.
+                        validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                        // logPropertyApplication("Validate untouched unmodified", false, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                    }
+                } catch (final RuntimeException e) {
+                    errorHandler.handle(entity, name, valAndOrigVal, e);
                 }
             }
         });
@@ -196,17 +203,21 @@ public class EntityResourceUtils {
         for (final String touchedProp : touchedProps) {
             final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(touchedProp);
             // The 'modified' properties are marked using the existence of "val" sub-property.
-            if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                applyModifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched   modified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
-            } else { // this is unmodified property
-                // IMPORTANT:
-                // Unlike to the case of untouched properties, all touched properties should be applied,
-                //  even unmodified ones.
-                // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
-                //  to have the ACE handlers executed for all touched properties.
-                applyUnmodifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched unmodified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+            try {
+                if (valAndOrigVal.containsKey("val")) { // this is a modified property
+                    applyModifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                    // logPropertyApplication("   Apply   touched   modified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                } else { // this is unmodified property
+                    // IMPORTANT:
+                    // Unlike to the case of untouched properties, all touched properties should be applied,
+                    //  even unmodified ones.
+                    // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
+                    //  to have the ACE handlers executed for all touched properties.
+                    applyUnmodifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                    // logPropertyApplication("   Apply   touched unmodified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                }
+            } catch (final RuntimeException e) {
+                errorHandler.handle(entity, touchedProp, valAndOrigVal, e);
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -218,6 +229,39 @@ public class EntityResourceUtils {
         disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps, isCriteriaEntity);
 
         return entity;
+    }
+
+    /// Handles errors that occur in the process of restoring property values and assigning them.
+    ///
+    /// Restoration refers to the conversion from the format used by [SavingInfoHolder#modifHolder].
+    ///
+    /// The default implementation is [#standard].
+    ///
+    public interface PropertyAssignmentErrorHandler {
+
+        /// Handles `error` that occurred during restoration and assignment of `value` to `property` in `entity`.
+        ///
+        /// @param value a value in unspecified format
+        ///
+        void handle(AbstractEntity<?> entity, String property, Object value, RuntimeException error);
+
+        /// Returns a handler that first calls this handler and then calls `handler`.
+        ///
+        default PropertyAssignmentErrorHandler and(final PropertyAssignmentErrorHandler handler) {
+            return (entity, property, value, error) -> {
+                this.handle(entity, property, value, error);
+                handler.handle(entity, property, value, error);
+            };
+        }
+
+        PropertyAssignmentErrorHandler throwing = (_, _, _, error) -> {throw error;};
+
+        PropertyAssignmentErrorHandler standard = throwing;
+
+        static String makeMessage(final AbstractEntity<?> entity, final String prop, final Object value) {
+            return "Failed to assign value [%s] to property [%s.%s].".formatted(value, entity.getType().getSimpleName(), prop);
+        }
+
     }
 
     /**
@@ -585,14 +629,15 @@ public class EntityResourceUtils {
         return propertyType;
     }
 
-    /**
-     * Converts a raw reflected value to a value that matches the property's type.
-     *
-     * @param type  type that owns the property
-     * @param reflectedValue  raw reflected value to be converted
-     * @param reflectedValueId  if a property is entity-typed, represent an ID of the entity-typed value returned from the client application
-     * @param optActiveProp  if a property has a union entity type, represents the active property's name in the entity-typed value
-     */
+    /// Converts a raw reflected value to a value that matches the property's type.
+    ///
+    /// **Maintenance note**: Keep the conversion logic in sync with [ua.com.fielden.platform.tiny.TinyHyperlinkDao#makeModifHolderPropObject].
+    ///
+    /// @param type  type that owns the property
+    /// @param reflectedValue  raw reflected value to be converted
+    /// @param reflectedValueId  if a property is entity-typed, represent an ID of the entity-typed value returned from the client application
+    /// @param optActiveProp  if a property has a union entity type, represents the active property's name in the entity-typed value
+    ///
     private static <M extends AbstractEntity<?>> Object convert(
             final Class<M> type, final String propertyName,
             final Object reflectedValue, final Optional<Long> reflectedValueId,
@@ -607,6 +652,8 @@ public class EntityResourceUtils {
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (isEntityType(propertyType)) {
             if (isCollectional(type, propertyName)) {
+                // No conversion is needed for a collection with entity-typed elements.
+                // Such properties are never editable, so the returned value should never be used for assignment.
                 return reflectedValue;
             }
 

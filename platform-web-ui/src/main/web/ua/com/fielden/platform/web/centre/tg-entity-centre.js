@@ -245,7 +245,7 @@ const template = html`
     <iron-pages id="views" selected="[[_selectedView]]">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
-                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _reset-autocompleter-state="[[_resetAutocompleterState]]" _show-dialog="[[_showDialog]]" _help-mouse-down-event-handler="[[_helpMouseDownEventHandler]]" _help-mouse-up-event-handler="[[_helpMouseUpEventHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
+                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _reset-autocompleter-state="[[_resetAutocompleterState]]" _show-dialog="[[_showDialog]]" _long-help-tap-handler="[[_longHelpTapHandler]]" _short-help-tap-handler="[[_shortHelpTapHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
@@ -407,8 +407,8 @@ Polymer({
             value: false,
             notify: true
         },
-        _helpMouseDownEventHandler: Function,
-        _helpMouseUpEventHandler: Function
+        _longHelpTapHandler: Function,
+        _shortHelpTapHandler: Function
     },
 
     behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
@@ -841,8 +841,12 @@ Polymer({
         }, 100);
     },
 
-    confirm: function (message, buttons) {
-        return this.$.confirmationDialog.showConfirmationDialog(message, buttons);
+    closeConfirmationDialog: function () {
+        return this.$.confirmationDialog.close();
+    },
+
+    confirm: function (message, buttons, options) {
+        return this.$.confirmationDialog.showConfirmationDialog(message, buttons, options);
     },
 
     /**

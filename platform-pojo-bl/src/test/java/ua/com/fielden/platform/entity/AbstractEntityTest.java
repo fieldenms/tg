@@ -1088,7 +1088,7 @@ public class AbstractEntityTest {
         final Left<Exception, EntityWithInvalidMoneyPropWithPrecision> left = (Left<Exception, EntityWithInvalidMoneyPropWithPrecision>) result;
         final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
-        assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithPrecision.class.getName()), ex.getMessage());
+        assertEquals(format(INVALID_USE_FOR_PRECISION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithPrecision.class.getName()), ex.getMessage());
     }
 
     @Test
@@ -1098,7 +1098,7 @@ public class AbstractEntityTest {
         final Left<Exception, EntityWithInvalidMoneyPropWithScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithScale>) result;
         final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
-        assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithScale.class.getName()), ex.getMessage());
+        assertEquals(format(INVALID_USE_FOR_PRECISION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithScale.class.getName()), ex.getMessage());
     }
 
     @Test
@@ -1108,7 +1108,7 @@ public class AbstractEntityTest {
         final Left<Exception, EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale>) result;
         final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
-        assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale.class.getName()), ex.getMessage());
+        assertEquals(format(INVALID_USE_FOR_PRECISION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale.class.getName()), ex.getMessage());
     }
 
     @Test
@@ -1118,7 +1118,7 @@ public class AbstractEntityTest {
         final Left<Exception, EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale>) result;
         final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
-        assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale.class.getName()), ex.getMessage());
+        assertEquals(format(INVALID_USE_FOR_PRECISION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale.class.getName()), ex.getMessage());
     }
 
     @Test
@@ -1138,7 +1138,7 @@ public class AbstractEntityTest {
         final Left<Exception, EntityWithInvalidIntegerProp> left = (Left<Exception, EntityWithInvalidIntegerProp>) result;
         final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
-        assertEquals(format(INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG, "numericInteger", EntityWithInvalidIntegerProp.class.getName()), ex.getMessage());
+        assertEquals(format(INVALID_VALUES_FOR_PRECISION_AND_SCALE_MSG, "numericInteger", EntityWithInvalidIntegerProp.class.getName()), ex.getMessage());
     }
 
     @Test

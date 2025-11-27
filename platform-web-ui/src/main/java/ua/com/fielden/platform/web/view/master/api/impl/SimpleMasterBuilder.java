@@ -35,6 +35,7 @@ import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurat
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Optional.empty;
@@ -42,6 +43,7 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
@@ -355,6 +357,16 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         @Override
         public IRenderable render() {
             return renderableRepresentation;
+        }
+
+        @Override
+        public Stream<ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig> streamActionConfigs() {
+            return Stream.concat(widgets.stream()
+                                         .flatMap(w -> w.widget().action().stream())
+                                         .map(EntityMultiActionConfig::actions)
+                                         .flatMap(List::stream),
+                                 entityActions.stream()
+                                         .mapMulti(typeFilter(ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.class)));
         }
 
         @Override
