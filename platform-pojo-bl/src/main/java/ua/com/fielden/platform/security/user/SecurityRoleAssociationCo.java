@@ -3,6 +3,7 @@ package ua.com.fielden.platform.security.user;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.ISecurityToken;
 
 import java.util.Collection;
@@ -36,9 +37,9 @@ public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssoci
     ///
     int countActiveAssociations(final User user, final Class<? extends ISecurityToken> securityTokenClass);
 
-    /// Returns a list of active user roles associated with the tokens.
+    /// Selects all active [SecurityRoleAssociation] records for all active roles of `user` associated with any of `tokens`.
     ///
-    List<SecurityRoleAssociation> findActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens);
+    EntityResultQueryModel<SecurityRoleAssociation> selectActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens);
     
     /// Deletes a collection of [SecurityRoleAssociation]s.
     ///

@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -69,10 +70,11 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
             final var msgBuilder = new StringBuilder();
 
             final SecurityRoleAssociationCo coAssociation = co(SecurityRoleAssociation.class);
-            final var currUserAssociations = coAssociation.findActiveAssociations(
+            final var qCurrUserAssociations = coAssociation.selectActiveAssociations(
                     userProvider.getUser(),
                     SecurityRoleAssociation_CanRead_Token.class,
-                    SecurityRoleAssociation_CanSave_Token.class)
+                    SecurityRoleAssociation_CanSave_Token.class);
+            final var currUserAssociations = coAssociation.getAllEntities(from(qCurrUserAssociations).with(fetchNone(SecurityRoleAssociation.class).with(KEY)).model())
                     .stream()
                     .collect(groupingBy(SecurityRoleAssociation::getSecurityToken));
             // Is the user about to remove all associations between their roles and SecurityRoleAssociation_CanRead_Token?

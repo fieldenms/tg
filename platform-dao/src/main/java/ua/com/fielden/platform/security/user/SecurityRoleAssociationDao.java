@@ -78,16 +78,11 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     public int countActiveAssociations(final User user, final Class<? extends ISecurityToken> token) {
-        return count(createActiveAssociationsModel(user, token));
+        return count(selectActiveAssociations(user, token));
     }
 
     @Override
-    @SessionRequired
-    public List<SecurityRoleAssociation> findActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens) {
-        return getAllEntities(from(createActiveAssociationsModel(user, tokens)).with(FETCH_MODEL).model());
-    }
-
-    private EntityResultQueryModel<SecurityRoleAssociation> createActiveAssociationsModel(final User user, final Class<? extends ISecurityToken>... tokens) {
+    public EntityResultQueryModel<SecurityRoleAssociation> selectActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens) {
         final var slaveModel = select(UserAndRoleAssociation.class)
                 .where()
                 .prop("user").eq().val(user)
