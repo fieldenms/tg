@@ -21,6 +21,7 @@
         <poi.verstion>5.4.1</poi.verstion>
         <xalan.version>2.7.3</xalan.version>
         <guice.version>7.0.0</guice.version>
+        <qrcodegen.version>1.8.0</qrcodegen.version>
     </properties>
 
     <dependencies>
@@ -273,6 +274,13 @@
                     <artifactId>byte-buddy</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- https://www.nayuki.io/page/qr-code-generator-library-->
+        <dependency>
+            <groupId>io.nayuki</groupId>
+            <artifactId>qrcodegen</artifactId>
+            <version>${qrcodegen.version}</version>
         </dependency>
 
     </dependencies>

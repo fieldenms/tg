@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
@@ -32,6 +33,12 @@ public interface IMaster<T extends AbstractEntity<?>> {
     /// Returns action configuration for concrete action kind and its number in that kind's space.
     ///
     EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber);
+
+    /// Creates a stream of all action configurations that are present in this master and associated with some [FunctionalActionKind].
+    ///
+    default Stream<EntityActionConfig> streamActionConfigs() {
+        return Stream.of();
+    }
 
     /// Returns `additionalProperties` for autocompleter configuration for property `propertyName`.
     /// Returns empty set if property is not entity-typed or if the property was not added to master configuration.

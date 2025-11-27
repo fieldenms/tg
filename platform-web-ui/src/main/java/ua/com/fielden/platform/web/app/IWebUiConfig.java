@@ -15,9 +15,11 @@ import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Represent a contract for Web UI configuring.
@@ -119,6 +121,18 @@ public interface IWebUiConfig extends IMenuRetriever {
      */
     Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres();
 
+    /// Creates a stream of all action configurations in the whole Web UI configuration.
+    ///
+    Stream<EntityActionConfig> streamActionConfigs();
+
+    /// Searches the whole Web UI configuration for an action with the specified identifier.
+    ///
+    Optional<EntityActionConfig> findAction(CharSequence actionIdentifier);
+
+    /// Returns all registered "extra" actions, which are not exposed in the UI, but exist for other server-side purposes.
+    ///
+    Collection<EntityActionConfig> getExtraActions();
+
     /**
      * Returns the map of custom views for this web application.
      *
@@ -219,4 +233,5 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     List<EntityActionConfig> centreConfigShareActions();
+
 }

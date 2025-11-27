@@ -1177,7 +1177,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // load / update fresh centre if it is not loaded yet / stale
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
-        final M validationPrototype = createCriteriaValidationPrototype(miType, saveAsName, originalCdtmae, companionFinder, critGenerator, getVersion(modifiedPropertiesHolder), user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+        final M validationPrototype = createCriteriaValidationPrototype(miType, saveAsName, originalCdtmae, companionFinder, critGenerator, maybeVersion(modifiedPropertiesHolder).getAsLong(), user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
                 modifiedPropertiesHolder,
                 validationPrototype,
@@ -1210,7 +1210,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<M, Map<String, Object>> constructCriteriaEntityAndResetMetaValues(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final Class<?> originalManagedType, final ICompanionObjectFinder companionFinder) {
         return new Pair<>(
                 resetMetaStateForCriteriaValidationPrototype(
-                        EntityResourceUtils.apply(modifiedPropertiesHolder, validationPrototype, companionFinder),
+                        EntityResourceUtils.apply(modifiedPropertiesHolder, validationPrototype, PropertyAssignmentErrorHandler.standard, companionFinder),
                         originalManagedType
                 ),
                 modifiedPropertiesHolder//
