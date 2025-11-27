@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyApplicationErrorHandler;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyAssignmentErrorHandler;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -158,7 +158,7 @@ public class EntityRestorationUtils {
     ///
     public static <T extends AbstractEntity<?>> Pair<T, Map<String, Object>> constructEntity(
             final Map<String, Object> modifiedPropertiesHolder,
-            final PropertyApplicationErrorHandler propApplicationErrorHandler,
+            final PropertyAssignmentErrorHandler propApplicationErrorHandler,
             final T originallyProducedEntity,
             final IEntityDao<T> companion, 
             final IEntityProducer<T> producer,
@@ -185,7 +185,7 @@ public class EntityRestorationUtils {
     ///
     public static <T extends AbstractEntity<?>> Pair<T, Map<String, Object>> constructEntityWithContext(
             final Map<String, Object> modifiedPropertiesHolder,
-            final PropertyApplicationErrorHandler propApplicationErrorHandler,
+            final PropertyAssignmentErrorHandler propApplicationErrorHandler,
             final T originallyProducedEntity,
             final CentreContext<T, AbstractEntity<?>> context,
             final int tabCount,
@@ -212,7 +212,7 @@ public class EntityRestorationUtils {
     /// @return the applied validation prototype and `modifiedPropertiesHolder`.
     private static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> applyModifHolder(
             final Map<String, Object> modifiedPropertiesHolder,
-            final PropertyApplicationErrorHandler propApplicationErrorHandler,
+            final PropertyAssignmentErrorHandler propApplicationErrorHandler,
             final M validationPrototype, 
             final ICompanionObjectFinder companionFinder)
     {

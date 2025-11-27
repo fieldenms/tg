@@ -1210,7 +1210,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<M, Map<String, Object>> constructCriteriaEntityAndResetMetaValues(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final Class<?> originalManagedType, final ICompanionObjectFinder companionFinder) {
         return new Pair<>(
                 resetMetaStateForCriteriaValidationPrototype(
-                        EntityResourceUtils.apply(modifiedPropertiesHolder, validationPrototype, PropertyApplicationErrorHandler.standard, companionFinder),
+                        EntityResourceUtils.apply(modifiedPropertiesHolder, validationPrototype, PropertyAssignmentErrorHandler.standard, companionFinder),
                         originalManagedType
                 ),
                 modifiedPropertiesHolder//

@@ -7,7 +7,6 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
-import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -31,7 +30,7 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyApplicationErrorHandler;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyAssignmentErrorHandler;
 
 import java.util.Map;
 import java.util.Objects;
@@ -127,10 +126,10 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                 }
             };
 
-            final PropertyApplicationErrorHandler propApplicationErrorHandler = (entity, property, value, error) -> {
+            final PropertyAssignmentErrorHandler propApplicationErrorHandler = (entity, property, value, error) -> {
                 LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during property application: %s",
                                          tinyHyperlink.getHash(),
-                                         PropertyApplicationErrorHandler.makeMessage(entity, property, value)),
+                                         PropertyAssignmentErrorHandler.makeMessage(entity, property, value)),
                             error);
                 // Ignore non-existing properties.
                 // Assign a warning if property application fails.

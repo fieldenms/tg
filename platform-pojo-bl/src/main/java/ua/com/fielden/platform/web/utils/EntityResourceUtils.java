@@ -165,7 +165,7 @@ public class EntityResourceUtils {
     public static <M extends AbstractEntity<?>> M apply(
             final Map<String, Object> modifiedPropertiesHolder,
             final M entity,
-            final PropertyApplicationErrorHandler errorHandler,
+            final PropertyAssignmentErrorHandler errorHandler,
             final ICompanionObjectFinder coFinder)
     {
         final Class<M> type = (Class<M>) entity.getType();
@@ -237,9 +237,9 @@ public class EntityResourceUtils {
     ///
     /// The default implementation is [#standard].
     ///
-    public interface PropertyApplicationErrorHandler {
+    public interface PropertyAssignmentErrorHandler {
 
-        /// Handles `error` that occured during restoration and assignment of `value` to `property` in `entity`.
+        /// Handles `error` that occurred during restoration and assignment of `value` to `property` in `entity`.
         ///
         /// @param value a value in unspecified format
         ///
@@ -247,19 +247,19 @@ public class EntityResourceUtils {
 
         /// Returns a handler that first calls this handler and then calls `handler`.
         ///
-        default PropertyApplicationErrorHandler and(final PropertyApplicationErrorHandler handler) {
+        default PropertyAssignmentErrorHandler and(final PropertyAssignmentErrorHandler handler) {
             return (entity, property, value, error) -> {
                 this.handle(entity, property, value, error);
                 handler.handle(entity, property, value, error);
             };
         }
 
-        PropertyApplicationErrorHandler throwing = (_, _, _, error) -> {throw error;};
+        PropertyAssignmentErrorHandler throwing = (_, _, _, error) -> {throw error;};
 
-        PropertyApplicationErrorHandler standard = throwing;
+        PropertyAssignmentErrorHandler standard = throwing;
 
         static String makeMessage(final AbstractEntity<?> entity, final String prop, final Object value) {
-            return "Failed to apply a value to property [%s.%s]. Value: %s".formatted(entity.getType().getSimpleName(), prop, value);
+            return "Failed to assign value [%s] to property [%s.%s].".formatted(value, entity.getType().getSimpleName(), prop);
         }
 
     }
