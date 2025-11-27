@@ -6,18 +6,14 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
-import ua.com.fielden.platform.types.tuples.T2;
 
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 import static ua.com.fielden.platform.entity.CollectionModificationUtils.toMapByKey;
 import static ua.com.fielden.platform.entity.CollectionModificationUtils.validateAction;
@@ -34,9 +30,8 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
     private final ISecurityTokenProvider securityTokenProvider;
     
     @Inject
-    public UserRoleTokensUpdaterDao(
-            final IFilter filter, 
-            final EntityFactory factory, 
+    protected UserRoleTokensUpdaterDao(
+            final EntityFactory factory,
             final ISecurityTokenNodeTransformation tokenTransformation,
             final ISecurityTokenProvider securityTokenProvider)
     {
@@ -49,33 +44,39 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
     @SessionRequired
     @Authorise(UserRole_CanSave_Token.class)
     public UserRoleTokensUpdater save(final UserRoleTokensUpdater action) {
-        final T2<UserRoleTokensUpdater, UserRole> actionAndUserRoleBeingUpdated = validateAction(action, this, String.class, new UserRoleTokensUpdaterController(factory, co(UserRole.class), co$(UserRoleTokensUpdater.class), tokenTransformation, securityTokenProvider));
-        final UserRoleTokensUpdater actionToSave = actionAndUserRoleBeingUpdated._1;
-        
-        // After all validations have passed -- the association changes could be saved:
-        final UserRole userRoleBeingUpdated = actionAndUserRoleBeingUpdated._2;
-        final Map<Object, SecurityTokenInfo> availableTokens = toMapByKey(actionToSave.getTokens());
-        final SecurityRoleAssociationCo associationCo$ = co$(SecurityRoleAssociation.class);
-        // Initiate associations to add.
-        final Set<SecurityRoleAssociation> addedAssociations = new LinkedHashSet<>();
-        for (final String addedId : actionToSave.getAddedIds()) {
-            final Class<? extends ISecurityToken> token = loadToken(availableTokens.get(addedId).getKey());
-            final SecurityRoleAssociation assoc = associationCo$.new_().setSecurityToken(token).setRole(userRoleBeingUpdated);
-            addedAssociations.add(assoc);
-        }
-        // Initiate associations to remove.
-        final Set<SecurityRoleAssociation> removedAssociations = new LinkedHashSet<>();
-        for (final String removedId : actionToSave.getRemovedIds()) {
-            final Class<? extends ISecurityToken> token = loadToken(availableTokens.get(removedId).getKey());
-            final SecurityRoleAssociation assoc = associationCo$.new_().setSecurityToken(token).setRole(userRoleBeingUpdated);
-            removedAssociations.add(assoc);
-        }
-        // Save associations.
-        associationCo$.addAssociations(addedAssociations);
-        associationCo$.removeAssociations(removedAssociations);
+        return validateAction(
+                action,
+                this,
+                String.class,
+                new UserRoleTokensUpdaterController(factory,
+                                                    co(UserRole.class),
+                                                    co$(UserRoleTokensUpdater.class),
+                                                    tokenTransformation,
+                                                    securityTokenProvider)
+        ).map((actionToSave, userRoleBeingUpdated) -> {
+            // After validation succeeds, the association changes can be saved.
+            final Map<Object, SecurityTokenInfo> availableTokens = toMapByKey(actionToSave.getTokens());
+            final SecurityRoleAssociationCo co$Association = co$(SecurityRoleAssociation.class);
 
-        // After the association changes were successfully saved, the action should also be saved:
-        return super.save(actionToSave);
+            final var associationsToAdd = actionToSave.getAddedIds()
+                    .stream()
+                    .map(id -> co$Association.new_()
+                            .setSecurityToken(loadToken(availableTokens.get(id).getKey()))
+                            .setRole(userRoleBeingUpdated))
+                    .toList();
+
+            final var associationsToRemove = actionToSave.getRemovedIds()
+                    .stream()
+                    .map(id -> co$Association.new_()
+                            .setSecurityToken(loadToken(availableTokens.get(id).getKey()))
+                            .setRole(userRoleBeingUpdated))
+                    .toList();
+
+            co$Association.addAssociations(associationsToAdd);
+            co$Association.removeAssociations(associationsToRemove);
+
+            return super.save(actionToSave);
+        });
     }
 
     private Class<? extends ISecurityToken> loadToken(final String name) {
