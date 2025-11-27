@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.security.user;
 
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.utils.Pair;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.annotation.*;
-import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 /**
  * Represents a concept of a user role. Multiple users may have the same role. At this stage user role has only key and description.
@@ -30,7 +30,7 @@ public class UserRole extends ActivatableAbstractEntity<String> {
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
-    @IsProperty(value = SecurityRoleAssociation.class, linkProperty = "role")
+    @IsProperty(value = SecurityRoleAssociation.class, linkProperty = SecurityRoleAssociation.ROLE)
     @Title(value = "Tokens", desc = "A list of associations between this role and various security tokens.")
     private final Set<SecurityRoleAssociation> tokens = new HashSet<SecurityRoleAssociation>();
 

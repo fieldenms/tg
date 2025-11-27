@@ -11,6 +11,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.security.user.SecurityRoleAssociation.ROLE;
+import static ua.com.fielden.platform.security.user.SecurityRoleAssociation.SECURITY_TOKEN;
 import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 
 public class SecurityRoleAssociationTest extends AbstractDaoTestCase {
@@ -36,9 +38,9 @@ public class SecurityRoleAssociationTest extends AbstractDaoTestCase {
     private List<Class<? extends ISecurityToken>> tokensForRole(final UserRole role) {
         return co(SecurityRoleAssociation.class).getAllEntities(
                 from(select(SecurityRoleAssociation.class).where()
-                             .prop("role").eq().val(role)
+                             .prop(ROLE).eq().val(role)
                              .model())
-                .with(fetchIdOnly(SecurityRoleAssociation.class).with("securityToken"))
+                .with(fetchIdOnly(SecurityRoleAssociation.class).with(SECURITY_TOKEN))
                 .model())
                 .stream()
                 .<Class<? extends ISecurityToken>>map(SecurityRoleAssociation::getSecurityToken)

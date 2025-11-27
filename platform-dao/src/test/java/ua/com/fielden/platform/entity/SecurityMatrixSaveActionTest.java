@@ -19,6 +19,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao.ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING;
 import static ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao.ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_SAVING;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
@@ -47,7 +48,7 @@ public class SecurityMatrixSaveActionTest extends AbstractDaoTestCase {
                 .setAssociationsToSave(associationsToSave));
         // Find the desired association again.
         final SecurityRoleAssociation refetchedAssociation = associationCo.findByKeyAndFetch(
-                fetchNone(SecurityRoleAssociation.class).with("active"),
+                fetchNone(SecurityRoleAssociation.class).with(ACTIVE),
                 SecondLevelSecurityToken1.class,
                 test_role_3);
         // Verify that the desired association exists and is active.

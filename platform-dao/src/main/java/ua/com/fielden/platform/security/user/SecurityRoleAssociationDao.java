@@ -20,10 +20,13 @@ import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.partitioningBy;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.security.provider.ISecurityTokenProvider.MissingSecurityTokenPlaceholder;
+import static ua.com.fielden.platform.security.user.SecurityRoleAssociation.ROLE;
+import static ua.com.fielden.platform.security.user.SecurityRoleAssociation.SECURITY_TOKEN;
 
 /// DAO implementation of [SecurityRoleAssociationCo].
 ///
@@ -39,9 +42,9 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @SessionRequired
     public List<SecurityRoleAssociation> findAssociationsFor(final Class<? extends ISecurityToken> securityToken) {
         final var model = select(SecurityRoleAssociation.class).where()
-                .prop("securityToken").eq().val(securityToken.getName()).and()
-                .prop("active").eq().val(true).model();
-        final var orderBy = orderBy().prop("role").asc().model();
+                .prop(SECURITY_TOKEN).eq().val(securityToken.getName()).and()
+                .prop(ACTIVE).eq().val(true).model();
+        final var orderBy = orderBy().prop(ROLE).asc().model();
         return getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).with(orderBy).model());
     }
 
@@ -49,7 +52,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @SessionRequired
     public Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations() {
 
-        final var model = select(SecurityRoleAssociation.class).where().prop("active").eq().val(true).model();
+        final var model = select(SecurityRoleAssociation.class).where().prop(ACTIVE).eq().val(true).model();
 
         final Map<Boolean, List<SecurityRoleAssociation>> partitionedAssociations = getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).model()).stream()
                 .collect(partitioningBy(association -> !association.getSecurityToken().equals(MissingSecurityTokenPlaceholder.class)));
@@ -166,8 +169,8 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     private static EntityResultQueryModel<SecurityRoleAssociation> queryForAssociations(final List<SecurityRoleAssociation> group) {
         return select(SecurityRoleAssociation.class).where()
-                .prop("securityToken").in().values(group.stream().map(a -> a.getSecurityToken().getName()).toList()).and()
-                .prop("role").in().values(group.stream().map(SecurityRoleAssociation::getRole).toList())
+                .prop(SECURITY_TOKEN).in().values(group.stream().map(a -> a.getSecurityToken().getName()).toList()).and()
+                .prop(ROLE).in().values(group.stream().map(SecurityRoleAssociation::getRole).toList())
                 .model();
     }
 
