@@ -1,5 +1,7 @@
 import { TgReflector } from '/app/tg-reflector.js';
 
+export const SCROLL_THRESHOLD = 20;
+
 /**
  * Generates the unique identifier.
  */
