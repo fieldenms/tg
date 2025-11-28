@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.security.user.*;
+import ua.com.fielden.platform.tiny.PlatformActionIdentifiers;
 import ua.com.fielden.platform.ui.menu.sample.MiUserRole;
 import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
@@ -250,8 +251,7 @@ public class UserRoleWebUiConfig {
             @Override
             public EntityActionConfig mkAction() {
                 return action(CopyUserRoleAction.class)
-                        // TODO #2109 Introduce PlatformActionIdentifiers
-                        // .withTinyHyperlink()
+                        .withTinyHyperlink(PlatformActionIdentifiers.PLATFORM_COPY_USER_ROLE)
                         .withContext(context().withSelectedEntities().build())
                         .icon("icons:copy")
                         .shortDesc("Add new User Role from selected roles")

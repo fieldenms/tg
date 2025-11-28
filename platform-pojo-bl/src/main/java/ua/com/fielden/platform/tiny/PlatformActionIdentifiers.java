@@ -6,4 +6,7 @@ package ua.com.fielden.platform.tiny;
 ///
 public enum PlatformActionIdentifiers implements IActionIdentifier {
 
+    PLATFORM_COPY_USER_ROLE
+    ;
+
 }
