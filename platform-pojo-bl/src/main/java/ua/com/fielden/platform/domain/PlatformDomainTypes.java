@@ -42,15 +42,7 @@ import ua.com.fielden.platform.ref_hierarchy.ReferenceLevelHierarchyEntry;
 import ua.com.fielden.platform.ref_hierarchy.ReferencedByLevelHierarchyEntry;
 import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.security.session.UserSession;
-import ua.com.fielden.platform.security.user.ReUser;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.SecurityTokenInfo;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
-import ua.com.fielden.platform.security.user.UserRolesUpdater;
-import ua.com.fielden.platform.security.user.UserSecret;
+import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.security.user.locator.UserLocator;
 import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenMain_MenuItem;
 import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenUserAndRoleAssociation_MenuItem;
@@ -92,6 +84,7 @@ public class PlatformDomainTypes {
         types.add(UserSession.class);
         types.add(UserRole.class);
         types.add(UserRoleTokensUpdater.class);
+        types.add(CopyUserRoleAction.class);
         types.add(SecurityTokenInfo.class);
 
         types.add(CentreConfigUpdater.class);

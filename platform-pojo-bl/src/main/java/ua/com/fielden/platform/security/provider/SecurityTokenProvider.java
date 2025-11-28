@@ -90,6 +90,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 UserAndRoleAssociation_CanReadModel_Token.class,
                 UserRolesUpdater_CanExecute_Token.class,
                 UserRoleTokensUpdater_CanExecute_Token.class,
+                CopyUserRoleAction_CanExecute_Token.class,
                 Attachment_CanSave_Token.class,
                 Attachment_CanRead_Token.class,
                 Attachment_CanReadModel_Token.class,
