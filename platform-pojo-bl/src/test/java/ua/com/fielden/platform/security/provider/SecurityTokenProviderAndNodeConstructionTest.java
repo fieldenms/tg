@@ -69,10 +69,10 @@ public class SecurityTokenProviderAndNodeConstructionTest {
     public void security_token_hierarchy_is_determined_correctly_for_the_specified_path_and_package() {
         final var provider = injector.getInstance(ISecurityTokenProvider.class);
         final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-        assertEquals("Incorrect number of top security tokens.", 38, topNodes.size());
+        assertEquals("Incorrect number of top security tokens.", 39, topNodes.size());
 
         // skip attachment related security tokens before getting iterator nodesWithSkippedAttachmentTokens
-        final Iterator<SecurityTokenNode> superIter = topNodes.stream().skip(19).collect(toList()).iterator();
+        final Iterator<SecurityTokenNode> superIter = topNodes.stream().skip(20).collect(toList()).iterator();
 
         final SecurityTokenNode top1 = superIter.next();
         assertEquals("Incorrect first top token.", Top1LevelSecurityToken.class, top1.getToken());
