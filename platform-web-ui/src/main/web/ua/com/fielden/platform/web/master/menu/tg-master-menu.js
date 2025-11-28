@@ -43,15 +43,17 @@ const template = html`
             --paper-listbox-background-color: #fff;
         }
         #menu ::slotted(paper-item) {
-            margin-left: -8px;
             padding-left: 0;
             --icon-display: inherit;
             --icon-visibility: hidden;
         }
-        #menu ::slotted(paper-item.notDraggable) {
+        #menu ::slotted(paper-item:not([drag-element])) {
             margin-left: 0;
             padding-left: 16px;
             --icon-display: none;
+        }
+        #menu ::slotted(paper-item.dragging-element) {
+            background-color: #ECEFF1;
         }
         #menu ::slotted(paper-item.dragging) {
             opacity: 0;
@@ -122,7 +124,7 @@ const findMenuItemSection = function (path) {
 };
 
 const _updateMenuOrder = function (menuOrder, container) {
-    const menuItems = [...container.querySelectorAll("paper-item:not(.notDraggable)")];
+    const menuItems = [...container.querySelectorAll("paper-item[drag-element]")];
 
     let nextSibling = menuItems[0];
     for (let menuIdx = menuOrder.length - 1; menuIdx >= 0; menuIdx--) {
@@ -348,13 +350,10 @@ Polymer({
                 this._menuScrolling = false;
             }
         }
-        if (!isTouchEnabled()) { // TODO remove this check in #2323
-            this.addEventListener('dragstart', this.startDrag.bind(this));
-            this.addEventListener('drop', this.dragDrop.bind(this));
-            this.addEventListener('dragend', this.endDrag.bind(this));
-            this.addEventListener('dragenter', this.dragEntered.bind(this));
-            this.addEventListener('dragover', this.dragOver.bind(this));
-        }
+        this.addEventListener('dragstart', this.startDrag.bind(this));
+        this.addEventListener('drop', this.dragDrop.bind(this));
+        this.addEventListener('dragend', this.endDrag.bind(this));
+        this.addEventListener('dragover', this.dragOver.bind(this));
         this._toggleMenuBound = this._toggleMenu.bind(this);
     },
 
@@ -372,15 +371,20 @@ Polymer({
                 }
             }
 
-            const touchEnabled = isTouchEnabled();
-            if (touchEnabled) {
-                const menuItems = self.$.menuItems.assignedNodes({ flatten: true });
-                if (menuItems && menuItems.length > 0) {
-                    for (let index = 0; index < menuItems.length; index++) {
+            const menuItems = self.$.menuItems.assignedNodes({ flatten: true });
+            if (menuItems && menuItems.length > 0) {
+                for (let index = 0; index < menuItems.length; index++) {
+                    if (menuItems[index].hasAttribute("drag-element")) {
+                        // A menu item with the "drag-element" attribute should have a drag anchor.
+                        // Therefore, the next `dragAnchor` should not be null.
                         const dragAnchor = menuItems[index].querySelector('.drag-anchor');
-                        if (dragAnchor) {
+                        // If the menu is displayed on touch devices, the user can start dragging a menu item from any point on it.
+                        // On mouse-based devices, the user can start dragging only by using the drag anchor.
+                        if (isTouchEnabled()) {
+                            menuItems[index].setAttribute("draggable", "true");
                             dragAnchor.style.visibility = 'hidden';
-                            dragAnchor.removeAttribute('draggable');
+                        } else {
+                            dragAnchor.setAttribute("draggable", "true");
                         }
                     }
                 }
@@ -483,10 +487,12 @@ Polymer({
         // Make sure the drag start event is triggered only on the draggable icon of the menu item.
         // This prevents dragging from other elements in the compound entity master.
         if (dragEvent.target.nodeType === Node.ELEMENT_NODE && dragEvent.target.getAttribute("draggable") === "true") {
+            const elementToDrag = getParentAnd(dragEvent.target, element => element.hasAttribute("drag-element"));
             this._dragObject = {
-                menuItemToDrag: dragEvent.target.parentElement,
-                originSibling: dragEvent.target.parentElement.nextSibling
+                menuItemToDrag: elementToDrag,
+                originSibling: elementToDrag.nextSibling
             };
+            this._dragObject.menuItemToDrag.classList.add("dragging-element");
             this.async(() => {
                 if (this._dragObject) {
                     this._dragObject.menuItemToDrag.classList.add("dragging");
@@ -501,6 +507,7 @@ Polymer({
 
     dragDrop: function (dragEvent) {
         if (this._dragObject) {
+            this._dragObject.menuItemToDrag.classList.remove("dragging-element");
             this._dragObject.menuItemToDrag.classList.remove("dragging");
             this.$.menu.classList.remove("dragging");
             this._saveMenuOrder();
@@ -510,6 +517,7 @@ Polymer({
 
     endDrag: function (dragEvent) {
         if (this._dragObject) {
+            this._dragObject.menuItemToDrag.classList.remove("dragging-element");
             this._dragObject.menuItemToDrag.classList.remove("dragging");
             this.$.menu.classList.remove("dragging");
             this.insertBefore(this._dragObject.menuItemToDrag, this._dragObject.originSibling);
@@ -520,7 +528,7 @@ Polymer({
     dragOver: function (e) {
         if (this._dragObject) {
             tearDownEvent(e);
-            const siblings = [...this.querySelectorAll("paper-item:not(.dragging):not(.notDraggable)")];
+            const siblings = [...this.querySelectorAll("paper-item[drag-element]:not(.dragging)")];
             const nextSibling = siblings.find(sibling => {
                 const siblingRect = sibling.getBoundingClientRect();
                 return e.clientY <= siblingRect.y + siblingRect.height / 2;
@@ -541,7 +549,7 @@ Polymer({
 
     _saveMenuOrder: function () {
         if (this.userName && this.entityType) {
-            const menuItems = [...this.querySelectorAll("paper-item:not(.notDraggable)")].map(item => item.getAttribute("item-title"));
+            const menuItems = [...this.querySelectorAll("paper-item[drag-element]")].map(item => item.getAttribute("item-title"));
             localStorage[this._menuStorageKey(this.userName, this.entityType)] = JSON.stringify(menuItems);
         }
     },

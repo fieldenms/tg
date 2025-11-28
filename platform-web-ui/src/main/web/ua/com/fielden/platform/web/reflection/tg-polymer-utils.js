@@ -77,11 +77,15 @@ export function _removeAllLightDOMChildrenFrom (element) {
 };
 
 /**
- * Returns the x and y coordinates relatively to specified container
+ * Returns the x and y coordinates relative to the specified container.
+ * If no container is provided, the point with the given x and y coordinates is returned as is.
  */
 export function getRelativePos (x, y, container) {
-    const containerRect = container.getBoundingClientRect();
-    return {x: x - containerRect.left, y: y - containerRect.top};
+    if (container) {
+        const containerRect = container.getBoundingClientRect();
+        return {x: x - containerRect.left, y: y - containerRect.top};
+    }
+    return {x: x, y: y};
 };
 
 /**
