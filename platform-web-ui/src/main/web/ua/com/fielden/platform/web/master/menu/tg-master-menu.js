@@ -375,7 +375,11 @@ Polymer({
             if (menuItems && menuItems.length > 0) {
                 for (let index = 0; index < menuItems.length; index++) {
                     if (menuItems[index].hasAttribute("drag-element")) {
-                        const dragAnchor = menuItems[index].querySelector('.drag-anchor'); //should not be null
+                        // A menu item with the "drag-element" attribute should have a drag anchor.
+                        // Therefore, the next `dragAnchor` should not be null.
+                        const dragAnchor = menuItems[index].querySelector('.drag-anchor');
+                        // If the menu is displayed on touch devices, the user can start dragging a menu item from any point on it.
+                        // On mouse-based devices, the user can start dragging only by using the drag anchor.
                         if (isTouchEnabled()) {
                             menuItems[index].setAttribute("draggable", "true");
                             dragAnchor.style.visibility = 'hidden';
