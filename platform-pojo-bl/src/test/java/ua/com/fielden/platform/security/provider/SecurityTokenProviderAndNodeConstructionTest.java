@@ -6,21 +6,22 @@ import com.google.inject.Injector;
 import com.google.inject.ProvisionException;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.security.tokens.*;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_CanOpen_Token;
 
-import java.util.Iterator;
 import java.util.Set;
-import java.util.SortedSet;
 
-import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.longDesc;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
 import static ua.com.fielden.platform.security.provider.ISecurityTokenProvider.ERR_DUPLICATE_SECURITY_TOKENS;
+import static ua.com.fielden.platform.security.provider.SecurityTokenProvider.PLATFORM_TOKENS;
+import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 /// A test case to ensure correct configuration of security tokens as provided for security tooling (the tree structure).
@@ -67,23 +68,25 @@ public class SecurityTokenProviderAndNodeConstructionTest {
 
     @Test
     public void security_token_hierarchy_is_determined_correctly_for_the_specified_path_and_package() {
-        final var provider = injector.getInstance(ISecurityTokenProvider.class);
-        final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-        assertEquals("Incorrect number of top security tokens.", 39, topNodes.size());
+        final var provider = injector.getInstance(SecurityTokenProviderWithCustomPackage.class);
 
-        // skip attachment related security tokens before getting iterator nodesWithSkippedAttachmentTokens
-        final Iterator<SecurityTokenNode> superIter = topNodes.stream().skip(20).collect(toList()).iterator();
+        final var tokensInPackage = Set.of(
+                _CanRead_Token.class,
+                FirstLevelSecurityToken1.class,
+                FirstLevelSecurityToken2.class,
+                SecondLevelSecurityToken1.class,
+                SecondLevelSecurityToken2.class,
+                ThirdLevelSecurityToken1.class,
+                ThirdLevelSecurityToken2.class);
+        Assertions.assertThat(provider.allSecurityTokens())
+                .containsExactlyInAnyOrderElementsOf(concatList(PLATFORM_TOKENS, tokensInPackage));
+    }
 
-        final SecurityTokenNode top1 = superIter.next();
-        assertEquals("Incorrect first top token.", Top1LevelSecurityToken.class, top1.getToken());
-        assertEquals("Incorrect number of sub tokens.", 2, top1.getSubTokenNodes().size());
-        final Iterator<SecurityTokenNode> subIter = top1.getSubTokenNodes().iterator();
-        assertEquals("Incorrect sub token.", Lower1LevelSecurityToken.class, subIter.next().getToken());
-        assertEquals("Incorrect sub token.", Lower2LevelSecurityToken.class, subIter.next().getToken());
-
-        final SecurityTokenNode top2 = superIter.next();
-        assertEquals("Incorrect second top token.", Top2LevelSecurityToken.class, top2.getToken());
-        assertEquals("Incorrect number of sub tokens.", 0, top2.getSubTokenNodes().size());
+    private static class SecurityTokenProviderWithCustomPackage extends SecurityTokenProvider {
+        @Inject
+        protected SecurityTokenProviderWithCustomPackage(final @Named("tokens.path") String path) {
+            super(path, "ua.com.fielden.platform.security.tokens", setOf(), setOf());
+        }
     }
 
     @Test

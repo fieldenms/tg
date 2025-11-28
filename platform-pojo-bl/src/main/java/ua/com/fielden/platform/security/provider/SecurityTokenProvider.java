@@ -13,13 +13,15 @@ import ua.com.fielden.platform.security.tokens.ISecurityTokenGenerator;
 import ua.com.fielden.platform.security.tokens.Template;
 import ua.com.fielden.platform.security.tokens.attachment.*;
 import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.*;
+import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.persistent.*;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.*;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.util.*;
@@ -38,6 +40,45 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.requireAnno
 ///
 @Singleton
 public class SecurityTokenProvider implements ISecurityTokenProvider {
+
+    static final Set<Class<? extends ISecurityToken>> PLATFORM_TOKENS = Set.of(
+            User_CanSave_Token.class,
+            User_CanRead_Token.class,
+            User_CanReadModel_Token.class,
+            ReUser_CanRead_Token.class,
+            ReUser_CanReadModel_Token.class,
+            User_CanDelete_Token.class,
+            UserMaster_CanOpen_Token.class,
+            UserRole_CanSave_Token.class,
+            UserRole_CanRead_Token.class,
+            UserRole_CanReadModel_Token.class,
+            UserRole_CanDelete_Token.class,
+            UserRoleMaster_CanOpen_Token.class,
+            UserAndRoleAssociation_CanRead_Token.class,
+            UserAndRoleAssociation_CanReadModel_Token.class,
+            UserRolesUpdater_CanExecute_Token.class,
+            UserRoleTokensUpdater_CanExecute_Token.class,
+            CopyUserRoleAction_CanExecute_Token.class,
+            Attachment_CanSave_Token.class,
+            Attachment_CanRead_Token.class,
+            Attachment_CanReadModel_Token.class,
+            Attachment_CanDelete_Token.class,
+            AttachmentMaster_CanOpen_Token.class,
+            AttachmentDownload_CanExecute_Token.class,
+            DashboardRefreshFrequencyUnit_CanRead_Token.class,
+            DashboardRefreshFrequencyUnit_CanReadModel_Token.class,
+            DashboardRefreshFrequency_CanSave_Token.class,
+            DashboardRefreshFrequency_CanRead_Token.class,
+            DashboardRefreshFrequency_CanReadModel_Token.class,
+            DashboardRefreshFrequency_CanDelete_Token.class,
+            DashboardRefreshFrequencyMaster_CanOpen_Token.class,
+            DomainExplorer_CanRead_Token.class,
+            DomainExplorer_CanReadModel_Token.class,
+            KeyNumber_CanRead_Token.class,
+            KeyNumber_CanReadModel_Token.class,
+            GraphiQL_CanExecute_Token.class,
+            UserDefinableHelp_CanSave_Token.class,
+            PersistentEntityInfo_CanExecute_Token.class);
 
     /// A map between token classes and their names.
     /// Used as a cache for obtaining class by name.
@@ -73,46 +114,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             final Set<Class<? extends ISecurityToken>> extraTokens,
             final Set<Class<? extends ISecurityToken>> redundantTokens)
     {
-        final Set<Class<? extends ISecurityToken>> platformLevelTokens = CollectionUtil.setOf(
-                User_CanSave_Token.class,
-                User_CanRead_Token.class,
-                User_CanReadModel_Token.class,
-                ReUser_CanRead_Token.class,
-                ReUser_CanReadModel_Token.class,
-                User_CanDelete_Token.class,
-                UserMaster_CanOpen_Token.class,
-                UserRole_CanSave_Token.class,
-                UserRole_CanRead_Token.class,
-                UserRole_CanReadModel_Token.class,
-                UserRole_CanDelete_Token.class,
-                UserRoleMaster_CanOpen_Token.class,
-                UserAndRoleAssociation_CanRead_Token.class,
-                UserAndRoleAssociation_CanReadModel_Token.class,
-                UserRolesUpdater_CanExecute_Token.class,
-                UserRoleTokensUpdater_CanExecute_Token.class,
-                CopyUserRoleAction_CanExecute_Token.class,
-                Attachment_CanSave_Token.class,
-                Attachment_CanRead_Token.class,
-                Attachment_CanReadModel_Token.class,
-                Attachment_CanDelete_Token.class,
-                AttachmentMaster_CanOpen_Token.class,
-                AttachmentDownload_CanExecute_Token.class,
-                DashboardRefreshFrequencyUnit_CanRead_Token.class,
-                DashboardRefreshFrequencyUnit_CanReadModel_Token.class,
-                DashboardRefreshFrequency_CanSave_Token.class,
-                DashboardRefreshFrequency_CanRead_Token.class,
-                DashboardRefreshFrequency_CanReadModel_Token.class,
-                DashboardRefreshFrequency_CanDelete_Token.class,
-                DashboardRefreshFrequencyMaster_CanOpen_Token.class,
-                DomainExplorer_CanRead_Token.class,
-                DomainExplorer_CanReadModel_Token.class,
-                KeyNumber_CanRead_Token.class,
-                KeyNumber_CanReadModel_Token.class,
-                GraphiQL_CanExecute_Token.class,
-                UserDefinableHelp_CanSave_Token.class,
-                PersistentEntityInfo_CanExecute_Token.class);
         final Set<Class<? extends ISecurityToken>> allTokens = new HashSet<>(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class));
-        allTokens.addAll(platformLevelTokens);
+        allTokens.addAll(PLATFORM_TOKENS);
         allTokens.addAll(extraTokens);
         allTokens.removeAll(redundantTokens);
         allTokens.forEach(type -> { tokenClassesByName.put(type.getName(), type); tokenClassesBySimpleName.put(type.getSimpleName(), type); });
