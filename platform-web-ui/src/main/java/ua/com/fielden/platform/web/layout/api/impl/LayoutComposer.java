@@ -24,6 +24,10 @@ public class LayoutComposer {
     public final static String MASTER_ACTION_SPECIFICATION = StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
 
     public static final FlexLayoutConfig CELL_LAYOUT = layout().flex().end();
+    public static final FlexLayoutConfig FLEXIBLE_ROW = LayoutCellBuilder.layout().flexAuto().end();
+    public static final FlexLayoutConfig FLEXIBLE_LAYOUT_WITH_PADDING = LayoutCellBuilder.layout().withStyle("height", "100%").withStyle("box-sizing", "border-box").withStyle("min-height", "fit-content").withStyle("padding", "20px").end();
+
+    public static final int SIMPLE_ONE_COLUMN_MASTER_DIM_WIDTH = 520;
 
     /**
      * @param layout

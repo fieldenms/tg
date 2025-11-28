@@ -28,11 +28,13 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
 import { TgBackButtonBehavior } from '/resources/views/tg-back-button-behavior.js'
-import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
+import { createDialog } from '/resources/egi/tg-dialog-util.js';
+import { openShareAction } from '/resources/reflection/tg-share-utils.js';
 
 const ST_WIDTH = '_width';
 const ST_HEIGHT = '_height';
@@ -181,7 +183,7 @@ const template = html`
             </div>
             <div class="layout horizontal center">
                 <!-- Get A Link button -->
-                <paper-icon-button hidden$="[[!_mainEntityType]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
+                <paper-icon-button hidden$="[[_shareHidden(_mainEntityType, _lastAction)]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
                 <paper-icon-button hidden$="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
@@ -469,9 +471,24 @@ Polymer({
             type: Object,
             value: null
         },
-        
+
         /**
-         * Represents the ID of the currently bound persisted entity (of type derived from _mainEntityType) or 'null' if the entity is not yet persisted or not yet loaded.
+         * The deepest embedded Entity Master.
+         *
+         * For compound masters it represents the master of loaded persistent entity under Main / one-2-one menu item.
+         * For simple persistent masters (including those embedded by EntityEditAction / EntityNewAction)
+         * it represents the master of actual persistent entity.
+         * Otherwise (i.e. for functional masters) it represents the master of that functional entity.
+         */
+        _deepestMaster: {
+            type: Object,
+            value: null
+        },
+
+        /**
+         * Represents the ID of the currently bound persisted entity (of type derived from _mainEntityType) or 'null',
+         * if the entity is not yet persisted or not yet loaded.
+         *
          * Should only be used if '_mainEntityType' is present.
          */
         _mainEntityId: {
@@ -499,7 +516,18 @@ Polymer({
         _masterMenu: {
             type: Object,
             value: null
+        },
+
+        /**
+         * A dialog instance that is used for displaying entity (functional and not) masters as part of dialog actions logic.
+         * This dialog is of type tg-custom-action-dialog and gets created on demand when needed i.e. on first _showDialog invocation.
+         * It is appended to document.body just before dialog opening and is removed just after dialog closing.
+         */
+        _actionDialog: {
+            type: Object,
+            value: null
         }
+
     },
 
     observers: ["_updateDialogDimensionsIfNotAnimating(_masterVisibilityChanges, _masterLayoutChanges, prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
@@ -538,6 +566,7 @@ Polymer({
         this._handleActionNavigationChange = this._handleActionNavigationChange.bind(this);
         this._handleActionNavigationInvoked = this._handleActionNavigationInvoked.bind(this);
         this._handleViewLoaded = this._handleViewLoaded.bind(this);
+        this._showDialog = this._showDialog.bind(this);
 
         this._setIsRunning(false);
 
@@ -585,6 +614,8 @@ Polymer({
         this.$.spinner.style.setProperty('--paper-spinner-layer-2-color', 'white');
         this.$.spinner.style.setProperty('--paper-spinner-layer-3-color', 'white');
         this.$.spinner.style.setProperty('--paper-spinner-layer-4-color', 'white');
+
+        this.uuid = this.is + '/' + generateUUID();
     },
 
     attached: function() {
@@ -1072,6 +1103,22 @@ Polymer({
             self.$.elementLoader.attrs = customAction.attrs;
             return self.$.elementLoader.reload();
         }
+    },
+
+    _showDialog: function (action) {
+        // Calculate close event channel for dialog.
+        // It should be the same as action's centreUuid.
+        // This is done because action's centreUuid is set into centreUuid of the master opened by specified action and inserted into opening dialog.
+        // Then the master's `centreUuid` is used as `closeEventChannel` for `tg-action`.
+        // Expression `|| this.uuid` is used as a fallback in case where action's `centreUuid` wasn't defined.
+        const closeEventChannel = action.attrs.centreUuid || this.uuid;
+        const closeEventTopics = ['save.post.success', 'refresh.post.success'];
+        this.async(() => {
+            if (this._actionDialog === null) {
+                this._actionDialog = createDialog(this.uuid);
+            }
+            this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+        }, 1);
     },
 
     /*
@@ -1724,6 +1771,20 @@ Polymer({
         return (_lastAction && _lastAction.continuous) || mobile;
     },
 
+    /**
+     * Returns 'true' if Share button is hidden, 'false' otherwise.
+     */
+    _shareHidden: function (_mainEntityType, _lastAction) {
+        return !(
+            // Visible for all persistent masters either with NEW or persisted instance.
+            // This covers simple and compound masters.
+            // Action identifier can be empty for NEW (custom action) -- it then shows info message `Please save and try again.`
+            _mainEntityType
+            // Visible also for all functional masters with explicit action identifier.
+            || _lastAction && _lastAction.attrs && _lastAction.attrs.actionIdentifier
+        );
+    },
+
     _minimisedIcon: function (_minimised) {
         return _minimised ? "tg-icons:expandMin" : "tg-icons:collapseMin";
     },
@@ -1752,6 +1813,9 @@ Polymer({
             if (this._embeddedMasterType === null && !entityType.isCompoundMenuItem() && !entityMaster.masterWithMaster) {
                 this._embeddedMasterType = entityType;
             }
+            if (this._deepestMaster === null && !entityType.compoundOpenerType() && !entityType.isCompoundMenuItem() && !entityMaster.masterWithMaster) {
+                this._deepestMaster = entityMaster;
+            }
             if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
             } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item
@@ -1775,6 +1839,9 @@ Polymer({
         if (entityType) {
             if (this._embeddedMasterType !== null && entityType === this._embeddedMasterType) {
                 this._embeddedMasterType = null;
+            }
+            if (this._deepestMaster !== null && entityMaster === this._deepestMaster) {
+                this._deepestMaster = null;
             }
             if (this._mainEntityType !== null && entityType === this._mainEntityType) {
                 this._mainEntityType = null;
@@ -1811,44 +1878,64 @@ Polymer({
      */
     _entityReceived: function (event) {
         const entity = event.detail;
-        if (entity.type() === this._mainEntityType) {
+        if (entity.type() === this._mainEntityType) { // _mainEntityType can be null for functional entities
             this._mainEntityId = entity.type().compoundOpenerType() ? entity.get('key').get('id') : entity.get('id');
         }
         tearDownEvent(event);
     },
-    
+
     /**
-     * Generates a link to entity master for persisted entity opened in this dialog; copies it to the clipboard; shows informational dialog with ability to review link (MORE button).
-     * or
-     * Shows informational dialog for not-yet-persisted entity opened in this dialog -- 'Please save and try again.'.
-     * 
-     * This functionality is only available for persistent entities.
+     * 1. If a master for a persisted entity is opened in this dialog, generates a link to it, copies it to the clipboard,
+     *    and shows an informational dialog with the ability to review the link (MORE button).
+     *    If the master is compound, the generated link will point to the currenly open menu item.
+     *
+     * 2. If the action that opened this dialog has an identifier (i.e., supports tiny hyperlinks), then `ShareAction` will be invoked,
+     *    and the resulting tiny hyperlink will be presented to the user.
+     *
+     * 3. Otherwise, link generation is not supported, and a corresponding message will be displayed.
      */
     _getLink: function () {
-        const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
-        const showNonCritical = toaster => {
-            toaster.showProgress = false;
-            toaster.isCritical = false;
-            toaster.show();
-        };
-        if (this._mainEntityId !== null) {
-            const url = new URL(window.location.href);
-            const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
-            url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
-            const link = url.href;
-            // Writing into clipboard is always permitted for currently open tab (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) -- that's why promise error should never occur;
-            // if for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user and global handler will report that to the server.
-            navigator.clipboard.writeText(link).then(() => {
-                this.$.toaster.text = 'Copied to clipboard.';
-                this.$.toaster.hasMore = true;
-                this.$.toaster.msgText = link;
-                showNonCritical(this.$.toaster);
-            });
-        } else {
+        const isPersistedEntity = this._mainEntityType !== null && this._mainEntityId !== null;
+        if (isPersistedEntity
+            || this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionIdentifier)
+        {
+            // Find a deepest embdedded master, which will contain master entity for share action.
+            const deepestMaster = this._deepestMaster;
+            // this dialog's `uuid` to be used for action.
+            const uuid = this.uuid;
+
+            let getSharedUri;
+            if (isPersistedEntity) {
+                const url = new URL(window.location.href);
+                const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
+                const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
+                url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
+                getSharedUri = () => url.href;
+            }
+            else {
+                getSharedUri = null;
+            }
+
+            openShareAction(
+                this.$.toaster,
+                uuid,
+                this._showDialog,
+                !isPersistedEntity && deepestMaster
+                    ? deepestMaster._createContextHolder
+                    : (() => this._reflector.createContextHolder(null, null, null, null, null, null)),
+                getSharedUri,
+                shareAction => {
+                    // Persist reference to the dialog to easily get it in `tg-ui-action._createContextHolderForAction`.
+                    shareAction._dialog = this;
+                });
+        }
+        else {
             this.$.toaster.text = 'Please save and try again.';
             this.$.toaster.hasMore = false;
             this.$.toaster.msgText = '';
-            showNonCritical(this.$.toaster);
+            this.$.toaster.showProgress = false;
+            this.$.toaster.isCritical = false;
+            this.$.toaster.show();
         }
     },
     

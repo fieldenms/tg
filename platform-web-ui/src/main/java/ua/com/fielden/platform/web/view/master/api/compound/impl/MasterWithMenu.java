@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -168,4 +169,10 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         throw new UnsupportedOperationException("Getting of action configuration is not supported.");
     }
+
+    @Override
+    public Stream<EntityActionConfig> streamActionConfigs() {
+        return Stream.empty();
+    }
+
 }
