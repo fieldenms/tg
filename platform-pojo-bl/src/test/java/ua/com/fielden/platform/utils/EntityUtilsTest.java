@@ -42,6 +42,7 @@ import java.util.stream.Stream;
 import static java.math.RoundingMode.HALF_EVEN;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
@@ -662,9 +663,19 @@ public class EntityUtilsTest {
 
     @Test
     public void only_a_specific_subset_of_platform_level_entities_have_introspection_allowed() {
-        final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, DashboardRefreshFrequency.class, DashboardRefreshFrequencyUnit.class, KeyNumber.class, User.class, ReUser.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, UserDefinableHelp.class);
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> filtered = PlatformDomainTypes.types.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toCollection(LinkedHashSet::new));
-        assertEquals(expected, filtered);
+        assertThat(filtered).containsExactlyInAnyOrder(
+                Attachment.class,
+                DomainExplorer.class,
+                DashboardRefreshFrequency.class,
+                DashboardRefreshFrequencyUnit.class,
+                KeyNumber.class,
+                User.class,
+                ReUser.class,
+                UserRole.class,
+                UserAndRoleAssociation.class,
+                SecurityRoleAssociation.class,
+                UserDefinableHelp.class);
     }
 
     @Test

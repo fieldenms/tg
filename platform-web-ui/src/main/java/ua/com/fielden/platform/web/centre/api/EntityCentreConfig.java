@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre.api;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
@@ -11,6 +12,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
@@ -39,6 +41,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Collections.*;
@@ -384,7 +387,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /// A primary entity action configuration that is associated with every retrieved and present in the result set entity. It can be `null` if no primary entity action
     /// is needed.
     ///
-    private final EntityMultiActionConfig resultSetPrimaryEntityAction;
+    private final @Nullable EntityMultiActionConfig resultSetPrimaryEntityAction;
 
     /// A list of secondary action configurations that are associated with every retrieved and present in the result set entity. It can be empty if no secondary action are
     /// necessary.
@@ -1021,6 +1024,19 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             .map(matchersInfo -> matchersInfo.get(property))
             .map(matcherInfo -> matcherInfo._3.contains(HIDE_ACTIVE_ONLY_ACTION))
             .orElse(false);
+    }
+
+    /// Creates a stream of all action configurations present in this centre.
+    ///
+    public Stream<EntityActionConfig> streamActionConfigs() {
+        return StreamUtils.concat(topLevelActions.stream().map(Pair::getKey),
+                                  frontActions.stream(),
+                                  insertionPointConfigs.stream().map(InsertionPointConfig::getInsertionPointAction),
+                                  resultSetProperties.stream()
+                                          .flatMap(prop -> prop.propAction.stream())
+                                          .flatMap(propAction -> propAction.actions().stream()),
+                                  ofNullable(resultSetPrimaryEntityAction).stream().map(EntityMultiActionConfig::actions).flatMap(List::stream),
+                                  resultSetSecondaryEntityActions.stream().map(EntityMultiActionConfig::actions).flatMap(List::stream));
     }
 
 }

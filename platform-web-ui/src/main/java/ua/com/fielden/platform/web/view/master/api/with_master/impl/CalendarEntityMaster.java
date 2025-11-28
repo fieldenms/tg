@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuild
 
 import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
@@ -117,6 +118,10 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
         return renderable;
     }
 
+    @Override
+    public Stream<EntityActionConfig> streamActionConfigs() {
+        return Stream.of(editAction);
+    }
 
     @Override
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {

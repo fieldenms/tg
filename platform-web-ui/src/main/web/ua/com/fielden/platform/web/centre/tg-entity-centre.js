@@ -841,8 +841,12 @@ Polymer({
         }, 100);
     },
 
-    confirm: function (message, buttons) {
-        return this.$.confirmationDialog.showConfirmationDialog(message, buttons);
+    closeConfirmationDialog: function () {
+        return this.$.confirmationDialog.close();
+    },
+
+    confirm: function (message, buttons, options) {
+        return this.$.confirmationDialog.showConfirmationDialog(message, buttons, options);
     },
 
     /**

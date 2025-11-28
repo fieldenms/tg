@@ -1563,4 +1563,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.isActiveOnlyActionHidden(property);
     }
 
+    /// Creates a stream of all action configurations present in this centre.
+    ///
+    public Stream<EntityActionConfig> streamActionConfigs() {
+        return dslDefaultConfig.streamActionConfigs();
+    }
+
 }

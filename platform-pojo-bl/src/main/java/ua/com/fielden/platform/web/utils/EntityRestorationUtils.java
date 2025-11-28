@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyAssignmentErrorHandler;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -157,13 +158,14 @@ public class EntityRestorationUtils {
     ///
     public static <T extends AbstractEntity<?>> Pair<T, Map<String, Object>> constructEntity(
             final Map<String, Object> modifiedPropertiesHolder,
+            final PropertyAssignmentErrorHandler propApplicationErrorHandler,
             final T originallyProducedEntity,
             final IEntityDao<T> companion, 
             final IEntityProducer<T> producer,
             final ICompanionObjectFinder companionFinder) {
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-        return applyModifHolder(modifiedPropertiesHolder, createValidationPrototype(id, originallyProducedEntity, companion, producer), companionFinder);
+        return applyModifHolder(modifiedPropertiesHolder, propApplicationErrorHandler, createValidationPrototype(id, originallyProducedEntity, companion, producer), companionFinder);
     }
 
     /// Creates a validation prototype based on entity `id` (carried in `modifiedPropertiesHolder`), `originallyProducedEntity`, and `context`.
@@ -172,16 +174,18 @@ public class EntityRestorationUtils {
     /// The value of `id` in `modifiedPropertiesHolder` represents the validation prototype's identifier for the retrieval from a database.
     /// This value is `null` if a "new" validation prototype is being created.
     ///
-    /// @param modifiedPropertiesHolder a set of properties with original and new values to be applied to the validation prototype
-    /// @param originallyProducedEntity the originally produced entity instance to avoid producing it multiple times (if `modifiedPropertiesHolder.id = null`);
-    ///                                 it can be `null` intentionally to trigger the creation by a producer
-    /// @param context                  for the case of `id = null` and `originallyProducedEntity = null`,
-    ///                                 this argument contains the context from which the entity (validation prototype) can be produced.
+    /// @param modifiedPropertiesHolder    a set of properties with original and new values to be applied to the validation prototype
+    /// @param propApplicationErrorHandler a handler for errors that occur during the application of `modifiedPropertiesHolder`
+    /// @param originallyProducedEntity    the originally produced entity instance to avoid producing it multiple times (if `modifiedPropertiesHolder.id = null`);
+    ///                                    it can be `null` intentionally to trigger the creation by a producer
+    /// @param context                     for the case of `id = null` and `originallyProducedEntity = null`,
+    ///                                    this argument contains the context from which the entity (validation prototype) can be produced.
     ///
     /// @return the applied validation prototype and `modifiedPropertiesHolder`
     ///
     public static <T extends AbstractEntity<?>> Pair<T, Map<String, Object>> constructEntityWithContext(
             final Map<String, Object> modifiedPropertiesHolder,
+            final PropertyAssignmentErrorHandler propApplicationErrorHandler,
             final T originallyProducedEntity,
             final CentreContext<T, AbstractEntity<?>> context,
             final int tabCount,
@@ -193,24 +197,26 @@ public class EntityRestorationUtils {
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
         final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, originallyProducedEntity, context, companion, producer);
         logger.debug(() -> tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
-        final Pair<T, Map<String, Object>> constructed = applyModifHolder(modifiedPropertiesHolder, validationPrototypeWithContext, companionFinder);
+        final Pair<T, Map<String, Object>> constructed = applyModifHolder(modifiedPropertiesHolder, propApplicationErrorHandler, validationPrototypeWithContext, companionFinder);
         logger.debug(() -> tabs(tabCount) + "constructEntity: finished.");
         return constructed;
     }
     
     /// Applies `modifiedPropertiesHolder` to `validationPrototype`.
     ///
-    /// @param modifiedPropertiesHolder a set of properties with original and new values to be applied to the validation prototype
-    /// @param validationPrototype      a validation prototype to which `modifiedPropertiesHolder` is applied
-    /// @param companionFinder          a companion finder for data retrieval
+    /// @param modifiedPropertiesHolder    a set of properties with original and new values to be applied to the validation prototype
+    /// @param propApplicationErrorHandler a handler for errors that occur during the application of `modifiedPropertiesHolder`
+    /// @param validationPrototype         a validation prototype to which `modifiedPropertiesHolder` is applied
+    /// @param companionFinder             a companion finder for data retrieval
     ///
     /// @return the applied validation prototype and `modifiedPropertiesHolder`.
     private static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> applyModifHolder(
-            final Map<String, Object> modifiedPropertiesHolder, 
+            final Map<String, Object> modifiedPropertiesHolder,
+            final PropertyAssignmentErrorHandler propApplicationErrorHandler,
             final M validationPrototype, 
             final ICompanionObjectFinder companionFinder)
     {
-        return new Pair<>(EntityResourceUtils.apply(modifiedPropertiesHolder, validationPrototype, companionFinder), modifiedPropertiesHolder);
+        return new Pair<>(EntityResourceUtils.apply(modifiedPropertiesHolder, validationPrototype, propApplicationErrorHandler, companionFinder), modifiedPropertiesHolder);
     }
     
 }
