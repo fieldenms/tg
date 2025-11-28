@@ -19,7 +19,7 @@ public class CopyUserRoleActionDao extends CommonEntityDao<CopyUserRoleAction> i
     @Authorise(CopyUserRoleAction_CanExecute_Token.class)
     public CopyUserRoleAction save(final CopyUserRoleAction action) {
         if (action.getSelectedIds().isEmpty()) {
-            throw failure("Please select at least one %s and try again.".formatted(UserRole.ENTITY_TITLE));
+            throw failure(ERR_EMPTY_SELECTION);
         }
 
         action.isValid().ifFailure(Result::throwRuntime);

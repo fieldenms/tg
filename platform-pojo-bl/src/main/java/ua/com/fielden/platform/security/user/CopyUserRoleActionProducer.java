@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.security.user.CopyUserRoleActionCo.ERR_EMPTY_SELECTION;
 
 public class CopyUserRoleActionProducer extends DefaultEntityProducerWithContext<CopyUserRoleAction> {
 
@@ -18,7 +19,7 @@ public class CopyUserRoleActionProducer extends DefaultEntityProducerWithContext
     protected CopyUserRoleAction provideDefaultValues(final CopyUserRoleAction entity) {
         if (contextNotEmpty()) {
             if (selectedEntitiesEmpty()) {
-                throw failure("Please select at least one %s and try again.".formatted(UserRole.ENTITY_TITLE));
+                throw failure(ERR_EMPTY_SELECTION);
             }
 
             entity.setSelectedIds(selectedEntityIds());
