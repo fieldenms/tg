@@ -179,7 +179,7 @@ public class UserRoleWebUiConfig {
                 .addProp(ROLE_ACTIVE).asCheckbox().also()
                 .addProp(ROLE_DESC).asMultilineText().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
-                .addAction(MasterActions.SAVE).shortDesc("Copy").longDesc("Create %s".formatted(UserRole.ENTITY_TITLE))
+                .addAction(MasterActions.SAVE).shortDesc("Create").longDesc("Create %s".formatted(UserRole.ENTITY_TITLE))
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .withDimensions(mkDim(480, 320))
