@@ -537,10 +537,6 @@ Polymer({
         }
     },
 
-    dragEntered: function (dropToEvent) {
-        tearDownEvent(dropToEvent);
-    },
-
     _loadMenuOrder: function (userName, entityType) {
         if (userName && entityType) {
             _updateMenuOrder(JSON.parse(localStorage[this._menuStorageKey(userName, entityType)] || "[]"), this);
