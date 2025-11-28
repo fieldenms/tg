@@ -3,6 +3,7 @@ package ua.com.fielden.platform.security.user;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.user.CopyUserRoleAction_CanExecute_Token;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -20,6 +21,8 @@ public class CopyUserRoleActionDao extends CommonEntityDao<CopyUserRoleAction> i
         if (action.getSelectedIds().isEmpty()) {
             throw failure("Please select at least one %s and try again.".formatted(UserRole.ENTITY_TITLE));
         }
+
+        action.isValid().ifFailure(Result::throwRuntime);
 
         final var co$UserRole = co$(UserRole.class);
         final var savedRole = co$UserRole.save(
