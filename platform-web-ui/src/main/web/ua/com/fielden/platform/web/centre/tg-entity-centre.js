@@ -866,7 +866,6 @@ Polymer({
     /************************* Insertion point drag & drop related events ******************************/
     _insertionPointCustomLayoutEnabledChanged: function (newValue) {
         if (newValue) {
-            this.$.centreResultContainer.addEventListener("touchstart", (e) => {console.log("result view touchstart", e);});
             this.$.centreResultContainer.addEventListener("dragstart", this._startDrag);
             this.$.centreResultContainer.addEventListener("dragend", this._endDrag);
             this.$.centreResultContainer.addEventListener("drop", this._dragDrop);
