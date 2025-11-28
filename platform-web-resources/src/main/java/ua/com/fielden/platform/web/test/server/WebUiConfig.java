@@ -836,6 +836,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             addMaster(userWebUiConfig.rolesUpdater).
             addMaster(userRoleWebUiConfig.master).
             addMaster(userRoleWebUiConfig.tokensUpdater).
+            addMaster(userRoleWebUiConfig.copyUserRoleActionMaster).
             addMaster(clourMaster).//
 
                 addMaster(new EntityMaster<>(
