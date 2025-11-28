@@ -91,6 +91,26 @@ export function getRelativePos (x, y, container) {
 };
 
 /**
+ * Scrolls the given container up or down if the y-coordinate is near the top or bottom edge of the scrollable area.
+ */
+export function scrollContainerIfPointNearTheEdge(scrollContainer, y) {
+    const relPos = getRelativePos(0, y, scrollContainer);
+    if (scrollContainer && scrollContainer.offsetHeight !== scrollContainer.scrollHeight) { // scroll container has scrollbar and is scrollable
+        if (relPos.y < SCROLL_THRESHOLD) { // mouse is close to the top edge
+            const scrollDistance = Math.min(SCROLL_THRESHOLD - relPos.y, scrollContainer.scrollTop);
+            if (scrollDistance > 0) { // if scrollbar is not on the top then scroll to the top
+                scrollContainer.scrollTop -= scrollDistance;
+            }
+        } else if (relPos.y > scrollContainer.offsetHeight - SCROLL_THRESHOLD) { // mouse is close to the bottom edge
+            const scrollDistance = Math.min(relPos.y - scrollContainer.offsetHeight + SCROLL_THRESHOLD, scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.offsetHeight);
+            if (scrollDistance > 0) { // if scrollbar is not on the bottom then scroll to the bottom
+                scrollContainer.scrollTop += scrollDistance;
+            }
+        }
+    }
+}
+
+/**
  * This method prevents event from further bubbling.
  */
 export function tearDownEvent (e) {

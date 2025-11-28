@@ -19,7 +19,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
-import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { scrollContainerIfPointNearTheEdge, getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 import '/resources/components/postal-lib.js';
@@ -534,6 +534,7 @@ Polymer({
                 return e.clientY <= siblingRect.y + siblingRect.height / 2;
             });
             this.insertBefore(this._dragObject.menuItemToDrag, nextSibling);
+            scrollContainerIfPointNearTheEdge(this.$.menu, e.clientY);
         }
     },
 

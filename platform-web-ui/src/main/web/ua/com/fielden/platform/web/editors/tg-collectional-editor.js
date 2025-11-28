@@ -13,7 +13,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { searchRegExp, matchedParts } from '/resources/editors/tg-highlighter.js';
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
 import { GestureEventListeners } from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
-import { SCROLL_THRESHOLD, tearDownEvent, isTouchEnabled, getParentAnd, getRelativePos} from '/resources/reflection/tg-polymer-utils.js';
+import { scrollContainerIfPointNearTheEdge, tearDownEvent, isTouchEnabled, getParentAnd, getRelativePos} from '/resources/reflection/tg-polymer-utils.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
 
 const additionalTemplate = html`
@@ -913,21 +913,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
                 this.moveItem(this._reorderingObject.from, currentElementIndex);
                 this._reorderingObject.from = currentElementIndex;
             }
-            const scrollContainer = this.$.input;
-            const mousePos = getRelativePos(dragEvent.clientX, dragEvent.clientY, scrollContainer);
-            if (scrollContainer && scrollContainer.offsetHeight !== scrollContainer.scrollHeight) { // scroll container has scrollbar and is scrollable
-                if (mousePos.y < SCROLL_THRESHOLD) { // mouse is close to the top edge
-                    const scrollDistance = Math.min(SCROLL_THRESHOLD - mousePos.y, scrollContainer.scrollTop);
-                    if (scrollDistance > 0) { // if scrollbar is not on the top then scroll to the top
-                        scrollContainer.scrollTop -= scrollDistance;
-                    }
-                } else if (mousePos.y > scrollContainer.offsetHeight - SCROLL_THRESHOLD) { // mouse is close to the bottom edge
-                    const scrollDistance = Math.min(mousePos.y - scrollContainer.offsetHeight + SCROLL_THRESHOLD, scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.offsetHeight);
-                    if (scrollDistance > 0) { // if scrollbar is not on the bottom then scroll to the bottom
-                        scrollContainer.scrollTop += scrollDistance;
-                    }
-                }
-            }
+            scrollContainerIfPointNearTheEdge(this.$.input, dragEvent.clientY);
         }
     }
 
