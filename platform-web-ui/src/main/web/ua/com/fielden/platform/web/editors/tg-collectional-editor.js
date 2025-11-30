@@ -30,7 +30,7 @@ const additionalTemplate = html`
             @apply --layout-flex;
         }
         .search-controls-wrapper {
-            padding-left:16px;
+            padding-left: 16px;
             @apply --layout-horizontal;
             @apply --layout-center;
         }
@@ -201,7 +201,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             },
 
             /**
-             * Determines whether collectional editor is on touch device.
+             * Indicates whether the current device is a touch device.
              */
             _touchEnabled: {
                 type: Boolean,
@@ -209,7 +209,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             },
             
             /**
-             * Indicates the item that is currently dragging. It might be null if there is no dragging item.
+             * The item currently being dragged, or `null` if no item is being dragged.
              */
             _draggingItem: {
                 type: Object
@@ -923,7 +923,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             this.entity.setAndRegisterPropertyTouch("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
             delete this._reorderingObject;
             this._draggingItem = null;
-            // invoke validation after user has completed item reordering
+            // Invoke validation after user has completed item reordering.
             this._invokeValidation.bind(this)();
         }
     }

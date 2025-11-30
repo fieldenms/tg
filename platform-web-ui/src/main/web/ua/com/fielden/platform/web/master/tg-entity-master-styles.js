@@ -20,7 +20,7 @@ styleElement.innerHTML = `
                 min-height: 0;
             }
             .drag-anchor {
-                margin-left:-8px;
+                margin-left: -8px;
                 cursor: move; /* fallback if grab cursor is unsupported */
                 cursor: grab;
                 cursor: -moz-grab;
