@@ -46,6 +46,12 @@ public class SecurityRoleAssociation extends ActivatableAbstractEntity<DynamicEn
     @Title(value = "Active?", desc = "Designates whether an entity instance is active or not.")
     private boolean active;
 
+    protected SecurityRoleAssociation() {
+        final DynamicEntityKey key = new DynamicEntityKey(this);
+        key.addKeyMemberComparator(1, new ClassComparator());
+        setKey(key);
+    }
+
     @Override
     public boolean isActive() {
         return active;
@@ -56,12 +62,6 @@ public class SecurityRoleAssociation extends ActivatableAbstractEntity<DynamicEn
     public SecurityRoleAssociation setActive(final boolean active) {
         this.active = active;
         return this;
-    }
-
-    protected SecurityRoleAssociation() {
-        final DynamicEntityKey key = new DynamicEntityKey(this);
-        key.addKeyMemberComparator(1, new ClassComparator());
-        setKey(key);
     }
 
     public Class<? extends ISecurityToken> getSecurityToken() {
