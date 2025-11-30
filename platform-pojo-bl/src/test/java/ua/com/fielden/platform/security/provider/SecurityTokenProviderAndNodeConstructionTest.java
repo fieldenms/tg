@@ -16,7 +16,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.SortedSet;
 
-import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.longDesc;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
@@ -69,10 +68,10 @@ public class SecurityTokenProviderAndNodeConstructionTest {
     public void security_token_hierarchy_is_determined_correctly_for_the_specified_path_and_package() {
         final var provider = injector.getInstance(ISecurityTokenProvider.class);
         final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-        assertEquals("Incorrect number of top security tokens.", 38, topNodes.size());
+        assertEquals("Incorrect number of top security tokens.", 40, topNodes.size());
 
         // skip attachment related security tokens before getting iterator nodesWithSkippedAttachmentTokens
-        final Iterator<SecurityTokenNode> superIter = topNodes.stream().skip(19).collect(toList()).iterator();
+        final Iterator<SecurityTokenNode> superIter = topNodes.stream().skip(22).toList().iterator();
 
         final SecurityTokenNode top1 = superIter.next();
         assertEquals("Incorrect first top token.", Top1LevelSecurityToken.class, top1.getToken());

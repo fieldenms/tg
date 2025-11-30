@@ -61,7 +61,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
             final SecurityRoleAssociationCo coSecurityRoleAssociation = co(SecurityRoleAssociation.class);
             coSecurityRoleAssociation.addAssociations(provider.allSecurityTokens()
                                                               .stream()
-                                                              .map(tok -> coSecurityRoleAssociation.new_().setRole(admin).setSecurityToken(tok)));
+                                                              .map(tok -> coSecurityRoleAssociation.new_().setRole(admin).setSecurityToken(tok)).toList());
         }
 
         up.setUsername(testUser.getKey(), getInstance(IUser.class));

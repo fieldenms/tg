@@ -13,8 +13,14 @@ import ua.com.fielden.platform.security.tokens.ISecurityTokenGenerator;
 import ua.com.fielden.platform.security.tokens.Template;
 import ua.com.fielden.platform.security.tokens.attachment.*;
 import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.*;
+import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.persistent.*;
+import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.*;
@@ -89,7 +95,9 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 UserAndRoleAssociation_CanRead_Token.class,
                 UserAndRoleAssociation_CanReadModel_Token.class,
                 UserRolesUpdater_CanExecute_Token.class,
-                UserRoleTokensUpdater_CanExecute_Token.class,
+                SecurityRoleAssociation_CanRead_Token.class,
+                SecurityRoleAssociation_CanSave_Token.class,
+                SecurityRoleAssociation_CanReadModel_Token.class,
                 Attachment_CanSave_Token.class,
                 Attachment_CanRead_Token.class,
                 Attachment_CanReadModel_Token.class,
