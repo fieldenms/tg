@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
@@ -18,10 +17,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
+import static java.util.Comparator.comparing;
 import static java.util.Optional.of;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 @EntityType(SecurityMatrixInsertionPoint.class)
@@ -63,8 +63,12 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
 
     private SecurityTokenTreeNodeEntity createTokenNodeEntity(final Optional<SecurityTokenTreeNodeEntity> parentNode, final SecurityTokenNode tokenNode) {
         final SecurityTokenTreeNodeEntity tokenTreeNode = new SecurityTokenTreeNodeEntity();
+        final var childrenNodes = tokenNode.daughters().stream().map(child -> createTokenNodeEntity(of(tokenTreeNode), child))
+                                  // Ensure that child nodes are always sorted by the title.
+                                  .sorted(comparing(SecurityTokenTreeNodeEntity::getTitle))
+                                  .collect(toCollection(LinkedHashSet::new));
         tokenTreeNode.setParent(parentNode.orElse(null))
-                     .setChildren(tokenNode.daughters().stream().map(child -> createTokenNodeEntity(of(tokenTreeNode), child)).collect(toCollection(LinkedHashSet::new)))
+                     .setChildren(childrenNodes)
                      .setTitle(tokenNode.getShortDesc())
                      .setKey(tokenNode.getToken().getName())
                      .setDesc(tokenNode.getLongDesc());
