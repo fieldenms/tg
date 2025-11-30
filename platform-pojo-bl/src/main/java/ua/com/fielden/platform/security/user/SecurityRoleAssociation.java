@@ -38,6 +38,26 @@ public class SecurityRoleAssociation extends ActivatableAbstractEntity<DynamicEn
     @Dependent(ACTIVE)
     private UserRole role;
 
+    /// Redefined property `active` to skip the default validation to improve activation/deactivation performance.
+    /// This is possible because instances of [SecurityRoleAssociation] are not referenced by any other entities.
+    ///
+    @IsProperty
+    @MapTo
+    @Title(value = "Active?", desc = "Designates whether an entity instance is active or not.")
+    private boolean active;
+
+    @Override
+    public boolean isActive() {
+        return active;
+    }
+
+    @Override
+    @Observable
+    public SecurityRoleAssociation setActive(final boolean active) {
+        this.active = active;
+        return this;
+    }
+
     protected SecurityRoleAssociation() {
         final DynamicEntityKey key = new DynamicEntityKey(this);
         key.addKeyMemberComparator(1, new ClassComparator());
@@ -64,10 +84,4 @@ public class SecurityRoleAssociation extends ActivatableAbstractEntity<DynamicEn
         return this;
     }
 
-    @Override
-    @Observable
-    public SecurityRoleAssociation setActive(final boolean active) {
-        super.setActive(active);
-        return this;
-    }
 }
