@@ -144,8 +144,10 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
                 createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), window)
                         .ifPresent(query -> {
                             final var foundAssociations = getAllEntities(from(query).with(FETCH_MODEL).model());
-                            foundAssociations.forEach(assoc -> save(assoc.setActive(true), empty()));
-                            notFoundAssociations.removeAll(foundAssociations);
+                            foundAssociations.forEach(assoc -> {
+                                save(assoc.setActive(true), empty());
+                                notFoundAssociations.remove(assoc);
+                            });
                         });
             });
 
