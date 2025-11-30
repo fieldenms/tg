@@ -21,7 +21,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssociation> {
 
     IFetchProvider<SecurityRoleAssociation> FETCH_PROVIDER = fetch(SecurityRoleAssociation.class)
-            .with(SECURITY_TOKEN, ROLE, ACTIVE);
+            .with(SECURITY_TOKEN,
+                  ROLE,
+                  ACTIVE);
 
     fetch<SecurityRoleAssociation> FETCH_MODEL = FETCH_PROVIDER.fetchModel();
 

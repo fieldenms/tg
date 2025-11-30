@@ -10,16 +10,12 @@ import java.lang.reflect.Method;
 
 import static java.lang.ThreadLocal.withInitial;
 
-/**
- * Method interceptor ensuring that all calls to methods annotated with Authorise are validated against an application authorisation model first. If authorisation does not succeed
- * then a Result type exception is thrown. This is a convenient exception type for both controller method as well as for entity setters since it is processed in a special way by UI
- * controllers.
- * <p>
- * Authorisation model is configurable and can be passed into the interceptor during the construction phase. It is envisaged that in most cases it will be bound (and thus injected)
- * as part of a Guice configuration module.
- * 
- * @author TG Team
- */
+/// Interceptor that validates calls to methods annotated with `@Authorise` against the application authorisation model before execution.
+/// If authorisation fails, a `Result` exception is thrown, which is handled specially by UI controllers and is suitable for both companion methods and entity setters.
+///
+/// The authorisation model is configurable and can be supplied to the interceptor at construction time.
+/// In most cases it is expected to be bound and injected via an IoC configuration module.
+///
 public class AuthorisationInterceptor implements MethodInterceptor {
 
     private final ThreadLocal<IAuthorisationModel> authModel;

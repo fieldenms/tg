@@ -471,10 +471,10 @@ Polymer({
                     check: this.check,
                 });
             });
-            //In order to reset filter state if reload button was pressed.
+            // Reset the filter state if reload button was pressed.
             this.filterRoles("");
             this.filterTokens("");
-            //Set new columns and entities
+            // Set new columns and entities.
             this.columns = columnList;
             this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList.slice().splice(1), this._toggleButtonStates));
         }
