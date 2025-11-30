@@ -42,7 +42,7 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
     public SecurityMatrixSaveAction save(final SecurityMatrixSaveAction entity) {
         final Map<Long, UserRole> idRoleMap = getUserRoles(entity);
         if (!idRoleMap.isEmpty()) {
-            final var assocationsToAdd = entity.getAssociationsToSave().entrySet().stream()
+            final var associationsToAdd = entity.getAssociationsToSave().entrySet().stream()
                 .map(entry -> createSecurityRoleAssociations(entry.getKey(), entry.getValue(), idRoleMap))
                 .flatMap(List::stream)
                 .collect(toSet());
@@ -55,18 +55,18 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
             validateSecurityMatrixLockout(assocationsToRemove).ifFailure(Result::throwRuntime);
             // Save associations.
             final SecurityRoleAssociationCo co$Association = co$(SecurityRoleAssociation.class);
-            co$Association.addAssociations(assocationsToAdd);
+            co$Association.addAssociations(associationsToAdd);
             co$Association.removeAssociations(assocationsToRemove);
         }
         return super.save(entity);
     }
 
-    /// Returns a validation failure if, as a result of removing `assocations`, the current user would lock themselves out of the Security Matrix
-    /// (either by blocking reading or saving for themselves).
+    /// Returns a validation failure if, as a result of removing `associations`, the current user would lock themselves out of the Security Matrix
+    /// (either by removing Security Matrix reading or saving privileges for themselves).
     ///
-    private Result validateSecurityMatrixLockout(final Set<SecurityRoleAssociation> assocationsToRemove) {
+    private Result validateSecurityMatrixLockout(final Set<SecurityRoleAssociation> associationsToRemove) {
         // Check whether the associations to be removed include any associations related to Security Matrix tokens.
-        if (hasSecurityMatrixRelatedAssociations(assocationsToRemove)) {
+        if (hasSecurityMatrixRelatedAssociations(associationsToRemove)) {
             final var msgBuilder = new StringBuilder();
 
             final SecurityRoleAssociationCo coAssociation = co(SecurityRoleAssociation.class);
@@ -74,17 +74,16 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
                     userProvider.getUser(),
                     SecurityRoleAssociation_CanRead_Token.class,
                     SecurityRoleAssociation_CanSave_Token.class);
-            final var currUserAssociations = coAssociation.getAllEntities(from(qCurrUserAssociations).with(fetchNone(SecurityRoleAssociation.class).with(KEY)).model())
-                    .stream()
-                    .collect(groupingBy(SecurityRoleAssociation::getSecurityToken));
+            final var currUserAssociations = coAssociation.getAllEntities(from(qCurrUserAssociations).with(fetchNone(SecurityRoleAssociation.class).with(KEY)).model()).stream()
+                                             .collect(groupingBy(SecurityRoleAssociation::getSecurityToken));
             // Is the user about to remove all associations between their roles and SecurityRoleAssociation_CanRead_Token?
             final var currUserReadAssociations = currUserAssociations.getOrDefault(SecurityRoleAssociation_CanRead_Token.class, List.of());
-            if (!currUserReadAssociations.isEmpty() && assocationsToRemove.containsAll(currUserReadAssociations)) {
+            if (!currUserReadAssociations.isEmpty() && associationsToRemove.containsAll(currUserReadAssociations)) {
                 msgBuilder.append(ERR_CAN_NOT_DELETE_ASSOCIATIONS_FOR_READING);
             }
             // Is the user about to remove all associations between their roles and SecurityRoleAssociation_CanSave_Token?
             final var currUserSaveAssociations = currUserAssociations.getOrDefault(SecurityRoleAssociation_CanSave_Token.class, List.of());
-            if (!currUserSaveAssociations.isEmpty() && assocationsToRemove.containsAll(currUserSaveAssociations)) {
+            if (!currUserSaveAssociations.isEmpty() && associationsToRemove.containsAll(currUserSaveAssociations)) {
                 if (!msgBuilder.isEmpty()) {
                     msgBuilder.append("<br>");
                 }

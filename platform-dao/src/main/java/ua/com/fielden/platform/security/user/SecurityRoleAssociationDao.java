@@ -106,7 +106,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     @Override
     public EntityResultQueryModel<SecurityRoleAssociation> selectActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens) {
-        final var slaveModel = select(UserAndRoleAssociation.class)
+        final var subModel = select(UserAndRoleAssociation.class)
                 .where()
                 .prop("user").eq().val(user)
                 .and().prop("userRole.active").eq().val(true) // filter out association with inactive roles
@@ -115,7 +115,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
                 .where()
                 .prop("sra.securityToken").in().values(Stream.of(tokens).map(Class::getName).toList())
                 .and().prop("sra.active").eq().val(true)
-                .and().exists(slaveModel).model();
+                .and().exists(subModel).model();
     }
 
     @Override
