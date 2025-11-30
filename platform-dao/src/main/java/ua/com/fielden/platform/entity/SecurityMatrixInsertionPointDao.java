@@ -43,11 +43,10 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
     @SessionRequired
     @Authorise(SecurityRoleAssociation_CanRead_Token.class)
     public SecurityMatrixInsertionPoint save(final SecurityMatrixInsertionPoint entity) {
-        final List<SecurityTokenTreeNodeEntity> tokenEntities = tokenTransformation.transform(tokenProvider.getTopLevelSecurityTokenNodes()).stream().map(token -> createTokenNodeEntity(Optional.empty(), token)).collect(toList());
-        final EntityResultQueryModel<UserRole> userRoleQueryModel = select(UserRole.class).model();
-        try (final Stream<UserRole> stream = co(UserRole.class).stream(from(userRoleQueryModel).with(fetchKeyAndDescOnly(UserRole.class)).model())) {
-            entity.setUserRoles(stream.collect(toList()));
-        }
+        final var tokenEntities = tokenTransformation.transform(tokenProvider.getTopLevelSecurityTokenNodes()).stream()
+                                  .map(token -> createTokenNodeEntity(Optional.empty(), token)).toList();
+        final var userRoleQueryModel = select(UserRole.class).model();
+        entity.setUserRoles(co(UserRole.class).getAllEntities(from(userRoleQueryModel).with(fetchKeyAndDescOnly(UserRole.class)).model()));
         entity.setTokens(tokenEntities);
         final SecurityRoleAssociationCo coTokenRoleAssociation = co(SecurityRoleAssociation.class);
         final Map<String, List<Long>> tokenRoleMap = coTokenRoleAssociation.findAllAssociations().entrySet().stream().collect(toMap(entry -> entry.getKey().getName(), entry -> entry.getValue().stream().map(UserRole::getId).collect(toList())));
