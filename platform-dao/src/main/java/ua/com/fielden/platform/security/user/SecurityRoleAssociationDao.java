@@ -50,6 +50,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     @Override
     @SessionRequired
+    @Authorise(SecurityRoleAssociation_CanSave_Token.class)
     public SecurityRoleAssociation save(final SecurityRoleAssociation entity) {
         return save(entity, of(FetchModelReconstructor.reconstruct(entity))).asRight().value();
     }
