@@ -49,6 +49,8 @@ public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssoci
 
     /// Creates or activates all associations in the collection.
     ///
+    /// @param associations a collection of instrumented instances, each of which has all required key values and does not have ID
+    ///
     void addAssociations(Collection<SecurityRoleAssociation> associations);
 
 }
