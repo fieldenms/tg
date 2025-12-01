@@ -1,23 +1,12 @@
 package ua.com.fielden.platform.domain;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.attachment.AttachmentUploader;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
-import ua.com.fielden.platform.domain.metadata.DomainExplorer;
-import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPoint;
-import ua.com.fielden.platform.domain.metadata.DomainProperty;
-import ua.com.fielden.platform.domain.metadata.DomainPropertyHolder;
-import ua.com.fielden.platform.domain.metadata.DomainPropertyTreeEntity;
-import ua.com.fielden.platform.domain.metadata.DomainTreeEntity;
-import ua.com.fielden.platform.domain.metadata.DomainType;
+import ua.com.fielden.platform.domain.metadata.*;
 import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
@@ -25,22 +14,8 @@ import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.master.MasterInfo;
-import ua.com.fielden.platform.menu.Action;
-import ua.com.fielden.platform.menu.CustomView;
-import ua.com.fielden.platform.menu.EntityCentreView;
-import ua.com.fielden.platform.menu.EntityMasterView;
-import ua.com.fielden.platform.menu.Menu;
-import ua.com.fielden.platform.menu.MenuSaveAction;
-import ua.com.fielden.platform.menu.ModuleMenu;
-import ua.com.fielden.platform.menu.ModuleMenuItem;
-import ua.com.fielden.platform.menu.UserMenuVisibilityAssociator;
-import ua.com.fielden.platform.menu.View;
-import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
-import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
-import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyEntry;
-import ua.com.fielden.platform.ref_hierarchy.ReferenceLevelHierarchyEntry;
-import ua.com.fielden.platform.ref_hierarchy.ReferencedByLevelHierarchyEntry;
-import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
+import ua.com.fielden.platform.menu.*;
+import ua.com.fielden.platform.ref_hierarchy.*;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.security.user.locator.UserLocator;
@@ -49,25 +24,13 @@ import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_Open
 import ua.com.fielden.platform.security.user.ui_actions.OpenUserMasterAction;
 import ua.com.fielden.platform.share.ShareAction;
 import ua.com.fielden.platform.tiny.TinyHyperlink;
-import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
-import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
-import ua.com.fielden.platform.ui.config.EntityMasterConfig;
-import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigConfigureAction;
-import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
-import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
-import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
-import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
-import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentrePreferredViewUpdater;
-import ua.com.fielden.platform.web.centre.CustomisableColumn;
-import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
-import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
+import ua.com.fielden.platform.ui.config.*;
+import ua.com.fielden.platform.web.centre.*;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 public class PlatformDomainTypes {
     public static final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
@@ -83,7 +46,6 @@ public class PlatformDomainTypes {
         types.add(UserRolesUpdater.class);
         types.add(UserSession.class);
         types.add(UserRole.class);
-        types.add(UserRoleTokensUpdater.class);
         types.add(CopyUserRoleAction.class);
         types.add(SecurityTokenInfo.class);
 
