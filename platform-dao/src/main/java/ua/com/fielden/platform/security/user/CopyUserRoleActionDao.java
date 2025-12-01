@@ -8,6 +8,7 @@ import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.user.CopyUserRoleAction_CanExecute_Token;
 import ua.com.fielden.platform.utils.StreamUtils;
 
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.error.Result.failure;
 
@@ -33,17 +34,17 @@ public class CopyUserRoleActionDao extends CommonEntityDao<CopyUserRoleAction> i
 
         final var qAssociations = select(SecurityRoleAssociation.class)
                 .where()
-                .prop("role").in().values(action.getSelectedIds())
-                // TODO #2109 Uncomment once #2444 is merged.
-                // .and()
-                // .prop("active").eq().val(true)
+                .prop(SecurityRoleAssociation.ROLE).in().values(action.getSelectedIds())
+                .and()
+                .prop(ACTIVE).eq().val(true)
                 .model();
 
         final SecurityRoleAssociationCo co$Association = co$(SecurityRoleAssociation.class);
-        try (final var stream = co$Association.stream(from(qAssociations).with(fetchNone(SecurityRoleAssociation.class).with("securityToken")).lightweight().model(), 1000)) {
+        try (final var stream = co$Association.stream(from(qAssociations).with(fetchNone(SecurityRoleAssociation.class).with(SecurityRoleAssociation.SECURITY_TOKEN)).lightweight().model(), 1000)) {
             co$Association.addAssociations(
                     StreamUtils.distinct(stream, SecurityRoleAssociation::getSecurityToken)
-                               .map(assoc -> co$Association.new_().setRole(savedRole).setSecurityToken(assoc.getSecurityToken())));
+                               .map(assoc -> co$Association.new_().setRole(savedRole).setSecurityToken(assoc.getSecurityToken()))
+                               .toList());
         }
 
         return super.save(action);

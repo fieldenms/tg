@@ -133,21 +133,21 @@ public class CopyUserRoleActionTest extends AbstractDaoTestCase {
 
     private void addAssociations(final String userRoleKey, final Collection<Class<? extends ISecurityToken>> tokenTypes) {
         final var userRole = co(UserRole.class).findByKey(userRoleKey);
-        final SecurityRoleAssociationCo co$Association = co(SecurityRoleAssociation.class);
-        co$Association.addAssociations(tokenTypes.stream().map(tokenType -> co$Association.new_().setSecurityToken(tokenType).setRole(userRole)));
+        final SecurityRoleAssociationCo co$Association = co$(SecurityRoleAssociation.class);
+        co$Association.addAssociations(tokenTypes.stream().map(tokenType -> co$Association.new_().setSecurityToken(tokenType).setRole(userRole)).toList());
     }
 
     private void removeAssociations(final String userRoleKey, final Collection<Class<? extends ISecurityToken>> tokenTypes) {
         final var userRole = co(UserRole.class).findByKey(userRoleKey);
-        final SecurityRoleAssociationCo co$Association = co(SecurityRoleAssociation.class);
+        final SecurityRoleAssociationCo co$Association = co$(SecurityRoleAssociation.class);
         co$Association.removeAssociations(tokenTypes.stream().map(tokenType -> co$Association.new_().setSecurityToken(tokenType).setRole(userRole)).toList());
     }
 
     private Set<Class<? extends ISecurityToken>> findAssociatedTokens(final String roleKey) {
         return co(EntityAggregates.class).getAllEntities(
                         from(select(SecurityRoleAssociation.class).where()
-                                     .prop("role.key").eq().val(roleKey)
-                                     .yield().prop("securityToken").as("token")
+                                     .prop(SecurityRoleAssociation.ROLE + "." + KEY).eq().val(roleKey)
+                                     .yield().prop(SecurityRoleAssociation.SECURITY_TOKEN).as("token")
                                      .modelAsAggregate())
                         .model())
                 .stream()
