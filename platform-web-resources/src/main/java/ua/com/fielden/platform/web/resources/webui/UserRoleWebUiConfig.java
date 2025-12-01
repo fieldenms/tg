@@ -44,18 +44,20 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActio
 ///
 public class UserRoleWebUiConfig {
 
-    public final EntityMaster<CopyUserRoleAction> copyUserRoleActionMaster;
     public final EntityCentre<UserRole> centre;
     public final EntityMaster<UserRole> master;
 
     public static UserRoleWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
-        return new UserRoleWebUiConfig(injector);
+        return new UserRoleWebUiConfig(injector, builder);
     }
 
-    private UserRoleWebUiConfig(final Injector injector) {
+    private UserRoleWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
         centre = createCentre(injector);
+        // TODO Masters should be consistently and uniformly registered.
+        //      Currently, `master` is expected to be registered by applications,
+        //      but `copyUserRoleActionMaster` is registered here, at the platform.
         master = createMaster(injector);
-        copyUserRoleActionMaster = copyUserRoleActionMaster(injector);
+        builder.register(copyUserRoleActionMaster(injector));
     }
 
     private static EntityCentre<UserRole> createCentre(final Injector injector) {
