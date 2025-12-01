@@ -10,6 +10,9 @@ import java.util.Set;
 import static java.util.Collections.unmodifiableSet;
 import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
+/// Represents an action that creates a [UserRole] from selected roles.
+/// The created user role inherits all [security token associations][SecurityRoleAssociation] from selected roles.
+///
 @CompanionObject(CopyUserRoleActionCo.class)
 @KeyType(NoKey.class)
 public class CopyUserRoleAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
