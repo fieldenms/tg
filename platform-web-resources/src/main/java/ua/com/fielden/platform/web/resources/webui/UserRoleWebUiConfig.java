@@ -5,12 +5,12 @@ import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
-import ua.com.fielden.platform.security.user.*;
-import ua.com.fielden.platform.tiny.PlatformActionIdentifiers;
+import ua.com.fielden.platform.security.user.CopyUserRoleAction;
+import ua.com.fielden.platform.security.user.CopyUserRoleActionProducer;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRoleProducer;
+import ua.com.fielden.platform.tiny.PlatformActionIdentifiers;
 import ua.com.fielden.platform.ui.menu.sample.MiUserRole;
-import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -28,7 +28,6 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import java.util.Optional;
 
 import static java.lang.String.format;
-import static java.util.Optional.empty;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -41,29 +40,8 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
 
-/**
- * {@link UserRole} Web UI configuration.
- *
- * @author TG Team
- *
- */
-import java.util.Optional;
-
-import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
-
 /// [UserRole] Web UI configuration.
 ///
-/// @author TG Team
 public class UserRoleWebUiConfig {
 
     public final EntityMaster<CopyUserRoleAction> copyUserRoleActionMaster;
@@ -80,11 +58,6 @@ public class UserRoleWebUiConfig {
         copyUserRoleActionMaster = copyUserRoleActionMaster(injector);
     }
 
-    /**
-     * Creates entity centre for {@link UserRole}.
-     *
-     * @return
-     */
     private static EntityCentre<UserRole> createCentre(final Injector injector) {
         final String fmr = "'flex', 'margin-right: 20px', 'width: 200px'";
         final String fmrLast = "'flex', 'width: 200px'";
@@ -115,8 +88,6 @@ public class UserRoleWebUiConfig {
                 .build(), injector, null);
     }
 
-    /// Creates entity master for [UserRole].
-    ///
     private static EntityMaster<UserRole> createMaster(final Injector injector) {
         final int MARGIN = 20;
         final String MARGIN_PIX = MARGIN + "px";
