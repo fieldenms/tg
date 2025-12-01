@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.security.user;
 
+import jakarta.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.tokens.user.CopyUserRoleAction_CanExecute_Token;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -15,10 +18,20 @@ import static ua.com.fielden.platform.error.Result.failure;
 @EntityType(CopyUserRoleAction.class)
 public class CopyUserRoleActionDao extends CommonEntityDao<CopyUserRoleAction> implements CopyUserRoleActionCo {
 
+    private final IAuthorisationModel authModel;
+
+    @Inject
+    protected CopyUserRoleActionDao(final IAuthorisationModel authModel) {
+        this.authModel = authModel;
+    }
+
     @Override
     @SessionRequired
-    @Authorise(CopyUserRoleAction_CanExecute_Token.class)
+    @Authorise(UserRole_CanSave_Token.class)
     public CopyUserRoleAction save(final CopyUserRoleAction action) {
+        // `@Authorise` does not support multiple tokens, so authorise imperatively.
+        authModel.authorise(SecurityRoleAssociation_CanSave_Token.class).ifFailure(Result::throwRuntime);
+
         if (action.getSelectedIds().isEmpty()) {
             throw failure(ERR_EMPTY_SELECTION);
         }

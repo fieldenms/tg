@@ -84,9 +84,8 @@ public class CopyUserRoleActionTest extends AbstractDaoTestCase {
         addAssociations(ROLE1, Set.of(User_CanSave_Token.class, User_CanDelete_Token.class, User_CanReadModel_Token.class, KeyNumber_CanRead_Token.class));
         removeAssociations(ROLE1, Set.of(User_CanSave_Token.class, KeyNumber_CanRead_Token.class));
 
-        addAssociations(ROLE2, Set.of(User_CanSave_Token.class, UserAndRoleAssociation_CanRead_Token.class, User_CanReadModel_Token.class,
-                                      CopyUserRoleAction_CanExecute_Token.class));
-        removeAssociations(ROLE2, Set.of(User_CanReadModel_Token.class, CopyUserRoleAction_CanExecute_Token.class));
+        addAssociations(ROLE2, Set.of(User_CanSave_Token.class, UserAndRoleAssociation_CanRead_Token.class, User_CanReadModel_Token.class));
+        removeAssociations(ROLE2, Set.of(User_CanReadModel_Token.class));
 
         final var copy1Key = "COPY1";
         save(produceAction(ROLE1, ROLE2).setRoleTitle(copy1Key).setRoleDesc("Copy 1"));
