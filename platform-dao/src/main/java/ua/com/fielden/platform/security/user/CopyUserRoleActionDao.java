@@ -9,7 +9,6 @@ import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
-import ua.com.fielden.platform.utils.StreamUtils;
 
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
@@ -50,15 +49,16 @@ public class CopyUserRoleActionDao extends CommonEntityDao<CopyUserRoleAction> i
                 .prop(SecurityRoleAssociation.ROLE).in().values(action.getSelectedIds())
                 .and()
                 .prop(ACTIVE).eq().val(true)
-                .model();
+                .groupBy().prop(SecurityRoleAssociation.SECURITY_TOKEN)
+                .yield().prop(SecurityRoleAssociation.SECURITY_TOKEN).as(SecurityRoleAssociation.SECURITY_TOKEN)
+                .modelAsEntity(SecurityRoleAssociation.class);
 
         final SecurityRoleAssociationCo co$Association = co$(SecurityRoleAssociation.class);
-        try (final var stream = co$Association.stream(from(qAssociations).with(fetchNone(SecurityRoleAssociation.class).with(SecurityRoleAssociation.SECURITY_TOKEN)).lightweight().model(), 1000)) {
-            co$Association.addAssociations(
-                    StreamUtils.distinct(stream, SecurityRoleAssociation::getSecurityToken)
-                               .map(assoc -> co$Association.new_().setRole(savedRole).setSecurityToken(assoc.getSecurityToken()))
-                               .toList());
-        }
+        final var assocations = co$Association.getAllEntities(from(qAssociations).with(fetchNone(SecurityRoleAssociation.class).with(SecurityRoleAssociation.SECURITY_TOKEN)).lightweight().model())
+                .stream()
+                .map(assoc -> co$Association.new_().setRole(savedRole).setSecurityToken(assoc.getSecurityToken()))
+                .toList();
+        co$Association.addAssociations(assocations);
 
         return super.save(action);
     }
