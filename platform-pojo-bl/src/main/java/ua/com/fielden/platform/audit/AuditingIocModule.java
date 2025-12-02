@@ -53,7 +53,10 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
     /// An optional binding is created for this name.
     /// Blank values are treated as if absent.
     ///
-    /// **NOTE**: Any code outside of this module should use [AuditingMode] instead of this named binding.
+    /// This name should only be bound to a [String] value.
+    /// This means that [AuditingMode#name()] should be used, rather than the enum value itself.
+    ///
+    /// **NOTE**: Any code outside of this module should inject [AuditingMode] directly instead of this named binding.
     /// This is because the value of a system property, if specified, will be reflected in [AuditingMode], but not in the named binding.
     public static final String AUDIT_MODE = "audit.mode";
 
