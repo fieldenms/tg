@@ -4,10 +4,8 @@ import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
-import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
@@ -80,12 +78,6 @@ public interface IBasicWebApplicationServerModule {
     default void initWebAppWithoutCaching(final Injector injector) {
         final AbstractWebUiConfig webApp = (AbstractWebUiConfig) injector.getInstance(IWebUiConfig.class);
         webApp.setInjector(injector);
-
-        final ISerialisationTypeEncoder serialisationTypeEncoder = injector.getInstance(ISerialisationTypeEncoder.class);
-        final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = injector.getInstance(IIdOnlyProxiedEntityTypeCache.class);
-        final ISerialiser serialiser = injector.getInstance(ISerialiser.class);
-        serialiser.initJacksonEngine(serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
-
         // initialise IWebApp with its masters / centres
         webApp.initConfiguration();
     }
@@ -117,4 +109,5 @@ public interface IBasicWebApplicationServerModule {
      * @return
      */
     <T> AnnotatedBindingBuilder<T> bindType(final Class<T> type);
+
 }

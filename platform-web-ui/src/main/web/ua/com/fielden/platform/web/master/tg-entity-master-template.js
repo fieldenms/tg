@@ -3,6 +3,7 @@
 import '/resources/actions/tg-ui-action.js';
 
 import { TgEntityMasterTemplateBehavior, Polymer, html } from '/resources/master/tg-entity-master-template-behavior.js';
+import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-handler-behaviour.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js'; // required by BindSavedPropertyPostActionSuccess/Error handlers
 
@@ -67,12 +68,10 @@ const template = html`<!-- TODO layout vertical -->
         _saver-loading="{{_saverLoading}}">
         <paper-icon-button 
             id="helpButton"
+            on-tg-long-tap="_longHelpTapHandler"
+            on-tg-short-tap="_shortHelpTapHandler"
             class="help-button"
             icon="icons:help-outline"
-            on-mousedown="_helpMouseDownEventHandler"
-            on-touchstart="_helpMouseDownEventHandler"
-            on-mouseup="_helpMouseUpEventHandler"
-            on-touchend="_helpMouseUpEventHandler"
             tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link."
             hidden$="[[_hasEmbededView()]]"
             slot="help-button">
@@ -109,7 +108,7 @@ Polymer({
 
     is: 'tg-@entity_type-master',
 
-    behaviors: [TgEntityMasterTemplateBehavior],
+    behaviors: [TgEntityMasterTemplateBehavior, TgLongTapHandlerBehaviour],
 
     created: function () {
         const self = this;

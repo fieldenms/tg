@@ -137,7 +137,9 @@ export const TgSerialiser = Polymer({
 
                         deserialisedObject = self.$.reflector.newEntityEmpty();
 
-                        const foundType = self.$.reflector.getType(typeName);
+                        const enhancedIndex = typeName.indexOf("$$TgEntity");
+                        const notEnhancedTypeName = enhancedIndex >= 0 ? typeName.substring(0, enhancedIndex) : typeName;
+                        const foundType = self.$.reflector.getType(typeName) || self.$.reflector.getType(notEnhancedTypeName);
                         if (!foundType) {
                             throw "Can not find the type with name [" + typeName + "]";
                         }

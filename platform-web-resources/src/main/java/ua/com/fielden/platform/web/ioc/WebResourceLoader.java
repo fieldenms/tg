@@ -11,14 +11,17 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingCentreConfigurationException;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingCustomViewConfigurationException;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingMasterConfigurationException;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
+import ua.com.fielden.platform.web.resources.webui.TgAppActionsResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 
@@ -31,12 +34,14 @@ import static java.util.Collections.sort;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.basic.config.Workflows.deployment;
 import static ua.com.fielden.platform.basic.config.Workflows.vulcanizing;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
 import static ua.com.fielden.platform.utils.ResourceLoader.getText;
+import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
@@ -95,6 +100,8 @@ public class WebResourceLoader implements IWebResourceLoader {
             return ofNullable(webUiConfig.genMainWebUIComponent());
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceUri)) {
             return getReflectorSource(webUiConfig, serialiser, (TgJackson) serialiser.getEngine(JACKSON));
+        } else if (TgAppActionsResource.PATH.equalsIgnoreCase(resourceUri)) {
+            return getAppActionsSource();
         } else if (resourceUri.startsWith("/master_ui")) {
             return ofNullable(getMasterSource(resourceUri.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig));
         } else if (resourceUri.startsWith("/centre_ui")) {
@@ -126,6 +133,17 @@ public class WebResourceLoader implements IWebResourceLoader {
     private static Optional<String> getReflectorSource(final IWebUiConfig webUiConfig, final ISerialiser serialiser, final TgJackson tgJackson) {
         final Optional<String> originalSource = ofNullable(getText("ua/com/fielden/platform/web/reflection/tg-reflector.js"));
         return originalSource.map(src -> src.replace("@typeTable", new String(serialiser.serialise(enhanceWithMasterInfo(webUiConfig, tgJackson.getTypeTable()), JACKSON), UTF_8)));
+    }
+
+    private Optional<String> getAppActionsSource() {
+        return ofNullable(getText("ua/com/fielden/platform/web/app/tg-app-actions-template.js"))
+                .map(src -> {
+                    final var actionsCode = distinct(webUiConfig.streamActionConfigs().filter(action -> action.actionIdentifier.isPresent()),
+                                                     action -> action.actionIdentifier.get())
+                                            .map(action -> "'%s': %s".formatted(action.actionIdentifier.get(), FunctionalActionElement.createActionObjectForTgAppActions(action)))
+                                            .collect(joining(",\n", "{\n", "\n}"));
+                    return src.replace("@actions", actionsCode);
+                });
     }
 
     /// Extends types in `typeTable` with information about their masters.

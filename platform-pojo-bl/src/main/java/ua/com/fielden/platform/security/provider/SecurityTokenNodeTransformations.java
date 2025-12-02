@@ -65,6 +65,13 @@ public final class SecurityTokenNodeTransformations {
                                                      getTokenNode(acc, parent)));
     }
 
+    /// Returns a stream of all nodes in `tree`.
+    ///
+    public static Stream<SecurityTokenNode> flatten(final SortedSet<SecurityTokenNode> tree) {
+        return tree.stream()
+                .flatMap(node -> Stream.concat(Stream.of(node), node.getSubTokenNodes().stream().flatMap(SecurityTokenNodeTransformations::flatten)));
+    }
+
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Implementation
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -168,11 +175,6 @@ public final class SecurityTokenNodeTransformations {
 
     private static Optional<SecurityTokenNode> findTokenNode(final SortedSet<SecurityTokenNode> tree, final Class<? extends ISecurityToken> token) {
         return flatten(tree).filter(node -> node.getToken() == token).findFirst();
-    }
-
-    private static Stream<SecurityTokenNode> flatten(final SortedSet<SecurityTokenNode> tree) {
-        return tree.stream()
-                .flatMap(node -> Stream.concat(Stream.of(node), node.getSubTokenNodes().stream().flatMap(SecurityTokenNodeTransformations::flatten)));
     }
 
     private static Stream<SecurityTokenNode> flatten(final SecurityTokenNode node) {

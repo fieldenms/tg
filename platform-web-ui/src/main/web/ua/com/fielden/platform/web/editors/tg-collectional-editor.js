@@ -12,8 +12,9 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { searchRegExp, matchedParts } from '/resources/editors/tg-highlighter.js';
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
-import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
-import { tearDownEvent} from '/resources/reflection/tg-polymer-utils.js';
+import { GestureEventListeners } from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
+import { scrollContainerIfPointNearTheEdge, tearDownEvent, isTouchEnabled, getParentAnd, getRelativePos} from '/resources/reflection/tg-polymer-utils.js';
+import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
 
 const additionalTemplate = html`
     <style>
@@ -29,6 +30,7 @@ const additionalTemplate = html`
             @apply --layout-flex;
         }
         .search-controls-wrapper {
+            padding-left: 16px;
             @apply --layout-horizontal;
             @apply --layout-center;
         }
@@ -38,50 +40,38 @@ const additionalTemplate = html`
         .item-disabled {
             pointer-events: none;
         }
-        
         .item {
             @apply --layout-horizontal;
             @apply --layout-center;
             padding: 16px 16px 16px 0;
             border-bottom: 1px solid #DDD;
         }
-        
         .item:hover {
             background-color: var(--google-grey-100);
         }
-        
+        iron-list:not([drag-mode]) .item:hover .drag-anchor{
+            visibility: visible;
+        }
         .item:focus,
         .item.selected:focus {
             outline: 0;
         }
-        .item:hover > .resizing-box {
-            visibility: visible;
+        [is-dragging-item] {
+            visibility: hidden;
         }
-        .resizing-box:hover {
+        .drag-anchor {
+            visibility: hidden;
+            margin-left:-8px;
             cursor: move; /* fallback if grab cursor is unsupported */
             cursor: grab;
             cursor: -moz-grab;
             cursor: -webkit-grab;
-            color: var(--paper-light-blue-700);
+            color: var(--paper-grey-400);
         }
-        .resizing-box:active { 
+        .drag-anchor:active {
             cursor: grabbing;
             cursor: -moz-grabbing;
             cursor: -webkit-grabbing;
-        }
-        .resizing-box {
-            margin: 0 5px;
-            min-width: 32px;
-            min-height: 32px;
-            color: var(--paper-grey-400);
-        }
-        .dummy-box {
-            background-color: transparent;
-            border: 1px solid var(--paper-light-blue-500);
-        }
-        .dragging-item > .resizing-box{
-            visibility: visible;
-            color: var(--paper-light-blue-700);
         }
         paper-checkbox {
             --paper-checkbox-checked-color: var(--paper-light-blue-700);
@@ -89,21 +79,17 @@ const additionalTemplate = html`
             --paper-checkbox-unchecked-color: var(--paper-grey-900:);
             --paper-checkbox-unchecked-ink-color: var(--paper-grey-900:);
         }
-
         paper-checkbox[semi-checked] {
             --paper-checkbox-checked-color: #acdbfe;
             --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
         }
-
         .item.selected {
             background-color: var(--google-grey-100);
         }
-        
         .ordering-number {
             font-size: 8pt;
             width: 1rem;
         }
-        
         .title {
             overflow: hidden;
             @apply --layout-vertical;
@@ -147,20 +133,18 @@ const additionalTemplate = html`
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>`;
 const customInputTemplate = html`
-    <div class="search-controls-wrapper" style$="[[_computeInputStyle(_forReview, canReorderItems)]]">
-        <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
+    <div class="search-controls-wrapper" style$="[[_computeInputStyle(_forReview)]]">
         <iron-input bind-value="{{_phraseForSearching}}" class="custom-input-wrapper" >
             <input id="searchInput" class="custom-input" placeholder="Type to search..." on-input="_onInput" on-mouseup="_onMouseUp" on-mousedown="_onMouseDown" on-blur="_eventHandler" autocomplete="off">
         </iron-input>
         <paper-checkbox class="select-all-checkbox" style$="[[_computeSelectAllCheckboxStyle(_scrollBarWidth, _multiSelection)]]" id="selectAllCheckbox" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
     </div>
     <div class="layout vertical flex relative">
-        <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection="[[_multiSelection]]">
+        <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection="[[_multiSelection]]" drag-mode$="[[_draggingItem]]">
             <template>
-                <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
-                    <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisible(item, _draggingItem)]]"></div>
-                    <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, _draggingItem, canReorderItems)]]" on-tap="_selectionHandler">
-                        <iron-icon class="resizing-box" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeItemOrder" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
+                <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]" selected$="[[selected]]" drag-element draggable$="[[_calcItemDraggable(selected, canReorderItems, _touchEnabled)]]">
+                    <div tabindex="0" class$="[[_computedClass(selected, item)]]" style$="[[_computeItemStyle(_forReview)]]" is-dragging-item$="[[_isDraggingThisItem(item, _draggingItem)]]" on-tap="_selectionHandler">
+                        <iron-icon class="drag-anchor" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForDragAnchor(selected, _touchEnabled)]]" draggable$="[[_calcIconDraggable(selected, canReorderItems, _touchEnabled)]]"></iron-icon>
                         <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]" style$="[[_computeTitleStyle(canReorderItems)]]">
                             <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
                             <div class$="[[_computedDescriptionClass(item)]]" hidden$="[[!_calcItemText(item, descriptionPropertyName)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
@@ -215,9 +199,17 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
                 type: Boolean,
                 value: false
             },
+
+            /**
+             * Indicates whether the current device is a touch device.
+             */
+            _touchEnabled: {
+                type: Boolean,
+                value: false
+            },
             
             /**
-             * Indicates the item that is currently dragging. It might be null if there is no dragging item.
+             * The item currently being dragged, or `null` if no item is being dragged.
              */
             _draggingItem: {
                 type: Object
@@ -361,6 +353,13 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             oldListRender();
             this._scrollBarWidth = this.$.input.offsetWidth - this.$.input.clientWidth;
         }.bind(this);
+
+        this.addEventListener('dragstart', this._startDrag.bind(this));
+        this.addEventListener('dragover', this._dragOver.bind(this));
+        this.addEventListener("drop", this._dragDrop);
+        this.addEventListener('dragend', this._endDrag.bind(this));
+
+        this._touchEnabled = isTouchEnabled();
     }
 
     connectedCallback () {
@@ -540,7 +539,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         return 'IRRELEVANT';
     }
     
-    _isDummyBoxVisible (item, _draggingItem) {
+    _isDraggingThisItem (item, _draggingItem) {
         return item === _draggingItem;
     }
     
@@ -548,13 +547,10 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         return 'sorting-group' + (!item.sortable ? " sorting-invisible" : "");
     }
     
-    _computedClass (isSelected, item, _draggingItem) {
+    _computedClass (isSelected, item) {
         var classes = 'item';
         if (isSelected) {
           classes += ' selected';
-        }
-        if (item === _draggingItem) {
-            classes += ' dragging-item'
         }
         return classes;
     }
@@ -603,10 +599,8 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         return !_forReview;
     }
 
-    _computeInputStyle (_forReview, canReorderItems) {
-        let style = canReorderItems ? "" : "padding-left:16px;";
-        style += _forReview ? "" : "padding-bottom: 20px;";
-        return style;
+    _computeInputStyle (_forReview) {
+        return _forReview ? "" : "padding-bottom: 20px;";
     }
 
     _computeSelectAllCheckboxStyle (_scrollBarWidth, _multiSelection) {
@@ -621,13 +615,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         return style;
     }
     
-    _computeItemStyle (_forReview, _draggingItem, canReorderItems) {
-        let style = _forReview || _draggingItem ? '' : 'cursor: pointer;';
-        return style;
+    _computeItemStyle (_forReview) {
+        return _forReview ? '' : 'cursor: pointer;';
     }
 
-    _computeStyleForResizingBox (selected) {
-        return !selected ? "visibility: hidden;" : ""; 
+    _computeStyleForDragAnchor (selected, _touchEnabled) {
+        return !selected || _touchEnabled ? "visibility: hidden;" : ""; 
     }
 
     _computeTitleStyle (canReorderItems) {
@@ -879,66 +872,68 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         }
         this._disableSelectionListeners = false;
     }
-    
-    _changeItemOrder (e) {
-       switch (e.detail.state) {
-           case 'start':
-               this._startItemReordering(e);
-               break;
-            case 'track':
-               this._trackItemOrder(e);
-               break;
-            case 'end':
-               this._endItemReordering(e);
-               break;
-       }
-       tearDownEvent(e);
+
+    _calcIconDraggable (selected, canReorderItems, _touchEnabled) {
+        return selected && canReorderItems && !_touchEnabled ? "true" : "false";
     }
-    
-    _disableScrolling (e) {
-        tearDownEvent(e);
+
+    _calcItemDraggable (selected, canReorderItems, _touchEnabled) {
+        return selected && canReorderItems && _touchEnabled ? "true" : "false";
     }
-    
-    _startItemReordering (e) {
-        if (e.model.selected) {
-            this._reorderingObject = {
-                from: e.model.index,
-                x: e.detail.x
+
+    _startDrag (dragEvent) {
+        const target = dragEvent.composedPath()[0];
+        if (target.nodeType === Node.ELEMENT_NODE && target.getAttribute("draggable") === 'true') {
+            const elementToDrag = getParentAnd(target, element => element.hasAttribute("drag-element"));
+            if (elementToDrag && elementToDrag.hasAttribute("selected")) {
+                const relMousePos = getRelativePos(dragEvent.clientX, dragEvent.clientY, elementToDrag);
+                dragEvent.dataTransfer.effectAllowed = "copyMove";
+                dragEvent.dataTransfer.setDragImage(elementToDrag, relMousePos.x, relMousePos.y); 
+                hideTooltip();
+                setTimeout(() => {
+                    const itemIndex = this._getIndexForElement(elementToDrag);
+                    this._reorderingObject = {
+                        origin: itemIndex,
+                        from: itemIndex,
+                        x: dragEvent.clientX
+                    }
+                    this._draggingItem = this._entities[itemIndex];
+                }, 1);
+                
             }
-            this._draggingItem = e.model.item;
         }
     }
 
-    _trackItemOrder (e) {
+    _dragOver (dragEvent) {
         if (this._reorderingObject)  {
-            const list = this.$.input;
-            let currentElementIndex = this._getIndexForElement(e.detail.hover());
-            if (currentElementIndex < 0) {
-                const listBoundingRect = list.getBoundingClientRect();
-                if (listBoundingRect.top > e.detail.y && e.detail.ddy < 0) {
-                    list.scrollTop -= listBoundingRect.top - e.detail.y;
-                    currentElementIndex = list.firstVisibleIndex > this._reorderingObject.from ? this._reorderingObject.from : list.firstVisibleIndex;
-                } else if (listBoundingRect.bottom < e.detail.y && e.detail.ddy > 0) {
-                    list.scrollTop += e.detail.y - listBoundingRect.bottom;
-                    currentElementIndex = list.lastVisibleIndex < this._reorderingObject.from ? this._reorderingObject.from: list.lastVisibleIndex;
-                } else {
-                    currentElementIndex = this._getIndexForElement(document.elementFromPoint(this._reorderingObject.x, e.detail.y)); 
-                }
-            }
+            tearDownEvent(dragEvent);
+            const target = dragEvent.composedPath()[0];
+            let currentElementIndex = this._getIndexForElement(getParentAnd(target, element => element.hasAttribute("drag-element")));
             if (currentElementIndex >= 0 && currentElementIndex < this._entities.length && this._reorderingObject.from !== currentElementIndex) {
                 this.moveItem(this._reorderingObject.from, currentElementIndex);
                 this._reorderingObject.from = currentElementIndex;
             }
+            scrollContainerIfPointNearTheEdge(this.$.input, dragEvent.clientY);
         }
     }
 
-    _endItemReordering (e) {
-        const chosenIds = this.entity.get("chosenIds");
-        this.entity.setAndRegisterPropertyTouch("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
-        delete this._reorderingObject;
-        this._draggingItem = null;
-        // invoke validation after user has completed item reordering
-        this._invokeValidation.bind(this)();
+    _dragDrop (dragEvent) {
+        if (this._reorderingObject) {
+            const chosenIds = this.entity.get("chosenIds");
+            this.entity.setAndRegisterPropertyTouch("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
+            delete this._reorderingObject;
+            this._draggingItem = null;
+            // Invoke validation after user has completed item reordering.
+            this._invokeValidation.bind(this)();
+        }
+    }
+
+    _endDrag (dragEvent) {
+        if (this._reorderingObject) {
+            this.moveItem(this._reorderingObject.from, this._reorderingObject.origin);
+            delete this._reorderingObject;
+            this._draggingItem = null;
+        }
     }
     
     _getIndexForElement (element) {
@@ -947,15 +942,6 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             currentElement = currentElement.parentElement;
         }
         return currentElement ? +currentElement.getAttribute("collectional-index") : -1;
-    }
-    
-    _setUpCursor (e) {
-        tearDownEvent(e);
-        document.body.style["cursor"] = "-webkit-grabbing";
-    }
-    
-    _resetCursor () {
-        document.body.style["cursor"] = '';
     }
 
     _updateSelectAll () {

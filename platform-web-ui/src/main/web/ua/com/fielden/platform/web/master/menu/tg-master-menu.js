@@ -19,7 +19,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
-import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { scrollContainerIfPointNearTheEdge, getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 import '/resources/components/postal-lib.js';
@@ -43,15 +43,17 @@ const template = html`
             --paper-listbox-background-color: #fff;
         }
         #menu ::slotted(paper-item) {
-            margin-left: -8px;
             padding-left: 0;
             --icon-display: inherit;
             --icon-visibility: hidden;
         }
-        #menu ::slotted(paper-item.notDraggable) {
+        #menu ::slotted(paper-item:not([drag-element])) {
             margin-left: 0;
             padding-left: 16px;
             --icon-display: none;
+        }
+        #menu ::slotted(paper-item.dragging-element) {
+            background-color: #ECEFF1;
         }
         #menu ::slotted(paper-item.dragging) {
             opacity: 0;
@@ -122,7 +124,7 @@ const findMenuItemSection = function (path) {
 };
 
 const _updateMenuOrder = function (menuOrder, container) {
-    const menuItems = [...container.querySelectorAll("paper-item:not(.notDraggable)")];
+    const menuItems = [...container.querySelectorAll("paper-item[drag-element]")];
 
     let nextSibling = menuItems[0];
     for (let menuIdx = menuOrder.length - 1; menuIdx >= 0; menuIdx--) {
@@ -348,12 +350,10 @@ Polymer({
                 this._menuScrolling = false;
             }
         }
-        if (!isTouchEnabled()) { // TODO remove this check in #2323
-            this.addEventListener('dragstart', this.startDrag.bind(this));
-            this.addEventListener('dragend', this.endDrag.bind(this));
-            this.addEventListener('dragenter', this.dragEntered.bind(this));
-            this.addEventListener('dragover', this.dragOver.bind(this));
-        }
+        this.addEventListener('dragstart', this.startDrag.bind(this));
+        this.addEventListener('drop', this.dragDrop.bind(this));
+        this.addEventListener('dragend', this.endDrag.bind(this));
+        this.addEventListener('dragover', this.dragOver.bind(this));
         this._toggleMenuBound = this._toggleMenu.bind(this);
     },
 
@@ -371,15 +371,20 @@ Polymer({
                 }
             }
 
-            const touchEnabled = isTouchEnabled();
-            if (touchEnabled) {
-                const menuItems = self.$.menuItems.assignedNodes({ flatten: true });
-                if (menuItems && menuItems.length > 0) {
-                    for (let index = 0; index < menuItems.length; index++) {
+            const menuItems = self.$.menuItems.assignedNodes({ flatten: true });
+            if (menuItems && menuItems.length > 0) {
+                for (let index = 0; index < menuItems.length; index++) {
+                    if (menuItems[index].hasAttribute("drag-element")) {
+                        // A menu item with the "drag-element" attribute should have a drag anchor.
+                        // Therefore, the next `dragAnchor` should not be null.
                         const dragAnchor = menuItems[index].querySelector('.drag-anchor');
-                        if (dragAnchor) {
+                        // If the menu is displayed on touch devices, the user can start dragging a menu item from any point on it.
+                        // On mouse-based devices, the user can start dragging only by using the drag anchor.
+                        if (isTouchEnabled()) {
+                            menuItems[index].setAttribute("draggable", "true");
                             dragAnchor.style.visibility = 'hidden';
-                            dragAnchor.removeAttribute('draggable');
+                        } else {
+                            dragAnchor.setAttribute("draggable", "true");
                         }
                     }
                 }
@@ -479,41 +484,58 @@ Polymer({
 
     //Drag from behavior implementation
     startDrag: function (dragEvent) {
-        this._menuItemToDrag = dragEvent.target.parentElement;
-        this.async(() => {
-            if (this._menuItemToDrag) {
-                this._menuItemToDrag.classList.add("dragging");
-                this.$.menu.classList.add("dragging");
-            }
-        }, 1);
-        dragEvent.dataTransfer.effectAllowed = "copyMove";
-        dragEvent.dataTransfer.setDragImage(this._menuItemToDrag, 12, 24);
-        hideTooltip();
+        // Make sure the drag start event is triggered only on the draggable icon of the menu item.
+        // This prevents dragging from other elements in the compound entity master.
+        if (dragEvent.target.nodeType === Node.ELEMENT_NODE && dragEvent.target.getAttribute("draggable") === "true") {
+            const elementToDrag = getParentAnd(dragEvent.target, element => element.hasAttribute("drag-element"));
+            this._dragObject = {
+                menuItemToDrag: elementToDrag,
+                originSibling: elementToDrag.nextSibling
+            };
+            this._dragObject.menuItemToDrag.classList.add("dragging-element");
+            this.async(() => {
+                if (this._dragObject) {
+                    this._dragObject.menuItemToDrag.classList.add("dragging");
+                    this.$.menu.classList.add("dragging");
+                }
+            }, 1);
+            dragEvent.dataTransfer.effectAllowed = "copyMove";
+            dragEvent.dataTransfer.setDragImage(this._dragObject.menuItemToDrag, 12, 24);
+            hideTooltip();
+        }
+    },
+
+    dragDrop: function (dragEvent) {
+        if (this._dragObject) {
+            this._dragObject.menuItemToDrag.classList.remove("dragging-element");
+            this._dragObject.menuItemToDrag.classList.remove("dragging");
+            this.$.menu.classList.remove("dragging");
+            this._saveMenuOrder();
+            this._dragObject = null;
+        }
     },
 
     endDrag: function (dragEvent) {
-        if (this._menuItemToDrag) {
-            this._menuItemToDrag.classList.remove("dragging");
+        if (this._dragObject) {
+            this._dragObject.menuItemToDrag.classList.remove("dragging-element");
+            this._dragObject.menuItemToDrag.classList.remove("dragging");
             this.$.menu.classList.remove("dragging");
-            this._saveMenuOrder();
-            this._menuItemToDrag = null;
+            this.insertBefore(this._dragObject.menuItemToDrag, this._dragObject.originSibling);
+            this._dragObject = null;
         }
     },
 
     dragOver: function (e) {
-        if (this._menuItemToDrag) {
+        if (this._dragObject) {
             tearDownEvent(e);
-            const siblings = [...this.querySelectorAll("paper-item:not(.dragging):not(.notDraggable)")];
+            const siblings = [...this.querySelectorAll("paper-item[drag-element]:not(.dragging)")];
             const nextSibling = siblings.find(sibling => {
                 const siblingRect = sibling.getBoundingClientRect();
                 return e.clientY <= siblingRect.y + siblingRect.height / 2;
             });
-            this.insertBefore(this._menuItemToDrag, nextSibling);
+            this.insertBefore(this._dragObject.menuItemToDrag, nextSibling);
+            scrollContainerIfPointNearTheEdge(this.$.menu, e.clientY);
         }
-    },
-
-    dragEntered: function (dropToEvent) {
-        tearDownEvent(dropToEvent);
     },
 
     _loadMenuOrder: function (userName, entityType) {
@@ -524,7 +546,7 @@ Polymer({
 
     _saveMenuOrder: function () {
         if (this.userName && this.entityType) {
-            const menuItems = [...this.querySelectorAll("paper-item:not(.notDraggable)")].map(item => item.getAttribute("item-title"));
+            const menuItems = [...this.querySelectorAll("paper-item[drag-element]")].map(item => item.getAttribute("item-title"));
             localStorage[this._menuStorageKey(this.userName, this.entityType)] = JSON.stringify(menuItems);
         }
     },
@@ -794,16 +816,20 @@ Polymer({
 
     _routeChanged: function (newRoute, oldRoute) {
         if (this.route !== this.sectionRoute) {
-            if (this.sectionRoute !== undefined) {
+            // Make sure the following logic is triggered only when the route changes 
+            // from a section with a defined name to another defined section.
+            // This should prevent unnecessary checks when closing an entity master 
+            // for a persisted entity or canceling a compound entity master for a new entity.
+            if (this.sectionRoute !== undefined && newRoute !== undefined) {
                 const currentSection = this.currentSection();
                 if (!currentSection) {
-                    throw 'Compound master\'s menu item section [' + this.sectionRoute + '] does not exist.';
+                    throw 'Compound master’s menu item section [' + this.sectionRoute + '] does not exist.';
                 }
                 const cannotLeaveReason = currentSection.canLeave();
                 const cannotLeaveMessage = cannotLeaveReason ? cannotLeaveReason.msg : (this.isMasterWithMasterAndNonPersisted(currentSection) ? 'A new entity is being created. Please save or cancel your changes.' : undefined);
                 if (cannotLeaveMessage) {
                     this.route = this.sectionRoute;
-                    this.parent._openToastForError('Cannot leave "' + currentSection.sectionTitle + '".', cannotLeaveMessage);
+                    this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage);
                 } else {
                     this.sectionRoute = newRoute;
                     if (currentSection.activated) {

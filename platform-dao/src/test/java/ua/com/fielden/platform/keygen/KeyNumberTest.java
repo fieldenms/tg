@@ -115,14 +115,39 @@ public class KeyNumberTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void key_number_value_is_stored_in_upper_case() {
+        final String nextValue = "A0";
+        final Integer nextNumber = Integer.valueOf(nextValue, 36);
+        assertEquals(nextNumber, coKeyNumber.nextNumber(KEY_RADIX_36, 36));
+        assertEquals(nextNumber, coKeyNumber.currNumber(KEY_RADIX_36, 36));
+        assertEquals(nextValue, coKeyNumber.findByKey(KEY_RADIX_36).getValue());
+    }
+
+    @Test
     public void nextNumbers_with_radix_36_and_count_1_is_equivalent_to_nextNumber_with_radix_36() {
-        final Integer nextNumber = Integer.valueOf("A0", 36);
+        final String nextValue = "A0";
+        final Integer nextNumber = Integer.valueOf(nextValue, 36);
         final SortedSet<Integer> numbers = coKeyNumber.nextNumbers(KEY_RADIX_36, 1, 36);
         assertEquals(1, numbers.size());
         assertEquals(nextNumber, numbers.first());
         assertEquals(nextNumber, coKeyNumber.currNumber(KEY_RADIX_36, 36));
+        assertEquals(nextValue, coKeyNumber.findByKey(KEY_RADIX_36).getValue());
     }
 
+    @Test
+    public void resetting_existing_keynumber_assigns_value_0() {
+        coKeyNumber.reset(KEY_RADIX_10);
+        assertEquals(Integer.valueOf(0), coKeyNumber.currNumber(KEY_RADIX_10));
+
+        coKeyNumber.reset(KEY_RADIX_36);
+        assertEquals(Integer.valueOf(0), coKeyNumber.currNumber(KEY_RADIX_36));
+    }
+
+    @Test
+    public void resetting_non_existing_keynumber_creates_it_with_value_0() {
+        coKeyNumber.reset("NON-EXISTING");
+        assertEquals(Integer.valueOf(0), coKeyNumber.currNumber("NON-EXISTING"));
+    }
 
     @Override
     protected void populateDomain() {

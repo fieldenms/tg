@@ -12,7 +12,7 @@ import '/resources/centre/tg-selection-view.js';
 import '/resources/centre/tg-centre-result-view.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, localStorageKeyForCentre, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
+import { SCROLL_THRESHOLD, tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, localStorageKeyForCentre, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/actions/tg-ui-action.js';
 import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
@@ -245,7 +245,7 @@ const template = html`
     <iron-pages id="views" selected="[[_selectedView]]">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
-                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _reset-autocompleter-state="[[_resetAutocompleterState]]" _show-dialog="[[_showDialog]]" _help-mouse-down-event-handler="[[_helpMouseDownEventHandler]]" _help-mouse-up-event-handler="[[_helpMouseUpEventHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
+                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _reset-autocompleter-state="[[_resetAutocompleterState]]" _show-dialog="[[_showDialog]]" _long-help-tap-handler="[[_longHelpTapHandler]]" _short-help-tap-handler="[[_shortHelpTapHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
@@ -407,8 +407,8 @@ Polymer({
             value: false,
             notify: true
         },
-        _helpMouseDownEventHandler: Function,
-        _helpMouseUpEventHandler: Function
+        _longHelpTapHandler: Function,
+        _shortHelpTapHandler: Function
     },
 
     behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
@@ -841,8 +841,12 @@ Polymer({
         }, 100);
     },
 
-    confirm: function (message, buttons) {
-        return this.$.confirmationDialog.showConfirmationDialog(message, buttons);
+    closeConfirmationDialog: function () {
+        return this.$.confirmationDialog.close();
+    },
+
+    confirm: function (message, buttons, options) {
+        return this.$.confirmationDialog.showConfirmationDialog(message, buttons, options);
     },
 
     /**
@@ -865,18 +869,16 @@ Polymer({
 
     /************************* Insertion point drag & drop related events ******************************/
     _insertionPointCustomLayoutEnabledChanged: function (newValue) {
-        if (!isTouchEnabled()) { // TODO remove this check in #2323
-            if (newValue) {
-                this.$.centreResultContainer.addEventListener("dragstart", this._startDrag);
-                this.$.centreResultContainer.addEventListener("dragend", this._endDrag);
-                this.$.centreResultContainer.addEventListener("drop", this._dragDrop);
-                this.$.centreResultContainer.addEventListener("dragover", this._dragOver);
-            } else {
-                this.$.centreResultContainer.removeEventListener("dragstart", this._startDrag);
-                this.$.centreResultContainer.removeEventListener("dragend", this._endDrag);
-                this.$.centreResultContainer.removeEventListener("drop", this._dragDrop);
-                this.$.centreResultContainer.removeEventListener("dragover", this._dragOver);
-            }
+        if (newValue) {
+            this.$.centreResultContainer.addEventListener("dragstart", this._startDrag);
+            this.$.centreResultContainer.addEventListener("dragend", this._endDrag);
+            this.$.centreResultContainer.addEventListener("drop", this._dragDrop);
+            this.$.centreResultContainer.addEventListener("dragover", this._dragOver);
+        } else {
+            this.$.centreResultContainer.removeEventListener("dragstart", this._startDrag);
+            this.$.centreResultContainer.removeEventListener("dragend", this._endDrag);
+            this.$.centreResultContainer.removeEventListener("drop", this._dragDrop);
+            this.$.centreResultContainer.removeEventListener("dragover", this._dragOver);
         }
     },
 
@@ -930,14 +932,15 @@ Polymer({
                 }
             }
             const mousePos = getRelativePos(dragEvent.clientX, dragEvent.clientY, scrollContainer);
+            const addressBarHeight = document.body.offsetHeight - window.innerHeight;
             if (scrollContainer && scrollContainer.offsetHeight !== scrollContainer.scrollHeight) { // scroll container has scrollbar and is scrollable
-                if (mousePos.y < 20 /* minimal distance to the edge */) { // mouse is close to the top edge
-                    const scrollDistance = Math.min(20 - mousePos.y, scrollContainer.scrollTop);
+                if (mousePos.y < SCROLL_THRESHOLD) { // mouse is close to the top edge
+                    const scrollDistance = Math.min(SCROLL_THRESHOLD - mousePos.y, scrollContainer.scrollTop);
                     if (scrollDistance > 0) { // if scrollbar is not on the top then scroll to the top
                         scrollContainer.scrollTop -= scrollDistance;
                     }
-                } else if (mousePos.y > scrollContainer.offsetHeight - 20 /* minimal distance to the edge */) { // mouse is close to the bottom edge
-                    const scrollDistance = Math.min(mousePos.y - scrollContainer.offsetHeight + 20, scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.offsetHeight);
+                } else if (mousePos.y > scrollContainer.offsetHeight - addressBarHeight - SCROLL_THRESHOLD) { // mouse is close to the bottom edge
+                    const scrollDistance = Math.min(mousePos.y - scrollContainer.offsetHeight + addressBarHeight + SCROLL_THRESHOLD, scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.offsetHeight);
                     if (scrollDistance > 0) { // if scrollbar is not on the bottom then scroll to the bottom
                         scrollContainer.scrollTop += scrollDistance;
                     }

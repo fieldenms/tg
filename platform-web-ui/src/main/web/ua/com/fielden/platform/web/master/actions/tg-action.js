@@ -279,7 +279,7 @@ Polymer({
         },
 
         /**
-         * Indicates wheather the action is in progress.
+         * Indicates whether the action is in progress.
          */
         _working: {
             type: Boolean
@@ -519,6 +519,8 @@ Polymer({
 
     /* Timer callback that performs spinner activation. */
     _startSpinnerCallback: function () {
+        // The approach with using `display: none` ensure
+        // that the spinner gets hidden just before the button becomes enabled.
         this.$.spinner.style.display = null;
     },
 
@@ -569,7 +571,7 @@ Polymer({
     _afterExecution: function () {
         if (!this._continuationInProgress) {
             this._working = false;
-            // prevent not yet activated spinner from activating if any
+            // Clear timeout to prevent not yet activated spinner from activating.
             if (this._startSpinnerTimer) {
                 clearTimeout(this._startSpinnerTimer);
             }
@@ -577,6 +579,8 @@ Polymer({
             // do the super stuff
             console.log(this.shortDesc + ": after execution");
             this._innerEnabled = true;
+
+            // According to Jhou need restore twice due to 2 calls to `this.persistActiveElement` on lines 353 and 358.
             this.restoreActiveElement();
 
             // Make spinner invisible

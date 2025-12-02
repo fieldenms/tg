@@ -1,27 +1,16 @@
 package ua.com.fielden.platform.data;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.SortedSet;
-
 import org.joda.time.DateTime;
-
-import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
-import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.provider.SecurityTokenNode;
-import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.provider.SecurityTokenNodeTransformations;
+import ua.com.fielden.platform.security.user.*;
+
+import java.math.BigDecimal;
+import java.util.Date;
 
 public interface IDomainDrivenData {
 
@@ -92,13 +81,13 @@ public interface IDomainDrivenData {
             }
 
             try {
-                final ISecurityTokenNodeTransformation tokenTransformation = getInstance(ISecurityTokenNodeTransformation.class);
-                final SortedSet<SecurityTokenNode> topNodes = tokenTransformation.transform(getInstance(ISecurityTokenProvider.class).getTopLevelSecurityTokenNodes());
-                final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
-                final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<>();
-                for (final SecurityTokenNode securityNode : topNodes) {
-                    alg.search(securityNode, predicate);
-                }
+                final var tokenTransformation = getInstance(ISecurityTokenNodeTransformation.class);
+                final var transformedTree = tokenTransformation.transform(getInstance(ISecurityTokenProvider.class).getTopLevelSecurityTokenNodes());
+                final SecurityRoleAssociationCo coSecurityRoleAssociation = co(SecurityRoleAssociation.class);
+                coSecurityRoleAssociation.addAssociations(SecurityTokenNodeTransformations.flatten(transformedTree)
+                                                                  .map(node -> coSecurityRoleAssociation.new_()
+                                                                          .setRole(admin)
+                                                                          .setSecurityToken(node.getToken())).toList());
             } catch (final Exception e) {
                 throw new IllegalStateException(e);
             }

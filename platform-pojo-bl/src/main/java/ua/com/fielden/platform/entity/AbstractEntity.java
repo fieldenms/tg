@@ -720,13 +720,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         if (isNumeric &&
             (isPropertyAnnotation.precision() != DEFAULT_PRECISION || isPropertyAnnotation.scale() != DEFAULT_SCALE) &&
             (isPropertyAnnotation.precision() <= 0 || isPropertyAnnotation.scale() < 0)) {
-            final String error = format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, propName, getType().getName());
+            final String error = format(INVALID_USE_FOR_PRECISION_AND_SCALE_MSG, propName, getType().getName());
             logger.error(error);
             throw new EntityDefinitionException(error);
         }
 
         if (isNumeric && isPropertyAnnotation.precision() != DEFAULT_PRECISION && isPropertyAnnotation.precision() <= isPropertyAnnotation.scale()) {
-                final String error = format(INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG, propName, getType().getName());
+                final String error = format(INVALID_VALUES_FOR_PRECISION_AND_SCALE_MSG, propName, getType().getName());
                 logger.error(error);
                 throw new EntityDefinitionException(error);
 

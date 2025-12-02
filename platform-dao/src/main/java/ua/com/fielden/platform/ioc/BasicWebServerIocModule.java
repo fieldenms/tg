@@ -17,6 +17,7 @@ import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ServerAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
@@ -26,6 +27,7 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web_api.GraphQLService;
 import ua.com.fielden.platform.web_api.IWebApi;
 
@@ -125,9 +127,18 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("dates.weekStart")).to(Integer.parseInt(props.getProperty("dates.weekStart", "1"))); // 1 - Monday
         bindConstant().annotatedWith(Names.named("dates.finYearStartDay")).to(Integer.parseInt(props.getProperty("dates.finYearStartDay", "1"))); // 1 - the first day of the month
         bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.parseInt(props.getProperty("dates.finYearStartMonth", "7"))); // 7 - July, the 1st of July is the start of Fin Year in Australia
+
         // Auditing
         bindConstant().annotatedWith(Names.named(AUDIT_PATH)).to(props.getProperty(AUDIT_PATH, ""));
         bindConstant().annotatedWith(Names.named(AUDIT_MODE)).to(props.getProperty(AUDIT_MODE, ""));
+
+        // Dates
+        bindConstant().annotatedWith(Names.named("dates.dateFormat")).to(props.getProperty("dates.dateFormat", IDates.DEFAULT_DATE_FORMAT));
+        bindConstant().annotatedWith(Names.named("dates.timeFormat")).to(props.getProperty("dates.timeFormat", IDates.DEFAULT_TIME_FORMAT));
+        bindConstant().annotatedWith(Names.named("dates.timeFormatWithMillis")).to(props.getProperty("dates.timeFormatWithMillis", IDates.DEFAULT_TIME_FORMAT_WITH_MILLIS));
+        bindConstant().annotatedWith(Names.named("dates.dateFormat.web")).to(props.getProperty("dates.dateFormat.web", IDates.DEFAULT_DATE_FORMAT_WEB));
+        bindConstant().annotatedWith(Names.named("dates.timeFormat.web")).to(props.getProperty("dates.timeFormat.web", IDates.DEFAULT_TIME_FORMAT_WEB));
+        bindConstant().annotatedWith(Names.named("dates.timeFormatWithMillis.web")).to(props.getProperty("dates.timeFormatWithMillis.web", IDates.DEFAULT_TIME_FORMAT_WEB_WITH_MILLIS));
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class);
         requireBinding(ISecurityTokenProvider.class);
@@ -150,6 +161,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         }
 
         requestStaticInjection(MultiInheritanceEntityVerificationService.class);
+        requestStaticInjection(EntityQueryCriteriaUtils.class);
     }
 
     public Properties getProps() {

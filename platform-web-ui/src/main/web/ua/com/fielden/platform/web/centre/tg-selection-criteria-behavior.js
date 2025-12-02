@@ -574,6 +574,27 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
 
     /**
+     * Ensures that `pageNumber`s (both intended `pageNumber` and actual `pageNumberUpdated`) revert in case of promise error.
+     */
+    _revertPageNumberIfError: function (promise, prevPageNumber) {
+        return promise.then(result => {
+            // This covers, e.g., server-side unsuccessful Results.
+            if (result && !result.successful) {
+                this.pageNumber = prevPageNumber;
+                this.pageNumberUpdated = this.pageNumber;
+            }
+            // Propagate result further.
+            return result;
+        }).catch(error => {
+            // This covers, e.g., some networking problems.
+            this.pageNumber = prevPageNumber;
+            this.pageNumberUpdated = this.pageNumber;
+            // Propagate error further.
+            throw error;
+        });
+    },
+
+    /**
      * Starts the process of centre run.
      */
     nextPage: function () {
@@ -582,8 +603,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (!this._canNext()) { // TODO either delete this check or provide correct parameter values to the function
             throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
         }
+        const prevPageNumber = this.pageNumber;
         this.pageNumber = this.pageNumber + 1;
-        return this._execute(RunActions.navigate);
+        return this._revertPageNumberIfError(this._execute(RunActions.navigate), prevPageNumber);
     },
 
     /**
@@ -595,8 +617,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (!this._canPrev()) { // TODO either delete this check or provide correct parameter values to the function
             throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
         }
+        const prevPageNumber = this.pageNumber;
         this.pageNumber = this.pageNumber - 1;
-        return this._execute(RunActions.navigate);
+        return this._revertPageNumberIfError(this._execute(RunActions.navigate), prevPageNumber);
     },
 
     /**
@@ -608,8 +631,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (!this._canFirst()) { // TODO either delete this check or provide correct parameter values to the function
             throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
         }
+        const prevPageNumber = this.pageNumber;
         this.pageNumber = 0;
-        return this._execute(RunActions.navigate);
+        return this._revertPageNumberIfError(this._execute(RunActions.navigate), prevPageNumber);
     },
 
     /**
@@ -621,8 +645,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (!this._canLast()) { // TODO either delete this check or provide correct parameter values to the function
             throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
         }
+        const prevPageNumber = this.pageNumber;
         this.pageNumber = this.pageCount - 1;
-        return this._execute(RunActions.navigate);
+        return this._revertPageNumberIfError(this._execute(RunActions.navigate), prevPageNumber);
     },
 
     _canPrev: function (pageNumber) {
