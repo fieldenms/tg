@@ -1,5 +1,7 @@
 import { TgReflector } from '/app/tg-reflector.js';
 
+export const SCROLL_THRESHOLD = 20;
+
 /**
  * Generates the unique identifier.
  */
@@ -77,21 +79,36 @@ export function _removeAllLightDOMChildrenFrom (element) {
 };
 
 /**
- * Returns the x and y coordinates relatively to specified container
+ * Returns the x and y coordinates relative to the specified container.
+ * If no container is provided, the point with the given x and y coordinates is returned as is.
  */
 export function getRelativePos (x, y, container) {
-    let reference = container;
-    let newPos = {
-        x: x,
-        y: y
+    if (container) {
+        const containerRect = container.getBoundingClientRect();
+        return {x: x - containerRect.left, y: y - containerRect.top};
     }
-    while (reference) {
-        newPos.x -= reference.offsetLeft;
-        newPos.y -= reference.offsetTop;
-        reference = reference.offsetParent;
-    }
-    return newPos;
+    return {x: x, y: y};
 };
+
+/**
+ * Scrolls the given container up or down if the y-coordinate is near the top or bottom edge of the scrollable area.
+ */
+export function scrollContainerIfPointNearTheEdge(scrollContainer, y) {
+    const relPos = getRelativePos(0, y, scrollContainer);
+    if (scrollContainer && scrollContainer.offsetHeight !== scrollContainer.scrollHeight) { // scroll container has scrollbar and is scrollable
+        if (relPos.y < SCROLL_THRESHOLD) { // mouse is close to the top edge
+            const scrollDistance = Math.min(SCROLL_THRESHOLD - relPos.y, scrollContainer.scrollTop);
+            if (scrollDistance > 0) { // if scrollbar is not on the top then scroll to the top
+                scrollContainer.scrollTop -= scrollDistance;
+            }
+        } else if (relPos.y > scrollContainer.offsetHeight - SCROLL_THRESHOLD) { // mouse is close to the bottom edge
+            const scrollDistance = Math.min(relPos.y - scrollContainer.offsetHeight + SCROLL_THRESHOLD, scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.offsetHeight);
+            if (scrollDistance > 0) { // if scrollbar is not on the bottom then scroll to the bottom
+                scrollContainer.scrollTop += scrollDistance;
+            }
+        }
+    }
+}
 
 /**
  * This method prevents event from further bubbling.

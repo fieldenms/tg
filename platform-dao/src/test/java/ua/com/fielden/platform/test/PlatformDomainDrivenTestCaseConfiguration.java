@@ -43,6 +43,9 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         props.setProperty("email.smtp", "non-existing-server");
         props.setProperty("email.fromAddress", "platform@fielden.com.au");
         props.setProperty("web.api", "true");
+        props.setProperty("web.domain", "tgdev.com");
+        props.setProperty("web.port", "443");
+        props.setProperty("web.path", "/");
         // Custom Hibernate configuration properties
         props.setProperty("hibernate.show_sql", "false");
         props.setProperty("hibernate.format_sql", "true");

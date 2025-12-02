@@ -13,6 +13,7 @@ import java.util.Set;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.security.user.SecurityRoleAssociation.ROLE;
 import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
 
 /// A test case for user and role, and role and security token associations.
@@ -143,8 +144,8 @@ public class UserAndRoleAndTokenAssociationTestCase extends AbstractDaoTestCase 
     @Test
     public void security_associations_can_be_retrieved() {
         final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
-        final List<SecurityRoleAssociation> associations = coSecurityRoleAssociation.getAllEntities(from(model).with(fetch(SecurityRoleAssociation.class).with("role")).model());
-        assertEquals("Incorrect number of security token/role associations.", 100, associations.size());
+        final List<SecurityRoleAssociation> associations = coSecurityRoleAssociation.getAllEntities(from(model).with(fetch(SecurityRoleAssociation.class).with(ROLE)).model());
+        assertEquals("Incorrect number of security token/role associations.", 102, associations.size());
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
         assertEqualByContents(Set.of(UNIT_TEST_ROLE, "ROLE1", "ROLE2"),
                               roles.stream().map(SecurityRoleAssociation::getRole).map(UserRole::getKey).collect(toImmutableSet()));;
@@ -160,8 +161,27 @@ public class UserAndRoleAndTokenAssociationTestCase extends AbstractDaoTestCase 
     }
 
     @Test
+    public void only_active_security_role_association_can_be_retrieved() {
+        final UserRole role = save(new_(UserRole.class, "ROLE56", "role56 desc").setActive(true));
+        final SecurityRoleAssociation association = save(new_composite(SecurityRoleAssociation.class, FirstLevelSecurityToken1.class, role));
+        save(new_composite(SecurityRoleAssociation.class, FirstLevelSecurityToken2.class, role).setActive(false));
+        final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
+        assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token.", 4, roles.size());
+        assertTrue("The " + FirstLevelSecurityToken1.class.getName() + " security token doesn't have a role56 user role.", roles.contains(association));
+    }
+
+    @Test
     public void count_associations_between_users_and_tokens_takes_into_account_active_association() {
+        // Find user1.
         final IUser coUser = co$(User.class);
+        final User user1 = coUser.findUserByKeyWithRoles("USER1");
+        // Create new ROLE9.
+        final UserRole role9 = save(new_(UserRole.class, "ROLE9", "role desc 9").setActive(true));
+        // Associate new role9 with USER1.
+        save(new_composite(UserAndRoleAssociation.class, user1, role9));
+        // Create inactive security token - role association.
+        save(new_composite(SecurityRoleAssociation.class).setRole(role9).setSecurityToken(FirstLevelSecurityToken1.class).setActive(false));
+        // Test how many user tokens are associated with .
         assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), FirstLevelSecurityToken1.class));
         assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken1.class));
         assertEquals("Incorrect number of associations between user and token.", 0, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken2.class));

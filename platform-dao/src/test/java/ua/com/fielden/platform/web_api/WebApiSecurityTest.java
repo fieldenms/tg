@@ -145,9 +145,9 @@ public class WebApiSecurityTest extends AbstractDaoTestCase {
     /// This is more like just in case `token` would get associated with `UNIT_TEST_ROLE` by the base test class logic.
     ///
     private void removeAccessTo(final Class<? extends ISecurityToken> token) {
-        final SecurityRoleAssociationCo co = co(SecurityRoleAssociation.class);
-        co.removeAssociations(setOf(
-                co.new_()
+        final SecurityRoleAssociationCo co$ = co$(SecurityRoleAssociation.class);
+        co$.removeAssociations(setOf(
+                co$.new_()
                         .setRole(co(UserRole.class).findByKey(UNIT_TEST_ROLE))
                         .setSecurityToken(token)
         ));

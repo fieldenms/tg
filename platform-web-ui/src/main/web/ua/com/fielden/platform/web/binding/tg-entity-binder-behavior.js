@@ -1,5 +1,5 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
+import { processResponseErrorEvent } from '/resources/reflection/tg-ajax-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 import { checkLinkAndOpen, isSupportedLink } from '/resources/components/tg-link-opener.js';
@@ -562,7 +562,7 @@ export const TgEntityBinderBehavior = {
         }).bind(self);
 
         self._processError = (function (e, name, customErrorHandlerFor) {
-            processResponseError(e, this._reflector(), this._serialiser(), customErrorHandlerFor, this.toaster);
+            processResponseErrorEvent(e, this._reflector(), this._serialiser(), customErrorHandlerFor, this.toaster);
         }).bind(self);
 
         // callbacks, that will be bound by editor child elements:

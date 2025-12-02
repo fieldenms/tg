@@ -8,28 +8,29 @@ import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.security.user.SecurityRoleAssociation.ROLE;
+import static ua.com.fielden.platform.security.user.SecurityRoleAssociation.SECURITY_TOKEN;
 import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 
 public class SecurityRoleAssociationTest extends AbstractDaoTestCase {
 
     @Test
-    public void addAssociations_creates_records_for_all_specified_assocations() {
-        final var userRole = save(new_(UserRole.class, "TEST_ROLE_01", "Test role 01"));
+    public void addAssociations_creates_records_for_all_specified_associations() {
+        final var userRole = save(new_(UserRole.class, "TEST_ROLE_01", "Test role 01").setActive(true));
         final SecurityRoleAssociationCo coSecurityRoleAssociation = co(SecurityRoleAssociation.class);
 
         final var tokens1 = List.of(User_CanSave_Token.class, User_CanRead_Token.class);
-        coSecurityRoleAssociation.addAssociations(tokens1.stream().map(tok -> new_(SecurityRoleAssociation.class).setRole(userRole).setSecurityToken(tok)));
+        coSecurityRoleAssociation.addAssociations(tokens1.stream().map(tok -> new_(SecurityRoleAssociation.class).setRole(userRole).setSecurityToken(tok)).toList());
         assertThat(tokensForRole(userRole)).containsExactlyInAnyOrderElementsOf(tokens1);
 
         final var tokens2 = List.of(Attachment_CanRead_Token.class);
-        coSecurityRoleAssociation.addAssociations(tokens2.stream().map(tok -> new_(SecurityRoleAssociation.class).setRole(userRole).setSecurityToken(tok)));
+        coSecurityRoleAssociation.addAssociations(tokens2.stream().map(tok -> new_(SecurityRoleAssociation.class).setRole(userRole).setSecurityToken(tok)).toList());
         assertThat(tokensForRole(userRole)).containsExactlyInAnyOrderElementsOf(concatList(tokens1, tokens2));
 
-        coSecurityRoleAssociation.addAssociations(Stream.of());
+        coSecurityRoleAssociation.addAssociations(List.of());
 
         assertThat(tokensForRole(userRole)).containsExactlyInAnyOrderElementsOf(concatList(tokens1, tokens2));
     }
@@ -37,9 +38,9 @@ public class SecurityRoleAssociationTest extends AbstractDaoTestCase {
     private List<Class<? extends ISecurityToken>> tokensForRole(final UserRole role) {
         return co(SecurityRoleAssociation.class).getAllEntities(
                 from(select(SecurityRoleAssociation.class).where()
-                             .prop("role").eq().val(role)
+                             .prop(ROLE).eq().val(role)
                              .model())
-                .with(fetchIdOnly(SecurityRoleAssociation.class).with("securityToken"))
+                .with(fetchIdOnly(SecurityRoleAssociation.class).with(SECURITY_TOKEN))
                 .model())
                 .stream()
                 .<Class<? extends ISecurityToken>>map(SecurityRoleAssociation::getSecurityToken)

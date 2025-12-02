@@ -116,6 +116,11 @@ public class CentreContextHolder extends AbstractEntity<String> {
         return this;
     }
 
+    public CentreContextHolder setSelectedEntities(final List<? extends AbstractEntity<?>> selectedEntities) {
+        final ArrayList<AbstractEntity<?>> arrayList = selectedEntities instanceof ArrayList it ? it : new ArrayList<>(selectedEntities);
+        return setSelectedEntities(arrayList);
+    }
+
     public List<AbstractEntity<?>> getSelectedEntities() {
         return unmodifiableList(selectedEntities);
     }

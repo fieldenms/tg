@@ -3,34 +3,28 @@ package ua.com.fielden.platform.entity;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
 import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
-import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
 
-/**
- * This test case is intended to check correctness of existing collection modification validation logic.
- * <p>
- * This includes validations of 1) master entity disappearance 2) available entity disappearance
- * 3) collection modification conflict detection.
- * <p>
- * These conflicts are most likely taken place after the user has been opened the dialog for collection modification, but hasn't finished collection modification by clicking on SAVE button.
- *
- * Also 4) order of available entities (user roles, userRole tokens) are checked, by-key order is required.
- *
- * @author TG Team
- *
- */
+/// This test case is intended to check correctness of existing collection modification validation logic.
+///
+/// This includes validations of:
+/// - Master entity disappearance.
+/// - Available entity disappearance.
+/// - Collection modification conflict detection.
+///
+///   These conflicts are most likely taken place after the user has been opened the dialog for collection modification,
+///   but hasn't finished collection modification by clicking on SAVE button.
+///
 public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     private final Logger logger = getLogger(getClass());
     private final String newUsername = "NEW_USER";
@@ -46,14 +40,6 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final UserRolesUpdaterProducer producer = getInstance(UserRolesUpdaterProducer.class);
         final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
         context.setMasterEntity(user);
-        producer.setContext(context);
-        return producer.newEntity();
-    }
-
-    private UserRoleTokensUpdater createUpdater(final UserRole userRole) {
-        final UserRoleTokensUpdaterProducer producer = getInstance(UserRoleTokensUpdaterProducer.class);
-        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
-        context.setMasterEntity(userRole);
         producer.setContext(context);
         return producer.newEntity();
     }
@@ -80,7 +66,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             fail("Collection modification should fail.");
         } catch (final Exception ex) {
             assertTrue(ex instanceof Result);
-            assertTrue(ex instanceof Result && ((Result) ex).getMessage().equals("The master entity for collection modification is not provided in the context."));
+            assertTrue(ex instanceof Result res && res.getMessage().equals("The master entity for collection modification is not provided in the context."));
         }
     }
 
@@ -244,30 +230,6 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
 
         final UserRolesUpdater newUpdater = createUpdater(user);
         assertEquals(listOf(role1, role2, role3, unitTestRole), new ArrayList<>(newUpdater.getRoles()));
-    }
-
-    @Test
-    public void available_entities_are_ordered_by_key_and_such_order_does_not_mutate_during_validation_cycles_in_userRole_tokens_collectional_editor() {
-        final UserRole userRole = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
-
-        final UserRoleTokensUpdater updater = createUpdater(userRole);
-        final Collection<SecurityTokenInfo> expectedTokens = getInstance(ISecurityTokenProvider.class).allSecurityTokens()
-                .stream()
-                .map(token -> newPlainEntity(SecurityTokenInfo.class, null).setKey(token.getName()))
-                .collect(toImmutableList());
-
-        assertEqualByContents(expectedTokens, updater.getTokens());
-
-        final var user_CanDelete = newPlainEntity(SecurityTokenInfo.class, null).setKey(User_CanDelete_Token.class.getName());
-        final var userRole_CanSave = newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRole_CanSave_Token.class.getName());
-        updater.setAddedIds(linkedSetOf(user_CanDelete.getKey(), userRole_CanSave.getKey()));
-
-        assertEqualByContents(expectedTokens, updater.getTokens());
-
-        save(updater);
-
-        final UserRoleTokensUpdater newUpdater = createUpdater(userRole);
-        assertEqualByContents(expectedTokens, newUpdater.getTokens());
     }
 
 }
