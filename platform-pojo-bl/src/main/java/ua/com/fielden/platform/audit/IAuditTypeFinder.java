@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.audit;
 
-import com.google.inject.ImplementedBy;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
@@ -16,7 +15,6 @@ import java.util.Optional;
  * <p>
  * Cannot be used if auditing is disabled, all methods will throw {@link AuditingModeException}.
  */
-@ImplementedBy(AuditTypeFinder.class)
 public interface IAuditTypeFinder {
 
     /**
