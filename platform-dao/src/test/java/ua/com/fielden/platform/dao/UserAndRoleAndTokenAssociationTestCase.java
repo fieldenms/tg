@@ -149,7 +149,7 @@ public class UserAndRoleAndTokenAssociationTestCase extends AbstractDaoTestCase 
         final List<SecurityRoleAssociation> associations = coSecurityRoleAssociation.getAllEntities(from(model).with(fetch(SecurityRoleAssociation.class).with("role")).model());
         assertThat(associations)
                 .describedAs(() -> "Incorrect number of security token/role associations.")
-                .hasSize(117);
+                .hasSize(123);
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
         assertEqualByContents(Set.of(UNIT_TEST_ROLE, "ROLE1", "ROLE2"),
                               roles.stream().map(SecurityRoleAssociation::getRole).map(UserRole::getKey).collect(toImmutableSet()));;
