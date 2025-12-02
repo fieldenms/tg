@@ -95,7 +95,7 @@ public class SavingInfoHolder extends AbstractEntity<NoKey> {
     }
 
     @Observable
-    protected SavingInfoHolder setModifHolder(final Map<String, Object> modifHolder) {
+    public SavingInfoHolder setModifHolder(final Map<String, Object> modifHolder) {
         this.modifHolder.clear();
         this.modifHolder.putAll(modifHolder);
         return this;

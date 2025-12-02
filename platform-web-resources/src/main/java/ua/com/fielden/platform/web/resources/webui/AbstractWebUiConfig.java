@@ -20,6 +20,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -48,6 +49,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -220,6 +222,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final EntityMaster<UserDefinableHelp> userDefinableHelpMaster = StandardMastersWebUiConfig.createUserDefinableHelpMaster(injector());
         final EntityMaster<PersistentEntityInfo> persistentEntityInfoMaster = StandardMastersWebUiConfig.createPersistentEntityInfoMaster(injector());
         final EntityMaster<OpenPersistentEntityInfoAction> persistentEntityInfoCompoundMaster = StandardMastersWebUiConfig.createPersistentEntityInfoCompoundMaster(injector(), webUiBuilder, persistentEntityInfoMaster);
+        final var shareEntityActionWebUiConfig = ShareActionWebUiConfig.register(injector());
 
         AcknowledgeWarningsWebUiConfig.register(injector(), configApp()); // generic TG functionality for warnings acknowledgement
 
@@ -250,7 +253,9 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(centreConfigurationWebUiConfig.centreConfigConfigureActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigDeleteActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigSaveActionMaster)
-        .addMaster(centreConfigurationWebUiConfig.overrideCentreConfigMaster);
+        .addMaster(centreConfigurationWebUiConfig.overrideCentreConfigMaster)
+        .addMaster(shareEntityActionWebUiConfig.master)
+        ;
 
         //Register embedded entity centres for audited entity types
         final var appDomainProvider = injector.getInstance(IApplicationDomainProvider.class);
@@ -342,6 +347,20 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres() {
         return webUiBuilder.getCentres();
+    }
+
+    @Override
+    public Stream<EntityActionConfig> streamActionConfigs() {
+        return StreamUtils.concat(getCentres().values().stream().flatMap(EntityCentre::streamActionConfigs),
+                                  getMasters().values().stream().flatMap(EntityMaster::streamActions),
+                                  getExtraActions().stream(),
+                                  configDesktopMainMenu().streamActionConfigs(),
+                                  configMobileMainMenu().streamActionConfigs());
+    }
+
+    @Override
+    public Collection<EntityActionConfig> getExtraActions() {
+        return webUiBuilder.getExtraActions();
     }
 
     @Override
@@ -438,15 +457,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * <p>
      * It copies currently loaded configuration URL (window.location.href) to the clipboard and shows informational message about it (if sharing validation was successful).
      */
-    protected static JsCode copyToClipboardForSuccessfulShare() {
-        return jsCode(
-              "if (!self.shareError) { // 'self' is enclosing centre \n"
-            + "    const link = window.location.href;\n"
-            + "    navigator && navigator.clipboard && navigator.clipboard.writeText(link).then(() => { // Writing into clipboard is always permitted for currently open tab (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) -- that's why promise error should never occur; \n"
-            + "        action.toaster.openToastWithoutEntity('Copied to clipboard.', true, link, false); // if for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user and global handler will report that to the server. \n"
-            + "    });\n"
-            + "}\n"
-        );
+    protected static JsCode onSuccessfulShare() {
+        return jsCode("""
+            if (!self.shareError) { // 'self' is enclosing centre
+                self._openShareAction();
+            }
+            """);
     }
 
     @Override
@@ -457,13 +473,18 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return asList(
             action(CentreConfigShareAction.class)
             .withContext(context().withSelectionCrit().build())
-            .preAction(() -> jsCode(showToastForShareError().toString() + copyToClipboardForSuccessfulShare().toString() + "return Promise.reject('Share action completed.');\n"))
+            .preAction(() -> jsCode(showToastForShareError().toString() + onSuccessfulShare().toString() + "return Promise.reject('Share action completed.');\n"))
             .icon("tg-icons:share")
             .shortDesc("Share")
             .longDesc("Share centre configuration")
             .withNoParentCentreRefresh()
             .build()
         );
+    }
+
+    @Override
+    public Optional<EntityActionConfig> findAction(final CharSequence actionIdentifier) {
+        return streamActionConfigs().filter(config -> config.actionIdentifier.filter(it -> it.contentEquals(actionIdentifier)).isPresent()).findAny();
     }
 
     @Override

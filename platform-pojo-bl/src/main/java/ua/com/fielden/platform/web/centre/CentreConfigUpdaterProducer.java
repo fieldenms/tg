@@ -1,16 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
-import static java.util.stream.Collectors.toCollection;
-import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createCustomisableColumns;
-import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createSortingVals;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
-
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -22,15 +12,21 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
 
-/**
- * A producer for new instances of entity {@link CentreConfigUpdater}.
- *
- * @author TG Team
- *
- */
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.getAvailableProperties;
+import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createCustomisableColumns;
+import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createSortingVals;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
+
+/// A producer for new instances of entity [CentreConfigUpdater].
+///
 public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> {
     private final ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater, String, CustomisableColumn> controller;
-    
+
     @Inject
     public CentreConfigUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, CentreConfigUpdater.class, companionFinder);
@@ -46,7 +42,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
     protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
         entity.setMasterEntityHolder(masterEntity.centreContextHolder());
         
-        final Class<?> root = masterEntity.getEntityClass();
+        final Class<? extends AbstractEntity<?>> root = masterEntity.getEntityClass();
         
         // When opening Customise Columns dialog we need to show the order / sort / visibility that is currently present in EGI.
         // It however does not mean that this configuration is synchronised with 'fresh' centre configuration.
@@ -56,9 +52,11 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         // Very similar situation is with Change Columns Width action.
         final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = masterEntity.previouslyRunCentre();
         
-        final List<String> previouslyRunCheckedProperties = previouslyRunCentre.getSecondTick().checkedProperties(root);
-        final List<String> previouslyRunUsedProperties = previouslyRunCentre.getSecondTick().usedProperties(root);
-        final List<Pair<String, Ordering>> previouslyRunSortedProperties = previouslyRunCentre.getSecondTick().orderedProperties(root);
+        final List<String> previouslyRunCheckedProperties = getAvailableProperties(root, previouslyRunCentre.getSecondTick().checkedProperties(root));
+        final List<String> previouslyRunUsedProperties = previouslyRunCentre.getSecondTick().usedProperties(root)
+            .stream().filter(previouslyRunCheckedProperties::contains).toList();
+        final List<Pair<String, Ordering>> previouslyRunSortedProperties = previouslyRunCentre.getSecondTick().orderedProperties(root)
+            .stream().filter(pair -> previouslyRunCheckedProperties.contains(pair.getKey())).toList();
         final Class<?> previouslyRunManagedType = previouslyRunCentre.getEnhancer().getManagedType(root);
         
         // provide chosenIds into the action

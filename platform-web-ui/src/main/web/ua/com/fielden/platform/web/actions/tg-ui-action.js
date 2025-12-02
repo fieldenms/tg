@@ -64,6 +64,8 @@ const template = html`
     <paper-spinner id="spinner" active="[[isActionInProgress]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
+const SHARE_ACTION_SIMPLE_NAME = 'ShareAction';
+
 /**
  * Returns 'true' in case where obj is not defined (aka 'null', 'undefined' or not undefined), 'false' otherwise. 
  */
@@ -744,7 +746,26 @@ Polymer({
             );
         }
         if (self.rootEntityType) {
-            this._reflector.setCustomProperty(context, '@@rootEntityType', self.rootEntityType);
+            self._reflector.setCustomProperty(context, '@@rootEntityType', self.rootEntityType);
+        }
+        // Determine whether the action represents special Share action for functional / new entities.
+        if (self.elementName === `tg-${SHARE_ACTION_SIMPLE_NAME}-master`) {
+            // Get a dialog, that induced creation of the action (no support for insertion points for now).
+            const dialog = self._dialog;
+            // Get dialog's last executed action. This action will represent the top most Entity Master:
+            //   1. WorkOrderCopyAction
+            //     -> returns <tg-ui-action> for WorkOrderCopyAction
+            //   2. EntityNewAction with Priority
+            //     -> returns <tg-ui-action> for EntityNewAction
+            //   3. OpenWorkOrderMasterAction with WorkOrderMaster_OpenMain_MenuItem with WorkOrder
+            //     -> returns <tg-ui-action> for OpenWorkOrderMasterAction
+            if (dialog && dialog._lastAction && dialog._lastAction.attrs && dialog._lastAction.attrs.actionIdentifier) {
+                // Put action identifier for that action into custom object of the context.
+                self._reflector.setCustomProperty(context, '@@actionIdentifier', dialog._lastAction.attrs.actionIdentifier);
+            }
+            if (self._sharedUri) {
+                self._reflector.setCustomProperty(context, '@@sharedUri', self._sharedUri);
+            }
         }
         return context;
     },

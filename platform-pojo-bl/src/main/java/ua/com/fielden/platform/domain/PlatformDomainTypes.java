@@ -29,6 +29,15 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import ua.com.fielden.platform.share.ShareAction;
+import ua.com.fielden.platform.tiny.TinyHyperlink;
+import ua.com.fielden.platform.ui.config.*;
+import ua.com.fielden.platform.web.centre.*;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 public class PlatformDomainTypes {
     public static final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
@@ -44,7 +53,6 @@ public class PlatformDomainTypes {
         types.add(UserRolesUpdater.class);
         types.add(UserSession.class);
         types.add(UserRole.class);
-        types.add(UserRoleTokensUpdater.class);
         types.add(SecurityTokenInfo.class);
 
         types.add(CentreConfigUpdater.class);
@@ -73,6 +81,8 @@ public class PlatformDomainTypes {
         types.add(Attachment.class);
         types.add(AttachmentUploader.class);
         types.add(AttachmentsUploadAction.class);
+        types.add(TinyHyperlink.class);
+        types.add(ShareAction.class);
         types.add(KeyNumber.class);
         types.add(CentreContextHolder.class);
         types.add(SavingInfoHolder.class);

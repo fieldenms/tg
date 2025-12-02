@@ -9,12 +9,14 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 const appConfig = new TgAppConfig();
 const confirmationDialog = new TgConfirmationDialog();
 
+// This date format is used to save date information for saved link
+const DATE_FORMAT_FOR_LINK_OPENER = 'YYYY MM DD';
 // 'mailto:' protocol, which is supported in TG links.
 export const MAILTO_PROTOCOL = 'mailto:';
-// Protocols, which are supported in TG links (besides mailto: above).
-export const SUPPORTED_PROTOCOLS = ['https:', 'http:', 'ftp:', 'ftps:'];
 // An error indicating unsupported protocol usage in links.
 export const ERR_UNSUPPORTED_PROTOCOL = 'One of http, https, ftp, ftps or mailto hyperlink protocols is expected.';
+// Protocols, which are supported in TG links (besides mailto: above).
+const SUPPORTED_PROTOCOLS = ['https:', 'http:', 'ftp:', 'ftps:'];
 
 /**
  * Loads a specified resource into new or existing browsing context (see https://developer.mozilla.org/en-US/docs/Web/API/Window/open).
@@ -22,7 +24,7 @@ export const ERR_UNSUPPORTED_PROTOCOL = 'One of http, https, ftp, ftps or mailto
  *
  * Unspecified 'target' means '_blank' i.e. most likely to be opened in a new tab (or window with special user options).
  */
-function openLink(url, target, windowFeatures) {
+export function openLink(url, target, windowFeatures) {
     const newWindow = window.open(url, target, windowFeatures);
     if (newWindow) {
         // Always prevent tabnapping.
@@ -99,6 +101,29 @@ export function isExternalURL(urlAndHostname) {
 }
 
 /**
+ * Opens a confirmation dialog for the URL provided in the `urlCheckResult` parameter
+ * and invokes the custom function specified by the `task` parameter.
+ *
+ * @param {Object} urlCheckResult - The object returned by the `canOpenLinkWithoutConfirmation` method.
+ * @param {Function} task - The function to invoke if the confirmation dialog is accepted.
+ */
+export function confirmLinkAndThen(urlCheckResult, task) {
+    const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br><pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${urlCheckResult.urlAndHostname.url.href}</pre>`;
+    const options = ["Don't show this again for this link", "Don't show this again for this site"];
+    const buttons = [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true, classes: "red" }];
+
+    confirmationDialog.showConfirmationDialog(text, buttons, { single: true, options }, "Double-check this link").then(opt => {
+        if (opt[options[0]]) {
+            localStorage.setItem(localStorageKey(urlCheckResult.urlAndHostname.url.href), moment().format(DATE_FORMAT_FOR_LINK_OPENER));
+        }
+        if (opt[options[1]]) {
+            localStorage.setItem(localStorageKey(urlCheckResult.urlAndHostname.hostname), moment().format(DATE_FORMAT_FOR_LINK_OPENER));
+        }
+        task(opt);
+    });
+}
+
+/**
  * Displays a confirmation dialog before opening a potentially external link.
  * If the user accepts, their choice can be remembered to skip the dialog in the future for the same URL or host.
  * 
@@ -107,43 +132,62 @@ export function isExternalURL(urlAndHostname) {
  * @param {Object} windowFeatures - optional features passed to `window.open()` when opening the link.
  */
 export function checkLinkAndOpen(urlString, target, windowFeatures) {
-    const dateFormat = 'YYYY MM DD';
+    const urlCheckRes = canOpenLinkWithoutConfirmation(urlString);
+    if (urlCheckRes) {
+        if (urlCheckRes.canOpenWithoutConfirmation === false) {
+            confirmLinkAndThen(urlCheckRes, opt => {
+                openLink(urlCheckRes.urlAndHostname.url.href, urlCheckRes.target || target, windowFeatures);
+            });
+        } else {
+            openLink(urlCheckRes.urlAndHostname.url.href, urlCheckRes.target || target, windowFeatures);
+        }
+    }
+}
+
+/**
+ * Checks whether the specified URL string can be opened without user confirmation.
+ *
+ * @param {String} urlString - The URL to check for confirmation requirements.
+ * @returns {undefined|Object}
+ *  - `undefined` if the URL is either unsupported or invalid.
+ *  - An object containing the following properties if the link is valid and supported:
+ *      - `canOpenWithoutConfirmation` — Indicates whether the link can be opened without user confirmation.
+ *      - `target` — The `target` attribute used when opening the link (e.g., "_blank").
+ *      - `urlAndHostname` — The Object containing URL Object and hostname.
+ *      - `hostname` — The URL host name string.
+ */
+export function canOpenLinkWithoutConfirmation(urlString) {
     const urlAndHostname = processURL(urlString);
     if (urlAndHostname) {
-        const url = urlAndHostname.url.href;
         if (isExternalURL(urlAndHostname)) {
-            const hostName = urlAndHostname.hostname;
-            const isAllowedSite = () => appConfig.getSiteAllowlist() && appConfig.getSiteAllowlist().find(pattern => pattern.test(hostName));
+            const isAllowedSite = () => appConfig.getSiteAllowlist() && appConfig.getSiteAllowlist().find(pattern => pattern.test(urlAndHostname.hostname));
             const wasAcceptedByUser = () => {
                 const now = moment();
                 const isRecent = (key) =>
                     appConfig.getDaysUntilSitePermissionExpires() && 
                     localStorage.getItem(key) &&
-                    now.diff(moment(localStorage.getItem(key), dateFormat), 'days') < appConfig.getDaysUntilSitePermissionExpires();
+                    now.diff(moment(localStorage.getItem(key), DATE_FORMAT_FOR_LINK_OPENER), 'days') < appConfig.getDaysUntilSitePermissionExpires();
 
-                return isRecent(localStorageKey(url)) || isRecent(localStorageKey(hostName));
+                return isRecent(localStorageKey(urlAndHostname.url.href)) || isRecent(localStorageKey(urlAndHostname.hostname));
             };
-            if (!isAllowedSite() && !wasAcceptedByUser()) {
-                const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br><pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${url}</pre>`;
-                const options = ["Don't show this again for this link", "Don't show this again for this site"];
-                const buttons = [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true, classes: "red" }];
-
-                confirmationDialog.showConfirmationDialog(text, buttons, { single: true, options }, "Double-check this link").then(opt => {
-                    if (opt[options[0]]) {
-                        localStorage.setItem(localStorageKey(url), moment().format(dateFormat));
-                    }
-                    if (opt[options[1]]) {
-                        localStorage.setItem(localStorageKey(hostName), moment().format(dateFormat));
-                    }
-                    openLink(url, "_blank", windowFeatures);
-                });
-            } else {
-                openLink(url, "_blank", windowFeatures);
-            }
-        } else {
-            openLink(url, target, windowFeatures);
+            return {canOpenWithoutConfirmation: !!(isAllowedSite() || wasAcceptedByUser()), target: "_blank", urlAndHostname: urlAndHostname};
         }
+        return {canOpenWithoutConfirmation: true, urlAndHostname: urlAndHostname};
     }
+}
+
+/**
+ * Determines whether the specified link protocol is supported by the TG Platform.
+ *
+ * @param {String} maybeLink - The link to check.
+ * @returns {Boolean} `true` if the link protocol is supported; otherwise, `false`.
+ */
+export function isSupportedLink(maybeLink) {
+    if (maybeLink) {
+        const lowerCaseMaybeLink = maybeLink.toLowerCase();
+        return lowerCaseMaybeLink.startsWith(MAILTO_PROTOCOL) || SUPPORTED_PROTOCOLS.some(p => lowerCaseMaybeLink.startsWith(p + '//'))
+    }
+    return false;
 }
 
 /**

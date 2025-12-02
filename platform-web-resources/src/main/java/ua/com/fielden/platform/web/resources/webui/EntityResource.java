@@ -25,6 +25,7 @@ import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.share.ShareActionProducer;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -40,6 +41,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyAssignmentErrorHandler;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -47,6 +49,7 @@ import java.util.*;
 
 import static java.util.Optional.*;
 import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.tiny.TinyHyperlink.CUSTOM_OBJECT_ACTION_IDENTIFIER;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
@@ -184,7 +187,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     } catch (final ClassNotFoundException e) {
                         throw new IllegalStateException(e);
                     }
-                    final AbstractEntity<?> funcEntity = restoreEntityFrom(true, savingInfoHolder, funcEntityType, factory, webUiConfig, companionFinder, user, critGenerator, 0, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                    final AbstractEntity<?> funcEntity = restoreEntityFrom(true, savingInfoHolder, funcEntityType, PropertyAssignmentErrorHandler.standard, factory, webUiConfig, companionFinder, user, critGenerator, 0, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null,
@@ -205,6 +208,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     return createRepresentation(entity);
                 } else {
                     final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
+
+                    if (producer instanceof ShareActionProducer shareEntityActionProducer) {
+                        shareEntityActionProducer.setCentreContextHolder(centreContextHolder);
+                    }
 
                     final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(true, webUiConfig, companionFinder, user, critGenerator, factory, centreContextHolder, 0, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
                     final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
@@ -282,7 +289,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         final List<String> contProps = !savingInfoHolder.proxiedPropertyNames().contains("continuationProperties") ? savingInfoHolder.getContinuationProperties() : new ArrayList<>();
         final Map<String, IContinuationData> continuations = conts != null && !conts.isEmpty() ?
                 EntityResourceContinuationsHelper.createContinuationsMap(conts, contProps) : new LinkedHashMap<>();
-        final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+        final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, PropertyAssignmentErrorHandler.standard, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
         return EntityResourceContinuationsHelper.saveWithContinuations(applied, continuations, companion);
     }
@@ -295,11 +302,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     /// @param disregardOriginallyProducedEntities indicates whether it is necessary to disregard originallyProducedEntity while restoring this entity and its parent functional entities
     /// @param savingInfoHolder                    the actual holder of information about functional entity
     /// @param functionalEntityType                the type of functional entity to be restored into
+    /// @param propApplicationErrorHandler         an error handler that applies only to the restoration of the resulting entity
     ///
     public static <T extends AbstractEntity<?>> T restoreEntityFrom(
             final boolean disregardOriginallyProducedEntities,
             final SavingInfoHolder savingInfoHolder,
             final Class<T> functionalEntityType,
+            final PropertyAssignmentErrorHandler propApplicationErrorHandler,
             final EntityFactory entityFactory,
             final IWebUiConfig webUiConfig,
             final ICompanionObjectFinder companionFinder,
@@ -323,7 +332,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity restore...");
         final AbstractEntity<?> funcEntity = restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, critGenerator, entityFactory, centreContextHolder, tabCount + 1, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity has been restored.");
-        final T restored = restoreEntityFrom(disregardOriginallyProducedEntities, webUiConfig, user, savingInfoHolder, entityFactory, functionalEntityType, companion, entityProducer, companionFinder, critGenerator, funcEntity /* master context */, tabCount + 1, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+        final T restored = restoreEntityFrom(disregardOriginallyProducedEntities, webUiConfig, user, savingInfoHolder, propApplicationErrorHandler, entityFactory, functionalEntityType, companion, entityProducer, companionFinder, critGenerator, funcEntity /* master context */, tabCount + 1, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): duration: " + pd.getSeconds() + " s " + pd.getMillis() + " ms.");
@@ -362,7 +371,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             }
 
             if (entityType != null) {
-                entity = restoreEntityFrom(disregardOriginallyProducedEntities, outerContext, entityType, entityFactory, webUiConfig, companionFinder, user, critGenerator, tabCount + 1, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                entity = restoreEntityFrom(disregardOriginallyProducedEntities, outerContext, entityType, PropertyAssignmentErrorHandler.standard, entityFactory, webUiConfig, companionFinder, user, critGenerator, tabCount + 1, device, eccCompanion, mmiCompanion, userCompanion, sharingModel);
             }
         }
         final DateTime end = new DateTime();
@@ -377,6 +386,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final IWebUiConfig webUiConfig,
             final User user,
             final SavingInfoHolder savingInfoHolder,
+            final PropertyAssignmentErrorHandler propApplicationErrorHandler,
             final EntityFactory entityFactory,
             final Class<T> entityType,
             final IEntityDao<T> companion,
@@ -398,7 +408,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         final CentreContextHolder centreContextHolder = !savingInfoHolder.proxiedPropertyNames().contains("centreContextHolder") ? savingInfoHolder.getCentreContextHolder() : null;
         if (centreContextHolder == null) {
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder.");
-            applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, originallyProducedEntity, companion, producer, companionFinder).getKey();
+            applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, propApplicationErrorHandler, originallyProducedEntity, companion, producer, companionFinder).getKey();
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder finished.");
         } else {
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started.");
@@ -420,6 +430,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
 
             applied = EntityRestorationUtils.constructEntityWithContext(
                     modifiedPropertiesHolder,
+                    propApplicationErrorHandler,
                     originallyProducedEntity,
                     centreContext,
                     tabCount + 1,
@@ -438,9 +449,15 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     ///
     public static <T extends AbstractEntity<?>> Optional<EntityActionConfig> restoreActionConfig(final IWebUiConfig webUiConfig, final CentreContextHolder centreContextHolder) {
         final Optional<EntityActionConfig> actionConfig;
-        if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
-            final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>)
-                    ClassesRetriever.findClass((String) centreContextHolder.getCustomObject().get("@@miType"));
+        if (centreContextHolder.getCustomObject().get(CUSTOM_OBJECT_ACTION_IDENTIFIER) != null) {
+            final var actionIdentifier = (String) centreContextHolder.getCustomObject().get(CUSTOM_OBJECT_ACTION_IDENTIFIER);
+            actionConfig = webUiConfig.findAction(actionIdentifier);
+            if (actionConfig.isEmpty()) {
+                LOGGER.warn(() -> "Action configuration [%s] was not found.".formatted(actionIdentifier));
+            }
+        }
+        else if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
+            final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) ClassesRetriever.findClass((String) centreContextHolder.getCustomObject().get("@@miType"));
             final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(miType);
             actionConfig = ofNullable(centre.actionConfig(
                 valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
@@ -454,7 +471,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                 throw new IllegalStateException(e);
             }
             final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(entityType);
-            actionConfig = of(master.actionConfig(
+            actionConfig = ofNullable(master.actionConfig(
                 valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
                 Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")))
             );

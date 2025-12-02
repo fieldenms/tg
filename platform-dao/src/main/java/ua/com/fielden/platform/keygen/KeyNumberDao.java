@@ -35,7 +35,7 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
         }
 
         final int nextNo = Integer.parseInt(number.getValue(), radix) + 1;
-        number.setValue(Integer.toString(nextNo, radix));
+        number.setValue(Integer.toString(nextNo, radix).toUpperCase());
         save(number);
         return nextNo;
     }
@@ -58,7 +58,7 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
         }
 
         final SortedSet<Integer> keys = IntStream.iterate(Integer.parseInt(number.getValue(), radix) + 1, n -> n + 1).limit(count).boxed().collect(toCollection(TreeSet::new));
-        number.setValue(Integer.toString(keys.last(), radix));
+        number.setValue(Integer.toString(keys.last(), radix).toUpperCase());
         save(number);
         return keys;
     }
@@ -73,6 +73,21 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
             throw new EntityCompanionException(ERR_NO_NUMBER_FOR_KEY.formatted(key));
         }
         return Integer.valueOf(number.getValue(), radix);
+    }
+
+    @Override
+    @SessionRequired
+    public void reset(final String key) {
+        KeyNumber number = findByKey(key); // find an instance
+        if (number != null) {
+            // re-fetch instance with pessimistic write lock
+            number = getSession().load(KeyNumber.class, number.getId(), new LockOptions(LockMode.PESSIMISTIC_WRITE));
+            number.setValue("0");
+        }
+        else {
+            number = new_().setKey(key).setValue("0");
+        }
+        save(number);
     }
 
 }

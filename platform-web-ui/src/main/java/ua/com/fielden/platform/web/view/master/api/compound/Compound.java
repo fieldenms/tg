@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.tiny.IActionIdentifier;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -128,8 +129,16 @@ public class Compound {
             final String longDesc,
             final PrefDim prefDim)
     {
-        // TODO here empty context will be relevant in most cases, please use it when API for empty context will be implemented (for example, context().empty().build())
-        return open(openCompoundMasterActionType, empty(), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withSelectionCrit().build());
+        return open(openCompoundMasterActionType,
+                    of(actionIdentifierForNew(openCompoundMasterActionType)),
+                    empty(),
+                    ofNullable(icon),
+                    empty(),
+                    shortDesc,
+                    ofNullable(longDesc),
+                    prefDim,
+                    // TODO here empty context will be relevant in most cases, please use it when API for empty context will be implemented (for example, context().empty().build())
+                    context().withSelectionCrit().build());
     }
 
     /**
@@ -151,7 +160,16 @@ public class Compound {
             final String longDesc,
             final PrefDim prefDim)
     {
-        return open(openCompoundMasterActionType, empty(), ofNullable(icon), ofNullable(iconStyle), shortDesc, ofNullable(longDesc), prefDim, context().withSelectionCrit().build());
+        return open(openCompoundMasterActionType,
+                    of(actionIdentifierForNew(openCompoundMasterActionType)),
+                    empty(),
+                    ofNullable(icon),
+                    ofNullable(iconStyle),
+                    shortDesc,
+                    ofNullable(longDesc),
+                    prefDim,
+                    // TODO here empty context will be relevant in most cases, please use it when API for empty context will be implemented (for example, context().empty().build())
+                    context().withSelectionCrit().build());
     }
 
     /**
@@ -172,7 +190,15 @@ public class Compound {
             final String longDesc,
             final PrefDim prefDim)
     {
-        return open(openCompoundMasterActionType, empty(), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withMasterEntity().build());
+        return open(openCompoundMasterActionType,
+                    of(actionIdentifierForNewWithMaster(openCompoundMasterActionType)),
+                    empty(),
+                    ofNullable(icon),
+                    empty(),
+                    shortDesc,
+                    ofNullable(longDesc),
+                    prefDim,
+                    context().withMasterEntity().build());
     }
 
     /**
@@ -188,7 +214,15 @@ public class Compound {
             final String shortDesc,
             final PrefDim prefDim)
     {
-        return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), empty(), empty(), shortDesc, empty(), prefDim, context().withCurrentEntity().build());
+        return open(openCompoundMasterActionType,
+                    empty(),
+                    of(new EntityNavigationPreAction(shortDesc)),
+                    empty(),
+                    empty(),
+                    shortDesc,
+                    empty(),
+                    prefDim,
+                    context().withCurrentEntity().build());
     }
 
     /**
@@ -198,13 +232,23 @@ public class Compound {
      * @param shortDesc -- short description of action
      * @param longDesc -- long description of action
      * @param prefDim - preferred dimension for compound master dialog
+     * @return
      */
     public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
             final Class<OPEN_ACTION> openCompoundMasterActionType,
             final String shortDesc,
             final String longDesc,
-            final PrefDim prefDim) {
-        return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), empty(), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().build());
+            final PrefDim prefDim)
+    {
+        return open(openCompoundMasterActionType,
+                    empty(),
+                    of(new EntityNavigationPreAction(shortDesc)),
+                    empty(),
+                    empty(),
+                    shortDesc,
+                    ofNullable(longDesc),
+                    prefDim,
+                    context().withCurrentEntity().build());
     }
 
     /**
@@ -215,6 +259,7 @@ public class Compound {
      * @param shortDesc -- short description of action
      * @param longDesc -- long description of action
      * @param prefDim - preferred dimension for compound master dialog
+     * @return
      */
     public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
             final Class<OPEN_ACTION> openCompoundMasterActionType,
@@ -223,7 +268,15 @@ public class Compound {
             final String longDesc,
             final PrefDim prefDim)
     {
-        return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().build());
+        return open(openCompoundMasterActionType,
+                    empty(),
+                    of(new EntityNavigationPreAction(shortDesc)),
+                    ofNullable(icon),
+                    empty(),
+                    shortDesc,
+                    ofNullable(longDesc),
+                    prefDim,
+                    context().withCurrentEntity().build());
     }
     
     /**
@@ -235,6 +288,7 @@ public class Compound {
      * @param shortDesc -- short description of action
      * @param longDesc -- long description of action
      * @param prefDim - preferred dimension for compound master dialog
+     * @return
      */
     public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
             final Class<OPEN_ACTION> openCompoundMasterActionType,
@@ -244,12 +298,20 @@ public class Compound {
             final String longDesc,
             final PrefDim prefDim)
     {
-        return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().withComputation(computation).build());
+        return open(openCompoundMasterActionType,
+                    empty(),
+                    of(new EntityNavigationPreAction(shortDesc)),
+                    ofNullable(icon),
+                    empty(),
+                    shortDesc,
+                    ofNullable(longDesc),
+                    prefDim,
+                    context().withCurrentEntity().withComputation(computation).build());
     }
-    
 
     private static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig open(
             final Class<OPEN_ACTION> openCompoundMasterActionType,
+            final Optional<IActionIdentifier> maybeActionIdentifier,
             final Optional<IPreAction> preAction,
             final Optional<String> icon,
             final Optional<String> iconStyle,
@@ -258,7 +320,9 @@ public class Compound {
             final PrefDim prefDim,
             final CentreContextConfig centreContextConfig)
     {
-        final IEntityActionBuilder1<AbstractEntity<?>> actionPart = action(openCompoundMasterActionType).withContext(centreContextConfig);
+        final IEntityActionBuilder1<AbstractEntity<?>> actionPart = action(openCompoundMasterActionType)
+            .withTinyHyperlink(maybeActionIdentifier)
+            .withContext(centreContextConfig);
         IEntityActionBuilder2<AbstractEntity<?>> actionWithPreAction;
         if (preAction.isPresent()) {
             actionWithPreAction = actionPart.preAction(preAction.get());
@@ -286,5 +350,13 @@ public class Compound {
                     .build();
         }
     }
-    
+
+    private static IActionIdentifier actionIdentifierForNew(final Class<?> actionType) {
+        return IActionIdentifier.of("%s_OPEN_COMPOUND_NEW".formatted(actionType.getSimpleName()));
+    }
+
+    private static IActionIdentifier actionIdentifierForNewWithMaster(final Class<?> actionType) {
+        return IActionIdentifier.of("%s_OPEN_COMPOUND_NEW_WITH_MASTER".formatted(actionType.getSimpleName()));
+    }
+
 }

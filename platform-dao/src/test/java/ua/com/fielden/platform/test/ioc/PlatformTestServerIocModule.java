@@ -35,17 +35,16 @@ import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.test.entities.*;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.annotations.AppUri;
 
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Serve IoC module for platform related testing.
- *
- * @author TG Team
- *
- */
+import static java.lang.String.format;
+
+/// Serve IoC module for platform related testing.
+///
 public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
     private static final Logger LOGGER = LogManager.getLogger(PlatformTestServerIocModule.class);
@@ -76,6 +75,8 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
 
         install(new SecurityTestIocModule());
+
+        bindConstant().annotatedWith(AppUri.class).to(format("https://%s:%s%s", getProps().get("web.domain"), getProps().get("port"), getProps().get("web.path")));
     }
 
     @Override

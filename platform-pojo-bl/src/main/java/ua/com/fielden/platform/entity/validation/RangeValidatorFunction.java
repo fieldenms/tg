@@ -26,8 +26,12 @@ public abstract class RangeValidatorFunction<T> {
 
     public static final String ERR_NOT_SUPPORTED_PROPERTY_TYPE = "Range validation is not supported for property type [%s].";
 
-    public Result validate(final MetaProperty<T> startProperty, final T startValue,
-                           final MetaProperty<T> endProperty, final T endValue)
+    public Result validate(
+            final MetaProperty<T> startProperty,
+            final T startValue,
+            final MetaProperty<T> endProperty,
+            final T endValue,
+            final boolean strictComparison)
     {
         if (startValue == null && endValue == null) {
             return Result.Success;
@@ -36,12 +40,14 @@ public abstract class RangeValidatorFunction<T> {
         } else if (startValue != null && endValue == null) {
             return Result.Success;
         } else {
-            return coreValidate(startProperty, startValue, endProperty, endValue);
+            return coreValidate(startProperty, startValue, endProperty, endValue, strictComparison);
         }
     }
 
-    protected abstract Result coreValidate(final MetaProperty<T> startProperty, final T startValue,
-                                           final MetaProperty<T> endProperty, final T endValue);
+    protected abstract Result coreValidate(
+            final MetaProperty<T> startProperty, final T startValue,
+            final MetaProperty<T> endProperty, final T endValue,
+            final boolean strictComparison);
 
     public enum Result {
         Success,
@@ -76,9 +82,16 @@ public abstract class RangeValidatorFunction<T> {
     public static final class ComparableValidator<X extends Comparable<X>> extends RangeValidatorFunction<X> {
 
         @Override
-        public Result coreValidate(final MetaProperty<X> startProperty, final X startValue,
-                                   final MetaProperty<X> endProperty, final X endValue)
+        public Result coreValidate(
+                final MetaProperty<X> startProperty,
+                final X startValue,
+                final MetaProperty<X> endProperty,
+                final X endValue,
+                final boolean strictComparison)
         {
+            if (strictComparison) {
+                return startValue.compareTo(endValue) >= 0 ? Result.Failure : Result.Success;
+            }
             return startValue.compareTo(endValue) > 0 ? Result.Failure : Result.Success;
         }
     }
@@ -86,8 +99,12 @@ public abstract class RangeValidatorFunction<T> {
     public static final class DateValidator extends RangeValidatorFunction<Date> {
 
         @Override
-        protected Result coreValidate(final MetaProperty<Date> startProperty, final Date startValue,
-                                      final MetaProperty<Date> endProperty, final Date endValue)
+        protected Result coreValidate(
+                final MetaProperty<Date> startProperty,
+                final Date startValue,
+                final MetaProperty<Date> endProperty,
+                final Date endValue,
+                final boolean strictComparison)
         {
             requireNotNullArgument(startValue, "startValue");
             requireNotNullArgument(endValue, "endValue");
@@ -110,7 +127,12 @@ public abstract class RangeValidatorFunction<T> {
                 cmp = startValue.compareTo(endValue);
             }
 
-            return cmp > 0 ? Result.Failure : Result.Success;
+            if (strictComparison) {
+                return cmp >= 0 ? Result.Failure : Result.Success;
+            }
+            else {
+                return cmp > 0 ? Result.Failure : Result.Success;
+            }
         }
 
     }

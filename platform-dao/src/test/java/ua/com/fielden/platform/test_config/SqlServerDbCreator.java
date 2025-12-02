@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -20,14 +19,11 @@ import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 import ua.com.fielden.platform.utils.DbUtils;
 
-/**
- * This is a DB creator implementation for running unit tests against SQL Server 2012 and up.
- *
- * @author TG Team
- *
- */
+/// This is a DB creator implementation for running unit tests against SQL Server 2012 and up.
+///
 public class SqlServerDbCreator extends DbCreator {
 
     public SqlServerDbCreator(
@@ -35,9 +31,10 @@ public class SqlServerDbCreator extends DbCreator {
             final Properties props,
             final IDomainDrivenTestCaseConfiguration config,
             final List<String> maybeDdl,
-            final boolean execDdslScripts)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        super(testCaseType, props, config, maybeDdl, execDdslScripts);
+            final boolean execDdlScripts)
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException
+    {
+        super(testCaseType, props, config, maybeDdl, execDdlScripts);
     }
 
     /**
@@ -74,7 +71,7 @@ public class SqlServerDbCreator extends DbCreator {
      * Tables <code>ENTITY_CENTRE_CONFIG</code>, <code>ENTITY_LOCATOR_CONFIG</code> and <code>ENTITY_MASTER_CONFIG</code> are excluded as they contains <code>varbinary</code> columns that cannot be easily scripted.
      */
     @Override
-    public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) throws SQLException {
+    public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
         // unfortunately we have to drop all the constraints to enable data truncation and repopulation out of order...
         // now let's generate insert statements
         try (final PreparedStatement ps = conn.prepareStatement("EXEC sp_generate_inserts ?")) {
@@ -91,12 +88,14 @@ public class SqlServerDbCreator extends DbCreator {
                             }
                         }
                     } catch (final Exception ex) {
-                        logger.warn(format("Could not generate INSERT for table %s", table));
+                        logger.warn(() -> format("Could not generate INSERT for table %s", table));
                         logger.warn(ex.getMessage());
                     }
                     return inserts.stream();
                 })
                 .collect(toList());
+        } catch (final Exception ex) {
+            throw new DomainDrivenTestException("Could not generate insert statements.", ex);
         }
     }
 

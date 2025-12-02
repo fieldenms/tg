@@ -1,32 +1,13 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
-
-import java.util.Optional;
-
 import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRoleProducer;
-import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
-import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterProducer;
 import ua.com.fielden.platform.ui.menu.sample.MiUserRole;
-import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -41,15 +22,25 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-/**
- * {@link UserRole} Web UI configuration.
- *
- * @author TG Team
- *
- */
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
+
+/// [UserRole] Web UI configuration.
+///
+/// @author TG Team
 public class UserRoleWebUiConfig {
 
-    public final EntityMaster<UserRoleTokensUpdater> tokensUpdater;
     public final EntityCentre<UserRole> centre;
     public final EntityMaster<UserRole> master;
 
@@ -60,14 +51,10 @@ public class UserRoleWebUiConfig {
     private UserRoleWebUiConfig(final Injector injector) {
         centre = createCentre(injector);
         master = createMaster(injector);
-        tokensUpdater = createTokensUpdater(injector);
     }
 
-    /**
-     * Creates entity centre for {@link UserRole}.
-     *
-     * @return
-     */
+    /// Creates entity centre for [UserRole].
+    ///
     private static EntityCentre<UserRole> createCentre(final Injector injector) {
         final String fmr = "'flex', 'margin-right: 20px', 'width: 200px'";
         final String fmrLast = "'flex', 'width: 200px'";
@@ -76,7 +63,7 @@ public class UserRoleWebUiConfig {
                 + format("['flex']")
                 + "]";
 
-        final EntityCentre<UserRole> userRoleCentre = new EntityCentre<>(MiUserRole.class, "User Roles",
+        return new EntityCentre<>(MiUserRole.class, "User Roles",
                 EntityCentreBuilder.centreFor(UserRole.class)
                 .runAutomatically()
                 .addTopAction(UserRoleActions.NEW_ACTION.mkAction()).also()
@@ -93,17 +80,12 @@ public class UserRoleWebUiConfig {
                 .also()
                 .addProp("desc").minWidth(200).also()
                 .addProp(ACTIVE).minWidth(50)
-                .addPrimaryAction(UserRoleActions.EDIT_ACTION.mkAction()).also()
-                .addSecondaryAction(UserRoleActions.MANAGE_SECURITY_TOKEN_ACTION.mkAction())
+                .addPrimaryAction(UserRoleActions.EDIT_ACTION.mkAction())
                 .build(), injector, null);
-        return userRoleCentre;
     }
 
-    /**
-     * Creates entity master for {@link UserRole}.
-     *
-     * @return
-     */
+    /// Creates entity master for [UserRole].
+    ///
     private static EntityMaster<UserRole> createMaster(final Injector injector) {
         final int MARGIN = 20;
         final String MARGIN_PIX = MARGIN + "px";
@@ -138,25 +120,7 @@ public class UserRoleWebUiConfig {
                 injector);
     }
 
-    /**
-     * Creates entity master for {@link UserRoleTokensUpdater}.
-     *
-     * @return
-     */
-    private static EntityMaster<UserRoleTokensUpdater> createTokensUpdater(final Injector injector) {
-        final IMaster<UserRoleTokensUpdater> masterConfig = new SimpleMasterBuilder<UserRoleTokensUpdater>()
-                .forEntity(UserRoleTokensUpdater.class)
-                .addProp("tokens").asCollectionalEditor().withHeader("title").also()
-                .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes, if any, and close the dialog.")
-                .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
-                .setActionBarLayoutFor(Device.DESKTOP, empty(), mkActionLayoutForMaster())
-                .setLayoutFor(Device.DESKTOP, empty(), "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']] ]")
-                .withDimensions(mkDim(30, 75, Unit.PRC))
-                .done();
-        return new EntityMaster<>(UserRoleTokensUpdater.class, UserRoleTokensUpdaterProducer.class, masterConfig, injector);
-    }
-
-    private static enum UserRoleActions {
+    private enum UserRoleActions {
 
         NEW_ACTION {
             @Override
@@ -201,21 +165,9 @@ public class UserRoleWebUiConfig {
                         .build();
             }
 
-        },
-
-        MANAGE_SECURITY_TOKEN_ACTION {
-            @Override
-            public EntityActionConfig mkAction() {
-                return action(UserRoleTokensUpdater.class)
-                        .withContext(context().withCurrentEntity().build())
-                        .icon("av:playlist-add-check")
-                        .shortDesc("Add/Remove Security Tokens")
-                        .longDesc("Add/remove security token associations for the current user role.")
-                        .build();
-            }
-
         };
 
         public abstract EntityActionConfig mkAction();
     }
+
 }

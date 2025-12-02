@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -88,13 +89,12 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                     .attr("slot", "menu-item").attr("data-route", el.getDataRoute())
                     .attr("tooltip-text", el.conf().longDesc.orElse(""))
                     .attr("item-title", el.getShortDesc())
-                    .clazz(el.numberOfAction == 0 ? "notDraggable" : "")
+                    .attr("drag-element", el.numberOfAction == 0 ? false : true)
                     .style("padding-right: 16px")
                     .add(new DomElement("iron-icon")
-                            .attr("draggable", "true")
                             .attr("icon", "tg-icons:dragVertical")
                             .clazz("drag-anchor")
-                            .style("cursor: grab", "visibility: var(--icon-visibility)", "display: var(--icon-display)"))
+                            .style("visibility: var(--icon-visibility)", "display: var(--icon-display)"))
                     .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 32px"))
                     .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc()))));
         }
@@ -169,4 +169,10 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         throw new UnsupportedOperationException("Getting of action configuration is not supported.");
     }
+
+    @Override
+    public Stream<EntityActionConfig> streamActionConfigs() {
+        return Stream.empty();
+    }
+
 }

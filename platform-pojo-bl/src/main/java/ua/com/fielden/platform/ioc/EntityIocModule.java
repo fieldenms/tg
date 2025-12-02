@@ -3,6 +3,7 @@ package ua.com.fielden.platform.ioc;
 import ua.com.fielden.platform.audit.AuditingIocModule;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web_api.GraphQLScalars;
 
 import java.util.Properties;
@@ -37,10 +38,11 @@ public abstract class EntityIocModule extends AbstractPlatformIocModule {
                 annotatedWith(Observable.class), // having observed methods
                 new ObservableMutatorInterceptor()); // the interceptor
 
-        // request static IDates injection into GraphQLScalars;
-        // static injection occurs at the time when an injector is created
-        // this guarantees that different implementations of IDates will be injected based on IDates binding in IoC modules that define the binding configuration;
+        // Request static [IDates] injection into [GraphQLScalars] and [EntityUtils].
+        // Static injection occurs at the time when an injector is created.
+        // This guarantees that different implementations of [IDates] will be injected based on [IDates] binding in IoC modules that define the binding configuration;
         requestStaticInjection(GraphQLScalars.class);
+        requestStaticInjection(EntityUtils.class);
 
         install(DynamicPropertyAccessIocModule.options().fromProperties(properties));
         install(new DynamicPropertyAccessIocModule());

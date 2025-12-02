@@ -13,6 +13,7 @@ import { TgReflector } from '/app/tg-reflector.js';
 import '/resources/components/tg-scrollable-component.js';
 import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
+import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-handler-behaviour.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/images/tg-document-related-icons.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
@@ -64,7 +65,7 @@ const template = html`
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Edit' long-desc='Edit title, description and dashboard settings...' icon='tg-document-related-icons:square-edit-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_3_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.3.attrs]]' pre-action='[[topLevelActions.3.preAction]]' post-action-success='[[topLevelActions.3.postActionSuccess]]' post-action-error='[[topLevelActions.3.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Delete configuration' long-desc='Delete current configuration' icon='tg-document-related-icons:delete-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigDeleteAction' element-name='tg-CentreConfigDeleteAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigDeleteAction-master_4_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.4.attrs]]' pre-action='[[topLevelActions.4.preAction]]' post-action-success='[[topLevelActions.4.postActionSuccess]]' post-action-error='[[topLevelActions.4.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Configure' long-desc='Configure running automatically...' icon='icons:settings' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigConfigureAction' element-name='tg-CentreConfigConfigureAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigConfigureAction-master_5_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.5.attrs]]' pre-action='[[topLevelActions.5.preAction]]' post-action-success='[[topLevelActions.5.postActionSuccess]]' post-action-error='[[topLevelActions.5.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' hidden="[[embedded]]" disabled='[[_configureButtonDisabled]]' style='[[_computeButtonStyle(_configureButtonDisabled)]]'></tg-ui-action>
-        <paper-icon-button id="helpAction" slot="standart-action" style="color:#727272" icon="icons:help-outline" on-mousedown="_helpMouseDownEventHandler" on-touchstart="_helpMouseDownEventHandler" on-mouseup="_helpMouseUpEventHandler" on-touchend="_helpMouseUpEventHandler" tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link."></paper-icon-button>
+        <paper-icon-button id="helpAction" slot="standart-action" style="color:#727272" icon="icons:help-outline" on-tg-long-tap="_longHelpTapHandler" on-tg-short-tap="_shortHelpTapHandler" tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link."></paper-icon-button>
     </tg-responsive-toolbar>
     <tg-scrollable-component class="relative">
         <slot name="custom-selection-criteria"></slot>
@@ -84,6 +85,7 @@ Polymer({
     is: 'tg-selection-view',
 
     behaviors: [
+        TgLongTapHandlerBehaviour,
         IronA11yKeysBehavior,
         TgRequiredPropertiesFocusTraversalBehavior,
         TgShortcutProcessingBehavior,
@@ -116,9 +118,8 @@ Polymer({
         embedded: Boolean,
         initiateAutoRun: Function,
         _resetAutocompleterState: Function,
-        _helpMouseDownEventHandler: Function,
-        _helpMouseUpEventHandler: Function
-
+        _longHelpTapHandler: Function,
+        _shortHelpTapHandler: Function
     },
 
     created: function () {

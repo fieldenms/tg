@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.test;
 
 import com.google.inject.Injector;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
@@ -14,14 +12,10 @@ import java.util.Properties;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 
-/**
- * Provides Platform specific implementation of {@link IDomainDrivenTestCaseConfiguration} for testing purposes, which is mainly related to construction of appropriate IoC modules.
- *
- * @author TG Team
- */
+/// Provides Platform specific implementation of [IDomainDrivenTestCaseConfiguration] for testing purposes,
+/// which is mainly related to construction of appropriate IoC modules.
+///
 public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private final Injector injector;
 
@@ -37,7 +31,6 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
                     .getInjector();
 
         } catch (final Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -60,6 +53,9 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         props.setProperty("email.smtp", "non-existing-server");
         props.setProperty("email.fromAddress", "platform@fielden.com.au");
         props.setProperty("web.api", "true");
+        props.setProperty("web.domain", "tgdev.com");
+        props.setProperty("web.port", "443");
+        props.setProperty("web.path", "/");
         // Custom Hibernate configuration properties
         props.setProperty("hibernate.show_sql", "false");
         props.setProperty("hibernate.format_sql", "true");

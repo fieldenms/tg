@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.inject.Inject;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -36,9 +37,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
-import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -75,22 +74,24 @@ public class EntityUtils {
 
     public static final String ERR_PERSISTENT_NATURE_OF_ENTITY_TYPE = "Could not determine persistent nature of entity type [%s].";
 
+    @Inject
+    private static IDates dates;
+
     /** Private default constructor to prevent instantiation. */
     private EntityUtils() {
     }
 
-    /**
-     * dd/MM/yyyy format instance
-     */
+    /// dd/MM/yyyy format.
+    ///
+    /// **DEPRECATED:** Use [IDates#dateFormat()] instead.
+    ///
+    @Deprecated(forRemoval = true, since = "2.2.0")
     public static final String dateWithoutTimeFormat = "dd/MM/yyyy";
 
-    /**
-     * Convenient method for value to {@link String} conversion
-     *
-     * @param value
-     * @param valueType
-     * @return
-     */
+    /// Convenient method for value to [String] conversion.
+    ///
+    /// Returns an empty string if `value` is `null`.
+    ///
     public static String toString(final Object value, final Class<?> valueType) {
         if (value == null) {
             return "";
@@ -99,9 +100,10 @@ public class EntityUtils {
             return NumberFormat.getInstance().format(value);
         } else if (Number.class.isAssignableFrom(valueType) || valueType == double.class) {
             return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
-        } else if (Date.class.isAssignableFrom(valueType) || DateTime.class.isAssignableFrom(valueType)) {
-            final Date date = Date.class.isAssignableFrom(valueType) ? (Date) value : ((DateTime) value).toDate();
-            return new SimpleDateFormat(dateWithoutTimeFormat).format(date) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
+        } else if (value instanceof Date date) {
+            return dates.toString(date);
+        } else if (value instanceof DateTime dateTime) {
+            return dates.toString(dateTime.toDate());
         } else if (Money.class.isAssignableFrom(valueType)) {
             return value instanceof Number ? new Money(value.toString()).toString() : value.toString();
         } else if (valueType == BigDecimalWithTwoPlaces.class) {
@@ -246,29 +248,6 @@ public class EntityUtils {
             }
         }
         return -1;
-    }
-
-    /**
-     * Formats passeed value according to its type.
-     *
-     * @param value
-     * @param valueType
-     * @return
-     */
-    public static String formatTooltip(final Object value, final Class<?> valueType) {
-        if (value == null) {
-            return "";
-        }
-        if (valueType == Integer.class) {
-            return NumberFormat.getInstance().format(value);
-        } else if (Number.class.isAssignableFrom(valueType)) {
-            return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
-        } else if (valueType == Date.class || valueType == DateTime.class) {
-            final Object convertedValue = value instanceof DateTime ? ((DateTime) value).toDate() : value;
-            return new SimpleDateFormat(dateWithoutTimeFormat).format(convertedValue) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(convertedValue);
-        } else {
-            return value.toString();
-        }
     }
 
     /**
@@ -1577,24 +1556,34 @@ public class EntityUtils {
         return result;
     }
 
-    /**
-     * A convenient method checking whether entity values should be enlisted in descending (key) order.
-     *
-     * @param type
-     * @return
-     */
+    /// A convenient method checking whether entity values should be enlisted in descending (key) order.
+    ///
     public static boolean isNaturalOrderDescending(final Class<? extends AbstractEntity<?>> type) {
-        return AnnotationReflector.getAnnotation(type, KeyType.class).descendingOrder();
+        return AnnotationReflector.getAnnotationOptionally(type, KeyType.class).map(KeyType::descendingOrder).orElse(false);
     }
 
-    /**
-     * Returns true if propertyName in entityType has {@link DateOnly} annotation.
-     *
-     * @param entityType
-     * @param propertyName
-     * @return
-     */
+    /// Determines if `propertyName` in `entityType` is a [DateOnly] property.
+    ///
     public static boolean isDateOnly(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
         return isAnnotationPresent(findFieldByName(entityType, propertyName), DateOnly.class);
     }
+
+    /// Determines if [MetaProperty] `mp` represents a [DateOnly] property.
+    ///
+    public static boolean isDateOnly(final MetaProperty<Date> mp) {
+        return isAnnotationPresent(findFieldByName(mp.getEntity().getType(), mp.getName()), DateOnly.class);
+    }
+
+    /// Determines if `propertyName` in `entityType` is a [TimeOnly] property.
+    ///
+    public static boolean isTimeOnly(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
+        return isAnnotationPresent(findFieldByName(entityType, propertyName), TimeOnly.class);
+    }
+
+    /// Determines if [MetaProperty] `mp` represents a [TimeOnly] property.
+    ///
+    public static boolean isTimeOnly(final MetaProperty<Date> mp) {
+        return isAnnotationPresent(findFieldByName(mp.getEntity().getType(), mp.getName()), TimeOnly.class);
+    }
+
 }

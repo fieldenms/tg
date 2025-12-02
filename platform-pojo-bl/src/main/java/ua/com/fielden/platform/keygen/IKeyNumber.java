@@ -51,4 +51,9 @@ public interface IKeyNumber extends IEntityDao<KeyNumber> {
     ///
     Integer currNumber(final String key, final int radix);
 
+    /// Resets the value associated with `key` to 0.
+    /// If no record for `key` exists, a new record is added.
+    ///
+    void reset(final String key);
+
 }
