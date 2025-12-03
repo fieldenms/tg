@@ -23,11 +23,13 @@ import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.PropertyDeserialisationErrorHandler;
 import ua.com.fielden.platform.tiny.TinyHyperlink;
 import ua.com.fielden.platform.tiny.TinyHyperlinkCo;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyAssignmentErrorHandler;
@@ -113,66 +115,81 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                 return restUtil.resultJSONRepresentation(successful().extendResultWithCustomObject(customObject));
             }
             // Otherwise, it represents a shared entity.
-
-            final PropertyDeserialisationErrorHandler propDeserialisationErrorHandler = (entity, property, inputValueSupplier, error) -> {
-                LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during deserialisation: %s",
-                                         tinyHyperlink.getHash(),
-                                         PropertyDeserialisationErrorHandler.makeMessage(entity, property, inputValueSupplier)),
-                            error);
-                // Ignore non-existing properties.
-                // Assign a warning if property deserialisation fails.
-                if (isPropertyPresent(entity.getType(), property)) {
-                    entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
-                }
-            };
-
-            final PropertyAssignmentErrorHandler propApplicationErrorHandler = (entity, property, value, error) -> {
-                LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during property application: %s",
-                                         tinyHyperlink.getHash(),
-                                         PropertyAssignmentErrorHandler.makeMessage(entity, property, value)),
-                            error);
-                // Ignore non-existing properties.
-                // Assign a warning if property application fails.
-                if (isPropertyPresent(entity.getType(), property)) {
-                    // The meta-property should exist, but let's be defensive.
-                    entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
-                }
-            };
-
-            final SavingInfoHolder savingInfoHolder;
-            EntitySerialiser.getContext().setPropDeserialisationErrorHandler(propDeserialisationErrorHandler);
-            try {
-                savingInfoHolder = serialiser.deserialise(tinyHyperlink.getSavingInfoHolder(), SavingInfoHolder.class, SerialiserEngines.JACKSON);
-            } finally {
-                EntitySerialiser.getContext().removePropDeserialisationErrorHandler();
-            }
-
-            final var entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(tinyHyperlink.getEntityTypeName());
-            final var entity = restoreEntityFrom(true,
-                                                 savingInfoHolder,
-                                                 entityType,
-                                                 propApplicationErrorHandler,
-                                                 factory,
-                                                 webUiConfig,
-                                                 companionFinder,
-                                                 userProvider.getUser(),
-                                                 critGenerator,
-                                                 0,
-                                                 device(),
-                                                 companionFinder.find(EntityCentreConfig.class),
-                                                 companionFinder.find(MainMenuItem.class),
-                                                 companionFinder.find(User.class),
-                                                 sharingModel);
-
-            final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
-            customObject.put(CUSTOM_OBJECT_ACTION_IDENTIFIER, tinyHyperlink.getActionIdentifier());
-            // Send the deserialised `savingInfoHolder` to the client instead of the original `tinyHyperlink.savingInfoHolder`.
-            // Since we skip properties that could not be deserialised (via a custom error handler), the deserialised form will be free of erroneous elements.
-            // If we sent the original form, the client could use it for subsequent requests to other resources that do not use a lenient error handler for deserialisation,
-            // ultimately causing unexpected errors.
-            customObject.put(SAVING_INFO_HOLDER, new String(serialiser.serialise(savingInfoHolder, SerialiserEngines.JACKSON)));
-            return restUtil.resultJSONRepresentation(restUtil.singleEntityResult(entity).extendResultWithCustomObject(customObject));
+            return restoreSharedEntity(tinyHyperlink, factory, critGenerator, companionFinder, serialiser, webUiConfig, userProvider, device(), sharingModel)
+                    .map((savingInfoHolder, entity) -> {
+                        final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
+                        customObject.put(CUSTOM_OBJECT_ACTION_IDENTIFIER, tinyHyperlink.getActionIdentifier());
+                        // Send the deserialised `savingInfoHolder` to the client instead of the original `tinyHyperlink.savingInfoHolder`.
+                        // Since we skip properties that could not be deserialised (via a custom error handler), the deserialised form will be free of erroneous elements.
+                        // If we sent the original form, the client could use it for subsequent requests to other resources that do not use a lenient error handler for deserialisation,
+                        // ultimately causing unexpected errors.
+                        customObject.put(SAVING_INFO_HOLDER, new String(serialiser.serialise(savingInfoHolder, SerialiserEngines.JACKSON)));
+                        return restUtil.resultJSONRepresentation(restUtil.singleEntityResult(entity).extendResultWithCustomObject(customObject));
+                    });
         }, restUtil);
+    }
+
+    static T2<SavingInfoHolder, AbstractEntity<?>> restoreSharedEntity(
+            final TinyHyperlink tinyHyperlink,
+            final EntityFactory entityFactory,
+            final ICriteriaGenerator critGenerator,
+            final ICompanionObjectFinder companionFinder,
+            final ISerialiser serialiser,
+            final IWebUiConfig webUiConfig,
+            final IUserProvider userProvider,
+            final DeviceProfile deviceProfile,
+            final ICentreConfigSharingModel sharingModel)
+    {
+        final PropertyDeserialisationErrorHandler propDeserialisationErrorHandler = (entity, property, inputValueSupplier, error) -> {
+            LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during deserialisation: %s",
+                                     tinyHyperlink.getHash(),
+                                     PropertyDeserialisationErrorHandler.makeMessage(entity, property, inputValueSupplier)),
+                        error);
+            // Ignore non-existing properties.
+            // Assign a warning if property deserialisation fails.
+            if (isPropertyPresent(entity.getType(), property)) {
+                entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
+            }
+        };
+
+        final PropertyAssignmentErrorHandler propApplicationErrorHandler = (entity, property, value, error) -> {
+            LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during property application: %s",
+                                     tinyHyperlink.getHash(),
+                                     PropertyAssignmentErrorHandler.makeMessage(entity, property, value)),
+                        error);
+            // Ignore non-existing properties.
+            // Assign a warning if property application fails.
+            if (isPropertyPresent(entity.getType(), property)) {
+                // The meta-property should exist, but let's be defensive.
+                entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
+            }
+        };
+
+        final SavingInfoHolder savingInfoHolder;
+        EntitySerialiser.getContext().setPropDeserialisationErrorHandler(propDeserialisationErrorHandler);
+        try {
+            savingInfoHolder = serialiser.deserialise(tinyHyperlink.getSavingInfoHolder(), SavingInfoHolder.class, SerialiserEngines.JACKSON);
+        } finally {
+            EntitySerialiser.getContext().removePropDeserialisationErrorHandler();
+        }
+
+        final var entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(tinyHyperlink.getEntityTypeName());
+        final var entity = restoreEntityFrom(true,
+                                             savingInfoHolder,
+                                             entityType,
+                                             propApplicationErrorHandler,
+                                             entityFactory,
+                                             webUiConfig,
+                                             companionFinder,
+                                             userProvider.getUser(),
+                                             critGenerator,
+                                             0,
+                                             deviceProfile,
+                                             companionFinder.find(EntityCentreConfig.class),
+                                             companionFinder.find(MainMenuItem.class),
+                                             companionFinder.find(User.class),
+                                             sharingModel);
+        return t2(savingInfoHolder, entity);
     }
 
 }
