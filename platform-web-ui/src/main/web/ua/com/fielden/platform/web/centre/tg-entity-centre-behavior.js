@@ -1389,8 +1389,8 @@ const TgEntityCentreBehaviorImpl = {
                         // `preferredView` has actually been changed.
                         // First, it should be saved into persisted storage.
                         this._preferredViewUpdaterAction._run();
-                        // And then, alternative view [re-]activation should occur as it is a lazy process.
-                        this.runInsertionPointActions();
+                        // And then, alternative view [re-]activation (if preferred) should occur as it is a lazy process.
+                        this.runInsertionPointActions(null, true /* alternativeViewsOnly */);
                     }
                 }
             }   
@@ -1633,7 +1633,13 @@ const TgEntityCentreBehaviorImpl = {
         self.fire('tg-save-as-name-changed', newSaveAsName);
     },
 
-    runInsertionPointActions: function (excludeInsertionPoints) {
+    /// Run insertion points for this entity centre.
+    /// This includes running of preferred alternative view.
+    ///
+    /// @param excludeInsertionPoints -- a list of `tg-*-master` insertion points to be excluded (see `withNoInsertionPointsRefresh` Action API)
+    /// @param alternativeViewsOnly -- specify truthy value to skip non-alternative-views running, falsy otherwise
+    ///
+    runInsertionPointActions: function (excludeInsertionPoints, alternativeViewsOnly) {
         const self = this;
         const actions = self.$.egi.querySelectorAll('.insertion-point-action');
         if (actions) {
@@ -1647,7 +1653,7 @@ const TgEntityCentreBehaviorImpl = {
                         || !excludeInsertionPoints.includes(action.elementName)
                     ) && (
                         // Always run insertion points that are not alternative views (i.e. `alternativeView` is empty).
-                        !(alternativeView = self._alternativeViews.find(altView => altView.functionalMasterTagName === action.elementName.toUpperCase()))
+                        !(alternativeView = self._alternativeViews.find(altView => altView.functionalMasterTagName === action.elementName.toUpperCase())) && !alternativeViewsOnly
                         // Only run alternative view iff it is preferred one,
                         //   i.e. the one that is already loaded or will be loaded shortly based on persisted user preference.
                         // If it was not loaded, perhaps RUN action (or auto-run for embedded / link / save-as / default) is performed.
