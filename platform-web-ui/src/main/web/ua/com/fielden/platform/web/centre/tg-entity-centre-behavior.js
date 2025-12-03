@@ -1647,16 +1647,7 @@ const TgEntityCentreBehaviorImpl = {
                         || !excludeInsertionPoints.includes(action.elementName)
                     ) && (
                         !(alternativeView = self._alternativeViews.find(altView => altView.functionalMasterTagName === action.elementName.toUpperCase()))
-                        || alternativeView
-                            && alternativeView.$
-                            && alternativeView.$.elementLoader
-                            && alternativeView.$.elementLoader.loadedElement
-                            && alternativeView.$.elementLoader.loadedElement.offsetParent !== null
-                        || alternativeView
-                            && alternativeView.$
-                            && alternativeView.$.elementLoader
-                            && !alternativeView.$.elementLoader.loadedElement
-                            && self.allViews[self.preferredView] === alternativeView
+                        || alternativeView && self.allViews[self.preferredView] === alternativeView
                     )
                 ) {
                     self.async(function () {
