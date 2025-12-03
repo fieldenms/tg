@@ -1,0 +1,22 @@
+package ua.com.fielden.platform.web.resources.test;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+
+import java.util.List;
+
+import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
+
+/// A class to enlist platform test domain entities for web resource tests.
+///
+class WebResourcesTestDomainTypes extends PlatformTestDomainTypes {
+
+    @Override
+    public List<Class<? extends AbstractEntity<?>>> entityTypes() {
+        return concatList(
+                super.entityTypes(),
+                // Additional entity types go here.
+                List.of());
+    }
+
+}
