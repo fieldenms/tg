@@ -1386,13 +1386,11 @@ const TgEntityCentreBehaviorImpl = {
                     this._selectedView = index;
                     if (this._selectedView !== 0 && this.preferredView !== this._selectedView) {
                         this.preferredView = this._selectedView;
+                        // `preferredView` has actually been changed.
+                        // First, it should be saved into persisted storage.
                         this._preferredViewUpdaterAction._run();
+                        // And then, alternative view [re-]activation should occur as it is a lazy process.
                         this.runInsertionPointActions();
-//                        const actions = this.$.egi.querySelectorAll('.insertion-point-action');
-//                        let altViewAction;
-//                        if (actions && (altViewAction = [...actions].find(action => this.preferredView === action.elementName.toUpperCase()))) {
-//                            altViewAction._run();
-//                        }
                     }
                 }
             }   
@@ -1643,10 +1641,18 @@ const TgEntityCentreBehaviorImpl = {
                 let alternativeView;
                 if (
                     (
+                        // If `excludeInsertionPoints` are not specified - skip excluding anything and check further conditions.
                         !Array.isArray(excludeInsertionPoints)
+                        // Otherwise, exclude currently processed insertion point if it matches exclusion criteria.
                         || !excludeInsertionPoints.includes(action.elementName)
                     ) && (
+                        // Always run insertion points that are not alternative views (i.e. `alternativeView` is empty).
                         !(alternativeView = self._alternativeViews.find(altView => altView.functionalMasterTagName === action.elementName.toUpperCase()))
+                        // Only run alternative view iff it is preferred one,
+                        //   i.e. the one that is already loaded or will be loaded shortly based on persisted user preference.
+                        // If it was not loaded, perhaps RUN action (or auto-run for embedded / link / save-as / default) is performed.
+                        // If it was loaded, likely REFRESH action is performed (or auto-run).
+                        // In both cases `preferredView` state is always present and actual (due to early client-side assignment).
                         || alternativeView && self.allViews[self.preferredView] === alternativeView
                     )
                 ) {
