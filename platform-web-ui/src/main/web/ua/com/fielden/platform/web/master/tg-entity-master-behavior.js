@@ -99,7 +99,6 @@ const _isElementInViewport = function (el) {
  * Focuses 'inputToFocus' taking into account that it can already be focused.
  */
 const focusInput = function (inputToFocus) {
-    console.log(`_updateManuallyFocusedInputWith (focusInput)`, inputToFocus);
     inputToFocus.focus();
     // '.focus()' scrolls to view.
     // However, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused).
@@ -1160,7 +1159,6 @@ const TgEntityMasterBehaviorImpl = {
             // Please note, that tg-multiline-text-editor is special and its <text-area> does not have 'custom-input' class.
             // Only, <iron-autogrow-text-area> above has it.
             this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
-            console.trace(`_updateManuallyFocusedInputWith to`, this.manuallyFocusedInput);
         }
     },
 
@@ -1251,7 +1249,6 @@ const TgEntityMasterBehaviorImpl = {
      * In case of preferred input focusing, the contents of the input gets selected.
      */
     focusView: function () {
-        console.log(`_updateManuallyFocusedInputWith (focusView for `, this.is, `)`, this.manuallyFocusedInput);
         this.async(() => {
             const insertionPoint = getParentAnd(this, parent => parent.matches('tg-entity-centre-insertion-point'));
             if (!insertionPoint || (insertionPoint.offsetParent !== null && insertionPoint.alternativeView)) { 

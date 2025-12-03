@@ -350,7 +350,7 @@ Polymer({
      */
     _createRun: function () {
         return (function (closeAfterExecution, subRole, continuation, continuationProperty) {
-            /**/this.persistActiveElement();
+            this.persistActiveElement();
 
             this._innerEnabled = false;
             console.log(this.shortDesc + ": execute");
@@ -586,7 +586,7 @@ Polymer({
             // Make spinner invisible
             this.$.spinner.style.display = 'none';
 
-            /**/this.restoreActiveElement();
+            this.restoreActiveElement();
         }
     },
 
