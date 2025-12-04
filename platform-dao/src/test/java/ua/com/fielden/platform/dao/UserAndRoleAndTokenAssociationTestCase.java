@@ -93,7 +93,7 @@ public class UserAndRoleAndTokenAssociationTestCase extends AbstractDaoTestCase 
             }
         }
         assertEquals(1, associations.size());
-        coUserAndRoleAssociation.removeAssociation(associations);
+        coUserAndRoleAssociation.deactivateAssociation(associations);
         coUser.save(userBefore);
 
         // retrieve and check the updated user
@@ -103,8 +103,15 @@ public class UserAndRoleAndTokenAssociationTestCase extends AbstractDaoTestCase 
 
         // checking whether the user role1 was removed or not
         final Set<UserAndRoleAssociation> userRoleAssociations = userAfter.getRoles();
-        assertEquals("Unexpected number of roles.", 1, userRoleAssociations.size());
-        assertEquals("Invalid role association.", co(UserRole.class).findByKey("ROLE2"), userRoleAssociations.iterator().next().getUserRole());
+        assertEquals(2, userRoleAssociations.size());
+        final var userRoles = userRoleAssociations.iterator();
+        final var userRoleAssociation1 = userRoles.next();
+        assertEquals("ROLE1", userRoleAssociation1.getUserRole().getKey());
+        assertFalse(userRoleAssociation1.isActive());
+        final var userRoleAssociation2 = userRoles.next();
+        assertEquals("ROLE2", userRoleAssociation2.getUserRole().getKey());
+        assertTrue(userRoleAssociation2.isActive());
+
     }
 
     @Test
@@ -145,7 +152,7 @@ public class UserAndRoleAndTokenAssociationTestCase extends AbstractDaoTestCase 
     public void security_associations_can_be_retrieved() {
         final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
         final List<SecurityRoleAssociation> associations = coSecurityRoleAssociation.getAllEntities(from(model).with(fetch(SecurityRoleAssociation.class).with(ROLE)).model());
-        assertEquals("Incorrect number of security token/role associations.", 102, associations.size());
+        assertEquals("Incorrect number of security token/role associations.", 100, associations.size());
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
         assertEqualByContents(Set.of(UNIT_TEST_ROLE, "ROLE1", "ROLE2"),
                               roles.stream().map(SecurityRoleAssociation::getRole).map(UserRole::getKey).collect(toImmutableSet()));;

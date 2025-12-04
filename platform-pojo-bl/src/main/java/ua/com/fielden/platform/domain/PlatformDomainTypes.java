@@ -43,7 +43,6 @@ public class PlatformDomainTypes {
         types.add(ReUser.class);
         types.add(UserLocator.class);
         types.add(UserSecret.class);
-        types.add(UserRolesUpdater.class);
         types.add(UserSession.class);
         types.add(UserRole.class);
         types.add(SecurityTokenInfo.class);

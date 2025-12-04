@@ -12,12 +12,9 @@ import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchActionCo
 import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchActionDao;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.reflection.CompanionObjectAutobinder;
-import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
-import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionDao;
 
 import java.util.List;
 import java.util.Properties;
-import java.util.function.Predicate;
 
 import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
 
@@ -43,7 +40,6 @@ public class CompanionIocModule extends CommonFactoryIocModule {
         bind(IEntityAggregatesOperations.class).to(EntityAggregatesDao.class);
         bind(IEntityAggregates.class).to(CommonEntityAggregatesDao.class);
 
-        bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
         bind(UserMenuInvisibilityAssociationBatchActionCo.class).to(UserMenuInvisibilityAssociationBatchActionDao.class);
         install(new EntityCompanionGenerationIocModule());
     }

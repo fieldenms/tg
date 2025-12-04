@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -54,12 +53,9 @@ import static ua.com.fielden.platform.security.user.UserSecretCo.newUserPassword
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
 
-/**
- * DAO implementation of {@link IUser}.
- *
- * @author TG Team
- *
- */
+/// DAO implementation of [IUser].
+///
+/// @author TG Team
 @EntityType(User.class)
 public class UserDao extends CommonEntityDao<User> implements IUser {
 
@@ -77,10 +73,8 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public UserDao(
             final INewUserNotifier newUserNotifier,
             final SessionIdentifierGenerator crypto,
-            final IApplicationSettings appSettings,
-            final IFilter filter) {
-        super(filter);
-
+            final IApplicationSettings appSettings)
+    {
         this.newUserNotifier = newUserNotifier;
         this.crypto = crypto;
         this.ssoMode = appSettings.authMode() == AuthMode.SSO;
@@ -276,7 +270,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         }
 
         // first remove user/role associations
-        this.<UserAndRoleAssociationCo, UserAndRoleAssociation>co$(UserAndRoleAssociation.class).removeAssociation(removeList);
+        this.<UserAndRoleAssociationCo, UserAndRoleAssociation>co$(UserAndRoleAssociation.class).deactivateAssociation(removeList);
         // then insert new user/role associations
         saveAssociation(saveList);
     }

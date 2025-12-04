@@ -1,24 +1,7 @@
 package ua.com.fielden.platform.security.user;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-
-import java.util.Collections;
-import java.util.Set;
-import java.util.TreeSet;
-
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.Dependent;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -36,12 +19,17 @@ import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 import ua.com.fielden.platform.utils.Pair;
 
-/**
- * Represents the system-wide concept of a user. So, this is a system user, which should be used by system security as well as for implementing any specific customer personnel
- * requirements.
- *
- * @author TG Team
- */
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
+
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+
+/// Represents a concept of a system user, used for authentication and authorisation of users, be that a human or another information system.
+///
 @KeyTitle("Application User")
 @KeyType(String.class)
 @MapEntityTo

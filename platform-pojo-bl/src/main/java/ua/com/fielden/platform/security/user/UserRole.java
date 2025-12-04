@@ -24,7 +24,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 @DescRequired
 @MapEntityTo("USER_ROLE")
 @CompanionObject(UserRoleCo.class)
-@DeactivatableDependencies({SecurityRoleAssociation.class})
+@DeactivatableDependencies({SecurityRoleAssociation.class, UserAndRoleAssociation.class})
 public class UserRole extends ActivatableAbstractEntity<String> {
     private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(UserRole.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();

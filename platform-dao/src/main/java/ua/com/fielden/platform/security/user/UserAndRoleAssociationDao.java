@@ -1,34 +1,25 @@
 package ua.com.fielden.platform.security.user;
 
-import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
-
-import java.util.Collection;
-import java.util.Set;
-
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanSave_Token;
 
-/**
- * DbDriven implementation of the {@link UserAndRoleAssociationCo}
- * 
- * @author TG Team
- * 
- */
+import java.util.Set;
+
+import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+
+/// DbDriven implementation of the [UserAndRoleAssociationCo]
+///
 @EntityType(UserAndRoleAssociation.class)
 public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssociation> implements UserAndRoleAssociationCo {
 
-    @Inject
-    protected UserAndRoleAssociationDao(final IFilter filter) {
-        super(filter);
+    @Override
+    public UserAndRoleAssociation new_() {
+        return super.new_().setActive(true);
     }
 
     @Override
@@ -40,27 +31,17 @@ public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssoci
 
     @Override
     @SessionRequired
-    @Authorise(UserAndRoleAssociation_CanDelete_Token.class)
-    public void removeAssociation(final Set<UserAndRoleAssociation> associations) {
-        createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), associations).map(this::batchDelete);
-    }
-
-    @Override
-    @SessionRequired
-    @Authorise(UserAndRoleAssociation_CanDelete_Token.class)
-    public int batchDelete(final EntityResultQueryModel<UserAndRoleAssociation> model) {
-        return defaultBatchDelete(model);
-    }
-
-    @Override
-    @SessionRequired
-    @Authorise(UserAndRoleAssociation_CanDelete_Token.class)
-    public int batchDelete(final Collection<Long> entitiesIds) {
-        return defaultBatchDelete(entitiesIds);
+    @Authorise(UserAndRoleAssociation_CanSave_Token.class)
+    public void deactivateAssociation(final Set<UserAndRoleAssociation> associations) {
+        final var co$ = co$(UserAndRoleAssociation.class);
+        createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), associations)
+        .map(q -> co$.getAllEntities(from(q).with(FETCH_PROVIDER.fetchModel()).model()))
+        .ifPresent(toDeactivate -> toDeactivate.forEach(assoc -> co$.save(assoc.setActive(false))));
     }
 
     @Override
     public IFetchProvider<UserAndRoleAssociation> createFetchProvider() {
         return FETCH_PROVIDER;
     }
+
 }
