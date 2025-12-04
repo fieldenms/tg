@@ -5,6 +5,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerIocModule;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action1Co;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action1Dao;
+import ua.com.fielden.platform.web.resources.webui.test_entities.Action2Co;
+import ua.com.fielden.platform.web.resources.webui.test_entities.Action2Dao;
 
 import java.util.List;
 import java.util.Properties;
@@ -24,6 +26,7 @@ class WebResourcesTestIocModule extends PlatformTestServerIocModule {
         super.bindDomainCompanionObjects(domainEntityTypes);
 
         bind(Action1Co.class).to(Action1Dao.class);
+        bind(Action2Co.class).to(Action2Dao.class);
     }
 
 }
