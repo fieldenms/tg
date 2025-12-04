@@ -27,10 +27,13 @@ import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action1;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action2;
+import ua.com.fielden.platform.web.resources.webui.test_entities.Action3;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -148,6 +151,33 @@ public class TinyHyperlinkEntityRestorationTest extends AbstractWebResourceWithD
                     assertor.assertNull(Action2.Properties.tc2, String.class, TgNote.class);
                     assertor.assertNull(Action2.Properties.tc3, RichText.class, String.class);
                     assertor.assertEquals(Action2.Properties.tc4, Integer.class, BigDecimal.class, new BigDecimal("50.00"));
+                });
+    }
+
+    @Test
+    public void restoration_with_centre_context() {
+        final var personName1 = save(new_(TgPersonName.class, "HP1"));
+        final var personName2 = save(new_(TgPersonName.class, "HP2"));
+        final var selectedEntities = List.of(personName1, personName2);
+
+        final TinyHyperlinkCo coTinyHyperlink = co$(TinyHyperlink.class);
+        final var chosenProperty = "test";
+        final var tinyHyperlink = coTinyHyperlink.save(
+                Action3.class,
+                Map.of(),
+                new CentreContextHolder()
+                        .setChosenProperty(chosenProperty)
+                        .setSelectedEntities(selectedEntities),
+                Action3.ACTION_ID_ACTION3);
+
+        TinyHyperlinkResource.restoreSharedEntity(tinyHyperlink, entityFactory, critGenerator, companionFinder, serialiser, webUiConfig, userProvider, DeviceProfile.DESKTOP, sharingModel)
+                .run2(restoredEntity -> {
+                    assertEquals(Action3.class, restoredEntity.getType());
+                    final var action3 = (Action3) restoredEntity;
+                    assertEquals(selectedEntities.stream().map(AbstractEntity::getId).collect(toSet()),
+                                 action3.getSelectedIds());
+                    assertEquals(Action3.COMPUTED_STRING_VALUE, action3.getComputedString());
+                    assertEquals(chosenProperty, action3.getChosenProperty());
                 });
     }
 

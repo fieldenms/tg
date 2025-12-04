@@ -6,10 +6,14 @@ import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action1;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action2;
+import ua.com.fielden.platform.web.resources.webui.test_entities.Action3;
+import ua.com.fielden.platform.web.resources.webui.test_entities.Action3Producer;
 
 import java.util.Optional;
 import java.util.Properties;
 
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.noUiFunctionalMaster;
 
 /// Web UI configuration for web resource tests.
@@ -55,6 +59,14 @@ class WebUiConfig extends AbstractWebUiConfig {
 
         builder.register(noUiFunctionalMaster(Action1.class, injector()));
         builder.register(noUiFunctionalMaster(Action2.class, injector()));
+        builder.register(noUiFunctionalMaster(Action3.class, Action3Producer.class, injector()));
+        builder.registerExtraAction(action(Action3.class)
+                                    .withTinyHyperlink(Action3.ACTION_ID_ACTION3)
+                                    .withContext(context()
+                                                 .withSelectedEntities()
+                                                 .withComputation((_, _) -> Action3.COMPUTED_STRING_VALUE)
+                                                 .build())
+                                    .build());
     }
 
     @Override
