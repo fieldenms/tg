@@ -33,6 +33,10 @@ public class Action1 extends AbstractFunctionalEntityWithCentreContext<NoKey> {
         bigDecimal,
         richText,
         personName,
+        tc1,
+        tc2,
+        tc3,
+        tc4,
         ;
 
         @Override
@@ -93,6 +97,60 @@ public class Action1 extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty
     private TgPersonName personName;
+
+    // Properties whose type will be changed ("tc" -- type change).
+
+    @IsProperty
+    private TgPersonName tc1;
+
+    @IsProperty
+    private String tc2;
+
+    @IsProperty
+    private RichText tc3;
+
+    @IsProperty
+    private Integer tc4;
+
+    public RichText getTc3() {
+        return tc3;
+    }
+
+    @Observable
+    public Action1 setTc3(final RichText tc3) {
+        this.tc3 = tc3;
+        return this;
+    }
+
+    public Integer getTc4() {
+        return tc4;
+    }
+
+    @Observable
+    public Action1 setTc4(final Integer tc4) {
+        this.tc4 = tc4;
+        return this;
+    }
+
+    public String getTc2() {
+        return tc2;
+    }
+
+    @Observable
+    public Action1 setTc2(final String tc2) {
+        this.tc2 = tc2;
+        return this;
+    }
+
+    public TgPersonName getTc1() {
+        return tc1;
+    }
+
+    @Observable
+    public Action1 setTc1(final TgPersonName tc1) {
+        this.tc1 = tc1;
+        return this;
+    }
 
     public String getStr2() {
         return str2;

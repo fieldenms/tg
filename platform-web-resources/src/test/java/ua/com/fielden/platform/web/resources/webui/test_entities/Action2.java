@@ -6,6 +6,8 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.sample.domain.TgFuelType;
+import ua.com.fielden.platform.sample.domain.TgNote;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.RichText;
@@ -29,6 +31,10 @@ public class Action2 extends AbstractFunctionalEntityWithCentreContext<NoKey> {
         hyperlink,
         bigDecimal,
         richText,
+        tc1,
+        tc2,
+        tc3,
+        tc4,
         ;
 
         @Override
@@ -77,6 +83,60 @@ public class Action2 extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty
     private RichText richText;
+
+    // Properties whose type changed.
+
+    @IsProperty
+    private TgFuelType tc1;
+
+    @IsProperty
+    private TgNote tc2;
+
+    @IsProperty
+    private String tc3;
+
+    @IsProperty
+    private BigDecimal tc4;
+
+    public BigDecimal getTc4() {
+        return tc4;
+    }
+
+    @Observable
+    public Action2 setTc4(final BigDecimal tc4) {
+        this.tc4 = tc4;
+        return this;
+    }
+
+    public String getTc3() {
+        return tc3;
+    }
+
+    @Observable
+    public Action2 setTc3(final String tc3) {
+        this.tc3 = tc3;
+        return this;
+    }
+
+    public TgNote getTc2() {
+        return tc2;
+    }
+
+    @Observable
+    public Action2 setTc2(final TgNote tc2) {
+        this.tc2 = tc2;
+        return this;
+    }
+
+    public TgFuelType getTc1() {
+        return tc1;
+    }
+
+    @Observable
+    public Action2 setTc1(final TgFuelType tc1) {
+        this.tc1 = tc1;
+        return this;
+    }
 
     public BigDecimal getBigDecimal() {
         return bigDecimal;

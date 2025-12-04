@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import com.google.inject.Inject;
+import org.junit.Assert;
 import org.junit.Test;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -8,6 +9,8 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.sample.domain.TgFuelType;
+import ua.com.fielden.platform.sample.domain.TgNote;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -29,6 +32,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 public class TinyHyperlinkEntityRestorationTest extends AbstractWebResourceWithDaoTestCase {
@@ -110,6 +114,63 @@ public class TinyHyperlinkEntityRestorationTest extends AbstractWebResourceWithD
                         }
                     }
                 });
+    }
+
+    @Test
+    public void restoration_of_properties_whose_type_has_changed() {
+        final var personName = save(new_(TgPersonName.class, "HP"));
+
+        final TinyHyperlinkCo coTinyHyperlink = co$(TinyHyperlink.class);
+        final Map<CharSequence, Object> modifiedProperties = CollectionUtil.mapOf(
+                t2(Action1.Properties.nInt, 10),
+                t2(Action1.Properties.nLong, 42L),
+                t2(Action1.Properties.tc1, personName),
+                t2(Action1.Properties.tc2, "Hello"),
+                t2(Action1.Properties.tc3, RichText.fromHtml("Hello")),
+                t2(Action1.Properties.tc4, 50));
+        final var tinyHyperlink = coTinyHyperlink.save(
+                Action1.class,
+                modifiedProperties,
+                new CentreContextHolder(),
+                IActionIdentifier.of("test"));
+        final var tinyHyperlinkToRestore = save(copyWithEntityType(tinyHyperlink, Action2.class));
+        assertEquals(Action2.class, ClassesRetriever.findClass(tinyHyperlinkToRestore.getEntityTypeName()));
+
+        TinyHyperlinkResource.restoreSharedEntity(tinyHyperlinkToRestore, entityFactory, critGenerator, companionFinder, serialiser, webUiConfig, userProvider, DeviceProfile.DESKTOP, sharingModel)
+                .run2(restoredEntity -> {
+                    assertEquals(Action2.class, restoredEntity.getType());
+                    final var action2 = (Action2) restoredEntity;
+                    assertEquals(10, action2.getNInt().intValue());
+                    assertEquals(42L, action2.getNLong().longValue());
+
+                    final var assertor = new PropertyValueAfterTypeChangeAssert(Action1.class, restoredEntity);
+                    assertor.assertNull(Action2.Properties.tc1, TgPersonName.class, TgFuelType.class);
+                    assertor.assertNull(Action2.Properties.tc2, String.class, TgNote.class);
+                    assertor.assertNull(Action2.Properties.tc3, RichText.class, String.class);
+                    assertor.assertEquals(Action2.Properties.tc4, Integer.class, BigDecimal.class, new BigDecimal("50.00"));
+                });
+    }
+
+    record PropertyValueAfterTypeChangeAssert
+            (Class<? extends AbstractEntity<?>> oldEntityType,
+             AbstractEntity<?> restoredEntity)
+    {
+        void assertNull(CharSequence prop, Class<?> oldType, Class<?> newType) {
+            assertEquals(prop, oldType, newType, null);
+        }
+
+        void assertEquals(CharSequence prop, Class<?> oldType, Class<?> newType, Object value) {
+            assertTypes(prop, oldType, newType);
+            Assert.assertEquals("Restored value of [%s] in entity [%s].".formatted(prop, restoredEntity),
+                                value, restoredEntity.get(prop.toString()));
+        }
+
+        private void assertTypes(CharSequence prop, Class<?> oldType, Class<?> newType) {
+            Assert.assertEquals("Type of property [%s].".formatted(oldType.getSimpleName(), prop),
+                                oldType, determinePropertyType(oldEntityType, prop));
+            Assert.assertEquals("Type of property [%s].".formatted(restoredEntity.getType().getSimpleName(), prop),
+                                newType, determinePropertyType(restoredEntity.getType(), prop));
+        }
     }
 
     private TinyHyperlink copyWithEntityType(final TinyHyperlink tinyHyperlink, final Class<? extends AbstractEntity<?>> entityType) {
