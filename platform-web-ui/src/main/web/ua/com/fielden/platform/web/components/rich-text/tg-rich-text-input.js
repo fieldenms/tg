@@ -936,7 +936,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         // Initiate key binding and key event target.
         this.addOwnKeyBinding('ctrl+b meta+b', '_applyBold');
         this.addOwnKeyBinding('ctrl+i meta+i', '_applyItalic');
-        this.addOwnKeyBinding('ctrl+s meta+s', '_applyStrikethough');
         this.addOwnKeyBinding('ctrl+x meta+x', '_cut');
         this.addOwnKeyBinding('ctrl+z meta+z', '_undo');
         this.addOwnKeyBinding('ctrl+y meta+y', '_redo');
@@ -1102,10 +1101,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     _applyStrikethough(event) {
         this._editor.exec('strike');
-        const selection = this._getSelection();
-        if (selection && selection[0] !== selection[1]) {
-            tearDownEvent(event.detail && event.detail.keyboardEvent);
-        }
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     _changeTextColor(e) {
