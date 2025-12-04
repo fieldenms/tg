@@ -143,7 +143,7 @@ const template = html`
             <div id="cameraLoadingView" hidden$="[[!_showCameraLoadingView]]">[[_loadingMsg]]</div>
         </div>
         <div id="controls" class="no-padding">
-            <tg-dropdown-switch id="cameraSelector" class ="editor" style="padding-bottom: 12px" views="[[_cameras]]" dropdown-button-tooltip-text="Select camera" raised make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_changeCamera"></tg-dropdown-switch>
+            <tg-dropdown-switch id="cameraSelector" class ="editor" style="padding-bottom: 12px" views="[[_cameras]]" dropdown-button-tooltip-text="Select camera" raised make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-switch-action-change="_changeCamera"></tg-dropdown-switch>
             <tg-singleline-text-editor id="textEditor" class ="editor" entity="[[_entity]]" property-name="scannedValue" prop-title="Scanned Value" 
                     prop-desc="Contains text scanned from a QR or barcode" current-state="EDIT" 
                     validation-callback="[[_validate]]" toaster="[[toaster]]" hide-qr-code-scanner></tg-singleline-text-editor>
