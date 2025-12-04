@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources.test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.web.resources.webui.test_entities.Action1;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ class WebResourcesTestDomainTypes extends PlatformTestDomainTypes {
         return concatList(
                 super.entityTypes(),
                 // Additional entity types go here.
-                List.of());
+                List.of(Action1.class));
     }
 
 }
