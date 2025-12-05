@@ -7,10 +7,10 @@ import ua.com.fielden.platform.utils.Pair;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER_ROLE;
 
-/// Synthetic entity providing reacher search capabilities for entity [User].
+/// Synthetic entity providing richer search capabilities for entity [User].
 ///
-/// @author TG Team
 @CompanionObject(ReUserCo.class)
 @EntityTitle(value = "User Ext", desc = "Synthetic entity based on User, which provides additional search capabilities (e.g., search by user roles).")
 public class ReUser extends User {
@@ -23,7 +23,7 @@ public class ReUser extends User {
 
     protected static final EntityResultQueryModel<ReUser> model_ =
             select(User.class).where()
-            .critCondition(select(UserAndRoleAssociation.class).where().prop("user").eq().extProp("id"), "userRole.key", "userRoles")
+            .critCondition(select(UserAndRoleAssociation.class).where().prop(UserAndRoleAssociation.USER).eq().extProp(ID), USER_ROLE + "." + KEY, USER_ROLES)
             .yieldAll()
             .modelAsEntity(ReUser.class);
 

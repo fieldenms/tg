@@ -19,7 +19,9 @@ public class UserAndRoleAssociation extends ActivatableAbstractEntity<DynamicEnt
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
-    public static final String USER_ROLE = "userRole";
+    public static final String
+            USER = "user",
+            USER_ROLE = "userRole";
 
     @IsProperty
     @CompositeKeyMember(1)

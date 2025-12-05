@@ -22,8 +22,8 @@ public class UserActivationDefiner implements IAfterChangeEventHandler<Boolean> 
     public void handle(final MetaProperty<Boolean> property, final Boolean active) {
         final User user = property.getEntity();
         user.getPropertyIfNotProxy(User.EMAIL).ifPresent(p -> p.setRequired(active));
-        user.getPropertyIfNotProxy(User.ACTIVE_ROLES).filter(p -> active && user.getActiveRoles().isEmpty())
-            .ifPresent(p -> property.setDomainValidationResult(user.isInitialising()
+        user.getPropertyIfNotProxy(User.ACTIVE_ROLES).filter(_ -> active && user.getActiveRoles().isEmpty())
+            .ifPresent(_ -> property.setDomainValidationResult(user.isInitialising()
                                                                ? informativeEx(WARN_MISSING_ACTIVE_ROLES, WARN_EXT_MISSING_ACTIVE_ROLES)
                                                                : warningEx(WARN_MISSING_ACTIVE_ROLES, WARN_EXT_MISSING_ACTIVE_ROLES)));
     }

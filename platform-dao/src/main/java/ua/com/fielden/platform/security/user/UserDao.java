@@ -49,6 +49,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.security.user.User.*;
+import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
 import static ua.com.fielden.platform.security.user.UserSecretCo.newUserPasswordRestExpirationTime;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
@@ -59,18 +60,20 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWith
 @EntityType(User.class)
 public class UserDao extends CommonEntityDao<User> implements IUser {
 
-    private static final Logger logger = getLogger(UserDao.class);
+    private static final Logger LOGGER = getLogger();
+
     public static final String
             ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE = "Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].",
             ERR_INITIATING_PASSWORD_RESET = "Could not initiate password reset.",
             ERR_DELETING_USERS_WITH_ROLES = "Users assigned to roles can’t be deleted. Deactivate such users instead.";
 
+    private static final fetch<User> userWithRolesFetch = fetch(User.class)
+            .with(ACTIVE_ROLES, fetch(SynUserAndRoleAssociationActive.class))
+            .with(INACTIVE_ROLES, fetch(SynUserAndRoleAssociationInactive.class));
+
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
     private final boolean ssoMode;
-
-    private final fetch<User> fetchModel = fetch(User.class).with(ACTIVE_ROLES, fetch(SynUserAndRoleAssociationActive.class))
-                                                            .with(INACTIVE_ROLES, fetch(SynUserAndRoleAssociationInactive.class));
 
     @Inject
     public UserDao(
@@ -229,7 +232,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public IPage<? extends User> firstPageOfUsersWithRoles(final int capacity) {
         final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
-        return firstPage(from(model).with(fetchModel).with(orderBy).model(), capacity);
+        return firstPage(from(model).with(userWithRolesFetch).with(orderBy).model(), capacity);
     }
 
     private void saveAssociation(final Set<UserAndRoleAssociation> associations) {
@@ -240,20 +243,20 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public User findUserByIdWithRoles(final Long id) {
-        return findById(id, fetchModel);
+        return findById(id, userWithRolesFetch);
     }
 
     @Override
     public User findUserByKeyWithRoles(final String key) {
         final EntityResultQueryModel<User> query = select(User.class).where().prop(AbstractEntity.KEY).eq().val(key).model();
-        return getEntity(from(query).with(fetchModel).model());
+        return getEntity(from(query).with(userWithRolesFetch).model());
     }
 
     @Override
     public List<User> findAllUsersWithRoles() {
         final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
-        return getAllEntities(from(model).with(fetchModel).with(orderBy).model());
+        return getAllEntities(from(model).with(userWithRolesFetch).with(orderBy).model());
     }
 
     @Override
@@ -325,7 +328,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             this.<IUserSession, UserSession>co$(UserSession.class).clearAll(savedSecret.getKey());
             return savedSecret;
         } catch (final Exception ex) {
-            logger.warn("Could not reset password for user [%s].", ex);
+            LOGGER.warn("Could not reset password for user [%s].", ex);
             throw new SecurityException("Could not reset user password.", ex);
         }
     }
@@ -422,24 +425,21 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             this.<IUserSession, UserSession>co$(UserSession.class).clearAll(user);
         }
 
-        // then let's remove all user related configurations
-        final Long[] ids = userIds.toArray(new Long[]{});
-
-        final var qUserRoleAssociations = select(UserAndRoleAssociation.class).where().prop("user.id").in().values(ids).model();
+        final var qUserRoleAssociations = select(UserAndRoleAssociation.class).where().prop(USER + "." + ID).in().values(userIds).model();
         if (co$(UserAndRoleAssociation.class).exists(qUserRoleAssociations)) {
             throw new InvalidStateException(ERR_DELETING_USERS_WITH_ROLES);
         }
 
-        final EntityResultQueryModel<WebMenuItemInvisibility> qMainMenuItemInvisibility = select(WebMenuItemInvisibility.class).where().prop("owner.id").in().values(ids).model();
+        final EntityResultQueryModel<WebMenuItemInvisibility> qMainMenuItemInvisibility = select(WebMenuItemInvisibility.class).where().prop("owner.id").in().values(userIds).model();
         this.co$(WebMenuItemInvisibility.class).batchDelete(qMainMenuItemInvisibility);
 
-        final EntityResultQueryModel<EntityLocatorConfig> qEntityLocatorConfig = select(EntityLocatorConfig.class).where().prop("owner.id").in().values(ids).model();
+        final EntityResultQueryModel<EntityLocatorConfig> qEntityLocatorConfig = select(EntityLocatorConfig.class).where().prop("owner.id").in().values(userIds).model();
         this.co$(EntityLocatorConfig.class).batchDelete(qEntityLocatorConfig);
 
-        final EntityResultQueryModel<EntityMasterConfig> qEntityMasterConfig = select(EntityMasterConfig.class).where().prop("owner.id").in().values(ids).model();
+        final EntityResultQueryModel<EntityMasterConfig> qEntityMasterConfig = select(EntityMasterConfig.class).where().prop("owner.id").in().values(userIds).model();
         this.co$(EntityMasterConfig.class).batchDelete(qEntityMasterConfig);
 
-        final EntityResultQueryModel<EntityCentreConfig> qEntityCentreConfig = select(EntityCentreConfig.class).where().prop("owner.id").in().values(ids).model();
+        final EntityResultQueryModel<EntityCentreConfig> qEntityCentreConfig = select(EntityCentreConfig.class).where().prop("owner.id").in().values(userIds).model();
         this.co$(EntityCentreConfig.class).batchDelete(qEntityCentreConfig);
 
         // let's remove secrets for all users
