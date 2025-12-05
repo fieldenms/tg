@@ -126,8 +126,10 @@ public class UserWebUiConfig {
                 .addProp(EMAIL).minWidth(150).also()
                 .addProp(ACTIVE).width(50).also()
                 .addProp(SSO_ONLY).width(50).also()
-                .addProp(ACTIVE_ROLES).minWidth(70).also()
+                .addProp(ACTIVE_ROLES).minWidth(70)
+                    .withActionSupplier(builder.getOpenMasterAction(User.class)).also()
                 .addProp(INACTIVE_ROLES).minWidth(70)
+                    .withActionSupplier(builder.getOpenMasterAction(User.class))
                 .addPrimaryAction(editUserAction)
                 .build(), injector);
     }
