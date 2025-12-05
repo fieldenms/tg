@@ -91,18 +91,18 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         return newUser;
     }
 
-    /**
-     * Saves a user instance. Special care is taken for the case where only property {@code refCount} is changed.
-     * This is why this method is not annotated with {@code @Authorise(User_CanSave_Token.class)}.
-     * Authorisation happens for {@link #save(User, Optional)}, which is invoked for all other cases.
-     */
+    /// Saves a user instance.
+    /// Special care is taken for the case where only property `refCount` is changed.
+    /// This is why this method is not annotated with `@Authorise(User_CanSave_Token.class)`.
+    /// Authorisation happens for [#save(User,Optional)], which is invoked for all other cases.
+    ///
     @Override
     @SessionRequired
     public User save(final User user) {
-        // anybody should be able to save updated reference count
+        // Anybody should be able to save updated reference count.
         if (user.getDirtyProperties().size() == 1 && user.getProperty(User.REF_COUNT).isDirty()) {
-            // use super save with refetching based on the reconstructed fetch model,
-            // which should be slim comparing to IUser.FETCH_PROVIDER
+            // Use super save with refetching based on the reconstructed fetch model,
+            // which should be slim comparing to IUser.FETCH_PROVIDER.
             return super.save(user);
         } else {
             return save(user, of(FETCH_PROVIDER.fetchModel())).orElseThrow(id -> new EntityCompanionException(ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE.formatted(id, user)));
@@ -117,7 +117,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             throw new SecurityException("VIRTUAL_USER cannot be persisted.");
         }
         user.isValid().ifFailure(Result::throwRuntime);
-        // remove all authenticated sessions in case the user is being deactivated
+        // Remove all authenticated sessions in case the user is being deactivated.
         if (user.isPersisted() && !user.isActive() && user.getProperty(ACTIVE).isDirty()) {
             final IUserSession coUserSession = co(UserSession.class);
             coUserSession.clearAll(user);
@@ -126,21 +126,21 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         }
 
         // User becomes a based-on user or has its base user changed -- need to handle menu invisibility.
-        // If a based-on user is new or became active or changed its base user then we need remove any previous invisible menu items and create new ones
-        // for menu items, which are invisible for all based-on users for the current base user (and whish is now also a base user for the user instance being saved).
+        // If a based-on user is new, became active, or changed its base user, then we need remove any previous invisible menu items and create new ones
+        // for menu items, which are invisible for all based-on users for the current base user (and which is now also a base user for the user instance being saved).
         final List<String> menuItemsToSave = new ArrayList<>();
-        // the use is new or it either has base user or active flag changed
+        // The user is new or it either has a base user or an active flag changed.
         final boolean newOrHasBaseUserOrActivePropsChanged = !user.isPersisted() ||
-                                                             (user.isPersisted() && (user.getProperty("basedOnUser").isDirty() || user.getProperty(ACTIVE).isDirty()));
+                                                             (user.isPersisted() && (user.getProperty(BASED_ON_USER).isDirty() || user.getProperty(ACTIVE).isDirty()));
         if (!user.isBase() && user.isActive() && newOrHasBaseUserOrActivePropsChanged) {
             final WebMenuItemInvisibilityCo coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
             coMenuItemInvisibility.batchDelete(select(WebMenuItemInvisibility.class).where().prop("owner").eq().val(user).model());
             menuItemsToSave.addAll(invisibleMenuItems(user));
         }
 
-        // if a new active user is being created then need to send an activation email, but only if user is not restricted to SSO only for an application in the SSO mode
-        // this is possible only if an email address is associated with the user, which is required for active users
-        // there could also be a situation where an inactive existing user, which did not have their password set in the first place, is being activated... this also warrants an activation email
+        // If a new active user is being created then need to send an activation email, but only if the user is not restricted to SSO only for an application in the SSO mode.
+        // This is possible only if an email address is associated with the user, which is required for active users.
+        // There could also be a situation where an inactive existing user, who did not have their password set in the first place, is being activated... this also warrants an activation email.
         final Either<Long, User> savedUser;
         if ((!user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user)) ||
             ( user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user) && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
@@ -151,51 +151,39 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             savedUser = super.save(user, maybeFetch);
         }
 
-        // save menu item invisibility for a user, this may require fetching the user in case savedUser is only an ID (i.e. left).
+        // Save menu item invisibility for a user, this may require fetching the user in case savedUser is only an ID (i.e. left).
         final User menuOwner = savedUser.isLeft() ? co(User.class).findById(savedUser.asLeft().value(), WebMenuItemInvisibilityCo.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel()) : savedUser.asRight().value();
         saveMenuItemInvisibility(menuItemsToSave, menuOwner);
 
         return savedUser;
     }
 
-    /**
-     * A helper predicate, which return {@code true} for users who are not restricted to SSO only in the SSO authentication mode.
-     *
-     * @param user
-     * @return
-     */
+    /// A helper predicate, which returns `true` for users who are not restricted to SSO only in the SSO authentication mode.
+    ///
     private boolean notRestrictedToSsoOnly(final User user) {
         return !ssoMode || !user.isSsoOnly();
     }
 
-    /**
-     * Saves new {@link WebMenuItemInvisibility} for menu item URIs specified in menuItems, and specified non base user.
-     *
-     * TODO once issue https://github.com/fieldenms/tg/issues/1032 is merged, this saving should be optimised
-     *
-     * @param menuItems
-     * @param menuOwner
-     */
+    /// Saves new [WebMenuItemInvisibility] for menu item URIs specified in menuItems, and the specified non-base user.
+    ///
     private void saveMenuItemInvisibility(final List<String> menuItems, final User menuOwner) {
+        // TODO Optimise by using batch insertion.
         final WebMenuItemInvisibilityCo co$MenuItemInvisibility = co$(WebMenuItemInvisibility.class);
         menuItems.forEach(menuItem -> {
             co$MenuItemInvisibility.save(co$MenuItemInvisibility.new_().setOwner(menuOwner).setMenuItemUri(menuItem));
         });
     }
 
-    /**
-     * Returns menu item URIs to save as invisible menu items for specified user. That is needed when user changes it's base user or it is new user or
-     * the user that becomes active. The given user should be non base user
-     *
-     * @param user
-     * @return
-     */
+    /// Returns menu item URIs to save as invisible menu items for the specified `user`.
+    /// This is needed when the user has their base user changed, it is a new user, or the user is being activated.
+    /// The user should be non-base user.
+    ///
     private List<String> invisibleMenuItems(final User user) {
-        //First find all active non base users for specified non base user.
+        // First find all active non-base users for the specified non-base user.
         final Set<User> availableUsers = findBasedOnUsers(user.getBasedOnUser(), fetchKeyAndDescOnly(User.class));
-        //Then find all invisible menu items for non base users based on the same user as base user of given user.
+        // Then find all invisible menu items for non-base users based on the same user as the base user for the specified user.
         final Map<String, Set<User>> invisibleMenuItems = getInvisibleMenuItemsForBaseUser(user.getBasedOnUser());
-        //Find all menu items those are invisible for all non base user of specified user's base user.
+        // Find all menu items that are invisible for all non-base users of the specified user's base user.
         return invisibleMenuItems.entrySet().stream()
             .filter(entry -> entry.getValue().containsAll(availableUsers))
             .map(Map.Entry::getKey).collect(Collectors.toList());
@@ -211,12 +199,8 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
                 .with(userFetch).with(orderBy().prop(KEY).asc().model()).model()));
     }
 
-    /**
-     * Returns all invisible menu items for active non-base users based on given base user.
-     *
-     * @param baseUser
-     * @return
-     */
+    /// Returns all invisible menu items for active non-base users based on given base user.
+    ///
     private Map<String, Set<User>> getInvisibleMenuItemsForBaseUser(final User baseUser) {
         final WebMenuItemInvisibilityCo coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
         final EntityResultQueryModel<WebMenuItemInvisibility> query = select(WebMenuItemInvisibility.class).where()
@@ -284,14 +268,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         return IUser.FETCH_PROVIDER;
     }
 
-    /**
-     * A convenient method that either returns an instance of {@link UserSecret} that is already associated with {@code user},
-     * or a new instance of {@link UserSecret}.
-     *
-     * @param user
-     * @param coUserSecret
-     * @return
-     */
+    /// A convenient method that either returns an instance of [UserSecret] that is already associated with `user`,
+    /// or a new instance of [UserSecret].
+    ///
     private UserSecret findOrCreateNewSecret(final User user, final UserSecretCo coUserSecret) {
         if (!user.isPersisted()) {
             throw new SecurityException("User must be persisted.");
@@ -309,8 +288,8 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             save(user.setActive(false));
         }
 
-        // attempt to delete user secret regardless of whether user exists or not
-        // this is to reduce the difference in the computation time that is required for processing existing and non-existing accounts
+        // An attempt to delete user secrets regardless of whether user exists or not.
+        // This is to reduce the difference in the computation time that is required for processing existing and non-existing accounts.
         final UserSecretCo coUserSecret = co(UserSecret.class);
         coUserSecret.batchDelete(select(UserSecret.class).where().prop("key.key").eq().val(username).model());
     }
