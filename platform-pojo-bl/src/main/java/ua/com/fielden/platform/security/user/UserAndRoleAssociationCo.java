@@ -13,8 +13,4 @@ public interface UserAndRoleAssociationCo extends IEntityDao<UserAndRoleAssociat
 
     IFetchProvider<UserAndRoleAssociation> FETCH_PROVIDER = fetch(UserAndRoleAssociation.class).with("user", "userRole");
 
-    /// Deactivates `associations`.
-    ///
-    void deactivateAssociation(Set<UserAndRoleAssociation> associations);
-
 }

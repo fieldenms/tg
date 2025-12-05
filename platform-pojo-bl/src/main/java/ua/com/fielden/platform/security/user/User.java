@@ -39,7 +39,6 @@ public class User extends ActivatableAbstractEntity<String> {
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
-    public static final String ROLES = "roles";
     public static final String ACTIVE_ROLES = "activeRoles";
     public static final String INACTIVE_ROLES = "inactiveRoles";
     public static final String BASED_ON_USER = "basedOnUser";
@@ -84,10 +83,6 @@ public class User extends ActivatableAbstractEntity<String> {
     @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = USER_NAME_REGEX)}))
     private String key;
     
-    @IsProperty(UserAndRoleAssociation.class)
-    @Title(value = "Roles", desc = "The associated with this user roles.")
-    private final Set<UserAndRoleAssociation> roles = new TreeSet<>();
-
     @IsProperty(SynUserAndRoleAssociationActive.class)
     @Title(value = "Active Roles", desc = "")
     private final Set<SynUserAndRoleAssociationActive> activeRoles = new TreeSet<>();
@@ -184,17 +179,6 @@ public class User extends ActivatableAbstractEntity<String> {
         return this;
     }
 
-    public Set<UserAndRoleAssociation> getRoles() {
-        return unmodifiableSet(roles);
-    }
-
-    @Observable
-    public User setRoles(final Set<UserAndRoleAssociation> roles) {
-        this.roles.clear();
-        this.roles.addAll(roles);
-        return this;
-    }
-
     @Observable
     protected User setInactiveRoles(final Set<SynUserAndRoleAssociationInactive> inactiveRoles) {
         this.inactiveRoles.clear();
@@ -217,9 +201,9 @@ public class User extends ActivatableAbstractEntity<String> {
         return unmodifiableSet(activeRoles);
     }
 
-    /// A convenient method for extracting [UserRole] instances from a set of active [UserAndRoleAssociation]s.
+    /// A convenient method for extracting active [UserRole] instances from a set of active [UserAndRoleAssociation]s.
     ///
-    public Set<UserRole> roles() {
+    public Set<UserRole> activeRoles() {
         return this.activeRoles.stream().map(UserAndRoleAssociation::getUserRole).collect(toSet());
     }
 

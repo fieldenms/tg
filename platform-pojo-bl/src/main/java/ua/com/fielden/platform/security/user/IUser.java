@@ -9,7 +9,10 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -22,7 +25,7 @@ public interface IUser extends IEntityDao<User> {
     IFetchProvider<User> FETCH_PROVIDER = EntityUtils.fetch(User.class)
             .with(KEY, EMAIL, ACTIVE, SSO_ONLY)
             .with(BASE, BASED_ON_USER__BASE)
-            .with(ROLES, ACTIVE_ROLES, INACTIVE_ROLES);
+            .with(ACTIVE_ROLES, INACTIVE_ROLES);
 
     /// Returns users with roles.
     ///
@@ -87,11 +90,6 @@ public interface IUser extends IEntityDao<User> {
     /// @param capacity a maximum number of users for a data page.
     ///
     IPage<? extends User> firstPageOfUsersWithRoles(int capacity);
-
-    /// Updates association between user and a list of roles.
-    /// Once completer user should be associated strictly with the specified list of roles.
-    ///
-    void updateUsers(Map<User, Set<UserRole>> userRolesMap);
 
     /// Finds user by name.
     ///

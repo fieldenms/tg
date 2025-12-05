@@ -67,8 +67,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     private final SessionIdentifierGenerator crypto;
     private final boolean ssoMode;
 
-    private final fetch<User> fetchModel = fetch(User.class).with(ROLES, fetch(UserAndRoleAssociation.class))
-                                                            .with(ACTIVE_ROLES, fetch(SynUserAndRoleAssociationActive.class))
+    private final fetch<User> fetchModel = fetch(User.class).with(ACTIVE_ROLES, fetch(SynUserAndRoleAssociationActive.class))
                                                             .with(INACTIVE_ROLES, fetch(SynUserAndRoleAssociationInactive.class));
 
     @Inject
@@ -245,36 +244,6 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
         return firstPage(from(model).with(fetchModel).with(orderBy).model(), capacity);
-    }
-
-    @Override
-    public void updateUsers(final Map<User, Set<UserRole>> userRoleMap) {
-        for (final Map.Entry<User, Set<UserRole>> userRoleEntry : userRoleMap.entrySet()) {
-            updateUser(userRoleEntry.getKey(), userRoleEntry.getValue());
-        }
-    }
-
-    @SessionRequired
-    private void updateUser(final User user, final Set<UserRole> checkedRoles) {
-        // remove list at the first stage of the algorithm contains the associations of the given user.
-        // At the last stage of the algorithm that list contains only associations those must be removed from the data base
-        final Set<UserAndRoleAssociation> removeList = new HashSet<>(user.getRoles());
-        // contains the list of associations those must be saved
-        final Set<UserAndRoleAssociation> saveList = new HashSet<>();
-
-        for (final UserRole role : checkedRoles) {
-            final UserAndRoleAssociation roleAssociation = user.getEntityFactory().newByKey(UserAndRoleAssociation.class, user, role);
-            if (!removeList.contains(roleAssociation)) {
-                saveList.add(roleAssociation);
-            } else {
-                removeList.remove(roleAssociation);
-            }
-        }
-
-        // first remove user/role associations
-        this.<UserAndRoleAssociationCo, UserAndRoleAssociation>co$(UserAndRoleAssociation.class).deactivateAssociation(removeList);
-        // then insert new user/role associations
-        saveAssociation(saveList);
     }
 
     private void saveAssociation(final Set<UserAndRoleAssociation> associations) {

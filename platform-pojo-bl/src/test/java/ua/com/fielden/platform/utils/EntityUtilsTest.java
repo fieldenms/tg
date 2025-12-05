@@ -159,17 +159,13 @@ public class EntityUtilsTest {
     @Test
     public void collectional_properties_are_correctly_identifiable() {
         final List<Field> collectionalProperties = getCollectionalProperties(User.class);
-        assertEquals(3, collectionalProperties.size());
+        assertEquals(2, collectionalProperties.size());
 
-        final Field fRoles = collectionalProperties.get(0);
-        assertEquals("Incorrect field name", "roles", fRoles.getName());
-        assertEquals("Incorrect collectional entity class", UserAndRoleAssociation.class, AnnotationReflector.getAnnotation(fRoles, IsProperty.class).value());
-
-        final Field fActiveRoles = collectionalProperties.get(1);
+        final Field fActiveRoles = collectionalProperties.get(0);
         assertEquals("Incorrect field name", "activeRoles", fActiveRoles.getName());
         assertEquals("Incorrect collectional entity class", SynUserAndRoleAssociationActive.class, AnnotationReflector.getAnnotation(fActiveRoles, IsProperty.class).value());
 
-        final Field fInactiveRoles = collectionalProperties.get(2);
+        final Field fInactiveRoles = collectionalProperties.get(1);
         assertEquals("Incorrect field name", "inactiveRoles", fInactiveRoles.getName());
         assertEquals("Incorrect collectional entity class", SynUserAndRoleAssociationInactive.class, AnnotationReflector.getAnnotation(fInactiveRoles, IsProperty.class).value());
     }
