@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.resources.test;
 
 import org.junit.runner.RunWith;
 import ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerContextSelector;
-import ua.com.fielden.platform.web.resources.webui.AbstractWebResourceWithDaoTestCase;
 
 import java.util.Properties;
 

@@ -24,6 +24,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.resources.test.AbstractWebResourceWithDaoTestCase;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action1;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action2;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action3;
