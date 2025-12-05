@@ -7,7 +7,7 @@ import java.util.Set;
 
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
-/// Interface that defines the API for retrieving, saving and removing [UserAndRoleAssociation] instances
+/// A companion for [UserAndRoleAssociation].
 ///
 public interface UserAndRoleAssociationCo extends IEntityDao<UserAndRoleAssociation> {
 

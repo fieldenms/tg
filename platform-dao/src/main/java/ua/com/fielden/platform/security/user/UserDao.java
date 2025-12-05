@@ -47,7 +47,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
-import static ua.com.fielden.platform.security.user.User.EMAIL;
+import static ua.com.fielden.platform.security.user.User.*;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
 import static ua.com.fielden.platform.security.user.UserSecretCo.newUserPasswordRestExpirationTime;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
@@ -67,7 +67,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     private final SessionIdentifierGenerator crypto;
     private final boolean ssoMode;
 
-    private final fetch<User> fetchModel = fetch(User.class).with("roles", fetch(UserAndRoleAssociation.class));
+    private final fetch<User> fetchModel = fetch(User.class).with(ROLES, fetch(UserAndRoleAssociation.class))
+                                                            .with(ACTIVE_ROLES, fetch(SynUserAndRoleAssociationActive.class))
+                                                            .with(INACTIVE_ROLES, fetch(SynUserAndRoleAssociationInactive.class));
 
     @Inject
     public UserDao(
@@ -209,7 +211,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     }
 
     /**
-     * Returns all invisible menu items for active non base users based on given base user.
+     * Returns all invisible menu items for active non-base users based on given base user.
      *
      * @param baseUser
      * @return

@@ -43,8 +43,9 @@ import java.util.Optional;
 import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
-import static ua.com.fielden.platform.security.user.User.EMAIL;
-import static ua.com.fielden.platform.security.user.User.SSO_ONLY;
+import static ua.com.fielden.platform.security.user.ReUser.USER_ROLES;
+import static ua.com.fielden.platform.security.user.User.*;
+import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER_ROLE;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.RunAutomaticallyOptions.ALLOW_CUSTOMISED;
@@ -71,7 +72,7 @@ public class UserWebUiConfig {
 
     private UserWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
         centre = createCentre(injector, builder, mkLocator(builder, injector, UserLocator.class, "user"));
-        master = createMaster(injector);
+        master = createMain(injector);
 
         CompoundMasterBuilder.<User, OpenUserMasterAction>create(injector, builder)
                 .forEntity(OpenUserMasterAction.class)
@@ -93,14 +94,13 @@ public class UserWebUiConfig {
     /// Creates entity centre for [User].
     ///
     private EntityCentre<ReUser> createCentre(final Injector injector, final IWebUiBuilder builder, final EntityActionConfig locator) {
-        final var dims = mkDim(960, 390, Unit.PX);
+        final var dims = mkDim(960, 500, Unit.PX);
         final var editUserAction = Compound.openEdit(OpenUserMasterAction.class, USER_TITLE, "Edit " + USER_TITLE, dims);
         final var newUserAction = Compound.openNew(OpenUserMasterAction.class, "add-circle-outline", USER_TITLE, "Add " + USER_TITLE, dims);
         builder.registerOpenMasterAction(User.class, editUserAction);
 
         final var layout = LayoutComposer.mkVarGridForCentre(2, 2, 2, 1);
-        return new EntityCentre<>(MiUser.class,
-                EntityCentreBuilder.centreFor(ReUser.class)
+        return new EntityCentre<>(MiUser.class, EntityCentreBuilder.centreFor(ReUser.class)
                 .addFrontAction(newUserAction).also()
                 .addFrontAction(locator)
                 .addTopAction(newUserAction).also()
@@ -109,53 +109,54 @@ public class UserWebUiConfig {
                 .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction()).also()
                 .addTopAction(StandardActions.EXPORT_ACTION.mkAction(ReUser.class))
                 .addCrit("this").asMulti().autocompleter(User.class).also()
-                .addCrit("basedOnUser").asMulti().autocompleter(User.class).also()
+                .addCrit(BASED_ON_USER).asMulti().autocompleter(User.class).also()
                 .addCrit(ACTIVE).asMulti().bool().also()
-                .addCrit("base").asMulti().bool().also()
+                .addCrit(BASE).asMulti().bool().also()
                 .addCrit(EMAIL).asMulti().text().also()
                 .addCrit(SSO_ONLY).asMulti().bool().also()
-                .addCrit("userRoles").asMulti().autocompleter(UserRole.class)
+                .addCrit(USER_ROLES).asMulti().autocompleter(UserRole.class)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .addProp("this")
                     .order(1).asc()
                     .width(200)
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching users.")
                 .also()
-                .addProp("basedOnUser").width(200).also()
-                .addProp("base").width(80).also()
+                .addProp(BASED_ON_USER).width(200).also()
+                .addProp(BASE).width(80).also()
                 .addProp(EMAIL).minWidth(150).also()
                 .addProp(ACTIVE).width(50).also()
                 .addProp(SSO_ONLY).width(50).also()
-                .addProp("roles").minWidth(70)
+                .addProp(ACTIVE_ROLES).minWidth(70).also()
+                .addProp(INACTIVE_ROLES).minWidth(70)
                 .addPrimaryAction(editUserAction)
                 .build(), injector);
     }
 
     /// Creates entity master for [User].
     ///
-    private EntityMaster<User> createMaster(final Injector injector) {
-        final String layout = LayoutComposer.mkVarGridForMasterFitWidth(2, 2, 2, 1);
+    private EntityMaster<User> createMain(final Injector injector) {
+        final String layout = LayoutComposer.mkVarGridForMasterFitWidth(2, 2, 2, 1, 1);
 
         final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
                 .forEntity(User.class)
-                .addProp("key").asSinglelineText().also()
-                .addProp("basedOnUser").asAutocompleter().withMatcher(UserMasterBaseUserMatcher.class).also()
+                .addProp(KEY).asSinglelineText().also()
+                .addProp(BASED_ON_USER).asAutocompleter().withMatcher(UserMasterBaseUserMatcher.class).also()
                 .addProp(ACTIVE).asCheckbox().also()
-                .addProp("base").asCheckbox().also()
+                .addProp(BASE).asCheckbox().also()
                 .addProp(EMAIL).asSinglelineText().also()
                 .addProp(SSO_ONLY).asCheckbox().also()
-                .addProp("roles").asCollectionalRepresentor().also()
+                .addProp(ACTIVE_ROLES).asCollectionalRepresentor().also()
+                .addProp(INACTIVE_ROLES).asCollectionalRepresentor().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes if any and refresh.")
                 .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
-                .withDimensions(mkDim(580, 390))
+                .withDimensions(mkDim(580, 500))
                 .done();
         return new EntityMaster<>(User.class, masterConfigForUser, injector);
     }
 
     private EntityCentre<UserAndRoleAssociation> createUserAndRoleAssociationCentre(final Injector injector) {
-        final Class<UserAndRoleAssociation> root = UserAndRoleAssociation.class;
         final String layout = LayoutComposer.mkVarGridForCentre(1, 1);
 
         final EntityActionConfig standardEditAction = StandardActions.EDIT_ACTION.mkAction(UserAndRoleAssociation.class);
@@ -163,20 +164,20 @@ public class UserWebUiConfig {
         final EntityActionConfig standardExportAction = StandardActions.EXPORT_EMBEDDED_CENTRE_ACTION.mkAction(UserAndRoleAssociation.class);
         final EntityActionConfig standardSortAction = CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
 
-        final EntityCentreConfig<UserAndRoleAssociation> ecc = EntityCentreBuilder.centreFor(root)
+        final EntityCentreConfig<UserAndRoleAssociation> ecc = EntityCentreBuilder.centreFor(UserAndRoleAssociation.class)
                 .runAutomatically(ALLOW_CUSTOMISED)
                 .addTopAction(standardNewAction).also()
                 .addTopAction(standardSortAction).also()
                 .addTopAction(standardExportAction)
-                .addCrit("userRole").asMulti().autocompleter(UserRole.class).also()
-                .addCrit("active").asMulti().bool().setDefaultValue(multi().bool().setIsValue(true).setIsNotValue(false).value())
+                .addCrit(USER_ROLE).asMulti().autocompleter(UserRole.class).also()
+                .addCrit(ACTIVE).asMulti().bool().setDefaultValue(multi().bool().setIsValue(true).setIsNotValue(false).value())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
-                .addProp("userRole").order(1).asc().width(80)
+                .addProp(USER_ROLE).order(1).asc().width(80)
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching Roles.").also()
-                .addProp("userRole.desc").minWidth(80).also()
-                .addProp("active").width(80)
+                .addProp(USER_ROLE + ".desc").minWidth(80).also()
+                .addProp(ACTIVE).width(80)
                 .addPrimaryAction(standardEditAction)
                 .setQueryEnhancer(UserMaster_UserAndRoleAssociationCentre_QueryEnhancer.class, context().withMasterEntity().build())
                 .build();
@@ -240,4 +241,5 @@ public class UserWebUiConfig {
 
         public abstract EntityActionConfig mkAction();
     }
+
 }

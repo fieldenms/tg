@@ -12,7 +12,7 @@ import java.util.Set;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
-/// DbDriven implementation of the [UserAndRoleAssociationCo]
+/// DAO implementation of the [UserAndRoleAssociationCo]
 ///
 @EntityType(UserAndRoleAssociation.class)
 public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssociation> implements UserAndRoleAssociationCo {

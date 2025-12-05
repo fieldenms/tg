@@ -65,6 +65,8 @@ public class PlatformDomainTypes {
         types.add(DashboardRefreshFrequency.class);
 
         types.add(UserAndRoleAssociation.class);
+        types.add(SynUserAndRoleAssociationActive.class);
+        types.add(SynUserAndRoleAssociationInactive.class);
         types.add(SecurityRoleAssociation.class);
         types.add(EntityCentreConfig.class);
         types.add(EntityCentreAnalysisConfig.class);
