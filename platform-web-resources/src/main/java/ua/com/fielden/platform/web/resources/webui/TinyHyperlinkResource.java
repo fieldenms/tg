@@ -53,6 +53,8 @@ public class TinyHyperlinkResource extends AbstractWebResource {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    static final String WARN_CONFIGURED_VALUE_COULD_NOT_BE_USED = "The configured value could not be used.";
+
     private final RestServerUtil restUtil;
 
     private final ICompanionObjectFinder companionFinder;
@@ -148,7 +150,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             // Ignore non-existing properties.
             // Assign a warning if property deserialisation fails.
             if (isPropertyPresent(entity.getType(), property)) {
-                entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
+                entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning(WARN_CONFIGURED_VALUE_COULD_NOT_BE_USED)));
             }
         };
 
@@ -161,7 +163,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             // Assign a warning if property application fails.
             if (isPropertyPresent(entity.getType(), property)) {
                 // The meta-property should exist, but let's be defensive.
-                entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning("The configured value could not be used.")));
+                entity.getPropertyOptionally(property).ifPresent(mp -> mp.setDomainValidationResult(warning(WARN_CONFIGURED_VALUE_COULD_NOT_BE_USED)));
             }
         };
 

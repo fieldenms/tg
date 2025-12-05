@@ -35,8 +35,12 @@ import java.util.Map;
 
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_WAS_NOT_FOUND;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.web.resources.webui.TinyHyperlinkResource.WARN_CONFIGURED_VALUE_COULD_NOT_BE_USED;
 
 public class TinyHyperlinkEntityRestorationTest extends AbstractWebResourceWithDaoTestCase {
 
@@ -147,10 +151,21 @@ public class TinyHyperlinkEntityRestorationTest extends AbstractWebResourceWithD
                     assertEquals(42L, action2.getNLong().longValue());
 
                     final var assertor = new PropertyValueAfterTypeChangeAssert(Action1.class, restoredEntity);
+
                     assertor.assertNull(Action2.Properties.tc1, TgPersonName.class, TgFuelType.class);
+                    assertEquals(ERR_ENTITY_WAS_NOT_FOUND.formatted(getEntityTitleAndDesc(TgFuelType.class).getKey(), personName.getKey()),
+                                 restoredEntity.getProperty(Action2.Properties.tc1.name()).validationResult().getMessage());
+
                     assertor.assertNull(Action2.Properties.tc2, String.class, TgNote.class);
+                    assertEquals(ERR_ENTITY_WAS_NOT_FOUND.formatted(getEntityTitleAndDesc(TgNote.class).getKey(), "Hello"),
+                                 restoredEntity.getProperty(Action2.Properties.tc2.name()).validationResult().getMessage());
+
                     assertor.assertNull(Action2.Properties.tc3, RichText.class, String.class);
+                    assertEquals(WARN_CONFIGURED_VALUE_COULD_NOT_BE_USED,
+                                 restoredEntity.getProperty(Action2.Properties.tc3.name()).validationResult().getMessage());
+
                     assertor.assertEquals(Action2.Properties.tc4, Integer.class, BigDecimal.class, new BigDecimal("50.00"));
+                    assertTrue(restoredEntity.getProperty(Action2.Properties.tc4.name()).isValid());
                 });
     }
 
