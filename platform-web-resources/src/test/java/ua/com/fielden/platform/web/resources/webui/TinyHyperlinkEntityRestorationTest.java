@@ -8,10 +8,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.sample.domain.TgFuelType;
-import ua.com.fielden.platform.sample.domain.TgNote;
-import ua.com.fielden.platform.sample.domain.TgPersonName;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.tiny.IActionIdentifier;
@@ -195,6 +194,29 @@ public class TinyHyperlinkEntityRestorationTest extends AbstractWebResourceWithD
                     assertEquals(chosenProperty, action3.getChosenProperty());
                 });
     }
+
+    @Test
+    public void an_id_only_proxy_entity_can_be_specified_as_a_value_for_a_modified_property_and_can_then_be_restored() {
+        final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
+
+        final var make = save(new_(TgVehicleMake.class, "BMW"));
+        final var idOnlyMake = entityFactory.newEntity(getInstance(IIdOnlyProxiedEntityTypeCache.class).getIdOnlyProxiedTypeFor(TgVehicleMake.class), make.getId());
+        assertTrue(idOnlyMake.isIdOnlyProxy());
+
+        final var tinyHyperlink = coTinyHyperlink.save(
+                TgVehicleModel.class,
+                Map.of("make", idOnlyMake),
+                new CentreContextHolder(),
+                IActionIdentifier.of("test"));
+
+        TinyHyperlinkResource.restoreSharedEntity(tinyHyperlink, entityFactory, critGenerator, companionFinder, serialiser, webUiConfig, userProvider, DeviceProfile.DESKTOP, sharingModel)
+                .run2(restoredEntity -> {
+                    assertEquals(TgVehicleModel.class, restoredEntity.getType());
+                    final var model = (TgVehicleModel) restoredEntity;
+                    assertEquals(idOnlyMake, model.getMake());
+                });
+    }
+
 
     record PropertyValueAfterTypeChangeAssert
             (Class<? extends AbstractEntity<?>> oldEntityType,
