@@ -278,7 +278,10 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         if (isEntityType(propertyType)) {
             final var entity = (AbstractEntity<?>) value;
             final var object = new HashMap<>();
-            object.put("val", Objects.toString(entity.getKey(), null));
+            // If this is an id-only proxy, we cannot access its key to associate with "val".
+            // Nor should we use `null`, because then this value will be skipped entirely during restoration.
+            // Hence, use an empty string.
+            object.put("val", entity.isIdOnlyProxy() ? "" : Objects.toString(entity.getKey(), null));
             object.put("valId", entity.getId());
             if (isUnionEntityType(propertyType)) {
                 final var unionValue = (AbstractUnionEntity) value;
