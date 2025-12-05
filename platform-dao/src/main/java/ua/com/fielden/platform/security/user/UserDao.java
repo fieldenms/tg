@@ -13,6 +13,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -55,13 +56,14 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWith
 
 /// DAO implementation of [IUser].
 ///
-/// @author TG Team
 @EntityType(User.class)
 public class UserDao extends CommonEntityDao<User> implements IUser {
 
     private static final Logger logger = getLogger(UserDao.class);
-    public static final String ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE = "Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].";
-    public static final String ERR_INITIATING_PASSWORD_RESET = "Could not initiate password reset.";
+    public static final String
+            ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE = "Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].",
+            ERR_INITIATING_PASSWORD_RESET = "Could not initiate password reset.",
+            ERR_DELETING_USERS_WITH_ROLES = "Users assigned to roles can’t be deleted. Deactivate such users instead.";
 
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
@@ -196,17 +198,17 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         //Find all menu items those are invisible for all non base user of specified user's base user.
         return invisibleMenuItems.entrySet().stream()
             .filter(entry -> entry.getValue().containsAll(availableUsers))
-            .map(entry -> entry.getKey()).collect(Collectors.toList());
+            .map(Map.Entry::getKey).collect(Collectors.toList());
     }
 
     @Override
     public Set<User> findBasedOnUsers(final User baseUser, final fetch<User> userFetch) {
         return new LinkedHashSet<>(co(User.class).getAllEntities(from(
                 select(User.class).where()
-                .prop("active").eq().val(true).and()
-                .prop("base").eq().val(false).and()
-                .prop("basedOnUser").eq().val(baseUser).model())
-                .with(userFetch).with(orderBy().prop("key").asc().model()).model()));
+                .prop(ACTIVE).eq().val(true).and()
+                .prop(BASE).eq().val(false).and()
+                .prop(BASED_ON_USER).eq().val(baseUser).model())
+                .with(userFetch).with(orderBy().prop(KEY).asc().model()).model()));
     }
 
     /**
@@ -444,8 +446,10 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // then let's remove all user related configurations
         final Long[] ids = userIds.toArray(new Long[]{});
 
-        final EntityResultQueryModel<UserAndRoleAssociation> qUserRoleAssociations = select(UserAndRoleAssociation.class).where().prop("user.id").in().values(ids).model();
-        this.co$(UserAndRoleAssociation.class).batchDelete(qUserRoleAssociations);
+        final var qUserRoleAssociations = select(UserAndRoleAssociation.class).where().prop("user.id").in().values(ids).model();
+        if (co$(UserAndRoleAssociation.class).exists(qUserRoleAssociations)) {
+            throw new InvalidStateException(ERR_DELETING_USERS_WITH_ROLES);
+        }
 
         final EntityResultQueryModel<WebMenuItemInvisibility> qMainMenuItemInvisibility = select(WebMenuItemInvisibility.class).where().prop("owner.id").in().values(ids).model();
         this.co$(WebMenuItemInvisibility.class).batchDelete(qMainMenuItemInvisibility);

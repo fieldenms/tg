@@ -15,7 +15,7 @@ public class UserActivationDefiner implements IAfterChangeEventHandler<Boolean> 
             WARN_MISSING_ACTIVE_ROLES = "Missing active roles.",
             WARN_EXT_MISSING_ACTIVE_ROLES = """
                                            Missing active roles.
-                                           Don't forget to assign at leas one active role to this user.
+                                           Don't forget to assign at least one active role to this user.
                                            """;
 
     @Override
