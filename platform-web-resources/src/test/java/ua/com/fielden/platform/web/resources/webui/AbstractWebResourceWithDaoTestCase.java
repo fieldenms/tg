@@ -9,4 +9,4 @@ import ua.com.fielden.platform.web.resources.test.WebResourcesTestRunner;
 /// @see WebResourcesTestRunner
 ///
 @RunWith(WebResourcesTestRunner.class)
-public class AbstractWebResourceWithDaoTestCase extends AbstractDaoTestCase {}
+public abstract class AbstractWebResourceWithDaoTestCase extends AbstractDaoTestCase {}
