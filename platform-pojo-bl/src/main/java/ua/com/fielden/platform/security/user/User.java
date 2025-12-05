@@ -24,7 +24,7 @@ import java.util.TreeSet;
 
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
@@ -167,7 +167,7 @@ public class User extends ActivatableAbstractEntity<String> {
     @Override
     public User setKey(final String value) {
         if (isPersisted() && (system_users.SU.matches(getKey()) && !system_users.SU.matches(value))) {
-            throw failure("User %s is an application built-in account and cannot be renamed.".formatted(getKey()));
+            throw failuref("User %s is an application built-in account and cannot be renamed.", getKey());
         }
 
         this.key = value;
