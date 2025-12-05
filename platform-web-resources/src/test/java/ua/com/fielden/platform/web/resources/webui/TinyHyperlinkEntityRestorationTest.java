@@ -196,9 +196,9 @@ public class TinyHyperlinkEntityRestorationTest extends AbstractWebResourceWithD
         }
 
         private void assertTypes(CharSequence prop, Class<?> oldType, Class<?> newType) {
-            Assert.assertEquals("Type of property [%s].".formatted(oldType.getSimpleName(), prop),
+            Assert.assertEquals("Type of property [%s] before change.".formatted(prop),
                                 oldType, determinePropertyType(oldEntityType, prop));
-            Assert.assertEquals("Type of property [%s].".formatted(restoredEntity.getType().getSimpleName(), prop),
+            Assert.assertEquals("Type of property [%s] after change.".formatted(prop),
                                 newType, determinePropertyType(restoredEntity.getType(), prop));
         }
     }
