@@ -18,7 +18,7 @@ import { ExpectedError } from '/resources/components/tg-global-error-handler.js'
 const confirmationDialogStyle = html`
     <custom-style>
         <style>
-            .title {
+            .confirm-dialog .title {
                 font-size: 1.5rem;
                 font-weight: bold;
                 padding: 0 34px;
@@ -40,18 +40,18 @@ const confirmationDialogStyle = html`
             .confirm-dialog paper-button.red:hover {
                 background: var(--google-red-100);
             }
-            paper-dialog-scrollable {
+            .confirm-dialog paper-dialog-scrollable {
                 @apply --layout-vertical;
             }
-            #opts {
+            .confirm-dialog #opts {
                 @apply --layout-vertical;
             }
-            paper-checkbox {
+            .confirm-dialog paper-checkbox {
                 margin-bottom: 15px;
                 --paper-checkbox-checked-color: var(--paper-light-blue-700);
                 --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
             }
-            #spinner {
+            .confirm-dialog #spinner {
                 position: absolute;
                 top: 50%;/*position Y halfway in*/
                 left: 50%;/*position X halfway in*/
