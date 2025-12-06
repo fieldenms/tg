@@ -14,7 +14,7 @@
 
     <properties>
         <restlet.version>2.6.0</restlet.version>
-        <jetty.version>12.1.2</jetty.version>
+        <jetty.version>12.1.4</jetty.version>
     </properties>
 
     <dependencies>
