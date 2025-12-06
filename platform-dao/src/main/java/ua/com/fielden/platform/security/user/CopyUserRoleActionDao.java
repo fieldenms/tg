@@ -54,12 +54,12 @@ public class CopyUserRoleActionDao extends CommonEntityDao<CopyUserRoleAction> i
                 .modelAsEntity(SecurityRoleAssociation.class);
 
         final SecurityRoleAssociationCo co$Association = co$(SecurityRoleAssociation.class);
-        final var assocations = co$Association.getAllEntities(from(qAssociations).with(fetch(SecurityRoleAssociation.class)).model())
+        final var associations = co$Association.getAllEntities(from(qAssociations).with(fetch(SecurityRoleAssociation.class)).model())
                 .stream()
                 // We can reuse retrieved instances, as `addAssociations` looks only at key values.
                 .map(assoc$ -> assoc$.setRole(savedRole))
                 .toList();
-        co$Association.addAssociations(assocations);
+        co$Association.addAssociations(associations);
 
         return super.save(action);
     }
