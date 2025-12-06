@@ -1,42 +1,30 @@
 package ua.com.fielden.platform.security.user;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
-import ua.com.fielden.platform.security.user.UserRoleCo;
-import ua.com.fielden.platform.security.user.UserRole;
 
-/**
- * Db driven implementation of the {@link UserRoleCo}.
- * 
- * @author TG Team
- * 
- */
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+
+/// DAO implementation of [UserRoleCo].
+///
 @EntityType(UserRole.class)
 public class UserRoleDao extends CommonEntityDao<UserRole> implements UserRoleCo {
 
-    @Inject
-    protected UserRoleDao(final IFilter filter) {
-        super(filter);
+    @Override
+    public UserRole new_() {
+        return super.new_().setActive(true);
     }
 
     @Override
