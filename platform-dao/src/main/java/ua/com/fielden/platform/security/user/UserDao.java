@@ -67,7 +67,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             ERR_INITIATING_PASSWORD_RESET = "Could not initiate password reset.",
             ERR_DELETING_USERS_WITH_ROLES = "Users assigned to roles can’t be deleted. Deactivate such users instead.";
 
-    private static final fetch<User> userWithRolesFetch = fetch(User.class)
+    private static final fetch<User> FETCH_USER_WITH_ROLES = fetch(User.class)
             .with(ACTIVE_ROLES, fetch(SynUserAndRoleAssociationActive.class))
             .with(INACTIVE_ROLES, fetch(SynUserAndRoleAssociationInactive.class));
 
@@ -115,6 +115,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     @Authorise(User_CanSave_Token.class)
+    @SessionRequired
     protected Either<Long, User> save(final User user, final Optional<fetch<User>> maybeFetch) {
         if (User.system_users.VIRTUAL_USER.matches(user)) {
             throw new SecurityException("VIRTUAL_USER cannot be persisted.");
@@ -170,11 +171,8 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     /// Saves new [WebMenuItemInvisibility] for menu item URIs specified in menuItems, and the specified non-base user.
     ///
     private void saveMenuItemInvisibility(final List<String> menuItems, final User menuOwner) {
-        // TODO Optimise by using batch insertion.
-        final WebMenuItemInvisibilityCo co$MenuItemInvisibility = co$(WebMenuItemInvisibility.class);
-        menuItems.forEach(menuItem -> {
-            co$MenuItemInvisibility.save(co$MenuItemInvisibility.new_().setOwner(menuOwner).setMenuItemUri(menuItem));
-        });
+        final WebMenuItemInvisibilityCo co$ = co$(WebMenuItemInvisibility.class);
+        co$.batchInsert(menuItems.stream().map(menuItem -> co$.new_().setOwner(menuOwner).setMenuItemUri(menuItem)), 200);
     }
 
     /// Returns menu item URIs to save as invisible menu items for the specified `user`.
@@ -232,7 +230,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public IPage<? extends User> firstPageOfUsersWithRoles(final int capacity) {
         final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
-        return firstPage(from(model).with(userWithRolesFetch).with(orderBy).model(), capacity);
+        return firstPage(from(model).with(FETCH_USER_WITH_ROLES).with(orderBy).model(), capacity);
     }
 
     private void saveAssociation(final Set<UserAndRoleAssociation> associations) {
@@ -243,20 +241,20 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public User findUserByIdWithRoles(final Long id) {
-        return findById(id, userWithRolesFetch);
+        return findById(id, FETCH_USER_WITH_ROLES);
     }
 
     @Override
     public User findUserByKeyWithRoles(final String key) {
         final EntityResultQueryModel<User> query = select(User.class).where().prop(AbstractEntity.KEY).eq().val(key).model();
-        return getEntity(from(query).with(userWithRolesFetch).model());
+        return getEntity(from(query).with(FETCH_USER_WITH_ROLES).model());
     }
 
     @Override
     public List<User> findAllUsersWithRoles() {
         final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
-        return getAllEntities(from(model).with(userWithRolesFetch).with(orderBy).model());
+        return getAllEntities(from(model).with(FETCH_USER_WITH_ROLES).with(orderBy).model());
     }
 
     @Override
