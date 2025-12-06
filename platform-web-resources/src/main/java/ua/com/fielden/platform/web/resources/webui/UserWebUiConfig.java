@@ -51,7 +51,6 @@ import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCan
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.RunAutomaticallyOptions.ALLOW_CUSTOMISED;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
 import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
 
@@ -172,7 +171,7 @@ public class UserWebUiConfig {
                 .addTopAction(standardSortAction).also()
                 .addTopAction(standardExportAction)
                 .addCrit(USER_ROLE).asMulti().autocompleter(UserRole.class).also()
-                .addCrit(ACTIVE).asMulti().bool().setDefaultValue(multi().bool().setIsValue(true).setIsNotValue(false).value())
+                .addCrit(ACTIVE).asMulti().bool()
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
