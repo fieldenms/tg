@@ -106,8 +106,8 @@ public class EntityFinderTest {
     public void findDeclaredProperties_finds_only_declared_properties_in_User() {
       final EntityElement entity = entityFinder.findEntity(User.class);
       final List<PropertyElement> props = entityFinder.findDeclaredProperties(entity);
-      assertEquals(7, props.size());
-      final String expectedProps = "key, roles, base, basedOnUser, email, active, ssoOnly";
+      assertEquals(8, props.size());
+      final String expectedProps = "key, activeRoles, inactiveRoles, base, basedOnUser, email, active, ssoOnly";
       assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
 
@@ -126,7 +126,7 @@ public class EntityFinderTest {
     public void findProperties_finds_all_properties_in_User() {
       final EntityElement entity = entityFinder.findEntity(User.class);
 
-      final List<String> expectedProps = List.of("key", "roles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
+      final List<String> expectedProps = List.of("key", "activeRoles", "inactiveRoles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
               "createdDate", "createdTransactionGuid", "lastUpdatedBy", "lastUpdatedDate", "lastUpdatedTransactionGuid", "desc");
       assertEquals(expectedProps, entityFinder.findProperties(entity).stream().map(p -> p.getSimpleName().toString()).toList()); 
     }
@@ -238,7 +238,7 @@ public class EntityFinderTest {
       final EntityElement entity = entityFinder.findEntity(User.class);
       final Set<PropertyElement> props = entityFinder.findProperties(entity);
 
-      final List<String> expectedProps = List.of("key", "roles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
+      final List<String> expectedProps = List.of("key", "activeRoles", "inactiveRoles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
               "createdDate", "createdTransactionGuid", "lastUpdatedBy", "lastUpdatedDate", "lastUpdatedTransactionGuid", "id");
       assertEquals(expectedProps, 
               entityFinder.processProperties(props, entity).stream().map(p -> p.getSimpleName().toString()).toList()); 
@@ -250,7 +250,7 @@ public class EntityFinderTest {
       final Set<PropertyElement> props = entityFinder.findProperties(entity);
 
       // unlike User, SuperUser also has property "desc" due to @DescTitle
-      final List<String> expectedProps = List.of("key", "roles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
+      final List<String> expectedProps = List.of("key", "activeRoles", "inactiveRoles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
               "createdDate", "createdTransactionGuid", "lastUpdatedBy", "lastUpdatedDate", "lastUpdatedTransactionGuid", "desc", "id");
       assertEquals(expectedProps, 
               entityFinder.processProperties(props, entity).stream().map(p -> p.getSimpleName().toString()).toList());
@@ -262,7 +262,7 @@ public class EntityFinderTest {
       final Set<PropertyElement> props = entityFinder.findProperties(entity);
 
       // unlike User, SuperUserWithDeclaredDesc has property "desc" declared explicitly
-      final String expectedProps = "desc, key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, id";
+      final String expectedProps = "desc, key, activeRoles, inactiveRoles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, id";
       assertEquals(expectedProps,
               entityFinder.processProperties(props, entity).stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
@@ -276,7 +276,7 @@ public class EntityFinderTest {
         final EntityElement entity = entityFinder.findEntity(NoDescTitleAndNoDeclaredDesc.class);
         final Set<PropertyElement> props = entityFinder.findProperties(entity);
 
-        final String expectedProps = "key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, desc, id";
+        final String expectedProps = "key, activeRoles, inactiveRoles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, desc, id";
         assertEquals(expectedProps,
                 entityFinder.processProperties(props, entity).stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
@@ -292,7 +292,7 @@ public class EntityFinderTest {
         final EntityElement entity = entityFinder.findEntity(NoDescTitleAndNoDeclaredDesc2.class);
         final Set<PropertyElement> props = entityFinder.findProperties(entity);
 
-        final String expectedProps = "desc, key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, id";
+        final String expectedProps = "desc, key, activeRoles, inactiveRoles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, id";
         assertEquals(expectedProps,
                 entityFinder.processProperties(props, entity).stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
