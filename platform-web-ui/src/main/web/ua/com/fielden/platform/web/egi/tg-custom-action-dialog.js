@@ -1083,7 +1083,7 @@ Polymer({
 
     _handleCloseEvent: function(data, envelope) {
         if (data.canClose === true) {
-            this._closeDialogAndIndicateActionCompletion();
+            this.closeDialog();
         }
     },
 

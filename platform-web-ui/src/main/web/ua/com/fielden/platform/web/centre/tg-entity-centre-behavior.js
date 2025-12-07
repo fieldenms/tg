@@ -1177,7 +1177,7 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * Adds event listener updates centre's view on dropdown switch custom event.
          */
-         self.addEventListener("tg-centre-view-change", function (e) {
+         self.addEventListener("tg-switch-action-change", function (e) {
             this._activateView(e.detail);
             tearDownEvent(e);
         }.bind(self));
