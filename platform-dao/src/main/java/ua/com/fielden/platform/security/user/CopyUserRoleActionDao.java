@@ -11,7 +11,8 @@ import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssoc
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
 
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
 
 @EntityType(CopyUserRoleAction.class)
@@ -44,7 +45,10 @@ public class CopyUserRoleActionDao extends CommonEntityDao<CopyUserRoleAction> i
                         .setDesc(action.getRoleDesc())
                         .setActive(action.isRoleActive()));
 
-        final var qAssociations = select(SecurityRoleAssociation.class)
+        // This query is to select distinct records of [SecurityRoleAssociation] by token, with only `securityToken` yielded.
+        // Such instances won't have ID and by retrieving them via an instrumented companion,
+        // we get new instrumented instances that only need to have their property `role` assigned to `savedRole` before saving.
+        final var qDistinctAssociations = select(SecurityRoleAssociation.class)
                 .where()
                 .prop(SecurityRoleAssociation.ROLE).in().values(action.getSelectedIds())
                 .and()
@@ -54,12 +58,10 @@ public class CopyUserRoleActionDao extends CommonEntityDao<CopyUserRoleAction> i
                 .modelAsEntity(SecurityRoleAssociation.class);
 
         final SecurityRoleAssociationCo co$Association = co$(SecurityRoleAssociation.class);
-        final var associations = co$Association.getAllEntities(from(qAssociations).with(fetch(SecurityRoleAssociation.class)).model())
-                .stream()
-                // We can reuse retrieved instances, as `addAssociations` looks only at key values.
+        final var newAssociations = co$Association.getAllEntities(from(qDistinctAssociations).with(SecurityRoleAssociationCo.FETCH_MODEL).model()).stream()
                 .map(assoc$ -> assoc$.setRole(savedRole))
                 .toList();
-        co$Association.addAssociations(associations);
+        co$Association.addAssociations(newAssociations);
 
         return super.save(action);
     }
