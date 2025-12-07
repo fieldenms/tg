@@ -833,7 +833,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgSelectedEntitiesExampleActionProducer.class,
                     injector())).
             addMaster(userWebUiConfig.master).
-            addMaster(userWebUiConfig.rolesUpdater).
             addMaster(userRoleWebUiConfig.master).
             addMaster(clourMaster).//
 
