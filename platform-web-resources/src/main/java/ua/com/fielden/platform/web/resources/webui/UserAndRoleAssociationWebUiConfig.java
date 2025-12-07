@@ -14,6 +14,9 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 import java.util.Optional;
 
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER;
+import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER_ROLE;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 
 /// [UserAndRoleAssociation] Web UI configuration.
@@ -37,9 +40,9 @@ public class UserAndRoleAssociationWebUiConfig {
         final String layout = LayoutComposer.mkGridForMasterFitWidth(3, 1);
 
         final IMaster<UserAndRoleAssociation> masterConfig = new SimpleMasterBuilder<UserAndRoleAssociation>().forEntity(UserAndRoleAssociation.class)
-                .addProp("user").asAutocompleter().also()
-                .addProp("userRole").asAutocompleter().also()
-                .addProp("active").asCheckbox().also()
+                .addProp(USER).asAutocompleter().also()
+                .addProp(USER_ROLE).asAutocompleter().also()
+                .addProp(ACTIVE).asCheckbox().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes if any and refresh.")
                 .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkActionLayoutForMaster())

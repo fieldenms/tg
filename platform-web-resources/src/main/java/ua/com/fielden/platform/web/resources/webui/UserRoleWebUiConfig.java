@@ -19,6 +19,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
@@ -206,9 +207,10 @@ public class UserRoleWebUiConfig {
                 return action(CopyUserRoleAction.class)
                         .withTinyHyperlink(PlatformActionIdentifiers.PLATFORM_COPY_USER_ROLE)
                         .withContext(context().withSelectedEntities().build())
+                        .postActionSuccess(() -> new JsCode("self.$.egi.clearPageSelection();\n"))
                         .icon("icons:content-copy")
                         .shortDesc("Add new User Role from selected roles")
-                        .longDesc("Creates a new User Role with all security tokens of selected roles.")
+                        .longDesc("Create a new User Role with all security tokens of selected roles.")
                         .build();
             }
         };
