@@ -45,6 +45,7 @@ public class PlatformDomainTypes {
         types.add(UserSecret.class);
         types.add(UserSession.class);
         types.add(UserRole.class);
+        types.add(CopyUserRoleAction.class);
         types.add(SecurityTokenInfo.class);
 
         types.add(CentreConfigUpdater.class);
