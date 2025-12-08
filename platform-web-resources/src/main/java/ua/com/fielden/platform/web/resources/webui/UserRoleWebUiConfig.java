@@ -207,7 +207,12 @@ public class UserRoleWebUiConfig {
                 return action(CopyUserRoleAction.class)
                         .withTinyHyperlink(PlatformActionIdentifiers.PLATFORM_COPY_USER_ROLE)
                         .withContext(context().withSelectedEntities().build())
-                        .postActionSuccess(() -> new JsCode("self.$.egi.clearPageSelection();\n"))
+                        .postActionSuccess(() -> new JsCode(
+                            """
+                            if (self.$.egi) {
+                                self.$.egi.clearPageSelection();
+                            }
+                            """))
                         .icon("icons:content-copy")
                         .shortDesc("Add new User Role from selected roles")
                         .longDesc("Create a new User Role with all security tokens of selected roles.")
