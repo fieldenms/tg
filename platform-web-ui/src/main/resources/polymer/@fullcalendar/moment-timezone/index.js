@@ -1,6 +1,6 @@
 import { createPlugin } from '../core/index.js';
 import moment from '../../../_virtual/index.js';
-import { by as NamedTimeZoneImpl } from '../core/internal-common.js';
+import { bw as NamedTimeZoneImpl } from '../core/internal-common.js';
 
 class MomentNamedTimeZone extends NamedTimeZoneImpl {
     offsetForArray(a) {

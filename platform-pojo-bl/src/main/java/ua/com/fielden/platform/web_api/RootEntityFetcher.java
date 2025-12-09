@@ -1,20 +1,5 @@
 package ua.com.fielden.platform.web_api;
 
-import static graphql.GraphqlErrorBuilder.newError;
-import static ua.com.fielden.platform.security.tokens.Template.READ;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_CAPACITY;
-import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_NUMBER;
-import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_CAPACITY;
-import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_NUMBER;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.extractValue;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.generateQueryModelFrom;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.rootPropAndArguments;
-
-import java.util.List;
-import java.util.Optional;
-
 import graphql.execution.DataFetcherResult;
 import graphql.execution.DataFetcherResult.Builder;
 import graphql.language.Argument;
@@ -33,14 +18,19 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
 
-/**
- * {@link DataFetcher} implementation responsible for resolving root {@code Query} fields that correspond to main entity trees.
- * All other {@link DataFetcher}s for sub-fields can be left unchanged ({@link PropertyDataFetcher}) unless some specific behaviour is needed.
- * 
- * @author TG Team
- *
- * @param <T>
- */
+import java.util.List;
+import java.util.Optional;
+
+import static graphql.GraphqlErrorBuilder.newError;
+import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.web_api.FieldSchema.*;
+import static ua.com.fielden.platform.web_api.RootEntityUtils.*;
+
+/// A [DataFetcher] implementation responsible for resolving root `Query` fields that correspond to main entity trees.
+/// All other [DataFetcher]s for sub-fields can be left unchanged ([PropertyDataFetcher]) unless some specific behaviour is needed.
+///
 public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetcher<DataFetcherResult<List<T>>> {
     private final Class<T> entityType;
     private final ICompanionObjectFinder coFinder;
@@ -48,15 +38,6 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
     
-    /**
-     * Creates {@link RootEntityFetcher} for concrete {@code entityType}.
-     * 
-     * @param entityType
-     * @param coFinder
-     * @param dates
-     * @param authorisationModel-- authorises running of Web API queries.
-     * @param securityTokenProvider
-     */
     public RootEntityFetcher(
             final Class<T> entityType,
             final ICompanionObjectFinder coFinder,
@@ -69,12 +50,12 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
     }
-    
-    /**
-     * Checks whether {@code entityType} can be executed by current user and returns error if not.
-     * Otherwise, finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link FieldSchema#PAGE_CAPACITY} entities.<p>
-     * {@inheritDoc}
-     */
+
+    /// Verifies whether  [#entityType] can be retrieved by the current user and returns an error if access is denied.
+    /// Otherwise, finds an uninstrumented reader for [#entityType] and retrieves the first [FieldSchema#PAGE_CAPACITY] entities.
+    ///
+    /// {@inheritDoc}
+    ///
     @Override
     public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
         authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);// reading of entities should be authorised when running GraphQL query

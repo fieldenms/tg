@@ -2,7 +2,6 @@ package ua.com.fielden.platform.dao;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.*;
@@ -19,6 +18,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.sample.domain.TgSubSystemDao.DEFAULT_VALUE_FOR_PROPERTY_EXPLANATION;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 
 public class CommonEntityDaoBatchInsertionTest extends AbstractDaoTestCase {
 
@@ -100,7 +100,7 @@ public class CommonEntityDaoBatchInsertionTest extends AbstractDaoTestCase {
 
     @Test
     public void batchInsert_inactive_activatables_is_supported() {
-        assertTrue(ActivatableAbstractEntity.class.isAssignableFrom(TgSystem.class)); // Pre-condition in case model changes
+        assertTrue(isActivatableEntityType(TgSystem.class)); // Pre-condition in case model changes
 
         final var newEntities = List.of(
                 new_(TgSystem.class, "S1").setActive(false),
@@ -116,7 +116,7 @@ public class CommonEntityDaoBatchInsertionTest extends AbstractDaoTestCase {
 
     @Test
     public void batchInsert_active_activatables_is_not_supported() {
-        assertTrue(ActivatableAbstractEntity.class.isAssignableFrom(TgSystem.class)); // Pre-condition in case model changes
+        assertTrue(isActivatableEntityType(TgSystem.class)); // Pre-condition in case model changes
 
         final var newEntities = List.of(
                 new_(TgSystem.class, "S1").setActive(false),

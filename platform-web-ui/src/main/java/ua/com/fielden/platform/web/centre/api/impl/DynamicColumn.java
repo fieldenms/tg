@@ -1,14 +1,17 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement.DEFAULT_COLUMN_WIDTH;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement.MIN_COLUMN_WIDTH;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.IDynamicColumnConfig;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderAddPropWithDone;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWidth;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithDesc;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithTitle;
 
 import java.util.Optional;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.api.IDynamicColumnConfig;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.*;
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement.DEFAULT_COLUMN_WIDTH;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement.MIN_COLUMN_WIDTH;
 
 public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColumnBuilderWithTitle, IDynamicColumnBuilderWithDesc {
     public static final String DYN_COL_GROUP_PROP_VALUE = "keyPropValue";
@@ -21,6 +24,7 @@ public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColum
     public static final String DYN_COL_WIDTH = "width";
     public static final String DYN_COL_MIN_WIDTH = "minWidth";
     public static final String DYN_COL_GROW_FACTOR = "growFactor";
+    public static final String DYN_COL_WORDWRAP="wordWrap";
 
     
     private final DynamicColumnBuilder<T> dynamicColumnBuilder;

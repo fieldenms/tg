@@ -1,43 +1,7 @@
 package ua.com.fielden.platform.processors.appdomain;
 
-import static java.util.stream.Collectors.toSet;
-import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
-import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.Function;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.element.TypeElement;
-
+import com.squareup.javapoet.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.WildcardTypeName;
-
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -52,45 +16,51 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 
-/**
- * An annotation processor that generates and maintains the {@code ApplicationDomain} class, which implements {@link IApplicationDomainProvider}.
- * <p>
- * The following sources of information are taken into account during processing:
- * <ol>
- *   <li>Set of input entities.</li>
- *   <li>Previously generated {@code ApplicationDomain}.</li>
- *   <li>Extensions, i.e., types annotated with {@link ExtendApplicationDomain}. Generally, there should be a single such type.</li>
- * </ol>
- *
- * <p>
- * The maintenance of the generated {@code ApplicationDomain} is carried out according to the following rules:
- * <ul>
- *  <li>New domain entity types are incrementally registered.</li>
- *  <li>Registered entity types that cannot be located any more (e.g., due to removal of the java source) are unregistered.</li>
- *  <li>Registered entity types that no longer wish to be registered or are structurally modified in such a way that they are no longer
- *      domain entity types are unregistered.</li>
- * </ul>
- *
- * Renaming of java sources by means of IDE refactoring capabilities should automatically lead to the adjustment of {@code ApplicationDomain}.
- * <p>
- * To exclude application-level entity types from registration, annotation {@link SkipEntityRegistration} should be used.
- *
- * <h3>Registration of 3rd-party entities</h3>
- * External, 3rd-party entities are those that come from dependencies. Their registration requires a specific application-level
- * class to be annotated with {@link ExtendApplicationDomain}, listing external entity types.
- * The established convention it to use class {@code fielden.config.ApplicationConfig} in the {@code pojo-bl} module,
- * although this can be customised with option {@linkplain #APP_DOMAIN_EXTENSION_OPT_DESC appDomainExtension}.
- * Any other annotated classes will be ignored.
- *
- * <h3>Supported options</h3>
- * <ul>
- *     <li>{@linkplain #APP_DOMAIN_PKG_OPT_DESC appDomainPkg} - destination package of a generated {@code ApplicationDomain}
- *     <li>{@linkplain #APP_DOMAIN_EXTENSION_OPT_DESC appDomainExtension} - fully-qualified name of the {@code ApplicationDomain}
- *     {@link ExtendApplicationDomain extension}.
- * </ul>
- *
- * @author TG Team
- */
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.TypeElement;
+import java.io.IOException;
+import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toSet;
+import static javax.lang.model.element.Modifier.*;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
+
+/// An annotation processor that generates and maintains the `ApplicationDomain` class, which implements [IApplicationDomainProvider].
+///
+/// The following sources of information are taken into account during processing:
+///
+/// - Set of input entities.
+/// - Previously generated `ApplicationDomain`.
+/// - Extensions, i.e., types annotated with [ExtendApplicationDomain]. Generally, there should be a single such type.
+///
+/// The maintenance of the generated `ApplicationDomain` is carried out according to the following rules:
+///
+/// - New domain entity types are incrementally registered.
+/// - Registered entity types that cannot be located any more (e.g., due to removal of the java source) are unregistered.
+/// - Registered entity types that no longer wish to be registered or are structurally modified in such a way that they are no longer domain entity types are unregistered.
+///
+/// Renaming of java sources by means of IDE refactoring capabilities should automatically lead to the adjustment of `ApplicationDomain`.
+///
+/// To exclude application-level entity types from registration, annotation [SkipEntityRegistration] should be used.
+///
+/// #### Registration of 3rd-party entities
+/// External, 3rd-party entities are those that come from dependencies.
+/// Their registration requires a specific application-level class to be annotated with [ExtendApplicationDomain], listing external entity types.
+/// The established convention it to use class `fielden.config.ApplicationConfig` in the `pojo-bl` module,
+/// although this can be customised with option {@linkplain #APP_DOMAIN_EXTENSION_OPT_DESC appDomainExtension}.
+/// Any other annotated classes will be ignored.
+///
+/// #### Supported options
+///
+/// - [appDomainPkg][#APP_DOMAIN_PKG_OPT_DESC] - destination package of a generated `ApplicationDomain`
+/// - [appDomainExtension][#APP_DOMAIN_EXTENSION_OPT_DESC] - fully-qualified name of the `ApplicationDomain` [extension][ExtendApplicationDomain].
+///
 @SupportedAnnotationTypes("*")
 public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProcessor {
 
@@ -127,9 +97,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         }
     };
 
-    /**
-     * Returns the fully-qualified name of the {@code ApplicationDomain} class determined by given processor options.
-     */
+    /// Returns the fully-qualified name of the `ApplicationDomain` class determined by given processor options.
+    ///
     public static String getApplicationDomainFqn(Map<String, String> procOptions) {
         return "%s.%s".formatted(parseOptionFrom(procOptions, ApplicationDomainProcessor.APP_DOMAIN_PKG_OPT_DESC), APPLICATION_DOMAIN_SIMPLE_NAME);
     }
@@ -140,6 +109,13 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     RegisteredEntitiesCollector registeredEntitiesCollector;
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
+
+    /// Populated in each round.
+    private final Set<EntityElement> allInputEntities = new HashSet<>();
+    /// Assigned only in the 1st round.
+    private Optional<ExtendApplicationDomainMirror> maybeInputExtension = Optional.empty();
+    /// Assigned only in the 1st round.
+    private Optional<ApplicationDomainElement> maybeAppDomainRootElt = Optional.empty();
 
     @Override
     public Set<String> getSupportedOptions() {
@@ -165,43 +141,52 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     @Override
     protected boolean processRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        // if this is an incremental build, then any newly created entity types would be passed into the first round
-        // otherwise, it's a full build and all sources would also be passed into the first round
-        // therefore, there is no need for any processing in case of additional rounds beyond the first one
-        if (getRoundNumber() > 1) {
-            return false;
-        }
-
+        // Entities should be collected from the 1st round (initial inputs) and the 2nd round (generated entities).
         final var pair = registeredEntitiesCollector.scanRoundInputs(roundEnv);
-        final List<EntityElement> inputEntities = pair.getKey();
-        final Optional<ExtendApplicationDomainMirror> maybeInputExtension = pair.getValue();
+        allInputEntities.addAll(pair.getKey());
 
-        // removal of a registered entity will cause recompilation of ApplicationDomain
-        final Optional<ApplicationDomainElement> maybeAppDomainRootElt = registeredEntitiesCollector.findApplicationDomainInRound(roundEnv);
-
-        // this is an incremental build, but it doesn't affect us
-        if (inputEntities.isEmpty() && maybeAppDomainRootElt.isEmpty() && maybeInputExtension.isEmpty()) {
-            printNote("There is nothing to do.");
-            return false;
+        if (getRoundNumber() == 1) {
+            // The extension class can only appear among the inputs of the 1st round, it cannot be generated by other processors.
+            maybeInputExtension = pair.getValue();
+            // Removal of a registered entity will cause recompilation of ApplicationDomain.
+            maybeAppDomainRootElt = registeredEntitiesCollector.findApplicationDomainInRound(roundEnv);
         }
 
-        // if ApplicationDomain is not among root elements, then search through the whole environment
-        final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder))
-                .or(registeredEntitiesCollector::findApplicationDomain);
-        maybeAppDomainElt.ifPresentOrElse(elt -> {
-            // incremental build <=> regenerate
-            printNote("Found existing %s (%s registered entities)", elt.getSimpleName(), elt.entities().size() + elt.externalEntities().size());
-        }, /*else*/ () -> {
-            printNote("Generating %s from scratch.", APPLICATION_DOMAIN_SIMPLE_NAME);
-        });
+        if (getRoundNumber() == 2) {
+            // this is an incremental build, but it doesn't affect us
+            if (allInputEntities.isEmpty() && maybeAppDomainRootElt.isEmpty() && maybeInputExtension.isEmpty()) {
+                printNote("There is nothing to do.");
+                return false;
+            }
 
-        final var registerableEntities = new TreeSet<EntityElement>();
-        final var registerableExtEntities = new TreeSet<EntityElement>();
-        final boolean merged = registeredEntitiesCollector.mergeRegisteredEntities(inputEntities, maybeInputExtension, maybeAppDomainElt, registerableEntities::add, registerableExtEntities::add);
-        if (merged) {
-            writeApplicationDomain(registerableEntities, registerableExtEntities);
-        } else {
-            printNote("There is nothing to do.");
+            // if ApplicationDomain is not among root elements, then search through the whole environment
+            final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt
+                    .map(elt -> new ApplicationDomainElement(elt, entityFinder))
+                    .or(registeredEntitiesCollector::findApplicationDomain);
+            maybeAppDomainElt.ifPresentOrElse(
+                    (elt) -> {
+                        // incremental build <=> regenerate
+                        printNote("Found existing %s (%s registered entities)", elt.getSimpleName(),
+                                elt.entities().size() + elt.externalEntities().size());
+                    },
+                    // or else
+                    () -> {
+                        printNote("Generating %s from scratch.", APPLICATION_DOMAIN_SIMPLE_NAME);
+                    });
+
+            final var registerableEntities = new TreeSet<EntityElement>();
+            final var registerableExtEntities = new TreeSet<EntityElement>();
+            final boolean merged = registeredEntitiesCollector.mergeRegisteredEntities(allInputEntities,
+                                                                                       maybeInputExtension,
+                                                                                       maybeAppDomainElt,
+                                                                                       registerableEntities::add,
+                                                                                       registerableExtEntities::add);
+            if (merged) {
+                writeApplicationDomain(registerableEntities, registerableExtEntities);
+            }
+            else {
+                printNote("There is nothing to do.");
+            }
         }
 
         return false;

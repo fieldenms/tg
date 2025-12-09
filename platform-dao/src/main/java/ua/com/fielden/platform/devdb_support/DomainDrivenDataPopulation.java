@@ -1,17 +1,8 @@
 package ua.com.fielden.platform.devdb_support;
 
-import static java.lang.String.format;
-
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -21,6 +12,15 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
+
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 
 /**
  * This is a base class for implementing development data population in a domain driven manner. Reuses {@link IDomainDrivenTestCaseConfiguration} for configuration of application
@@ -106,7 +106,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
     public final <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key, final String desc) {
         final T entity = new_(entityClass);
         entity.setKey(key);
-        entity.setDesc(desc);
+        entity.set(DESC, desc);
         return entity;
     }
 

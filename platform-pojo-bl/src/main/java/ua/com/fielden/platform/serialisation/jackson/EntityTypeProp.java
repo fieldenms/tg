@@ -1,12 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 
 /**
  * Master entity object.
@@ -86,6 +81,20 @@ public class EntityTypeProp extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Short Collection Key", desc = "Non-parent composite key member of this short collectional property's element type (non-empty only if it is short collection).")
     private String _shortCollectionKey;
+
+    @IsProperty
+    @Title(value = "Is entity type carrier?", desc = "Indicates whether this property carries an information about entity type.")
+    private Boolean _entityTypeCarrier;
+
+    @Observable
+    public EntityTypeProp set_entityTypeCarrier(final Boolean _entityTypeCarrier) {
+        this._entityTypeCarrier = _entityTypeCarrier;
+        return this;
+    }
+
+    public Boolean get_entityTypeCarrier() {
+        return _entityTypeCarrier;
+    }
 
     @Observable
     public EntityTypeProp set_shortCollectionKey(final String _shortCollectionKey) {
@@ -256,5 +265,4 @@ public class EntityTypeProp extends AbstractEntity<String> {
     public Boolean get_secrete() {
         return _secrete;
     }
-
 }

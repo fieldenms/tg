@@ -16,7 +16,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.eql.execution.AbstractEqlExecutionTestCase;
 import ua.com.fielden.platform.sample.domain.TeNamedValuesVector;
-import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
+import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 
 public class ConcatEqlFunctionTest extends AbstractEqlExecutionTestCase {
     private static final DateFormat FORMATTER_WITH_MILLISECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -305,7 +305,7 @@ public class ConcatEqlFunctionTest extends AbstractEqlExecutionTestCase {
         try {
             return FORMATTER_WITH_MILLISECONDS.parse(dateTime);
         } catch (ParseException e) {
-            throw new DomainDriventTestException(format("Could not parse value [%s].", dateTime));
+            throw new DomainDrivenTestException(format("Could not parse value [%s].", dateTime));
         }
     }
 }

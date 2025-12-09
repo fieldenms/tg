@@ -10,6 +10,7 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { openShareAction } from '/resources/reflection/tg-share-utils.js';
 
 /**
  * A local insertion point manager for the entity centre to manage detached or maximized insertion points.
@@ -745,6 +746,21 @@ const TgEntityCentreBehaviorImpl = {
         return _buttonDisabled || embedded;
     },
 
+    /// Opens share action master with tiny URL and QR code for currently loaded centre configuration.
+    ///
+    _openShareAction: function () {
+        openShareAction(
+            this.$.selection_criteria._toastGreeting(),
+            this.uuid,
+            this._showDialog,
+            () => this._reflector.createContextHolder(
+                null, null, null,
+                null, null, null
+            ),
+            () => window.location.href
+        );
+    },
+
     _computeViewerDisabled: function (_buttonDisabled, _wasRun) {
         return _buttonDisabled || _wasRun !== "yes";
     },
@@ -908,6 +924,7 @@ const TgEntityCentreBehaviorImpl = {
                 this.$.egi.adjustColumnWidths(result.columnWidths);
                 this.$.egi.visibleRowsCount = result.resultConfig.visibleRowsCount;
                 this.$.egi.numberOfHeaderLines = result.resultConfig.numberOfHeaderLines;
+                this.$.egi.adjustColumnAvailability(result.resultConfig.availableColumns);
                 this.$.egi.adjustColumnsVisibility(result.resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
                 this.$.egi.adjustColumnsSorting(result.resultConfig.orderingConfig.map(propOrder => {
                    if (propOrder.property === "this") {
@@ -1160,7 +1177,7 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * Adds event listener updates centre's view on dropdown switch custom event.
          */
-         self.addEventListener("tg-centre-view-change", function (e) {
+         self.addEventListener("tg-switch-action-change", function (e) {
             this._activateView(e.detail);
             tearDownEvent(e);
         }.bind(self));

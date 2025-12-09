@@ -11,10 +11,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -55,6 +52,12 @@ public class WebUiBuilder implements IWebUiBuilder {
     private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new ConcurrentHashMap<>();
 
     private final Map<Class<? extends AbstractEntity<?>>, EntityActionConfig> openMasterActions = new ConcurrentHashMap<>();
+
+    /// Extra action configurations not attached to any centre, master or main menu item.
+    ///
+    /// Key: action identifier.
+    ///
+    private final Map<String, EntityActionConfig> extraActionsMap = new ConcurrentHashMap<>();
 
     /**
      * Holds the map between custom view name and custom view instance.
@@ -165,6 +168,19 @@ public class WebUiBuilder implements IWebUiBuilder {
     }
 
     @Override
+    public IWebUiBuilder registerExtraAction(final EntityActionConfig actionConfig) {
+        if (actionConfig.actionIdentifier.isEmpty()) {
+            throw new WebUiBuilderException("Action identifier must be present to register an action configuration.");
+        }
+        final var actionIdentifier = actionConfig.actionIdentifier.get();
+        final var prev = extraActionsMap.putIfAbsent(actionIdentifier, actionConfig);
+        if (prev != null) {
+            throw new WebUiBuilderException("An action with identifier [%s] has already been registered.".formatted(actionIdentifier));
+        }
+        return this;
+    }
+
+    @Override
     public <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final EntityCentre<?> centre) {
         final Optional<EntityCentre<?>> centreOptional = getCentre(centre.getMenuItemType());
         if (centreOptional.isPresent()) {
@@ -198,6 +214,10 @@ public class WebUiBuilder implements IWebUiBuilder {
 
     public Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres() {
         return centreMap;
+    }
+
+    public Collection<EntityActionConfig> getExtraActions() {
+        return extraActionsMap.values();
     }
 
     public Map<String, AbstractCustomView> getCustomViews() {

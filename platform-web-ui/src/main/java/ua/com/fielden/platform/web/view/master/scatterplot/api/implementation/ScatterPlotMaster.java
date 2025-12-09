@@ -18,6 +18,7 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Optional.*;
@@ -164,6 +165,11 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
     @Override
     public IRenderable render() {
         return renderable;
+    }
+
+    @Override
+    public Stream<EntityActionConfig> streamActionConfigs() {
+        return Stream.of(action);
     }
 
     @Override

@@ -18,7 +18,7 @@
     <script type="module">
 
         import '/app/tg-reflector.js';
-        import {CURRENCY_SYMBOL_SPACE} from '/app/tg-reflector.js';
+        import { CURRENCY_SYMBOL_SPACE } from '/resources/reflection/tg-numeric-utils.js';
         import '/app/tg-app-config.js'; // this is to trigger setting of LTS, LT and L formats in moment library instance to convert dates properly
         import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 
@@ -533,6 +533,30 @@
             
             test('EntityType.prop: union\'s common subproperty is defined', function (done) {
                 assert.exists(reflector.getType('ua.com.fielden.platform.sample.domain.TgUnionHolder').prop('union.common.desc'));
+                done();
+            });
+
+            test('EntityType.prop: title / desc of key prop of composite entity type without @KeyTitle are defined, but empty', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('key').title(), '');
+                assert.strictEqual(reflector.getType(typeName7).prop('key').desc(), '');
+                done();
+            });
+
+            test('EntityType.prop: title / desc of key prop of composite entity type with @KeyTitle are as in @KeyTitle definition', function (done) {
+                assert.strictEqual(reflector.getType(typeName8).prop('key').title(), 'Entity With Composite Boolean Key');
+                assert.strictEqual(reflector.getType(typeName8).prop('key').desc(), 'Represents an entity with single composite key of type Boolean.');
+                done();
+            });
+
+            test('EntityType.prop: title / desc of key prop of union entity type without @KeyTitle are defined, but empty', function (done) {
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.UnionEntityWithSkipExistsValidation').prop('key').title(), '');
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.UnionEntityWithSkipExistsValidation').prop('key').desc(), '');
+                done();
+            });
+
+            test('EntityType.prop: title / desc of key prop of union entity type with @KeyTitle are as in @KeyTitle definition', function (done) {
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgUnion').prop('key').title(), 'Entity With Union Key');
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgUnion').prop('key').desc(), 'Entity With Union Key');
                 done();
             });
             

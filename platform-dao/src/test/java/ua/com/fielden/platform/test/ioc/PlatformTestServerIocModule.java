@@ -28,23 +28,23 @@ import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
+import ua.com.fielden.platform.security.provider.SecurityTestIocModule;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.test.entities.*;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.annotations.AppUri;
 
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Serve IoC module for platform related testing.
- *
- * @author TG Team
- *
- */
+import static java.lang.String.format;
+
+/// Serve IoC module for platform related testing.
+///
 public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
     private static final Logger LOGGER = LogManager.getLogger(PlatformTestServerIocModule.class);
@@ -70,6 +70,10 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
+
+        install(new SecurityTestIocModule());
+
+        bindConstant().annotatedWith(AppUri.class).to(format("https://%s:%s%s", getProps().get("web.domain"), getProps().get("port"), getProps().get("web.path")));
     }
 
     @Override
@@ -138,6 +142,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgEntityWithManyPropTypesCo.class).to(TgEntityWithManyPropTypesDao.class);
         bind(IEntityOne.class).to(EntityOneDao.class);
         bind(IEntityTwo.class).to(EntityTwoDao.class);
+        bind(EntityThreeCo.class).to(EntityThreeDao.class);
         bind(IUnionEntity.class).to(UnionEntityDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);

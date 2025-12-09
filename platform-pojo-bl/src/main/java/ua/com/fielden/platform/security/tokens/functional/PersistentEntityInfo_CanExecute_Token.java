@@ -6,7 +6,6 @@ import ua.com.fielden.platform.security.tokens.Template;
 
 import static java.lang.String.format;
 
-///
 /// A security token for entity {@link PersistentEntityInfo} to guard Execute.
 ///
 public class PersistentEntityInfo_CanExecute_Token implements ISecurityToken {

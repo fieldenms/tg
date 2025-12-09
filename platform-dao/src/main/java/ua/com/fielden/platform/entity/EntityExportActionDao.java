@@ -5,13 +5,10 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
-import ua.com.fielden.platform.security.IAuthorisationModel;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
@@ -29,17 +26,11 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getDefaultEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.security.tokens.Template.READ;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
-/**
- * DAO implementation for companion object {@link EntityExportActionCo}.
- *
- * @author TG Team
- *
- */
+/// DAO implementation for companion object [EntityExportActionCo].
+///
 @EntityType(EntityExportAction.class)
 public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> implements EntityExportActionCo {
     public static final String ERR_EMPTY_SELECTION_FOR_EXPORT_OF_SELECTED = "Please select at least one entity to export from %s view.";
@@ -51,21 +42,14 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     public static final String EXPORT_FILE_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
-    private final IAuthorisationModel authorisationModel;
-    private final ISecurityTokenProvider securityTokenProvider;
     private final IEntityMasterUrlProvider entityMasterUrlProvider;
 
     @Inject
     public EntityExportActionDao(
             final ICriteriaEntityRestorer criteriaEntityRestorer,
-            final IAuthorisationModel authorisationModel,
-            final ISecurityTokenProvider securityTokenProvider,
-            final IEntityMasterUrlProvider entityMasterUrlProvider,
-            final IFilter filter) {
-        super(filter);
+            final IEntityMasterUrlProvider entityMasterUrlProvider)
+    {
         this.criteriaEntityRestorer = criteriaEntityRestorer;
-        this.authorisationModel = authorisationModel;
-        this.securityTokenProvider = securityTokenProvider;
         this.entityMasterUrlProvider = entityMasterUrlProvider;
     }
 
@@ -163,7 +147,6 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             final String sheetTitle,
             final boolean allowNoSelectionForExportOfSelected)
     {
-        authoriseReading(selectionCrit.getEntityClass().getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime); // reading of entities should be authorised when exporting
         if (entity.isExportAll()) {
             return selectionCrit.export(new LinkedHashMap<>());
         }

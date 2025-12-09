@@ -91,13 +91,12 @@ public class CentreToolbar implements IToolbarConfig {
 
     public static DomElement helpButton() {
         return new DomElement("paper-icon-button")
+                .id("helpButton")
                 .style("color:#727272")
                 .attr("slot", "standart-action")
+                .attr("on-tg-long-tap", "_longHelpTapHandler")
+                .attr("on-tg-short-tap", "_shortHelpTapHandler")
                 .attr("icon", "icons:help-outline")
-                .attr("on-mousedown", "_helpMouseDownEventHandler")
-                .attr("on-touchstart", "_helpMouseDownEventHandler")
-                .attr("on-mouseup", "_helpMouseUpEventHandler")
-                .attr("on-touchend", "_helpMouseUpEventHandler")
                 .attr("tooltip-text", "Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link.");
     }
 

@@ -1,7 +1,8 @@
 import { keyName, base } from '../../w3c-keyname/index.js';
 import { Plugin } from '../../prosemirror-state/dist/index.js';
 
-const mac = typeof navigator != "undefined" ? /Mac|iP(hone|[oa]d)/.test(navigator.platform) : false;
+const mac = typeof navigator != "undefined" && /Mac|iP(hone|[oa]d)/.test(navigator.platform);
+const windows = typeof navigator != "undefined" && /Win/.test(navigator.platform);
 function normalizeKeyName(name) {
     let parts = name.split(/-(?!$)/), result = parts[parts.length - 1];
     if (result == "Space")
@@ -107,12 +108,14 @@ function keydownHandler(bindings) {
                 if (noShift && noShift(view.state, view.dispatch, view))
                     return true;
             }
-            if ((event.shiftKey || event.altKey || event.metaKey || name.charCodeAt(0) > 127) &&
+            if ((event.altKey || event.metaKey || event.ctrlKey) &&
+                // Ctrl-Alt may be used for AltGr on Windows
+                !(windows && event.ctrlKey && event.altKey) &&
                 (baseName = base[event.keyCode]) && baseName != name) {
                 // Try falling back to the keyCode when there's a modifier
                 // active or the character produced isn't ASCII, and our table
                 // produces a different name from the the keyCode. See #668,
-                // #1060
+                // #1060, #1529.
                 let fromCode = map[modifiers(baseName, event)];
                 if (fromCode && fromCode(view.state, view.dispatch, view))
                     return true;

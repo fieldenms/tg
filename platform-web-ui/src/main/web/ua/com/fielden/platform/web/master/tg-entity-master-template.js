@@ -3,6 +3,7 @@
 import '/resources/actions/tg-ui-action.js';
 
 import { TgEntityMasterTemplateBehavior, Polymer, html } from '/resources/master/tg-entity-master-template-behavior.js';
+import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-handler-behaviour.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js'; // required by BindSavedPropertyPostActionSuccess/Error handlers
 
@@ -12,6 +13,12 @@ const template = html`<!-- TODO layout vertical -->
     <style include="tg-entity-master-styles"></style> <!-- imported as part of tg-entity-master-template-behavior to reduce the size of resultant generated file -->
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <style>
+        .help-button {
+            width: 22px;
+            height: 22px;
+            padding: 0px;
+            color: var(--paper-input-container-color, var(--secondary-text-color));
+        }
         #tgOpenPersistentEntityInfo {
             color: var(--paper-input-container-color, var(--secondary-text-color));
             margin-left: 2px;
@@ -58,13 +65,17 @@ const template = html`<!-- TODO layout vertical -->
         _process-retriever-error="[[_processRetrieverError]]"
         _process-saver-response="[[_processSaverResponse]]"
         _process-saver-error="[[_processSaverError]]"
-        _initiate-help-action="[[_helpMouseDownEventHandler]]"
-        _run-help-action="[[_helpMouseUpEventHandler]]"
-        _has-embeded-view="[[_hasEmbededView]]"
         _saver-loading="{{_saverLoading}}">
-        <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
-        <!--@tg-entity-master-content-->
-        <!--END OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
+        <paper-icon-button 
+            id="helpButton"
+            on-tg-long-tap="_longHelpTapHandler"
+            on-tg-short-tap="_shortHelpTapHandler"
+            class="help-button"
+            icon="icons:help-outline"
+            tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link."
+            hidden$="[[_hasEmbededView()]]"
+            slot="help-button">
+        </paper-icon-button>
         <tg-ui-action
             id="tgOpenPersistentEntityInfo"
             ui-role='ICON'
@@ -86,6 +97,9 @@ const template = html`<!-- TODO layout vertical -->
             disabled="[[!_isEntityPersisted(_currEntity)]]"
             slot="persistent-entity-info-slot">
         </tg-ui-action>
+        <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
+        <!--@tg-entity-master-content-->
+        <!--END OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
     </tg-entity-master>
 `;
 
@@ -94,7 +108,7 @@ Polymer({
 
     is: 'tg-@entity_type-master',
 
-    behaviors: [TgEntityMasterTemplateBehavior],
+    behaviors: [TgEntityMasterTemplateBehavior, TgLongTapHandlerBehaviour],
 
     created: function () {
         const self = this;

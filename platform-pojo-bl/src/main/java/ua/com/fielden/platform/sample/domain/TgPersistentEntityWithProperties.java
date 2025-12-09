@@ -9,15 +9,19 @@ import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.sample.domain.composite.TgRollingStockMinorComponent;
 import ua.com.fielden.platform.sample.domain.definers.CosWithACEDefiner;
 import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
 import ua.com.fielden.platform.sample.domain.definers.TgPersistentEntityWithPropertiesEntityPropDefiner;
 import ua.com.fielden.platform.sample.domain.validators.*;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.tokens.persistent.TgPersistentEntityWithProperties_CanRead_moneyProp_Token;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.Pair;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -39,6 +43,11 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 @DescTitle(value = "Desc", desc = "Some desc description")
 @DisplayDescription
 public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWithCentreContext<String> { // yet persistent (@MapEntityTo); has been marked as functional to be able to add it as the action of editing itself
+
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TgPersistentEntityWithProperties.class);
+    public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
+    public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
+
     @IsProperty
     @MapTo
     @Title(value = "Integer prop", desc = "Integer prop desc")
@@ -60,6 +69,9 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
     @MapTo
     @Title(value = "String prop", desc = "String prop desc")
     @UpperCase
+    // Keep commented out, uncomment for testing.
+    //@BeforeChange(@Handler(StringPropValidator.class))
+    //@AfterChange(TgPersistentEntityWithPropertiesStringPropDefiner.class)
     private String stringProp;
 
     @IsProperty
@@ -106,6 +118,7 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
     @MapTo
     @Title(value = "Money prop", desc = "Money prop desc")
     // @PersistedType(userType = IMoneyUserType.class)
+    @Authorise(TgPersistentEntityWithProperties_CanRead_moneyProp_Token.class)
     private Money moneyProp;
 
     @IsProperty

@@ -133,6 +133,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgEntityWithTimeZoneDates.class);
         add(EntityOne.class);
         add(EntityTwo.class);
+        add(EntityThree.class);
         add(UnionEntity.class);
         add(TgUnion.class);
         add(TgUnionType1.class);

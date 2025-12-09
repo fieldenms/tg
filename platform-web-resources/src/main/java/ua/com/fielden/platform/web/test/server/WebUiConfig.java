@@ -33,6 +33,7 @@ import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.action.post.BindSavedPropertyPostActionError;
 import ua.com.fielden.platform.web.action.post.BindSavedPropertyPostActionSuccess;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
+import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -498,7 +499,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .addAction(dummyAction("color: yellow"))
                             .addAction(dummyAction("color: red")).build())
                 .also()
-//                .addProp("stringProp").asSinglelineText().skipValidation()
+//                .addProp("stringProp").asAutocompleter(TgPersistentCompositeEntity.class)/*.withMatcher(CompositeEntityValueMatcher.class)*/
 //                    .withAction(
 //                        action(TgDummyAction.class)
 //                        .withContext(context().withMasterEntity().build())
@@ -832,9 +833,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgSelectedEntitiesExampleActionProducer.class,
                     injector())).
             addMaster(userWebUiConfig.master).
-            addMaster(userWebUiConfig.rolesUpdater).
             addMaster(userRoleWebUiConfig.master).
-            addMaster(userRoleWebUiConfig.tokensUpdater).
             addMaster(clourMaster).//
 
                 addMaster(new EntityMaster<>(
@@ -1536,7 +1535,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
                 //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
                 .also()
-                .addCrit("stringProp").asMulti().text()
+                .addCrit("stringProp").asMulti().autocompleter(TgPersistentCompositeEntity.class)
                 //*    */.setDefaultValue(multi().string().not().setValues("DE*", "ED*").canHaveNoValue().value())
                 .also()
                 .addCrit("integerProp").asRange().integer()
@@ -1547,7 +1546,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .lightDesc()
                 //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
                 .also()
-                .addCrit("bigDecimalProp").asRange().decimal()
+                .addCrit("moneyProp").asRange().decimal()
                 //*    */.setDefaultValue(range().decimal().not().setFromValueExclusive(new BigDecimal(3).setScale(5) /* TODO scale does not give appropriate effect on centres -- the prop becomes 'changed by other user' -- investigate generated crit property */).setToValueExclusive(new BigDecimal(4).setScale(5)).canHaveNoValue().value())
                 .also()
                 .addCrit("booleanProp").asMulti().bool()
@@ -1780,7 +1779,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         .setPageCapacity(20)
         //.setHeight("100%")
         //.setVisibleRowsCount(10)
-        //.fitToHeight()
+        .fitToHeight()
         .addProp("this")
             .order(2).asc()
             .width(60);
@@ -1794,7 +1793,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
                 withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
-                        //.preAction(new EntityNavigationPreAction("Cool entity"))
+                        .preAction(new EntityNavigationPreAction("Cool entity"))
                         .icon("editor:mode-edit")
                         .withStyle("color: green")
                         .shortDesc("Edit entity")
@@ -1802,7 +1801,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .withNoParentCentreRefresh()
                         .build())
                 .also()
-                .addEditableProp("desc")
+                .addEditableProp("desc").withWordWrap()
                     .withAction(
                         action(TgPersistentEntityWithProperties.class)
                         .withContext(context().withCurrentEntity().build())
@@ -1864,7 +1863,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .minWidth(42)
                 .also()
             .addEditableProp("bigDecimalProp")
-                .minWidth(68);
+                .minWidth(68)
+                .also()
+            .addProp("moneyProp")
+                .minWidth(100);
 
         final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
             .withContext(context().withSelectedEntities().build())
@@ -1914,7 +1916,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("compositeProp").minWidth(110)
                 .also()
-                .addProp("stringProp").minWidth(50).also()
+                .addEditableProp("stringProp").asAutocompleter(TgPersistentCompositeEntity.class).minWidth(50).withWordWrap().also()
                 .addEditableProp("colourProp").width(40).also()
                 .addProp("numberOfAttachments").width(100).also()
                 .addEditableProp("hyperlinkProp").minWidth(500)

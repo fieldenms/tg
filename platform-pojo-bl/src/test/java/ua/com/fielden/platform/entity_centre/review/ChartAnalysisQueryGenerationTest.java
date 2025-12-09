@@ -33,6 +33,7 @@ import ua.com.fielden.platform.report.query.generation.AnalysisResultClass;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
+import ua.com.fielden.platform.security.interception.AuthenticationTestIocModule;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.IDates;
@@ -47,7 +48,10 @@ public class ChartAnalysisQueryGenerationTest {
 
     private Injector createInjector() {
         final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
-        return new ApplicationInjectorFactory().add(module).getInjector();
+        return new ApplicationInjectorFactory()
+            .add(new AuthenticationTestIocModule())
+            .add(module)
+            .getInjector();
     }
 
     private EntityFactory createFactory(final Injector injector) {
