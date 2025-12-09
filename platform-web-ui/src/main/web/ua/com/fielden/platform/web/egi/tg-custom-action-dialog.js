@@ -1082,6 +1082,7 @@ Polymer({
     },
 
     _handleCloseEvent: function(data, envelope) {
+        // Close this dialog only when the event data permits it and all child dialogs have been closed. 
         if (data.canClose === true && this._closeChildren()) {
             this._closeDialogAndIndicateActionCompletion();
         }
