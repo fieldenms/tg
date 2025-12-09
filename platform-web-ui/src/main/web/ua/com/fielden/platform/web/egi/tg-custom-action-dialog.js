@@ -1082,8 +1082,8 @@ Polymer({
     },
 
     _handleCloseEvent: function(data, envelope) {
-        if (data.canClose === true) {
-            this.closeDialog();
+        if (data.canClose === true && this._closeChildren()) {
+            this._closeDialogAndIndicateActionCompletion();
         }
     },
 
