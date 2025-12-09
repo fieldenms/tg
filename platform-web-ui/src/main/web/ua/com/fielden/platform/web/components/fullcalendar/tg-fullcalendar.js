@@ -89,7 +89,7 @@ const template = html`
             <paper-icon-button id="calendarTrigger" icon="tg-icons:legend" tooltip-text="Show the colour legend." on-tap="_showLegend"></paper-icon-button>
         </div>
         <span class="centre-toolbar" pos="center">[[calendarTitle]]</span>
-        <tg-dropdown-switch view-index="0" views="[[viewTypes]]" button-width="40" change-current-view-on-select on-tg-centre-view-change="_changeView"></tg-dropdown-switch>
+        <tg-dropdown-switch view-index="0" views="[[viewTypes]]" button-width="40" change-current-view-on-select on-tg-switch-action-change="_changeView"></tg-dropdown-switch>
     </tg-flex-layout>
     <div id="calendarContainer"></div>
     <iron-dropdown id="dropdown" horizontal-align="left" restore-focus-on-close always-on-top>
