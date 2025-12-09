@@ -109,6 +109,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     public EntityResultQueryModel<SecurityRoleAssociation> selectActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens) {
         final var subModel = select(UserAndRoleAssociation.class)
                 .where()
+                .prop(ACTIVE).eq().val(true).and()
                 .prop("user").eq().val(user)
                 .and().prop("userRole.active").eq().val(true) // filter out association with inactive roles
                 .and().prop("userRole.id").eq().prop("sra.role.id").model();
