@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.security.user.SecurityRoleAssociation.ROLE;
 import static ua.com.fielden.platform.security.user.SecurityRoleAssociation.SECURITY_TOKEN;
@@ -23,7 +24,11 @@ public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssoci
     IFetchProvider<SecurityRoleAssociation> FETCH_PROVIDER = fetch(SecurityRoleAssociation.class)
             .with(SECURITY_TOKEN,
                   ROLE,
-                  ACTIVE);
+                  ACTIVE,
+                  // `CREATED_*` properties are needed to save new associations in [CopyUserRoleActionDao].
+                  CREATED_BY,
+                  CREATED_DATE,
+                  CREATED_TRANSACTION_GUID);
 
     fetch<SecurityRoleAssociation> FETCH_MODEL = FETCH_PROVIDER.fetchModel();
 
@@ -48,6 +53,8 @@ public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssoci
     void removeAssociations(final Collection<SecurityRoleAssociation> associations);
 
     /// Creates or activates all associations in the collection.
+    ///
+    /// @param associations a collection of instrumented instances, each of which has all required key values and does not have ID
     ///
     void addAssociations(Collection<SecurityRoleAssociation> associations);
 

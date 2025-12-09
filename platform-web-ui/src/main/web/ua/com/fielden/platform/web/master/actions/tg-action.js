@@ -95,7 +95,7 @@ const template = html`
         <span>[[shortDesc]]</span>
     </paper-button>
     <paper-fab id="fabButton" class="action-item" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(availableOptions, excludeNew, excludeClose, icon)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
-    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" main-button-tooltip-text="[[_generateMainShortcutTooltip(shortcut)]]" dropdown-button-tooltip-text="Select an action" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(availableOptions, excludeNew, excludeClose, icon)]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
+    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" main-button-tooltip-text="[[_generateMainShortcutTooltip(shortcut)]]" dropdown-button-tooltip-text="Select an action" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(availableOptions, excludeNew, excludeClose, icon)]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-switch-action-change="_changeActionOption" on-tg-switch-action-activate="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
@@ -409,10 +409,16 @@ Polymer({
         }).bind(this);
     },
 
-    _runOptionAction: function (e) {
+    _changeActionOption: function (e) {
         const itemIdx = e.detail;
         if (this._options && this._options[itemIdx]) {
             this._saveActionIndex(itemIdx);
+        }
+    },
+
+    _runOptionAction: function (e) {
+        const itemIdx = e.detail;
+        if (this._options && this._options[itemIdx]) {
             const closeAfterExecution = this._options[itemIdx].closeAfterExecution;
             const subRole = this._options[itemIdx].subRole;
             this.async(function () {
