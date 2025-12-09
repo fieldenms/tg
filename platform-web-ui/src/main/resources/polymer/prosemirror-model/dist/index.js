@@ -272,7 +272,7 @@ class Fragment {
     position in this fragment. The result object will be reused
     (overwritten) the next time the function is called. @internal
     */
-    findIndex(pos, round = -1) {
+    findIndex(pos) {
         if (pos == 0)
             return retIndex(0, pos);
         if (pos == this.size)
@@ -282,7 +282,7 @@ class Fragment {
         for (let i = 0, curPos = 0;; i++) {
             let cur = this.child(i), end = curPos + cur.nodeSize;
             if (end >= pos) {
-                if (end == pos || round > 0)
+                if (end == pos)
                     return retIndex(i + 1, end);
                 return retIndex(i, curPos);
             }
@@ -682,7 +682,7 @@ function insertInto(content, dist, insert, parent) {
             return null;
         return content.cut(0, dist).append(insert).append(content.cut(dist));
     }
-    let inner = insertInto(child.content, dist - offset - 1, insert);
+    let inner = insertInto(child.content, dist - offset - 1, insert, child);
     return inner && content.replaceChild(index, child.copy(inner));
 }
 function replace($from, $to, slice) {
@@ -1245,7 +1245,7 @@ class Node {
     `blockSeparator` is given, it will be inserted to separate text
     from different block nodes. If `leafText` is given, it'll be
     inserted for every non-text leaf node encountered, otherwise
-    [`leafText`](https://prosemirror.net/docs/ref/#model.NodeSpec^leafText) will be used.
+    [`leafText`](https://prosemirror.net/docs/ref/#model.NodeSpec.leafText) will be used.
     */
     textBetween(from, to, blockSeparator, leafText) {
         return this.content.textBetween(from, to, blockSeparator, leafText);
@@ -2455,8 +2455,8 @@ class Schema {
             let type = this.marks[prop], excl = type.spec.excludes;
             type.excluded = excl == null ? [type] : excl == "" ? [] : gatherMarks(this, excl.split(" "));
         }
-        this.nodeFromJSON = this.nodeFromJSON.bind(this);
-        this.markFromJSON = this.markFromJSON.bind(this);
+        this.nodeFromJSON = json => Node.fromJSON(this, json);
+        this.markFromJSON = json => Mark.fromJSON(this, json);
         this.topNodeType = this.nodes[this.spec.topNode || "doc"];
         this.cached.wrappings = Object.create(null);
     }
@@ -2490,20 +2490,6 @@ class Schema {
         if (typeof type == "string")
             type = this.marks[type];
         return type.create(attrs);
-    }
-    /**
-    Deserialize a node from its JSON representation. This method is
-    bound.
-    */
-    nodeFromJSON(json) {
-        return Node.fromJSON(this, json);
-    }
-    /**
-    Deserialize a mark from its JSON representation. This method is
-    bound.
-    */
-    markFromJSON(json) {
-        return Mark.fromJSON(this, json);
     }
     /**
     @internal
@@ -2687,7 +2673,7 @@ class DOMParser {
     /**
     Construct a DOM parser using the parsing rules listed in a
     schema's [node specs](https://prosemirror.net/docs/ref/#model.NodeSpec.parseDOM), reordered by
-    [priority](https://prosemirror.net/docs/ref/#model.ParseRule.priority).
+    [priority](https://prosemirror.net/docs/ref/#model.GenericParseRule.priority).
     */
     static fromSchema(schema) {
         return schema.cached.domParser ||
@@ -2833,7 +2819,7 @@ class ParseContext {
                 value = value.replace(/\r\n?/g, "\n");
             }
             if (value)
-                this.insertNode(this.parser.schema.text(value), marks);
+                this.insertNode(this.parser.schema.text(value), marks, !/\S/.test(value));
             this.findInText(dom);
         }
         else {
@@ -2897,7 +2883,7 @@ class ParseContext {
     ignoreFallback(dom, marks) {
         // Ignored BR nodes should at least create an inline context
         if (dom.nodeName == "BR" && (!this.top.type || !this.top.type.inlineContent))
-            this.findPlace(this.parser.schema.text("-"), marks);
+            this.findPlace(this.parser.schema.text("-"), marks, true);
     }
     // Run any style parser associated with the node's styles. Either
     // return an updated array of marks, or null to indicate some of the
@@ -2945,7 +2931,7 @@ class ParseContext {
                     marks = inner;
                 }
             }
-            else if (!this.insertNode(nodeType.create(rule.attrs), marks)) {
+            else if (!this.insertNode(nodeType.create(rule.attrs), marks, dom.nodeName == "BR")) {
                 this.leafFallback(dom, marks);
             }
         }
@@ -2962,7 +2948,7 @@ class ParseContext {
         }
         else if (rule.getContent) {
             this.findInside(dom);
-            rule.getContent(dom, this.parser.schema).forEach(node => this.insertNode(node, marks));
+            rule.getContent(dom, this.parser.schema).forEach(node => this.insertNode(node, marks, false));
         }
         else {
             let contentDOM = dom;
@@ -2993,19 +2979,22 @@ class ParseContext {
     // Try to find a way to fit the given node type into the current
     // context. May add intermediate wrappers and/or leave non-solid
     // nodes that we're in.
-    findPlace(node, marks) {
+    findPlace(node, marks, cautious) {
         let route, sync;
-        for (let depth = this.open; depth >= 0; depth--) {
+        for (let depth = this.open, penalty = 0; depth >= 0; depth--) {
             let cx = this.nodes[depth];
             let found = cx.findWrapping(node);
-            if (found && (!route || route.length > found.length)) {
+            if (found && (!route || route.length > found.length + penalty)) {
                 route = found;
                 sync = cx;
                 if (!found.length)
                     break;
             }
-            if (cx.solid)
-                break;
+            if (cx.solid) {
+                if (cautious)
+                    break;
+                penalty += 2;
+            }
         }
         if (!route)
             return null;
@@ -3015,13 +3004,13 @@ class ParseContext {
         return marks;
     }
     // Try to insert the given node, adjusting the context when needed.
-    insertNode(node, marks) {
+    insertNode(node, marks, cautious) {
         if (node.isInline && this.needsBlock && !this.top.type) {
             let block = this.textblockFromContext();
             if (block)
                 marks = this.enterInner(block, null, marks);
         }
-        let innerMarks = this.findPlace(node, marks);
+        let innerMarks = this.findPlace(node, marks, cautious);
         if (innerMarks) {
             this.closeExtra();
             let top = this.top;
@@ -3039,7 +3028,7 @@ class ParseContext {
     // Try to start a node of the given type, adjusting the context when
     // necessary.
     enter(type, attrs, marks, preserveWS) {
-        let innerMarks = this.findPlace(type.create(attrs), marks);
+        let innerMarks = this.findPlace(type.create(attrs), marks, false);
         if (innerMarks)
             innerMarks = this.enterInner(type, attrs, marks, true, preserveWS);
         return innerMarks;
@@ -3435,6 +3424,8 @@ function renderSpec(doc, structure, xmlNS, blockArraysIn) {
                 let space = name.indexOf(" ");
                 if (space > 0)
                     dom.setAttributeNS(name.slice(0, space), name.slice(space + 1), attrs[name]);
+                else if (name == "style" && dom.style)
+                    dom.style.cssText = attrs[name];
                 else
                     dom.setAttribute(name, attrs[name]);
             }

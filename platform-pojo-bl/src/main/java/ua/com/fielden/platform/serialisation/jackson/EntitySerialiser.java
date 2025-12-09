@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Boolean.TRUE;
 import static java.lang.reflect.Modifier.isAbstract;
 import static java.lang.reflect.Modifier.isInterface;
 import static java.util.Collections.unmodifiableList;
@@ -33,9 +34,11 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonPropertie
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
@@ -96,7 +99,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             entityTypeInfo.set_persistentWithAudit(true);
         }
 
-        if (IContinuationData.class.isAssignableFrom(type)) {
+        if (isContinuationData(type)) {
             entityTypeInfo.set_continuation(true);
         }
 
@@ -106,7 +109,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             entityTypeInfo.set_displayDesc(shouldDisplayDescription);
         }
 
-        if (EntityUtils.isCompositeEntity(type)) {
+        if (isCompositeEntity(type)) {
             final List<String> compositeKeyNames = new ArrayList<>();
             final List<Field> keyMembers = Finder.getKeyMembers(type);
             for (final Field keyMember : keyMembers) {
@@ -118,10 +121,16 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             if (!isCompositeKeySeparatorDefault(compositeKeySeparator)) {
                 entityTypeInfo.set_compositeKeySeparator(compositeKeySeparator);
             }
+            final var titleAndDesc = getTitleAndDesc(KEY, type);
+            entityTypeInfo.set_keyTitle(titleAndDesc.getKey());
+            entityTypeInfo.set_keyDesc(titleAndDesc.getValue());
         }
-        if (AbstractUnionEntity.class.isAssignableFrom(type)) {
+        if (isUnionEntityType(type)) {
             entityTypeInfo.set_unionCommonProps(new ArrayList<>(commonProperties((Class<AbstractUnionEntity>) type)));
             entityTypeInfo.set_unionProps(unionProperties((Class<AbstractUnionEntity>) type).stream().map(filed -> filed.getName()).collect(toList()));
+            final var titleAndDesc = getTitleAndDesc(KEY, type);
+            entityTypeInfo.set_keyTitle(titleAndDesc.getKey());
+            entityTypeInfo.set_keyDesc(titleAndDesc.getValue());
         }
         if (AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(type)) {
             entityTypeInfo.set_compoundOpenerType(getKeyType(type).getName());
@@ -165,7 +174,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (!isUpperCaseDefault(upperCase)) {
                     entityTypeProp.set_upperCase(upperCase);
                 }
-                final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(name, type);
+                final Pair<String, String> titleAndDesc = getTitleAndDesc(name, type);
                 entityTypeProp.set_title(titleAndDesc.getKey());
                 entityTypeProp.set_desc(titleAndDesc.getValue());
                 final Boolean critOnly = AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, type, name);
@@ -180,11 +189,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (!isIgnoreDefault(ignore)) {
                     entityTypeProp.set_ignore(ignore);
                 }
-                if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, type, name)) {
-                    entityTypeProp.set_date(Boolean.TRUE);
+                if (isPropertyAnnotationPresent(DateOnly.class, type, name)) {
+                    entityTypeProp.set_date(TRUE);
                 }
-                if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
-                    entityTypeProp.set_time(Boolean.TRUE);
+                if (isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
+                    entityTypeProp.set_time(TRUE);
                 }
                 final IsProperty isPropertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, name);
                 if (isPropertyAnnotation != null) {
@@ -218,6 +227,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (isShortCollection(type, name)) {
                     entityTypeProp.set_shortCollectionKey(shortCollectionKey(type, name));
                 }
+
+                if (isPropertyAnnotationPresent(EntityTypeCarrier.class, type, name)) {
+                    entityTypeProp.set_entityTypeCarrier(TRUE);
+                }
+
                 props.put(name, entityTypeProp);
             }
             entityTypeInfo.set_props(props);

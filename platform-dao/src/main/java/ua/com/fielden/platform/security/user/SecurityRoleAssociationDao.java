@@ -1,55 +1,74 @@
 package ua.com.fielden.platform.security.user;
 
-import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import com.google.inject.Inject;
-
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.streaming.SequentialGroupingStream;
+import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanSave_Token;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.utils.StreamUtils;
 
-/**
- * DbDriven implementation of the {@link SecurityRoleAssociationCo}
- * 
- * @author TG Team
- * 
- */
+import java.util.*;
+import java.util.stream.Stream;
+
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.partitioningBy;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.security.provider.ISecurityTokenProvider.MissingSecurityTokenPlaceholder;
+import static ua.com.fielden.platform.security.user.SecurityRoleAssociation.ROLE;
+import static ua.com.fielden.platform.security.user.SecurityRoleAssociation.SECURITY_TOKEN;
+
+/// DAO implementation of [SecurityRoleAssociationCo].
+///
 @EntityType(SecurityRoleAssociation.class)
 public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAssociation> implements SecurityRoleAssociationCo {
 
-    /**
-     * Instantiates the {@link SecurityRoleAssociationDao}
-     */
-    @Inject
-    protected SecurityRoleAssociationDao(final IFilter filter) {
-        super(filter);
+    private static final Logger LOGGER = getLogger();
+    private static final int MAX_NUMBER_OF_PARAMS = 500;
+
+    public static final String MSG_DELETED_SECURITY_ROLE_ASSOCIATIONS_WITH_NON_EXISTING_TOKENS = "Deleted [%s] security role associations with non-existing tokens.";
+
+    @Override
+    public SecurityRoleAssociation new_() {
+        return super.new_().setActive(true);
+    }
+
+    @Override
+    protected IFetchProvider<SecurityRoleAssociation> createFetchProvider() {
+        return FETCH_PROVIDER;
+    }
+
+    @Override
+    @SessionRequired
+    @Authorise(SecurityRoleAssociation_CanSave_Token.class)
+    public SecurityRoleAssociation save(final SecurityRoleAssociation entity) {
+        return save(entity, of(FetchModelReconstructor.reconstruct(entity))).asRight().value();
+    }
+
+    @Override
+    @SessionRequired
+    @Authorise(SecurityRoleAssociation_CanSave_Token.class)
+    protected Either<Long, SecurityRoleAssociation> save(final SecurityRoleAssociation entity, final Optional<fetch<SecurityRoleAssociation>> maybeFetch) {
+        return super.save(entity, maybeFetch);
     }
 
     @Override
     @SessionRequired
     public List<SecurityRoleAssociation> findAssociationsFor(final Class<? extends ISecurityToken> securityToken) {
-        final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).where().prop("securityToken").eq().val(securityToken.getName()).model();
-        final OrderingModel orderBy = orderBy().prop("role").asc().model();
+        final var model = select(SecurityRoleAssociation.class).where()
+                .prop(SECURITY_TOKEN).eq().val(securityToken.getName()).and()
+                .prop(ACTIVE).eq().val(true).model();
+        final var orderBy = orderBy().prop(ROLE).asc().model();
         return getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).with(orderBy).model());
     }
 
@@ -57,48 +76,87 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @SessionRequired
     public Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations() {
 
-        final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
+        final var model = select(SecurityRoleAssociation.class).where().prop(ACTIVE).eq().val(true).model();
 
-        final List<SecurityRoleAssociation> associations = getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).model());
+        final Map<Boolean, List<SecurityRoleAssociation>> partitionedAssociations = getAllEntities(from(model).with(fetchAll(SecurityRoleAssociation.class)).model()).stream()
+                .collect(partitioningBy(association -> !association.getSecurityToken().equals(MissingSecurityTokenPlaceholder.class)));
 
-        final Map<Class<? extends ISecurityToken>, Set<UserRole>> associationMap = new HashMap<>();
-        for (final SecurityRoleAssociation association : associations) {
-            Set<UserRole> roles = associationMap.get(association.getSecurityToken());
-            if (roles == null) {
-                roles = new HashSet<>();
-                associationMap.put(association.getSecurityToken(), roles);
-            }
-            roles.add(association.getRole());
+        // Delete [SecurityRoleAssociation] records that reference non-existing security tokens.
+        // This is more of an opportunistic data cleanup.
+        // The `defaultBatchDelete` is used to delete records by their IDs.
+        final var toDelete = partitionedAssociations.get(false).stream().map(SecurityRoleAssociation::getId).toList();
+        if (!toDelete.isEmpty()) {
+            final var deletedCount = defaultBatchDelete(toDelete);
+            LOGGER.info(() -> MSG_DELETED_SECURITY_ROLE_ASSOCIATIONS_WITH_NON_EXISTING_TOKENS.formatted(deletedCount));
         }
 
+        // Transform [SecurityRoleAssociation] to a map between security tokens and [UserRole] records with access to those tokens.
+        final Map<Class<? extends ISecurityToken>, Set<UserRole>> associationMap = new HashMap<>();
+        partitionedAssociations.get(true).forEach(association -> {
+            final var roles = associationMap.computeIfAbsent(association.getSecurityToken(), k -> new HashSet<>());
+            roles.add(association.getRole());
+        });
         return associationMap;
     }
 
     @Override
     @SessionRequired
     public int countActiveAssociations(final User user, final Class<? extends ISecurityToken> token) {
-        final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class)
+        return count(selectActiveAssociations(user, token));
+    }
+
+    @Override
+    public EntityResultQueryModel<SecurityRoleAssociation> selectActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens) {
+        final var subModel = select(UserAndRoleAssociation.class)
                 .where()
+                .prop(ACTIVE).eq().val(true).and()
                 .prop("user").eq().val(user)
                 .and().prop("userRole.active").eq().val(true) // filter out association with inactive roles
                 .and().prop("userRole.id").eq().prop("sra.role.id").model();
-        final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).as("sra")
+        return select(SecurityRoleAssociation.class).as("sra")
                 .where()
-                .prop("sra.securityToken").eq().val(token.getName())
-                .and().exists(slaveModel).model();
-        return count(model);
+                .prop("sra.securityToken").in().values(Stream.of(tokens).map(Class::getName).toList())
+                .and().prop("sra.active").eq().val(true)
+                .and().exists(subModel).model();
     }
-    
+
     @Override
     @SessionRequired
-    public void removeAssociations(final Set<SecurityRoleAssociation> associations) {
-        SequentialGroupingStream.stream(associations.stream(), (assoc, group) -> group.size() < 1000)
-        .forEach(group -> createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), group).map(query -> batchDelete(query)));
+    public void removeAssociations(final Collection<SecurityRoleAssociation> associations) {
+        // Update all existing associations.
+        StreamUtils.windowed(associations.stream(), MAX_NUMBER_OF_PARAMS)
+                .forEach(window -> {
+                    createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), window)
+                            .ifPresent(query -> {
+                                getAllEntities(from(query).with(FETCH_MODEL).model())
+                                        .forEach(assoc -> save(assoc.setActive(false), empty()));
+                            });
+                });
     }
-    
+
     @Override
     @SessionRequired
-    public int batchDelete(final EntityResultQueryModel<SecurityRoleAssociation> model) {
-        return defaultBatchDelete(model);
+    public void addAssociations(final Collection<SecurityRoleAssociation> associations) {
+        final Set<SecurityRoleAssociation> notFoundAssociations = new HashSet<>(associations);
+
+        // Update all existing associations.
+        StreamUtils.windowed(associations.stream(), MAX_NUMBER_OF_PARAMS)
+            .forEach(window -> {
+                createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), window)
+                        .ifPresent(query -> {
+                            final var foundAssociations = getAllEntities(from(query).with(FETCH_MODEL).model());
+                            foundAssociations.forEach(assoc -> {
+                                save(assoc.setActive(true), empty());
+                                notFoundAssociations.remove(assoc);
+                            });
+                        });
+            });
+
+        // Create all non-existing associations.
+        for (final var association : notFoundAssociations) {
+            association.setActive(true);
+            this.save(association, empty());
+        }
     }
+
 }

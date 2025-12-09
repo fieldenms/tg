@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.web.test.server;
 
 import com.google.inject.Injector;
+import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
+import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -37,6 +40,7 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
                     .add(new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), props))
                     .add(new NewUserEmailNotifierTestIocModule())
                     .add(new DataFilterTestIocModule())
+                    .add(new IocModule())
                     .getInjector();
         } catch (final Exception e) {
             throw new IllegalStateException("Could not create data population configuration.", e);
@@ -46,6 +50,16 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     @Override
     public <T> T getInstance(final Class<T> type) {
         return injector.getInstance(type);
+    }
+
+    static class IocModule extends AbstractPlatformIocModule {
+
+        @Override
+        protected void configure() {
+            // Requires a binding, but is not used for data population.
+            bind(IEntityMasterUrlProvider.class).toInstance(_ -> Optional.empty());
+        }
+
     }
 
 }

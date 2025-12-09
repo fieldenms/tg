@@ -22,13 +22,10 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.join;
 
-/**
- * The implementation for functional entity actions (DOM element).
- *
- * @author TG Team
- *
- */
+/// Implementation for functional entity actions (DOM element).
+///
 public class FunctionalActionElement implements IRenderable, IImportable {
+
     private final String widgetName;
     private final String widgetPath;
     private boolean debug = false;
@@ -36,65 +33,43 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public final int numberOfAction;
     private final FunctionalActionKind functionalActionKind;
     private final String chosenProperty;
-    /** Should be <code>true</code> in case where functional action element is inside entity master, otherwise it is inside entity centre. */
+    /// `true` if the functional action element is inside an entity master, otherwise `false` and it is inside an entity centre.
     private boolean forMaster = false;
 
-    /**
-     * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
-     *
-     * @param entityActionConfig
-     */
+    /// Creates [FunctionalActionElement] from `entityActionConfig`.
+    ///
     public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final String chosenProperty) {
         this(entityActionConfig, numberOfAction, FunctionalActionKind.PROP, chosenProperty);
     }
 
-    /**
-     * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
-     *
-     * @param entityActionConfig
-     */
+    /// Creates [FunctionalActionElement] from `entityActionConfig`.
+    ///
     public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind) {
         this(entityActionConfig, numberOfAction, functionalActionKind, null);
     }
 
-    /**
-     * Creates an entity (aka primary) action for master.
-     *
-     * @param entityActionConfig
-     * @param numberOfAction
-     * @return
-     */
+    /// Creates an entity (aka primary) action for master.
+    ///
     public static FunctionalActionElement newEntityActionForMaster(final EntityActionConfig entityActionConfig, final int numberOfAction) {
         final FunctionalActionElement el = new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.PRIMARY_RESULT_SET);
         el.setForMaster(true);
         return el;
     }
 
-    /**
-     * Creates a property action for master.
-     *
-     * @param entityActionConfig
-     * @param numberOfAction
-     * @return
-     */
+    /// Creates a property action for master.
+    ///
     public static FunctionalActionElement newPropertyActionForMaster(final EntityActionConfig entityActionConfig, final int numberOfAction, final String propName) {
         final FunctionalActionElement el = new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.PRIMARY_RESULT_SET, propName);
         el.setForMaster(true);
         return el;
     }
 
-    /**
-     * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
-     *
-     * @param entityActionConfig
-     */
     private FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind, final String chosenProperty) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("actions/tg-ui-action");
         this.widgetPath = "actions/tg-ui-action";
         this.entityActionConfig = entityActionConfig;
         this.numberOfAction = numberOfAction;
         this.functionalActionKind = functionalActionKind;
-
         this.chosenProperty = chosenProperty;
     }
 
@@ -127,10 +102,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         attrs.put("ui-role", conf().role.toString());
         attrs.put("short-desc", getShortDesc());
-        attrs.put("long-desc", conf().longDesc.isPresent() ? conf().longDesc.get() : "NOT SPECIFIED");
-        if (conf().shortcut.isPresent()) {
-            attrs.put("shortcut", conf().shortcut.get());
-        }
+        attrs.put("long-desc", conf().longDesc.orElse(""));
+        conf().shortcut.ifPresent(s -> attrs.put("shortcut", s));
         attrs.put("icon", getIcon());
         attrs.put("icon-style", getIconStyle());
         attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
@@ -193,23 +166,30 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return attrs;
     }
 
-    /**
-     * Generates element name for corresponding functional Entity Master.
-     */
+    /// Generates an element name for the corresponding functional Entity Master.
+    ///
     public String generateElementName() {
-        return conf().functionalEntity.map(entityType -> "tg-" + entityType.getSimpleName() + "-master").orElse("");
+        return generateElementName(conf());
+    }
+
+    private static String generateElementName(final EntityActionConfig config) {
+        return config.functionalEntity.map(entityType -> "tg-" + entityType.getSimpleName() + "-master").orElse("");
     }
 
     private String generateComponentUri() {
-        return conf().functionalEntity.map(entityType -> "/master_ui/" + entityType.getName()).orElse("");
+        return generateComponentUri(conf());
+    }
+
+    private static String generateComponentUri(EntityActionConfig config) {
+        return config.functionalEntity.map(entityType -> "/master_ui/" + entityType.getName()).orElse("");
     }
 
     public String getDataRoute() {
-        return conf().functionalEntity.map(entityType -> entityType.getSimpleName()).orElse("");
+        return conf().functionalEntity.map(Class::getSimpleName).orElse("");
     }
 
     public String getIcon() {
-        return conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit";
+        return conf().icon.orElse("editor:mode-edit");
     }
 
     public String getIconStyle() {
@@ -217,18 +197,15 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     }
 
     public String getShortDesc() {
-        return conf().shortDesc.isPresent() ? conf().shortDesc.get() : "NOT SPECIFIED";
+        return conf().shortDesc.orElse("");
     }
 
-    /**
-     * Creates an attributes that will be used for widget component generation.
-     * <p>
-     * Please, implement this method in descendants (for concrete widgets) to extend the attributes set by widget-specific attributes.
-     *
-     * @return
-     */
+    /// Creates an attributes that will be used for widget component generation.
+    ///
+    /// Please, implement this method in descendants (for concrete widgets) to extend the attributes set by widget-specific attributes.
+    ///
     protected Map<String, Object> createCustomAttributes() {
-        return new LinkedHashMap<>();
+        return Map.of();
     }
 
     public EntityActionConfig conf() {
@@ -257,48 +234,78 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         this.debug = debug;
     }
 
-    /**
-     * Creates a string representation for the object which holds pre- and post-actions.
-     *
-     * @return
-     */
+    /// Creates a string representation for the object which holds pre- and post-actions.
+    ///
     public String createActionObject() {
+        return createActionObject(conf());
+    }
+
+    /// Generates JavaScript code for an object literal representing `config`.
+    ///
+    public static String createActionObject(final EntityActionConfig config) {
         final StringBuilder attrs = new StringBuilder("{\n");
-        if (conf().context.isPresent()) {
-            if (!conf().context.get().relatedContexts.isEmpty()) {
-                attrs.append("relatedContexts: ").append(createRelatedContexts(conf().context.get().relatedContexts)).append(",\n");
+        if (config.context.isPresent()) {
+            if (!config.context.get().relatedContexts.isEmpty()) {
+                attrs.append("relatedContexts: ").append(createRelatedContexts(config.context.get().relatedContexts)).append(",\n");
             }
-            conf().context.get().parentCentreContext.ifPresent(parentCentreContext -> {
+            config.context.get().parentCentreContext.ifPresent(parentCentreContext -> {
                 attrs.append("parentCentreContext: ").append(createParentCentreContext(parentCentreContext)).append(",\n");
             });
         }
-        attrs.append("preAction: ").append(createPreAction()).append(",\n");
-        attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
-        attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
-        attrs.append("postActionError: ").append(createPostActionError()).append("\n");
+        attrs.append("preAction: ").append(createPreAction(config)).append(",\n");
+        attrs.append("postActionSuccess: ").append(createPostActionSuccess(config)).append(",\n");
+        attrs.append("attrs: ").append(createElementAttributes(config, false)).append(",\n");
+        attrs.append("postActionError: ").append(createPostActionError(config)).append("\n");
         return attrs.append("}\n").toString();
     }
 
-    private String createParentCentreContext(final CentreContextConfig context) {
+    /// Generates JavaScript code for an object literal representing `config`.
+    /// This method exists to support generation of `tg-app-actions.js`.
+    ///
+    public static String createActionObjectForTgAppActions(final EntityActionConfig config) {
+        final StringBuilder attrs = new StringBuilder("{\n");
+        if (config.context.isPresent()) {
+            if (!config.context.get().relatedContexts.isEmpty()) {
+                attrs.append("relatedContexts: ").append(createRelatedContexts(config.context.get().relatedContexts)).append(",\n");
+            }
+            config.context.get().parentCentreContext.ifPresent(parentCentreContext -> {
+                attrs.append("parentCentreContext: ").append(createParentCentreContext(parentCentreContext)).append(",\n");
+            });
+            attrs.append("requireSelectionCriteria: ").append(config.context.get().withSelectionCrit ? "'true'" : "'false'").append(",\n");
+            attrs.append("requireSelectedEntities: ").append(config.context.get().withCurrentEtity ? "'ONE'" : (config.context.get().withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
+            attrs.append("requireMasterEntity: ").append(config.context.get().withMasterEntity ? "'true'" : "'false'").append(",\n");
+        }
+        attrs.append("shortDesc: ").append(jsString(config.shortDesc.orElse(""))).append(",\n");
+        attrs.append("longDesc: ").append(jsString(config.longDesc.orElse(""))).append(",\n");
+        attrs.append("componentUri: ").append(jsString(generateComponentUri(config))).append(",\n");
+        attrs.append("elementName: ").append(jsString(generateElementName(config))).append(",\n");
+        attrs.append("preAction: ").append(createPreAction(config)).append(",\n");
+        attrs.append("postActionSuccess: ").append(createPostActionSuccess(config)).append(",\n");
+        attrs.append("attrs: ").append(createElementAttributes(config, false)).append(",\n");
+        attrs.append("postActionError: ").append(createPostActionError(config)).append("\n");
+        return attrs.append("}\n").toString();
+    }
+
+    private static String createParentCentreContext(final CentreContextConfig context) {
         final StringBuilder attrs = new StringBuilder("{\n");
         attrs.append(createContextAttributes(context));
         return attrs.append("}").toString();
     }
 
-    private String createRelatedContexts(final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts) {
+    private static String createRelatedContexts(final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts) {
         final StringBuilder relatedContextsList = new StringBuilder("[");
         relatedContextsList.append(relatedContexts.entrySet().stream().map(relatedContext -> createRelatedContext(relatedContext.getKey(), relatedContext.getValue())).collect(joining(",")));
         return relatedContextsList.append("]").toString();
     }
 
-    private String createRelatedContext(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcType, final CentreContextConfig context) {
+    private static String createRelatedContext(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcType, final CentreContextConfig context) {
         final StringBuilder attrs = new StringBuilder("{\n");
         attrs.append("elementName: ").append("'" + format("tg-%s-master", funcType.getSimpleName()) + "'").append(",\n");
         attrs.append(createContextAttributes(context));
         return attrs.append("}").toString();
     }
 
-    private String createContextAttributes(final CentreContextConfig context) {
+    private static String createContextAttributes(final CentreContextConfig context) {
         final StringBuilder attrs = new StringBuilder("");
         if (!context.relatedContexts.isEmpty()) {
             attrs.append("relatedContexts: ").append(createRelatedContexts(context.relatedContexts)).append(",\n");
@@ -313,17 +320,16 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return attrs.toString();
     }
 
-    private String createExcludeInsertionPoints() {
-        return "[" + join(conf().excludeInsertionPoints.stream().map(insertionPointType -> "'tg-" + insertionPointType.getSimpleName() + "-master'").collect(toList()), ",") + "]";
+    private static String createExcludeInsertionPoints(final EntityActionConfig config) {
+        return "[" + join(config.excludeInsertionPoints.stream().map(insertionPointType -> "'tg-" + insertionPointType.getSimpleName() + "-master'").collect(toList()), ",") + "]";
     }
 
-    /**
-     * Creates non-empty JS function string for {@code bodyOpt}. Generated function logs the {@code name} and {@code actionShortDescOpt} and executes the body.
-     *
-     * @param params -- string of parameters for the generated function
-     * @param codeOptIfEmptyBody -- code to be executed if body is empty
-     * @return
-     */
+    /// Creates a non-empty JS function string for `bodyOpt`.
+    /// The generated function logs the `name` and `actionShortDescOpt` and executes the body.
+    ///
+    /// @param params             string of parameters for the generated function
+    /// @param codeOptIfEmptyBody code to be executed if body is empty
+    ///
     private static String createFunctionBody(final Optional<? extends IAction> bodyOpt, final String name, final String params, final Optional<String> codeOptIfEmptyBody, final Optional<String> actionShortDescOpt) {
         final StringBuilder code = new StringBuilder();
         code.append(format("function (%s) {\n", params));
@@ -331,61 +337,74 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         if (bodyOpt.isPresent()) {
             code.append(bodyOpt.get().build().toString());
         } else {
-            codeOptIfEmptyBody.ifPresent((c) -> code.append(c));
+            codeOptIfEmptyBody.ifPresent(code::append);
         }
         code.append("}");
         return code.toString();
     }
 
-    /**
-     * Creates JS function for {@link IPreAction}.
-     */
+    /// Creates a JS function for [IPreAction].
+    ///
     public String createPreAction() {
-        return createFunctionBody(conf().preAction, "preAction", "action", of("    return Promise.resolve(true);\n"), conf().shortDesc);
+        return createPreAction(conf());
     }
 
-    /**
-     * Creates JS function for {@link IPostAction}.
-     */
+    private static String createPreAction(final EntityActionConfig config) {
+        return createFunctionBody(config.preAction, "preAction", "action", of("    return Promise.resolve(true);\n"), config.shortDesc);
+    }
+
+    /// Creates a JS function for [IPostAction].
+    ///
     public String createPostActionFunctionBody(final Optional<? extends IAction> actionFunction, final String name) {
-        return createFunctionBody(actionFunction, name, "functionalEntity, action, master", empty(), conf().shortDesc);
+        return createPostActionFunctionBody(conf(), actionFunction, name);
     }
 
-    /**
-     * Creates JS function for successful {@link IPostAction}.
-     */
+    private static String createPostActionFunctionBody(final EntityActionConfig config, final Optional<? extends IAction> actionFunction, final String name) {
+        return createFunctionBody(actionFunction, name, "functionalEntity, action, master", empty(), config.shortDesc);
+    }
+
+    /// Creates a JS function for successful [IPostAction].
+    ///
     public String createPostActionSuccess() {
-        return createPostActionFunctionBody(conf().successPostAction, "postActionSuccess");
+        return createPostActionSuccess(conf());
     }
 
-    /**
-     * Creates JS function for erroneous {@link IPostAction}.
-     */
+    private static String createPostActionSuccess(final EntityActionConfig config) {
+        return createPostActionFunctionBody(config, config.successPostAction, "postActionSuccess");
+    }
+
+    /// Creates a JS function for erroneous [IPostAction].
+    ///
     public String createPostActionError() {
         return createPostActionFunctionBody(conf().errorPostAction, "postActionError");
     }
 
-    /**
-     * Creates action 'attrs' for generation ({@code asString} === false) or for client-side parsing in 'tg-app-template.postRetrieved' method ({@code asString} === true).
-     *
-     * @param asString
-     * @return
-     */
+    private static String createPostActionError(final EntityActionConfig config) {
+        return createPostActionFunctionBody(config, config.errorPostAction, "postActionError");
+    }
+
+    /// If `asString` is `false`, creates action `attrs` for generation.
+    /// Otherwise, creates them for client-side parsing in `tg-app-template.postRetrieved`.
+    ///
     public String createElementAttributes(final boolean asString) {
+        return createElementAttributes(conf(), asString);
+    }
+
+    private static String createElementAttributes(final EntityActionConfig config, final boolean asString) {
         final StringBuilder code = new StringBuilder();
         final String keyQ = asString ? "\"" : "";
         final String valueQ = asString ? "\"" : "'";
         code.append("{\n");
-        conf().functionalEntity.ifPresent(entityType -> {
+        config.functionalEntity.ifPresent(entityType -> {
             code.append("    " + keyQ + "entityType" + keyQ + ": " + valueQ + entityType.getName() + valueQ + ",\n");
         });
-        if (!conf().excludeInsertionPoints.isEmpty()) {
-            code.append("    " + keyQ +"excludeInsertionPoints" + keyQ + ": " + keyQ + createExcludeInsertionPoints() + keyQ + ",\n");
+        if (!config.excludeInsertionPoints.isEmpty()) {
+            code.append("    " + keyQ +"excludeInsertionPoints" + keyQ + ": " + keyQ + createExcludeInsertionPoints(config) + keyQ + ",\n");
         }
         code.append("    " + keyQ + "currentState" + keyQ + ": " + valueQ + "EDIT" + valueQ + ",\n");
         code.append("    " + keyQ + "centreUuid" + keyQ + ": " + keyQ + "self.uuid" + keyQ); // value surrounded with "" -- will be interpreted in tg-app-template specifically
 
-        conf().prefDimForView.ifPresent(prefDim -> {
+        config.prefDimForView.ifPresent(prefDim -> {
             code.append(format(",\n    " +
                 keyQ + "prefDim" + keyQ + ": " + "{" +
                     keyQ + "width" + keyQ + ": " + keyQ + "function() {return %s}" + keyQ +", " + // value surrounded with "" -- will be interpreted in tg-app-template specifically
@@ -395,6 +414,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
                 "}", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value
             ));
         });
+
+        config.actionIdentifier.ifPresent(actionIdentifier -> code.append(",\n").append("    " + keyQ + "actionIdentifier" + keyQ + ": " + valueQ + actionIdentifier + valueQ));
         code.append("\n}");
         return code.toString();
     }
@@ -406,4 +427,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public void setForMaster(final boolean forMaster) {
         this.forMaster = forMaster;
     }
+
+    private static String jsString(final String str) {
+        return "'%s'".formatted(str.replace("'", "\\'"));
+    }
+
 }

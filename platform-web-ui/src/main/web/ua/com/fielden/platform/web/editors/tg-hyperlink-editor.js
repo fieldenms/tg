@@ -7,7 +7,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 
-import { checkLinkAndOpen, MAILTO_PROTOCOL, SUPPORTED_PROTOCOLS, ERR_UNSUPPORTED_PROTOCOL } from '/resources/components/tg-link-opener.js';
+import { checkLinkAndOpen, isSupportedLink, MAILTO_PROTOCOL, ERR_UNSUPPORTED_PROTOCOL } from '/resources/components/tg-link-opener.js';
 
 const additionalTemplate = html`
     <style>
@@ -34,7 +34,7 @@ const customInputTemplate = html`
             on-focus="_onFocus"
             on-blur="_outFocus"
             disabled$="[[_disabled]]"
-            tooltip-text$="[[_getTooltip(_editingValue)]]"
+            tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]"
             autocomplete="off"/>
     </iron-input>`;
 const customIconButtonsTemplate = html`<paper-icon-button on-tap="_openLink" icon="open-in-browser" class="open-button custom-icon-buttons" tabIndex="-1" tooltip-text="Open link"></paper-icon-button>`;
@@ -53,7 +53,7 @@ export class TgHyperlinkEditor extends TgEditor {
         if (strValue === '') {
             return null;
         } else {
-            if (!strValue.startsWith(MAILTO_PROTOCOL) && SUPPORTED_PROTOCOLS.every(p => !strValue.startsWith(p + '//'))) {
+            if (!isSupportedLink(strValue)) {
                 throw ERR_UNSUPPORTED_PROTOCOL;
             }
 

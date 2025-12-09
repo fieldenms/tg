@@ -2,6 +2,8 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
+import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-handler-behaviour.js';
+import { getFirstEntityType, getParentAnd, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
@@ -196,9 +198,15 @@ const TgEntityCentreTemplateBehaviorImpl = {
         }
     },
 
-    confirm: function (message, buttons) {
+    closeConfirmationDialog: function () {
         if (!this.$.egi.isEditing()) {
-            return this._dom()._confirmationDialog().showConfirmationDialog(message, buttons);
+            return this._dom().closeConfirmationDialog();
+        }
+    },
+
+    confirm: function (message, buttons, options) {
+        if (!this.$.egi.isEditing()) {
+            return this._dom()._confirmationDialog().showConfirmationDialog(message, buttons, options);
         }
         return this._saveOrCancelPromise();
     },
@@ -227,17 +235,21 @@ const TgEntityCentreTemplateBehaviorImpl = {
             action.entityTypeTitle = action.entityTypeTitle || navigationType;
             action._oldRestoreActionState = action.restoreActionState;
             action.restoreActionState = function () {
-                action._oldRestoreActionState();
-                this.$.egi.editEntity(null);
                 const master = action._masterReferenceForTesting;
-                if (master && master.$.menu) {
-                    master.$.menu.maintainPreviouslyOpenedMenuItem = false;
+                const dialog = master && getParentAnd(master, e => e.matches('tg-custom-action-dialog'));
+                if (!dialog || !dialog.opened) {
+                    action._oldRestoreActionState();
+                    this.$.egi.editEntity(null);
+                    const master = action._masterReferenceForTesting;
+                    if (master && master.$.menu) {
+                        master.$.menu.maintainPreviouslyOpenedMenuItem = false;
+                    }
+                    this.removeEventListener('tg-entity-centre-refreshed', action._updateNavigationProps);
+                    delete action.count;
+                    delete action.entInd;
+                    delete action.hasPrev;
+                    delete action.hasNext;
                 }
-                this.removeEventListener('tg-entity-centre-refreshed', action._updateNavigationProps);
-                delete action.count;
-                delete action.entInd;
-                delete action.hasPrev;
-                delete action.hasNext;
             }.bind(this);
             action._propertyHasValue = function (entity, chosenProperty) {
                 return typeof entity.get(chosenProperty) !== 'undefined' && entity.get(chosenProperty) !== null;
@@ -272,30 +284,64 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 }
                 return this.$.egi.filteredEntities.length;
             }.bind(this);
-            action._setEntityAndReload = function (entity, spinnerInvoked) {
+            action._setEntityAndReload = function (entity, spinnerInvoked, masterChangedCallback) {
                 if (entity) {
                     this.$.egi.editEntity(entity);
                     const master = action._masterReferenceForTesting;
                     if (master) {
                         master.fire('tg-action-navigation-invoked', {spinner: spinnerInvoked});
-                        master.savingContext = action._createContextHolderForAction();
-                        master.retrieve(master.savingContext).then(function(ironRequest) {
-                            if (action.modifyFunctionalEntity) {
-                                action.modifyFunctionalEntity(master._currBindingEntity, master, action);
-                            }
+                        const entityTypeObj = getFirstEntityType(entity, action.chosenProperty);
+                        const masterInfo = entityTypeObj.entityMaster();
+                        if (action.dynamicAction && !masterInfo) {
+                            const masterErrorMessage = `Could not find master for entity type: ${entityTypeObj.notEnhancedFullClassName()}.`
+                            action.toaster && action.toaster.openToastForError('Entity Master Error', masterErrorMessage, true);
+                            action._fireNavigationChangeEvent(true);
+                            master.fire('tg-error-happened', masterErrorMessage);
+                        } else if (action.dynamicAction && masterInfo && masterInfo.key.toUpperCase() !== master.tagName) {
                             if (master.$.menu) {
-                                master.$.menu.currentSection()._showBlockingPane();
-                                master.$.menu.maintainPreviouslyOpenedMenuItem = true;
+                                master.$.menu.maintainPreviouslyOpenedMenuItem = false;
                             }
-                            master.addEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);
-                            master.addEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);
-                            master.save().then(function(value) {}, function (error) {
+                            action._setEntityMasterInfo(masterInfo);
+                            if (masterChangedCallback) {
+                                masterChangedCallback(newMaster => {
+                                    if (newMaster.$.menu) {
+                                        newMaster.$.menu.maintainPreviouslyOpenedMenuItem = true;
+                                    }
+                                }).then(() => {
+                                    action._fireNavigationChangeEvent(false);
+                                }).catch(e => {
+                                    action._fireNavigationChangeEvent(true);
+                                })
+                            }
+                        } else {
+                            // Entity navigation: store Entity Master focus on Ctrl+arrow action.
+                            // Also force loosing of the focus to as early as possible to before actual transition starts.
+                            master._storeFocus && master._storeFocus() && deepestActiveElement().blur();
+                            master.savingContext = action._createContextHolderForAction();
+                            master.retrieve(master.savingContext).then(function(ironRequest) {
+                                // Entity navigation: restore Entity Master focus on Ctrl+arrow action.
+                                // On async execution, `tg-editor._outFocus` has already been completed and we can restore focus back.
+                                master._restoreFocus && master._restoreFocus();
+                                if (action.modifyFunctionalEntity) {
+                                    action.modifyFunctionalEntity(master._currBindingEntity, master, action);
+                                }
+                                if (master.$.menu) {
+                                    if (master.$.menu.currentSection()) { //current menu item section can be null if previous entity wasn't retrieved or any other error happened 
+                                        master.$.menu.currentSection()._showBlockingPane();
+                                    }
+                                    master.$.menu.maintainPreviouslyOpenedMenuItem = true;
+                                }
+                                master.addEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);
+                                master.addEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);
+                                master.save().then(() => {
+                                    action._fireNavigationChangeEvent(false);
+                                }).catch(() => {
+                                    action._fireNavigationChangeEvent(true);
+                                });
+                            }.bind(this), function (error) {
                                 action._fireNavigationChangeEvent(true);
                             }.bind(this));
-                        }.bind(this), function (error) {
-                            this.$.egi.editEntity(entity);
-                            action._fireNavigationChangeEvent(true);
-                        }.bind(this));
+                        }
                     }
                 }
             }.bind(this);
@@ -305,27 +351,27 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 master.removeEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);
                 master.removeEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);
             }.bind(this);
-            action.firstEntry = function() {
-                action._setEntityAndReload(action._findFirstEntity(), 'firstEntity');
+            action.firstEntry = function(masterChangeCallback) {
+                action._setEntityAndReload(action._findFirstEntity(), 'firstEntity', masterChangeCallback);
             }.bind(this);
-            action.previousEntry = function() {
+            action.previousEntry = function(masterChangeCallback) {
                 const entityIndex = this.$.egi.findFilteredEntityIndex(action.currentEntity());
                 if (entityIndex >= 0) {
-                    action._setEntityAndReload(action._findPreviousEntityTo(entityIndex), 'prevEntity');
+                    action._setEntityAndReload(action._findPreviousEntityTo(entityIndex), 'prevEntity', masterChangeCallback);
                 } else {
-                    action._setEntityAndReload(action._findFirstEntity(), 'prevEntity');
+                    action._setEntityAndReload(action._findFirstEntity(), 'prevEntity', masterChangeCallback);
                 }
             }.bind(this);
-            action.nextEntry = function() {
+            action.nextEntry = function(masterChangeCallback) {
                 const entityIndex = this.$.egi.findFilteredEntityIndex(action.currentEntity());
                 if (entityIndex >= 0) {
-                    action._setEntityAndReload(action._findNextEntityTo(entityIndex), 'nextEntity');
+                    action._setEntityAndReload(action._findNextEntityTo(entityIndex), 'nextEntity', masterChangeCallback);
                 } else {
-                    action._setEntityAndReload(action._findFirstEntity(), 'nextEntity');
+                    action._setEntityAndReload(action._findFirstEntity(), 'nextEntity', masterChangeCallback);
                 }
             }.bind(this);
-            action.lastEntry = function() {
-                action._setEntityAndReload(action._findLastEntity(), 'lastEntity');
+            action.lastEntry = function(masterChangeCallback) {
+                action._setEntityAndReload(action._findLastEntity(), 'lastEntity', masterChangeCallback);
             }.bind(this);
             action.hasPreviousEntry = function() {
                 const thisPageInd = this.$.egi.findFilteredEntityIndex(action.currentEntity());
@@ -335,7 +381,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 }
                 return action._countActualEntities() > 0;
             }.bind(this);
-            action.hasNextEntry = function(entitiesCount, entityIndex) {
+            action.hasNextEntry = function () {
                 const thisPageInd = this.$.egi.findFilteredEntityIndex(action.currentEntity());
                 if (thisPageInd >= 0) {
                     const lastEntity = action._findLastEntity();
@@ -356,9 +402,8 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 action.entInd = thisPageInd >= 0 ? pageNumber * pageCapacity + thisPageInd : action.entInd;
                 action.hasPrev  = action.hasPreviousEntry();
                 action.hasNext = action.hasNextEntry();
-                const master = action._masterReferenceForTesting;
-                if (master) {
-                    master.fire('tg-action-navigation-changed', {
+                if (action._masterReferenceForTesting) {
+                    action._masterReferenceForTesting.fire('tg-action-navigation-changed', {
                         hasPrev: action.hasPrev,
                         hasNext: action.hasNext,
                         count: action.count,
@@ -382,5 +427,6 @@ const TgEntityCentreTemplateBehaviorImpl = {
 export const TgEntityCentreTemplateBehavior = [
     TgEntityCentreBehavior,
     TgViewWithHelpBehavior,
+    TgLongTapHandlerBehaviour,
     TgEntityCentreTemplateBehaviorImpl
 ];

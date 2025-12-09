@@ -292,4 +292,9 @@ public class Entity extends AbstractEntity<String> {
         return this;
     }
 
+    @Override
+    @Observable
+    public Entity setDesc(String desc) {
+        return super.setDesc(desc);
+    }
 }

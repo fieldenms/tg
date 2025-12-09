@@ -19,20 +19,11 @@ import inspectClass from './class.js';
 import inspectObject from './object.js';
 import inspectArguments from './arguments.js';
 import inspectError from './error.js';
-import inspectHTMLElement, { inspectHTMLCollection } from './html.js';
+import inspectHTMLElement, { inspectNodeCollection } from './html.js';
 import { normaliseOptions } from './helpers.js';
 const symbolsSupported = typeof Symbol === 'function' && typeof Symbol.for === 'function';
 const chaiInspect = symbolsSupported ? Symbol.for('chai/inspect') : '@@chai/inspect';
-let nodeInspect = false;
-try {
-    // eslint-disable-next-line global-require
-    // @ts-ignore
-    const nodeUtil = require('util');
-    nodeInspect = nodeUtil.inspect ? nodeUtil.inspect.custom : false;
-}
-catch (noNodeInspect) {
-    nodeInspect = false;
-}
+const nodeInspect = Symbol.for('nodejs.util.inspect.custom');
 const constructorMap = new WeakMap();
 const stringTagMap = {};
 const baseTypesMap = {
@@ -74,16 +65,16 @@ const baseTypesMap = {
     DataView: () => '',
     ArrayBuffer: () => '',
     Error: inspectError,
-    HTMLCollection: inspectHTMLCollection,
-    NodeList: inspectHTMLCollection,
+    HTMLCollection: inspectNodeCollection,
+    NodeList: inspectNodeCollection,
 };
 // eslint-disable-next-line complexity
-const inspectCustom = (value, options, type) => {
+const inspectCustom = (value, options, type, inspectFn) => {
     if (chaiInspect in value && typeof value[chaiInspect] === 'function') {
         return value[chaiInspect](options);
     }
-    if (nodeInspect && nodeInspect in value && typeof value[nodeInspect] === 'function') {
-        return value[nodeInspect](options.depth, options);
+    if (nodeInspect in value && typeof value[nodeInspect] === 'function') {
+        return value[nodeInspect](options.depth, options, inspectFn);
     }
     if ('inspect' in value && typeof value.inspect === 'function') {
         return value.inspect(options.depth, options);
@@ -111,7 +102,7 @@ export function inspect(value, opts = {}) {
     }
     // If `options.customInspect` is set to true then try to use the custom inspector
     if (customInspect && value) {
-        const output = inspectCustom(value, options, type);
+        const output = inspectCustom(value, options, type, inspect);
         if (output) {
             if (typeof output === 'string')
                 return output;

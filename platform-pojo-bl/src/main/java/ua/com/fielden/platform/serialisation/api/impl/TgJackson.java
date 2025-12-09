@@ -6,8 +6,10 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Charsets;
+import jakarta.inject.Inject;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.continuation.NeedMoreDataException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -40,19 +42,14 @@ import static com.fasterxml.jackson.databind.type.SimpleType.constructUnsafe;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
-/**
- * The descendant of {@link ObjectMapper} with TG specific logic to correctly assign serialisers and recognise descendants of {@link AbstractEntity}. This covers correct
- * determination of the underlying entity type for dynamic CGLIB proxies.
- * <p>
- * All classes have to be registered at the server ({@link TgJackson}) and client ('tg-serialiser' web component) sides in the same order. To be more specific -- the 'type table'
- * at the server and client side should be identical (most likely should be send to the client during client application startup).
- *
- * @author TG Team
- *
- */
+/// A subclass of [ObjectMapper] with TG-specific logic to correctly assign serialisers and recognise subtypes of [AbstractEntity].
+/// This covers correct determination of the underlying entity type for dynamic CGLIB proxies.
+///
+/// All classes have to be registered at the server ([TgJackson]) and client (`tg-serialiser` web component) sides in the same order.
+/// Specifically, the "type table" at the server and client side should be identical (most likely should be sent to the client during client application startup).
+///
 public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
-    private static final long serialVersionUID = 8131371701442950310L;
-    private static final Logger logger = getLogger(TgJackson.class);
+    private static final Logger logger = getLogger();
 
     public static final String ERR_RESTRICTED_TYPE_SERIALISATION = "Type [%s] is not permitted for serialisation.";
     public static final String ERR_RESTRICTED_TYPE_DESERIALISATION = "Type [%s] is not permitted for deserialisation.";
@@ -65,6 +62,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     
     //private final LRUMap<?, ?> cachedFCAsToClear; EXPERIMENTAL
 
+    @Inject
     public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.module = new TgJacksonModule(this);
         this.factory = entityFactory;
@@ -99,6 +97,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module.addDeserializer(RichText.class, new RichTextJsonDeserialiser(this));
 
         this.module.addSerializer(Result.class, new ResultJsonSerialiser(this));
+        this.module.addSerializer(NeedMoreDataException.class, new NeedMoreDataExceptionJsonSerialiser(this));
         this.module.addDeserializer(Result.class, new ResultJsonDeserialiser(this));
 
         this.module.addDeserializer(ArrayList.class, new ArrayListJsonDeserialiser(this, serialisationTypeEncoder));

@@ -26,7 +26,16 @@ const template = html`
         }
         .value-container {
             @apply --layout-relative;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-top: 4px;
+            padding-bottom: 4px;
+            white-space: pre-wrap;
         }
+        .value-container:not([word-wrap]) {
+            white-space: nowrap;
+        }
+
         .cell-background {
             @apply --layout-fit;
         }
@@ -36,11 +45,6 @@ const template = html`
         .table-icon {
             --iron-icon-width: 1.3rem;
             --iron-icon-height: 1.3rem;
-        }
-        .truncate {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
         .unordered-list:not(:first-child),
         .ordered-list:not(:first-child) {
@@ -116,8 +120,8 @@ const template = html`
     </style>
     <div class="cell-background" style$="[[_backgroundRendHints]]" modified$="[[_modified]]"></div>
     <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" icon="[[_value]]"></iron-icon>
-    <a class="truncate value-container" hidden$="[[!_isHyperlinkProp(_hostComponent, _entity, column)]]" href$="[[_value]]" target="_blank" style$="[[_foregroundRendHints]]">[[_value]]</a>
-    <div class="truncate value-container" hidden$="[[!_isNotBooleanOrHyperlinkProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" inner-h-t-m-l="[[_value]]"></div>`;
+    <a class="value-container" hidden$="[[!_isHyperlinkProp(_hostComponent, _entity, column)]]" href$="[[_value]]" target="_blank" style$="[[_foregroundRendHints]]">[[_value]]</a>
+    <div class="value-container" word-wrap$="[[column.wordWrap]]" hidden$="[[!_isNotBooleanOrHyperlinkProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" inner-h-t-m-l="[[_value]]"></div>`;
 
 Polymer({
 

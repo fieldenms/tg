@@ -9,7 +9,6 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Put;
-import org.restlet.resource.ResourceException;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -20,17 +19,16 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -38,16 +36,12 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 
-/**
- * This is a multipurpose file-processing resource that can be used for uploading files to be processed with the specified functional entity.
- *
- * @author TG Team
- *
- */
+/// This is a multipurpose file-processing resource that can be used for uploading files to be processed with the specified functional entity.
+///
 public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends AbstractWebResource {
 
     private static final Logger LOGGER = LogManager.getLogger(FileProcessingResource.class);
-    private static final String ERR_CLIENT_NOT_REGISTERED = "The client should have been registered for SSE communication.";
+    private static final String WARN_CLIENT_NOT_REGISTERED = "The client should have been registered for SSE communication.";
 
     protected final IEntityDao<T> companion;
     private final EntityFactory factory;
@@ -80,7 +74,8 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             final ISerialiser serialiser,
             final Context context,
             final Request request,
-            final Response response) {
+            final Response response)
+    {
         super(context, request, response, deviceProvider, dates);
         this.eseRegister = eseRegister;
         this.companion = companion;
@@ -108,11 +103,8 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         }
     }
 
-    /**
-     * Receives a file from a client.
-     *
-     * @throws IOException
-     */
+    /// Receives a file from a client.
+    ///
     @Put
     public Representation receiveFile(final Representation input) throws IOException {
         String msg = "Successful processing.";
@@ -149,13 +141,10 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         }
     }
 
-    /**
-     * Need to exhaust the input stream representing a file being uploaded for processing.
-     * Not fully consumed streams could happen due to various errors (including validation) before or during their processing.
-     * Without consuming the input stream entirely, the client may get blocked waiting for the connection to be terminated by the server (e.g. by HAProxy).
-     *
-     * @param input
-     */
+    /// Need to exhaust the input stream representing a file being uploaded for processing.
+    /// Not fully consumed streams could happen due to various errors (including validation) before or during their processing.
+    /// Without consuming the input stream entirely, the client may get blocked waiting for the connection to be terminated by the server (e.g. by HAProxy).
+    ///
     private void exhaustInputStream(final Representation input) {
         try {
             input.exhaust();
@@ -181,36 +170,61 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         return equalsEx(mime1Parts[0], mime2Parts[0]) && (equalsEx(mime1Parts[1], mime2Parts[1]) || anySubtype);
     }
 
-    /**
-     * Creates an event source and connects it to an SSE emitter, which is associated with a client making the current request as identified by {@code sseUid}, to report file processing progress back to that client.
-     * Instantiates an entity that is responsible for file processing and executes it.
-     *
-     * @param stream -- a stream that represents a file to be processed.
-     * @return
-     */
+    /// Creates an event source and connects it to an SSE emitter, which is associated with a client making the current request as identified by `sseUid`, to report file processing progress back to that client.
+    /// Instantiates an entity that is responsible for file processing and executes it.
+    ///
+    /// @param stream -- a stream that represents a file to be processed.
+    ///
     private Representation tryToProcess(final InputStream stream, final String mime) {
 
-        final IEventSourceEmitter emitter = eseRegister.getEmitter(user, sseUid);
-        if (emitter == null) {
-            throw new InvalidUiConfigException(ERR_CLIENT_NOT_REGISTERED);
-        }
-
+        final Optional<IEventSourceEmitter> maybeEmitter = getEmitterWithRetry();
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
         final ProcessingProgressEventSource eventSource = new ProcessingProgressEventSource(subject, jobUid, serialiser);
 
         try {
-            eventSource.connect(emitter);
+            maybeEmitter.ifPresent(eventSource::connect);
             final T entity = entityCreator.apply(factory);
             entity.setOrigFileName(origFileName);
             entity.setLastModified(fileLastModified);
             entity.setInputStream(stream);
-            entity.setEventSourceSubject(subject);
+            maybeEmitter.ifPresent(_ -> entity.setEventSourceSubject(subject));
             entity.setMime(mime);
 
             final T applied = saveRaw(entity);
             return restUtil.singleJsonRepresentation(applied);
         } finally {
             eventSource.disconnect();
+        }
+    }
+
+    /// Attempts to retrieve an [IEventSourceEmitter] from the emitter registry with retries.
+    ///
+    /// If no emitter is found after retries, a warning is logged.
+    ///
+    /// @return an [Optional] containing the emitter if available; otherwise empty.
+    ///
+    private Optional<IEventSourceEmitter> getEmitterWithRetry() {
+        try {
+            int count = 1;
+            IEventSourceEmitter emitter = eseRegister.getEmitter(user, sseUid);
+            while (emitter == null && count <= 3) {
+                count++;
+                LOGGER.info("Retrying to get an SSE emitter [{}].", count);
+                try {
+                    Thread.sleep(500);
+                } catch (final InterruptedException e) {
+                    LOGGER.warn("Thread sleep interrupted.", e);
+                }
+                emitter = eseRegister.getEmitter(user, sseUid);
+
+            }
+            if (emitter == null) {
+                LOGGER.warn(WARN_CLIENT_NOT_REGISTERED);
+            }
+            return Optional.ofNullable(emitter);
+        } catch (Exception ex) {
+            LOGGER.error("Error while obtaining an SSE event source emitter.", ex);
+            return Optional.empty();
         }
     }
 

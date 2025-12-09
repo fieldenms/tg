@@ -1,12 +1,10 @@
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
-import { TgAppConfig } from '/app/tg-app-config.js';
 
 export const TgEgiDataRetrievalBehavior = {
 
     created: function () {
         this._reflector = new TgReflector();
-        this._appConfig = new TgAppConfig();
     },
 
     isHyperlinkProp: function (entity, column) {
@@ -64,17 +62,25 @@ export const TgEgiDataRetrievalBehavior = {
     },
 
     getCollectionalItem: function (entity, column) {
-        if (column.collectionalProperty) {
-            const collection = entity.get(column.collectionalProperty);
-            const item = collection.find(cItem => column.property === cItem[column.keyProperty]);
-            return item || null;
+        try {
+            if (column.collectionalProperty) {
+                const collection = entity.get(column.collectionalProperty);
+                const item = collection.find(cItem => column.property === cItem[column.keyProperty]);
+                return item || null;
+            }
+        } catch (e) {
+            return null;
         }
     },
 
     getValueFromEntity: function (entity, column) {
-        const realEntity = this.getRealEntity(entity, column);
-        const realProperty = this.getRealProperty(column);
-        return realEntity && realEntity.get(realProperty);
+        try {
+            const realEntity = this.getRealEntity(entity, column);
+            const realProperty = this.getRealProperty(column);
+            return realEntity && realEntity.get(realProperty);
+        } catch (e) {
+            return null;
+        }
     },
 
     getBindedValue: function (entity, column) {
@@ -85,7 +91,11 @@ export const TgEgiDataRetrievalBehavior = {
         if (entity === null || property === null || type === null) {
             return '';
         } else {
-            return this._reflector.tg_toString(entity.get(property), entity.constructor.prototype.type.call(entity), property, { display: true, locale: this._appConfig.locale });
+            try {
+                return this._reflector.tg_toString(entity.get(property), entity.constructor.prototype.type.call(entity), property, { display: true });
+            } catch (e) {
+                return '';
+            }
         }
     }
 

@@ -9,6 +9,8 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.companion.*;
+import ua.com.fielden.platform.continuation.NeedMoreData;
+import ua.com.fielden.platform.continuation.NeedMoreDataStorage;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -42,7 +44,6 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -421,84 +422,69 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return $instrumented$;
     }
 
-    ////////////////////////////////////////////////////////////////
-    //////// Continuation related structures and methods ///////////
-    ////////////////////////////////////////////////////////////////
-    // a map to hold the "more data" gathered by means of continuations
-    private final Map<String, IContinuationData> moreData = new HashMap<>();
-    // indicates whether continuations are supported to provide "more data" in the caller's context
-    private boolean continuationSupported = false;
+    //-------------------------------------------------------------------//
+    //--------------------- Continuation related methods ----------------//
+    //-------------------------------------------------------------------//
 
-    /**
-     * Replaces any previously provided "more data" with new "more data".
-     * This is a bulk operation that is mainly needed for the infrastructural integration.
-     *
-     * @param moreData
-     */
-    public CommonEntityDao<T> setMoreData(final Map<String, IContinuationData> moreData) {
-        clearMoreData();
-        this.moreData.putAll(moreData);
-        return this;
-    }
-
-    /**
-     * A convenient method to set a single "more data" instance for a given key.
-     * Mostly useful for unit tests.
-     *
-     * @param key
-     * @param moreData
-     * @return
-     */
+    /// A convenient method to set a single "more data" instance for a given key.
+    /// Mostly useful for unit tests.
+    ///
     public CommonEntityDao<T> setMoreData(final String key, final IContinuationData moreData) {
-        this.moreData.put(key, moreData);
+        NeedMoreDataStorage.putMoreData(key, moreData);
         return this;
     }
 
-    /**
-     * Clears continuations in this companion object.
-     */
-    public void clearMoreData() {
-        this.moreData.clear();
-    }
-
-    /**
-     * A convenient way to obtain "more data" by key. An empty optional is return if there was no "more data" found.
-     *
-     * @param key -- companion object property that identifies continuation
-     * @return
-     */
-    @SuppressWarnings("unchecked")
+    /// A convenient way to obtain “more data” by key.
+    /// Returns an empty optional if no corresponding data is found.
+    ///
+    /// @param key a companion object property that identifies the continuation
+    /// @return an optional containing the requested data if found; otherwise, empty
+    ///
     public <E extends IContinuationData> Optional<E> moreData(final String key) {
-        return Optional.ofNullable((E) this.moreData.get(key));
+        return NeedMoreDataStorage.moreData(key);
     }
 
-    /**
-     * A convenient way to obtain all "more data" by keys.
-     *
-     * @return
-     */
+    /// A convenient way to obtain all "more data" by keys.
+    ///
     public Map<String, IContinuationData> moreData() {
-        return Collections.unmodifiableMap(moreData);
+        return NeedMoreDataStorage.moreData();
     }
 
-    public CommonEntityDao<T> setContinuationSupported(final boolean supported) {
-        this.continuationSupported = supported;
-        return this;
+    /// A convenient helper for creating unique values for [NeedMoreData] keys.
+    /// Use this method when defining keys for continuation data in a consistent,
+    /// type-safe manner suitable for storage in the continuation context.
+    ///
+    /// This method is intended for initialising static constants that represent
+    /// continuation-data keys.
+    ///
+    /// For example:
+    /// ```java
+    /// public static final String
+    ///     MDK_CERTIFICATION = mkMoreDataKey(CertificationValidation.class);
+    /// ```
+    ///
+    /// @param moreDataType the type of the continuation data.
+    /// @return a newly generated continuation-data key
+    ///
+    public static String moreDataKey(final Class<? extends IContinuationData> moreDataType) {
+        try {
+            final var fullClassName = Thread.currentThread().getStackTrace()[2].getClassName();
+            final var simpleName = fullClassName.substring(fullClassName.lastIndexOf('.') + 1);
+            return simpleName + "-" + moreDataType.getSimpleName();
+        } catch (final Exception ex) {
+            // A fallback just in case.
+            return UUID.randomUUID().toString();
+        }
     }
 
-    public boolean isContinuationSupported() {
-        return this.continuationSupported;
-    }
+    //-------------------------------------------------------------------//
+    //------------------ Before and After save methods ------------------//
+    //-------------------------------------------------------------------//
 
-    ////////////////////////////////////////////////////////////////
-    //////////////////// Before and After save methods /////////////
-    ////////////////////////////////////////////////////////////////
-    /**
-     * A method for assigning a value to a domain specific transactional property. This method does nothing by default, and should be overridden by companion objects in order to
-     * provide domain specific behaviour.
-     *
-     * @param prop
-     */
+    /// A method for assigning a value to a domain specific transactional property.
+    /// This method does nothing by default, and should be overridden by companion objects in order to
+    /// provide domain specific behaviour.
+    ///
     protected void assignBeforeSave(final MetaProperty<?> prop) {
 
     }
@@ -518,106 +504,69 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     }
 
-    ////////////////////////////////////////////////////////////
-    /////////////// block of default delete methods ////////////
-    ////////////////////////////////////////////////////////////
+    //-------------------------------------------------------------------//
+    //---------------- Block of default delete methods ------------------//
+    //-------------------------------------------------------------------//
 
-    /**
-     * A convenient default implementation for entity deletion, which should be used when overriding method {@link #delete(T)}.
-     *
-     * @param entity
-     */
+    /// A convenient default implementation for entity deletion, which should be used when overriding method [#delete(T)].
+    ///
     @SessionRequired
     protected void defaultDelete(final T entity) {
         deleteOps.get().defaultDelete(entity);
     }
 
-    /**
-     * A convenient default implementation for deletion of entities specified by provided query model and parameters, which could be empty.
-     *
-     * @param model
-     * @param paramValues
-     */
+    /// A convenient default implementation for deletion of entities specified by provided query model and parameters, which could be empty.
+    ///
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         deleteOps.get().defaultDelete(model, paramValues);
     }
 
-    /**
-     * The same as {@link #defaultDelete(EntityResultQueryModel, Map)}, but with empty parameters.
-     *
-     * @param model
-     */
+    /// The same as [#defaultDelete(EntityResultQueryModel,Map)], but with empty parameters.
+    ///
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model) {
         deleteOps.get().defaultDelete(model);
     }
 
-    /**
-     * A convenient default implementation for batch deletion of entities specified by provided query model and parameters, which could be empty.
-     *
-     * @param model
-     * @param paramValues
-     * @return
-     */
+    /// A convenient default implementation for batch deletion of entities specified by provided query model and parameters, which could be empty.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         return deleteOps.get().defaultBatchDelete(model, paramValues);
     }
 
-    /**
-     * The same as {@link #defaultBatchDelete(EntityResultQueryModel, Map)}, but with empty parameters.
-     *
-     * @param model
-     * @return
-     */
+    /// The same as [#defaultBatchDelete(EntityResultQueryModel,Map)], but with empty parameters.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model) {
         return deleteOps.get().defaultBatchDelete(model);
     }
 
-    /**
-     * Batch deletion of entities in the provided list.
-     *
-     * @param entities
-     * @return
-     */
+    /// Batch deletion of entities in the provided list.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
-        return batchDelete(entities.stream().map(e -> e.getId()).collect(Collectors.toList()));
+        return batchDelete(entities.stream().map(AbstractEntity::getId).toList());
     }
 
-    /**
-     * Batch deletion of entities by their ID values.
-     *
-     * @param entitiesIds
-     * @return
-     */
+    /// Batch deletion of entities by their ID values.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
         return deleteOps.get().defaultBatchDelete(entitiesIds);
     }
 
-    /**
-     * A more generic version of batch deletion of entities {@link #defaultBatchDelete(Collection)} that accepts a property name and a collection of ID values.
-     * Those entities that have the specified property matching any of those ID values get deleted.
-     *
-     * @param propName
-     * @param entitiesIds
-     * @return
-     */
+    /// A more generic version of batch deletion of entities [#defaultBatchDelete(Collection)] that accepts a property name and a collection of ID values.
+    /// Those entities that have the specified property matching any of those ID values get deleted.
+    ///
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
         return deleteOps.get().defaultBatchDeleteByPropertyValues(propName, entitiesIds);
     }
 
-    /**
-     * The same as {@link #defaultBatchDeleteByPropertyValues(String, Collection)}, but for a list of entities.
-     *
-     * @param propName
-     * @param propEntities
-     * @return
-     */
+    /// The same as [#defaultBatchDeleteByPropertyValues(String,Collection)], but for a list of entities.
+    ///
     @SessionRequired
     protected <E extends AbstractEntity<?>> int defaultBatchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
         return deleteOps.get().defaultBatchDeleteByPropertyValues(propName, propEntities);
@@ -641,15 +590,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return fetchProvider;
     }
 
-    /**
-     * Creates fetch provider for this entity companion.
-     * <p>
-     * Should be overridden to provide custom fetch provider.
-     *
-     * @return
-     */
+    /// Creates a fetch provider for this entity companion.
+    ///
+    /// Override this method to provide a custom fetch provider.
+    ///
     protected IFetchProvider<T> createFetchProvider() {
-        // provides a very minimalistic version of fetch provider by default (only id and version are included)
+        // Provides a very minimalistic version of fetch provider by default (only id and version are included).
         return EntityUtils.fetch(getEntityType());
     }
 
@@ -657,12 +603,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return entityFactory;
     }
 
-    /**
-     * Instantiates an instrumented new entity of the type for which this object is a companion.
-     * The default entity constructor, which should be protected, is used for instantiation.
-     *
-     * @return
-     */
+    /// Instantiates an instrumented new entity of the type for which this object is a companion.
+    /// The default entity constructor, which should be protected, is used for instantiation.
+    ///
     @Override
     public T new_() {
         return entityFactory.newEntity(getEntityType());

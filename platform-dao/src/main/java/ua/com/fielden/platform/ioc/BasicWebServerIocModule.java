@@ -14,6 +14,7 @@ import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ServerAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web_api.GraphQLService;
 import ua.com.fielden.platform.web_api.IWebApi;
 
@@ -33,23 +35,17 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
 
-/**
- * Basic IoC module for server web applications, which should be extended by an application-specific IoC module.
- *
- * This IoC provides all the necessary bindings for:
- * <ul>
- * <li>Applications settings (refer {@link IApplicationSettings});
- * <li>Serialisation mechanism;
- * <li>Essential DAO interfaces {@link IUser}, {@link IAuthorisationModel}, and more;
- * <li>Provides application main menu configuration related DAO bindings.
- * </ul>
- * <p>
- * Instantiation of singletons occurs in accordance with <a href="https://github.com/google/guice/wiki/Scopes#eager-singletons">Guice Eager Singletons</a>,
- * where values of {@link Workflows} are mapped to {@link Stage}.
- *
- * @author TG Team
- *
- */
+/// Basic IoC module for server web applications, which should be extended by an application-specific IoC module.
+/// This IoC provides all the necessary bindings for:
+///
+/// - Applications settings (refer [IApplicationSettings]);
+/// - Serialisation mechanism;
+/// - Essential DAO interfaces [IUser], [IAuthorisationModel], and more;
+/// - Provides application main menu configuration related DAO bindings.
+///
+/// Instantiation of singletons occurs in accordance with [Guice Eager Singletons](https://github.com/google/guice/wiki/Scopes#eager-singletons),
+/// where values of [Workflows] are mapped to [Stage].
+///
 public class BasicWebServerIocModule extends CompanionIocModule {
     private static final Logger LOGGER = getLogger(BasicWebServerIocModule.class);
 
@@ -118,6 +114,12 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("dates.weekStart")).to(Integer.parseInt(props.getProperty("dates.weekStart", "1"))); // 1 - Monday
         bindConstant().annotatedWith(Names.named("dates.finYearStartDay")).to(Integer.parseInt(props.getProperty("dates.finYearStartDay", "1"))); // 1 - the first day of the month
         bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.parseInt(props.getProperty("dates.finYearStartMonth", "7"))); // 7 - July, the 1st of July is the start of Fin Year in Australia
+        bindConstant().annotatedWith(Names.named("dates.dateFormat")).to(props.getProperty("dates.dateFormat", IDates.DEFAULT_DATE_FORMAT));
+        bindConstant().annotatedWith(Names.named("dates.timeFormat")).to(props.getProperty("dates.timeFormat", IDates.DEFAULT_TIME_FORMAT));
+        bindConstant().annotatedWith(Names.named("dates.timeFormatWithMillis")).to(props.getProperty("dates.timeFormatWithMillis", IDates.DEFAULT_TIME_FORMAT_WITH_MILLIS));
+        bindConstant().annotatedWith(Names.named("dates.dateFormat.web")).to(props.getProperty("dates.dateFormat.web", IDates.DEFAULT_DATE_FORMAT_WEB));
+        bindConstant().annotatedWith(Names.named("dates.timeFormat.web")).to(props.getProperty("dates.timeFormat.web", IDates.DEFAULT_TIME_FORMAT_WEB));
+        bindConstant().annotatedWith(Names.named("dates.timeFormatWithMillis.web")).to(props.getProperty("dates.timeFormatWithMillis.web", IDates.DEFAULT_TIME_FORMAT_WEB_WITH_MILLIS));
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
@@ -139,6 +141,9 @@ public class BasicWebServerIocModule extends CompanionIocModule {
             // ... bind Web API to platform-dao GraphQL-based implementation
             bind(IWebApi.class).to(GraphQLService.class);
         }
+
+        requestStaticInjection(MultiInheritanceEntityVerificationService.class);
+        requestStaticInjection(EntityQueryCriteriaUtils.class);
     }
 
     public Properties getProps() {

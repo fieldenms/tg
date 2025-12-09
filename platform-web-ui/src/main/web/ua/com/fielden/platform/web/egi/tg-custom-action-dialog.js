@@ -28,11 +28,13 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
 import { TgBackButtonBehavior } from '/resources/views/tg-back-button-behavior.js'
-import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
+import { createDialog } from '/resources/egi/tg-dialog-util.js';
+import { openShareAction } from '/resources/reflection/tg-share-utils.js';
 
 const ST_WIDTH = '_width';
 const ST_HEIGHT = '_height';
@@ -162,21 +164,6 @@ const template = html`
         paper-icon-button.button-reverse {
             transform: scale(-1, 1);
         }
-        paper-spinner {
-            position: absolute;
-            width: 20px;
-            height: 20px; 
-            min-width: 20px; 
-            min-height: 20px; 
-            max-width: 20px; 
-            max-height: 20px; 
-            padding: 0;
-            margin-left: 0;
-            --paper-spinner-layer-1-color: white;
-            --paper-spinner-layer-2-color: white;
-            --paper-spinner-layer-3-color: white;
-            --paper-spinner-layer-4-color: white;
-        }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <div id="titleBar" class="title-bar layout horizontal justified center" on-track="moveComponent">
@@ -188,15 +175,15 @@ const template = html`
         </div>
         <div class="relative layout horizontal justified center">
             <div id="navigationBar" hidden$="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
-                <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
-                <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" on-pointerdown="_storePrevFocus" on-pointerup="_restorePrevFocus" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" on-pointerdown="_storePrevFocus" on-pointerup="_restorePrevFocus" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
                 <span style="white-space: nowrap;">[[_sequentialEditText]]</span>
-                <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_isNavigationButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
-                <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigationButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" on-pointerdown="_storePrevFocus" on-pointerup="_restorePrevFocus" disabled$="[[!_isNavigationButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" on-pointerdown="_storePrevFocus" on-pointerup="_restorePrevFocus" disabled$="[[!_isNavigationButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
             </div>
             <div class="layout horizontal center">
                 <!-- Get A Link button -->
-                <paper-icon-button hidden$="[[!_mainEntityType]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
+                <paper-icon-button hidden$="[[_shareHidden(_mainEntityType, _lastAction)]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
                 <paper-icon-button hidden$="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
@@ -213,7 +200,7 @@ const template = html`
     </div>
     <div id="dialogBody" class="relative flex layout vertical">
         <div id="loadingPanel" class="fit layout horizontal">
-            <div style="margin: auto; padding: 20px" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
+            <div style="margin: auto; padding: 20px; text-align: center;" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
         </div>
         <div id="dialogLoader" class="flex layout horizontal">
             <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
@@ -276,8 +263,6 @@ Polymer({
         'iron-overlay-opened': '_dialogOpened',
         'iron-overlay-closed': '_dialogClosed',
         'tg-dynamic-title-changed': '_updateDynamicTitle',
-        'tg-menu-appeared': '_updateMenuButton',
-        'tg-master-type-changed': '_handleMasterChanged',
         'tg-master-type-before-change': '_handleMasterBeforeChange',
         'tg-action-navigation-changed': '_handleActionNavigationChange',
         'tg-action-navigation-invoked': '_handleActionNavigationInvoked',
@@ -339,7 +324,7 @@ Polymer({
         //This property also has three states: true, false and undefined.
         //True - means that master is about to change it's layout when master type is changing. This value is applied only in _handleMasterBeforeChange method.
         //False - means that master has changed it's type and can be resized smoothly using the CSS transitioning functionality, which is invoked in _updateDialogAnimation method.
-        //        This value is applied only in _handleMasterChanged method.
+        //        This value is applied only in _handleDataLoaded method.
         //Undefined - means that dialog has changed it's size and blocking layer has become invisible. This indicates also that all animations have finished.
         //            This value is applied in _handleBodyTransitionEnd method when master container is visible and in _resetAnimationBlockingSpinnerState method to ensure 
         //            that all animation is finished in case when master was closed during animation process or error happend when navigating to another entity. 
@@ -486,9 +471,24 @@ Polymer({
             type: Object,
             value: null
         },
-        
+
         /**
-         * Represents the ID of the currently bound persisted entity (of type derived from _mainEntityType) or 'null' if the entity is not yet persisted or not yet loaded.
+         * The deepest embedded Entity Master.
+         *
+         * For compound masters it represents the master of loaded persistent entity under Main / one-2-one menu item.
+         * For simple persistent masters (including those embedded by EntityEditAction / EntityNewAction)
+         * it represents the master of actual persistent entity.
+         * Otherwise (i.e. for functional masters) it represents the master of that functional entity.
+         */
+        _deepestMaster: {
+            type: Object,
+            value: null
+        },
+
+        /**
+         * Represents the ID of the currently bound persisted entity (of type derived from _mainEntityType) or 'null',
+         * if the entity is not yet persisted or not yet loaded.
+         *
          * Should only be used if '_mainEntityType' is present.
          */
         _mainEntityId: {
@@ -516,10 +516,21 @@ Polymer({
         _masterMenu: {
             type: Object,
             value: null
+        },
+
+        /**
+         * A dialog instance that is used for displaying entity (functional and not) masters as part of dialog actions logic.
+         * This dialog is of type tg-custom-action-dialog and gets created on demand when needed i.e. on first _showDialog invocation.
+         * It is appended to document.body just before dialog opening and is removed just after dialog closing.
+         */
+        _actionDialog: {
+            type: Object,
+            value: null
         }
+
     },
 
-    observers: ["_updateDialogDimensionsIfNotAnimating(prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
+    observers: ["_updateDialogDimensionsIfNotAnimating(_masterVisibilityChanges, _masterLayoutChanges, prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
 
     keyBindings: {
         'alt+c': '_invertMinimiseState',
@@ -555,6 +566,7 @@ Polymer({
         this._handleActionNavigationChange = this._handleActionNavigationChange.bind(this);
         this._handleActionNavigationInvoked = this._handleActionNavigationInvoked.bind(this);
         this._handleViewLoaded = this._handleViewLoaded.bind(this);
+        this._showDialog = this._showDialog.bind(this);
 
         this._setIsRunning(false);
 
@@ -585,6 +597,25 @@ Polymer({
             this.refit();
             this.notifyResizeWithoutItselfAndAncestors();
         });
+        //Set inline style for spinner, because it will be added to shadow dom of paper-icon-buttons
+        this.$.spinner.style.position = 'absolute';
+        this.$.spinner.style.left = '50%';
+        this.$.spinner.style.top = '50%';
+        this.$.spinner.style.transform = 'translate(-50%, -50%)';
+        this.$.spinner.style.width = '20px';
+        this.$.spinner.style.height = '20px'; 
+        this.$.spinner.style.minWidth = '20px'; 
+        this.$.spinner.style.minHeight = '20px'; 
+        this.$.spinner.style.maxWidth = '20px'; 
+        this.$.spinner.style.maxHeight = '20px'; 
+        this.$.spinner.style.padding = '0';
+        this.$.spinner.style.marginLeft = '0';
+        this.$.spinner.style.setProperty('--paper-spinner-layer-1-color', 'white');
+        this.$.spinner.style.setProperty('--paper-spinner-layer-2-color', 'white');
+        this.$.spinner.style.setProperty('--paper-spinner-layer-3-color', 'white');
+        this.$.spinner.style.setProperty('--paper-spinner-layer-4-color', 'white');
+
+        this.uuid = this.is + '/' + generateUUID();
     },
 
     attached: function() {
@@ -617,6 +648,26 @@ Polymer({
 
     _onShiftTabDown: function(e) {
         this._focusChange(e, false);
+    },
+
+    /**
+     * Entity navigation: stores Entity Master focus on navigation button actions.
+     */
+    _storePrevFocus: function (event) {
+        let master = null;
+        if (this.$.elementLoader && (master = this.$.elementLoader.loadedElement)) {
+            master._storeFocus && master._storeFocus();
+        }
+    },
+
+    /**
+     * Entity navigation: restores Entity Master focus on navigation button actions.
+     */
+    _restorePrevFocus: function (event) {
+        let master = null;
+        if (this.$.elementLoader && (master = this.$.elementLoader.loadedElement)) {
+            master._restoreFocus && master._restoreFocus();
+        }
     },
 
     _focusChange: function(e, forward) {
@@ -749,7 +800,7 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
-            this._lastAction.firstEntry();
+            this._lastAction.firstEntry(this.reloadDialog.bind(this));
         }
     },
     
@@ -759,7 +810,7 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
-            this._lastAction.previousEntry();
+            this._lastAction.previousEntry(this.reloadDialog.bind(this));
         }
     },
     
@@ -769,7 +820,7 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
-            this._lastAction.nextEntry();
+            this._lastAction.nextEntry(this.reloadDialog.bind(this));
         }
     },
     
@@ -779,18 +830,16 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
-            this._lastAction.lastEntry();
+            this._lastAction.lastEntry(this.reloadDialog.bind(this));
         }
     },
     
     _displaySpinnerOn: function (element) {
         this.$.spinner.style.removeProperty("display");
-        this.$.spinner.style.left = element.offsetLeft + (element.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
-        this.$.spinner.style.top = element.offsetTop + (element.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
-        element.parentElement.appendChild(this.$.spinner);
+        element.shadowRoot.appendChild(this.$.spinner);
         this.isNavigationActionInProgress = true;
     },
-    
+
     _getFirstEntryActionTooltip: function (_navigationType) {
         return "Get first " + _navigationType + ", Ctrl&nbsp+&nbsp<span style='font-size:18px;font-weight:bold'>&#8593</span>";
     },
@@ -999,14 +1048,11 @@ Polymer({
     /**
      * Updates 'hidden' state of the menu toggler button and assigns _toogleMenu function.
      */
-    _updateMenuButton: function(event) {
-        const appearedAndFunc = event.detail;
-        this.$.menuToggler.hidden = !appearedAndFunc.appeared;
-        if (appearedAndFunc.appeared) {
-            this._toggleMenu = appearedAndFunc.func;
-            if (this.mobile && isIPhoneOs()) {
-                appearedAndFunc.drawer.drawer.align = 'right';
-            }
+    _updateMenuButton: function (menu, appeared) {
+        this.$.menuToggler.hidden = !appeared;
+        this._toggleMenu = appeared ? menu._toggleMenuBound : null;
+        if (appeared && this.mobile && isIPhoneOs()) {
+            menu.$.drawerPanel.drawer.align = 'right';
         }
     },
 
@@ -1024,24 +1070,32 @@ Polymer({
             }
             this._parentDialog = null;
         }
+        //Reset routes for compound masters those are in cache. It is needed in case if all some masters in cache were opened via navigation action,
+        //which tries to maintain previously opened menu item.
+        Object.values(this._cachedElements).forEach(element => {
+            if (element.$.menu) {
+                element.$.menu.route = undefined;
+            }
+        });
         this.close();
         this._removeFromDom();
     },
 
     _handleCloseEvent: function(data, envelope) {
-        if (data.canClose === true) {
+        // Close this dialog only when the event data permits it and all child dialogs have been closed. 
+        if (data.canClose === true && this._closeChildren()) {
             this._closeDialogAndIndicateActionCompletion();
         }
     },
 
     /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
     _getElement: function(customAction) {
-        var self = this;
-        var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+        const self = this;
+        const key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
         // disabled chache (temprarily?) to support polymorphic masters
          if (self._cachedElements.hasOwnProperty(key)) {
             console.log("Reusing cached element:", key);
-            var element = self._cachedElements[key];
+            const element = self._cachedElements[key];
             self.$.elementLoader.insert(element);
             return Promise.resolve(element);
         } else { 
@@ -1050,6 +1104,22 @@ Polymer({
             self.$.elementLoader.attrs = customAction.attrs;
             return self.$.elementLoader.reload();
         }
+    },
+
+    _showDialog: function (action) {
+        // Calculate close event channel for dialog.
+        // It should be the same as action's centreUuid.
+        // This is done because action's centreUuid is set into centreUuid of the master opened by specified action and inserted into opening dialog.
+        // Then the master's `centreUuid` is used as `closeEventChannel` for `tg-action`.
+        // Expression `|| this.uuid` is used as a fallback in case where action's `centreUuid` wasn't defined.
+        const closeEventChannel = action.attrs.centreUuid || this.uuid;
+        const closeEventTopics = ['save.post.success', 'refresh.post.success'];
+        this.async(() => {
+            if (this._actionDialog === null) {
+                this._actionDialog = createDialog(this.uuid);
+            }
+            this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+        }, 1);
     },
 
     /*
@@ -1070,7 +1140,7 @@ Polymer({
                 customAction.restoreActionState();
             }
         } else {
-            var self = this;
+            const self = this;
             if (self.isRunning === false) {
                 //Add this dialog to body before opening it. Dialog should be added to document DOM because it's 'ready' callback will be invoked immediately before first attaching.
                 //Also shadow DOM of dialog component won't be defined until dialog is attached for the first time. It is important because
@@ -1083,17 +1153,12 @@ Polymer({
 
                 self._getElement(customAction)
                     .then(function(element) {
-                        var promise = customAction._onExecuted(null, element, null);
+                        self._lastElement = element;
+                        const promise = customAction._onExecuted(null, element, null);
                         if (promise) {
                             return promise
                                 .then(function(ironRequest) {
-                                    var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
-                                    if (!self._cachedElements.hasOwnProperty(key)) {
-                                        if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
-                                            console.log("caching:", key);
-                                            self._cachedElements[key] = element;
-                                        }
-                                    }
+                                    self._cacheElement(element);
                                     if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
                                         return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, false));
                                     } else  if (ironRequest && ironRequest.response && ironRequest.response.ex && ironRequest.response.ex.continuationTypeStr) {
@@ -1117,18 +1182,65 @@ Polymer({
                     })
                     .catch(function(error) {
                         console.error(error);
-                        self.$.toaster.text = 'There was an error displaying the dialog.';
-                        self.$.toaster.hasMore = true;
-                        self.$.toaster.msgText = `There was an error displaying the dialog.<br><br>` +
-                                                  `<b>Error cause:</b><br>${error.message}`;
-                        self.$.toaster.showProgress = false;
-                        self.$.toaster.isCritical = true;
-                        self.$.toaster.show();
+                        self._showDisplayDialogErrorToast(error);
                         self._finishErroneousOpening();
                         throw new UnreportableError(error);
                     });
             }
         }
+    },
+
+    reloadDialog: function(elementLoaded) {
+        const self = this;
+        if (self._lastElement.tagName !== self._lastAction.elementName.toUpperCase()) {
+            //Call this method because entity master type changes, therefore dialog's dimension and position will be changed
+            self._handleMasterBeforeChange();
+            self._customiseAction(self._lastAction);
+            self.dynamicTitle = null;
+            return self._getElement(self._lastAction)
+                .then(element => {
+                    // Hide element loader that contains loaded element because it might cause flickering effect on moving from one master to another.
+                    this.$.elementLoader.style.display = 'none';
+                    self._lastElement = element;
+                    if (elementLoaded) {
+                        elementLoaded(element);
+                    }
+                    return self._lastAction._onExecuted(null, element, null).then(ironRequest => {
+                        self._cacheElement(element);
+                        if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
+                            return Promise.resolve(element);
+                        } else {
+                            return Promise.reject('Retrieval / saving promise was not successful.');
+                        }
+                    })
+                }).catch(error => {
+                    console.error(error);
+                    self._showDisplayDialogErrorToast(error);
+                    self._handleError({detail: error.message});
+                    throw new UnreportableError(error);
+                });
+        }
+        return Promise.reject("The entity master type didn't changed.");
+    },
+
+    _cacheElement: function(element) {
+        const key = this._lastAction.elementAlias ? this._lastAction.elementAlias : this._lastAction.elementName;
+        if (!this._cachedElements.hasOwnProperty(key)) {
+            if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
+                console.log("caching:", key);
+                this._cachedElements[key] = element;
+            }
+        }
+    },
+
+    _showDisplayDialogErrorToast: function(error) {
+        this.$.toaster.text = 'There was an error displaying the dialog.';
+        this.$.toaster.hasMore = true;
+        this.$.toaster.msgText = `There was an error displaying the dialog.<br><br>` +
+                                    `<b>Error cause:</b><br>${error.message}`;
+        this.$.toaster.showProgress = false;
+        this.$.toaster.isCritical = true;
+        this.$.toaster.show();
     },
 
     _addToDom: function () {
@@ -1150,6 +1262,9 @@ Polymer({
     
     // This method handles data-loaded-and-focused event. This event can be fired when dialog is opening or navigating to another entity and resets the spinner state and hides blocking layer.
     _handleDataLoaded: function () {
+        if (this._masterLayoutChanges && this.opened) {
+            this._masterLayoutChanges = false;
+        }
         this._dataLoaded = true;
         this._resetSpinner();
         this._hideBlockingPane();
@@ -1178,7 +1293,7 @@ Polymer({
         }
     },
     
-    // Inoked by navigation buttons it turns on spinner on navigation button and makes blocking layer visible. Also it resets error message if it is present due to previous navigation action.
+    // Invoked by navigation buttons it turns on spinner on navigation button and makes blocking layer visible. Also it resets error message if it is present due to previous navigation action.
     _handleActionNavigationInvoked: function (e) {
         //Reset dataLoaded property to ensure that blocking layer will work correctly and appropriate event handlers will be invoked.
         this._dataLoaded = false;
@@ -1212,8 +1327,6 @@ Polymer({
             return;
         }
         if (!_masterVisibilityChanges && !_masterLayoutChanges) {
-            //Animate dialog dimensions even if it was resized.
-            this._updateDialogDimensionsIfNotAnimating(this.prefDim, this._minimised, this._maximised);
             //Animate dialog position if it wasn't moved.
             if (!this._wasMoved()) {
                 this._updateDialogPositionWithPrefDim(this.prefDim, this._minimised, this._maximised);
@@ -1224,14 +1337,17 @@ Polymer({
     },
 
     /**
-     * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance. This method changes the dialog's dimension only when dialog is not animating anything.
+     * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance.
+     * This method changes the dialog's dimension only when dialog is not animating anything.
      */
-    _updateDialogDimensionsIfNotAnimating: function(prefDim, minimised, maximised) {
-        if (!allDefined(arguments)) {
+    _updateDialogDimensionsIfNotAnimating: function(_masterVisibilityChanges, _masterLayoutChanges, prefDim, minimised, maximised) {
+        if (prefDim === undefined || minimised === undefined || maximised === undefined) { // !allDefined(arguments)
             return;
         }
-        if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
+        if (!_masterVisibilityChanges && !_masterLayoutChanges) {
             this._setDialogDimensions(prefDim, minimised, maximised);
+            // Removes the optimisation hook if master size or position was changed.
+            this.$.elementLoader.style.removeProperty("display");
         }
     },
 
@@ -1273,8 +1389,6 @@ Polymer({
         }
         this.style.removeProperty("transition-property");
         this.style.removeProperty("transition-duration");
-        //Removes the optimisation hook if master size or position was changed.
-        this.$.elementLoader.style.removeProperty("display");
         // focuses dialog view after dialog resizing transition is completed;
         //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
         this._focusDialogView();
@@ -1282,8 +1396,16 @@ Polymer({
     },
     
     //Invoked when master is about to change it's type.
-    _handleMasterBeforeChange: function () {
-        if (this.opened && !this._minimised && !this._maximised) {
+    _handleMasterBeforeChange: function (e) {
+        //Check _masterLayoutChanges: if it is already true, there is no need to start the resize animation since it has already been initiated.
+        if (this.opened && !this._masterLayoutChanges && !this._minimised && !this._maximised) {
+            //Set new title
+            if (e && e.detail && e.detail.currType) {
+                const masterInfo = this._reflector.getType(e.detail.currType).entityMaster();
+                if (masterInfo && this._lastAction.dynamicAction) {
+                    this.staticTitle = this._lastAction._originalShortDesc || masterInfo.shortDesc;
+                }
+            }
             //First animate the blocking pane.
             this._showBlockingPane();
             //Indicate that master is about to change it's type
@@ -1296,13 +1418,6 @@ Polymer({
             //Then set dimension properties as transitional for dialog for futher animation.
             this.style.transitionProperty = "top, left, width, height";
             this.style.transitionDuration = "500ms";
-        }
-    },
-    
-    //Invoked when master has changed it's type, then _masterLayoutChanges property becomes false that should trigger resizing animation if blocking layer has finished animating.
-    _handleMasterChanged: function (e) {
-        if (this.opened) {
-            this._masterLayoutChanges = false;
         }
     },
     
@@ -1342,7 +1457,6 @@ Polymer({
     },
     
     _showMaster: function(action, element, closeEventChannel, closeEventTopics, actionWithContinuation) {
-        this._lastElement = element;
         const self = this;
         if (element.noUI === true) { // is this is the end of action execution?
             self._resetState();
@@ -1367,7 +1481,7 @@ Polymer({
             this._maximised = this._customMaximised();
         }
 
-        console.log(`--refiting fialog maximised state: ${this._maximised}--`);
+        console.log(`--refiting dialog maximised state: ${this._maximised}--`);
 
         if (this._dialogIsOutOfTheWindow()) {
             this._removePersistedPositionAndDimensions();
@@ -1512,12 +1626,12 @@ Polymer({
     _hideBlockingPane: function () {
         if (this._blockingPaneCounter > 0) {
             this._blockingPaneCounter--;
-        }
-        if (this._blockingPaneCounter === 0 && this.$.loadingPanel.classList.contains("visible")) {
-            //Indicate that blocking pane is changing it's visibility from visible to invisible.
-            this._masterVisibilityChanges = true;
-            this.$.loadingPanel.classList.remove("visible");
-            this.$.dialogLoader.classList.remove("hidden");
+            if (this._blockingPaneCounter === 0 && this.$.loadingPanel.classList.contains("visible")) {
+                //Indicate that blocking pane is changing it's visibility from visible to invisible.
+                this._masterVisibilityChanges = true;
+                this.$.loadingPanel.classList.remove("visible");
+                this.$.dialogLoader.classList.remove("hidden");
+            }
         }
     },
 
@@ -1642,7 +1756,7 @@ Polymer({
     _onIronResize: function() {
         // Check this._isAnimatingDimensions() in order to prevent refitting dialog if animation is in progress.
         // This should be done because loaded element in dialog might contain component that might trigger iron-resize event when attached.
-        if (!this._wasMoved() && !this._customDim() && !this._minimised && !this._isAnimatingDimensions()) {
+        if (!this._wasMoved() && !this._customDim() && !this._minimised && !this._maximised && !this._isAnimatingDimensions()) {
             IronOverlayBehaviorImpl._onIronResize.call(this);
         }
     },
@@ -1656,6 +1770,20 @@ Polymer({
      */
     _closerHidden: function(_lastAction, mobile) {
         return (_lastAction && _lastAction.continuous) || mobile;
+    },
+
+    /**
+     * Returns 'true' if Share button is hidden, 'false' otherwise.
+     */
+    _shareHidden: function (_mainEntityType, _lastAction) {
+        return !(
+            // Visible for all persistent masters either with NEW or persisted instance.
+            // This covers simple and compound masters.
+            // Action identifier can be empty for NEW (custom action) -- it then shows info message `Please save and try again.`
+            _mainEntityType
+            // Visible also for all functional masters with explicit action identifier.
+            || _lastAction && _lastAction.attrs && _lastAction.attrs.actionIdentifier
+        );
     },
 
     _minimisedIcon: function (_minimised) {
@@ -1686,6 +1814,9 @@ Polymer({
             if (this._embeddedMasterType === null && !entityType.isCompoundMenuItem() && !entityMaster.masterWithMaster) {
                 this._embeddedMasterType = entityType;
             }
+            if (this._deepestMaster === null && !entityType.compoundOpenerType() && !entityType.isCompoundMenuItem() && !entityMaster.masterWithMaster) {
+                this._deepestMaster = entityMaster;
+            }
             if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
             } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item
@@ -1710,6 +1841,9 @@ Polymer({
             if (this._embeddedMasterType !== null && entityType === this._embeddedMasterType) {
                 this._embeddedMasterType = null;
             }
+            if (this._deepestMaster !== null && entityMaster === this._deepestMaster) {
+                this._deepestMaster = null;
+            }
             if (this._mainEntityType !== null && entityType === this._mainEntityType) {
                 this._mainEntityType = null;
                 this._mainEntityId = null;
@@ -1725,6 +1859,7 @@ Polymer({
      */
     _masterMenuAttached: function (event) {
         this._masterMenu = event.detail;
+        this._updateMenuButton(this._masterMenu, true);
         tearDownEvent(event);
     },
     
@@ -1732,6 +1867,7 @@ Polymer({
      * Function that handles detaching of tg-master-menu inside this dialog.
      */
     _masterMenuDetached: function (event) {
+        this._updateMenuButton(this._masterMenu, false);
         this._masterMenu = null;
         tearDownEvent(event);
     },
@@ -1743,44 +1879,64 @@ Polymer({
      */
     _entityReceived: function (event) {
         const entity = event.detail;
-        if (entity.type() === this._mainEntityType) {
+        if (entity.type() === this._mainEntityType) { // _mainEntityType can be null for functional entities
             this._mainEntityId = entity.type().compoundOpenerType() ? entity.get('key').get('id') : entity.get('id');
         }
         tearDownEvent(event);
     },
-    
+
     /**
-     * Generates a link to entity master for persisted entity opened in this dialog; copies it to the clipboard; shows informational dialog with ability to review link (MORE button).
-     * or
-     * Shows informational dialog for not-yet-persisted entity opened in this dialog -- 'Please save and try again.'.
-     * 
-     * This functionality is only available for persistent entities.
+     * 1. If a master for a persisted entity is opened in this dialog, generates a link to it, copies it to the clipboard,
+     *    and shows an informational dialog with the ability to review the link (MORE button).
+     *    If the master is compound, the generated link will point to the currenly open menu item.
+     *
+     * 2. If the action that opened this dialog has an identifier (i.e., supports tiny hyperlinks), then `ShareAction` will be invoked,
+     *    and the resulting tiny hyperlink will be presented to the user.
+     *
+     * 3. Otherwise, link generation is not supported, and a corresponding message will be displayed.
      */
     _getLink: function () {
-        const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
-        const showNonCritical = toaster => {
-            toaster.showProgress = false;
-            toaster.isCritical = false;
-            toaster.show();
-        };
-        if (this._mainEntityId !== null) {
-            const url = new URL(window.location.href);
-            const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
-            url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
-            const link = url.href;
-            // Writing into clipboard is always permitted for currently open tab (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) -- that's why promise error should never occur;
-            // if for some reason the promise will be rejected then 'Unexpected error occurred.' will be shown to the user and global handler will report that to the server.
-            navigator.clipboard.writeText(link).then(() => {
-                this.$.toaster.text = 'Copied to clipboard.';
-                this.$.toaster.hasMore = true;
-                this.$.toaster.msgText = link;
-                showNonCritical(this.$.toaster);
-            });
-        } else {
+        const isPersistedEntity = this._mainEntityType !== null && this._mainEntityId !== null;
+        if (isPersistedEntity
+            || this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionIdentifier)
+        {
+            // Find a deepest embdedded master, which will contain master entity for share action.
+            const deepestMaster = this._deepestMaster;
+            // this dialog's `uuid` to be used for action.
+            const uuid = this.uuid;
+
+            let getSharedUri;
+            if (isPersistedEntity) {
+                const url = new URL(window.location.href);
+                const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
+                const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
+                url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
+                getSharedUri = () => url.href;
+            }
+            else {
+                getSharedUri = null;
+            }
+
+            openShareAction(
+                this.$.toaster,
+                uuid,
+                this._showDialog,
+                !isPersistedEntity && deepestMaster
+                    ? deepestMaster._createContextHolder
+                    : (() => this._reflector.createContextHolder(null, null, null, null, null, null)),
+                getSharedUri,
+                shareAction => {
+                    // Persist reference to the dialog to easily get it in `tg-ui-action._createContextHolderForAction`.
+                    shareAction._dialog = this;
+                });
+        }
+        else {
             this.$.toaster.text = 'Please save and try again.';
             this.$.toaster.hasMore = false;
             this.$.toaster.msgText = '';
-            showNonCritical(this.$.toaster);
+            this.$.toaster.showProgress = false;
+            this.$.toaster.isCritical = false;
+            this.$.toaster.show();
         }
     },
     

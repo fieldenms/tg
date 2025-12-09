@@ -7,12 +7,8 @@ import ua.com.fielden.platform.test.ioc.PlatformTestServerIocModule;
 
 import java.util.Properties;
 
-/**
- * Provides Platform specific implementation of {@link IDomainDrivenTestCaseConfiguration} for testing purposes, which is mainly related to construction of appropriate IoC modules.
- * 
- * @author TG Team
- * 
- */
+/// Provides Platform specific implementation of [IDomainDrivenTestCaseConfiguration] for testing purposes, which is mainly related to construction of appropriate IoC modules.
+///
 public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
     private final Injector injector;
 
@@ -28,7 +24,6 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
                     .getInjector();
 
         } catch (final Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -48,6 +43,9 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         props.setProperty("email.smtp", "non-existing-server");
         props.setProperty("email.fromAddress", "platform@fielden.com.au");
         props.setProperty("web.api", "true");
+        props.setProperty("web.domain", "tgdev.com");
+        props.setProperty("web.port", "443");
+        props.setProperty("web.path", "/");
         // Custom Hibernate configuration properties
         props.setProperty("hibernate.show_sql", "false");
         props.setProperty("hibernate.format_sql", "true");

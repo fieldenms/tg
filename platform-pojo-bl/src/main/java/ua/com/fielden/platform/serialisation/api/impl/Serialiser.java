@@ -1,18 +1,13 @@
 package ua.com.fielden.platform.serialisation.api.impl;
 
-import java.io.InputStream;
-
 import com.google.inject.Inject;
-
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.api.*;
 import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
+
+import java.io.InputStream;
 
 /**
  * The default implementation for {@link ISerialiser} with JACKSON engine.
@@ -23,25 +18,23 @@ import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 @Singleton
 public class Serialiser implements ISerialiser {
     private final EntityFactory factory;
-    private ISerialiserEngine tgJackson;
-    private final ISerialisationClassProvider provider;
+    private ISerialiserEngine jacksonEngine;
 
     @Inject
-    public Serialiser(final EntityFactory factory, final ISerialisationClassProvider provider) {
+    public Serialiser(final EntityFactory factory, final TgJackson tgJackson) {
         this.factory = factory;
-        this.provider = provider;
+        this.jacksonEngine = tgJackson;
     }
     
     public static Serialiser createSerialiserWithJackson(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        final Serialiser serialiser = new Serialiser(factory, provider);
-        serialiser.initJacksonEngine(serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
-        return serialiser;
+        final var tgJackson = new TgJackson(factory, provider, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
+        return new Serialiser(factory, tgJackson);
     }
 
     @Override
     public <T> T deserialise(final byte[] content, final Class<T> type, final SerialiserEngines serialiserEngine) {
         if (SerialiserEngines.JACKSON == serialiserEngine) {
-            return tgJackson.deserialise(content, type); 
+            return jacksonEngine.deserialise(content, type);
         }
         throw new SerialisationException("Unsupported serialisation engine.");
     }
@@ -49,7 +42,7 @@ public class Serialiser implements ISerialiser {
     @Override
     public <T> T deserialise(final InputStream content, final Class<T> type, final SerialiserEngines serialiserEngine) {
         if (SerialiserEngines.JACKSON == serialiserEngine) {
-            return tgJackson.deserialise(content, type); 
+            return jacksonEngine.deserialise(content, type);
         }
         throw new SerialisationException("Unsupported serialisation engine.");
     }
@@ -57,7 +50,7 @@ public class Serialiser implements ISerialiser {
     @Override
     public byte[] serialise(final Object obj, final SerialiserEngines serialiserEngine) {
         if (SerialiserEngines.JACKSON == serialiserEngine) {
-            return tgJackson.serialise(obj); 
+            return jacksonEngine.serialise(obj);
         }
         throw new SerialisationException("Unsupported serialisation engine.");
     }
@@ -85,23 +78,18 @@ public class Serialiser implements ISerialiser {
     @Override
     public ISerialiserEngine getEngine(final SerialiserEngines serialiserEngine) {
         if (SerialiserEngines.JACKSON == serialiserEngine) {
-            return tgJackson; 
+            return jacksonEngine;
         }
         throw new SerialisationException("Unsupported serialisation engine.");
     }
 
     public ISerialiser setEngine(final SerialiserEngines serialiserEngine, final ISerialiserEngine engine) {
         if (SerialiserEngines.JACKSON == serialiserEngine) {
-            tgJackson = engine;
+            this.jacksonEngine = engine;
         } else {
             throw new SerialisationException("Unsupported serialisation engine.");
         }
         return this;
     }
     
-    @Override
-    public ISerialiser initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        tgJackson = new TgJackson(factory, provider, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
-        return this;
-    }
 }
