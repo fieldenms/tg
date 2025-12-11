@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.function.LongFunction;
 import java.util.stream.Stream;
 
+import static java.util.Comparator.comparingInt;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -42,14 +43,15 @@ public final class DomainMetadataModelGenerator {
         // f is called with an ID
         record H (Class<?> type, LongFunction<DomainTypeData> f) {}
 
-        final Stream<H> hs = entityTypes.stream().flatMap(entityType -> {
+        // 1. Map each element in `entityTypes` to a `DomainTypeData` instance.
+        final Stream<H> entityHs = entityTypes.stream().flatMap(entityType -> {
             final var em = domainMetadata.forEntity(entityType);
             final List<? extends PropertyMetadata> props = em.properties().stream()
                     .filter(pm -> !pm.name().equals(VERSION) && !pm.type().isCollectional() && !pm.type().isCompositeKey()
                                   && !(pm.isPlain() && em.isPersistent()))
                     .toList();
 
-            final Stream<H> entityTypeS = Stream.of(
+            return Stream.of(
                     new H(entityType, id -> {
                         final var typeTitleAndDesc = getEntityTitleAndDesc(entityType);
                         final Optional<EntityMetadata.Persistent> persistentBase = persistentBaseForSynthetic(em);
@@ -60,38 +62,48 @@ public final class DomainMetadataModelGenerator {
                                               domainMetadata.entityMetadataUtils().compositeKeyMembers(em),
                                               props);
                     }));
-
-            final Stream<H> propsS = props.stream().map(prop -> {
-                final Optional<Class<?>> optPropJavaType = switch (prop.type()) {
-                    case PropertyTypeMetadata.Component it -> Optional.of(it.javaType());
-                    case PropertyTypeMetadata.Primitive it -> Optional.of(it.javaType());
-                    // inherited from old code, not sure why entities with metadata are filtered
-                    case PropertyTypeMetadata.Entity it when domainMetadata.forType(it.javaType()).isEmpty()
-                                                             || !entityTypes.contains(it.javaType())
-                            -> Optional.of(it.javaType());
-                    default -> Optional.empty();
-                };
-                return optPropJavaType.map(propJavaType -> new H(propJavaType, id -> {
-                    final int propsCount = prop.asPersistent().flatMap(propertyInliner::inline)
-                            // ignore single-component composite types; not sure why, but this has been in the old code
-                            .filter(props_ -> !prop.type().isComponent() || props_.size() > 1)
-                            .map(Collection::size)
-                            .orElse(0);
-                    final var subTypeTitleAndDesc = isUnionEntityType(propJavaType)
-                            ? getEntityTitleAndDesc((Class<? extends AbstractUnionEntity>) propJavaType)
-                            : null;
-                    final String title = subTypeTitleAndDesc != null ? subTypeTitleAndDesc.getKey() : propJavaType.getSimpleName();
-                    final String titleDesc = subTypeTitleAndDesc != null ? subTypeTitleAndDesc.getValue() : propJavaType.getSimpleName();
-
-                    return domainTypeData(propJavaType, null, id, propJavaType.getName(), title, false,
-                                          null, titleDesc, propsCount, ImmutableList.of(), ImmutableList.of());
-                }));
-            }).flatMap(Optional::stream);
-
-            return Stream.concat(entityTypeS, propsS);
         });
 
-        return collectToImmutableMap(distinct(hs, H::type),
+        // 2. Map each property from all properties in `entityTypes` to a `DomainTypeData` instance.
+        //    This covers union entities, primitive and component types.
+        final Stream<H> propHs = entityTypes.stream()
+                .map(domainMetadata::forEntity)
+                .map(EntityMetadata::properties)
+                .flatMap(Collection::stream)
+                // Process persistent properties first because correct determination of sub-properties relies on `PropertyInliner`
+                // that expects persistent properties.
+                // E.g., if a property typed with a union, such as `MaintenanceCapable`, is declared in multiple places,
+                // then we should first process the declaration where it is declared persistent.
+                // Other declarations will later be skipped due to `distinct`.
+                .sorted(comparingInt(prop -> prop.isPersistent() ? 0 : 1))
+                .map(prop -> {
+                    final Optional<Class<?>> optPropJavaType = switch (prop.type()) {
+                        case PropertyTypeMetadata.Component it -> Optional.of(it.javaType());
+                        case PropertyTypeMetadata.Primitive it -> Optional.of(it.javaType());
+                        // inherited from old code, not sure why entities with metadata are filtered
+                        case PropertyTypeMetadata.Entity it when domainMetadata.forType(it.javaType()).isEmpty()
+                                                                 || !entityTypes.contains(it.javaType())
+                                -> Optional.of(it.javaType());
+                        default -> Optional.empty();
+                    };
+                    return optPropJavaType.map(propJavaType -> new H(propJavaType, id -> {
+                        final int propsCount = prop.asPersistent().flatMap(propertyInliner::inline)
+                                // ignore single-component composite types; not sure why, but this has been in the old code
+                                .filter(props_ -> !prop.type().isComponent() || props_.size() > 1)
+                                .map(Collection::size)
+                                .orElse(0);
+                        final var subTypeTitleAndDesc = isUnionEntityType(propJavaType)
+                                ? getEntityTitleAndDesc((Class<? extends AbstractUnionEntity>) propJavaType)
+                                : null;
+                        final String title = subTypeTitleAndDesc != null ? subTypeTitleAndDesc.getKey() : propJavaType.getSimpleName();
+                        final String titleDesc = subTypeTitleAndDesc != null ? subTypeTitleAndDesc.getValue() : propJavaType.getSimpleName();
+
+                        return domainTypeData(propJavaType, null, id, propJavaType.getName(), title, false,
+                                              null, titleDesc, propsCount, ImmutableList.of(), ImmutableList.of());
+                    }));
+                }).flatMap(Optional::stream);
+
+        return collectToImmutableMap(distinct(Stream.concat(entityHs, propHs), H::type),
                                      longs(1),
                                      (h, i) -> h.type(),
                                      (h, i) -> h.f().apply(i));
