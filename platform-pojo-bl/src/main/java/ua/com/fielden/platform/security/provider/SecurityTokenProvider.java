@@ -48,7 +48,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.requireAnno
 /// - The location of security tokens given by application properties `tokens.path` and `tokens.package` is scanned.
 /// - Tokens for generated multi-inheritance types are dynamically generated.
 /// - Tokens for synthetic audit-entity types are dynamically generated in package `${tokens.package}.audit`.
-///   Also see [#templatesForAuditedType(Class)].
+///   Also see [#tokensForAuditTypes].
 ///
 /// **A fundamental assumption:** simple class names uniquely identify security tokens and entities.
 ///
@@ -217,7 +217,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     }
 
     /// Provides tokens for audit types corresponding to an audited type.
-    /// This method generates [Template#READ] and [Template#READ_MODEL] tokens for each audit type.
+    /// This method generates [Template#READ] and [Template#READ_MODEL] tokens for each synthetic audit type.
     ///
     /// @param auditedType  the audited type whose audit types should be considered
     /// @param generator  token generator that should be used to generate audit tokens
@@ -230,8 +230,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             final String auditTokensPkgName)
     {
         final var navigator = auditTypeFinder.navigate(auditedType);
-        return navigator.allAuditTypes()
-                .stream()
+        return Stream.of(navigator.synAuditEntityType())
                 .flatMap(auditType -> Stream.of(Template.READ, Template.READ_MODEL)
                         .map(templ -> generator.generateToken(auditType,
                                                               templ,

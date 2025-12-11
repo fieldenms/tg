@@ -4,6 +4,7 @@ import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -150,9 +151,10 @@ public interface IAuditTypeFinder {
 
         /**
          * Returns all persistent audit types.
-         * The result is equivalent to the concatenation of {@link #allAuditEntityTypes()} and {@link #allAuditPropTypes()}.
+         * The result is equivalent to the union of {@link #allAuditEntityTypes()} and {@link #allAuditPropTypes()}.
+         * For convenience, the result is sorted by audit type version ascending (e.g., `Entity_a3t_1`, `Entity_a3t_1_Prop`, `Entity_a3t_2`, ...).
          */
-        Collection<Class<? extends AbstractEntity<?>>> allPersistentAuditTypes();
+        List<Class<? extends AbstractEntity<?>>> allPersistentAuditTypes();
 
         /**
          * Returns all audit types.

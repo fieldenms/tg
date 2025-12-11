@@ -14,11 +14,8 @@ import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * A test case to ensure correct generation of security tokens for audit types.
- *
- * @author TG Team
- */
+/// A test case to ensure correct generation of security tokens for audit types.
+///
 public class AuditSecurityTokensTest {
 
     private final Injector injector = new ApplicationInjectorFactory()
@@ -36,18 +33,18 @@ public class AuditSecurityTokensTest {
             .getInjector();
 
     @Test
-    public void all_audit_types_have_READ_and_READ_MODEL_tokens() {
+    public void synthetic_audit_entity_types_have_READ_and_READ_MODEL_tokens() {
         final var provider = injector.getInstance(ISecurityTokenProvider.class);
         final var auditTypeFinder = injector.getInstance(IAuditTypeFinder.class);
         final var appDomain = injector.getInstance(IApplicationDomainProvider.class);
 
-        final var auditTypes = appDomain.entityTypes()
+        final var synEntityAuditTypes = appDomain.entityTypes()
                 .stream()
                 .filter(AuditUtils::isAudited)
-                .flatMap(auditedType -> auditTypeFinder.navigate(auditedType).allAuditTypes().stream())
+                .map(auditedType -> auditTypeFinder.navigate(auditedType).synAuditEntityType())
                 .toList();
 
-        assertThat(auditTypes)
+        assertThat(synEntityAuditTypes)
                 .allSatisfy(ty -> {
                     assertThat(provider.getTokenByName(Template.READ.forClassName().formatted(ty.getSimpleName())))
                             .isPresent();

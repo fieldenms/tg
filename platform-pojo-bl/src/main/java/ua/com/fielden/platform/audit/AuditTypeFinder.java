@@ -3,20 +3,22 @@ package ua.com.fielden.platform.audit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
-import jakarta.annotation.Nullable;
 import java.util.*;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingLong;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.*;
-import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 
 final class AuditTypeFinder implements IAuditTypeFinder {
 
@@ -239,8 +241,11 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         }
 
         @Override
-        public Collection<Class<? extends AbstractEntity<?>>> allPersistentAuditTypes() {
-            return concatList(_auditEntityTypes, _auditPropTypes);
+        public List<Class<? extends AbstractEntity<?>>> allPersistentAuditTypes() {
+            return Stream.concat(_auditEntityTypes.stream(), _auditPropTypes.stream())
+                    .sorted(comparing(AuditUtils::getAuditTypeVersion)
+                                    .thenComparingInt(type -> AuditUtils.isAuditEntityType(type) ? 0 : 1))
+                    .collect(toImmutableList());
         }
 
         @Override
