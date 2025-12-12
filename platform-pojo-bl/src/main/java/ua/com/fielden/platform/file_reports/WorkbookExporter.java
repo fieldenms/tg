@@ -8,7 +8,6 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -28,7 +27,9 @@ import java.util.zip.Deflater;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static org.apache.commons.lang3.StringUtils.join;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * A set of utility methods for exporting data into MS Excel.
@@ -383,7 +384,7 @@ public class WorkbookExporter {
     private static <M extends AbstractEntity<?>> Map<String, String> determinePropsForHyperlinks(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
         final var propsWithHyperlinks = new HashMap<String, String>();
         final var thisPresent = sheetData.getPropNames().stream().anyMatch(StringUtils::isEmpty);
-        final Optional<String> maybeMainEntityMaster = maybeEntityMasterUrlProvider.flatMap(g -> g.masterUrlFor(entity));
+        final var maybeMainEntityMaster = maybeEntityMasterUrlProvider.flatMap(g -> getMasterUrlFor(entity, g));
         // If the main entity has a master, that master should be used for the hyperlinks.
         if (maybeMainEntityMaster.isPresent()) {
             final var url = maybeMainEntityMaster.get();
@@ -393,14 +394,14 @@ public class WorkbookExporter {
             // key or composite key members should be associated with the main hyperlink
             else {
                 final var entityType = entity.getType();
-                Finder.getKeyMembers(entityType).forEach(field -> {
+                getKeyMembers(entityType).forEach(field -> {
                     final var keyMemberPropName = field.getName();
                     propsWithHyperlinks.put(keyMemberPropName, url);
                     // key members can be composite themselves, which would most likely result in their key members present in the result set
                     // if that is the case, we should associate the main hyperlink with those key members also
-                    if (EntityUtils.isEntityType(field.getType()) && EntityUtils.isCompositeEntity((Class<? extends AbstractEntity<?>>) field.getType())) {
-                        final Class<? extends AbstractEntity<?>> fieldTypeAsEntity = (Class<? extends AbstractEntity<?>>) field.getType();
-                        Finder.getKeyMembers(fieldTypeAsEntity).forEach(subKeyMemberField -> propsWithHyperlinks.put(keyMemberPropName + "." + subKeyMemberField.getName(), url));
+                    if (isEntityType(field.getType()) && isCompositeEntity((Class<? extends AbstractEntity<?>>) field.getType())) {
+                        final var fieldTypeAsEntity = (Class<? extends AbstractEntity<?>>) field.getType();
+                        getKeyMembers(fieldTypeAsEntity).forEach(subKeyMemberField -> propsWithHyperlinks.put(keyMemberPropName + "." + subKeyMemberField.getName(), url));
                     }
                 });
             }
@@ -408,24 +409,49 @@ public class WorkbookExporter {
         // Otherwise, create hyperlinks for an entity-typed key or key members.
         else {
             final var entityType = entity.getType();
-            Finder.getKeyMembers(entityType)
+            getKeyMembers(entityType)
                   .forEach(field -> {
-                      if (EntityUtils.isEntityType(field.getType()) && !entity.proxiedPropertyNames().contains(field.getName())) {
-                          final AbstractEntity<?> keyMemberValue = (AbstractEntity<?>) sheetData.getValue(entity, field.getName());
-                          maybeEntityMasterUrlProvider.flatMap(g -> g.masterUrlFor(keyMemberValue)).ifPresent(url -> {
-                              final var keyMemberPropName = field.getName();
-                              propsWithHyperlinks.put(keyMemberPropName, url);
-                              // key members can be composite themselves, which would most likely result in their key members present in the result set
-                              // if that is the case, we should associate those key members with the URL also
-                              if (EntityUtils.isEntityType(field.getType()) && EntityUtils.isCompositeEntity((Class<? extends AbstractEntity<?>>) field.getType())) {
-                                  final Class<? extends AbstractEntity<?>> fieldTypeAsEntity = (Class<? extends AbstractEntity<?>>) field.getType();
-                                  Finder.getKeyMembers(fieldTypeAsEntity).forEach(subKeyMemberField -> propsWithHyperlinks.put(keyMemberPropName + "." + subKeyMemberField.getName(), url));
-                              }
-                          });
+                      if (isEntityType(field.getType()) && !entity.proxiedPropertyNames().contains(field.getName())) {
+                          final var keyMemberValue = (AbstractEntity<?>) sheetData.getValue(entity, field.getName());
+                          maybeEntityMasterUrlProvider
+                                  .flatMap(g -> getMasterUrlFor(keyMemberValue, g))
+                                  .ifPresent(url -> {
+                                      final var keyMemberPropName = field.getName();
+                                      propsWithHyperlinks.put(keyMemberPropName, url);
+                                      // key members can be composite themselves, which would most likely result in their key members present in the result set
+                                      // if that is the case, we should associate those key members with the URL also
+                                      if (isEntityType(field.getType()) && isCompositeEntity((Class<? extends AbstractEntity<?>>) field.getType())) {
+                                          final var fieldTypeAsEntity = (Class<? extends AbstractEntity<?>>) field.getType();
+                                          getKeyMembers(fieldTypeAsEntity).forEach(subKeyMemberField -> propsWithHyperlinks.put(keyMemberPropName + "." + subKeyMemberField.getName(), url));
+                                      }
+                                  });
                       }
                   });
         }
         return propsWithHyperlinks;
+    }
+
+    /// Returns the URL for the specified entity. This logic accounts for cases where
+    /// the entity participates in a one-to-one or many-to-one association.
+    /// If the specified entity does not have an Entity Master, the associated entity
+    /// is analysed recursively, and the URL of the first associated entity that has
+    /// an Entity Master is returned.
+    ///
+    private static <M extends AbstractEntity<?>> Optional<? extends String> getMasterUrlFor(final M entity, final IEntityMasterUrlProvider g) {
+        return g.masterUrlFor(entity).or(() -> getMasterUrlForAssociatedEntity(entity, g));
+
+    }
+
+    private static <M extends AbstractEntity<?>> Optional<? extends String> getMasterUrlForAssociatedEntity(final M entity, final IEntityMasterUrlProvider g) {
+        if (isOneToOne(entity.getType()) && entity.getKey() != null) {
+            return getMasterUrlFor((AbstractEntity<?>) entity.getKey(), g);
+        } else if (isManyToOne(entity.getType())) {
+            return getKeyMembers(entity.getType()).stream()
+                    .filter(keyField -> isEntityType(keyField.getType()) && isPersistentEntityType(keyField.getType()))
+                    .findFirst()
+                    .flatMap(keyField -> getMasterUrlFor(entity.<AbstractEntity>get(keyField.getName()), g));
+        }
+        return Optional.empty();
     }
 
     private static List<? extends AbstractEntity<?>> createShortCollection(final Collection<AbstractEntity<?>> collection, final String keyToInclude) {
@@ -439,13 +465,13 @@ public class WorkbookExporter {
                 .findFirst()
                 .map(firstElem -> {
                     final Class<?> elementType = firstElem.getClass();
-                    final boolean isShortCollection = EntityUtils.isEntityType(elementType) &&
-                            EntityUtils.isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
-                            Finder.getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).size() == 2 &&
-                            Finder.getKeyMembers((Class<? extends AbstractEntity<?>>)elementType).stream().allMatch(field -> EntityUtils.isEntityType(field.getType()));
+                    final boolean isShortCollection = isEntityType(elementType) &&
+                            isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
+                            getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).size() == 2 &&
+                            getKeyMembers((Class<? extends AbstractEntity<?>>)elementType).stream().allMatch(field -> isEntityType(field.getType()));
                     if (isShortCollection) {
                         final AbstractEntity<?> firstEntity = (AbstractEntity<?>) firstElem;
-                        final List<String> keyProps = Finder.getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).stream().map(Field::getName).toList();
+                        final List<String> keyProps = getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).stream().map(Field::getName).toList();
                         final Object key1 = firstEntity.get(keyProps.get(0));
                         final Object key2 = firstEntity.get(keyProps.get(1));
                         if (collection.stream().filter(Objects::nonNull).allMatch(elem -> EntityUtils.equalsEx(((AbstractEntity<?>) elem).get(keyProps.getFirst()), key1))) {

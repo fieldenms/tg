@@ -808,6 +808,51 @@ public class EntityUtilsTest {
         assertFalse(isActivatablePersistentEntityType(null));
     }
 
+    @Test
+    public void isOneToOne_returns_false_for_entity_with_simple_key() {
+        assertFalse(isOneToOne(TgVehicle.class));
+    }
+
+    @Test
+    public void isOneToOne_returns_false_for_null_entity_type() {
+        assertFalse(isOneToOne(null));
+    }
+
+    @Test
+    public void isOneToOne_returns_true_for_entity_with_entity_key() {
+        assertTrue(isOneToOne(TgVehicleFinDetails.class));
+    }
+
+    @Test
+    public void isManyToOne_returns_false_for_entity_with_simple_key_type() {
+        assertFalse(isManyToOne(TgVehicle.class));
+    }
+
+    @Test
+    public void isManyToOne_returns_false_for_entity_with_entity_key_type() {
+        assertFalse(isManyToOne(TgVehicleFinDetails.class));
+    }
+
+    @Test
+    public void isManyToOne_returns_false_for_entity_with_dynamic_key_but_without_entity_part() {
+        assertFalse(isManyToOne(TgTimesheet.class));
+    }
+
+    @Test
+    public void isManyToOne_returns_false_for_entity_with_dynamic_key_that_has_two_entity_parts() {
+        assertFalse(isManyToOne(TeFuelUsageByType.class));
+    }
+
+    @Test
+    public void isManyToOne_returns_false_for_null_entity_tpe() {
+        assertFalse(isManyToOne(null));
+    }
+
+    @Test
+    public void isManyToOne_returns_true_for_entity_with_dynamic_key_and_only_one_entity_typed_key() {
+        assertTrue(isManyToOne(TgFuelUsage.class));
+    }
+
     /**
      * A helper factory method for generating a new type based on {@code baseType} with the {@code maxNestedLevels} of nesting (i.e., a new type gets generated based on the previously generated type sequentially).  
      *
