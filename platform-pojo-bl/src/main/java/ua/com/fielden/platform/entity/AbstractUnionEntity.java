@@ -17,7 +17,6 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.reflection.exceptions.ReflectionException.requireNotNullArgument;
@@ -53,7 +52,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     /// **Note**: This method is for platform use only.
     ///
     public final void ensureUnion(final String propertyName) {
-        if (!isEmpty(activePropertyName)) {
+        if (activePropertyName != null) {
             throw new EntityException(ERR_UNION_PROPERTY_ALREADY_HAS_VALUE.formatted(propertyName, getType().getSimpleName(),  activePropertyName));
         }
         activePropertyName = propertyName;
@@ -100,9 +99,9 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     }
 
     private void ensureActiveProperty() {
-        if (isEmpty(activePropertyName)) {
+        if (activePropertyName == null) {
             activePropertyName = getNameOfAssignedUnionProperty();
-            if (isEmpty(activePropertyName)) {
+            if (activePropertyName == null) {
                 throw new EntityException(ERR_ACTIVE_PROPERTY_NOT_DETERMINED.formatted(getType().getSimpleName()));
             }
         }
@@ -173,7 +172,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         final var propName = unionPropertyNameByType((Class<? extends AbstractUnionEntity>) this.getType(), value.getType())
                 .orElseThrow(() -> new EntityException(ERR_NO_MATCHING_PROP_TYPE.formatted(value.getType().getSimpleName())));
 
-        if (!isEmpty(activePropertyName)) {
+        if (activePropertyName != null) {
             throw new EntityException(ERR_UNION_PROPERTY_ALREADY_HAS_VALUE.formatted(propName, getType().getSimpleName(),  activePropertyName));
         }
         // Property setter should be used to trigger the assignment logic.
