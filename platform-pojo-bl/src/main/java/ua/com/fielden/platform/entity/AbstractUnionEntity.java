@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -145,23 +146,23 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
                 .orElse(null);
     }
 
-    /// A convenient method to obtain the value of an active property. Returns null if all properties are null.
+    /// Returns the value of the assigned union property, as determined by [#activePropertyName()].
+    /// If none of the union properties are assigned, returns `null`.
     ///
-    public final AbstractEntity<?> activeEntity() {
+    public final @Nullable AbstractEntity<?> activeEntity() {
         final var prop = activePropertyName();
         return prop == null ? null : get(prop);
     }
 
-    /// A convenient method for setting a union property to a non-null value.
-    /// It should only be used on union entity instances that do not yet have an active union-property.
+    /// A convenient method for assigning a non-null value to a union property.
+    /// It should only be used on union entity instances that do not yet have an assigned union property.
     ///
-    ///
-    /// This method looks for an appropriate union-property based on the type of `value`, which gets assigned to that property.
-    /// If no appropriate union-property is found, exception [EntityException] is thrown.
+    /// This method looks for an appropriate union property based on the type of `value`, which gets assigned to that property.
+    /// If no appropriate union property is found, exception [EntityException] is thrown.
     ///
     /// @param value a non-null value
     /// @return an instance of this union entity
-    /// @param <T> a type of the union entity as a convenience for method chaining
+    /// @param <T> the type of this union entity for convenient method chaining
     ///
     public final <T extends AbstractUnionEntity> T setUnionProperty(@Nonnull final AbstractEntity<?> value) {
         if (value == null) {
@@ -186,7 +187,10 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         return Finder.commonPropertiesForUnion(type);
     }
 
-    public String activePropertyName() {
+    /// Returns the name of the assigned union property.
+    /// If none of the union properties are assigned, returns `null`.
+    ///
+    public @Nullable String activePropertyName() {
         // If instrumented, `activePropertyName` will be assigned during interception of setters.
         // Otherwise, eagerly look for the assigned union member.
         return isInstrumented() ? activePropertyName : getNameOfAssignedUnionProperty();
