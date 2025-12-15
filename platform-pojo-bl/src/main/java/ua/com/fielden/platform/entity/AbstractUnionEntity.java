@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
+import ua.com.fielden.platform.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -41,8 +42,14 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
                                ERR_NULL_IS_NOT_ACCEPTABLE = "Null is not a valid value for union-properties (union entity [%s]).",
                                ERR_MISSING_ACTIVE_PROP_TO_CHECK_MEMBERSHIP = "Active property cannot be null when checking for membership in [%s].";
 
-    /// If this entity is instrumented, represents the name of the assigned union member.
-    /// Otherwise, constantly `null`.
+    /// Represents the name of the assigned union member.
+    ///
+    /// This field should be initialised only once, and this may happen in several places:
+    /// * Instantiation of query results by the EQL engine, where [#getId] may be called indirectly, which in turns calls [#ensureActiveProperty].
+    /// * [ObservableMutatorInterceptor] calls [#ensureUnion].
+    ///
+    /// For uninstrumented union entities, this field may never be initialised.
+    /// Therefore, [#activePropertyName()] has a fallback that performs eager search.
     ///
     private String activePropertyName;
 
