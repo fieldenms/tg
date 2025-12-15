@@ -77,8 +77,6 @@ public class AbstractUnionEntityRetrievalTest extends AbstractDaoTestCase {
         }
     }
 
-    // a
-
     @Test
     public void if_union_is_retrieved_instrumented_inside_another_entity_activeEntity_returns_the_value_of_the_assigned_member() {
         {
