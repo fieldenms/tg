@@ -124,7 +124,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         }
 
         final IEntityDao unionMemberCo = coFinder.find(unionMemberValue.getType());
-        final Optional<Result> existenceCheckResult = unionMemberValue instanceof ActivatableAbstractEntity<?> activatableUnionMemberValue && isActivatableUnionMember(entity, property, unionEntity, unionCo)
+        final Optional<Result> existenceCheckResult = unionMemberValue instanceof ActivatableAbstractEntity<?> activatableUnionMemberValue && isActivatableUnionMember(entity, property, unionEntity)
                 ? checkExistenceForActivatable(entity, activatableUnionMemberValue, unionMemberCo)
                 : checkExistenceWithoutActive(entity, unionMemberValue, unionMemberCo);
 
@@ -173,11 +173,10 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     private static <U extends AbstractUnionEntity> boolean isActivatableUnionMember(
             final AbstractEntity<?> entity,
             final CharSequence property,
-            final U union,
-            final IEntityDao<U> unionCo)
+            final U union)
     {
         return isActivatableProperty(entity.getType(), property)
-               || isActivatableProperty(union.getType(), instrument(union, unionCo).activePropertyName());
+               || isActivatableProperty(union.getType(), union.activePropertyName());
     }
 
     private <V extends AbstractEntity<?>> Optional<Result> checkExistenceWithoutActive(

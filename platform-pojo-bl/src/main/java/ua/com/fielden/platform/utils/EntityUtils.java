@@ -821,8 +821,6 @@ public class EntityUtils {
     ///
     /// This method is a utility to perform instrumentation for uninstrumented values.
     ///
-    /// TODO Instrumentation will no longer be necessary after #2466.
-    ///
     public static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityInstantiator<U> instantiator) {
         return unionEntity.isInstrumented()
                ? unionEntity
