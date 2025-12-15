@@ -14,12 +14,12 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Stream;
 
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.reflection.exceptions.ReflectionException.requireNotNullArgument;
 
 /// A base class for implementing synthetic entities to be used for modelling situations where a property of some entity can be of multiple types,
@@ -49,6 +49,8 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     /// Enforces union rule: only one property can be set and only once from the moment of union entity instantiation.
     /// Such property drives values for properties `id`, `key` and `desc`.
+    ///
+    /// **Note**: This method is for platform use only.
     ///
     public final void ensureUnion(final String propertyName) {
         if (!isEmpty(activePropertyName)) {
@@ -135,30 +137,20 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     }
 
     private String getNameOfAssignedUnionProperty() {
-        final List<Field> fields = findRealProperties(getType());
-        for (final Field field : fields) {
-            field.setAccessible(true);
-            try {
-                if (field.get(this) != null) {
-                    return field.getName();
-                }
-            } catch (final Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        return null;
+        return unionProperties((Class<? extends AbstractUnionEntity>) getType())
+                .stream()
+                .map(Field::getName)
+                .filter(prop -> !isPropertyProxied(this, prop))
+                .filter(prop -> get(prop) != null)
+                .findFirst()
+                .orElse(null);
     }
 
     /// A convenient method to obtain the value of an active property. Returns null if all properties are null.
     ///
     public final AbstractEntity<?> activeEntity() {
-        final Stream<String> propertyNames = streamRealProperties(getType()).map(Field::getName);
-
-        return propertyNames
-                .filter(propName -> !Reflector.isPropertyProxied(this, propName) && get(propName) != null)
-                .findFirst() // returns Optional
-                .map(propName -> (AbstractEntity<?>) get(propName)) // map optional propName value to an actual property value
-                .orElse(null); // return the property value or null if there was no matching propName
+        final var prop = activePropertyName();
+        return prop == null ? null : get(prop);
     }
 
     /// A convenient method for setting a union property to a non-null value.
