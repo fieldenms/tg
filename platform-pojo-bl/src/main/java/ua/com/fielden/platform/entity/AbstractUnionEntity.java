@@ -18,7 +18,6 @@ import java.util.*;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
-import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.reflection.exceptions.ReflectionException.requireNotNullArgument;
 
@@ -165,23 +164,20 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     /// @param <T> a type of the union entity as a convenience for method chaining
     ///
     public final <T extends AbstractUnionEntity> T setUnionProperty(@Nonnull final AbstractEntity<?> value) {
-        // If null is being assigned then we only need to clear the active union property, if it exists.
         if (value == null) {
             throw new EntityException(ERR_NULL_IS_NOT_ACCEPTABLE.formatted(getType().getSimpleName()));
         }
+
         // A non-null value can only be assigned if it matches one of the union properties by type.
-        final Optional<Field> maybeMatchingProp = streamRealProperties(getType()).filter(field -> field.getType().equals(value.getType())).findFirst();
-        if (maybeMatchingProp.isPresent()) {
-            final String propertyName = maybeMatchingProp.get().getName();
-            if (!isEmpty(activePropertyName)) {
-                throw new EntityException(ERR_UNION_PROPERTY_ALREADY_HAS_VALUE.formatted(propertyName, getType().getSimpleName(),  activePropertyName));
-            }
-            // property setter should be used to trigger the assignment logic
-            this.set(propertyName, value);
-            return (T) this;
+        final var propName = unionPropertyNameByType((Class<? extends AbstractUnionEntity>) this.getType(), value.getType())
+                .orElseThrow(() -> new EntityException(ERR_NO_MATCHING_PROP_TYPE.formatted(value.getType().getSimpleName())));
+
+        if (!isEmpty(activePropertyName)) {
+            throw new EntityException(ERR_UNION_PROPERTY_ALREADY_HAS_VALUE.formatted(propName, getType().getSimpleName(),  activePropertyName));
         }
-        // If no matching union property is found, we throw an exception.
-        throw new EntityException(ERR_NO_MATCHING_PROP_TYPE.formatted(value.getType().getSimpleName()));
+        // Property setter should be used to trigger the assignment logic.
+        this.set(propName, value);
+        return (T) this;
     }
 
     /// Returns a set of property names that are common to all members of the specified union type.
