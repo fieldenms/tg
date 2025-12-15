@@ -383,75 +383,108 @@ public class WorkbookExporter {
      */
     private static <M extends AbstractEntity<?>> Map<String, String> determinePropsForHyperlinks(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
         final var propsWithHyperlinks = new HashMap<String, String>();
-        final var thisPresent = sheetData.getPropNames().stream().anyMatch(StringUtils::isEmpty);
         final var maybeMainEntityMaster = maybeEntityMasterUrlProvider.flatMap(g -> getMasterUrlFor(entity, g));
-        // If the main entity has a master, that master should be used for the hyperlinks.
+
         if (maybeMainEntityMaster.isPresent()) {
-            final var url = maybeMainEntityMaster.get();
-            if (thisPresent) {
-                propsWithHyperlinks.put("", url);
+            if (sheetData.getPropNames().stream().anyMatch(StringUtils::isEmpty)) { // is 'this' property present?
+                propsWithHyperlinks.put("", maybeMainEntityMaster.get());
             }
-            // key or composite key members should be associated with the main hyperlink
-            else {
-                final var entityType = entity.getType();
-                getKeyMembers(entityType).forEach(field -> {
-                    final var keyMemberPropName = field.getName();
-                    propsWithHyperlinks.put(keyMemberPropName, url);
-                    // key members can be composite themselves, which would most likely result in their key members present in the result set
-                    // if that is the case, we should associate the main hyperlink with those key members also
-                    if (isEntityType(field.getType()) && isCompositeEntity((Class<? extends AbstractEntity<?>>) field.getType())) {
-                        final var fieldTypeAsEntity = (Class<? extends AbstractEntity<?>>) field.getType();
-                        getKeyMembers(fieldTypeAsEntity).forEach(subKeyMemberField -> propsWithHyperlinks.put(keyMemberPropName + "." + subKeyMemberField.getName(), url));
-                    }
+            if (propsWithHyperlinks.isEmpty()) {
+                getFirstPresentKeyProperty(entity.getType(), sheetData).ifPresent(presentKeyMember -> {
+                    propsWithHyperlinks.put(presentKeyMember, maybeMainEntityMaster.get());
                 });
             }
-        }
-        // Otherwise, create hyperlinks for an entity-typed key or key members.
-        else {
-            final var entityType = entity.getType();
-            getKeyMembers(entityType)
-                  .forEach(field -> {
-                      if (isEntityType(field.getType()) && !entity.proxiedPropertyNames().contains(field.getName())) {
-                          final var keyMemberValue = (AbstractEntity<?>) sheetData.getValue(entity, field.getName());
-                          maybeEntityMasterUrlProvider
-                                  .flatMap(g -> getMasterUrlFor(keyMemberValue, g))
-                                  .ifPresent(url -> {
-                                      final var keyMemberPropName = field.getName();
-                                      propsWithHyperlinks.put(keyMemberPropName, url);
-                                      // key members can be composite themselves, which would most likely result in their key members present in the result set
-                                      // if that is the case, we should associate those key members with the URL also
-                                      if (isEntityType(field.getType()) && isCompositeEntity((Class<? extends AbstractEntity<?>>) field.getType())) {
-                                          final var fieldTypeAsEntity = (Class<? extends AbstractEntity<?>>) field.getType();
-                                          getKeyMembers(fieldTypeAsEntity).forEach(subKeyMemberField -> propsWithHyperlinks.put(keyMemberPropName + "." + subKeyMemberField.getName(), url));
-                                      }
-                                  });
-                      }
-                  });
+            if (propsWithHyperlinks.isEmpty()) {
+                getFirstPresentSubKeyProperty(entity.getType(), sheetData).ifPresent(presentSubKeyMember -> {
+                    propsWithHyperlinks.put(presentSubKeyMember, maybeMainEntityMaster.get());
+                });
+            }
+        } else {
+            if (propsWithHyperlinks.isEmpty()) {
+                getFirstPresentKeyValue(entity, sheetData, maybeEntityMasterUrlProvider).ifPresent(presentKeyUrl -> {
+                    propsWithHyperlinks.put(presentKeyUrl._1, presentKeyUrl._2);
+                });
+            }
+            if (propsWithHyperlinks.isEmpty()) {
+                getFirstPresentSubKeyValue(entity, sheetData, maybeEntityMasterUrlProvider).ifPresent(presentKeyUrl -> {
+                    propsWithHyperlinks.put(presentKeyUrl._1, presentKeyUrl._2);
+                });
+            }
         }
         return propsWithHyperlinks;
     }
 
-    /// Returns the URL for the specified entity. This logic accounts for cases where
-    /// the entity participates in a one-to-one or many-to-one association.
-    /// If the specified entity does not have an Entity Master, the associated entity
-    /// is analysed recursively, and the URL of the first associated entity that has
-    /// an Entity Master is returned.
-    ///
-    private static <M extends AbstractEntity<?>> Optional<? extends String> getMasterUrlFor(final M entity, final IEntityMasterUrlProvider g) {
-        return g.masterUrlFor(entity).or(() -> getMasterUrlForAssociatedEntity(entity, g));
+    private static <M extends AbstractEntity<?>> Optional<T2<String, String>> getFirstPresentSubKeyValue(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
+        return getKeyMembersWithMaster(entity, sheetData, maybeEntityMasterUrlProvider).stream()
+                .<T2<String, String>>mapMulti((keyFieldPair, consumer) -> {
+                    if (isCompositeEntity((Class<? extends AbstractEntity<?>>) keyFieldPair._1.getType())) {
+                        getKeyMembers((Class<AbstractEntity<?>>)keyFieldPair._1.getType())
+                                .stream()
+                                .map(subKeyField -> keyFieldPair._1.getName() + "." + subKeyField.getName())
+                                .filter(subKeyDotNotation -> isPropertyPresent(subKeyDotNotation, sheetData))
+                                .findFirst().ifPresent(keyProp -> consumer.accept(T2.t2(keyProp, keyFieldPair._2)));
+                    }
+                })
+                .findFirst();
 
     }
 
-    private static <M extends AbstractEntity<?>> Optional<? extends String> getMasterUrlForAssociatedEntity(final M entity, final IEntityMasterUrlProvider g) {
-        if (isOneToOne(entity.getType()) && entity.getKey() != null) {
+    private static <M extends AbstractEntity<?>> Optional<T2<String, String>> getFirstPresentKeyValue(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
+        return getKeyMembersWithMaster(entity, sheetData, maybeEntityMasterUrlProvider).stream()
+                .<T2<String, String>>mapMulti((t2, consumer) -> {
+                    if (isPropertyPresent(t2._1.getName(), sheetData)) {
+                        consumer.accept(T2.t2(t2._1.getName(), t2._2));
+                    }
+                }).findFirst();
+    }
+
+    private static <M extends AbstractEntity<?>> List<T2<Field, String>> getKeyMembersWithMaster(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
+        return getKeyMembers(entity.getType()).stream()
+                .<T2<Field, String>>mapMulti((keyField, consumer) -> {
+                    if(isEntityType(keyField.getType()) && !entity.proxiedPropertyNames().contains(keyField.getName())) {
+                        final var keyMemberValue = (AbstractEntity<?>) sheetData.getValue(entity, keyField.getName());
+                        maybeEntityMasterUrlProvider.flatMap(g -> getMasterUrlFor(keyMemberValue, g))
+                                .ifPresent(url -> consumer.accept(T2.t2(keyField, url)));
+                    }
+                })
+                .toList();
+    }
+
+    private static <M extends AbstractEntity<?>> Optional<String> getFirstPresentSubKeyProperty(final Class<? extends AbstractEntity<?>> type, final DataForWorkbookSheet<M> sheetData) {
+        return getKeyMembers(type).stream()
+                .filter(keyField -> isEntityType(keyField.getType()) && isCompositeEntity((Class<? extends AbstractEntity<?>>) keyField.getType()))
+                .flatMap(entityKeyFiled -> getKeyMembers((Class<AbstractEntity<?>>)entityKeyFiled.getType())
+                        .stream()
+                        .map(subKeyField -> entityKeyFiled.getName() + "." + subKeyField.getName()))
+                .filter(subKeyDotNotation -> isPropertyPresent(subKeyDotNotation, sheetData))
+                .findFirst();
+    }
+
+    private static <M extends AbstractEntity<?>> Optional<String> getFirstPresentKeyProperty(final Class<? extends AbstractEntity<?>> type, final DataForWorkbookSheet<M> sheetData) {
+        return getKeyMembers(type).stream()
+                .<String>mapMulti((keyField, consumer) -> {
+                    if (isPropertyPresent(keyField.getName(), sheetData)) {
+                        consumer.accept(keyField.getName());
+                    }
+                })
+                .findFirst();
+    }
+
+    private static <M extends AbstractEntity<?>> boolean isPropertyPresent(String propertyName, final DataForWorkbookSheet<M> sheetData) {
+        return sheetData.getPropNames().indexOf(propertyName) >= 0;
+    }
+
+    /// Returns the URL for the specified entity.
+    /// This logic accounts for a one-to-one relationship where one entity
+    /// acts as an extension of another and cannot exist independently.
+    /// If the specified entity is part of such a relationship, the URL of the master entity is returned;
+    /// otherwise, the URL of the specified entity’s master is returned.
+    private static <M extends AbstractEntity<?>> Optional<String> getMasterUrlFor(final M entity, final IEntityMasterUrlProvider g) {
+        if (entity != null && isOneToOne(entity.getType())) {
             return getMasterUrlFor((AbstractEntity<?>) entity.getKey(), g);
-        } else if (isManyToOne(entity.getType())) {
-            return getKeyMembers(entity.getType()).stream()
-                    .filter(keyField -> isEntityType(keyField.getType()) && isPersistentEntityType(keyField.getType()))
-                    .findFirst()
-                    .flatMap(keyField -> getMasterUrlFor(entity.<AbstractEntity>get(keyField.getName()), g));
         }
-        return Optional.empty();
+        return g.masterUrlFor(entity);
+
     }
 
     private static List<? extends AbstractEntity<?>> createShortCollection(final Collection<AbstractEntity<?>> collection, final String keyToInclude) {
