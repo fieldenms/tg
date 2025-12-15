@@ -603,13 +603,6 @@ public class EntityUtils {
         return isPersistentEntityType(keyType);
     }
 
-    /// Determines if entity type represents many-2-one entity (e.g. Timesheet for Person).
-    ///
-    public static boolean isManyToOne(@Nullable final Class<? extends AbstractEntity<?>> entityType) {
-        return entityType != null && getKeyMembers(entityType).stream().filter(propField -> isEntityType(propField.getType()) && isPersistentEntityType(propField.getType())).limit(2).count() == 1;
-
-    }
-
     /**
      * Identifies whether an entity type represents a composite entity.
      *
