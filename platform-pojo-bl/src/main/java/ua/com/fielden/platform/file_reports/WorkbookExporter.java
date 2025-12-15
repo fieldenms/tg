@@ -385,26 +385,35 @@ public class WorkbookExporter {
         final var propsWithHyperlinks = new HashMap<String, String>();
         final var maybeMainEntityMaster = maybeEntityMasterUrlProvider.flatMap(g -> getMasterUrlFor(entity, g));
 
-        if (maybeMainEntityMaster.isPresent()) {
-            if (sheetData.getPropNames().stream().anyMatch(StringUtils::isEmpty)) { // is 'this' property present?
+        if (maybeMainEntityMaster.isPresent()) { // If the URL for the given entity is present
+            // If 'this' property is present, set the URL for it.
+            if (sheetData.getPropNames().stream().anyMatch(StringUtils::isEmpty)) {
                 propsWithHyperlinks.put("", maybeMainEntityMaster.get());
             }
+            // If the URL has not been set for any property yet,
+            // set it for the first key member present in the export data sheet.
             if (propsWithHyperlinks.isEmpty()) {
                 getFirstPresentKeyProperty(entity.getType(), sheetData).ifPresent(presentKeyMember -> {
                     propsWithHyperlinks.put(presentKeyMember, maybeMainEntityMaster.get());
                 });
             }
+            // If the URL has not been set for any property yet,
+            // set it for the first sub-key member of the key member
+            // that is present in the export data sheet.
             if (propsWithHyperlinks.isEmpty()) {
                 getFirstPresentSubKeyProperty(entity.getType(), sheetData).ifPresent(presentSubKeyMember -> {
                     propsWithHyperlinks.put(presentSubKeyMember, maybeMainEntityMaster.get());
                 });
             }
-        } else {
-            if (propsWithHyperlinks.isEmpty()) {
-                getFirstPresentKeyValue(entity, sheetData, maybeEntityMasterUrlProvider).ifPresent(presentKeyUrl -> {
-                    propsWithHyperlinks.put(presentKeyUrl._1, presentKeyUrl._2);
-                });
-            }
+        } else { // If the given entity has no associated URL
+            // Find the first entity key member that is present in the export data
+            // and has an entity master, then generate and set its URL.
+            getFirstPresentKeyValue(entity, sheetData, maybeEntityMasterUrlProvider).ifPresent(presentKeyUrl -> {
+                propsWithHyperlinks.put(presentKeyUrl._1, presentKeyUrl._2);
+            });
+            // If no key members are present in the export data,
+            // find the first sub-key member of the first composite key member that has an entity master,
+            // and then set the URL for that composite key member.
             if (propsWithHyperlinks.isEmpty()) {
                 getFirstPresentSubKeyValue(entity, sheetData, maybeEntityMasterUrlProvider).ifPresent(presentKeyUrl -> {
                     propsWithHyperlinks.put(presentKeyUrl._1, presentKeyUrl._2);
@@ -478,7 +487,7 @@ public class WorkbookExporter {
     /// This logic accounts for a one-to-one relationship where one entity
     /// acts as an extension of another and cannot exist independently.
     /// If the specified entity is part of such a relationship, the URL of the master entity is returned;
-    /// otherwise, the URL of the specified entity’s master is returned.
+    /// otherwise, the URL of the specified entity is returned.
     private static <M extends AbstractEntity<?>> Optional<String> getMasterUrlFor(final M entity, final IEntityMasterUrlProvider g) {
         if (entity != null && isOneToOne(entity.getType())) {
             return getMasterUrlFor((AbstractEntity<?>) entity.getKey(), g);
