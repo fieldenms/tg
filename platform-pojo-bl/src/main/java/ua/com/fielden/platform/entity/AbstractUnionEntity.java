@@ -42,7 +42,9 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
                                ERR_NULL_IS_NOT_ACCEPTABLE = "Null is not a valid value for union-properties (union entity [%s]).",
                                ERR_MISSING_ACTIVE_PROP_TO_CHECK_MEMBERSHIP = "Active property cannot be null when checking for membership in [%s].";
 
-    /// Points out the name of a non-null property.
+    /// If this entity is instrumented, represents the name of the assigned union member.
+    /// Otherwise, constantly `null`.
+    ///
     private String activePropertyName;
 
     /// Enforces union rule: only one property can be set and only once from the moment of union entity instantiation.
@@ -197,7 +199,9 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     }
 
     public String activePropertyName() {
-        return activePropertyName;
+        // If instrumented, `activePropertyName` will be assigned during interception of setters.
+        // Otherwise, eagerly look for the assigned union member.
+        return isInstrumented() ? activePropertyName : getNameOfAssignedUnionProperty();
     }
 
     /// Returns a list of properties that represent the members of the specified union type.
