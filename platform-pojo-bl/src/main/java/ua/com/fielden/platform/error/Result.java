@@ -348,9 +348,9 @@ public class Result extends RuntimeException {
         }
 
         int result = 1;
-        result = 31 * result + (ex == null ? 0 : (ex.getClass().hashCode() + (ex.getMessage() != null ? ex.getMessage().hashCode() : 0)));
-        result = 31 * result + (message == null ? 0 : message.hashCode());
-        result = 31 * result + (instance == null ? 0 : instance.hashCode());
+        result = 31 * result + (ex == null ? 0 : (ex.getClass().hashCode() + Objects.hash(ex.getMessage())));
+        result = 31 * result + Objects.hashCode(message);
+        result = 31 * result + Objects.hashCode(instance);
         return result;
     }
 
@@ -361,19 +361,14 @@ public class Result extends RuntimeException {
     ///
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Result)) {
-            return false;
-        }
-
-        final Result that = (Result) obj;
-        return (this.ex == null && that.ex == null ||
-                (this.ex != null && that.ex != null && Objects.equals(this.ex.getClass(), that.ex.getClass()) && Objects.equals(this.ex.getMessage(), that.ex.getMessage()))) &&
-               Objects.equals(this.message, that.message) &&
-               Objects.equals(this.instance, that.instance);
+        return this == obj
+               || obj instanceof Result that
+                  && Objects.equals(this.message, that.message)
+                  && (this.ex == null && that.ex == null
+                      || (this.ex != null && that.ex != null
+                          && Objects.equals(this.ex.getClass(), that.ex.getClass())
+                          && Objects.equals(this.ex.getMessage(), that.ex.getMessage())))
+                  && Objects.equals(this.instance, that.instance);
     }
 
     /// Returns a pair of messages, short and extended, associated with `result`.
