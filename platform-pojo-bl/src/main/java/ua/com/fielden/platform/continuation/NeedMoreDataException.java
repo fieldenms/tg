@@ -37,7 +37,7 @@ public class NeedMoreDataException extends Result {
         final Optional<T> maybeContinuation,
         final String continuationProperty)
     {
-        super(maybeContinuation.orElse(null), customMessage);
+        super(maybeContinuation.orElse(null), customMessage, null, false);
         this.maybeContinuation = maybeContinuation;
         this.continuationType = (Class<T>) stripIfNeeded(continuationType);
         this.continuationTypeStr = this.continuationType.getName();
