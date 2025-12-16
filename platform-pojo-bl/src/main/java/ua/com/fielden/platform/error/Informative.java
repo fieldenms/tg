@@ -24,7 +24,7 @@ public class Informative extends Result {
 
     @Override
     public Informative copyWith(final Object anotherInstance) {
-        return new Informative(anotherInstance, getMessage());
+        return new Informative(anotherInstance, message);
     }
 
 }

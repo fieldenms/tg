@@ -24,7 +24,7 @@ public class Warning extends Result {
 
     @Override
     public Warning copyWith(final Object anotherInstance) {
-        return new Warning(anotherInstance, getMessage());
+        return new Warning(anotherInstance, message);
     }
 
 }

@@ -34,9 +34,9 @@ public class Result extends RuntimeException {
     private static final String EXT_SEPARATOR = "<extended/>";
     private static final String EXT_SEPARATOR_PATTERN = quote(EXT_SEPARATOR);
 
-    private final Exception ex;
-    private final String message;
-    private final Object instance;
+    protected final Exception ex;
+    protected final String message;
+    protected final Object instance;
 
     ///////////////////////////////////////////// Successful /////////////////////////////////////////////
 
