@@ -293,4 +293,27 @@ public class ResultTestCase {
         assertThat(infof.getStackTrace()).isEmpty();;
     }
 
+    @Test
+    public void copyWith_copies_the_stack_trace() {
+        final var failure = failure("We underwent upgrade.");
+        assertThat(failure.getStackTrace()).isNotEmpty();
+        final var failureCopy = failure.copyWith(40);
+        assertThat(failureCopy.getStackTrace()).isNotEmpty();
+
+        final var success = successful();
+        assertThat(success.getStackTrace()).isEmpty();
+        final var successCopy = success.copyWith(40);
+        assertThat(successCopy.getStackTrace()).isEmpty();
+
+        final var warning = warning("We underwent upgrade.");
+        assertThat(warning.getStackTrace()).isEmpty();
+        final var warningCopy = warning.copyWith(40);
+        assertThat(warningCopy.getStackTrace()).isEmpty();
+
+        final var info = informative("We underwent upgrade.");
+        assertThat(info.getStackTrace()).isEmpty();
+        final var infoCopy = info.copyWith(40);
+        assertThat(infoCopy.getStackTrace()).isEmpty();
+    }
+
 }
