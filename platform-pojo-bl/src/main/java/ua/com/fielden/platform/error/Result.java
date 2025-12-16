@@ -298,8 +298,10 @@ public class Result extends RuntimeException {
 
     /// Returns a copy of this result, replacing the contained value by `anotherInstance`.
     ///
+    /// Subclasses that override the behaviour of capturing a stack trace should also override this method.
+    ///
     public Result copyWith(final Object anotherInstance) {
-        return new Result(anotherInstance, message, ex);
+        return new Result(anotherInstance, message, ex, !isSuccessful());
     }
 
     public boolean isSuccessful() {

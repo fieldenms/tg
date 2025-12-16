@@ -22,4 +22,10 @@ public class Informative extends Result {
     public Informative(final Object instance, final String message) {
         super(instance, message, null, false);
     }
+
+    @Override
+    public Informative copyWith(final Object anotherInstance) {
+        return new Informative(anotherInstance, getMessage());
+    }
+
 }

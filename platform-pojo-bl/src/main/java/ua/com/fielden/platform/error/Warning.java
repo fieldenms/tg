@@ -22,4 +22,10 @@ public class Warning extends Result {
     public Warning(final Object instance, final String message) {
         super(instance, message, null, false);
     }
+
+    @Override
+    public Warning copyWith(final Object anotherInstance) {
+        return new Warning(anotherInstance, getMessage());
+    }
+
 }
