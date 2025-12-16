@@ -36,20 +36,6 @@ public class Result extends RuntimeException {
     private final String message;
     private final Object instance;
 
-    /// Mainly used for serialisation.
-    ///
-    protected Result() {
-        ex = null;
-        message = null;
-        instance = null;
-    }
-
-    private Result(final Object instance, final String message, final Exception exception) {
-        this.instance = instance;
-        this.message = message;
-        this.ex = exception;
-    }
-
     ///////////////////////////////////////////// Successful /////////////////////////////////////////////
 
     /// Returns an empty successful result.
@@ -194,6 +180,8 @@ public class Result extends RuntimeException {
         return new Result(instance, exception);
     }
 
+    ///////////////////////////////////////////// Constructors /////////////////////////////////////////////
+
     /// @deprecated Use [#successful(Object)].
     ///
     @Deprecated(forRemoval = true)
@@ -230,6 +218,20 @@ public class Result extends RuntimeException {
         this.instance = null;
         this.message = ex.getMessage();
         this.ex = ex;
+    }
+
+    /// Mainly used for serialisation.
+    ///
+    protected Result() {
+        ex = null;
+        message = null;
+        instance = null;
+    }
+
+    private Result(final Object instance, final String message, final Exception exception) {
+        this.instance = instance;
+        this.message = message;
+        this.ex = exception;
     }
 
     @Override
