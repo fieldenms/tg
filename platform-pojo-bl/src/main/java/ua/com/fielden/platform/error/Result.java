@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.error;
 
+import jakarta.annotation.Nullable;
+
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -252,15 +254,15 @@ public class Result extends RuntimeException {
         return message != null ? message : ex != null ? !isEmpty(ex.getMessage()) ? ex.getMessage() : ex instanceof NullPointerException ? NULL_POINTER_EXCEPTION : ex.getClass().getName() : "no message";
     }
 
-    public Exception getEx() {
+    public @Nullable Exception getEx() {
         return ex;
     }
 
-    public Object getInstance() {
+    public @Nullable Object getInstance() {
         return instance;
     }
 
-    public <T> T getInstance(final Class<T> expectedType) {
+    public <T> @Nullable T getInstance(final Class<T> expectedType) {
         return expectedType.cast(instance);
     }
 
@@ -279,7 +281,7 @@ public class Result extends RuntimeException {
     ///
     /// This method is analogous to [Optional#orElseThrow(Supplier)].
     ///
-    public <T> T getInstanceOrElseThrow() {
+    public <T> @Nullable T getInstanceOrElseThrow() {
         ifFailure(Result::throwRuntime);
         return (T) getInstance();
     }
