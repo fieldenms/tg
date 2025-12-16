@@ -8,11 +8,10 @@ public class Informative extends Result {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * Mainly used for serialisation.
-     */
+    /// Mainly used for serialisation.
+    ///
     protected Informative() {
-
+        this(null, null);
     }
 
     public Informative(final String message) {

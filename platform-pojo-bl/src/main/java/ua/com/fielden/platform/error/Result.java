@@ -179,7 +179,7 @@ public class Result extends RuntimeException {
     /// Creates a failure that will contain `instance` and have `exception` as its cause.
     ///
     public static Result failure(final Object instance, final Exception exception) {
-        return new Result(instance, exception);
+        return new Result(instance, exception.getMessage(), exception, true);
     }
 
     ///////////////////////////////////////////// Constructors /////////////////////////////////////////////
@@ -188,46 +188,34 @@ public class Result extends RuntimeException {
     ///
     @Deprecated(forRemoval = true)
     public Result(final Object instance, final String message) {
-        this.instance = instance;
-        this.message = message;
-        this.ex = null;
+        this(instance, message, null, false);
     }
 
     /// @deprecated Use [#successful()].
     ///
     @Deprecated(forRemoval = true)
     public Result(final String msg) {
-        this.instance = null;
-        this.message = msg;
-        this.ex = null;
+        this(null, msg, null, false);
     }
 
     /// @deprecated Use [#failure(Object, Exception)].
     ///
     @Deprecated(forRemoval = true)
     public Result(final Object instance, final Exception ex) {
-        super(ex);
-        this.instance = instance;
-        this.message = ex.getMessage();
-        this.ex = ex;
+        this(instance, ex.getMessage(), ex, true);
     }
 
     /// @deprecated Use [#failure(Exception)].
     ///
     @Deprecated(forRemoval = true)
     public Result(final Exception ex) {
-        super(ex);
-        this.instance = null;
-        this.message = ex.getMessage();
-        this.ex = ex;
+        this(null, ex.getMessage(), ex, true);
     }
 
     /// Mainly used for serialisation.
     ///
     protected Result() {
-        ex = null;
-        message = null;
-        instance = null;
+        this(null, null, null, true);
     }
 
     /// The primary constructor that provides the most control.
