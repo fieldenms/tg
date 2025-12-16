@@ -194,24 +194,27 @@ public class Result extends RuntimeException {
         return new Result(instance, exception);
     }
 
-    ///////////////////////////////////////////////
-    ////////////////// constructors ///////////////
-    ///////////////////////////////////////////////
-    /** Creates successful result. */
+    /// @deprecated Use [#successful(Object)].
+    ///
+    @Deprecated(forRemoval = true)
     public Result(final Object instance, final String message) {
         this.instance = instance;
         this.message = message;
         this.ex = null;
     }
 
-    /** Creates successful result. */
+    /// @deprecated Use [#successful()].
+    ///
+    @Deprecated(forRemoval = true)
     public Result(final String msg) {
         this.instance = null;
         this.message = msg;
         this.ex = null;
     }
 
-    /** Creates a failed result. */
+    /// @deprecated Use [#failure(Object, Exception)].
+    ///
+    @Deprecated(forRemoval = true)
     public Result(final Object instance, final Exception ex) {
         super(ex);
         this.instance = instance;
@@ -219,7 +222,9 @@ public class Result extends RuntimeException {
         this.ex = ex;
     }
 
-    /** Creates a failed result. */
+    /// @deprecated Use [#failure(Exception)].
+    ///
+    @Deprecated(forRemoval = true)
     public Result(final Exception ex) {
         super(ex);
         this.instance = null;
