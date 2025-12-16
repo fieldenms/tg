@@ -31,6 +31,8 @@ public class Result extends RuntimeException {
     // Field names
     public static final String MESSAGE = "message", INSTANCE = "instance", EX = "ex";
 
+    public static final String NO_MESSAGE = "no message";
+
     private static final String SUCCESSFUL = "Successful";
     private static final String NULL_POINTER_EXCEPTION = "Null pointer exception";
     private static final String EXT_SEPARATOR = "<extended/>";
@@ -245,13 +247,17 @@ public class Result extends RuntimeException {
         this(null, exception, writableStackTrace);
     }
 
+    /// Returns the message associated with this result, or [#NO_MESSAGE] if there is no message and no cause.
+    ///
+    /// Unlike [Throwable#getMessage()], this method never returns `null`.
+    ///
     @Override
     public String getMessage() {
         // There are exceptions that have no message, returning null.
         // This is not very useful and in fact was confusing in practice.
         // Let's return a full name of the exception in such cases.
         //return message != null ? message : ex != null ? ex.getMessage() : "no message";
-        return message != null ? message : ex != null ? !isEmpty(ex.getMessage()) ? ex.getMessage() : ex instanceof NullPointerException ? NULL_POINTER_EXCEPTION : ex.getClass().getName() : "no message";
+        return message != null ? message : ex != null ? !isEmpty(ex.getMessage()) ? ex.getMessage() : ex instanceof NullPointerException ? NULL_POINTER_EXCEPTION : ex.getClass().getName() : NO_MESSAGE;
     }
 
     public @Nullable Exception getEx() {
