@@ -1,11 +1,9 @@
 package ua.com.fielden.platform.error;
 
-/**
- * This class represents Informative.
- *
- * @author TG Team
- *
- */
+/// A kind of [Result] that represents an informative message.
+///
+/// Stack trace is always disabled for informative results.
+///
 public class Informative extends Result {
 
     private static final long serialVersionUID = 1L;
@@ -22,6 +20,6 @@ public class Informative extends Result {
     }
 
     public Informative(final Object instance, final String message) {
-        super(instance, message);
+        super(instance, message, null, false);
     }
 }

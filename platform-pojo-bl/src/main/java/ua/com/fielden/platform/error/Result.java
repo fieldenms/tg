@@ -21,6 +21,8 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 /// The kind of a result can be determined using methods [#isSuccessful], [#isWarning], [#isInformative].
 ///
 /// `Result` is an exception type, and thus can also be thrown.
+/// Subclasses of `Result` can control whether a stack trace will be captured through the primary constructor.
+/// Stack trace is always disabled for successful results, and enabled for failures.
 ///
 public class Result extends RuntimeException {
 
@@ -47,7 +49,7 @@ public class Result extends RuntimeException {
     /// Creates a successful [Result] that will contain `instance`.
     ///
     public static Result successful(final Object instance) {
-        return new Result(instance, SUCCESSFUL);
+        return new Result(instance, SUCCESSFUL, null, false);
     }
 
     ///////////////////////////////////////////// Informative /////////////////////////////////////////////
@@ -228,10 +230,29 @@ public class Result extends RuntimeException {
         instance = null;
     }
 
-    private Result(final Object instance, final String message, final Exception exception) {
+    /// The primary constructor that provides the most control.
+    ///
+    /// @param writableStackTrace
+    ///        If `true`, a stack trace will be captured.
+    ///        For result types that do not need a stack trace, it is recommended to use `false`.
+    ///
+    protected Result(final Object instance, final String message, final Exception exception, final boolean writableStackTrace) {
+        super(message, exception, true, writableStackTrace);
         this.instance = instance;
         this.message = message;
         this.ex = exception;
+    }
+
+    /// Calls the primary constructor using the message in `exception` as the result's message.
+    ///
+    protected Result(final Object instance, final Exception exception, final boolean writableStackTrace) {
+        this(instance, exception == null ? null : exception.getMessage(), exception, writableStackTrace);
+    }
+
+    /// Calls the primary constructor using the message in `exception` as the result's message.
+    ///
+    protected Result(final Exception exception, final boolean writableStackTrace) {
+        this(null, exception, writableStackTrace);
     }
 
     @Override

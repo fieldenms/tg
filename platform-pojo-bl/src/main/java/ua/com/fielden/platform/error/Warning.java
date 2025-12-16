@@ -1,11 +1,9 @@
 package ua.com.fielden.platform.error;
 
-/**
- * This class represents warning.
- * 
- * @author TG Team
- * 
- */
+/// A kind of [Result] that represents a warning.
+///
+/// Stack trace is always disabled for warnings.
+///
 public class Warning extends Result {
 
     private static final long serialVersionUID = 1L;
@@ -22,6 +20,6 @@ public class Warning extends Result {
     }
 
     public Warning(final Object instance, final String message) {
-        super(instance, message);
+        super(instance, message, null, false);
     }
 }
