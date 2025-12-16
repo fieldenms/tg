@@ -1,21 +1,13 @@
 package ua.com.fielden.platform.error;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.error.Result.asRuntime;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.informative;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.error.Result.throwRuntime;
-import static ua.com.fielden.platform.error.Result.warning;
+import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.error.Result.*;
 
 public class ResultTestCase {
 
@@ -229,7 +221,7 @@ public class ResultTestCase {
     @Test
     public void getInstanceOrElseThrow_returns_an_instance_if_result_is_successful() {
         final String value = "instance";
-        final Result result = Result.successful(value);
+        final Result result = successful(value);
         assertEquals(value, result.getInstanceOrElseThrow());
         assertEquals(result.getInstance(), result.getInstanceOrElseThrow());
     }
@@ -244,6 +236,61 @@ public class ResultTestCase {
         } catch(final Exception ex) {
             assertEquals(errMsg, ex.getMessage());
         }
+    }
+
+    @Test
+    public void failure_captures_a_stack_trace() {
+        final var result = failure("We underwent upgrade.");
+        assertThat(result.getStackTrace()).isNotEmpty();
+        final var resultWithEx = failure(new Exception());
+        assertThat(resultWithEx.getStackTrace()).isNotEmpty();
+        final var resultWithValue = failure(123, "We underwent upgrade");
+        assertThat(resultWithValue.getStackTrace()).isNotEmpty();
+        final var resultWithValueAndEx = failure(123, new Exception());
+        assertThat(resultWithValueAndEx.getStackTrace()).isNotEmpty();
+        final var resultExt = failureEx("We underwent upgrade.", "An upgrade was undergone.");
+        assertThat(resultExt.getStackTrace()).isNotEmpty();
+        final var resultExtWithValue = failureEx(123, "We underwent upgrade.", "An upgrade was undergone.");
+        assertThat(resultExtWithValue.getStackTrace()).isNotEmpty();
+        final var resultf = failuref("%s underwent upgrade.", "We");
+        assertThat(resultf.getStackTrace()).isNotEmpty();
+    }
+
+    @Test
+    public void successful_result_does_not_capture_a_stack_trace() {
+        final var result = successful();
+        assertThat(result.getStackTrace()).isEmpty();;
+
+        final var resultWithValue = successful(123);
+        assertThat(resultWithValue.getStackTrace()).isEmpty();;
+    }
+
+    @Test
+    public void warning_does_not_capture_a_stack_trace() {
+        final var warning = warning("Prolonged sitting is likely to cause back pain.");
+        assertThat(warning.getStackTrace()).isEmpty();;
+        final var warningWithValue = warning(123, "Prolonged sitting is likely to cause back pain.");
+        assertThat(warningWithValue.getStackTrace()).isEmpty();;
+        final var warningEx = warningEx("Get up from the chair!", "Prolonged sitting is likely to cause back pain.");
+        assertThat(warningEx.getStackTrace()).isEmpty();;
+        final var warningExWithValue = warningEx(123, "Get up from the chair!", "Prolonged sitting is likely to cause back pain.");
+        assertThat(warningExWithValue.getStackTrace()).isEmpty();;
+        final var warningf = warningf("Get up from %s", "the chair");
+        assertThat(warningf.getStackTrace()).isEmpty();;
+    }
+
+    @Test
+    public void informative_does_not_capture_a_stack_trace() {
+        final var info = informative("Java is 30 years old.");
+        assertThat(info.getStackTrace()).isEmpty();;
+        final var infoWithValue = informative(30, "Java is 30 years old.");
+        assertThat(infoWithValue.getStackTrace()).isEmpty();;
+        final var infoEx = informativeEx("Java is 30.", "The Java programming language is 30 years old.");
+        assertThat(infoEx.getStackTrace()).isEmpty();;
+        final var infoExWithValue = informativeEx(30, "Java is 30.", "The Java programming language is 30 years old.");
+        assertThat(infoExWithValue.getStackTrace()).isEmpty();;
+        final var infof = informativef("Java is %s years old.", 30);
+        assertThat(infof.getStackTrace()).isEmpty();;
     }
 
 }
