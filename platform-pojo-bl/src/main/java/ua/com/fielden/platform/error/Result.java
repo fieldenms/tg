@@ -214,6 +214,11 @@ public class Result extends RuntimeException {
     /// @see #failure(Exception)
     ///
     public static Result failure(final Object instance, final String reason) {
+        // NOTE: This is sub-optimal, both `new Exception` and this Result will capture almost the same stack trace.
+        //       We should not disable the stack trace for this Result, because then `Result.getStackTrace` will be empty, leaking implementation details.
+        //       There is no simple change around `new Exception` without adding complexity to the implementation.
+        //       Therefore, let's leave this as is for now.
+        //       In the future, we could introduce separate types for failures and successful results.
         return failure(instance, new Exception(reason));
     }
 
