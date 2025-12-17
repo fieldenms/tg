@@ -29,8 +29,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.error.Result.*;
 import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
 
 /**
@@ -1209,7 +1208,7 @@ public class EntitySerialisationWithJacksonTest {
     public void successful_warning_with_entity_should_be_restored() {
         final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(Integer.valueOf(23));
-        final Warning warning = new Warning(entity, "warning message");
+        final Warning warning = warning(entity, "warning message");
         final Result restoredWarning = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(warning), Result.class);
 
         assertNotNull("Restored warning could not be null", restoredWarning);
@@ -1227,7 +1226,7 @@ public class EntitySerialisationWithJacksonTest {
     public void successful_informative_with_entity_should_be_restored() {
         final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(Integer.valueOf(23));
-        final Informative informative = new Informative(entity, "information message");
+        final Informative informative = informative(entity, "information message");
         final Result restoredInformative = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(informative), Result.class);
 
         assertNotNull("Restored informative could not be null", restoredInformative);

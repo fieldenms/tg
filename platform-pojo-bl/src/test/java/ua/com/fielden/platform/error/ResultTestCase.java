@@ -133,13 +133,13 @@ public class ResultTestCase {
         
         final Warning warning1 = warning("warning");
         final Warning warning2 = warning("warning");
-        final Warning warning3 = new Warning("warning");
+        final Warning warning3 = warning("warning");
         assertTrue(warning1.equals(warning2) && warning2.equals(warning3) ? warning1.equals(warning3) : false);
         assertTrue(warning1.hashCode() == warning2.hashCode() && warning2.hashCode() == warning3.hashCode());
         
         final Informative informative1 = informative("informative");
         final Informative informative2 = informative("informative");
-        final Informative informative3 = new Informative("informative");
+        final Informative informative3 = informative("informative");
         assertTrue(informative1.equals(informative2) && informative2.equals(informative3) ? informative1.equals(informative3) : false);
         assertTrue(informative1.hashCode() == informative2.hashCode() && informative2.hashCode() == informative3.hashCode());
     }

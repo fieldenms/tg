@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.equery.lifecycle.Categorizer;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
@@ -19,6 +18,7 @@ import java.util.List;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.warning;
 
 /**
  * Entity class used for testing.
@@ -215,7 +215,7 @@ public class Entity extends AbstractEntity<String> {
         }
         this.number = number;
         if (number.equals(777)) { // DYNAMIC warning generation :
-            throw new Warning("DYNAMIC validation : The value of 777 is dangerous.");
+            throw warning("DYNAMIC validation : The value of 777 is dangerous.");
         }
     }
 
