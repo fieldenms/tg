@@ -38,7 +38,7 @@ public final class DomainMetadataModelGenerator {
         this.propertyInliner = propertyInliner;
     }
 
-    public Map<Class<?>, DomainTypeData> generateDomainTypesData(final Set<Class<? extends AbstractEntity<?>>> entityTypes) {
+    Map<Class<?>, DomainTypeData> generateDomainTypesData(final Set<Class<? extends AbstractEntity<?>>> entityTypes) {
         // helper type for intermediate results
         // f is called with an ID
         record H (Class<?> type, LongFunction<DomainTypeData> f) {}
