@@ -2,6 +2,7 @@ package ua.com.fielden.platform.error;
 
 import org.junit.Test;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -115,7 +116,7 @@ public class ResultTestCase {
         assertTrue(f1.equals(f2) && f2.equals(f3) ? f1.equals(f3) : false);
         assertTrue(f1.hashCode() == f2.hashCode() && f2.hashCode() == f3.hashCode());
         
-        final Result f4 = new Result("instance", new Exception("failure reasons"));
+        final Result f4 = failure("instance", new Exception("failure reasons"));
         final Result f5 = failure("instance", new Exception("failure reasons"));
         final Result f6 = failure("instance", "failure reasons");
         assertTrue(f4.equals(f5) && f5.equals(f6) ? f4.equals(f6) : false);
@@ -124,9 +125,9 @@ public class ResultTestCase {
 
     @Test
     public void equals_is_transitive_for_success() {
-        final Result success1 = successful("instance");
-        final Result success2 = successful("instance");
-        final Result success3 = new Result("instance", "Successful");
+        final Result success1 = successful(List.of(1));
+        final Result success2 = successful(List.of(1));
+        final Result success3 = successful(List.of(1));
         assertTrue(success1.equals(success2) && success2.equals(success3) ? success1.equals(success3) : false);
         assertTrue(success1.hashCode() == success2.hashCode() && success2.hashCode() == success3.hashCode());
         

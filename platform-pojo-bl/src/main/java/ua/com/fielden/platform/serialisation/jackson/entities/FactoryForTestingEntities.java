@@ -1,39 +1,28 @@
 package ua.com.fielden.platform.serialisation.jackson.entities;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.error.Result.warning;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
-import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Currency;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
+
+import java.math.BigDecimal;
+import java.util.*;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.error.Result.*;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
 
 /**
  * The factory for testing entities for serialisation integration test and EntitySerialisationWithJacksonTest.
@@ -331,7 +320,7 @@ public class FactoryForTestingEntities {
     public EntityWithString createEntityWithStringAndFailure() {
         final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
         entity.setProp("okay");
-        entity.getProperty("prop").setRequiredValidationResult(new Result(entity, new Exception("Exception.")));
+        entity.getProperty("prop").setRequiredValidationResult(failure(entity, "Exception."));
         return finalise(entity);
     }
 

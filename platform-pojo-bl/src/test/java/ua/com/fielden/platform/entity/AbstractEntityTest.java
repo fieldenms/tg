@@ -39,6 +39,7 @@ import java.util.Set;
 import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.*;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertEmpty;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
@@ -1225,7 +1226,7 @@ public class AbstractEntityTest {
             @Override
             public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
                 if (newValue != null && newValue.equals(35)) {
-                    return new Result(property, new Exception("Domain : Value 35 is not permitted."));
+                    return failure("Domain : Value 35 is not permitted.");
                 } else if (newValue != null && newValue.equals(77)) {
                     return new Warning("DOMAIN validation : The value of 77 is dangerous.");
                 }

@@ -94,7 +94,7 @@ public class SerialisationTestResource extends AbstractWebResource {
         final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities = new IdentityHashMap<>();
         if (entities1 == null) {
             if (entities2 == null) {
-                return new Result(null, "okay");
+                return Result.successful();
             } else {
                 return Result.failure(format("entities1 [%s] does not equal to entities2 [%s].", entities1, entities2));
             }
@@ -120,7 +120,7 @@ public class SerialisationTestResource extends AbstractWebResource {
                             return deepEquals;
                         }
                     }
-                    return new Result(null, "okay");
+                    return Result.successful();
                 }
             }
         }

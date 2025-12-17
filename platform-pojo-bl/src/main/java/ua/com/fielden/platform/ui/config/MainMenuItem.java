@@ -19,6 +19,8 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
+import static ua.com.fielden.platform.error.Result.failure;
+
 /**
  * A type for persisting an individual main menu item. Existence of an instance of this type simply indicates the existence of a corresponding main menu item.
  * <p>
@@ -99,7 +101,7 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
 
     public MainMenuItem addChild(final MainMenuItem child) {
         if (child.getParent() != null && !child.getParent().equals(this)) {
-            throw new Result(this, new IllegalArgumentException("Menu item " + child + " already has a parent."));
+            throw failure("Menu item " + child + " already has a parent.");
         }
         if (!containsChild(child)) {
             children.add(child);
