@@ -12,6 +12,7 @@ import ua.com.fielden.platform.tiny.TinyHyperlink;
 import ua.com.fielden.platform.tiny.TinyHyperlinkCo;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.utils.EntityCentreAPI;
 
 import java.util.Base64;
 import java.util.Optional;
@@ -33,13 +34,16 @@ import static ua.com.fielden.platform.utils.QrCodeUtils.ImageFormat.PNG;
 public class ShareActionProducer extends DefaultEntityProducerWithContext<ShareAction> {
 
     private CentreContextHolder centreContextHolder;
+    private final EntityCentreAPI entityCentreAPI;
 
     @Inject
     ShareActionProducer(
             final EntityFactory factory,
-            final ICompanionObjectFinder companionFinder)
+            final ICompanionObjectFinder companionFinder,
+            final EntityCentreAPI entityCentreAPI)
     {
         super(factory, ShareAction.class, companionFinder);
+        this.entityCentreAPI = entityCentreAPI;
     }
 
     @Override
@@ -76,6 +80,11 @@ public class ShareActionProducer extends DefaultEntityProducerWithContext<ShareA
                 }
             });
         }
+
+        final var result = entityCentreAPI.entityCentreResult(null, null, null);
+        result.asRight().value()._1.forEach(ent -> {
+            System.out.println(ent.get("details") + " " + ent.get("person") + " " + ent.get("date"));
+        });
 
         return super.provideDefaultValues(entity);
     }

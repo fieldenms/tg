@@ -17,6 +17,8 @@ import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerIocModule;
 import ua.com.fielden.platform.web.uri.EntityMasterUrlProvider;
 import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
+import ua.com.fielden.platform.web.utils.EntityCentreAPI;
+import ua.com.fielden.platform.web.utils.EntityCentreAPIImpl;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 import static ua.com.fielden.platform.basic.config.Workflows.deployment;
@@ -61,6 +63,7 @@ public interface IBasicWebApplicationServerModule {
 
         // dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure
         bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class);
+        bindType(EntityCentreAPI.class).to(EntityCentreAPIImpl.class);
 
         // bind companion object implementations that are dependent on ICriteriaEntityRestorer
         PlatformDomainTypes.typesDependentOnWebUI.stream().forEach(type -> bindCo(type, (co, t) -> bindType(co).to(t)));
