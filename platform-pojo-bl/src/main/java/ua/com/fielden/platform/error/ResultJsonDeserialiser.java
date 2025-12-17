@@ -52,6 +52,7 @@ public class ResultJsonDeserialiser extends StdDeserializer<Result> {
 
         // instantiate the result; warning type checking is required only when instance and message are not null
         if (ex != null) {
+            // Capturing a stack trace during deserialisation is not meaningful, hence disable it.
             return PropertyConflict.class.equals(resultType) ? new PropertyConflict(instance, ex.getMessage()) : new Result(instance, ex, false);
         } else if (Warning.class.equals(resultType)) {
             return new Warning(instance, message);
