@@ -14,10 +14,16 @@ public class Informative extends Result {
         this(null, null);
     }
 
+    /// @deprecated Use [Result#informative(String)].
+    ///
+    @Deprecated
     public Informative(final String message) {
         this(null, message);
     }
 
+    /// @deprecated Use [Result#informative(Object, String)].
+    ///
+    @Deprecated
     public Informative(final Object instance, final String message) {
         super(instance, message, null, false);
     }
