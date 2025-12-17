@@ -79,15 +79,25 @@ public class Result extends RuntimeException {
 
     /// Creates an informative result that will contain `instance` and have message `message`.
     ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when informative results are processed, only the message is.
+    ///
+    /// @see #informative(String)
+    ///
     public static Informative informative(final Object instance, final String message) {
         return new Informative(instance, message);
     }
 
     /// Creates an informative result with an additional extended messsage.
     ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when informative results are processed, only the message is.
+    ///
     /// @param instance a value that the result will contain.
     /// @param shortMessage a concise message, which may contain HTML.
     /// @param extendedMessage a more detailed message, which may span multiple lines and contain HTML.
+    ///
+    /// @see #informativeEx(String, String)
     ///
     public static Informative informativeEx(final Object instance, final String shortMessage, final String extendedMessage) {
         return informative(instance, shortMessage + EXT_SEPARATOR + extendedMessage);
@@ -116,15 +126,25 @@ public class Result extends RuntimeException {
 
     /// Creates a warning that will contain `instance` and have message `message`.
     ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when warnings are processed, only the message is.
+    ///
+    /// @see #warning(String)
+    ///
     public static Warning warning(final Object instance, final String message) {
         return new Warning(instance, message);
     }
 
     /// Creates a warning with an additional extended messsage.
     ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when warnings are processed, only the message is.
+    ///
     /// @param instance a value that the result will contain.
     /// @param shortMessage a concise message, which may contain HTML.
     /// @param extendedMessage a more detailed message, which may span multiple lines and contain HTML.
+    ///
+    /// @see #warningEx(String, String)
     ///
     public static Warning warningEx(final Object instance, final String shortMessage, final String extendedMessage) {
         return warning(instance, shortMessage + EXT_SEPARATOR + extendedMessage);
@@ -156,31 +176,73 @@ public class Result extends RuntimeException {
         return failure(shortReason + EXT_SEPARATOR + extendedReason);
     }
 
-    /// Creates a failure from its cause `exception`.
+    /// Creates a failure from an existing `exception`.
+    ///
+    /// Use this method when the exception originates outside the current execution boundary (e.g., from a library call or I/O operation).
+    ///
+    /// ```
+    /// // Proper use of failure(Exception).
+    /// try {
+    ///     ...
+    /// } catch (Exception ex) {
+    ///     return failure(ex); // Or throw
+    /// }
+    /// ```
+    ///
+    /// Creating both the exception and the `Result` at the same point of execution is an anti-pattern.
+    /// In that case no error is being handled, only wrapped.
+    /// [Result#failure] is meant to capture an already thrown exception, rather than create one ad-hoc.
+    ///
+    /// ```
+    /// // Anti-pattern: creating an exception and wrapping it immediately.
+    /// return failure(new InvalidArgumentException("..."));
+    /// ```
+    ///
+    /// Instead, construct a `Result` using the error message directly.
     ///
     public static Result failure(final Exception exception) {
         return failure(null, exception);
     }
 
     /// Creates a failure that will contain `instance` and have message `message`.
-    /// Should be used when the cause is not important.
+    /// Should be used when the cause is missing or is not important.
+    ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when failures are processed, only the message and the cause are.
+    ///
+    /// @see #failure(String)
+    /// @see #failure(Exception)
     ///
     public static Result failure(final Object instance, final String reason) {
         return failure(instance, new Exception(reason));
     }
 
     /// Creates a failure with an additional extended messsage.
-    /// Should be used when no particular exception is at fault.
+    /// Should be used when the cause is missing or is not important.
+    ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when failures are processed, only the message and the cause are.
     ///
     /// @param instance a value that the result will contain.
     /// @param shortReason a concise message, which may contain HTML.
     /// @param extendedReason a more detailed message, which may span multiple lines and contain HTML.
+    ///
+    /// @see #failureEx(String, String)
     ///
     public static Result failureEx(final Object instance, final String shortReason, final String extendedReason) {
         return failure(instance, shortReason + EXT_SEPARATOR + extendedReason);
     }
 
     /// Creates a failure that will contain `instance` and have `exception` as its cause.
+    ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when failures are processed, only the message and the cause are.
+    ///
+    /// Also see [Result#failure(Exception)] for guidance on capturing a cause.
+    ///
+    /// @see #failure(Object, String)
+    /// @see #failure(String)
+    /// @see #failure(Exception)
     ///
     public static Result failure(final Object instance, final Exception exception) {
         return new Result(instance, exception.getMessage(), exception, true);
@@ -202,7 +264,7 @@ public class Result extends RuntimeException {
         this(null, msg, null, false);
     }
 
-    /// @deprecated Use [#failure(Object, Exception)].
+    /// @deprecated Consider if `instance` and/or `ex` really need to be captured, and, if not, use [#failure(String)] or [#failure(Exception)].
     ///
     @Deprecated(forRemoval = true)
     public Result(final Object instance, final Exception ex) {
