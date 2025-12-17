@@ -1,12 +1,10 @@
 package ua.com.fielden.platform.error;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import org.apache.poi.ss.formula.functions.T;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
 
@@ -30,10 +28,10 @@ public class ResultJsonDeserialiser extends StdDeserializer<Result> {
     }
 
     @Override
-    public Result deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public Result deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException {
         final JsonNode node = jp.readValueAsTree();
 
-        final Class<T> resultType = (Class<T>) ClassesRetriever.findClass(node.get("@resultType").asText());
+        final Class<? extends Result> resultType = (Class<? extends Result>) ClassesRetriever.findClass(node.get("@resultType").asText());
 
         final String message = node.get(Result.MESSAGE).isNull() ? null : node.get(Result.MESSAGE).asText();
         final Object instance;
