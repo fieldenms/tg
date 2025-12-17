@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.ResultJsonDeserialiser;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;

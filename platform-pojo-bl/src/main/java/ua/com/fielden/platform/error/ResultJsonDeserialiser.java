@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.jackson.deserialisers;
+package ua.com.fielden.platform.error;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -7,9 +7,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.apache.poi.ss.formula.functions.T;
-import ua.com.fielden.platform.error.Informative;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
 
@@ -57,13 +54,13 @@ public class ResultJsonDeserialiser extends StdDeserializer<Result> {
 
         // instantiate the result; warning type checking is required only when instance and message are not null
         if (ex != null) {
-            return PropertyConflict.class.equals(resultType) ? new PropertyConflict(instance, ex.getMessage()) : new Result(instance, ex);
+            return PropertyConflict.class.equals(resultType) ? new PropertyConflict(instance, ex.getMessage()) : new Result(instance, ex, false);
         } else if (Warning.class.equals(resultType)) {
             return new Warning(instance, message);
         } else if (Informative.class.equals(resultType)){
             return new Informative(instance, message);
         } else {
-            return new Result(instance, message);
+            return new Result(instance, message, null, false);
         }
     }
 }
