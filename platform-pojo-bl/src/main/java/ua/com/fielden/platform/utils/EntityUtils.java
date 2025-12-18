@@ -6,7 +6,6 @@ import com.google.inject.Inject;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
-import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.*;
@@ -815,18 +814,6 @@ public class EntityUtils {
     public static boolean isUnionEntityType(final Class<?> type) {
         return type != null && AbstractUnionEntity.class.isAssignableFrom(type);
     }
-
-    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
-    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
-    ///
-    /// This method is a utility to perform instrumentation for uninstrumented values.
-    ///
-    public static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityInstantiator<U> instantiator) {
-        return unionEntity.isInstrumented()
-               ? unionEntity
-               : copy(unionEntity, instantiator.new_(), ID, VERSION);
-    }
-
 
     /**
      * Determines whether {@code type} represents entity query criteria.

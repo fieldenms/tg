@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.validation;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -20,8 +21,7 @@ import java.util.Set;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.getErrorMessage;
 import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.isMockNotFoundValue;
@@ -31,7 +31,7 @@ import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableProperty;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.utils.EntityUtils.instrument;
+import static ua.com.fielden.platform.utils.EntityUtils.copy;
 
 /// This validator applies to entity-typed properties, ensuring that the new value is an entity that exists.
 ///
@@ -226,6 +226,17 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                        KEY_NOT_ASSIGNED.equals(value.toString())
                        ? ERR_WAS_NOT_FOUND.formatted(entityTitle(value))
                        : ERR_ENTITY_WAS_NOT_FOUND.formatted(entityTitle(value), value));
+    }
+
+    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
+    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
+    ///
+    /// This method is a utility to perform instrumentation for uninstrumented values.
+    ///
+    private static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityInstantiator<U> instantiator) {
+        return unionEntity.isInstrumented()
+                ? unionEntity
+                : copy(unionEntity, instantiator.new_(), ID, VERSION);
     }
 
 }
