@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.file_reports;
 
+import com.google.inject.Injector;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -10,8 +11,12 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity.EnumType;
 import ua.com.fielden.platform.domaintree.testing.ShortSlaveEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
@@ -32,9 +37,19 @@ public class WorkbookExporterTest {
 
     private static final List<List<DynamicColumnForExport>> EMPTY_DYNAMIC_PROPERTIES = List.of();
 
+    private final Injector injector = createInjector();
+    private final EntityFactory factory = injector.getInstance(EntityFactory.class);
+
+    private Injector createInjector() {
+        final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
+        return new ApplicationInjectorFactory()
+                .add(module)
+                .getInjector();
+    }
+
     @Test
     public void date_property_can_be_exported() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         entityToExport.setDateProp(new DateTime(2000, 1, 1, 0, 0).toDate());
         final String[] propertyNames = { "dateProp" };
         final String[] propertyTitles = { "Date property" };
@@ -56,7 +71,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void boolean_property_can_be_exported() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         entityToExport.setBooleanProp(true);
         final String[] propertyNames = { "booleanProp" };
         final String[] propertyTitles = { "Boolean property" };
@@ -67,7 +82,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void money_property_can_be_exported() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         final var amount = new Money("1.00");
         entityToExport.setMoneyProp(amount);
         final String[] propertyNames = { "moneyProp" };
@@ -82,7 +97,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void string_property_can_be_exported() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         entityToExport.setStringProp("master1");
         final String[] propertyNames = { "stringProp" };
         final String[] propertyTitles = { "String property" };
@@ -93,7 +108,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void long_string_property_should_be_also_exportable() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         final String value = "very long description very long description very long description very long description very long description "
                 + "very long description very long description very long description very long description very long description very long description "
                 + "very long description very long description very long description very long description very long description very long description "
@@ -108,7 +123,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void integer_property_can_be_exported() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         entityToExport.setIntegerProp(Integer.valueOf(1));
         final String[] propertyNames = { "integerProp" };
         final String[] propertyTitles = { "Integer property" };
@@ -119,7 +134,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void null_property_can_be_exported() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
 
         entityToExport.setBigDecimalProp(null);
         final String[] propertyNames = { "bigDecimalProp" };
@@ -132,7 +147,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void enum_property_can_be_exported() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         entityToExport.setEnumProp(EnumType.ONE);
         final String[] propertyNames = { "enumProp" };
         final String[] propertyTitles = { "Enumeration property" };
@@ -143,7 +158,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void entity_property_can_be_exported() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         entityToExport.setKey("master key1");
         final SlaveEntity slave1 = new SlaveEntity();
         slave1.setMasterEntityProp(entityToExport);
@@ -158,7 +173,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void exporting_entities_with_this_included_associates_the_main_hyperlink_with_those_cells() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         entityToExport.setKey("master key1");
         final SlaveEntity slave1 = new SlaveEntity();
         slave1.setMasterEntityProp(entityToExport);
@@ -178,7 +193,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void exporting_entities_with_key_included_associates_the_main_hyperlink_with_those_cells() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         entityToExport.setKey("master key1");
         final String[] propertyNames = { "key", "entityProp" };
         final String[] propertyTitles = { "Key", "Entity property" };
@@ -190,7 +205,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void exporting_composite_entities_without_this_but_with_key_members_included_associates_the_main_hyperlink_with_those_cells() {
-        final MasterEntity master = new MasterEntity();
+        final MasterEntity master = factory.newEntity(MasterEntity.class);
         master.setKey("master key1");
         final SlaveEntity entityToExport = new SlaveEntity();
         entityToExport.setMasterEntityProp(master); // key member 1
@@ -207,7 +222,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void exporting_composite_entities_without_master_but_with_an_entity_typed_key_member_included_witch_has_master_associates_hyperlink_with_those_cells() {
-        final MasterEntity master = new MasterEntity();
+        final MasterEntity master = factory.newEntity(MasterEntity.class);
         master.setKey("master key1");
         final SlaveEntity entityToExport = new SlaveEntity();
         entityToExport.setMasterEntityProp(master); // key member 1
@@ -227,7 +242,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void hyperlinks_can_be_provided_explicitly_per_entity_and_per_property() {
-        final MasterEntity master = new MasterEntity();
+        final MasterEntity master = factory.newEntity(MasterEntity.class);
         master.setKey("master key1");
         master.setBigDecimalProp(new BigDecimal("10.42"));
         final SlaveEntity entityToExport = new SlaveEntity();
@@ -252,7 +267,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void collection_property_can_be_exported() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         entityToExport.setKey("master key1");
         final SlaveEntity slave1 = new SlaveEntity();
         slave1.setMasterEntityProp(entityToExport);
@@ -270,7 +285,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void short_collection_property_can_be_exported() {
-        final MasterEntity entityToExport = new MasterEntity();
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         entityToExport.setKey("master key1");
         final ShortSlaveEntity shortSlave1 = new ShortSlaveEntity();
         final SlaveEntity slave1 = new SlaveEntity();
@@ -389,7 +404,7 @@ public class WorkbookExporterTest {
     @Test
     public void entity_aggregats_with_entity_property_can_be_exported() {
         final EntityAggregates entityToExport = new EntityAggregates();
-        final MasterEntity master1 = new MasterEntity();
+        final MasterEntity master1 = factory.newEntity(MasterEntity.class);
         master1.setKey("master key1");
         final SlaveEntity slave1 = new SlaveEntity();
         slave1.setMasterEntityProp(master1);
@@ -405,7 +420,7 @@ public class WorkbookExporterTest {
     @Test
     public void entity_aggregats_with_collection_property_can_be_exported() {
         final EntityAggregates entityToExport = new EntityAggregates();
-        final MasterEntity master1 = new MasterEntity();
+        final MasterEntity master1 = factory.newEntity(MasterEntity.class);
         master1.setKey("master key1");
         final SlaveEntity slave1 = new SlaveEntity();
         slave1.setMasterEntityProp(master1);
@@ -424,9 +439,9 @@ public class WorkbookExporterTest {
     @Test
     public void entity_aggregats_with_short_collection_property_can_be_exported() {
         final EntityAggregates entityToExport = new EntityAggregates();
-        final MasterEntity master1 = new MasterEntity();
+        final MasterEntity master1 = factory.newEntity(MasterEntity.class);
         master1.setKey("master key1");
-        final MasterEntity master2 = new MasterEntity();
+        final MasterEntity master2 = factory.newEntity(MasterEntity.class);
         master2.setKey("master key2");
         final ShortSlaveEntity shortSlave1 = new ShortSlaveEntity();
         final SlaveEntity slave1 = new SlaveEntity();
@@ -450,11 +465,11 @@ public class WorkbookExporterTest {
 
     @Test
     public void multiple_sheets_can_be_exported() {
-        final var entityToExport1 = new MasterEntity();
+        final var entityToExport1 = factory.newEntity(MasterEntity.class);
         final var date1 = new DateTime(2000, 1, 1, 0, 0).toDate();
         entityToExport1.setDateProp(date1);
 
-        final var entityToExport2 = new MasterEntity();
+        final var entityToExport2 = factory.newEntity(MasterEntity.class);
         final var date2 = new DateTime(2004, 1, 1, 0, 0).toDate();
         entityToExport2.setDateProp(date2);
 
