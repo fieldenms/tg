@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
+import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
@@ -48,8 +49,10 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     /// * Instantiation of query results by the EQL engine, where [#ensureUnion(String)] is called.
     /// * [ObservableMutatorInterceptor] calls [#ensureUnion].
     ///
-    /// For uninstrumented union entities, this field may never be initialised.
-    /// Therefore, [#activePropertyName()] has a fallback that performs eager search.
+    /// This field may remain uninitialised, in which case [#activePropertyName()] will perform eager search.
+    /// This can occur when:
+    /// * A union entity is loaded by Hibernate.
+    /// * A union entity is instantiated directly (via [IEntityInstantiator#new_()]).
     ///
     private String activePropertyName;
 
@@ -197,9 +200,8 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     /// If none of the union properties are assigned, returns `null`.
     ///
     public @Nullable String activePropertyName() {
-        // If instrumented, `activePropertyName` will be assigned during interception of setters.
-        // Otherwise, eagerly look for the assigned union member.
-        return isInstrumented() ? activePropertyName : getNameOfAssignedUnionProperty();
+        // In most cases, `activePropertyName` will be assigned, but, if not, search for it eagerly.
+        return activePropertyName != null ? activePropertyName : getNameOfAssignedUnionProperty();
     }
 
     /// Returns a list of properties that represent the members of the specified union type.
