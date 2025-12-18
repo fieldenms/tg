@@ -45,7 +45,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     /// Represents the name of the assigned union member.
     ///
     /// This field should be initialised only once, and this may happen in several places:
-    /// * Instantiation of query results by the EQL engine, where [#getId] may be called indirectly, which in turns calls [#ensureActiveProperty].
+    /// * Instantiation of query results by the EQL engine, where [#ensureUnion(String)] is called.
     /// * [ObservableMutatorInterceptor] calls [#ensureUnion].
     ///
     /// For uninstrumented union entities, this field may never be initialised.
