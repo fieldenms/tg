@@ -8,7 +8,6 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -28,14 +27,12 @@ import java.util.zip.Deflater;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static org.apache.commons.lang3.StringUtils.join;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
-/**
- * A set of utility methods for exporting data into MS Excel.
- *
- * @author TG Team
- *
- */
+/// A set of utility methods for exporting data into MS Excel.
+///
 public class WorkbookExporter {
 
     private static final int MAX_COLUMN_WIDTH = 255 * 256;
@@ -45,16 +42,15 @@ public class WorkbookExporter {
 
     private WorkbookExporter() {}
 
-    /**
-     * Exports entities into a workbook.
-     * <p>
-     * Only those properties whose names are specified in {@code propNamesAndTitles} are exported.
-     *
-     * @param entities  list of entity groups, each of which is assigned a separate sheet
-     * @param propNamesAndTitles  list of groups of property names and titles
-     * @param dynamicProperties  list of groups of dynamic properties
-     * @param sheetTitles  list of sheet titles
-     */
+    /// Exports entities into a workbook.
+    ///
+    /// Only those properties whose names are specified in `propNamesAndTitles` are exported.
+    ///
+    /// @param entities  list of entity groups, each of which is assigned a separate sheet
+    /// @param propNamesAndTitles  list of groups of property names and titles
+    /// @param dynamicProperties  list of groups of dynamic properties
+    /// @param sheetTitles  list of sheet titles
+    ///
     public static <M extends AbstractEntity<?>> SXSSFWorkbook export(
             final List<Stream<M>> entities,
             final List<Pair<String[], String[]>> propNamesAndTitles,
@@ -71,9 +67,8 @@ public class WorkbookExporter {
         return export_(sheetsData, Optional.of(entityMasterUrlProvider));
     }
 
-    /**
-     * Exports a group of entities into a sheet.
-     */
+    /// Exports a group of entities into a sheet.
+    ///
     private static <M extends AbstractEntity<?>> DataForWorkbookSheet<M> export(
             final Stream<M> entities,
             final String[] propertyNames,
@@ -99,12 +94,11 @@ public class WorkbookExporter {
         return new DataForWorkbookSheet<>(sheetTitle, entities, propNamesAndTitles, collectionalProps);
     }
 
-    /**
-     * Exports entities into a workbook.
-     * This method specialises {@link #export(List, List, List, List, IEntityMasterUrlProvider)} for a single entity group.
-     *
-     * @param entityMasterUrlProvider  used to assign Entity Master hyperlinks
-     */
+    /// Exports entities into a workbook.
+    /// This method specialises [#export(List,List,List,List,IEntityMasterUrlProvider)] for a single entity group.
+    ///
+    /// @param entityMasterUrlProvider  used to assign Entity Master hyperlinks
+    ///
     public static <M extends AbstractEntity<?>> SXSSFWorkbook export(
             final Stream<M> entities,
             final String[] propertyNames,
@@ -114,15 +108,14 @@ public class WorkbookExporter {
         return export(entities, Stream.empty(), propertyNames, propertyTitles, Optional.of(entityMasterUrlProvider));
     }
 
-    /**
-     * The same as {@link #export(Stream, String[], String[], IEntityMasterUrlProvider)}, where hyperlinks are supplied
-     * by {@code hyperlinks} instead of {@link IEntityMasterUrlProvider}.
-     * <p>
-     * For each entity in {@code entities}, there should be an element in {@code hyperlinks} (their lengths should be equal).
-     * Alternatively, {@code hyperlinks} may be empty, in which case some default hyperlinks will be used.
-     *
-     * @param hyperlinks  a stream of maps with property names as keys and URLs as values
-     */
+    /// The same as [#export(Stream,String[],String[],IEntityMasterUrlProvider)], where hyperlinks are supplied
+    /// by `hyperlinks` instead of [IEntityMasterUrlProvider].
+    ///
+    /// For each entity in `entities`, there should be an element in `hyperlinks` (their lengths should be equal).
+    /// Alternatively, `hyperlinks` may be empty, in which case some default hyperlinks will be used.
+    ///
+    /// @param hyperlinks  a stream of maps with property names as keys and URLs as values
+    ///
     public static <M extends AbstractEntity<?>> SXSSFWorkbook export(
             final Stream<M> entities,
             final Stream<Map<String, String>> hyperlinks,
@@ -132,9 +125,8 @@ public class WorkbookExporter {
         return export(entities, hyperlinks, propertyNames, propertyTitles, Optional.empty());
     }
 
-    /**
-     * Equivalent to {@link #export(Stream, Stream, String[], String[])} but without the ability to specify hyperlinks.
-     */
+    /// Equivalent to [#export(Stream,Stream,String[],String[])] but without the ability to specify hyperlinks.
+    ///
     public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles) {
         return export(entities, Stream.empty(), propertyNames, propertyTitles, Optional.empty());
     }
@@ -157,32 +149,31 @@ public class WorkbookExporter {
         return export_(sheetsData, List.of(hyperlinks), maybeEntityMasterUrlProvider);
     }
 
-    /**
-     * Converts {@code workbook} to a byte array of a zipped output. Disposes {@code workbook} to remove temporary files SXSSF creates to hold the data.
-     */
+    /// Converts `workbook` to a byte array of a zipped output.
+    /// `workbook` is decated in try-with-resources to remove temporary files SXSSF creates to hold the data.
+    ///
     public static byte[] convertToGZipByteArray(final SXSSFWorkbook workbook) throws IOException {
-        try (final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
-             final GZipOutputStreamEx zOut = new GZipOutputStreamEx(oStream, Deflater.BEST_COMPRESSION)
-        ) {
+        try (workbook;
+             final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
+             final GZipOutputStreamEx zOut = new GZipOutputStreamEx(oStream, Deflater.BEST_COMPRESSION))
+        {
             workbook.write(zOut);
             zOut.flush();
             oStream.flush();
             return oStream.toByteArray();
-        } finally {
-            workbook.dispose();
         }
     }
 
-    /**
-     * Converts {@code workbook} to a byte array. Disposes {@code workbook} to remove temporary files SXSSF creates to hold the data.
-     */
+    /// Converts `workbook` to a byte array.
+    /// `workbook` is decated in try-with-resources to remove temporary files SXSSF creates to hold the data.
+    ///
     public static byte[] convertToByteArray(final SXSSFWorkbook workbook) throws IOException {
-        try (final ByteArrayOutputStream oStream = new ByteArrayOutputStream()) {
+        try (workbook;
+             final ByteArrayOutputStream oStream = new ByteArrayOutputStream())
+        {
             workbook.write(oStream);
             oStream.flush();
             return oStream.toByteArray();
-        } finally {
-            workbook.dispose();
         }
     }
 
@@ -375,57 +366,123 @@ public class WorkbookExporter {
         }
     }
 
-    /**
-     * Determines what entity properties should have hyperlinks associated with them, and where those hyperlinks should lead to.
-     *
-     * @return a map between property names, including dot-noted paths, and corresponding URLs.
-     */
+    /// Determines what entity properties should have hyperlinks associated with them, and where those hyperlinks should lead to.
+    ///
+    /// @return a map between property names, including dot-noted paths, and corresponding URLs.
+    ///
     private static <M extends AbstractEntity<?>> Map<String, String> determinePropsForHyperlinks(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
         final var propsWithHyperlinks = new HashMap<String, String>();
-        final var thisPresent = sheetData.getPropNames().stream().anyMatch(StringUtils::isEmpty);
-        final Optional<String> maybeMainEntityMaster = maybeEntityMasterUrlProvider.flatMap(g -> g.masterUrlFor(entity));
-        // If the main entity has a master, that master should be used for the hyperlinks.
-        if (maybeMainEntityMaster.isPresent()) {
-            final var url = maybeMainEntityMaster.get();
-            if (thisPresent) {
-                propsWithHyperlinks.put("", url);
+        final var maybeMainEntityMaster = maybeEntityMasterUrlProvider.flatMap(g -> getMasterUrlFor(entity, g));
+
+        if (maybeMainEntityMaster.isPresent()) { // If the URL for the given entity is present
+            // If 'this' property is present, set the URL for it.
+            if (sheetData.getPropNames().stream().anyMatch(StringUtils::isEmpty)) {
+                propsWithHyperlinks.put("", maybeMainEntityMaster.get());
             }
-            // key or composite key members should be associated with the main hyperlink
-            else {
-                final var entityType = entity.getType();
-                Finder.getKeyMembers(entityType).forEach(field -> {
-                    final var keyMemberPropName = field.getName();
-                    propsWithHyperlinks.put(keyMemberPropName, url);
-                    // key members can be composite themselves, which would most likely result in their key members present in the result set
-                    // if that is the case, we should associate the main hyperlink with those key members also
-                    if (EntityUtils.isEntityType(field.getType()) && EntityUtils.isCompositeEntity((Class<? extends AbstractEntity<?>>) field.getType())) {
-                        final Class<? extends AbstractEntity<?>> fieldTypeAsEntity = (Class<? extends AbstractEntity<?>>) field.getType();
-                        Finder.getKeyMembers(fieldTypeAsEntity).forEach(subKeyMemberField -> propsWithHyperlinks.put(keyMemberPropName + "." + subKeyMemberField.getName(), url));
-                    }
+            // If the URL has not been set for any property yet,
+            // set it for the first key member present in the export data sheet.
+            if (propsWithHyperlinks.isEmpty()) {
+                getFirstPresentKeyProperty(entity.getType(), sheetData).ifPresent(presentKeyMember -> {
+                    propsWithHyperlinks.put(presentKeyMember, maybeMainEntityMaster.get());
+                });
+            }
+            // If the URL has not been set for any property yet,
+            // set it for the first sub-key member of the key member
+            // that is present in the export data sheet.
+            if (propsWithHyperlinks.isEmpty()) {
+                getFirstPresentSubKeyProperty(entity.getType(), sheetData).ifPresent(presentSubKeyMember -> {
+                    propsWithHyperlinks.put(presentSubKeyMember, maybeMainEntityMaster.get());
+                });
+            }
+        } else { // If the given entity has no associated URL
+            // Find the first entity key member that is present in the export data
+            // and has an entity master, then generate and set its URL.
+            getFirstPresentKeyValue(entity, sheetData, maybeEntityMasterUrlProvider).ifPresent(presentKeyUrl -> {
+                propsWithHyperlinks.put(presentKeyUrl._1, presentKeyUrl._2);
+            });
+            // If no key members are present in the export data,
+            // find the first sub-key member of the first composite key member that has an entity master,
+            // and then set the URL for that composite key member.
+            if (propsWithHyperlinks.isEmpty()) {
+                getFirstPresentSubKeyValue(entity, sheetData, maybeEntityMasterUrlProvider).ifPresent(presentKeyUrl -> {
+                    propsWithHyperlinks.put(presentKeyUrl._1, presentKeyUrl._2);
                 });
             }
         }
-        // Otherwise, create hyperlinks for an entity-typed key or key members.
-        else {
-            final var entityType = entity.getType();
-            Finder.getKeyMembers(entityType)
-                  .forEach(field -> {
-                      if (EntityUtils.isEntityType(field.getType()) && !entity.proxiedPropertyNames().contains(field.getName())) {
-                          final AbstractEntity<?> keyMemberValue = (AbstractEntity<?>) sheetData.getValue(entity, field.getName());
-                          maybeEntityMasterUrlProvider.flatMap(g -> g.masterUrlFor(keyMemberValue)).ifPresent(url -> {
-                              final var keyMemberPropName = field.getName();
-                              propsWithHyperlinks.put(keyMemberPropName, url);
-                              // key members can be composite themselves, which would most likely result in their key members present in the result set
-                              // if that is the case, we should associate those key members with the URL also
-                              if (EntityUtils.isEntityType(field.getType()) && EntityUtils.isCompositeEntity((Class<? extends AbstractEntity<?>>) field.getType())) {
-                                  final Class<? extends AbstractEntity<?>> fieldTypeAsEntity = (Class<? extends AbstractEntity<?>>) field.getType();
-                                  Finder.getKeyMembers(fieldTypeAsEntity).forEach(subKeyMemberField -> propsWithHyperlinks.put(keyMemberPropName + "." + subKeyMemberField.getName(), url));
-                              }
-                          });
-                      }
-                  });
-        }
         return propsWithHyperlinks;
+    }
+
+    private static <M extends AbstractEntity<?>> Optional<T2<String, String>> getFirstPresentSubKeyValue(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
+        return getKeyMembersWithMaster(entity, sheetData, maybeEntityMasterUrlProvider).stream()
+                .<T2<String, String>>mapMulti((keyFieldPair, consumer) -> {
+                    if (isCompositeEntity((Class<? extends AbstractEntity<?>>) keyFieldPair._1.getType())) {
+                        getKeyMembers((Class<AbstractEntity<?>>)keyFieldPair._1.getType())
+                                .stream()
+                                .map(subKeyField -> keyFieldPair._1.getName() + "." + subKeyField.getName())
+                                .filter(subKeyDotNotation -> isPropertyPresent(subKeyDotNotation, sheetData))
+                                .findFirst().ifPresent(keyProp -> consumer.accept(T2.t2(keyProp, keyFieldPair._2)));
+                    }
+                })
+                .findFirst();
+
+    }
+
+    private static <M extends AbstractEntity<?>> Optional<T2<String, String>> getFirstPresentKeyValue(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
+        return getKeyMembersWithMaster(entity, sheetData, maybeEntityMasterUrlProvider).stream()
+                .<T2<String, String>>mapMulti((t2, consumer) -> {
+                    if (isPropertyPresent(t2._1.getName(), sheetData)) {
+                        consumer.accept(T2.t2(t2._1.getName(), t2._2));
+                    }
+                }).findFirst();
+    }
+
+    private static <M extends AbstractEntity<?>> List<T2<Field, String>> getKeyMembersWithMaster(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
+        return getKeyMembers(entity.getType()).stream()
+                .<T2<Field, String>>mapMulti((keyField, consumer) -> {
+                    if(isEntityType(keyField.getType()) && !entity.proxiedPropertyNames().contains(keyField.getName())) {
+                        final var keyMemberValue = (AbstractEntity<?>) sheetData.getValue(entity, keyField.getName());
+                        maybeEntityMasterUrlProvider.flatMap(g -> getMasterUrlFor(keyMemberValue, g))
+                                .ifPresent(url -> consumer.accept(T2.t2(keyField, url)));
+                    }
+                })
+                .toList();
+    }
+
+    private static <M extends AbstractEntity<?>> Optional<String> getFirstPresentSubKeyProperty(final Class<? extends AbstractEntity<?>> type, final DataForWorkbookSheet<M> sheetData) {
+        return getKeyMembers(type).stream()
+                .filter(keyField -> isEntityType(keyField.getType()) && isCompositeEntity((Class<? extends AbstractEntity<?>>) keyField.getType()))
+                .flatMap(entityKeyFiled -> getKeyMembers((Class<AbstractEntity<?>>)entityKeyFiled.getType())
+                        .stream()
+                        .map(subKeyField -> entityKeyFiled.getName() + "." + subKeyField.getName()))
+                .filter(subKeyDotNotation -> isPropertyPresent(subKeyDotNotation, sheetData))
+                .findFirst();
+    }
+
+    private static <M extends AbstractEntity<?>> Optional<String> getFirstPresentKeyProperty(final Class<? extends AbstractEntity<?>> type, final DataForWorkbookSheet<M> sheetData) {
+        return getKeyMembers(type).stream()
+                .<String>mapMulti((keyField, consumer) -> {
+                    if (isPropertyPresent(keyField.getName(), sheetData)) {
+                        consumer.accept(keyField.getName());
+                    }
+                })
+                .findFirst();
+    }
+
+    private static <M extends AbstractEntity<?>> boolean isPropertyPresent(String propertyName, final DataForWorkbookSheet<M> sheetData) {
+        return sheetData.getPropNames().indexOf(propertyName) >= 0;
+    }
+
+    /// Returns the URL for the specified entity.
+    /// This logic accounts for a one-2-one relationship where one entity acts as an extension of another and cannot exist independently.
+    /// If the specified entity is part of such a relationship, the URL of the master entity is returned.
+    /// Otherwise, the URL of the specified entity is returned.
+    ///
+    private static <M extends AbstractEntity<?>> Optional<String> getMasterUrlFor(final M entity, final IEntityMasterUrlProvider g) {
+        if (entity != null && isOneToOne(entity.getType())) {
+            return getMasterUrlFor((AbstractEntity<?>) entity.getKey(), g);
+        }
+        return g.masterUrlFor(entity);
+
     }
 
     private static List<? extends AbstractEntity<?>> createShortCollection(final Collection<AbstractEntity<?>> collection, final String keyToInclude) {
@@ -439,13 +496,13 @@ public class WorkbookExporter {
                 .findFirst()
                 .map(firstElem -> {
                     final Class<?> elementType = firstElem.getClass();
-                    final boolean isShortCollection = EntityUtils.isEntityType(elementType) &&
-                            EntityUtils.isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
-                            Finder.getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).size() == 2 &&
-                            Finder.getKeyMembers((Class<? extends AbstractEntity<?>>)elementType).stream().allMatch(field -> EntityUtils.isEntityType(field.getType()));
+                    final boolean isShortCollection = isEntityType(elementType) &&
+                            isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
+                            getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).size() == 2 &&
+                            getKeyMembers((Class<? extends AbstractEntity<?>>)elementType).stream().allMatch(field -> isEntityType(field.getType()));
                     if (isShortCollection) {
                         final AbstractEntity<?> firstEntity = (AbstractEntity<?>) firstElem;
-                        final List<String> keyProps = Finder.getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).stream().map(Field::getName).toList();
+                        final List<String> keyProps = getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).stream().map(Field::getName).toList();
                         final Object key1 = firstEntity.get(keyProps.get(0));
                         final Object key2 = firstEntity.get(keyProps.get(1));
                         if (collection.stream().filter(Objects::nonNull).allMatch(elem -> EntityUtils.equalsEx(((AbstractEntity<?>) elem).get(keyProps.getFirst()), key1))) {

@@ -6,7 +6,6 @@ import com.google.inject.Inject;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
-import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.*;
@@ -77,7 +76,8 @@ public class EntityUtils {
     @Inject
     private static IDates dates;
 
-    /** Private default constructor to prevent instantiation. */
+    /// Private default constructor to prevent instantiation.
+    ///
     private EntityUtils() {
     }
 
@@ -115,12 +115,8 @@ public class EntityUtils {
         }
     }
 
-    /**
-     * Invokes method {@link #toString(Object, Class)} with the second argument being assigned as value's class.
-     *
-     * @param value
-     * @return
-     */
+    /// Invokes method [#toString(Object,Class)] with the second argument being assigned as value's class.
+    ///
     public static String toString(final Object value) {
         if (value == null) {
             return "";
@@ -128,12 +124,8 @@ public class EntityUtils {
         return toString(value, value.getClass());
     }
 
-    /**
-     * Converts {@link Number} to {@link BigDecimal} with the specified {@code scale}.
-     *
-     * @param number
-     * @return
-     */
+    /// Converts [Number] to [BigDecimal] with the specified `scale`.
+    ///
     public static BigDecimal toDecimal(final Number number, final int scale) {
         if (number instanceof final BigDecimal decimal) {
             return decimal.scale() == scale ? decimal : decimal.setScale(scale, RoundingMode.HALF_UP);
@@ -141,38 +133,23 @@ public class EntityUtils {
         return new BigDecimal(number.toString(), new MathContext(scale, RoundingMode.HALF_UP));
     }
 
-    /**
-     * The same as {@link #toDecimal(Number, int)}, but with scale set to 2.
-     *
-     * @param number
-     * @return
-     */
+    /// The same as [#toDecimal(Number,int)], but with scale set to 2.
+    ///
     public static BigDecimal toDecimal(final Number number) {
         return toDecimal(number, 2);
     }
 
-    /**
-     * This is a convenient function to get the first non-null value, similar as the COALESCE function in SQL.
-     * Throws exception {@link NoSuchElementException} if there was no non-null elements.
-     *
-     * @param value
-     * @param alternative
-     * @param otherAlternatives
-     * @return
-     */
+    /// This is a convenient function to get the first non-null value, similar as the COALESCE function in SQL.
+    /// Throws exception [NoSuchElementException] if there was no non-null elements.
+    ///
     public static <A> A coalesce(final A value, final A alternative, final A... otherAlternatives) {
         return concat(of(value, alternative), otherAlternatives != null ? stream(otherAlternatives) : empty())
                 .filter(v -> v != null)
                 .findFirst().get();
     }
 
-    /**
-     * Null-safe comparator.
-     *
-     * @param c1
-     * @param c2
-     * @return
-     */
+    /// Null-safe comparator.
+    ///
     public static <T> int safeCompare(final Comparable<T> c1, final T c2) {
         if (c1 == null && c2 == null) {
             return 0;
@@ -185,13 +162,8 @@ public class EntityUtils {
         }
     }
 
-    /**
-     * Null-safe equals based on the {@link AbstractEntity}'s id property. If id property is not present in both entities then default equals for entities will be called.
-     *
-     * @param entity1
-     * @param entity2
-     * @return
-     */
+    /// Null-safe equals based on the [AbstractEntity]'s id property. If id property is not present in both entities then default equals for entities will be called.
+    ///
     public static boolean areEqual(final AbstractEntity<?> entity1, final AbstractEntity<?> entity2) {
         if (entity1 != null && entity2 != null) {
             if (entity1.getId() == null && entity2.getId() == null) {
@@ -203,28 +175,18 @@ public class EntityUtils {
         return entity1 == entity2;
     }
 
-    /**
-     * A convenient method to safely compare entity values even if they are <code>null</code>.
-     * <p>
-     * The <code>null</code> value is considered to be smaller than a non-null value.
-     *
-     * @param o1
-     * @param o2
-     * @return
-     */
+    /// A convenient method to safely compare entity values even if they are `null`.
+    ///
+    /// The `null` value is considered to be smaller than a non-null value.
+    ///
     @SuppressWarnings("rawtypes")
     public static <T extends AbstractEntity<K>, K extends Comparable> int compare(final T o1, final T o2) {
         return safeCompare(o1, o2);
     }
 
 
-    /**
-     * Returns value that indicates whether entity is among entities. The equality comparison is based on {@link #areEqual(AbstractEntity, AbstractEntity)} method
-     *
-     * @param entities
-     * @param entity
-     * @return
-     */
+    /// Returns value that indicates whether entity is among entities. The equality comparison is based on [#areEqual(AbstractEntity,AbstractEntity)] method
+    ///
     public static <T extends AbstractEntity<?>> boolean containsById(final List<T> entities, final T entity) {
         for (final AbstractEntity<?> e : entities) {
             if (areEqual(e, entity)) {
@@ -633,12 +595,8 @@ public class EntityUtils {
         return DynamicEntityKey.class.isAssignableFrom(type);
     }
 
-    /**
-     * Determines if entity type represents one-2-one entity (e.g. VehicleFinancialDetails for Vehicle).
-     *
-     * @param entityType
-     * @return
-     */
+    /// Determines if entity type represents one-2-one entity (e.g. VehicleFinancialDetails for Vehicle).
+    ///
     public static boolean isOneToOne(@Nullable final Class<? extends AbstractEntity<?>> entityType) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityType);
         return isPersistentEntityType(keyType);
@@ -815,20 +773,6 @@ public class EntityUtils {
     public static boolean isUnionEntityType(final Class<?> type) {
         return type != null && AbstractUnionEntity.class.isAssignableFrom(type);
     }
-
-    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
-    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
-    ///
-    /// This method is a utility to perform instrumentation for uninstrumented values.
-    ///
-    /// TODO Instrumentation will no longer be necessary after #2466.
-    ///
-    public static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityInstantiator<U> instantiator) {
-        return unionEntity.isInstrumented()
-               ? unionEntity
-               : copy(unionEntity, instantiator.new_(), ID, VERSION);
-    }
-
 
     /**
      * Determines whether {@code type} represents entity query criteria.
