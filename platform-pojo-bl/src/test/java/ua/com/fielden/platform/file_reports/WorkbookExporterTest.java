@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.file_reports;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Stream;
-
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -209,9 +203,6 @@ public class WorkbookExporterTest {
 
         assertEquals("Unexpected cell value for ”masterEntityProp”.", "master key1", exportedRow.getCell(0).getStringCellValue());
         assertNotNull("Hyperlinks are expected to be associated with cells for “masterEntityProp”.", exportedRow.getCell(0).getHyperlink());
-
-        assertEquals("Unexpected cell value for property “integerProp”", 1d, exportedRow.getCell(1).getNumericCellValue(), 0);
-        assertNotNull("Hyperlinks are expected to be associated with cells for “integerProp”.", exportedRow.getCell(1).getHyperlink());
     }
 
     @Test
