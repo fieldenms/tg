@@ -31,12 +31,8 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
-/**
- * A set of utility methods for exporting data into MS Excel.
- *
- * @author TG Team
- *
- */
+/// A set of utility methods for exporting data into MS Excel.
+///
 public class WorkbookExporter {
 
     private static final int MAX_COLUMN_WIDTH = 255 * 256;
@@ -46,16 +42,15 @@ public class WorkbookExporter {
 
     private WorkbookExporter() {}
 
-    /**
-     * Exports entities into a workbook.
-     * <p>
-     * Only those properties whose names are specified in {@code propNamesAndTitles} are exported.
-     *
-     * @param entities  list of entity groups, each of which is assigned a separate sheet
-     * @param propNamesAndTitles  list of groups of property names and titles
-     * @param dynamicProperties  list of groups of dynamic properties
-     * @param sheetTitles  list of sheet titles
-     */
+    /// Exports entities into a workbook.
+    ///
+    /// Only those properties whose names are specified in `propNamesAndTitles` are exported.
+    ///
+    /// @param entities  list of entity groups, each of which is assigned a separate sheet
+    /// @param propNamesAndTitles  list of groups of property names and titles
+    /// @param dynamicProperties  list of groups of dynamic properties
+    /// @param sheetTitles  list of sheet titles
+    ///
     public static <M extends AbstractEntity<?>> SXSSFWorkbook export(
             final List<Stream<M>> entities,
             final List<Pair<String[], String[]>> propNamesAndTitles,
@@ -72,9 +67,8 @@ public class WorkbookExporter {
         return export_(sheetsData, Optional.of(entityMasterUrlProvider));
     }
 
-    /**
-     * Exports a group of entities into a sheet.
-     */
+    /// Exports a group of entities into a sheet.
+    ///
     private static <M extends AbstractEntity<?>> DataForWorkbookSheet<M> export(
             final Stream<M> entities,
             final String[] propertyNames,
@@ -100,12 +94,11 @@ public class WorkbookExporter {
         return new DataForWorkbookSheet<>(sheetTitle, entities, propNamesAndTitles, collectionalProps);
     }
 
-    /**
-     * Exports entities into a workbook.
-     * This method specialises {@link #export(List, List, List, List, IEntityMasterUrlProvider)} for a single entity group.
-     *
-     * @param entityMasterUrlProvider  used to assign Entity Master hyperlinks
-     */
+    /// Exports entities into a workbook.
+    /// This method specialises [#export(List,List,List,List,IEntityMasterUrlProvider)] for a single entity group.
+    ///
+    /// @param entityMasterUrlProvider  used to assign Entity Master hyperlinks
+    ///
     public static <M extends AbstractEntity<?>> SXSSFWorkbook export(
             final Stream<M> entities,
             final String[] propertyNames,
@@ -115,15 +108,14 @@ public class WorkbookExporter {
         return export(entities, Stream.empty(), propertyNames, propertyTitles, Optional.of(entityMasterUrlProvider));
     }
 
-    /**
-     * The same as {@link #export(Stream, String[], String[], IEntityMasterUrlProvider)}, where hyperlinks are supplied
-     * by {@code hyperlinks} instead of {@link IEntityMasterUrlProvider}.
-     * <p>
-     * For each entity in {@code entities}, there should be an element in {@code hyperlinks} (their lengths should be equal).
-     * Alternatively, {@code hyperlinks} may be empty, in which case some default hyperlinks will be used.
-     *
-     * @param hyperlinks  a stream of maps with property names as keys and URLs as values
-     */
+    /// The same as [#export(Stream,String[],String[],IEntityMasterUrlProvider)], where hyperlinks are supplied
+    /// by `hyperlinks` instead of [IEntityMasterUrlProvider].
+    ///
+    /// For each entity in `entities`, there should be an element in `hyperlinks` (their lengths should be equal).
+    /// Alternatively, `hyperlinks` may be empty, in which case some default hyperlinks will be used.
+    ///
+    /// @param hyperlinks  a stream of maps with property names as keys and URLs as values
+    ///
     public static <M extends AbstractEntity<?>> SXSSFWorkbook export(
             final Stream<M> entities,
             final Stream<Map<String, String>> hyperlinks,
@@ -133,9 +125,8 @@ public class WorkbookExporter {
         return export(entities, hyperlinks, propertyNames, propertyTitles, Optional.empty());
     }
 
-    /**
-     * Equivalent to {@link #export(Stream, Stream, String[], String[])} but without the ability to specify hyperlinks.
-     */
+    /// Equivalent to [#export(Stream,Stream,String[],String[])] but without the ability to specify hyperlinks.
+    ///
     public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles) {
         return export(entities, Stream.empty(), propertyNames, propertyTitles, Optional.empty());
     }
@@ -158,32 +149,31 @@ public class WorkbookExporter {
         return export_(sheetsData, List.of(hyperlinks), maybeEntityMasterUrlProvider);
     }
 
-    /**
-     * Converts {@code workbook} to a byte array of a zipped output. Disposes {@code workbook} to remove temporary files SXSSF creates to hold the data.
-     */
+    /// Converts `workbook` to a byte array of a zipped output.
+    /// `workbook` is decated in try-with-resources to remove temporary files SXSSF creates to hold the data.
+    ///
     public static byte[] convertToGZipByteArray(final SXSSFWorkbook workbook) throws IOException {
-        try (final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
-             final GZipOutputStreamEx zOut = new GZipOutputStreamEx(oStream, Deflater.BEST_COMPRESSION)
-        ) {
+        try (workbook;
+             final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
+             final GZipOutputStreamEx zOut = new GZipOutputStreamEx(oStream, Deflater.BEST_COMPRESSION))
+        {
             workbook.write(zOut);
             zOut.flush();
             oStream.flush();
             return oStream.toByteArray();
-        } finally {
-            workbook.dispose();
         }
     }
 
-    /**
-     * Converts {@code workbook} to a byte array. Disposes {@code workbook} to remove temporary files SXSSF creates to hold the data.
-     */
+    /// Converts `workbook` to a byte array.
+    /// `workbook` is decated in try-with-resources to remove temporary files SXSSF creates to hold the data.
+    ///
     public static byte[] convertToByteArray(final SXSSFWorkbook workbook) throws IOException {
-        try (final ByteArrayOutputStream oStream = new ByteArrayOutputStream()) {
+        try (workbook;
+             final ByteArrayOutputStream oStream = new ByteArrayOutputStream())
+        {
             workbook.write(oStream);
             oStream.flush();
             return oStream.toByteArray();
-        } finally {
-            workbook.dispose();
         }
     }
 
@@ -376,11 +366,10 @@ public class WorkbookExporter {
         }
     }
 
-    /**
-     * Determines what entity properties should have hyperlinks associated with them, and where those hyperlinks should lead to.
-     *
-     * @return a map between property names, including dot-noted paths, and corresponding URLs.
-     */
+    /// Determines what entity properties should have hyperlinks associated with them, and where those hyperlinks should lead to.
+    ///
+    /// @return a map between property names, including dot-noted paths, and corresponding URLs.
+    ///
     private static <M extends AbstractEntity<?>> Map<String, String> determinePropsForHyperlinks(final M entity, final DataForWorkbookSheet<M> sheetData, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
         final var propsWithHyperlinks = new HashMap<String, String>();
         final var maybeMainEntityMaster = maybeEntityMasterUrlProvider.flatMap(g -> getMasterUrlFor(entity, g));
@@ -484,10 +473,10 @@ public class WorkbookExporter {
     }
 
     /// Returns the URL for the specified entity.
-    /// This logic accounts for a one-to-one relationship where one entity
-    /// acts as an extension of another and cannot exist independently.
-    /// If the specified entity is part of such a relationship, the URL of the master entity is returned;
-    /// otherwise, the URL of the specified entity is returned.
+    /// This logic accounts for a one-2-one relationship where one entity acts as an extension of another and cannot exist independently.
+    /// If the specified entity is part of such a relationship, the URL of the master entity is returned.
+    /// Otherwise, the URL of the specified entity is returned.
+    ///
     private static <M extends AbstractEntity<?>> Optional<String> getMasterUrlFor(final M entity, final IEntityMasterUrlProvider g) {
         if (entity != null && isOneToOne(entity.getType())) {
             return getMasterUrlFor((AbstractEntity<?>) entity.getKey(), g);
