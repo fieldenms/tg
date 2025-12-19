@@ -42,20 +42,7 @@ public class SqlServerDbCreator extends DbCreator {
      */
     @Override
     protected List<String> genDdl(final IDdlGenerator ddlGenerator, final Dialect dialect) {
-        final List<String> createDdl = DbUtils.prependDropDdlForSqlServer(ddlGenerator.generateDatabaseDdl(dialect));
-        createDdl.add("EXEC sp_msforeachtable \"ALTER TABLE ? NOCHECK CONSTRAINT all\";");
-        createDdl.add(
-                "WHILE(EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY'))"+
-                        "BEGIN"+
-                        "    DECLARE @sql_alterTable_fk NVARCHAR(4000)"+
-                        ""+
-                        "    SELECT  TOP 1 @sql_alterTable_fk = ('ALTER TABLE ' + TABLE_SCHEMA + '.[' + TABLE_NAME + '] DROP CONSTRAINT [' + CONSTRAINT_NAME + ']')"+
-                        "    FROM    INFORMATION_SCHEMA.TABLE_CONSTRAINTS"+
-                        "    WHERE   CONSTRAINT_TYPE = 'FOREIGN KEY'"+
-                        ""+
-                        "    EXEC (@sql_alterTable_fk)"+
-                "END");
-        return createDdl;
+        return DbUtils.prependDropDdlForSqlServer(ddlGenerator.generateDatabaseDdl(dialect, false));
     }
 
     /**

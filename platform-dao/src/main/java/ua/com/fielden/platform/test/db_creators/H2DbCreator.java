@@ -45,7 +45,7 @@ public class H2DbCreator extends DbCreator {
      */
     @Override
     protected List<String> genDdl(final IDdlGenerator ddlGenerator, final Dialect dialect) {
-        final List<String> createDdl = ddlGenerator.generateDatabaseDdl(dialect);
+        final List<String> createDdl = ddlGenerator.generateDatabaseDdl(dialect, false);
         return DbUtils.prependDropDdlForH2(createDdl);
     }
 
