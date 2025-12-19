@@ -1,7 +1,15 @@
 package ua.com.fielden.platform.test_config;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
+import com.google.common.collect.ImmutableList;
+import org.hibernate.dialect.Dialect;
+import ua.com.fielden.platform.ddl.IDdlGenerator;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.test.DbCreator;
+import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
+import ua.com.fielden.platform.utils.DbUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,16 +19,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
-import org.hibernate.dialect.Dialect;
-
-import ua.com.fielden.platform.ddl.IDdlGenerator;
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test.DbCreator;
-import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
-import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
-import ua.com.fielden.platform.utils.DbUtils;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
 /// This is a DB creator implementation for running unit tests against SQL Server 2012 and up.
 ///
@@ -42,7 +42,13 @@ public class SqlServerDbCreator extends DbCreator {
      */
     @Override
     protected List<String> genDdl(final IDdlGenerator ddlGenerator, final Dialect dialect) {
-        return DbUtils.prependDropDdlForSqlServer(ddlGenerator.generateDatabaseDdl(dialect, false));
+        final var ddl = DbUtils.prependDropDdlForSqlServer(ddlGenerator.generateDatabaseDdl(dialect, false));
+        return ImmutableList.<String>builder()
+                // This method may have been called in a transaction, but let's add another one to be certain.
+                .add("BEGIN TRANSACTION")
+                .addAll(ddl)
+                .add("COMMIT")
+                .build();
     }
 
     /**

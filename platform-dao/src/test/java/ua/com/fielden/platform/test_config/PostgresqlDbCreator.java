@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test_config;
 
+import com.google.common.collect.ImmutableList;
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.ddl.IDdlGenerator;
 import ua.com.fielden.platform.entity.query.DbVersion;
@@ -42,7 +43,12 @@ public class PostgresqlDbCreator extends DbCreator {
      */
     @Override
     protected List<String> genDdl(final IDdlGenerator ddlGenerator, final Dialect dialect) {
-        return DbUtils.prependDropDdlForPostgresql(ddlGenerator.generateDatabaseDdl(dialect, false));
+        final var ddl = DbUtils.prependDropDdlForPostgresql(ddlGenerator.generateDatabaseDdl(dialect, false));
+        return ImmutableList.<String>builder()
+                .add("BEGIN TRANSACTION")
+                .addAll(ddl)
+                .add("COMMIT")
+                .build();
     }
 
     /**
