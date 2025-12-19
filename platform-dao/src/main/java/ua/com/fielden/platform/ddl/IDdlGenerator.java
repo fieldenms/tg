@@ -10,10 +10,9 @@ import java.util.List;
 @ImplementedBy(DdlGeneratorImpl.class)
 public interface IDdlGenerator {
 
-    /**
-     * Generates DDL statements for creating tables, primary keys, indices and foreign keys for all persistent entity types,
-     * which includes domain entities and auxiliary platform entities.
-     */
+    /// Returns a list of DDL statements that will create the complete schema for the application.
+    /// This includes tables for persistent entity types, column constraints and indices.
+    ///
     default List<String> generateDatabaseDdl(final Dialect dialect) {
         return generateDatabaseDdl(dialect, true);
     }
@@ -26,9 +25,9 @@ public interface IDdlGenerator {
     ///
     List<String> generateDatabaseDdl(Dialect dialect, boolean withFk);
 
-    /**
-     * Generates DDL statements for creating tables, primary keys, indices, and foreign keys for the given entity types.
-     */
+    /// Returns a list of DDL statements that will create a schema for the application using only the specified entity types.
+    /// This includes tables for persistent entity types, column constraints and indices.
+    ///
     default List<String> generateDatabaseDdl(final Dialect dialect,
                                              final Class<? extends AbstractEntity<?>> type,
                                              final Class<? extends AbstractEntity<?>>... types)
@@ -47,9 +46,9 @@ public interface IDdlGenerator {
                                      Class<? extends AbstractEntity<?>> type,
                                      Class<? extends AbstractEntity<?>>... types);
 
-    /**
-     * Generates DDL statements for creating tables, primary keys, indices, and foreign keys for the given entity types.
-     */
+    /// Returns a list of DDL statements that will create a schema for the application using only the specified entity types.
+    /// This includes tables for persistent entity types, column constraints and indices.
+    ///
     default List<String> generateDatabaseDdl(Dialect dialect, Collection<Class<? extends AbstractEntity<?>>> types) {
         return generateDatabaseDdl(dialect, true, types);
     }
