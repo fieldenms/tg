@@ -102,6 +102,54 @@ public class AbstractUnionEntityTest {
     }
 
     @Test
+    public void for_instrumented_union_activePropertyName_returns_null_if_nothing_has_been_set_otherwise_the_name_of_the_non_null_property() {
+        final UnionEntity union = factory.newEntity(UnionEntity.class);
+        assertTrue(union.isInstrumented());
+        assertNull(union.activePropertyName());
+
+        final EntityOne one = factory.newEntity(EntityOne.class, 1L, "KEY VALUE");
+        union.setPropertyOne(one);
+        assertEquals(UnionEntity.Property.propertyOne.name(), union.activePropertyName());
+    }
+
+    @Test
+    public void for_uninstrumented_union_activePropertyName_returns_null_if_nothing_has_been_set_otherwise_the_name_of_the_non_null_property() {
+        final UnionEntity union = EntityFactory.newPlainEntity(UnionEntity.class, 2L);
+        assertFalse(union.isInstrumented());
+        assertNull(union.activePropertyName());
+
+        final EntityOne one = factory.newEntity(EntityOne.class, 1L, "KEY VALUE");
+        // Note that setters should never be called on uninstrumented entities, but we ignore this rule here.
+        // This is similar, but not identical, to how EQL initialises retrieved union entities.
+        union.setPropertyOne(one);
+        assertEquals(UnionEntity.Property.propertyOne.name(), union.activePropertyName());
+    }
+
+    @Test
+    public void for_instrumented_union_activeEntity_returns_null_if_nothing_has_been_set_otherwise_the_name_of_the_non_null_property() {
+        final UnionEntity union = factory.newEntity(UnionEntity.class);
+        assertTrue(union.isInstrumented());
+        assertNull(union.activeEntity());
+
+        final EntityOne one = factory.newEntity(EntityOne.class, 1L, "KEY VALUE");
+        union.setPropertyOne(one);
+        assertEquals(one, union.activeEntity());
+    }
+
+    @Test
+    public void for_uninstrumented_union_activeEntity_returns_null_if_nothing_has_been_set_otherwise_the_name_of_the_non_null_property() {
+        final UnionEntity union = EntityFactory.newPlainEntity(UnionEntity.class, 2L);
+        assertFalse(union.isInstrumented());
+        assertNull(union.activeEntity());
+
+        final EntityOne one = factory.newEntity(EntityOne.class, 1L, "KEY VALUE");
+        // Note that setters should never be called on uninstrumented entities, but we ignore this rule here.
+        // This is similar, but not identical, to how EQL initialises retrieved union entities.
+        union.setPropertyOne(one);
+        assertEquals(one, union.activeEntity());
+    }
+
+    @Test
     public void method_set_works_for_union_properties_and_for_common_properties_of_those_properties_when_invoked_on_a_union_entity() {
         final SecondLevelEntity inst = new SecondLevelEntity();
         inst.setPropertyOfSelfType(inst);
