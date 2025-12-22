@@ -45,6 +45,7 @@ public class PostgresqlDbCreator extends DbCreator {
     protected List<String> genDdl(final IDdlGenerator ddlGenerator, final Dialect dialect) {
         final var ddl = DbUtils.prependDropDdlForPostgresql(ddlGenerator.generateDatabaseDdl(dialect, false));
         return ImmutableList.<String>builder()
+                // This method may have been called in a transaction, but let's add another one to be certain.
                 .add("BEGIN TRANSACTION")
                 .addAll(ddl)
                 .add("COMMIT")
