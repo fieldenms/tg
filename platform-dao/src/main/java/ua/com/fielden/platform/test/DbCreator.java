@@ -70,8 +70,7 @@ public abstract class DbCreator {
         if (execDdslScripts) {
             // recreate DB structures
             logger.debug("CREATING DB SCHEMA...");
-            // The way DB schema is created for SQL Server does not permit batch insertion for more than 1 statement at a time.
-            config.getInstance(TransactionalExecution.class).execStrict(conn -> batchExecSql(maybeDdl, conn, 1));
+            config.getInstance(TransactionalExecution.class).execStrict(conn -> batchExecSql(maybeDdl, conn, BATCH_SIZE));
             logger.debug(" DONE!");
         }
     }
