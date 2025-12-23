@@ -25,6 +25,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.*;
@@ -253,7 +254,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public T save(final T entity) {
         if (entity == null) {
             throw new EntityCompanionException(format("Null entity of type [%s] cannot be saved.", entityType.getName()));
-        } else if (!entity.isPersistent()) {
+        }
+        if (this instanceof ISaveWithFetch<?> it) {
+            return ((ISaveWithFetch<T>) it).save(entity, Optional.of(FetchModelReconstructor.reconstruct(entity))).asRight().value();
+        }
+        if (!entity.isPersistent()) {
             return entity;
         } else {
             return entitySaver.get().save(entity);
