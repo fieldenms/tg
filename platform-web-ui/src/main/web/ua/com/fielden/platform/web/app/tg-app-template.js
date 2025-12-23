@@ -58,15 +58,15 @@ const template = html`
     <iron-ajax id="entityReconstructor" headers="[[_headers]]" method="GET" handle-as="json" reject-with-request></iron-ajax>
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
-            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]" idea-uri="[[ideaUri]]">
+            <tg-app-menu class="fit" name="menu" menu-config="[[appConfig.menu]]" app-title="[[appTitle]]" idea-uri="[[ideaUri]]">
                 <paper-icon-button id="helpAction" slot="helpAction" icon="icons:help-outline" tabindex="1"
                     on-tg-long-tap="_longHelpTapHandler"
                     on-tg-short-tap="_shortHelpTapHandler"
                     tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link.">
                 </paper-icon-button>
             </tg-app-menu>
-            <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
-                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" selected-submodule="{{_selectedSubmodule}}">
+            <template is="dom-repeat" items="[[appConfig.menu.menu]]" on-dom-change="_modulesRendered">
+                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[appConfig.menu.menu]]" menu-item="[[item]]" can-edit="[[appConfig.menu.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" selected-submodule="{{_selectedSubmodule}}">
                     <tg-ui-action
                         id="openUserMenuVisibilityAssociatorMaster"
                         ui-role='ICON'
@@ -135,10 +135,10 @@ const template = html`
 
 template.setAttribute('strip-whitespace', '');
 
-function findModule (moduleName, menuConfig) {
+function findModule (moduleName, appConfig) {
     var itemIndex;
-    for (itemIndex = 0; itemIndex < menuConfig.menu.length; itemIndex++) {
-        if (menuConfig.menu[itemIndex].key === moduleName) {
+    for (itemIndex = 0; itemIndex < appConfig.menu.menu.length; itemIndex++) {
+        if (appConfig.menu.menu[itemIndex].key === moduleName) {
             return moduleName;
         }
     }
@@ -625,8 +625,8 @@ Polymer({
     /// If the view is opened in different module then play transition animation between modules.
     ///
     _setSelected: function (selected) {
-        if (this.menuConfig) {
-            const moduleToSelect = findModule(selected, this.menuConfig);
+        if (this.appConfig) {
+            const moduleToSelect = findModule(selected, this.appConfig);
             const currentlySelected = this.$.pages.selected;
             const currentlySelectedElement = currentlySelected && this.shadowRoot.querySelector("[name='" + currentlySelected + "']");
             // If module to select is the same as currently selected then just open selected menu item (i.e. open entity centre or master).
@@ -746,13 +746,13 @@ Polymer({
             }, 500);
         }.bind(this);
         //Init master realted properties
-        this.entityType = "ua.com.fielden.platform.menu.Menu";
+        this.entityType = "ua.com.fielden.platform.entity.ApplicationConfig";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
             this.$.appConfig.setSiteAllowlist(entity.siteAllowlist.map(site => new RegExp(site)));
             this.$.appConfig.setDaysUntilSitePermissionExpires(entity.daysUntilSitePermissionExpires);
             this.currencySymbol = entity.currencySymbol;
-            entity.menu.forEach(menuItem => {
+            entity.menu.menu.forEach(menuItem => {
                 menuItem.actions.forEach(action => {
                     action._showDialog = this._showDialog;
                     action.toaster = this.toaster;
@@ -770,7 +770,7 @@ Polymer({
                     });
                 });
             });
-            this.menuConfig = entity;
+            this.appConfig = entity;
             // make splash related elements invisible
             // selection happens by id, but for all for safety reasons; for example, for web tests these elements do not exist
             document.querySelectorAll("#splash-background").forEach(bg => bg.style.display = 'none'); // background
