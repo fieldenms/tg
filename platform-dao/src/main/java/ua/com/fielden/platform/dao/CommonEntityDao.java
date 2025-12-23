@@ -220,11 +220,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return getEntitiesOnPage(query, null, null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /// {@inheritDoc}
+    ///
+    /// @deprecated See [IPersistentEntityMutator#quickSave(AbstractEntity)].
+    /// 
     @Override
     @SessionRequired
+    @Deprecated(forRemoval = true)
     public long quickSave(final T entity) {
         if (hasSaveOverridden == null) {
             hasSaveOverridden = isMethodOverriddenOrDeclared(CommonEntityDao.class, getClass(), "save", getEntityType());
@@ -249,8 +251,15 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
+    /// @deprecated To facilitate the transition to save-with-fetch, place all custom saving logic in [#save(AbstractEntity, Optional)]
+    ///             and make the corresponding companion interface (`*Co`) extend [ISaveWithFetch].
+    ///             Do not override this method, which will likely become `final` in the future.
+    ///             This deprecation notice concerns only the implementation of `save`, not its use.
+    ///             This method will not be removed, but the deprecation will last until the transition is complete.
+    ///
     @Override
     @SessionRequired
+    @Deprecated(since = "[See the JavaDoc]")
     public T save(final T entity) {
         if (entity == null) {
             throw new EntityCompanionException(format("Null entity of type [%s] cannot be saved.", entityType.getName()));
@@ -265,21 +274,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
-    /**
-     * Experimental API with the potential to replace {@link #save(AbstractEntity)} if proven superior in practice.
-     * <p>
-     * This method could be used as an alternative to {@link #quickSave(AbstractEntity)} by passing in an empty instance of {@code Optional<fetch<T>>}.
-     * The right way to go about it, would be to override this method and place all the logic into this method instead of the potentially overridden {@link #save(AbstractEntity)},
-     * and simply call it from {@link #save(AbstractEntity)} with the appropriate fetch model.
-     * This way would guarantee a single path for validation and other related logic when saving entities.
-     * <p>
-     * The return type {@code Either<Long, T>} represents either an entity id (left) or an entity instance (right).
-     * Passing an empty instance of {@code Optional<fetch<T>>} should always skip refetching and return the left result (i.e. id) – this is analogous to {@link #quickSave(AbstractEntity)}.
-     *
-     * @param entity
-     * @param maybeFetch
-     * @return
-     */
+    /// The core implementation of [ISaveWithFetch#save(AbstractEntity, Optional)].
+    ///
+    /// This method does not override [ISaveWithFetch#save(AbstractEntity, Optional)].
+    /// Companion interfaces are expected to extend [ISaveWithFetch] and delegate to this method via `super` to perform the actual saving.
+    ///
+    /// @see ISaveWithFetch#save(AbstractEntity, Optional)
+    ///
     @SessionRequired
     protected Either<Long, T> save(final T entity, final Optional<fetch<T>> maybeFetch) {
         // if maybeFetch is empty then we skip re-fetching
