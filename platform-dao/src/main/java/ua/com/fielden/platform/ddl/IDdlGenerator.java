@@ -20,8 +20,8 @@ public interface IDdlGenerator {
     /// Returns a list of DDL statements that will create the complete schema for the application.
     /// This includes tables for persistent entity types, column constraints and indices.
     ///
-    /// @param withFk controls whether foreign keys will be created.
-    ///               Specify `false` to skip foreign keys.
+    /// @param withFk controls whether foreign keys will be created;
+    ///               specify `false` to skip foreign keys.
     ///
     List<String> generateDatabaseDdl(Dialect dialect, boolean withFk);
 
@@ -38,8 +38,8 @@ public interface IDdlGenerator {
     /// Returns a list of DDL statements that will create a schema for the application using only the specified entity types.
     /// This includes tables for persistent entity types, column constraints and indices.
     ///
-    /// @param withFk controls whether foreign keys will be created.
-    ///               Specify `false` to skip foreign keys.
+    /// @param withFk controls whether foreign keys will be created;
+    ///               specify `false` to skip foreign keys.
     ///
     List<String> generateDatabaseDdl(Dialect dialect,
                                      boolean withFk,
@@ -56,8 +56,8 @@ public interface IDdlGenerator {
     /// Returns a list of DDL statements that will create a schema for the application using only the specified entity types.
     /// This includes tables for persistent entity types, column constraints and indices.
     ///
-    /// @param withFk controls whether foreign keys will be created.
-    ///               Specify `false` to skip foreign keys.
+    /// @param withFk controls whether foreign keys will be created;
+    ///               specify `false` to skip foreign keys.
     ///
     List<String> generateDatabaseDdl(Dialect dialect, boolean withFk, Collection<Class<? extends AbstractEntity<?>>> types);
 

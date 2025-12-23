@@ -19,12 +19,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 /// This is a DB creator implementation for running unit tests against SQL Server 2012 and up.
 ///
 public class SqlServerDbCreator extends DbCreator {
+
+    public static final String
+            WARN_GENERATE_INSERT_FOR_TABLE = "Could not generate INSERT for table %s",
+            ERR_GENERATE_INSERT_STATEMENTS = "Could not generate insert statements.";
 
     public SqlServerDbCreator(
             final Class<? extends AbstractDomainDrivenTestCase> testCaseType,
@@ -37,9 +40,9 @@ public class SqlServerDbCreator extends DbCreator {
         super(testCaseType, props, config, maybeDdl, execDdlScripts);
     }
 
-    /**
-     * Generates DDL for creation of a test database. All constraints are dropped to enable out-of-order data insertion and table truncation.
-     */
+    /// Generates DDL for creation of a test database.
+    /// All FK constraints are ignored to enable out-of-order data insertion and table truncation.
+    ///
     @Override
     protected List<String> genDdl(final IDdlGenerator ddlGenerator, final Dialect dialect) {
         final var ddl = DbUtils.prependDropDdlForSqlServer(ddlGenerator.generateDatabaseDdl(dialect, false));
@@ -51,18 +54,16 @@ public class SqlServerDbCreator extends DbCreator {
                 .build();
     }
 
-    /**
-     * Generate the script for emptying the test database.
-     */
+    /// Generate the script for emptying the test database.
+    ///
     @Override
     public List<String> genTruncStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
-        return entityMetadata.stream().map(em -> format("TRUNCATE TABLE %s;", em.data().tableName())).collect(toList());
+        return entityMetadata.stream().map(em -> "TRUNCATE TABLE %s;".formatted(em.data().tableName())).toList();
     }
 
-    /**
-     * Scripts the test database once the test data has been populated, using custom stored procedure <code>sp_generate_inserts</code>.
-     * Tables <code>ENTITY_CENTRE_CONFIG</code>, <code>ENTITY_LOCATOR_CONFIG</code> and <code>ENTITY_MASTER_CONFIG</code> are excluded as they contains <code>varbinary</code> columns that cannot be easily scripted.
-     */
+    /// Scripts the test database once the test data has been populated, using custom stored procedure `sp_generate_inserts`.
+    /// Tables `ENTITY_CENTRE_CONFIG`, `ENTITY_LOCATOR_CONFIG` and `ENTITY_MASTER_CONFIG` are excluded as they contains `varbinary` columns that cannot be easily scripted.
+    ///
     @Override
     public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
         // unfortunately we have to drop all the constraints to enable data truncation and repopulation out of order...
@@ -81,14 +82,14 @@ public class SqlServerDbCreator extends DbCreator {
                             }
                         }
                     } catch (final Exception ex) {
-                        logger.warn(() -> format("Could not generate INSERT for table %s", table));
+                        logger.warn(() -> WARN_GENERATE_INSERT_FOR_TABLE.formatted(table));
                         logger.warn(ex.getMessage());
                     }
                     return inserts.stream();
                 })
                 .collect(toList());
         } catch (final Exception ex) {
-            throw new DomainDrivenTestException("Could not generate insert statements.", ex);
+            throw new DomainDrivenTestException(ERR_GENERATE_INSERT_STATEMENTS, ex);
         }
     }
 
@@ -96,5 +97,5 @@ public class SqlServerDbCreator extends DbCreator {
     public DbVersion dbVersion() {
         return DbVersion.MSSQL;
     }
-}
 
+}

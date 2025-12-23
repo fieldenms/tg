@@ -22,8 +22,10 @@ class DdlGeneratorImpl implements IDdlGenerator {
     private final Supplier<Collection<Class<? extends AbstractEntity<?>>>> entityTypes;
 
     @Inject
-    DdlGeneratorImpl(final HibernateTypeMappings hibernateTypeMappings,
-                     final Provider<IApplicationDomainProvider> appDomainProvider) {
+    protected DdlGeneratorImpl(
+            final HibernateTypeMappings hibernateTypeMappings,
+            final Provider<IApplicationDomainProvider> appDomainProvider)
+    {
         this(hibernateTypeMappings, () -> appDomainProvider.get().entityTypes());
     }
 

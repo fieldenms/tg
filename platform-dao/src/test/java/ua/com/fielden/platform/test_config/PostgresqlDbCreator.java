@@ -21,12 +21,11 @@ import java.util.Properties;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
-/**
- * This is a DB creator implementation for running unit tests against PostgreSQL.
- *
- * @author TG Team
- */
+/// This is a DB creator implementation for running unit tests against PostgreSQL.
+///
 public class PostgresqlDbCreator extends DbCreator {
+
+    public static final String WARN_GENERATE_INSERT_FOR_TABLE = "Could not generate INSERT for table %s";
 
     public PostgresqlDbCreator(
             final Class<? extends AbstractDomainDrivenTestCase> testCaseType,
@@ -38,9 +37,9 @@ public class PostgresqlDbCreator extends DbCreator {
         super(testCaseType, props, config, maybeDdl, execDdslScripts);
     }
 
-    /**
-     * Generates DDL for creation of a test database. All constraints are dropped to enable out-of-order data insertion and table truncation.
-     */
+    /// Generates DDL for creation of a test database.
+    /// All FK constraints are ignored to enable out-of-order data insertion and table truncation.
+    ///
     @Override
     protected List<String> genDdl(final IDdlGenerator ddlGenerator, final Dialect dialect) {
         final var ddl = DbUtils.prependDropDdlForPostgresql(ddlGenerator.generateDatabaseDdl(dialect, false));
@@ -52,18 +51,16 @@ public class PostgresqlDbCreator extends DbCreator {
                 .build();
     }
 
-    /**
-     * Generate the script for emptying the test database.
-     */
+    /// Generate the script for emptying the test database.
+    ///
     @Override
     public List<String> genTruncStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
         return entityMetadata.stream().map(em -> format("delete from %s;", em.data().tableName())).collect(toList());
     }
 
-    /**
-     * Scripts the test database once the test data has been populated, using custom stored procedure <code>create_insert_statement</code>.
-     * Tables <code>ENTITY_CENTRE_CONFIG</code>, <code>ENTITY_LOCATOR_CONFIG</code> and <code>ENTITY_MASTER_CONFIG</code> are included even though they contains <code>varbinary</code> columns.
-     */
+    /// Scripts the test database once the test data has been populated, using custom stored procedure `create_insert_statement`.
+    /// Tables `ENTITY_CENTRE_CONFIG`, `ENTITY_LOCATOR_CONFIG` and `ENTITY_MASTER_CONFIG` are included even though they contains `varbinary` columns.
+    ///
     @Override
     public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
         return entityMetadata.stream()
@@ -88,7 +85,7 @@ public class PostgresqlDbCreator extends DbCreator {
                             }
                         }
                     } catch (final Exception ex) {
-                        logger.warn(format("Could not generate INSERT for table %s", table));
+                        logger.warn(() -> WARN_GENERATE_INSERT_FOR_TABLE.formatted(table));
                         logger.warn(ex.getMessage());
                     }
                     return inserts.stream();
