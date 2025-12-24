@@ -265,7 +265,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new EntityCompanionException(format("Null entity of type [%s] cannot be saved.", entityType.getName()));
         }
         if (this instanceof ISaveWithFetch<?> it) {
-            return ((ISaveWithFetch<T>) it).save(entity, Optional.of(FetchModelReconstructor.reconstruct(entity))).asRight().value();
+            return ((ISaveWithFetch<T>) it)
+                    .save(entity, entity.isPersistent() ? Optional.of(FetchModelReconstructor.reconstruct(entity)) : empty())
+                    .asRight().value();
         }
         if (!entity.isPersistent()) {
             return entity;
