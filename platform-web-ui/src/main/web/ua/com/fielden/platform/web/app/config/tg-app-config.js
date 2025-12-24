@@ -3,8 +3,6 @@ import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn
 import '/resources/components/postal-lib.js';
 import moment from '/resources/polymer/lib/moment-lib.js';
 
-@independentTimeZoneSetting
-
 moment.locale('custom-locale', {
     longDateFormat: {
         LTS: @timeWithMillisFormat,

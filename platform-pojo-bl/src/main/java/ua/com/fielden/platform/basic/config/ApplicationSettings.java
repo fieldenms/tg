@@ -9,6 +9,7 @@ import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 
 import java.io.File;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
@@ -39,6 +40,7 @@ public class ApplicationSettings implements IApplicationSettings {
     private final String currencySymbol;
     private final Set<String> siteAllowlist;
     private final int daysUntilSitePermissionExpires;
+    private final String timeZone;
 
     @Inject
     protected ApplicationSettings(
@@ -54,7 +56,8 @@ public class ApplicationSettings implements IApplicationSettings {
             final @Named("email.fromAddress") String fromAddress,
             final @Named("currency.symbol") String currencySymbol,
             final @Named("externalSites.allowlist") String siteAllowlist,
-            final @Named("externalSites.expiresIn") String expiryDays)
+            final @Named("externalSites.expiresIn") String expiryDays,
+            final @Named("independent.time.zone") boolean independentTimeZone)
     {
         this.appName = appName;
         this.pathToStorage = prepareSettings(pathToStorage);
@@ -79,6 +82,7 @@ public class ApplicationSettings implements IApplicationSettings {
                 .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'siteAllowlist': %s".formatted(ex.getMessage())));
         this.daysUntilSitePermissionExpires = TryWrapper.Try( () -> isEmpty(expiryDays) ? DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS : Integer.parseInt(expiryDays) )
                 .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'daysUntilSitePermissionExpires': %s".formatted(ex.getMessage())));
+        this.timeZone = independentTimeZone ? TimeZone.getDefault().getID() : "";
     }
 
     @Override
@@ -119,6 +123,11 @@ public class ApplicationSettings implements IApplicationSettings {
     @Override
     public String currencySymbol() {
         return currencySymbol;
+    }
+
+    @Override
+    public String timeZone() {
+        return timeZone;
     }
 
     @Override

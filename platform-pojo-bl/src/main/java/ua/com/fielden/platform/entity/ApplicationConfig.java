@@ -31,8 +31,8 @@ public class ApplicationConfig extends AbstractEntity<String> {
     private Integer daysUntilSitePermissionExpires;
 
     @IsProperty
-    @Title("Independent Time Zone")
-    private String independentTimeZone;
+    @Title("Time Zone")
+    private String timeZone;
 
     @IsProperty
     @Title(value = "Menu", desc = "Application menu configuration")
@@ -48,13 +48,13 @@ public class ApplicationConfig extends AbstractEntity<String> {
         return this;
     }
 
-    public String getIndependentTimeZone() {
-        return independentTimeZone;
+    public String getTimeZone() {
+        return timeZone;
     }
 
     @Observable
-    public ApplicationConfig setIndependentTimeZone(final String independentTimeZone) {
-        this.independentTimeZone = independentTimeZone;
+    public ApplicationConfig setTimeZone(final String timeZone) {
+        this.timeZone = timeZone;
         return this;
     }
 

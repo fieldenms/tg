@@ -21,15 +21,16 @@ public interface IApplicationSettings {
     String securityTokensPackageName();
 
     /// Site white list that user can visit without confirmation.
-    ///
     Set<String> siteAllowList();
 
     /// Defines how long an allowed site remains trusted before requiring re-confirmation.
-    ///
     int daysUntilSitePermissionExpires();
 
     /// A currency symbol that should be used to display monetary values.
     String currencySymbol();
+
+    /// Time zone for client application. Time zone should be default if this method returns empty value.
+    String timeZone();
 
     Workflows workflow();
     

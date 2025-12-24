@@ -6,6 +6,8 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 import '/resources/polymer/@polymer/app-route/app-location.js';
 import '/resources/polymer/@polymer/app-route/app-route.js';
 
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
 // this import is required to ensure the SSE initialisation upon loading of a web client
@@ -34,8 +36,8 @@ import { InsertionPointManager } from '/resources/centre/tg-insertion-point-mana
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { setCurrencySymbol } from '/resources/reflection/tg-numeric-utils.js';
 import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
-import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
+import moment from '/resources/polymer/lib/moment-lib.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 import * as appActions from '/app/tg-app-actions.js';
@@ -775,6 +777,9 @@ Polymer({
             // selection happens by id, but for all for safety reasons; for example, for web tests these elements do not exist
             document.querySelectorAll("#splash-background").forEach(bg => bg.style.display = 'none'); // background
             document.querySelectorAll("#splash-text").forEach(txt => txt.style.display = 'none'); // text
+            if (this.appConfig.timeZone) {
+                moment.tz.setDefault(this.appConfig.timeZone);
+            }
         }.bind(this);
         this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
         this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};

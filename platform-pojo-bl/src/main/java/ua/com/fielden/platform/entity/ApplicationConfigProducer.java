@@ -66,6 +66,7 @@ public class ApplicationConfigProducer extends DefaultEntityProducerWithContext<
         appConfig.setSiteAllowlist(appSettings.siteAllowList());
         appConfig.setDaysUntilSitePermissionExpires(appSettings.daysUntilSitePermissionExpires());
         appConfig.setCurrencySymbol(appSettings.currencySymbol());
+        appConfig.setTimeZone(appSettings.timeZone());
         return super.provideDefaultValues(appConfig);
     }
 
