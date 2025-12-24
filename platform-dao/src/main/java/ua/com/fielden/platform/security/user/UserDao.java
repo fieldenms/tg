@@ -116,7 +116,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     @Override
     @Authorise(User_CanSave_Token.class)
     @SessionRequired
-    protected Either<Long, User> save(final User user, final Optional<fetch<User>> maybeFetch) {
+    public Either<Long, User> save(final User user, final Optional<fetch<User>> maybeFetch) {
         if (User.system_users.VIRTUAL_USER.matches(user)) {
             throw new SecurityException("VIRTUAL_USER cannot be persisted.");
         }

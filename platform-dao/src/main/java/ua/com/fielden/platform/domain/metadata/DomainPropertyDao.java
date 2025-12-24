@@ -1,21 +1,20 @@
 package ua.com.fielden.platform.domain.metadata;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.types.either.Either;
 
-/**
- * DAO for {@link DomainProperty}.
- * 
- * @author TG Team
- */
+import java.util.Optional;
+
 @EntityType(DomainProperty.class)
 public class DomainPropertyDao extends CommonEntityDao<DomainProperty> implements DomainPropertyCo {
 
-    @Inject
-    protected DomainPropertyDao(final IFilter filter) {
-        super(filter);
+    @Override
+    @SessionRequired
+    public Either<Long, DomainProperty> save(final DomainProperty entity, final Optional<fetch<DomainProperty>> maybeFetch) {
+        return super.save(entity, maybeFetch);
     }
+
 }

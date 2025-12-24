@@ -18,6 +18,7 @@ import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_Can
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
 import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -66,23 +67,37 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         return file.canRead() ? of(file) : empty();
     }
 
+    /// Overriden to specify a custom fetch model for refetching if the revision history is modified.
+    ///
+    @Override
+    public Attachment save(final Attachment attachment) {
+        attachment.isValid().ifFailure(Result::throwRuntime);
+
+        final boolean revisionHistoryModified = attachment.getPrevRevision() != null && attachment.getProperty(pn_PREV_REVISION).isDirty();
+
+        return revisionHistoryModified
+                ? save(attachment, of(getFetchProvider().fetchModel())).asRight().value()
+                : super.save(attachment);
+    }
+
     @Override
     @SessionRequired
     @Authorise(Attachment_CanSave_Token.class)
-    public Attachment save(final Attachment attachment) {
+    public Either<Long, Attachment> save(final Attachment attachment, final Optional<fetch<Attachment>> maybeFetch) {
         attachment.isValid().ifFailure(Result::throwRuntime);
 
         // check if prev. revision was specified
         // this would indicate that document revision process is at play...
         final boolean revisionHistoryModified = attachment.getPrevRevision() != null && attachment.getProperty(pn_PREV_REVISION).isDirty();
-        
-        final Attachment savedAttachment = super.save(attachment);
-        
+
         if (revisionHistoryModified) {
+            final var fetchModel = getFetchProvider().fetchModel();
+            final Attachment savedAttachment = super.save(attachment, of(fetchModel)).asRight().value();
             updateAttachmentRevisionHistory(savedAttachment).ifFailure(Result::throwRuntime);
-            return findByEntityAndFetch(getFetchProvider().fetchModel(), savedAttachment);
-        } else {        
-            return savedAttachment;
+            return super.save(savedAttachment, maybeFetch);
+        }
+        else {
+            return super.save(attachment, maybeFetch);
         }
     }
 

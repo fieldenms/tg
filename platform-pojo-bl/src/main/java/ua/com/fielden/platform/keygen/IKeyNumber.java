@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.keygen;
 
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 
 import java.util.SortedSet;
@@ -9,7 +10,7 @@ import java.util.SortedSet;
 /// Methods with parameter `radix` should be used if the default radix 10 is not appropriate.
 /// The values for `radix` should be [java.lang.Character#MIN_RADIX] and [java.lang.Character#MAX_RADIX].
 ///
-public interface IKeyNumber extends IEntityDao<KeyNumber> {
+public interface IKeyNumber extends IEntityDao<KeyNumber>, ISaveWithFetch<KeyNumber> {
 
     /// Return the next number for a `key` (radix 10).
     ///

@@ -4,8 +4,12 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanSave_Token;
+import ua.com.fielden.platform.types.either.Either;
+
+import java.util.Optional;
 
 /// DAO implementation of the [UserAndRoleAssociationCo]
 ///
@@ -20,8 +24,8 @@ public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssoci
     @Override
     @SessionRequired
     @Authorise(UserAndRoleAssociation_CanSave_Token.class)
-    public UserAndRoleAssociation save(UserAndRoleAssociation entity) {
-        return super.save(entity);
+    public Either<Long, UserAndRoleAssociation> save(final UserAndRoleAssociation entity, final Optional<fetch<UserAndRoleAssociation>> maybeFetch) {
+        return super.save(entity, maybeFetch);
     }
 
     @Override
