@@ -39,7 +39,8 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
 
     public final Logger logger = getLogger(getClass());
 
-    // The following two fields are assigned only once during the initial creation of the test configuration.
+    // The following two fields are initialised only once when the test configuration is created.
+    // This avoids the memory- and CPU-intensive cost of repeating the initialisation.
 
     /// Properties for the establishment of a database connection via Hibernate.
     /// Required to instantiate [DbCreator].
