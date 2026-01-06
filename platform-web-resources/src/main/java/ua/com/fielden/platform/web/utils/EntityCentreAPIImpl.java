@@ -176,22 +176,23 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             final var saveAsName = actualSaveAsName;
 
             // load / update fresh centre if it is not loaded yet / stale
-            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
 
             final M validationPrototype = createCriteriaValidationPrototype(miType, saveAsName, originalCdtmae, companionFinder, critGenerator, CRITERIA_ENTITY_ID /* TODO prevVersion + 1 */, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
-            final M freshCentreAppliedCriteriaEntity = resetMetaStateForCriteriaValidationPrototype(
+            final M savedCriteriaEntity = resetMetaStateForCriteriaValidationPrototype(
                 validationPrototype,
                 getOriginalManagedType(validationPrototype.getType(), originalCdtmae)
             );
 
             // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
-            final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
+            final Result validationResult = savedCriteriaEntity.isValid();
             if (!validationResult.isSuccessful()) {
                 return left(validationResult);
             }
 
-            final Result authorisationResult = authoriseCriteriaEntity(freshCentreAppliedCriteriaEntity, miType, authorisationModel, securityTokenProvider);
+            final Result authorisationResult = authoriseCriteriaEntity(savedCriteriaEntity, miType, authorisationModel, securityTokenProvider);
             if (!authorisationResult.isSuccessful()) {
                 return left(authorisationResult);
             }
@@ -208,11 +209,11 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
 
                 // create and execute a generator instance
                 final var generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
-                final Map<String, Optional<?>> params = freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
+                final Map<String, Optional<?>> params = savedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
                         (final MetaProperty<?> mp) -> mp.getName(),
                         (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
-                params.putAll(freshCentreAppliedCriteriaEntity.getParameters().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> Optional.ofNullable(entry.getValue()))));
-                if (shouldForceRegeneration(customObject)) {
+                params.putAll(savedCriteriaEntity.getParameters().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> Optional.ofNullable(entry.getValue()))));
+                if (shouldForceRegeneration(customObject)) { // TODO always force regeneration
                     params.put(FORCE_REGENERATION_KEY, of(true));
                 }
                 final Result generationResult = generator.gen(generatorEntityType, params);
