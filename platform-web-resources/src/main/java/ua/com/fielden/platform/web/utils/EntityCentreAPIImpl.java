@@ -225,17 +225,17 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                 }
             }
 
-            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = freshCentreAppliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
+            //final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = savedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
 
-            commitCentreWithoutConflicts(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, updatedFreshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            //commitCentreWithoutConflicts(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, updatedSavedCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
 
-            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+            //final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            //final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
             final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
                 customObject,
                 complementCriteriaEntityBeforeRunning( // complements previouslyRunCriteriaEntity instance
-                        previouslyRunCriteriaEntity,
+                        savedCriteriaEntity,
                         webUiConfig,
                         companionFinder,
                         user,
