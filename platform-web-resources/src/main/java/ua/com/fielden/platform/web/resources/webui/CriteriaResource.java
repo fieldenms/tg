@@ -204,7 +204,7 @@ public class CriteriaResource extends AbstractWebResource {
                     final Optional<String> preliminarySaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device()));
                     // updating is required from upstream configuration;
                     if (!LINK_CONFIG_TITLE.equals(preliminarySaveAsName.get())) { // (but not for link configuration);
-                        actualSaveAsNameAndSharedIndicator = updateFromUpstream(configUuid.get(), preliminarySaveAsName);
+                        actualSaveAsNameAndSharedIndicator = updateFromUpstream(configUuid.get(), preliminarySaveAsName, miType, device(), eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, sharingModel, companionFinder);
                     } else {
                         actualSaveAsNameAndSharedIndicator = t2(preliminarySaveAsName, false);
                     }
@@ -236,7 +236,7 @@ public class CriteriaResource extends AbstractWebResource {
                     final Optional<String> preliminarySaveAsName = retrievePreferredConfigName(user, miType, device(), companionFinder, webUiConfig); // preferred configuration should be loaded
                     resolvedConfigUuid = updateCentreConfigUuid(user, miType, preliminarySaveAsName, device(), eccCompanion);
                     if (resolvedConfigUuid.isPresent()) { // preferred config can be inherited from base / shared (link configs can not be preferred, no need to check it here)
-                        actualSaveAsName = updateFromUpstream(resolvedConfigUuid.get(), preliminarySaveAsName)._1; // it needs updating from upstream -- only for the configs that has configUuid aka non-default
+                        actualSaveAsName = updateFromUpstream(resolvedConfigUuid.get(), preliminarySaveAsName, miType, device(), eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, sharingModel, companionFinder)._1; // it needs updating from upstream -- only for the configs that has configUuid aka non-default
                     } else {
                         actualSaveAsName = preliminarySaveAsName;
                     }
@@ -358,9 +358,21 @@ public class CriteriaResource extends AbstractWebResource {
     /// Updates a configuration already loaded by the `user` with the concrete `configUuid`
     /// from its upstream configuration, if it is inherited.
     ///
-    private T2<Optional<String>, Boolean> updateFromUpstream(final String configUuid, final Optional<String> saveAsName) {
+    public static T2<Optional<String>, Boolean> updateFromUpstream(
+        final String configUuid,
+        final Optional<String> saveAsName,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final DeviceProfile device,
+        final EntityCentreConfigCo eccCompanion,
+        final User user,
+        final IWebUiConfig webUiConfig,
+        final MainMenuItemCo mmiCompanion,
+        final IUser userCompanion,
+        final ICentreConfigSharingModel sharingModel,
+        final ICompanionObjectFinder companionFinder
+    ) {
         // look for config creator
-        final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, eccCompanion);
+        final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion);
         if (savedConfigOpt.isPresent()) {
             // the creator is current user or other
             final EntityCentreConfig savedConfig = savedConfigOpt.get();
@@ -369,20 +381,20 @@ public class CriteriaResource extends AbstractWebResource {
                 // current user didn't create this config -> it is inherited and needs updating
                 if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser() /*id-only-proxy*/)) {
                     // inherited from base
-                    if (isCentreChanged(saveAsName)) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
-                        removeCentres(user, miType, device(), saveAsName, eccCompanion, SAVED_CENTRE_NAME);
+                    if (isCentreChanged(saveAsName, miType, device, eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, companionFinder)) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
+                        removeCentres(user, miType, device, saveAsName, eccCompanion, SAVED_CENTRE_NAME);
                     } else { // otherwise base user changes will be loaded immediately after centre loading
-                        removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+                        removeCentres(user, miType, device, saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                     }
-                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
 
-                    makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig); // inherited from base always gets preferred on loading; must leave it preferred after deletion
+                    makePreferred(user, miType, saveAsName, device, companionFinder, webUiConfig); // inherited from base always gets preferred on loading; must leave it preferred after deletion
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
                         // inherited from shared
-                        updateInheritedFromShared(savedConfig, miType, device(), saveAsName, user, eccCompanion, of(() -> isCentreChanged(saveAsName)));
-                        return t2(of(obtainTitleFrom(savedConfig.getTitle(), SAVED_CENTRE_NAME, device())), true);
+                        updateInheritedFromShared(savedConfig, miType, device, saveAsName, user, eccCompanion, of(() -> isCentreChanged(saveAsName, miType, device, eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, companionFinder)));
+                        return t2(of(obtainTitleFrom(savedConfig.getTitle(), SAVED_CENTRE_NAME, device)), true);
                     } // already loaded inherited from shared config was made unshared; the inherited from shared configuration now acts like own save-as configuration
                 }
             } // if the current user is creator then no 'updating from upstream' is needed -- it is own save-as
@@ -423,10 +435,20 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// Determines whether the FRESH configuration has been modified compared to the SAVED one.
     ///
-    private boolean isCentreChanged(final Optional<String> actualSaveAsName) {
+    private static boolean isCentreChanged(
+        final Optional<String> actualSaveAsName,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final DeviceProfile device,
+        final EntityCentreConfigCo eccCompanion,
+        final User user,
+        final IWebUiConfig webUiConfig,
+        final MainMenuItemCo mmiCompanion,
+        final IUser userCompanion,
+        final ICompanionObjectFinder companionFinder
+    ) {
         return isFreshCentreChanged(
-            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
-            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
+            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
         );
     }
 

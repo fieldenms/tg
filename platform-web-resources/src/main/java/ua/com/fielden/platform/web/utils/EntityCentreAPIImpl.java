@@ -153,7 +153,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                 final Optional<String> preliminarySaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device));
                 // updating is required from upstream configuration;
                 if (!LINK_CONFIG_TITLE.equals(preliminarySaveAsName.get())) { // (but not for link configuration);
-                    actualSaveAsName = preliminarySaveAsName; // TODO updateFromUpstream(configUuid.get(), preliminarySaveAsName);
+                    actualSaveAsName = updateFromUpstream(configUuid, preliminarySaveAsName, miType, device, eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, sharingModel, companionFinder)._1;
                 } else {
                     actualSaveAsName = preliminarySaveAsName;
                 }
