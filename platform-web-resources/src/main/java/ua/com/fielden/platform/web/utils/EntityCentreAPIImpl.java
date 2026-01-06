@@ -93,26 +93,19 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
 
     @Override
     public <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Result, T2<List<T>, Hyperlink>> entityCentreResult(
-        Class<?> miTypeGen,
-        String configUuid,
-        User user
+        final String miTypeNameForStandaloneCentre,
+        final String configUuid,
+        final String userName
     ) {
-
-        final String miTypeString = "fielden.main.menu.personnel.MiLeaveRequest";
+        final Class<?> miTypeGen;
         try {
-            miTypeGen = Class.forName(miTypeString);
+            miTypeGen = Class.forName(miTypeNameForStandaloneCentre);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
         Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miTypeGen;
-
-        configUuid = "48b767df-bf45-48b7-932a-d2892eec47e8";
-
-        final var userName = "Troy.Plecas";
-//        user = new User();
-//        user.setKey(userName);
         final IUser coUser = companionFinder.find(User.class, true);
-        user = coUser.findUser(userName);
+        final User user = coUser.findUser(userName);
 
         final User currentUser = userProvider.getUser();
 

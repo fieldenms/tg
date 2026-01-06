@@ -79,12 +79,13 @@ public class ShareActionProducer extends DefaultEntityProducerWithContext<ShareA
                             .setQrCode(Base64.getEncoder().encodeToString(qrCodeImage(hyperlink.value, PNG, 512, 512, 12, WHITE, BLACK)));
                 }
             });
-        }
 
-        final var result = entityCentreAPI.entityCentreResult(null, null, null);
-        result.asRight().value()._1.forEach(ent -> {
-            System.out.println(ent.get("details") + " " + ent.get("person") + " " + ent.get("date"));
-        });
+            final var result = entityCentreAPI.entityCentreResult("fielden.main.menu.personnel.MiLeaveRequest", "48b767df-bf45-48b7-932a-d2892eec47e8", "Troy.Plecas"); // Daniel.Truong Troy.Plecas
+
+            result.asRight().value()._1.forEach(ent -> {
+                System.out.println(ent.get("details") + " " + ent.get("person") + " " + ent.get("date"));
+            });
+        }
 
         return super.provideDefaultValues(entity);
     }

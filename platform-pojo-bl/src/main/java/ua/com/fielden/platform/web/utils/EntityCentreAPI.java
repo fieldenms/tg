@@ -15,9 +15,9 @@ public interface EntityCentreAPI {
 
     <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>
     Either<Result, T2<List<T>, Hyperlink>> entityCentreResult(
-        Class<?> miTypeForStandaloneCentre,
+        String miTypeForStandaloneCentreName,
         String configUuid,
-        User user
+        String userName
     );
 
 }
