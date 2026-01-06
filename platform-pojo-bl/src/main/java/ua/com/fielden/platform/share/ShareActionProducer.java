@@ -80,11 +80,17 @@ public class ShareActionProducer extends DefaultEntityProducerWithContext<ShareA
                 }
             });
 
-            final var result = entityCentreAPI.entityCentreResult("fielden.main.menu.personnel.MiLeaveRequest", "48b767df-bf45-48b7-932a-d2892eec47e8", "Troy.Plecas"); // Daniel.Truong Troy.Plecas
-
-            result.asRight().value()._1.forEach(ent -> {
-                System.out.println(ent.get("details") + " " + ent.get("person") + " " + ent.get("date"));
-            });
+            final var result = entityCentreAPI.entityCentreResult("fielden.main.menu.personnel.MiLeaveRequest", "05ca9ad5-ecb3-4ee1-b8af-a56cc5e12131", "Daniel.Truong"); // Daniel.Truong Troy.Plecas
+            System.out.println("----------- API Execution (...) ------------");
+            if (result.isRight()) {
+                result.asRight().value()._1.forEach(ent -> {
+                    System.out.println(ent.get("details") + " " + ent.get("person") + " " + ent.get("date"));
+                });
+            }
+            else {
+                System.out.println(result.asLeft().value().getMessage());
+            }
+            System.out.println("----------- API Execution (end) ------------");
         }
 
         return super.provideDefaultValues(entity);

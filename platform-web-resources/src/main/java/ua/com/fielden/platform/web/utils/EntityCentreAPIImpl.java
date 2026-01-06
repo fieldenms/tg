@@ -45,6 +45,7 @@ import static org.apache.poi.hslf.usermodel.HSLFFontInfo.FontRenderType.device;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -172,6 +173,9 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                     sharingModel,
                     companionFinder
                 )._1;
+            }
+            if (!actualSaveAsName.isPresent() || LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) {
+                return left(failure("Default / Link configs are not available for API running (%s).".formatted(actualSaveAsName)));
             }
             final var saveAsName = actualSaveAsName;
 
