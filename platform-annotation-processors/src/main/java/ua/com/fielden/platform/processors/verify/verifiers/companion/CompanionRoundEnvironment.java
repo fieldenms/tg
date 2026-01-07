@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers.companion;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
 import ua.com.fielden.platform.processors.verify.AbstractTypeElementVerifier;
@@ -9,6 +8,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +35,8 @@ public class CompanionRoundEnvironment extends AbstractRoundEnvironment<TypeElem
     ///
     public List<TypeElement> listCompanions() {
         if (companions == null) {
-            // All DAO types are annotated with `@EntityType`.
-            companions = streamElementsAnnotatedWith(EntityType.class)
+            companions = streamRootElements()
+                    .filter(elt -> ElementKind.CLASS.equals(elt.getKind()))
                     .mapMulti(typeFilter(TypeElement.class))
                     .filter(typeElt -> elementFinder.isSubtype(typeElt.asType(), IEntityDao.class))
                     .toList();
