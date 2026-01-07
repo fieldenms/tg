@@ -16,8 +16,6 @@ import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.s
 
 public class SaveWithFetchVerifier extends AbstractCompanionVerifier {
 
-    private static final String ERR_MUST_IMPLEMENT_ISAVE_WITH_FETCH = "[%s] must implement [ISaveWithFetch] to override save-with-fetch.";
-
     public SaveWithFetchVerifier(final ProcessingEnvironment processingEnv) {
         super(processingEnv);
     }
@@ -34,12 +32,18 @@ public class SaveWithFetchVerifier extends AbstractCompanionVerifier {
                                              && elementFinder.isSubtype(execElt.getParameters().getFirst().asType(), AbstractEntity.class));
 
                 if (overridesSaveWithFetch && !elementFinder.isSubtype(typeElement.asType(), ISaveWithFetch.class)) {
-                    return Optional.of(new ViolatingElement(typeElement, ERROR, ERR_MUST_IMPLEMENT_ISAVE_WITH_FETCH.formatted(typeElement.getSimpleName())));
+                    return Optional.of(new ViolatingElement(typeElement, ERROR, errMustImplementSaveWithFetch(typeElement.getSimpleName())));
                 }
+
+                // TODO Warn if both saves are overriden.
 
                 return Optional.empty();
             }
         });
+    }
+
+    private static String errMustImplementSaveWithFetch(final CharSequence coName) {
+        return "[%s] must implement [%s] to override save-with-fetch.".formatted(coName, ISaveWithFetch.class.getSimpleName());
     }
 
 }
