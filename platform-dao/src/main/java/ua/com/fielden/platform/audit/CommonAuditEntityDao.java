@@ -19,6 +19,9 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.either.Left;
+import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import jakarta.annotation.Nullable;
@@ -35,6 +38,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
+import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
@@ -126,35 +130,37 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
     }
 
     @Override
-    public void audit(final E auditedEntity, final String transactionGuid, final Collection<String> dirtyProperties) {
+    public void audit(final Either<Long, E> auditedEntityOrId, final String transactionGuid, final Collection<String> dirtyProperties) {
         // NOTE save() is annotated with SessionRequired.
         //      To truly enforce the contract of this method described in IAuditEntityDao, a version of save() without
         //      SessionRequired would need to be used.
 
-        if (!auditedEntity.isPersisted()) {
-            throw cannotBeAuditedFailure(auditedEntity, ERR_ONLY_PERSISTED_INSTANCES_CAN_BE_AUDITED);
-        }
-        if (auditedEntity.isDirty()) {
-            throw cannotBeAuditedFailure(auditedEntity, ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED);
-        }
+        if (auditedEntityOrId instanceof Right<?, E> (var auditedEntity)) {
+            if (!auditedEntity.isPersisted()) {
+                throw cannotBeAuditedFailure(auditedEntity, ERR_ONLY_PERSISTED_INSTANCES_CAN_BE_AUDITED);
+            }
+            if (auditedEntity.isDirty()) {
+                throw cannotBeAuditedFailure(auditedEntity, ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED);
+            }
 
-        // NOTE: It is possible for a persisted entity to become invalid upon retrieval from a persistent store
-        //       (e.g., due to complex business logic in property definers), which may occur when an entity is refetched after being saved.
-        //       We cannot meaningfully distinguish such edge cases from truly invalid states.
-        //       However, as this method should only be used within the save operation, truly invalid states should never occur,
-        //       since only valid instances can be saved.
-        //       Therefore, we can skip the assertion about the audited entity validity.
-        //       The working principle is "that which was persisted is valid and can be audited".
-        //
-        // if (!auditedEntity.isValid().isSuccessful()) {
-        //     throw auditedEntity.isValid();
-        // }
+            // NOTE: It is possible for a persisted entity to become invalid upon retrieval from a persistent store
+            //       (e.g., due to complex business logic in property definers), which may occur when an entity is refetched after being saved.
+            //       We cannot meaningfully distinguish such edge cases from truly invalid states.
+            //       However, as this method should only be used within the save operation, truly invalid states should never occur,
+            //       since only valid instances can be saved.
+            //       Therefore, we can skip the assertion about the audited entity validity.
+            //       The working principle is "that which was persisted is valid and can be audited".
+            //
+            // if (!auditedEntity.isValid().isSuccessful()) {
+            //     throw auditedEntity.isValid();
+            // }
+        }
 
         final var anyAuditedPropertyDirty = auditedPropertyNames().stream().anyMatch(dirtyProperties::contains);
 
         if (anyAuditedPropertyDirty) {
             // Audit-entity may need to be refetched for its ID (and nothing else) is required to persist audit-prop entities below.
-            final var refetchedAuditedEntity = refetchAuditedEntity(auditedEntity);
+            final var refetchedAuditedEntity = refetchAuditedEntity(auditedEntityOrId);
             final AbstractAuditEntity<E> auditEntity = save(newAudit(refetchedAuditedEntity, transactionGuid), Optional.of(fetchNone(getEntityType()).with(ID))).asRight().value();
 
             if (!dirtyProperties.isEmpty()) {
@@ -218,11 +224,17 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         return audit;
     }
 
-    private E refetchAuditedEntity(final E auditedEntity) {
-        final var proxiedPropertyNames = auditedEntity.proxiedPropertyNames();
-        return propertiesForAuditing.stream().anyMatch(proxiedPropertyNames::contains)
-                ? coAuditedEntity.findById(auditedEntity.getId(), fetchModelForAuditing)
-                : auditedEntity;
+    private E refetchAuditedEntity(final Either<Long, E> auditedEntityOrId) {
+        // TODO May return an uninstrumented instance for efficiency.
+        return switch (auditedEntityOrId) {
+            case Left<Long, ?> (var id) -> coAuditedEntity.findById(id, fetchModelForAuditing);
+            case Right<?, E> (var entity) -> {
+                final var proxiedPropertyNames = entity.proxiedPropertyNames();
+                yield propertiesForAuditing.stream().anyMatch(proxiedPropertyNames::contains)
+                        ? coAuditedEntity.findById(entity.getId(), fetchModelForAuditing)
+                        : entity;
+            }
+        };
     }
 
     @Override

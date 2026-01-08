@@ -12,6 +12,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.util.Collection;
@@ -29,6 +30,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
+import static ua.com.fielden.platform.types.either.Either.right;
 
 public class AuditingTest extends AbstractDaoTestCase {
 
@@ -251,7 +253,7 @@ public class AuditingTest extends AbstractDaoTestCase {
 
         final var entity = save(new_(AuditedEntity.class, "A"))
                 .setStr2("foo");
-        assertThatThrownBy(() -> audit(coAudit, entity, generateTransactionGuid(), Set.of(AuditedEntity.Property.str2.toString())))
+        assertThatThrownBy(() -> audit(coAudit, right(entity), generateTransactionGuid(), Set.of(AuditedEntity.Property.str2.toString())))
                 .hasMessageContaining(ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED);
     }
 
@@ -260,7 +262,7 @@ public class AuditingTest extends AbstractDaoTestCase {
         final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
 
         final var entity = new_(AuditedEntity.class, "A").setStr2("foo");
-        assertThatThrownBy(() -> audit(coAudit, entity, generateTransactionGuid(), Set.of(KEY, AuditedEntity.Property.str2.toString())))
+        assertThatThrownBy(() -> audit(coAudit, right(entity), generateTransactionGuid(), Set.of(KEY, AuditedEntity.Property.str2.toString())))
                 .hasMessageContaining(ERR_ONLY_PERSISTED_INSTANCES_CAN_BE_AUDITED);
     }
 
@@ -282,11 +284,11 @@ public class AuditingTest extends AbstractDaoTestCase {
     @SessionRequired
     protected <E extends AbstractEntity<?>> void audit(
             final ISynAuditEntityDao<E> coAudit,
-            final E auditedEntity,
+            final Either<Long, E> auditedEntityOrId,
             final String transactionGuid,
             final Collection<String> dirtyProperties)
     {
-        coAudit.audit(auditedEntity, transactionGuid, dirtyProperties);
+        coAudit.audit(auditedEntityOrId, transactionGuid, dirtyProperties);
     }
 
     @Override

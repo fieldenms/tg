@@ -42,6 +42,7 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -79,6 +80,8 @@ import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionH
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
@@ -251,9 +254,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return propName;
         }).collect(toSet());
 
-        // Auditing requires an audited entity to be refetched so that audit records can be created.
-        final boolean reallySkipRefetching = skipRefetching && !audited;
-
         final T2<Long, T> savedEntityAndId;
         // let's try to save entity
         try {
@@ -266,9 +266,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                savedEntityAndId = saveNewEntity(entity, reallySkipRefetching, maybeFetch, fillModel, session.get());
+                savedEntityAndId = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
             } else { // so, this is a modified entity
-                savedEntityAndId = saveModifiedEntity(entity, reallySkipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
+                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
@@ -280,7 +280,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
         // Auditing
-        lazyAuditor.get().audit(savedEntity, transactionGuid.get(), dirtyPropNames);
+        lazyAuditor.get().audit(skipRefetching ? left(savedEntityAndId._1) : right(savedEntity), transactionGuid.get(), dirtyPropNames);
 
         return savedEntityAndId;
     }
@@ -294,7 +294,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     @FunctionalInterface
     private interface Auditor<E extends AbstractEntity<?>> {
 
-        void audit(final E entity, final String transactionGuid, Collection<String> dirtyProperties);
+        void audit(final Either<Long, E> entity, final String transactionGuid, Collection<String> dirtyProperties);
 
     }
 

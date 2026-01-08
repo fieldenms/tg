@@ -2,6 +2,7 @@ package ua.com.fielden.platform.audit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.util.Collection;
 
@@ -35,7 +36,7 @@ public interface IEntityAuditor<E extends AbstractEntity<?>> {
      * @param dirtyProperties  names of properties of the audited entity whose values changed.
      *                         Only audited properties are considered, others are ignored.
      */
-    void audit(E auditedEntity, String transactionGuid, Collection<String> dirtyProperties);
+    void audit(Either<Long, E> auditedEntity, String transactionGuid, Collection<String> dirtyProperties);
 
     /**
      * Returns a fetch model for the audited entity type that includes all properties that are necessary to perform auditing.
