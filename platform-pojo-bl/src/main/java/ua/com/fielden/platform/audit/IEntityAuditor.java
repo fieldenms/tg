@@ -29,14 +29,14 @@ public interface IEntityAuditor<E extends AbstractEntity<?>> {
      * This method requires a session but is deliberately not annotated with {@code @SessionRequired}, which must also be the case for its implementation.
      * This enforces the contract that this method may only be used as a part of a save operation on an audited entity.
      *
-     * @param auditedEntity  the audited entity that will be used to initialise the audit-entity instance.
-     *                       Must be persisted, not dirty, and valid.
-     *                       If any of the audited properties are proxied, the entity will be refetched.
+     * @param auditedEntityOrId  either an audited entity that will be used to initialise the audit-entity instance (must be persisted, not dirty, and valid),
+     *                           or the ID of that entity.
+     *                           If any of the audited properties are proxied, the entity will be refetched.
      * @param transactionGuid  identifier of a transaction that was used to save the audited entity
      * @param dirtyProperties  names of properties of the audited entity whose values changed.
      *                         Only audited properties are considered, others are ignored.
      */
-    void audit(Either<Long, E> auditedEntity, String transactionGuid, Collection<String> dirtyProperties);
+    void audit(Either<Long, E> auditedEntityOrId, String transactionGuid, Collection<String> dirtyProperties);
 
     /**
      * Returns a fetch model for the audited entity type that includes all properties that are necessary to perform auditing.
