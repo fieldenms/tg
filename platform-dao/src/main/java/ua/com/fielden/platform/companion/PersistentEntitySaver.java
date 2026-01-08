@@ -276,7 +276,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         final T savedEntity = savedEntityAndId._2;
 
-        // this call never throws any exceptions
+        // This call never throws any exceptions.
+        //
+        // NOTE: `savedEntity` will be a Hibernate proxy if refetching is skipped.
+        //       This may be confusing if "after-save" logic expects an entity instantiated in the usual way (via EntityFactory).
         processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
         // Auditing
