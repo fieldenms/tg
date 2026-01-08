@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.audit;
 
 import com.google.common.collect.ImmutableSet;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
-import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
@@ -24,7 +24,6 @@ import ua.com.fielden.platform.types.either.Left;
 import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import jakarta.annotation.Nullable;
 import java.util.*;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -38,7 +37,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
-import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
@@ -63,7 +61,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
 
     private IAuditPropInstantiator<E> auditPropInstantiator;
     private IDomainMetadata domainMetadata;
-    private IEntityReader<E> coAuditedEntity;
+    private Class<E> auditedEntityType;
     private fetch<E> fetchModelForAuditing;
     private EntityBatchInsertOperation.Factory batchInsertFactory;
     private IUserProvider userProvider;
@@ -91,7 +89,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         auditedToAuditPropertyNames = makeAuditedToAuditPropertyNames(domainMetadata);
         propertiesForAuditing = collectPropertiesForAuditing(auditedToAuditPropertyNames.keySet());
         fetchModelForAuditing = makeFetchModelForAuditing(a3tFinder.navigateAudit(getEntityType()).auditedType(), propertiesForAuditing, domainMetadata);
-        coAuditedEntity = coFinder.find(a3tFinder.navigateAudit(getEntityType()).auditedType());
+        auditedEntityType = a3tFinder.navigateAudit(getEntityType()).auditedType();
         final var auditPropType = a3tFinder.navigateAudit(getEntityType()).auditPropType();
         auditPropInstantiator = co(auditPropType);
     }
@@ -225,13 +223,12 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
     }
 
     private E refetchAuditedEntity(final Either<Long, E> auditedEntityOrId) {
-        // TODO May return an uninstrumented instance for efficiency.
         return switch (auditedEntityOrId) {
-            case Left<Long, ?> (var id) -> coAuditedEntity.findById(id, fetchModelForAuditing);
+            case Left<Long, ?> (var id) -> co(auditedEntityType).findById(id, fetchModelForAuditing);
             case Right<?, E> (var entity) -> {
                 final var proxiedPropertyNames = entity.proxiedPropertyNames();
                 yield propertiesForAuditing.stream().anyMatch(proxiedPropertyNames::contains)
-                        ? coAuditedEntity.findById(entity.getId(), fetchModelForAuditing)
+                        ? co(auditedEntityType).findById(entity.getId(), fetchModelForAuditing)
                         : entity;
             }
         };
