@@ -1,4 +1,4 @@
-// This grammar was generated. Timestamp: 2024-08-16T09:09:23.035716004+03:00[Europe/Kyiv]
+// This grammar was generated. Timestamp: 2026-01-09T19:39:10.088033808+02:00[Europe/Kyiv]
 
 grammar EQL;
 
@@ -197,6 +197,7 @@ yieldOperand :
     | BEGINYIELDEXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* ENDYIELDEXPR # YieldOperandExpr
     | COUNTALL # YieldOperand_CountAll
     | funcName=yieldOperandFunctionName argument=singleOperand # YieldOperandFunction
+    | CONCATOF expr=singleOperand SEPARATOR separator=yieldOperandConcatOfSeparator # YieldOperandConcatOf
 ;
 
 yieldOperandFunctionName :
@@ -208,6 +209,11 @@ yieldOperandFunctionName :
     | token=SUMOFDISTINCT
     | token=COUNTOFDISTINCT
     | token=AVGOFDISTINCT
+;
+
+yieldOperandConcatOfSeparator :
+      token=VAL
+    | token=PARAM
 ;
 
 yieldAlias :
@@ -281,6 +287,7 @@ BEGINYIELDEXPR : 'beginYieldExpr' ;
 BETWEEN : 'between' ;
 CASEWHEN : 'caseWhen' ;
 CONCAT : 'concat' ;
+CONCATOF : 'concatOf' ;
 COND : 'cond' ;
 CONDITION : 'condition' ;
 COUNT : 'count' ;
@@ -367,6 +374,7 @@ ROUND : 'round' ;
 SECONDOF : 'secondOf' ;
 SECONDS : 'seconds' ;
 SELECT : 'select' ;
+SEPARATOR : 'separator' ;
 SUB : 'sub' ;
 SUMOF : 'sumOf' ;
 SUMOFDISTINCT : 'sumOfDistinct' ;

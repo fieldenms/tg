@@ -419,11 +419,24 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitYieldOperandFunction(EQLParser.YieldOperandFunctionContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code YieldOperandConcatOf}
+	 * labeled alternative in {@link EQLParser#yieldOperand}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitYieldOperandConcatOf(EQLParser.YieldOperandConcatOfContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link EQLParser#yieldOperandFunctionName}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitYieldOperandFunctionName(EQLParser.YieldOperandFunctionNameContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link EQLParser#yieldOperandConcatOfSeparator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitYieldOperandConcatOfSeparator(EQLParser.YieldOperandConcatOfSeparatorContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link EQLParser#yieldAlias}.
 	 * @param ctx the parse tree
