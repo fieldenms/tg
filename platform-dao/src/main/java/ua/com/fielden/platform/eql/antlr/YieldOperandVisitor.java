@@ -81,7 +81,7 @@ final class YieldOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ext
                 yield value(preprocessValue(cs));
             }
             case ParamToken tok -> {
-                final var paramValue = getParamValue(tok.paramName);
+                final var paramValue = requireParamValue(tok.paramName);
                 if (!(paramValue instanceof CharSequence cs)) {
                     throw new EqlValidationException(format(
                             "Invalid separator for `concatOf` using `param(%s)`. Must be a subtype of [%s], but was [%s].",
