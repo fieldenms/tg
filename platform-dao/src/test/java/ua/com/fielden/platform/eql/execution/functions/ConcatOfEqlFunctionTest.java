@@ -49,6 +49,17 @@ public class ConcatOfEqlFunctionTest extends AbstractEqlExecutionTestCase {
                 .isEqualTo("word:word");
     }
 
+    @Test
+    public void concatOf_skips_null_values() {
+        final var qry = select(select(TgPersonName.class).yield().prop("key").as("x").modelAsAggregate(),
+                               select().yield().val(null).as("x").modelAsAggregate())
+                .yield().concatOf().prop("x").separator().val(", ").as(RESULT)
+                .modelAsAggregate();
+        // Cannot use orderBy because PostgreSQL doesn't like it.
+        assertThat(retrieveResult(qry))
+                .isIn("Alan Turing, John Conway", "John Conway, Alan Turing");
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
