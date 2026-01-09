@@ -1,9 +1,14 @@
 package ua.com.fielden.platform.eql.antlr;
 
+import ua.com.fielden.platform.entity.query.exceptions.EqlValidationException;
+import ua.com.fielden.platform.eql.antlr.exceptions.EqlCompilationException;
+import ua.com.fielden.platform.eql.antlr.tokens.ParamToken;
+import ua.com.fielden.platform.eql.antlr.tokens.ValToken;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.operands.CompoundSingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
+import ua.com.fielden.platform.eql.stage1.operands.Value1;
 import ua.com.fielden.platform.eql.stage1.operands.functions.*;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -11,8 +16,10 @@ import ua.com.fielden.platform.utils.StreamUtils;
 import java.util.List;
 import java.util.function.Function;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
 import static ua.com.fielden.platform.eql.antlr.SingleOperandVisitor.toArithmeticalOperator;
+import static ua.com.fielden.platform.eql.stage1.operands.Value1.value;
 
 final class YieldOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? extends ISingleOperand2<?>>> {
 
@@ -58,6 +65,35 @@ final class YieldOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ext
             case EQLLexer.AVGOFDISTINCT -> op -> new AverageOf1(op, true);
             default -> unexpectedToken(ctx.token);
         };
+    }
+
+    @Override
+    public ISingleOperand1<? extends ISingleOperand2<?>> visitYieldOperandConcatOf(final YieldOperandConcatOfContext ctx) {
+        final var expr = ctx.expr.accept(new SingleOperandVisitor(transformer));
+        final Value1 separator = switch (ctx.separator.token) {
+            case ValToken tok -> {
+                if (!(tok.value instanceof CharSequence cs)) {
+                    throw new EqlValidationException(format(
+                            "Invalid separator for `concatOf` using `val`. Must be a subtype of [%s], but was [%s].",
+                            CharSequence.class.getSimpleName(),
+                            tok.value == null ? "null" : tok.value.getClass().getTypeName()));
+                }
+                yield value(preprocessValue(cs));
+            }
+            case ParamToken tok -> {
+                final var paramValue = getParamValue(tok.paramName);
+                if (!(paramValue instanceof CharSequence cs)) {
+                    throw new EqlValidationException(format(
+                            "Invalid separator for `concatOf` using `param(%s)`. Must be a subtype of [%s], but was [%s].",
+                            tok.paramName,
+                            CharSequence.class.getSimpleName(),
+                            paramValue == null ? "null" : paramValue.getClass().getTypeName()));
+                }
+                yield value(cs);
+            }
+            default -> unexpectedToken(ctx.separator.token);
+        };
+        return new ConcatOf1(expr, separator);
     }
 
 }
