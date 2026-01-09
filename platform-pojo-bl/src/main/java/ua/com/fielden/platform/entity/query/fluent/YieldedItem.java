@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldOperand;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.*;
 
 abstract class YieldedItem<T, ET extends AbstractEntity<?>> //
         extends SingleOperand<T, ET> //
@@ -35,6 +34,26 @@ abstract class YieldedItem<T, ET extends AbstractEntity<?>> //
     @Override
     public IFunctionLastArgument<T, ET> avgOf() {
         return createFunctionLastArgument(builder.averageOf());
+    }
+
+    @Override
+    public ISingleOperand<IYieldOperandConcatOfSeparator<T, ET>, ET> concatOf() {
+        return new SingleOperand<>(builder.concatOf()) {
+            @Override
+            protected IYieldOperandConcatOfSeparator<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
+                return new IYieldOperandConcatOfSeparator<T, ET>() {
+                    @Override
+                    public IYieldOperandConcatOfSeparatorOperand<T, ET> separator() {
+                        return new YieldOperandConcatOfSeparatorOperand<T, ET>(builder.separator()) {
+                            @Override
+                            protected T nextForYieldOperandConcatOfSeparator(final EqlSentenceBuilder builder) {
+                                return YieldedItem.this.nextForSingleOperand(builder);
+                            }
+                        };
+                    }
+                };
+            }
+        };
     }
 
     @Override

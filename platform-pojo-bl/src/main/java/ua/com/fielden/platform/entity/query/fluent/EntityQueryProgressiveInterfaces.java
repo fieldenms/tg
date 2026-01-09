@@ -1,18 +1,10 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.*;
+
 import java.util.Collection;
 import java.util.Date;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
  * Class for collecting all interfaces, which are part of Entity Query Progressive Interfaces.
@@ -461,7 +453,8 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     interface IYieldOperand<T, ET extends AbstractEntity<?>> //
-            extends ISingleOperand<T, ET> {
+            extends ISingleOperand<T, ET>
+    {
         IFunctionLastArgument<T, ET> maxOf();
 
         IFunctionLastArgument<T, ET> minOf();
@@ -472,6 +465,8 @@ public interface EntityQueryProgressiveInterfaces {
 
         IFunctionLastArgument<T, ET> avgOf();
 
+        ISingleOperand<IYieldOperandConcatOfSeparator<T, ET>, ET> concatOf();
+
         T countAll();
 
         IFunctionLastArgument<T, ET> sumOfDistinct();
@@ -479,6 +474,16 @@ public interface EntityQueryProgressiveInterfaces {
         IFunctionLastArgument<T, ET> countOfDistinct();
 
         IFunctionLastArgument<T, ET> avgOfDistinct();
+    }
+
+    interface IYieldOperandConcatOfSeparator<T, ET extends AbstractEntity<?>> {
+        IYieldOperandConcatOfSeparatorOperand<T, ET> separator();
+    }
+
+    interface IYieldOperandConcatOfSeparatorOperand<T, ET extends AbstractEntity<?>> {
+        T val(CharSequence separator);
+        T param(CharSequence paramName);
+        T param(Enum<?> paramName);
     }
 
     interface IDateDiffFunction<T, ET extends AbstractEntity<?>> {

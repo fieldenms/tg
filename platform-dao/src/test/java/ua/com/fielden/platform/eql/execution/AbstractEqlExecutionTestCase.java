@@ -7,6 +7,8 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TeNamedValuesVector;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
+import java.util.Map;
+
 /**
  * Should be used as a convenient base class for EQL database interaction test cases.
  *
@@ -21,6 +23,10 @@ public abstract class AbstractEqlExecutionTestCase extends AbstractDaoTestCase {
 
     protected Object retrieveResult(final AggregatedResultQueryModel qry) {
         return aggregateDao.getEntity(from(qry).model()).get(RESULT);
+    }
+
+    protected Object retrieveResult(final AggregatedResultQueryModel qry, final Map<String, Object> params) {
+        return aggregateDao.getEntity(from(qry).with(params).model()).get(RESULT);
     }
 
     @Override

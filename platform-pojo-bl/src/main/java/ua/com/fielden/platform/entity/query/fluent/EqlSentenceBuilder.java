@@ -527,6 +527,14 @@ final class EqlSentenceBuilder {
         return _add(token(AVGOF));
     }
 
+    public EqlSentenceBuilder concatOf() {
+        return _add(token(CONCATOF));
+    }
+
+    public EqlSentenceBuilder separator() {
+        return _add(token(SEPARATOR));
+    }
+
     public EqlSentenceBuilder sumOfDistinct() {
         return _add(token(SUMOFDISTINCT));
     }
