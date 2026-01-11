@@ -173,6 +173,21 @@ const template = html`
         .lock-layer[lock] {
             display: initial;
         }
+
+        #blockingPane {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background-color: white;
+            font-size: 18px;
+            color: var(--paper-grey-400);
+            @apply --layout-horizontal;
+            @apply --layout-center-center;
+        }
+
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
     <div id="titleBar" draggable$="[[_titleBarDraggable]]" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="moveComponent" tooltip-text$="[[_calcTitleTooltip(longDesc, saveAsName, saveAsDesc)]]">
@@ -194,6 +209,7 @@ const template = html`
             </div>
             <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
+        <div id="blockingPane" hidden$="[[!_showBlockingPane]]">Loading data...</div>
     </div>
     <iron-icon id="resizer" style$="[[_getResizerStyle(detachedView)]]" hidden$="[[_resizingDisabled(minimised, maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" on-down="_preventMouseDownEvent" tooltip-text$="[[_resizeButtonTooltip(detachedView)]]"></iron-icon>
     <tg-toast id="toaster"></tg-toast>
@@ -385,6 +401,13 @@ Polymer({
             value: ''
         },
 
+        /// Indicates the presence of blocking pane with 'Loading data...' message.
+        ///
+        _showBlockingPane: {
+            type: Boolean,
+            value: false
+        },
+
         /**
          * Need for locking insertion point during data loading.
          */
@@ -454,6 +477,7 @@ Polymer({
     observers: ['_alternativeViewChanged(alternativeView, contextRetriever)', '_shouldEnableDraggable(contextRetriever)','_restoreFromLocalStorage(_element, contextRetriever)'],
 
     listeners: {
+        'data-loaded-and-focused': '_handleDataLoaded',
         'tg-save-as-name-changed': '_updateSaveAsName',
         'tg-save-as-desc-changed': '_updateSaveAsDesc'
     },
@@ -588,6 +612,16 @@ Polymer({
         }
     },
 
+    /// Hides blocking pane on first data loaded event, specifically on first loading of master entity ('binding-entity-appeared').
+    /// This is fully consistent with custom action dialog logic.
+    ///
+    /// 'binding-entity-appeared' is only considered for most internal master (without its own embedded view).
+    /// It also waits for 100 ms (see 'binding-entity-appeared' event handler in `tg-entity-master-behavior`).
+    ///
+    _handleDataLoaded: function () {
+        this._showBlockingPane = false;
+    },
+
     _centreStateChanged: function (newValue, oldValue) {
         if (this._element) {
             this._element.centreState = newValue;
@@ -620,6 +654,7 @@ Polymer({
                     });
                 });
         } else { // else need to first load and create the element to be inserted
+            self._showBlockingPane = true;
             self._getElement(customAction)
                 .then(function (element) {
                     self.activated = true;

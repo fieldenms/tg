@@ -883,6 +883,7 @@ const TgEntityCentreBehaviorImpl = {
         this._dom().showMarginAroundInsertionPoints = showMarginAround;
         // Configure all views to be able to switch between them
         const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[alternative-view]');
+        this._alternativeViews = [...altViews];
         this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];
         // Create result views to create centre view switch button
         this.resultViews = [{index: 1, icon: this.$.egi.icon, iconStyle: this.$.egi.iconStyle, title: "Grid", desc: "Standard grid representation."}, ...createViewsFromInsPoints([...altViews])];
@@ -1385,7 +1386,11 @@ const TgEntityCentreBehaviorImpl = {
                     this._selectedView = index;
                     if (this._selectedView !== 0 && this.preferredView !== this._selectedView) {
                         this.preferredView = this._selectedView;
+                        // `preferredView` has actually been changed.
+                        // First, it should be saved into persisted storage.
                         this._preferredViewUpdaterAction._run();
+                        // And then, alternative view [re-]activation (if preferred) should occur as it is a lazy process.
+                        this.runInsertionPointActions(null, true /* alternativeViewsOnly */);
                     }
                 }
             }   
@@ -1628,12 +1633,35 @@ const TgEntityCentreBehaviorImpl = {
         self.fire('tg-save-as-name-changed', newSaveAsName);
     },
 
-    runInsertionPointActions: function (excludeInsertionPoints) {
+    /// Run insertion points for this entity centre.
+    /// This includes running of preferred alternative view.
+    ///
+    /// @param excludeInsertionPoints -- a list of `tg-*-master` insertion points to be excluded (see `withNoInsertionPointsRefresh` Action API)
+    /// @param alternativeViewsOnly -- specify truthy value to skip non-alternative-views running, falsy otherwise
+    ///
+    runInsertionPointActions: function (excludeInsertionPoints, alternativeViewsOnly) {
         const self = this;
         const actions = self.$.egi.querySelectorAll('.insertion-point-action');
         if (actions) {
             actions.forEach(function (action) {
-                if (!Array.isArray(excludeInsertionPoints) || !excludeInsertionPoints.includes(action.elementName)) {
+                let alternativeView;
+                if (
+                    (
+                        // If `excludeInsertionPoints` are not specified - skip excluding anything and check further conditions.
+                        !Array.isArray(excludeInsertionPoints)
+                        // Otherwise, exclude currently processed insertion point if it matches exclusion criteria.
+                        || !excludeInsertionPoints.includes(action.elementName)
+                    ) && (
+                        // Always run insertion points that are not alternative views (i.e. `alternativeView` is empty).
+                        !(alternativeView = self._alternativeViews.find(altView => altView.functionalMasterTagName === action.elementName.toUpperCase())) && !alternativeViewsOnly
+                        // Only run alternative view iff it is preferred one,
+                        //   i.e. the one that is already loaded or will be loaded shortly based on persisted user preference.
+                        // If it was not loaded, perhaps RUN action (or auto-run for embedded / link / save-as / default) is performed.
+                        // If it was loaded, likely REFRESH action is performed (or auto-run).
+                        // In both cases `preferredView` state is always present and actual (due to early client-side assignment).
+                        || alternativeView && self.allViews[self.preferredView] === alternativeView
+                    )
+                ) {
                     self.async(function () {
                         action._run();
                     }, 1);
