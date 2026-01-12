@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-09-01 15:36:07 EEST
+// Generation timestamp: 2026-01-12 16:58:43 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -35,7 +35,7 @@ import ua.com.fielden.platform.types.RichText;
 @DenyIntrospection
 public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
   @IsProperty
-  @MapTo("A3T_INVALIDATE")
+  @MapTo
   @Final
   @Title(
       value = "Invalidate",
@@ -44,7 +44,7 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
   private boolean a3t_invalidate;
 
   @IsProperty
-  @MapTo("A3T_RICHTEXT")
+  @MapTo
   @Final
   @Title(
       value = "Rich Text",
@@ -61,7 +61,7 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
   private String a3t_str1;
 
   @IsProperty
-  @MapTo("A3T_STR2")
+  @MapTo
   @Final
   @Title(
       value = "Str 2",
@@ -70,7 +70,7 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
   private String a3t_str2;
 
   @IsProperty
-  @MapTo("A3T_UNION")
+  @MapTo
   @Final
   @Title(
       value = "Union Entity",

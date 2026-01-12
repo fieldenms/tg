@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-05-07 11:15:11 EEST
+// Generation timestamp: 2026-01-12 16:58:42 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -38,6 +38,111 @@ import ua.com.fielden.platform.types.Money;
 @KeyType(DynamicEntityKey.class)
 @DenyIntrospection
 public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
+  @IsProperty
+  @MapTo
+  @Final
+  @Title(
+      value = "Active",
+      desc = "[Active] at the time of the audited event."
+  )
+  private boolean a3t_active;
+
+  @IsProperty
+  @MapTo
+  @Final
+  @Title(
+      value = "Description",
+      desc = "[Description] at the time of the audited event."
+  )
+  private String a3t_desc;
+
+  @IsProperty
+  @MapTo
+  @Final
+  @Title(
+      value = "Init Date",
+      desc = "[Init Date] at the time of the audited event."
+  )
+  private Date a3t_initDate;
+
+  @IsProperty
+  @MapTo
+  @Final
+  @Title(
+      value = "Key",
+      desc = "[Key] at the time of the audited event."
+  )
+  private String a3t_key;
+
+  @IsProperty(
+      precision = 10,
+      scale = 3
+  )
+  @MapTo
+  @Final
+  @Title(
+      value = "Last meter reading",
+      desc = "[Last meter reading] at the time of the audited event."
+  )
+  private BigDecimal a3t_lastMeterReading;
+
+  @IsProperty
+  @MapTo
+  @Final
+  @Title(
+      value = "Leased?",
+      desc = "[Leased?] at the time of the audited event."
+  )
+  private boolean a3t_leased;
+
+  @IsProperty
+  @MapTo
+  @Final
+  @Title(
+      value = "Model",
+      desc = "[Model] at the time of the audited event."
+  )
+  @SkipEntityExistsValidation
+  private TgVehicleModel a3t_model;
+
+  @IsProperty
+  @MapTo
+  @Final
+  @Title(
+      value = "Price",
+      desc = "[Price] at the time of the audited event."
+  )
+  private Money a3t_price;
+
+  @IsProperty
+  @MapTo
+  @Final
+  @Title(
+      value = "Purchase Price",
+      desc = "[Purchase Price] at the time of the audited event."
+  )
+  private Money a3t_purchasePrice;
+
+  @IsProperty
+  @MapTo
+  @Final
+  @Title(
+      value = "Tg Vehicle",
+      desc = "[Tg Vehicle] at the time of the audited event."
+  )
+  @SkipEntityExistsValidation
+  private TgVehicle a3t_replacedBy;
+
+  @IsProperty
+  @MapTo
+  @Final
+  @Title(
+      value = "Tg Org Unit5",
+      desc = "[Tg Org Unit5] at the time of the audited event."
+  )
+  @SkipEntityExistsValidation
+  private TgOrgUnit5 a3t_station;
+
   @CompositeKeyMember(1)
   @MapTo
   @Required
@@ -50,128 +155,23 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
   @IsProperty
   private TgVehicle auditedEntity;
 
-  @IsProperty
-  @MapTo("A3T_KEY")
-  @Final
-  @Title(
-      value = "Key",
-      desc = "[Key] at the time of the audited event."
-  )
-  private String a3t_key;
-
-  @IsProperty
-  @MapTo("A3T_INITDATE")
-  @Final
-  @Title(
-      value = "Init Date",
-      desc = "[Init Date] at the time of the audited event."
-  )
-  private Date a3t_initDate;
-
-  @IsProperty
-  @MapTo("A3T_REPLACEDBY")
-  @Final
-  @Title(
-      value = "Tg Vehicle",
-      desc = "[Tg Vehicle] at the time of the audited event."
-  )
-  @SkipEntityExistsValidation
-  private TgVehicle a3t_replacedBy;
-
-  @IsProperty
-  @MapTo("A3T_STATION")
-  @Final
-  @Title(
-      value = "Tg Org Unit5",
-      desc = "[Tg Org Unit5] at the time of the audited event."
-  )
-  @SkipEntityExistsValidation
-  private TgOrgUnit5 a3t_station;
-
-  @IsProperty
-  @MapTo("A3T_MODEL")
-  @Final
-  @Title(
-      value = "Model",
-      desc = "[Model] at the time of the audited event."
-  )
-  @SkipEntityExistsValidation
-  private TgVehicleModel a3t_model;
-
-  @IsProperty
-  @MapTo("A3T_PRICE")
-  @Final
-  @Title(
-      value = "Price",
-      desc = "[Price] at the time of the audited event."
-  )
-  private Money a3t_price;
-
-  @IsProperty
-  @MapTo("A3T_PURCHASEPRICE")
-  @Final
-  @Title(
-      value = "Purchase Price",
-      desc = "[Purchase Price] at the time of the audited event."
-  )
-  private Money a3t_purchasePrice;
-
-  @IsProperty
-  @MapTo("A3T_ACTIVE")
-  @Final
-  @Title(
-      value = "Active",
-      desc = "[Active] at the time of the audited event."
-  )
-  private boolean a3t_active;
-
-  @IsProperty
-  @MapTo("A3T_LEASED")
-  @Final
-  @Title(
-      value = "Leased?",
-      desc = "[Leased?] at the time of the audited event."
-  )
-  private boolean a3t_leased;
-
-  @IsProperty(
-      precision = 10,
-      scale = 3
-  )
-  @MapTo("A3T_LASTMETERREADING")
-  @Final
-  @Title(
-      value = "Last meter reading",
-      desc = "[Last meter reading] at the time of the audited event."
-  )
-  private BigDecimal a3t_lastMeterReading;
-
-  @IsProperty
-  @MapTo("A3T_DESC")
-  @Final
-  @Title(
-      value = "Description",
-      desc = "[Description] at the time of the audited event."
-  )
-  private String a3t_desc;
-
-  public TgVehicle getAuditedEntity() {
-    return this.auditedEntity;
+  public boolean isA3t_active() {
+    return this.a3t_active;
   }
 
   @Observable
-  public TgVehicle_a3t_1 setAuditedEntity(final TgVehicle auditedEntity) {
-    this.auditedEntity = auditedEntity;
+  public TgVehicle_a3t_1 setA3t_active(final boolean a3t_active) {
+    this.a3t_active = a3t_active;
     return this;
   }
 
-  public String getA3t_key() {
-    return this.a3t_key;
+  public String getA3t_desc() {
+    return this.a3t_desc;
   }
 
   @Observable
-  public TgVehicle_a3t_1 setA3t_key(final String a3t_key) {
-    this.a3t_key = a3t_key;
+  public TgVehicle_a3t_1 setA3t_desc(final String a3t_desc) {
+    this.a3t_desc = a3t_desc;
     return this;
   }
 
@@ -185,23 +185,33 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
     return this;
   }
 
-  public TgVehicle getA3t_replacedBy() {
-    return this.a3t_replacedBy;
+  public String getA3t_key() {
+    return this.a3t_key;
   }
 
   @Observable
-  public TgVehicle_a3t_1 setA3t_replacedBy(final TgVehicle a3t_replacedBy) {
-    this.a3t_replacedBy = a3t_replacedBy;
+  public TgVehicle_a3t_1 setA3t_key(final String a3t_key) {
+    this.a3t_key = a3t_key;
     return this;
   }
 
-  public TgOrgUnit5 getA3t_station() {
-    return this.a3t_station;
+  public BigDecimal getA3t_lastMeterReading() {
+    return this.a3t_lastMeterReading;
   }
 
   @Observable
-  public TgVehicle_a3t_1 setA3t_station(final TgOrgUnit5 a3t_station) {
-    this.a3t_station = a3t_station;
+  public TgVehicle_a3t_1 setA3t_lastMeterReading(final BigDecimal a3t_lastMeterReading) {
+    this.a3t_lastMeterReading = a3t_lastMeterReading;
+    return this;
+  }
+
+  public boolean isA3t_leased() {
+    return this.a3t_leased;
+  }
+
+  @Observable
+  public TgVehicle_a3t_1 setA3t_leased(final boolean a3t_leased) {
+    this.a3t_leased = a3t_leased;
     return this;
   }
 
@@ -235,43 +245,33 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
     return this;
   }
 
-  public boolean isA3t_active() {
-    return this.a3t_active;
+  public TgVehicle getA3t_replacedBy() {
+    return this.a3t_replacedBy;
   }
 
   @Observable
-  public TgVehicle_a3t_1 setA3t_active(final boolean a3t_active) {
-    this.a3t_active = a3t_active;
+  public TgVehicle_a3t_1 setA3t_replacedBy(final TgVehicle a3t_replacedBy) {
+    this.a3t_replacedBy = a3t_replacedBy;
     return this;
   }
 
-  public boolean isA3t_leased() {
-    return this.a3t_leased;
+  public TgOrgUnit5 getA3t_station() {
+    return this.a3t_station;
   }
 
   @Observable
-  public TgVehicle_a3t_1 setA3t_leased(final boolean a3t_leased) {
-    this.a3t_leased = a3t_leased;
+  public TgVehicle_a3t_1 setA3t_station(final TgOrgUnit5 a3t_station) {
+    this.a3t_station = a3t_station;
     return this;
   }
 
-  public BigDecimal getA3t_lastMeterReading() {
-    return this.a3t_lastMeterReading;
+  public TgVehicle getAuditedEntity() {
+    return this.auditedEntity;
   }
 
   @Observable
-  public TgVehicle_a3t_1 setA3t_lastMeterReading(final BigDecimal a3t_lastMeterReading) {
-    this.a3t_lastMeterReading = a3t_lastMeterReading;
-    return this;
-  }
-
-  public String getA3t_desc() {
-    return this.a3t_desc;
-  }
-
-  @Observable
-  public TgVehicle_a3t_1 setA3t_desc(final String a3t_desc) {
-    this.a3t_desc = a3t_desc;
+  public TgVehicle_a3t_1 setAuditedEntity(final TgVehicle auditedEntity) {
+    this.auditedEntity = auditedEntity;
     return this;
   }
 }
