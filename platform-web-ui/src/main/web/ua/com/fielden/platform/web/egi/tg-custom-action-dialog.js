@@ -1138,6 +1138,13 @@ Polymer({
             console.log("The dialog is already opened and should be closed be being used again.");
             if (customAction) {
                 customAction.restoreActionState();
+                // At this stage of action execution `isActionInProgress` is false.
+                // It gets assigned to true in `_onExecuted` below.
+                // However, some custom logic may be needed in `isActionInProgressChanged` when action execution failed
+                //   due to other opened dialog present.
+                // Let's forcefully do that logic here. It is not harmfull because original logic only turns off spinner,
+                //   which isn't active at a time of this error.
+                customAction.isActionInProgressChanged(false, true);
             }
         } else {
             const self = this;

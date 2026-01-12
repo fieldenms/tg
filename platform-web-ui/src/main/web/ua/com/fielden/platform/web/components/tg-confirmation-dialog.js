@@ -166,7 +166,7 @@ export const TgConfirmationDialog = Polymer({
                 dialogModel.rejectDialog();
             };
 
-            dialogModel._action = function (e) {
+            dialogModel._action = dialogModel._originalAction = function (e) {
                 const button = e.model.item;
                 if (button.confirm) {
                     // If confirmation dialog has `withProgress` option...
@@ -232,13 +232,38 @@ export const TgConfirmationDialog = Polymer({
         });
     },
 
-    /// Manually closes confirmation dialog.
-    /// Resets progress indicator (spinner) and other `withProgress` configuration.
+    /// Manually closes confirmation dialog (`withProgress` preAction dialogs).
     ///
     close: function () {
         dialogModel.$.confirmDialog.close();
+    },
+
+    /// Manually resets progress indicator (spinner) and other configuration (`withProgress` preAction dialogs).
+    ///
+    /// @param action - optional `tg-ui-action` instance to execute on repeated YES / OK affirmative buttons tapping
+    ///
+    enableActions: function (action) {
         dialogModel.spinnerActive = false;
         dialogModel.$.confirmDialog.noCancelOnEscKey = false;
+        // Automatic auto-focusing of button does not occur, because it only occurs when <paper-dialog> opens.
+        // Find the button manually and focus it to be able to use keyboard Enter key multiple times without tapping.
+        const firstAutoFocusButton = dialogModel.$.confirmDialog.querySelector('[autofocus]');
+        firstAutoFocusButton && firstAutoFocusButton.focus();
+
+        if (action) {
+            // Override YES / OK affirmative buttons tapping to actually perform an action.
+            // Previous preAction promise is already rejected and resolving it again in `_action` will not trigger `.then(...)` processing.
+            dialogModel._action = function (e) {
+                // Perform original logic including making buttons disabled and starting spinner.
+                dialogModel._originalAction(e);
+                const button = e.model.item;
+                // In case of affirmative button do the next logic after original promise resolution
+                //   (see `tg-ui-action.postMasterInfoRetrieve`).
+                if (button.confirm) {
+                    action.showDialog(action);
+                }
+            };
+        }
     }
 
 });
