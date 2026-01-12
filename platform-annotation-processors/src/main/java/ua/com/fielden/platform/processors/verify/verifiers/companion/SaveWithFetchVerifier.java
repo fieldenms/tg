@@ -35,7 +35,17 @@ public class SaveWithFetchVerifier extends AbstractCompanionVerifier {
                     return Optional.of(new ViolatingElement(typeElement, ERROR, errMustImplementSaveWithFetch(typeElement.getSimpleName())));
                 }
 
-                // TODO Warn if both saves are overriden.
+
+                if (overridesSaveWithFetch) {
+                    final var maybeOverriddenSave = streamDeclaredMethods(typeElement)
+                            .filter(execElt -> execElt.getSimpleName().contentEquals("save")
+                                               && execElt.getParameters().size() == 1
+                                               && elementFinder.isSubtype(execElt.getParameters().getFirst().asType(), AbstractEntity.class))
+                            .findAny();
+                    if (maybeOverriddenSave.isPresent()) {
+                        return Optional.of(new ViolatingElement(maybeOverriddenSave.get(), ERROR, errMustNotOverrideBothSaves()));
+                    }
+                }
 
                 return Optional.empty();
             }
@@ -44,6 +54,12 @@ public class SaveWithFetchVerifier extends AbstractCompanionVerifier {
 
     private static String errMustImplementSaveWithFetch(final CharSequence coName) {
         return "[%s] must implement [%s] to override save-with-fetch.".formatted(coName, ISaveWithFetch.class.getSimpleName());
+    }
+
+    private static String errMustNotOverrideBothSaves() {
+        return """
+               Method save(AbstractEntity) may be overridden only if you know what you are doing. \
+               The primary save method is save-with-fetch, and its signature is save(AbstractEntity, Optional<fetch>).""";
     }
 
 }
