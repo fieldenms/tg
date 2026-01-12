@@ -94,23 +94,11 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         return newUser;
     }
 
-    /// Saves a user instance.
-    /// Special care is taken for the case where only property `refCount` is changed.
-    /// This is why this method is not annotated with `@Authorise(User_CanSave_Token.class)`.
-    /// Authorisation happens for [#save(User,Optional)], which is invoked for all other cases.
-    ///
     @Override
     @SessionRequired
     public User save(final User user) {
-        // Anybody should be able to save updated reference count.
-        if (user.getDirtyProperties().size() == 1 && user.getProperty(User.REF_COUNT).isDirty()) {
-            // Use super save with refetching based on the reconstructed fetch model,
-            // which should be slim comparing to IUser.FETCH_PROVIDER.
-            return super.save(user);
-        } else {
-            return save(user, of(FETCH_PROVIDER.fetchModel())).orElseThrow(id -> new EntityCompanionException(ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE.formatted(id, user)));
-        }
-
+        // Use a fetch model that includes calculated properties, which would not get included in a reconstructed fetch model.
+        return save(user, of(FETCH_PROVIDER.fetchModel())).orElseThrow(id -> new EntityCompanionException(ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE.formatted(id, user)));
     }
 
     @Override
