@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.audit;
 
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -14,7 +15,6 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import jakarta.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
@@ -25,13 +25,13 @@ import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-/**
- * Base type for implementations of synthetic audit-entity companion objects.
- * <p>
- * Cannot be used if auditing is disabled. Will throw {@link AuditingModeException} upon construction.
- *
- * @param <E>  the audited entity type
- */
+/// Base type for implementations of synthetic audit-entity companion objects.
+///
+/// Cannot be used if auditing is disabled.
+/// Will throw [AuditingModeException] upon construction.
+///
+/// @param <E>  the audited entity type
+///
 public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
         extends CommonEntityDao<AbstractSynAuditEntity<E>>
         implements ISynAuditEntityDao<E>

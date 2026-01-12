@@ -39,13 +39,12 @@ import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
-/**
- * Base type for implementations of audit-entity companion objects.
- * <p>
- * Cannot be used if auditing is disabled. Will throw {@link AuditingModeException} upon construction.
- *
- * @param <E>  the audited entity type
- */
+/// Base type for implementations of audit-entity companion objects.
+///
+/// Cannot be used if auditing is disabled. Will throw [AuditingModeException] upon construction.
+///
+/// @param <E>  the audited entity type
+///
 public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         extends CommonEntityDao<AbstractAuditEntity<E>>
         implements IEntityAuditor<E>
@@ -119,20 +118,15 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         return fetchModelForAuditing;
     }
 
-    /**
-     * Returns the name of a property of this audit-entity type that audits the specified property of the audited entity type,
-     * if the specified property is indeed audited; otherwise, returns {@code null}.
-     */
+    /// Returns the name of a property of this audit-entity type that audits the specified property of the audited entity type,
+    /// if the specified property is indeed audited; otherwise, returns `null`.
+    ///
     private @Nullable String getAuditPropertyName(final CharSequence auditedProperty) {
         return auditedToAuditPropertyNames.get(auditedProperty.toString());
     }
 
     @Override
     public void audit(final Either<Long, E> auditedEntityOrId, final String transactionGuid, final Collection<String> dirtyProperties) {
-        // NOTE save() is annotated with SessionRequired.
-        //      To truly enforce the contract of this method described in IAuditEntityDao, a version of save() without
-        //      SessionRequired would need to be used.
-
         if (auditedEntityOrId instanceof Right<?, E> (var auditedEntity)) {
             if (!auditedEntity.isPersisted()) {
                 throw cannotBeAuditedFailure(auditedEntity, ERR_ONLY_PERSISTED_INSTANCES_CAN_BE_AUDITED);
@@ -140,18 +134,6 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
             if (auditedEntity.isDirty()) {
                 throw cannotBeAuditedFailure(auditedEntity, ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED);
             }
-
-            // NOTE: It is possible for a persisted entity to become invalid upon retrieval from a persistent store
-            //       (e.g., due to complex business logic in property definers), which may occur when an entity is refetched after being saved.
-            //       We cannot meaningfully distinguish such edge cases from truly invalid states.
-            //       However, as this method should only be used within the save operation, truly invalid states should never occur,
-            //       since only valid instances can be saved.
-            //       Therefore, we can skip the assertion about the audited entity validity.
-            //       The working principle is "that which was persisted is valid and can be audited".
-            //
-            // if (!auditedEntity.isValid().isSuccessful()) {
-            //     throw auditedEntity.isValid();
-            // }
         }
 
         final var anyAuditedPropertyDirty = auditedPropertyNames().stream().anyMatch(dirtyProperties::contains);
@@ -162,7 +144,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
             final AbstractAuditEntity<E> auditEntity = save(newAudit(refetchedAuditedEntity, transactionGuid), Optional.of(fetchNone(getEntityType()).with(ID))).asRight().value();
 
             if (!dirtyProperties.isEmpty()) {
-                // Audit information about changed properites
+                // Audit information about changed properties.
                 final boolean isNewAuditedEntity = refetchedAuditedEntity.getVersion() == 0L;
                 final var auditProps = dirtyProperties.stream()
                         .map(property -> {
@@ -195,13 +177,12 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
                                     format.formatted(args)));
     }
 
-    /**
-     * Returns a new, initialised instance of this audit-entity type.
-     *
-     * @param auditedEntity  the audited entity that will be used to initialise the audit-entity instance.
-     *                       Must be persisted, non-dirty and contain all properties that are necessary for auditing.
-     * @param transactionGuid  identifier of a transaction that was used to save the audited entity
-     */
+    /// Returns a new, initialised instance of this audit-entity type.
+    ///
+    /// @param auditedEntity  the audited entity that will be used to initialise the audit-entity instance;
+    ///                       must be persisted, non-dirty and contain all properties that are necessary for auditing.
+    /// @param transactionGuid  identifier of a transaction that was used to save the audited entity
+    ///
     private AbstractAuditEntity<E> newAudit(final E auditedEntity, final String transactionGuid) {
         final AbstractAuditEntity<E> audit = new_();
         audit.beginInitialising();
@@ -247,9 +228,9 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         return auditedToAuditPropertyNames.keySet();
     }
 
-    /**
-     * Returns the current user, if defined; otherwise, throws an exception.
-     */
+    /// Returns the current user, if defined.
+    /// Otherwise, throws an exception.
+    ///
     private User getUserOrThrow() {
         final var user = getUser();
         if (user == null) {
@@ -266,9 +247,8 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
                 // Skip inactive audit properties.
                 .filter(p -> p.get(AUDIT_PROPERTY).filter(KAuditProperty.Data::active).isPresent())
                 .collect(toImmutableMap(p -> Optional.ofNullable(AuditUtils.auditedPropertyName(p.name()))
-                                                .orElseThrow(() -> new EntityDefinitionException(format(
-                                                        ERR_AUDIT_PROPERTY_UNEXPECTED_NAME,
-                                                        auditEntityMetadata.javaType().getSimpleName(), p.name()))),
+                                                .orElseThrow(() -> new EntityDefinitionException(ERR_AUDIT_PROPERTY_UNEXPECTED_NAME
+                                                                                                 .formatted(auditEntityMetadata.javaType().getSimpleName(), p.name()))),
                                         PropertyMetadata::name));
     }
 
