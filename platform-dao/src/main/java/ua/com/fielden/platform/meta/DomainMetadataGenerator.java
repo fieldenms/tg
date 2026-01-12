@@ -192,7 +192,7 @@ final class DomainMetadataGenerator {
 
         // PERSISTENT
         if (atMapTo != null) {
-            final String columnName = mkColumnName(field.getName(), atMapTo);
+            final String columnName = propColumnName(field.getDeclaringClass(), field.getName());
             builder = persistentProp(field.getName(), propTypeMd,
                                      hibTypeGenerator.generate(propTypeMd).use(field).get(),
                                      PropertyNature.Persistent.data(propColumn(columnName, atIsProperty)));
@@ -350,7 +350,7 @@ final class DomainMetadataGenerator {
                                         .required(true).build());
             case EntityMetadataBuilder.Persistent $ ->
                     Optional.of(persistentProp(VERSION, mkPropertyTypeOrThrow(Long.class), H_LONG,
-                                               PropertyNature.Persistent.data(propColumn(VERSION)))
+                                               PropertyNature.Persistent.data(propColumn(propColumnName(entityBuilder.getJavaType(), VERSION))))
                                         .required(true).build());
             default -> Optional.empty();
         };
@@ -365,7 +365,8 @@ final class DomainMetadataGenerator {
         if (isOneToOne(entityBuilder.getJavaType())) {
             return switch (entityBuilder) {
                 case EntityMetadataBuilder.Persistent $ ->
-                        Optional.of(persistentProp(KEY, mkPropertyTypeOrThrow(keyType), H_ENTITY, PropertyNature.Persistent.data(propColumn(ID)))
+                        Optional.of(persistentProp(KEY, mkPropertyTypeOrThrow(keyType), H_ENTITY,
+                                                   PropertyNature.Persistent.data(propColumn(propColumnName(entityBuilder.getJavaType(), ID))))
                                             .required(true).build());
                 case EntityMetadataBuilder.Synthetic $ ->
                         Optional.of(plainProp(KEY, mkPropertyTypeOrThrow(keyType), H_ENTITY).required(true).build());
@@ -413,7 +414,7 @@ final class DomainMetadataGenerator {
      */
     private Optional<PropertyMetadata> mkPropId(final EntityMetadataBuilder<?, ?> entityBuilder) {
         final PropertyMetadata propId = persistentProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY,
-                                                       PropertyNature.Persistent.data(propColumn(ID)))
+                                                       PropertyNature.Persistent.data(propColumn(propColumnName(entityBuilder.getJavaType(), ID))))
                 .required(true).build();
 
         return switch (entityBuilder) {
@@ -485,12 +486,12 @@ final class DomainMetadataGenerator {
         // TODO: Should an exception be thrown for incorrect definitions?
         //       It is probably best to delegate verification of property declarations to the compile time verifier.
         else if (atMapTo != null && !entityBuilder.getNature().isSynthetic() && atCalculated == null) {
-            final String columnName = mkColumnName(field.getName(), atMapTo);
             final var propTypeMd = mkPropertyTypeOrThrow(field);
             builder = Optional.of(
                     persistentProp(field.getName(), propTypeMd,
                                    hibTypeGenerator.generate(propTypeMd).use(field).get(),
-                                   PropertyNature.Persistent.data(propColumn(columnName, atIsProperty))));
+                                   PropertyNature.Persistent.data(propColumn(propColumnName(field.getDeclaringClass(), field.getName()),
+                                                                             atIsProperty))));
         }
         // CALCULATED
         else if (atCalculated != null) {
@@ -584,8 +585,23 @@ final class DomainMetadataGenerator {
     //// Persistent Entity ////
     ///////////////////////////
 
-    private static String mkColumnName(final String propName, final MapTo mapTo) {
-        return isNotEmpty(mapTo.value()) ? mapTo.value() : propName.toUpperCase() + "_";
+    String propColumnName(final Class<?> owner, final String propName) {
+        return Optional.ofNullable(specialPropColumns.get(propName))
+                .map(propColumn -> propColumn.name)
+                .orElseGet(() -> getPropertyAnnotationOptionally(MapTo.class, owner, propName)
+                        .filter(atMapTo -> isNotEmpty(atMapTo.value()))
+                        .map(MapTo::value)
+                        .orElseGet(() -> propName.toUpperCase() + "_"));
+    }
+
+    String propColumnNameForUnion(final String propColumnName, final String memberColumnName) {
+        final var result = propColumnName + "_" + memberColumnName;
+        return result.endsWith("_") ? result.substring(0, result.length() - 1) : result;
+    }
+
+    String propColumnNameForComponent(final String propColumnName, final String componentColumnName) {
+        final var result =  propColumnName + (propColumnName.endsWith("_") ? "" : "_") + componentColumnName;
+        return result.endsWith("_") ? result.substring(0, result.length() - 1) : result;
     }
 
     PropColumn propColumn(final String columnName, final Optional<IsProperty> optIsProperty) {
@@ -597,7 +613,7 @@ final class DomainMetadataGenerator {
     PropColumn propColumn(final String columnName) {
         return requireNonNullElseGet(
                 specialPropColumns.getOrDefault(columnName, null),
-                () -> new PropColumn(removeObsoleteUnderscore(columnName)));
+                () -> new PropColumn(columnName));
     }
 
     PropColumn propColumn(final String columnName, final IsProperty isProperty) {
@@ -607,14 +623,8 @@ final class DomainMetadataGenerator {
                     final var length = isProperty.length() > 0 ? isProperty.length() : null;
                     final var precision = isProperty.precision() >= 0 ? isProperty.precision() : null;
                     final var scale = isProperty.scale() >= 0 ? isProperty.scale() : null;
-                    return new PropColumn(removeObsoleteUnderscore(columnName), length, precision, scale);
+                    return new PropColumn(columnName, length, precision, scale);
                 });
-    }
-
-    private static String removeObsoleteUnderscore(final String name) {
-        return name.endsWith("_") && name.substring(0, name.length() - 1).contains("_")
-                ? name.substring(0, name.length() - 1)
-                : name;
     }
 
     private static String mkTableName(final Class<? extends AbstractEntity<?>> entityType) {
