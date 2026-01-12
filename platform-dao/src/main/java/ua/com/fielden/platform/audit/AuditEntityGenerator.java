@@ -246,7 +246,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                     final var propBuilder = propertyBuilder(auditPropertyName(pm.name()),
                                                             pm.type().genericJavaType())
                             .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, auditedType, pm.name())))
-                            .addAnnotation(AnnotationSpecs.mapTo(auditPropertyName(pm.name()).toUpperCase()))
+                            .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                             .addAnnotation(javaPoet.getAnnotation(Final.class));
 
                     final var propTitle = nonBlankPropertyTitle(pm.name(), auditedType);
@@ -312,7 +312,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                     final var propBuilder = propertyBuilder(auditPropertyName(pm.name()),
                                                             pm.type().genericJavaType())
                             .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, auditedType, pm.name())))
-                            .addAnnotation(AnnotationSpecs.mapTo(auditPropertyName(pm.name()).toUpperCase()))
+                            .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                             .addAnnotation(javaPoet.getAnnotation(Final.class));
 
                     final var propTitle = nonBlankPropertyTitle(pm.name(), auditedType);
