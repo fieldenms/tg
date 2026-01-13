@@ -219,7 +219,7 @@
                 
                 entitySender.addEventListener('response', function(e) {
                 	console.warn('client-server-client entitySender.addEventListener with done!');
-                    assert.equal(e.detail.response.message, 'okay', "The sended entities are not equal.");
+                    assert.equal(e.detail.response.instance, 'okay', "The sent entities are not equal.");
                     done();
                 });
 
