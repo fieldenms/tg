@@ -8,22 +8,20 @@ import ua.com.fielden.platform.security.user.User;
 
 import java.util.Date;
 
-/**
- * Base type for all audit-entity types.
- * <p>
- * It is expected that an audit-entity type declares key-member property {@link #AUDITED_ENTITY} that represents a reference to the audited entity.
- * This property cannot be declared in this base type due to a limitation on using type variables in property types.
- * <p>
- * Each audit-entity type is in a one-to-many association with {@linkplain AbstractAuditProp an audit-prop type },
- * to represent properties, values of which changed during an audit event.
- * This association, however, is implicit -- it is not modelled via a collectional property.
- * Instead, the union of such associations is explicitly modelled by corresponding
- * {@linkplain AbstractSynAuditEntity synthetic audit-entity} and {@linkplain AbstractSynAuditProp audit-prop} types.
- * <p>
- * Values of property {@link #auditedTransactionGuid} may have special meaning (see the property's documentation).
- *
- * @param <E>  type of the audited entity
- */
+/// Base type for all audit-entity types.
+///
+/// It is expected that an audit-entity type declares key-member property [#AUDITED_ENTITY] that represents a reference to the audited entity.
+/// This property cannot be declared in this base type due to a limitation on using type variables in property types.
+///
+/// Each audit-entity type is in a one-2-many relationship with [an audit-prop type][AbstractAuditProp],
+/// to represent properties, values of which changed during an audit event.
+/// This relationship, however, is implicit — it is not modelled via a collectional property.
+/// Instead, the union of such associations is explicitly modelled by corresponding
+/// [synthetic audit-entity][AbstractSynAuditEntity] and [audit-prop][AbstractSynAuditProp] types.
+///
+/// Values of property [#auditedTransactionGuid] may have special meaning (see the property's documentation).
+///
+/// @param <E>  type of the audited entity
 @KeyType(DynamicEntityKey.class)
 public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends AbstractEntity<DynamicEntityKey> {
 
@@ -33,33 +31,28 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     public static final String
             AUDITED_VERSION = "auditedVersion",
             AUDIT_DATE = "auditDate",
-            USER = "user",
+            AUDIT_USER = "auditUser",
             AUDITED_TRANSACTION_GUID = "auditedTransactionGuid";
 
-    /**
-     * Name of the property that is declared by specific audit-entity types.
-     * This property is a key-member representing a reference to the audited entity.
-     * Its type is the type of the audited entity.
-     * <p>
-     * For example, audit-entity {@code VehicleAudit} is expected to declare property {@code auditedEntity} of type {@code Vehicle}.
-     */
+    /// Name of the property that is declared by specific audit-entity types.
+    /// This property is a key-member representing a reference to the audited entity.
+    /// Its type is the type of the audited entity.
+    ///
+    /// For example, audit-entity `VehicleAudit` is expected to declare property `auditedEntity` of type `Vehicle`.
+    ///
     public static final String AUDITED_ENTITY = "auditedEntity";
 
-    /**
-     * The composite key order that must be specified by the {@link #AUDITED_ENTITY} property.
-     */
-    // Placing this property first ensures that its column comes first in the multi-column unique index that is always
-    // generated for composite keys, which improves performance because the first column in such an index is searchable.
+    /// The composite key order that must be specified by the [#AUDITED_ENTITY] property.
+    /// Placing this property first ensures that its column comes first in the multi-column unique index that is always
+    /// generated for composite keys, which improves performance because the first column in such an index is searchable.
     static final int AUDITED_ENTITY_KEY_MEMBER_ORDER = 1;
 
-    /**
-     * Getter for property {@link #AUDITED_ENTITY}.
-     */
+    /// Getter for property [#AUDITED_ENTITY].
+    ///
     public abstract E getAuditedEntity();
 
-    /**
-     * Setter for property {@link #AUDITED_ENTITY}.
-     */
+    /// Setter for property [#AUDITED_ENTITY].
+    ///
     public abstract AbstractAuditEntity<E> setAuditedEntity(E auditedEntity);
 
     @IsProperty
@@ -80,9 +73,10 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     @MapTo
     @Final
     @Required
-    private User user;
+    private User auditUser;
 
     /// The value may be either a transaction GUID or one of the [reserved values][ReservedTransactionGuid].
+    ///
     @IsProperty
     @Title(value = "Audit Transaction ID", desc = "A unique identifier of the transaction for the audited event.")
     @MapTo
@@ -90,24 +84,24 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     @Required
     private String auditedTransactionGuid;
 
-    /**
-     * Dynamic getter for accessing values of audited properties.
-     * Given the name of an audited property as declared in the audited entity, this method accesses the value of a corresponding property in this audit-entity.
-     * It is an error if the specified property is not audited by this audit-entity.
-     *
-     * @param property  simple property name
-     */
+    /// Dynamic getter for accessing values of audited properties.
+    /// Given the name of an audited property as declared in the audited entity,
+    /// this method accesses the value of a corresponding property in this audit-entity.
+    /// It is an error if the specified property is not audited by this audit-entity.
+    ///
+    /// @param property  simple property name
+    ///
     public final <T> T getA3t(final CharSequence property) {
         return get(AuditUtils.auditPropertyName(property));
     }
 
-    /**
-     * Dynamic setter for setting values of audited properties.
-     * Given the name of an audited property as declared in the audited entity, this method sets the value of a corresponding property in this audit-entity.
-     * It is an error if the specified property is not audited by this audit-entity.
-     *
-     * @param property  simple property name
-     */
+    /// Dynamic setter for setting values of audited properties.
+    /// Given the name of an audited property as declared in the audited entity,
+    /// this method sets the value of a corresponding property in this audit-entity.
+    /// It is an error if the specified property is not audited by this audit-entity.
+    ///
+    /// @param property  simple property name
+    ///
     public final AbstractAuditEntity<E> setA3t(final CharSequence property, final Object value) {
         set(AuditUtils.auditPropertyName(property), value);
         return this;
@@ -123,13 +117,13 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
         return this;
     }
 
-    public User getUser() {
-        return user;
+    public User getAuditUser() {
+        return auditUser;
     }
 
     @Observable
-    public AbstractAuditEntity<E> setUser(final User user) {
-        this.user = user;
+    public AbstractAuditEntity<E> setAuditUser(final User auditUser) {
+        this.auditUser = auditUser;
         return this;
     }
 
@@ -154,9 +148,11 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     }
 
     /// Special values for property [#auditedTransactionGuid].
+    ///
     public enum ReservedTransactionGuid {
 
         /// Indicates that an audit record was imported during data migration, and the data did not contain a transaction GUID.
+        ///
         MIGRATED ("MIGRATED");
 
         public final String value;

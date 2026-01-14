@@ -25,7 +25,7 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
     public static final String
             AUDITED_VERSION = "auditedVersion",
             AUDIT_DATE = "auditDate",
-            USER = "user",
+            AUDIT_USER = "auditUser",
             AUDITED_TRANSACTION_GUID = "auditedTransactionGuid";
 
     /**
@@ -64,7 +64,7 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
     public static final String CHANGED_PROPS_CRIT = "changedPropsCrit";
 
     public static final Set<String> BASE_PROPERTIES = ImmutableSet.of(
-            AUDITED_ENTITY, AUDITED_VERSION, AUDIT_DATE, USER, AUDITED_TRANSACTION_GUID
+            AUDITED_ENTITY, AUDITED_VERSION, AUDIT_DATE, AUDIT_USER, AUDITED_TRANSACTION_GUID
     );
 
     /**
@@ -86,7 +86,7 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
     @IsProperty
     @Title(value = "Audit User", desc = "User who performed the audited event.")
     @DenyIntrospection
-    private User user;
+    private User auditUser;
 
     @IsProperty
     @Title(value = "Audit Transaction ID", desc = "A unique identifier of the transaction for the audited event.")
@@ -119,13 +119,13 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
         return this;
     }
 
-    public User getUser() {
-        return user;
+    public User getAuditUser() {
+        return auditUser;
     }
 
     @Observable
-    public AbstractSynAuditEntity<E> setUser(final User user) {
-        this.user = user;
+    public AbstractSynAuditEntity<E> setAuditUser(final User auditUser) {
+        this.auditUser = auditUser;
         return this;
     }
 

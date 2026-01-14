@@ -193,7 +193,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         audit.setAuditDate(now().toDate());
         // TODO `User` itself cannot be audited, because saving the first User involves its auditing, which in turn requires a persisted User for the `user` property.
         //      The current workaround is to persist the first User without auditing (e.g., via an SQL script).
-        audit.setUser(getUserOrThrow());
+        audit.setAuditUser(getUserOrThrow());
         audit.setAuditedTransactionGuid(transactionGuid);
 
         // specific, audited properties

@@ -82,7 +82,7 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                         new Prop(AbstractAuditEntity.AUDITED_VERSION, Long.class, PERSISTENT),
                         new Prop(AbstractAuditEntity.AUDIT_DATE, Date.class, PERSISTENT),
                         new Prop(AbstractAuditEntity.AUDITED_TRANSACTION_GUID, String.class, PERSISTENT),
-                        new Prop(AbstractAuditEntity.USER, User.class, PERSISTENT),
+                        new Prop(AbstractAuditEntity.AUDIT_USER, User.class, PERSISTENT),
                         new Prop(KEY, String.class, CALCULATED),
                         new Prop(ID, Long.class, PERSISTENT),
                         new Prop(VERSION, Long.class, PERSISTENT),

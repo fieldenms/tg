@@ -65,7 +65,7 @@ public class AuditingTest extends AbstractDaoTestCase {
         a3t_assertions.assertThat(car2_a3t).isAuditFor(car2);
 
         assertNotNull(car2_a3t.getAuditDate());
-        assertNotNull(car2_a3t.getUser());
+        assertNotNull(car2_a3t.getAuditUser());
         assertNotNull(car2_a3t.getAuditedTransactionGuid());
     }
 
@@ -85,7 +85,7 @@ public class AuditingTest extends AbstractDaoTestCase {
         a3t_assertions.assertThat(car1_a3t).isAuditFor(car1);
 
         assertNotNull(car1_a3t.getAuditDate());
-        assertNotNull(car1_a3t.getUser());
+        assertNotNull(car1_a3t.getAuditUser());
         assertNotNull(car1_a3t.getAuditedTransactionGuid());
     }
 
