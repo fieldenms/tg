@@ -1,4 +1,4 @@
-// Generation timestamp: 2026-01-12 16:58:42 EET
+// Generation timestamp: 2026-01-16 10:46:36 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -48,7 +48,7 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
   private boolean a3t_active;
 
   @IsProperty
-  @MapTo
+  @MapTo("A3T_DESC_")
   @Final
   @Title(
       value = "Description",
@@ -66,7 +66,7 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
   private Date a3t_initDate;
 
   @IsProperty
-  @MapTo
+  @MapTo("A3T_KEY_")
   @Final
   @Title(
       value = "Key",

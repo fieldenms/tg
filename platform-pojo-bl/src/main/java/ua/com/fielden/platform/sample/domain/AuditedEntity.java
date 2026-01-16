@@ -38,7 +38,7 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
     private boolean bool1;
 
     @IsProperty
-    @MapTo
+    @MapTo("STR2") // To test generation of @MapTo in the audit-entity.
     private String str2;
 
     @IsProperty

@@ -1,4 +1,4 @@
-// Generation timestamp: 2026-01-12 16:58:43 EET
+// Generation timestamp: 2026-01-16 10:46:36 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -61,7 +61,7 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
   private String a3t_str1;
 
   @IsProperty
-  @MapTo
+  @MapTo("A3T_STR2")
   @Final
   @Title(
       value = "Str 2",
