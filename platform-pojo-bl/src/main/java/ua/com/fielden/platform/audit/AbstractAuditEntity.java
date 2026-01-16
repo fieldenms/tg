@@ -21,7 +21,29 @@ import java.util.Date;
 ///
 /// Values of property [#auditedTransactionGuid] may have special meaning (see the property's documentation).
 ///
+/// ### Column names
+///
+/// There is a defined mapping between column names of audited properties and their corresponding audit properties.
+///
+/// ```
+/// columnName(auditProperty) = "A3T_" + columnName(auditedProperty)
+/// ```
+///
+/// This applies even in those cases when an audited property has an explicit column name specified via [MapTo].
+///
+/// However, there is a caveat: if the column name of an audited property is changed when an audit-entity type already exists,
+/// the column name of the corresponding audit property will not change.
+///
+/// For example:
+/// 1. Audit type `User_a3t_1` is generated for `User`, and `User.base` is audited by `User_a3t_1.a3t_base`.
+///    * `User.base` maps to column `BASE_`.
+///    * `User_a3t_1.a3t_base` maps to column `A3T_BASE_`.
+/// 2. `User.base` gets annotated with `@MapTo("_BASE")`.
+///    While the column name is now changed for `User.base`, the column name for `User_a3t_1.a3t_base` remains unchanged.
+///    In this case, the solution is to manually edit `User_a3t_1.a3t_base` by annotating it with `@MapTo("A3T__BASE")`.
+///
 /// @param <E>  type of the audited entity
+///
 @KeyType(DynamicEntityKey.class)
 public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends AbstractEntity<DynamicEntityKey> {
 

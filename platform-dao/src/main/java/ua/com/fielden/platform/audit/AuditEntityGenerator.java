@@ -36,6 +36,7 @@ import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.*;
 import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
@@ -246,7 +247,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                     final var propBuilder = propertyBuilder(auditPropertyName(pm.name()),
                                                             pm.type().genericJavaType())
                             .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, auditedType, pm.name())))
-                            .addAnnotation(javaPoet.getAnnotation(MapTo.class))
+                            .addAnnotation(mkMapToForAudit(auditedType, pm.name()))
                             .addAnnotation(javaPoet.getAnnotation(Final.class));
 
                     final var propTitle = nonBlankPropertyTitle(pm.name(), auditedType);
@@ -275,6 +276,16 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
         return a3tBuilder.build(addSkipEntityExistsValidation)
                 .map2(typeSpec -> JavaFile.builder(auditPkg, typeSpec).build());
+    }
+
+    private AnnotationSpec mkMapToForAudit(final Class<? extends AbstractEntity<?>> auditedType, final String propName) {
+        return AnnotationReflector.getPropertyAnnotationOptionally(MapTo.class, auditedType, propName)
+                .map(MapTo::value)
+                .filter(not(String::isEmpty))
+                .map(colName -> AnnotationSpec.builder(MapTo.class)
+                        .addMember("value", "$S", "A3T_" + colName)
+                        .build())
+                .orElseGet(() -> javaPoet.getAnnotation(MapTo.class));
     }
 
     private static boolean isAuditPropertyFor(final PropertyMetadata auditProp, final PropertyMetadata auditedProp) {
@@ -312,7 +323,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                     final var propBuilder = propertyBuilder(auditPropertyName(pm.name()),
                                                             pm.type().genericJavaType())
                             .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, auditedType, pm.name())))
-                            .addAnnotation(javaPoet.getAnnotation(MapTo.class))
+                            .addAnnotation(mkMapToForAudit(auditedType, pm.name()))
                             .addAnnotation(javaPoet.getAnnotation(Final.class));
 
                     final var propTitle = nonBlankPropertyTitle(pm.name(), auditedType);
