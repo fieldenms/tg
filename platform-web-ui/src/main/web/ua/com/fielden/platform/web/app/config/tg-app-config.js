@@ -155,12 +155,12 @@ export const TgAppConfig = Polymer({
             readOnly: true,
             value: @locale
         },
-        dateFormat: {
+        dateFormat: {//TODO It seams like, that this property is not used anymore. Consider to remove it
             type: String,
             readOnly: true,
             value: @dateFormat
         },
-        timeFormat: {
+        timeFormat: {//TODO It seams like, that this property is not used anymore. Consider to remove it
             type: String,
             readOnly: true,
             value: @timeFormat

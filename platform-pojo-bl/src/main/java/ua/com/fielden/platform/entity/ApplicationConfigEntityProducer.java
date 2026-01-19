@@ -28,9 +28,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWith
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 
-public class ApplicationConfigProducer extends DefaultEntityProducerWithContext<ApplicationConfig> {
+public class ApplicationConfigEntityProducer extends DefaultEntityProducerWithContext<ApplicationConfigEntity> {
 
-    private static final Logger LOGGER = getLogger(ApplicationConfigProducer.class);
+    private static final Logger LOGGER = getLogger(ApplicationConfigEntityProducer.class);
 
     private final IMenuRetriever menuRetriever;
     private final IUserProvider userProvider;
@@ -38,14 +38,14 @@ public class ApplicationConfigProducer extends DefaultEntityProducerWithContext<
     private final IApplicationSettings appSettings;
 
     @Inject
-    public ApplicationConfigProducer(
+    public ApplicationConfigEntityProducer(
             final IMenuRetriever menuRetriever,
             final WebMenuItemInvisibilityCo miInvisible,
             final IUserProvider userProvider,
             final ICompanionObjectFinder coFinder,
             final EntityFactory entityFactory,
             final IApplicationSettings appSettings) {
-        super(entityFactory, ApplicationConfig.class, coFinder);
+        super(entityFactory, ApplicationConfigEntity.class, coFinder);
         this.menuRetriever = menuRetriever;
         this.miInvisible = miInvisible;
         this.userProvider = userProvider;
@@ -53,7 +53,7 @@ public class ApplicationConfigProducer extends DefaultEntityProducerWithContext<
     }
 
     @Override
-    protected ApplicationConfig provideDefaultValues(final ApplicationConfig appConfig) {
+    protected ApplicationConfigEntity provideDefaultValues(final ApplicationConfigEntity appConfig) {
         final Menu menu;
         if (chosenPropertyEqualsTo("desktop")) {
             menu = buildMenuConfiguration();

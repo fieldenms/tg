@@ -120,7 +120,7 @@ public class PlatformDomainTypes {
         types.add(UserMaster_OpenUserAndRoleAssociation_MenuItem.class);
         types.add(UserDefinableHelp.class);
         types.add(PersistentEntityInfo.class);
-        types.add(ApplicationConfig.class);
+        types.add(ApplicationConfigEntity.class);
 
         typesDependentOnWebUI.add(EntityExportAction.class);
         typesDependentOnWebUI.add(CentreConfigUpdater.class);

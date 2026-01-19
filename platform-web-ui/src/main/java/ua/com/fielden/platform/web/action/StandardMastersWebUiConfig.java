@@ -165,8 +165,8 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(PersistentEntityInfo.class, PersistentEntityInfoProducer.class, masterConfig, injector);
     }
 
-    public static EntityMaster<ApplicationConfig> createApplicationConfigMaster(final Injector injector, final MainMenuBuilder desktopMenuBuilder, final MainMenuBuilder mobileMenuBuilder) {
-        return new EntityMaster<>(ApplicationConfig.class, ApplicationConfigProducer.class, null, injector) {
+    public static EntityMaster<ApplicationConfigEntity> createApplicationConfigMaster(final Injector injector, final MainMenuBuilder desktopMenuBuilder, final MainMenuBuilder mobileMenuBuilder) {
+        return new EntityMaster<>(ApplicationConfigEntity.class, ApplicationConfigEntityProducer.class, null, injector) {
             @Override
             public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
                 final IDeviceProvider deviceProvider = injector.getInstance(IDeviceProvider.class);

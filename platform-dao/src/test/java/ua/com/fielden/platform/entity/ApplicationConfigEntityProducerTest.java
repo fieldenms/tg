@@ -20,7 +20,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
 /// A test case for application config logic.
 ///
-public class ApplicationConfigProducerTest extends AbstractDaoTestCase {
+public class ApplicationConfigEntityProducerTest extends AbstractDaoTestCase {
 
     private final IMenuRetriever menuRetriever = new IMenuRetriever() {
 
@@ -67,11 +67,11 @@ public class ApplicationConfigProducerTest extends AbstractDaoTestCase {
                         "module2/module2group2/module2group2item2",
                         "module2/module2group2/module2group2item3")));
 
-        final ApplicationConfigProducer appConfigProducer = new ApplicationConfigProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
+        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         appConfigProducer.setContext(context);
-        final ApplicationConfig appConfig = appConfigProducer.newEntity();
+        final ApplicationConfigEntity appConfig = appConfigProducer.newEntity();
 
         assertEquals("The menu has incorrect number of modules", 2, appConfig.getMenu().getMenu().size());
 
@@ -140,11 +140,11 @@ public class ApplicationConfigProducerTest extends AbstractDaoTestCase {
 
     private void checkMenuVisibilityForUser(final String user, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(user));
-        final ApplicationConfigProducer appConfigProducer = new ApplicationConfigProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
+        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         appConfigProducer.setContext(context);
-        final ApplicationConfig appConfig = appConfigProducer.newEntity();
+        final ApplicationConfigEntity appConfig = appConfigProducer.newEntity();
 
         assertEquals("The menu has incorrect number of modules", 2, appConfig.getMenu().getMenu().size());
 
@@ -185,11 +185,11 @@ public class ApplicationConfigProducerTest extends AbstractDaoTestCase {
 
         up.setUser(co(User.class).findByKey("USER_2"));
 
-        final ApplicationConfigProducer appConfigProducer = new ApplicationConfigProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
+        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         appConfigProducer.setContext(context);
-        final ApplicationConfig appConfig = appConfigProducer.newEntity();
+        final ApplicationConfigEntity appConfig = appConfigProducer.newEntity();
 
         assertEquals("The menu has incorrect number of modules", 2, appConfig.getMenu().getMenu().size());
 
@@ -265,11 +265,11 @@ public class ApplicationConfigProducerTest extends AbstractDaoTestCase {
 
     private void assertMenuInvisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey("USER_1"));
-        final ApplicationConfigProducer appConfigProducer = new ApplicationConfigProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
+        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         appConfigProducer.setContext(context);
-        final ApplicationConfig appConfig = appConfigProducer.newEntity();
+        final ApplicationConfigEntity appConfig = appConfigProducer.newEntity();
 
         final ModuleMenuItem module2group1 = appConfig.getMenu().getMenu().get(1).getMenu().get(0);
 
@@ -300,11 +300,11 @@ public class ApplicationConfigProducerTest extends AbstractDaoTestCase {
 
     private void assertMenuVisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(userName));
-        final ApplicationConfigProducer appConfigProducer = new ApplicationConfigProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
+        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         appConfigProducer.setContext(context);
-        final ApplicationConfig appConfig = appConfigProducer.newEntity();
+        final ApplicationConfigEntity appConfig = appConfigProducer.newEntity();
 
         final ModuleMenuItem module2group1 = appConfig.getMenu().getMenu().get(1).getMenu().get(0);
 

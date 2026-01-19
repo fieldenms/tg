@@ -748,7 +748,7 @@ Polymer({
             }, 500);
         }.bind(this);
         //Init master realted properties
-        this.entityType = "ua.com.fielden.platform.entity.ApplicationConfig";
+        this.entityType = "ua.com.fielden.platform.entity.ApplicationConfigEntity";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
             this.$.appConfig.setSiteAllowlist(entity.siteAllowlist.map(site => new RegExp(site)));

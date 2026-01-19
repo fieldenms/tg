@@ -12,8 +12,8 @@ import static java.util.Collections.unmodifiableSet;
 ///
 @KeyType(String.class)
 @KeyTitle(value = "Title", desc = "Application title")
-@CompanionObject(ApplicationConfigCo.class)
-public class ApplicationConfig extends AbstractEntity<String> {
+@CompanionObject(ApplicationConfigEntityCo.class)
+public class ApplicationConfigEntity extends AbstractEntity<String> {
 
     @IsProperty
     @Title("User name")
@@ -43,7 +43,7 @@ public class ApplicationConfig extends AbstractEntity<String> {
     }
 
     @Observable
-    public ApplicationConfig setMenu(final Menu menu) {
+    public ApplicationConfigEntity setMenu(final Menu menu) {
         this.menu = menu;
         return this;
     }
@@ -53,7 +53,7 @@ public class ApplicationConfig extends AbstractEntity<String> {
     }
 
     @Observable
-    public ApplicationConfig setTimeZone(final String timeZone) {
+    public ApplicationConfigEntity setTimeZone(final String timeZone) {
         this.timeZone = timeZone;
         return this;
     }
@@ -63,13 +63,13 @@ public class ApplicationConfig extends AbstractEntity<String> {
     }
 
     @Observable
-    public ApplicationConfig setDaysUntilSitePermissionExpires(final Integer daysUntilSitePermissionExpires) {
+    public ApplicationConfigEntity setDaysUntilSitePermissionExpires(final Integer daysUntilSitePermissionExpires) {
         this.daysUntilSitePermissionExpires = daysUntilSitePermissionExpires;
         return this;
     }
 
     @Observable
-    protected ApplicationConfig setSiteAllowlist(final Set<String> siteAllowlist) {
+    protected ApplicationConfigEntity setSiteAllowlist(final Set<String> siteAllowlist) {
         this.siteAllowlist.clear();
         this.siteAllowlist.addAll(siteAllowlist);
         return this;
@@ -80,7 +80,7 @@ public class ApplicationConfig extends AbstractEntity<String> {
     }
 
     @Observable
-    public ApplicationConfig setCurrencySymbol(final String currencySymbol) {
+    public ApplicationConfigEntity setCurrencySymbol(final String currencySymbol) {
         this.currencySymbol = currencySymbol;
         return this;
     }
@@ -90,7 +90,7 @@ public class ApplicationConfig extends AbstractEntity<String> {
     }
 
     @Observable
-    public ApplicationConfig setUserName(final String userName) {
+    public ApplicationConfigEntity setUserName(final String userName) {
         this.userName = userName;
         return this;
     }
