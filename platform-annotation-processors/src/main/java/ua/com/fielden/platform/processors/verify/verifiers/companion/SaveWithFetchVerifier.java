@@ -26,14 +26,15 @@ public class SaveWithFetchVerifier extends AbstractCompanionVerifier {
         return roundEnv.findViolatingElements(new AbstractTypeElementVerifier() {
             @Override
             public Optional<ViolatingElement> verify(final TypeElement typeElement) {
-                final boolean overridesSaveWithFetch = streamDeclaredMethods(typeElement)
-                        .anyMatch(execElt -> execElt.getSimpleName().contentEquals("save")
-                                             && execElt.getParameters().size() == 2
-                                             && isSameType(execElt.getParameters().get(1).asType(), Optional.class)
-                                             && elementFinder.isSubtype(execElt.getParameters().getFirst().asType(), AbstractEntity.class));
+                final var maybeOverriddenSaveWithFetch = streamDeclaredMethods(typeElement)
+                        .filter(execElt -> execElt.getSimpleName().contentEquals("save")
+                                           && execElt.getParameters().size() == 2
+                                           && isSameType(execElt.getParameters().get(1).asType(), Optional.class)
+                                           && elementFinder.isSubtype(execElt.getParameters().getFirst().asType(), AbstractEntity.class))
+                        .findAny();
 
-                if (overridesSaveWithFetch && !elementFinder.isSubtype(typeElement.asType(), ISaveWithFetch.class)) {
-                    return Optional.of(new ViolatingElement(typeElement, ERROR, errMustImplementSaveWithFetch(typeElement.getSimpleName())));
+                if (maybeOverriddenSaveWithFetch.isPresent() && !elementFinder.isSubtype(typeElement.asType(), ISaveWithFetch.class)) {
+                    return Optional.of(new ViolatingElement(maybeOverriddenSaveWithFetch.get(), ERROR, errMustImplementSaveWithFetch(typeElement.getSimpleName())));
                 }
 
 
@@ -44,7 +45,7 @@ public class SaveWithFetchVerifier extends AbstractCompanionVerifier {
                         .findAny();
 
                 if (maybeOverriddenSave.isPresent()) {
-                    if (overridesSaveWithFetch) {
+                    if (maybeOverriddenSaveWithFetch.isPresent()) {
                         return Optional.of(new ViolatingElement(maybeOverriddenSave.get(), ERROR, errMustNotOverrideBothSaves()));
                     }
                     else {
