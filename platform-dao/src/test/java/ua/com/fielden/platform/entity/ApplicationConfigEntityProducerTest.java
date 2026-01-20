@@ -22,7 +22,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.*;
 ///
 public class ApplicationConfigEntityProducerTest extends AbstractDaoTestCase {
 
-    private final IMenuRetriever menuRetriever = new IMenuRetriever() {
+    private final IWebAppConfigProvider menuRetriever = new IWebAppConfigProvider() {
 
         @Override
         public Menu getMenuEntity(final DeviceProfile deviceProfile) {
@@ -49,6 +49,11 @@ public class ApplicationConfigEntityProducerTest extends AbstractDaoTestCase {
             final ModuleMenu module2 = new ModuleMenu().setKey("module2").setMenu(moduleMenu2);
 
             return new Menu().setMenu(listOf(module1, module2));
+        }
+
+        @Override
+        public boolean independentTimeZone() {
+            return true;
         }
     };
 

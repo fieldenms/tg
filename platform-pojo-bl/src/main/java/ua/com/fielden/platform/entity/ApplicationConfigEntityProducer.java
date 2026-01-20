@@ -32,21 +32,21 @@ public class ApplicationConfigEntityProducer extends DefaultEntityProducerWithCo
 
     private static final Logger LOGGER = getLogger(ApplicationConfigEntityProducer.class);
 
-    private final IMenuRetriever menuRetriever;
+    private final IWebAppConfigProvider webAppConfigProvider;
     private final IUserProvider userProvider;
     private final WebMenuItemInvisibilityCo miInvisible;
     private final IApplicationSettings appSettings;
 
     @Inject
     public ApplicationConfigEntityProducer(
-            final IMenuRetriever menuRetriever,
+            final IWebAppConfigProvider webAppConfigProvider,
             final WebMenuItemInvisibilityCo miInvisible,
             final IUserProvider userProvider,
             final ICompanionObjectFinder coFinder,
             final EntityFactory entityFactory,
             final IApplicationSettings appSettings) {
         super(entityFactory, ApplicationConfigEntity.class, coFinder);
-        this.menuRetriever = menuRetriever;
+        this.webAppConfigProvider = webAppConfigProvider;
         this.miInvisible = miInvisible;
         this.userProvider = userProvider;
         this.appSettings = appSettings;
@@ -58,7 +58,7 @@ public class ApplicationConfigEntityProducer extends DefaultEntityProducerWithCo
         if (chosenPropertyEqualsTo("desktop")) {
             menu = buildMenuConfiguration();
         } else { // chosenPropertyEqualsTo("mobile")
-            menu = menuRetriever.getMenuEntity(MOBILE).setUserName(userProvider.getUser().getKey()).setCanEdit(false);
+            menu = webAppConfigProvider.getMenuEntity(MOBILE).setUserName(userProvider.getUser().getKey()).setCanEdit(false);
             // At this stage all items are visible for mobile profile.
             // In case where invisibility logic should be implemented, there is a need to extend persistent WebMenuItemInvisibility entity.
         }
@@ -66,12 +66,12 @@ public class ApplicationConfigEntityProducer extends DefaultEntityProducerWithCo
         appConfig.setSiteAllowlist(appSettings.siteAllowList());
         appConfig.setDaysUntilSitePermissionExpires(appSettings.daysUntilSitePermissionExpires());
         appConfig.setCurrencySymbol(appSettings.currencySymbol());
-        appConfig.setTimeZone(appSettings.timeZone());
+        appConfig.setTimeZone(webAppConfigProvider.independentTimeZone() ? TimeZone.getDefault().getID() : "");
         return super.provideDefaultValues(appConfig);
     }
 
     private Menu buildMenuConfiguration() {
-        final Menu menu = menuRetriever.getMenuEntity(DESKTOP).setUserName(userProvider.getUser().getKey()).setCanEdit(userProvider.getUser().isBase());
+        final Menu menu = webAppConfigProvider.getMenuEntity(DESKTOP).setUserName(userProvider.getUser().getKey()).setCanEdit(userProvider.getUser().isBase());
         //Get all invisible menu items
         final Map<String, Set<User>> invisibleItems = miInvisible.getAllEntities(createMenuInvisibilityQuery()).stream()
                 .collect(groupingBy(WebMenuItemInvisibility::getMenuItemUri, Collectors.mapping(WebMenuItemInvisibility::getOwner, toSet())));

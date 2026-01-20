@@ -29,9 +29,6 @@ public interface IApplicationSettings {
     /// A currency symbol that should be used to display monetary values.
     String currencySymbol();
 
-    /// Time zone for client application. Time zone should be default if this method returns empty value.
-    String timeZone();
-
     Workflows workflow();
     
     AuthMode authMode();

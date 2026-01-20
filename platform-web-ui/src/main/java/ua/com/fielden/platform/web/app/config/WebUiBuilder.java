@@ -11,7 +11,10 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -237,7 +240,6 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
                 replace("@minTabletWidth", Integer.toString(this.minTabletWidth)).
                 replace("@locale", "\"" + this.locale + "\"").
-                replace("@independentTimeZoneSetting", webUiConfig.independentTimeZone() ? format("moment.tz.setDefault('%s');", TimeZone.getDefault().getID()) : "").
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
                 replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
