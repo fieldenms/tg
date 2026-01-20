@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.types.tuples;
 
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.lang.String.format;
@@ -50,6 +52,24 @@ public class T2<T_1, T_2> {
         return mapper.apply(this._1, this._2);
     }
     ////////////////////////////////////
+
+    /// Runs the action with the first value.
+    ///
+    public void run1(final Consumer<? super T_1> action) {
+        action.accept(_1);
+    }
+
+    /// Runs the action with the second value.
+    ///
+    public void run2(final Consumer<? super T_2> action) {
+        action.accept(_2);
+    }
+
+    /// Runs the action with both values.
+    ///
+    public void run(final BiConsumer<? super T_1, ? super T_2> action) {
+        action.accept(_1, _2);
+    }
 
     @Override
     public int hashCode() {
