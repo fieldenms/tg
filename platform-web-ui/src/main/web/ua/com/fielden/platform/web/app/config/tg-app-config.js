@@ -1,25 +1,7 @@
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+import { PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import '/resources/components/postal-lib.js';
 import moment from '/resources/polymer/lib/moment-lib.js';
-
-moment.locale('custom-locale', {
-    longDateFormat: {
-        LTS: @timeWithMillisFormat,
-        LT: @timeFormat,
-        L: @dateFormat
-    }
-});
-
-/**
- * External site allowlist for hyperlinks that can be opened without a confirmation prompt.
- */
-let siteAllowlist;
-
-/**
- * A number of days for caching user-allowed sites/links that can be opened without a confirmation prompt.
- */
-let daysUntilSitePermissionExpires;
 
 /**
  * Timer Id to reconnect via sse after an error.
@@ -130,77 +112,137 @@ const closeEventSource = function (sourceObj) {
 //Holds all registered event sources in application.
 export const eventSource = registerEventSource();
 
+/**
+ * Determines the minimum screen width at which the desktop layout is applied.
+ */
+let minDesktopWidth;
+
+/**
+ * Determines the minimum screen width at which the tablet layout is applied.
+ */
+let minTabletWidth;
+
+/**
+ * Determines the locale for this application.
+ */
+let locale;
+
+/**
+ * Determines the options for master actions.
+ */
+let masterActionOptions;
+
+/**
+ * Determines the first day of the week (Sunday, Monday,...).
+ */
+let firstDayOfWeek;
+
+/**
+ * External site allowlist for hyperlinks that can be opened without a confirmation prompt.
+ */
+let siteAllowlist;
+
+/**
+ * A number of days for caching user-allowed sites/links that can be opened without a confirmation prompt.
+ */
+let daysUntilSitePermissionExpires;
+
 export const MasterActionOptions = {
     ALL_ON: "ALL_ON",
     ALL_OFF: "ALL_OFF"
 };
 
-export const TgAppConfig = Polymer({
-    
-    is: "tg-app-config",
-    
-    properties: {
-        minDesktopWidth: {
-            type: Number,
-            readOnly: true,
-            value: @minDesktopWidth
-        },
-        minTabletWidth: {
-            type: Number,
-            readOnly: true,
-            value: @minTabletWidth
-        },
-        locale: {
-            type: String,
-            readOnly: true,
-            value: @locale
-        },
-        dateFormat: {//TODO It seams like, that this property is not used anymore. Consider to remove it
-            type: String,
-            readOnly: true,
-            value: @dateFormat
-        },
-        timeFormat: {//TODO It seams like, that this property is not used anymore. Consider to remove it
-            type: String,
-            readOnly: true,
-            value: @timeFormat
-        },
-        masterActionOptions: {
-            type: String,
-            readOnly: true,
-            notify: true,
-            value: @masterActionOptions
-        },
-        firstDayOfWeek: {
-            type: Number,
-            notify: true,
-            readOnly: true,
-            value: window.firstDayOfWeek
-        },
-    },
-    
-    attached: function() {
-        this.style.display = "none";
-    },
+export class TgAppConfig extends PolymerElement {
 
-    getSiteAllowlist: function () {
-        return siteAllowlist;
-    },
+    static get properties() {
+        return {
+            minDesktopWidth: {
+                type: Number,
+                readOnly: true,
+                notify: true,
+                value: minDesktopWidth
+            },
+            minTabletWidth: {
+                type: Number,
+                readOnly: true,
+                notify: true,
+                value: minTabletWidth
+            },
+            locale: {
+                type: String,
+                readOnly: true,
+                notify: true,
+                value: locale
+            },
+            masterActionOptions: {
+                type: String,
+                readOnly: true,
+                notify: true,
+                value: masterActionOptions
+            },
+            firstDayOfWeek: {
+                type: Number,
+                notify: true,
+                readOnly: true,
+                value: firstDayOfWeek
+            },
+            siteAllowlist: {
+                type: Array,
+                notify: true,
+                readOnly: true,
+                value: siteAllowlist
+            },
+            daysUntilSitePermissionExpires: {
+                type: Number,
+                notify: true,
+                readOnly: true,
+                value: daysUntilSitePermissionExpires
+            }
 
-    setSiteAllowlist: function (allowlist) {
-        if (!siteAllowlist) {
-            siteAllowlist = allowlist;
-        }
-    },
-
-    getDaysUntilSitePermissionExpires: function () {
-        return daysUntilSitePermissionExpires;
-    },
-
-    setDaysUntilSitePermissionExpires: function (expiryDays) {
-        if (!daysUntilSitePermissionExpires) {
-            daysUntilSitePermissionExpires = expiryDays;
         }
     }
-    
-});
+
+    set minDesktopWidth (value) {
+        if (typeof minDesktopWidth === 'undefined') {
+            minDesktopWidth = value;
+        }
+    }
+
+    set minTabletWidth (value) {
+        if (typeof minTabletWidth === 'undefined') {
+            minTabletWidth = value;
+        }
+    }
+
+    set locale (value) {
+        if (typeof locale === 'undefined') {
+            locale = value;
+        }
+    }
+
+    set masterActionOptions (value) {
+        if (typeof masterActionOptions === 'undefined') {
+            masterActionOptions = value;
+        }
+    }
+
+    set firstDayOfWeek (value) {
+        if (typeof firstDayOfWeek === 'undefined') {
+            firstDayOfWeek = value;
+        }
+    }
+
+    set siteAllowlist (value) {
+        if (typeof siteAllowlist === 'undefined') {
+            siteAllowlist = value;
+        }
+    }
+
+    set daysUntilSitePermissionExpires (value) {
+        if (typeof daysUntilSitePermissionExpires === 'undefined') {
+            daysUntilSitePermissionExpires = value;
+        }
+    }
+}
+
+customElements.define('tg-app-config', TgAppConfig);

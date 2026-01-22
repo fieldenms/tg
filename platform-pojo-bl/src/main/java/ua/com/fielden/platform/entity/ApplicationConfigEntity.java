@@ -20,6 +20,7 @@ public class ApplicationConfigEntity extends AbstractEntity<String> {
     private String userName;
 
     @IsProperty
+    @Title("Currency")
     private String currencySymbol;
 
     @IsProperty(String.class)
@@ -33,6 +34,111 @@ public class ApplicationConfigEntity extends AbstractEntity<String> {
     @IsProperty
     @Title("Time Zone")
     private String timeZone;
+
+    @IsProperty
+    @Title("Minimal Desktop Width")
+    private int minDesktopWidth;
+
+    @IsProperty
+    @Title("Minimal Tablet Width")
+    private int minTabletWidth;
+
+    @IsProperty
+    @Title("Locale")
+    private String locale;
+
+    @IsProperty
+    @Title("Date Format")
+    private String dateFormat;
+
+    @IsProperty
+    @Title("Time Format")
+    private String timeFormat;
+
+    @IsProperty
+    @Title("Time with Milliseconds Format")
+    private String timeWithMillisFormat;
+
+    @IsProperty
+    @Title("Master Action Options")
+    private String masterActionOptions;
+
+    @IsProperty
+    @Title("First Day of the Week")
+    private int firstDayOfWeek;
+
+    public int getFirstDayOfWeek() {
+        return firstDayOfWeek;
+    }
+
+    @Observable
+    public ApplicationConfigEntity setFirstDayOfWeek(final int firstDayOfWeek) {
+        this.firstDayOfWeek = firstDayOfWeek;
+        return this;
+    }
+    public String getMasterActionOptions() {
+        return masterActionOptions;
+    }
+
+    @Observable
+    public ApplicationConfigEntity setMasterActionOptions(final String masterActionOptions) {
+        this.masterActionOptions = masterActionOptions;
+        return this;
+    }
+    public String getTimeWithMillisFormat() {
+        return timeWithMillisFormat;
+    }
+
+    @Observable
+    public ApplicationConfigEntity setTimeWithMillisFormat(final String timeWithMillisFormat) {
+        this.timeWithMillisFormat = timeWithMillisFormat;
+        return this;
+    }
+    public String getTimeFormat() {
+        return timeFormat;
+    }
+
+    @Observable
+    public ApplicationConfigEntity setTimeFormat(final String timeFormat) {
+        this.timeFormat = timeFormat;
+        return this;
+    }
+    public String getDateFormat() {
+        return dateFormat;
+    }
+
+    @Observable
+    public ApplicationConfigEntity setDateFormat(final String dateFormat) {
+        this.dateFormat = dateFormat;
+        return this;
+    }
+    public String getLocale() {
+        return locale;
+    }
+
+    @Observable
+    public ApplicationConfigEntity setLocale(final String locale) {
+        this.locale = locale;
+        return this;
+    }
+    public int getMinTabletWidth() {
+        return minTabletWidth;
+    }
+
+    @Observable
+    public ApplicationConfigEntity setMinTabletWidth(final int minTabletWidth) {
+        this.minTabletWidth = minTabletWidth;
+        return this;
+    }
+    public int getMinDesktopWidth() {
+        return minDesktopWidth;
+    }
+
+    @Observable
+    public ApplicationConfigEntity setMinDesktopWidth(final int minDesktopWidth) {
+        this.minDesktopWidth = minDesktopWidth;
+        return this;
+    }
 
     @IsProperty
     @Title(value = "Menu", desc = "Application menu configuration")

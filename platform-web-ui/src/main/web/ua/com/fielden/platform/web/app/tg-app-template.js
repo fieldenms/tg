@@ -751,8 +751,13 @@ Polymer({
         this.entityType = "ua.com.fielden.platform.entity.ApplicationConfigEntity";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
-            this.$.appConfig.setSiteAllowlist(entity.siteAllowlist.map(site => new RegExp(site)));
-            this.$.appConfig.setDaysUntilSitePermissionExpires(entity.daysUntilSitePermissionExpires);
+            this.$.appConfig.minDesktopWidth = entity.minDesktopWidth;
+            this.$.appConfig.minTabletWidth = entity.minTabletWidth;
+            this.$.appConfig.locale = entity.locale;
+            this.$.appConfig.masterActionOptions = entity.masterActionOptions;
+            this.$.appConfig.firstDayOfWeek = entity.firstDayOfWeek;
+            this.$.appConfig.siteAllowlist = entity.siteAllowlist.map(site => new RegExp(site));
+            this.$.appConfig.daysUntilSitePermissionExpires = entity.daysUntilSitePermissionExpires;
             this.currencySymbol = entity.currencySymbol;
             entity.menu.menu.forEach(menuItem => {
                 menuItem.actions.forEach(action => {
@@ -772,14 +777,21 @@ Polymer({
                     });
                 });
             });
-            this.appConfig = entity;
             // make splash related elements invisible
             // selection happens by id, but for all for safety reasons; for example, for web tests these elements do not exist
             document.querySelectorAll("#splash-background").forEach(bg => bg.style.display = 'none'); // background
             document.querySelectorAll("#splash-text").forEach(txt => txt.style.display = 'none'); // text
-            if (this.appConfig.timeZone) {
-                moment.tz.setDefault(this.appConfig.timeZone);
+            if (entity.timeZone) {
+                moment.tz.setDefault(entity.timeZone);
             }
+            moment.locale('custom-locale', {
+                longDateFormat: {
+                    LTS: entity.timeWithMillisFormat,
+                    LT: entity.timeFormat,
+                    L: entity.dateFormat
+                }
+            });
+            this.appConfig = entity;
         }.bind(this);
         this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
         this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};

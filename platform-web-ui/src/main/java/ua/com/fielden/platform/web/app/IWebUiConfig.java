@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.app;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.menu.IWebAppConfigProvider;
+import ua.com.fielden.platform.menu.IWebAppConfigSetter;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -13,7 +14,6 @@ import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-import ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 
 /// Represent a contract for Web UI configuring.
 ///
-public interface IWebUiConfig extends IWebAppConfigProvider {
+public interface IWebUiConfig extends IWebAppConfigProvider, IWebAppConfigSetter {
 
     /// Should return a port that an application server is listening to for incoming requests.
     ///
@@ -143,10 +143,6 @@ public interface IWebUiConfig extends IWebAppConfigProvider {
     /// Otherwise, the cached resource will be used straight away.
     ///
     Optional<String> checksum(final String resourceURI);
-
-    /// Returns [MasterActionOptions] instance that indicates what options should be available in master actions.
-    ///
-    MasterActionOptions masterActionOptions();
 
     /// A set of domain-specific actions for centre configurations sharing.
     ///

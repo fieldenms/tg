@@ -9,6 +9,7 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
@@ -55,6 +56,41 @@ public class ApplicationConfigEntityProducerTest extends AbstractDaoTestCase {
         public boolean independentTimeZone() {
             return true;
         }
+
+        @Override
+        public int minDesktopWidth() {
+            return 0;
+        }
+
+        @Override
+        public int minTabletWidth() {
+            return 0;
+        }
+
+        @Override
+        public String locale() {
+            return "";
+        }
+
+        @Override
+        public String dateFormat() {
+            return "";
+        }
+
+        @Override
+        public String timeFormat() {
+            return "";
+        }
+
+        @Override
+        public String timeWithMillisFormat() {
+            return "";
+        }
+
+        @Override
+        public String masterActionOptions() {
+            return "";
+        }
     };
 
     @Test
@@ -72,7 +108,7 @@ public class ApplicationConfigEntityProducerTest extends AbstractDaoTestCase {
                         "module2/module2group2/module2group2item2",
                         "module2/module2group2/module2group2item3")));
 
-        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
+        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class), getInstance(IDates.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         appConfigProducer.setContext(context);
@@ -145,7 +181,7 @@ public class ApplicationConfigEntityProducerTest extends AbstractDaoTestCase {
 
     private void checkMenuVisibilityForUser(final String user, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(user));
-        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
+        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class), getInstance(IDates.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         appConfigProducer.setContext(context);
@@ -190,7 +226,7 @@ public class ApplicationConfigEntityProducerTest extends AbstractDaoTestCase {
 
         up.setUser(co(User.class).findByKey("USER_2"));
 
-        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
+        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class), getInstance(IDates.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         appConfigProducer.setContext(context);
@@ -270,7 +306,7 @@ public class ApplicationConfigEntityProducerTest extends AbstractDaoTestCase {
 
     private void assertMenuInvisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey("USER_1"));
-        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
+        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class), getInstance(IDates.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         appConfigProducer.setContext(context);
@@ -305,7 +341,7 @@ public class ApplicationConfigEntityProducerTest extends AbstractDaoTestCase {
 
     private void assertMenuVisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(userName));
-        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class));
+        final ApplicationConfigEntityProducer appConfigProducer = new ApplicationConfigEntityProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), getInstance(IApplicationSettings.class), getInstance(IDates.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         appConfigProducer.setContext(context);
