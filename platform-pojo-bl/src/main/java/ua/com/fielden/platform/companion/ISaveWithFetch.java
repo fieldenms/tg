@@ -17,7 +17,7 @@ public interface ISaveWithFetch<T extends AbstractEntity<?>> {
     /// Saves `entity` and returns either its ID (left, only if `maybeFetch` is an empty optional)
     /// or a refetched instance of the saved entity (right, `maybeFetch` is used for refetching).
     ///
-    /// If `entity` is not persistent (e.g., an action entity), returns `entity` itself (right), regardless of `maybeFetch`.
+    /// The same rules apply if `entity` is not persistent (i.e., functional, union, or synthetic), but without refetching.
     ///
     /// This method is the single extension point for custom saving logic.
     /// Implementations must put all custom saving logic here and must not implement [IEntityActuator#save(AbstractEntity)],

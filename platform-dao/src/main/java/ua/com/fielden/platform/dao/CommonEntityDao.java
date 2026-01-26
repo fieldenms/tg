@@ -286,7 +286,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     protected Either<Long, T> save(final T entity, final Optional<fetch<T>> maybeFetch) {
         if (!entity.isPersistent()) {
-            return right(entity);
+            return maybeFetch.isPresent() ? right(entity) : left(entity.getId());
         }
         // if maybeFetch is empty then we skip re-fetching
         final boolean skipRefetching = !maybeFetch.isPresent();
