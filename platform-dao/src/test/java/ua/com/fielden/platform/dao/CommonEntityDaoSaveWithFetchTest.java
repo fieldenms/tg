@@ -10,8 +10,10 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.ERR_ACTIVE_PROPERTY_NOT_DETERMINED;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 
@@ -96,60 +98,56 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void saveWithFetch_for_an_action_entity_acts_as_identity() {
+    public void saveWithFetch_for_a_non_persistent_functional_entity_returns_entity_ID_as_left_if_fetch_model_is_absent() {
         final ITgDummyAction co$TgDummyAction = co$(TgDummyAction.class);
-
-        {
-            final var action = new_(TgDummyAction.class);
-            final var either = co$TgDummyAction.save(action, Optional.empty());
-            assertTrue(either.isRight());
-            assertSame(action, either.asRight().value());
-        }
-
-        {
-            final var action = new_(TgDummyAction.class);
-            final var either = co$TgDummyAction.save(action, Optional.of(fetch(TgDummyAction.class)));
-            assertTrue(either.isRight());
-            assertSame(action, either.asRight().value());
-        }
+        final var action = new_(TgDummyAction.class);
+        final var either = co$TgDummyAction.save(action, Optional.empty());
+        assertTrue(either.isLeft());
+        assertEquals(action.getId(), either.asLeft().value());
     }
 
     @Test
-    public void saveWithFetch_for_a_synthetic_entity_acts_as_identity() {
+    public void saveWithFetch_for_a_non_persistent_functional_entity_returns_entity_itself_as_right_if_fetch_model_is_present() {
+        final ITgDummyAction co$TgDummyAction = co$(TgDummyAction.class);
+        final var action = new_(TgDummyAction.class);
+        final var either = co$TgDummyAction.save(action, Optional.of(fetch(TgDummyAction.class)));
+        assertTrue(either.isRight());
+        assertSame(action, either.asRight().value());
+    }
+
+    @Test
+    public void saveWithFetch_for_a_synthetic_entity_returns_left_with_the_entity_id_if_the_fetch_is_absent() {
         final TgReMaxVehicleReadingCo co$MaxReading = co$(TgReMaxVehicleReading.class);
-
-        {
-            final var entity = new_(TgReMaxVehicleReading.class);
-            final var either = co$MaxReading.save(entity, Optional.empty());
-            assertTrue(either.isRight());
-            assertSame(entity, either.asRight().value());
-        }
-
-        {
-            final var entity = new_(TgReMaxVehicleReading.class);
-            final var either = co$MaxReading.save(entity, Optional.of(fetch(TgReMaxVehicleReading.class)));
-            assertTrue(either.isRight());
-            assertSame(entity, either.asRight().value());
-        }
+        final var entity = new_(TgReMaxVehicleReading.class);
+        final var either = co$MaxReading.save(entity, Optional.empty());
+        assertTrue(either.isLeft());
+        assertEquals(entity.getId(), either.asLeft().value());
     }
 
     @Test
-    public void saveWithFetch_for_a_union_entity_acts_as_identity() {
+    public void saveWithFetch_for_a_synthetic_entity_returns_right_with_the_entity_itself_if_the_fetch_is_present() {
+        final TgReMaxVehicleReadingCo co$MaxReading = co$(TgReMaxVehicleReading.class);
+        final var entity = new_(TgReMaxVehicleReading.class);
+        final var either = co$MaxReading.save(entity, Optional.of(fetch(TgReMaxVehicleReading.class)));
+        assertTrue(either.isRight());
+        assertSame(entity, either.asRight().value());
+    }
+
+    @Test
+    public void saveWithFetch_for_a_union_entity_without_an_active_property_fails_if_fetch_model_is_absent() {
         final IUnionEntity co$UnionEntity = co$(UnionEntity.class);
+        final var entity = new_(UnionEntity.class);
+        assertThatThrownBy(() -> co$UnionEntity.save(entity, Optional.empty()))
+                .hasMessage(ERR_ACTIVE_PROPERTY_NOT_DETERMINED.formatted(UnionEntity.class.getSimpleName()));
+    }
 
-        {
-            final var entity = new_(UnionEntity.class);
-            final var either = co$UnionEntity.save(entity, Optional.empty());
-            assertTrue(either.isRight());
-            assertSame(entity, either.asRight().value());
-        }
-
-        {
-            final var entity = new_(UnionEntity.class);
-            final var either = co$UnionEntity.save(entity, Optional.of(fetch(UnionEntity.class)));
-            assertTrue(either.isRight());
-            assertSame(entity, either.asRight().value());
-        }
+    @Test
+    public void saveWithFetch_for_a_union_entity_without_an_active_property_returns_union_itself_as_right_if_fetch_model_is_present() {
+        final IUnionEntity co$UnionEntity = co$(UnionEntity.class);
+        final var entity = new_(UnionEntity.class);
+        final var either = co$UnionEntity.save(entity, Optional.of(fetch(UnionEntity.class)));
+        assertTrue(either.isRight());
+        assertSame(entity, either.asRight().value());
     }
 
     @Override
