@@ -169,7 +169,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
             final Attachment prevRev = findByEntityAndFetch(getFetchProvider().fetchModel(), savedAttachment.getPrevRevision());
             super.save(prevRev.setLastRevision(savedAttachment), empty());
             super.save(savedAttachment.setLastRevision(savedAttachment), empty());
-            return Result.successful(savedAttachment);
+            return successful();
         } else { // otherwise, this is the case of joining two revision histories or the case of updating the history from the tail-end -- both are handled identically
             final Attachment lastRev = co(Attachment.class).findByEntityAndFetch(getFetchProvider().fetchModel(), savedAttachment.getLastRevision());
             return traverseAndUpdateHistory(lastRev, lastRev, /* sha1Checksums = */ setOf());
@@ -178,7 +178,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     
     private Result traverseAndUpdateHistory(final Attachment lastRev, final Attachment tracedRevision, final Set<String> sha1Checksums) {
         if (tracedRevision == null) {
-            return successful(tracedRevision);
+            return successful();
         } else {
             if (sha1Checksums.contains(tracedRevision.getSha1())) {
                 return failure(format(CanBeUsedAsPrevAttachmentRev.ERR_DUPLICATE_SHA1, tracedRevision.getSha1()));
@@ -196,8 +196,9 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
                     attachmentToUpdate.setRevNo(attachmentToUpdate.getPrevRevision().getRevNo() + 1);
                 }
                 attachmentToUpdate.beginLastRevisionUpdate().setLastRevision(lastRev).endLastRevisionUpdate();
-                
-                return successful(super.save(attachmentToUpdate, empty()));
+
+                super.save(attachmentToUpdate, empty());
+                return successful();
             } catch (final Result ex) {
                 return ex;
             } catch (final Exception ex) {
