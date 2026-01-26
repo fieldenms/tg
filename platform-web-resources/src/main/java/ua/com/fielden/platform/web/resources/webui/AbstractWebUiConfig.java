@@ -213,7 +213,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public void initConfiguration() {
-        final EntityMaster<ApplicationConfigEntity> applicationConfigMaster = StandardMastersWebUiConfig.createApplicationConfigMaster(injector(), desktopMainMenuConfig, mobileMainMenuConfig);
+        final EntityMaster<ApplicationConfigEntity> applicationConfigMaster = StandardMastersWebUiConfig.createApplicationConfigMaster(injector());
+        final EntityMaster<Menu> menuMaster = StandardMastersWebUiConfig.createMenuMaster(injector(), desktopMainMenuConfig, mobileMainMenuConfig);
         final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> genericEntityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
         final EntityMaster<ReferenceHierarchy> genericReferenceHierarchyMaster = ReferenceHierarchyWebUiConfig.createReferenceHierarchyMaster(injector());
@@ -238,6 +239,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(genericEntityDeleteActionMaster)
         .addMaster(genericEntityExportActionMaster)
         .addMaster(genericMenuSaveMaster)
+        .addMaster(menuMaster)
         .addMaster(applicationConfigMaster)
         .addMaster(userMenuAssociatorWebUiConfig.master)
         .addMaster(userDefinableHelpMaster)

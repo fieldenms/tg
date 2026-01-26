@@ -34,7 +34,6 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
-import { setCurrencySymbol } from '/resources/reflection/tg-numeric-utils.js';
 import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 import moment from '/resources/polymer/lib/moment-lib.js';
@@ -60,15 +59,15 @@ const template = html`
     <iron-ajax id="entityReconstructor" headers="[[_headers]]" method="GET" handle-as="json" reject-with-request></iron-ajax>
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
-            <tg-app-menu class="fit" name="menu" menu-config="[[appConfig.menu]]" app-title="[[appTitle]]" idea-uri="[[ideaUri]]">
+            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]" idea-uri="[[ideaUri]]">
                 <paper-icon-button id="helpAction" slot="helpAction" icon="icons:help-outline" tabindex="1"
                     on-tg-long-tap="_longHelpTapHandler"
                     on-tg-short-tap="_shortHelpTapHandler"
                     tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link.">
                 </paper-icon-button>
             </tg-app-menu>
-            <template is="dom-repeat" items="[[appConfig.menu.menu]]" on-dom-change="_modulesRendered">
-                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[appConfig.menu.menu]]" menu-item="[[item]]" can-edit="[[appConfig.menu.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" selected-submodule="{{_selectedSubmodule}}">
+            <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
+                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" selected-submodule="{{_selectedSubmodule}}">
                     <tg-ui-action
                         id="openUserMenuVisibilityAssociatorMaster"
                         ui-role='ICON'
@@ -137,10 +136,10 @@ const template = html`
 
 template.setAttribute('strip-whitespace', '');
 
-function findModule (moduleName, appConfig) {
+function findModule (moduleName, menuConfig) {
     var itemIndex;
-    for (itemIndex = 0; itemIndex < appConfig.menu.menu.length; itemIndex++) {
-        if (appConfig.menu.menu[itemIndex].key === moduleName) {
+    for (itemIndex = 0; itemIndex < menuConfig.menu.length; itemIndex++) {
+        if (menuConfig.menu[itemIndex].key === moduleName) {
             return moduleName;
         }
     }
@@ -204,10 +203,6 @@ Polymer({
         },
         appTitle: String,
         ideaUri: String,
-        currencySymbol: {
-            type: String,
-            observer: '_currencySymbolChanged'
-        },
         entityType: String,
 
         _manager: {
@@ -226,7 +221,7 @@ Polymer({
             observer: "_selectedSubmoduleChanged"
         },
 
-        //action related properties.
+        // Action related properties.
         _attrs: Object,
         _saveIdentifier: Number,
         _visibleMenuItems: Array,
@@ -274,25 +269,27 @@ Polymer({
         "tg-module-menu-closed": "_restoreLastFocusedElement"
     },
 
-    _currencySymbolChanged: function(newValue, oldValue) {
-        setCurrencySymbol(newValue);
-    },
-
     _searchMenu: function (event) {
-        const selectedElement = this.shadowRoot.querySelector("[name='" + this.$.pages.selected + "']");
-        if (selectedElement && selectedElement.searchMenu) {
-            this.persistActiveElement();
-            selectedElement.searchMenu();
-            tearDownEvent(event);
+        const pages = this.shadowRoot.querySelector("#pages");
+        if (pages) {
+            const selectedElement = this.shadowRoot.querySelector("[name='" + pages.selected + "']");
+            if (selectedElement && selectedElement.searchMenu) {
+                this.persistActiveElement();
+                selectedElement.searchMenu();
+                tearDownEvent(event);
+            }
         }
     },
     
     _openModuleMenu: function (event) {
-        const selectedElement = this.shadowRoot.querySelector("[name='" + this.$.pages.selected + "']");
-        if (selectedElement && selectedElement.openModuleMenu) {
-            this.persistActiveElement();
-            selectedElement.openModuleMenu();
-            tearDownEvent(event);
+        const pages = this.shadowRoot.querySelector("#pages");
+        if (pages) {
+            const selectedElement = this.shadowRoot.querySelector("[name='" + pages.selected + "']");
+            if (selectedElement && selectedElement.openModuleMenu) {
+                this.persistActiveElement();
+                selectedElement.openModuleMenu();
+                tearDownEvent(event);
+            }
         }
     },
 
@@ -627,8 +624,8 @@ Polymer({
     /// If the view is opened in different module then play transition animation between modules.
     ///
     _setSelected: function (selected) {
-        if (this.appConfig) {
-            const moduleToSelect = findModule(selected, this.appConfig);
+        if (this.menuConfig) {
+            const moduleToSelect = findModule(selected, this.menuConfig);
             const currentlySelected = this.$.pages.selected;
             const currentlySelectedElement = currentlySelected && this.shadowRoot.querySelector("[name='" + currentlySelected + "']");
             // If module to select is the same as currently selected then just open selected menu item (i.e. open entity centre or master).
@@ -748,18 +745,10 @@ Polymer({
             }, 500);
         }.bind(this);
         //Init master realted properties
-        this.entityType = "ua.com.fielden.platform.entity.ApplicationConfigEntity";
+        this.entityType = "ua.com.fielden.platform.menu.Menu";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
-            this.$.appConfig.minDesktopWidth = entity.minDesktopWidth;
-            this.$.appConfig.minTabletWidth = entity.minTabletWidth;
-            this.$.appConfig.locale = entity.locale;
-            this.$.appConfig.masterActionOptions = entity.masterActionOptions;
-            this.$.appConfig.firstDayOfWeek = entity.firstDayOfWeek;
-            this.$.appConfig.siteAllowlist = entity.siteAllowlist.map(site => new RegExp(site));
-            this.$.appConfig.daysUntilSitePermissionExpires = entity.daysUntilSitePermissionExpires;
-            this.currencySymbol = entity.currencySymbol;
-            entity.menu.menu.forEach(menuItem => {
+            entity.menu.forEach(menuItem => {
                 menuItem.actions.forEach(action => {
                     action._showDialog = this._showDialog;
                     action.toaster = this.toaster;
@@ -777,21 +766,11 @@ Polymer({
                     });
                 });
             });
+            this.menuConfig = entity;
             // make splash related elements invisible
             // selection happens by id, but for all for safety reasons; for example, for web tests these elements do not exist
             document.querySelectorAll("#splash-background").forEach(bg => bg.style.display = 'none'); // background
             document.querySelectorAll("#splash-text").forEach(txt => txt.style.display = 'none'); // text
-            if (entity.timeZone) {
-                moment.tz.setDefault(entity.timeZone);
-            }
-            moment.locale('custom-locale', {
-                longDateFormat: {
-                    LTS: entity.timeWithMillisFormat,
-                    LT: entity.timeFormat,
-                    L: entity.dateFormat
-                }
-            });
-            this.appConfig = entity;
         }.bind(this);
         this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
         this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};

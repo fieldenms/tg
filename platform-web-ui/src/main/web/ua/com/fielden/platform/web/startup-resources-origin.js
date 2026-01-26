@@ -6,6 +6,6 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 import '/resources/components/rich-text/tg-rich-text-styles.js';
 import '/resources/images/tg-reference-hierarchy.js';
 import '/resources/components/tg-qr-code-scanner.js';
-import '/app/tg-app.js';
+import '/resources/app/tg-app-loader.js';
 
 import '/app/application-startup-resources.js';

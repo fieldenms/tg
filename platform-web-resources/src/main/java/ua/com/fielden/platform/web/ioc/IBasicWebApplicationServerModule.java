@@ -4,6 +4,7 @@ import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
+import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.menu.IWebAppConfigProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
@@ -50,6 +51,7 @@ public interface IBasicWebApplicationServerModule {
         // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
         bindType(IWebUiConfig.class).toInstance(webApp);
         bindType(IWebAppConfigProvider.class).toInstance(webApp);
+        bindType(IMenuRetriever.class).toInstance(webApp);
 
         // bind Entity Master URI creator
         bindType(IEntityMasterUrlProvider.class).to(EntityMasterUrlProvider.class);

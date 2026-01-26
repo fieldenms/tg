@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.app;
 
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.menu.IWebAppConfigProvider;
 import ua.com.fielden.platform.menu.IWebAppConfigSetter;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -23,7 +24,7 @@ import java.util.stream.Stream;
 
 /// Represent a contract for Web UI configuring.
 ///
-public interface IWebUiConfig extends IWebAppConfigProvider, IWebAppConfigSetter {
+public interface IWebUiConfig extends IWebAppConfigProvider, IWebAppConfigSetter, IMenuRetriever {
 
     /// Should return a port that an application server is listening to for incoming requests.
     ///

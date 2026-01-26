@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity;
 
 import ua.com.fielden.platform.entity.annotation.*;
-import ua.com.fielden.platform.menu.Menu;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -137,20 +136,6 @@ public class ApplicationConfigEntity extends AbstractEntity<String> {
     @Observable
     public ApplicationConfigEntity setMinDesktopWidth(final int minDesktopWidth) {
         this.minDesktopWidth = minDesktopWidth;
-        return this;
-    }
-
-    @IsProperty
-    @Title(value = "Menu", desc = "Application menu configuration")
-    private Menu menu;
-
-    public Menu getMenu() {
-        return menu;
-    }
-
-    @Observable
-    public ApplicationConfigEntity setMenu(final Menu menu) {
-        this.menu = menu;
         return this;
     }
 

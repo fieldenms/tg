@@ -112,39 +112,44 @@ const closeEventSource = function (sourceObj) {
 //Holds all registered event sources in application.
 export const eventSource = registerEventSource();
 
-/**
- * Determines the minimum screen width at which the desktop layout is applied.
- */
+// Determines the minimum screen width at which the desktop layout is applied.
+// This variable is assigned only once.
+//
 let minDesktopWidth;
 
-/**
- * Determines the minimum screen width at which the tablet layout is applied.
- */
+// Determines the minimum screen width at which the tablet layout is applied.
+// This variable is assigned only once.
+//
 let minTabletWidth;
 
-/**
- * Determines the locale for this application.
- */
+// Determines the locale for this application.
+// This variable is assigned only once.
+//
 let locale;
 
-/**
- * Determines the options for master actions.
- */
+// A variable that defines a currency symbol, used to represent monetary values as strings.
+// This variable is assigned only once.
+//
+let currencySymbol;
+
+// Determines the options for master actions.
+// This variable is assigned only once.
+//
 let masterActionOptions;
 
-/**
- * Determines the first day of the week (Sunday, Monday,...).
- */
+// Determines the first day of the week (Sunday, Monday,...).
+// This variable is assigned only once.
+//
 let firstDayOfWeek;
 
-/**
- * External site allowlist for hyperlinks that can be opened without a confirmation prompt.
- */
+// External site allowlist for hyperlinks that can be opened without a confirmation prompt.
+// This variable is assigned only once.
+//
 let siteAllowlist;
 
-/**
- * A number of days for caching user-allowed sites/links that can be opened without a confirmation prompt.
- */
+// A number of days for caching user-allowed sites/links that can be opened without a confirmation prompt.
+// This variable is assigned only once.
+//
 let daysUntilSitePermissionExpires;
 
 export const MasterActionOptions = {
@@ -160,85 +165,107 @@ export class TgAppConfig extends PolymerElement {
                 type: Number,
                 readOnly: true,
                 notify: true,
-                value: minDesktopWidth
+                value: () => minDesktopWidth
             },
             minTabletWidth: {
                 type: Number,
                 readOnly: true,
                 notify: true,
-                value: minTabletWidth
+                value: () => minTabletWidth
             },
             locale: {
                 type: String,
                 readOnly: true,
                 notify: true,
-                value: locale
+                value: () => locale
+            },
+            currencySymbol: {
+                type: String,
+                readOnly: true,
+                notify: true,
+                value: () => currencySymbol
             },
             masterActionOptions: {
                 type: String,
                 readOnly: true,
                 notify: true,
-                value: masterActionOptions
+                value: () => masterActionOptions
             },
             firstDayOfWeek: {
                 type: Number,
                 notify: true,
                 readOnly: true,
-                value: firstDayOfWeek
+                value: () => firstDayOfWeek
             },
             siteAllowlist: {
                 type: Array,
                 notify: true,
                 readOnly: true,
-                value: siteAllowlist
+                value: () => siteAllowlist
             },
             daysUntilSitePermissionExpires: {
                 type: Number,
                 notify: true,
                 readOnly: true,
-                value: daysUntilSitePermissionExpires
+                value: () => daysUntilSitePermissionExpires
             }
 
         }
     }
 
-    set minDesktopWidth (value) {
+    ready () {
+        super.ready();
+        this.style.display = 'none';
+    }
+
+    setMinDesktopWidth (value) {
         if (typeof minDesktopWidth === 'undefined') {
             minDesktopWidth = value;
         }
     }
 
-    set minTabletWidth (value) {
+    setMinTabletWidth (value) {
         if (typeof minTabletWidth === 'undefined') {
             minTabletWidth = value;
         }
     }
 
-    set locale (value) {
-        if (typeof locale === 'undefined') {
+    setLocale (value) {
+        if (typeof locale === 'undefined' && locale) {
             locale = value;
         }
     }
 
-    set masterActionOptions (value) {
-        if (typeof masterActionOptions === 'undefined') {
+    // Set the provided currency symbol if previous was empty and provided one is not empty.
+    // It means that currency symbol can be set only once.
+    //
+    // @param {String} value - currency symbol to set
+    //
+    setCurrencySymbol (value) {
+        if (typeof currencySymbol === 'undefined' && currencySymbol) {
+            currencySymbol = value;
+        }
+    }
+
+    setMasterActionOptions (value) {
+        if (typeof masterActionOptions === 'undefined' && masterActionOptions) {
             masterActionOptions = value;
         }
     }
 
-    set firstDayOfWeek (value) {
+    setFirstDayOfWeek (value) {
         if (typeof firstDayOfWeek === 'undefined') {
             firstDayOfWeek = value;
         }
     }
 
-    set siteAllowlist (value) {
+    setSiteAllowlist (value) {
         if (typeof siteAllowlist === 'undefined') {
             siteAllowlist = value;
         }
     }
 
-    set daysUntilSitePermissionExpires (value) {
+    setDaysUntilSitePermissionExpires (value) {
         if (typeof daysUntilSitePermissionExpires === 'undefined') {
             daysUntilSitePermissionExpires = value;
         }
