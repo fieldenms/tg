@@ -45,6 +45,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
@@ -93,8 +95,11 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         if (revisionHistoryModified) {
             final var fetchModel = getFetchProvider().fetchModel();
             final Attachment savedAttachment = super.save(attachment, of(fetchModel)).asRight().value();
+            final var attachmentId = savedAttachment.getId();
             updateAttachmentRevisionHistory(savedAttachment).ifFailure(Result::throwRuntime);
-            return super.save(savedAttachment, maybeFetch);
+            return maybeFetch
+                    .<Either<Long, Attachment>> map(fetch -> right(findById(attachmentId, fetch)))
+                    .orElseGet(() -> left(attachmentId));
         }
         else {
             return super.save(attachment, maybeFetch);
@@ -149,12 +154,10 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         return empty();
     }
 
-    /**
-     * Ensures correct revision history, including revision numbering and references.
-     * 
-     * @param savedAttachment
-     * @return
-     */
+    /// Ensures correct revision history, including revision numbering and references.
+    ///
+    /// This method may update `savedAttachment`.
+    ///
     private Result updateAttachmentRevisionHistory(final Attachment savedAttachment) {
         if (savedAttachment.isDirty()) {
             return failure("Attachment revision history can only be updated for persisted attachments.");
