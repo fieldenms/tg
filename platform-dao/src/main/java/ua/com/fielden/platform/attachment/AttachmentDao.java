@@ -167,8 +167,8 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         // this means that prev. revision needs to have its last revision updated
         if (savedAttachment.getLastRevision() == null || equalsEx(savedAttachment, savedAttachment.getLastRevision())) {
             final Attachment prevRev = findByEntityAndFetch(getFetchProvider().fetchModel(), savedAttachment.getPrevRevision());
-            super.save(prevRev.setLastRevision(savedAttachment));
-            super.save(savedAttachment.setLastRevision(savedAttachment));
+            super.save(prevRev.setLastRevision(savedAttachment), empty());
+            super.save(savedAttachment.setLastRevision(savedAttachment), empty());
             return Result.successful(savedAttachment);
         } else { // otherwise, this is the case of joining two revision histories or the case of updating the history from the tail-end -- both are handled identically
             final Attachment lastRev = co(Attachment.class).findByEntityAndFetch(getFetchProvider().fetchModel(), savedAttachment.getLastRevision());
@@ -197,7 +197,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
                 }
                 attachmentToUpdate.beginLastRevisionUpdate().setLastRevision(lastRev).endLastRevisionUpdate();
                 
-                return successful(super.save(attachmentToUpdate));
+                return successful(super.save(attachmentToUpdate, empty()));
             } catch (final Result ex) {
                 return ex;
             } catch (final Exception ex) {
