@@ -14,8 +14,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.ERR_ACTIVE_PROPERTY_NOT_DETERMINED;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
 
@@ -101,8 +103,10 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
     public void saveWithFetch_for_a_non_persistent_functional_entity_returns_entity_ID_as_left_if_fetch_model_is_absent() {
         final ITgDummyAction co$TgDummyAction = co$(TgDummyAction.class);
         final var action = new_(TgDummyAction.class);
+        assertNull(action.getId());
         final var either = co$TgDummyAction.save(action, Optional.empty());
         assertTrue(either.isLeft());
+        assertNull(either.asLeft().value());
         assertEquals(action.getId(), either.asLeft().value());
     }
 
@@ -116,21 +120,59 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void saveWithFetch_for_a_synthetic_entity_returns_left_with_the_entity_id_if_the_fetch_is_absent() {
-        final TgReMaxVehicleReadingCo co$MaxReading = co$(TgReMaxVehicleReading.class);
-        final var entity = new_(TgReMaxVehicleReading.class);
-        final var either = co$MaxReading.save(entity, Optional.empty());
-        assertTrue(either.isLeft());
-        assertEquals(entity.getId(), either.asLeft().value());
+    public void saveWithFetch_for_a_synthetic_entity_returns_entity_ID_as_left_if_fetch_model_is_absent() {
+        final ITgReVehicleModel co$ReVehicleModel = co$(TgReVehicleModel.class);
+        assertTrue(isSyntheticEntityType(TgReVehicleModel.class));
+
+        {
+            // New entity.
+            final var entity = new_(TgReVehicleModel.class);
+            final var either = co$ReVehicleModel.save(entity, Optional.empty());
+            assertNull(entity.getId());
+            assertTrue(either.isLeft());
+            assertNull(either.asLeft().value());
+            assertEquals(entity.getId(), either.asLeft().value());
+        }
+
+        {
+            // Retrieved entity.
+            final var entity = assertThat(first(co(TgReVehicleModel.class).getFirstEntities(
+                    from(select(TgReVehicleModel.class).model()).model(), 1)))
+                    .isPresent()
+                    .get().actual();
+            assertNotNull(entity.getId());
+            final var either = co$ReVehicleModel.save(entity, Optional.empty());
+            assertTrue(either.isLeft());
+            assertNotNull(either.asLeft().value());
+            assertEquals(entity.getId(), either.asLeft().value());
+        }
     }
 
     @Test
-    public void saveWithFetch_for_a_synthetic_entity_returns_right_with_the_entity_itself_if_the_fetch_is_present() {
-        final TgReMaxVehicleReadingCo co$MaxReading = co$(TgReMaxVehicleReading.class);
-        final var entity = new_(TgReMaxVehicleReading.class);
-        final var either = co$MaxReading.save(entity, Optional.of(fetch(TgReMaxVehicleReading.class)));
-        assertTrue(either.isRight());
-        assertSame(entity, either.asRight().value());
+    public void saveWithFetch_for_a_synthetic_entity_returns_entity_itself_as_right_if_fetch_model_is_present() {
+        final ITgReVehicleModel co$ReVehicleModel = co$(TgReVehicleModel.class);
+        assertTrue(isSyntheticEntityType(TgReVehicleModel.class));
+
+        {
+            // New entity.
+            final var entity = new_(TgReVehicleModel.class);
+            final var either = co$ReVehicleModel.save(entity, Optional.of(fetch(TgReVehicleModel.class)));
+            assertNull(entity.getId());
+            assertTrue(either.isRight());
+            assertSame(entity, either.asRight().value());
+        }
+
+        {
+            // Retrieved entity.
+            final var entity = assertThat(first(co(TgReVehicleModel.class).getFirstEntities(
+                    from(select(TgReVehicleModel.class).model()).model(), 1)))
+                    .isPresent()
+                    .get().actual();
+            assertNotNull(entity.getId());
+            final var either = co$ReVehicleModel.save(entity, Optional.of(fetch(TgReVehicleModel.class)));
+            assertTrue(either.isRight());
+            assertSame(entity, either.asRight().value());
+        }
     }
 
     @Test
@@ -150,6 +192,58 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
         assertSame(entity, either.asRight().value());
     }
 
+    @Test
+    public void saveWithFetch_for_a_union_entity_with_an_active_property_returns_entity_ID_as_left_if_fetch_model_is_absent() {
+        assertTrue(isUnionEntityType(UnionEntity.class));
+        final IUnionEntity co$UnionEntity = co$(UnionEntity.class);
+
+        final var one = save(new_(EntityOne.class, "ONE1"));
+
+        {
+            // New entity.
+            final var entity = new_(UnionEntity.class).setPropertyOne(one);
+            assertNotNull(entity.getId());
+            final var either = co$UnionEntity.save(entity, Optional.empty());
+            assertTrue(either.isLeft());
+            assertNotNull(either.asLeft().value());
+            assertEquals(entity.getId(), either.asLeft().value());
+        }
+
+        {
+            // Retrieved entity.
+            final var entity = co$UnionEntity.findById(one.getId());
+            assertNotNull(entity.getId());
+            final var either = co$UnionEntity.save(entity, Optional.empty());
+            assertTrue(either.isLeft());
+            assertNotNull(either.asLeft().value());
+            assertEquals(entity.getId(), either.asLeft().value());
+        }
+    }
+
+    @Test
+    public void saveWithFetch_for_a_union_entity_with_an_active_property_returns_entity_itself_as_right_if_fetch_model_is_present() {
+        assertTrue(isUnionEntityType(UnionEntity.class));
+        final IUnionEntity co$UnionEntity = co$(UnionEntity.class);
+
+        final var one = save(new_(EntityOne.class, "ONE1"));
+
+        {
+            // New entity.
+            final var entity = new_(UnionEntity.class).setPropertyOne(one);
+            final var either = co$UnionEntity.save(entity, Optional.of(fetch(UnionEntity.class)));
+            assertTrue(either.isRight());
+            assertSame(entity, either.asRight().value());
+        }
+
+        {
+            // Retrieved entity.
+            final var entity = co$UnionEntity.findById(one.getId());
+            final var either = co$UnionEntity.save(entity, Optional.of(fetch(UnionEntity.class)));
+            assertTrue(either.isRight());
+            assertSame(entity, either.asRight().value());
+        }
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
@@ -160,11 +254,11 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
         final var merc = save(new_(TgVehicleMake.class, "MERC", "Mercedes"));
         final var m316 = save(new_(TgVehicleModel.class, "316", "316").setMake(merc));
         save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").
-                     setInitDate(date("2001-01-01 00:00:00")).
-                     setModel(m316).setPrice(new Money("20")).
-                     setPurchasePrice(new Money("10")).
-                     setActive(true).
-                     setLeased(false));
+                              setInitDate(date("2001-01-01 00:00:00")).
+                              setModel(m316).setPrice(new Money("20")).
+                              setPurchasePrice(new Money("10")).
+                              setActive(true).
+                              setLeased(false));
     }
 
 }
