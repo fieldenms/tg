@@ -104,6 +104,8 @@ public abstract class AbstractWebUiResources extends Application {
 
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
+        // Attach application configuration resource
+        guardedRouter.attach("/app/configuration", new ApplicationConfigurationResourceFactory(webApp, injector));
         // Attach main application resource.
         guardedRouter.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
         guardedRouter.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, dates));

@@ -1,45 +1,26 @@
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
-import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
-
-import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import moment from '/resources/polymer/lib/moment-lib.js';
-
-import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
-import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
-
-import '/resources/master/tg-entity-master.js';
-
+import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
+import '/resources/components/tg-toast.js';
 import '/app/tg-app-config.js';
-import '/app/tg-app.js';
 
 const template = html`
-    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <style>
-        tg-app-template {
-            height: 100vh;
-        }
-    </style>
     <tg-app-config id="appConfig"></tg-app-config>
-    <template is="dom-if" if="[[_appConfigLoaded]]">
+    <iron-ajax id="configLoader"
+        headers="[[_headers]]"
+        url="/app/configuration"
+        method="GET"
+        handle-as="json"
+        on-response="_processAppConfigResponse"
+        reject-with-request
+        on-error="_processAppConfigError">
+    </iron-ajax>
+    <!--template is="dom-if" if="[[_appConfigLoaded]]">
         <tg-app-template class="layout vertical" app-title="[[appTitle]]" idea-uri="[[ideaUri]]"></tg-app-template>
-    </template>
-    <tg-entity-master
-        id="masterDom"
-        entity-type="[[entityType]]"
-        entity-id="[[entityId]]"
-        hidden
-        _post-validated-default="[[_postValidatedDefault]]"
-        _post-validated-default-error="[[_postValidatedDefaultError]]"
-        _process-response="[[_processResponse]]"
-        _process-error="[[_processError]]"
-        _process-retriever-response="[[_processRetrieverResponse]]"
-        _process-retriever-error="[[_processRetrieverError]]"
-        _process-saver-response="[[_processSaverResponse]]"
-        _process-saver-error="[[_processSaverError]]"
-        _saver-loading="{{_saverLoading}}">
-    </tg-entity-master>`;
+    </template-->
+    <tg-toast id="messageToast"></tg-toast>`;
     
-export class TgAppLoader extends mixinBehaviors([TgEntityMasterBehavior], PolymerElement) {
+export class TgAppLoader extends PolymerElement {
 
     static get template() { 
         return template;
@@ -47,115 +28,101 @@ export class TgAppLoader extends mixinBehaviors([TgEntityMasterBehavior], Polyme
 
     static get properties() {
         return {
-            /**
-             * The property which indicates whether entity master is 'UI-less'.
-             */
-            noUI: {
-                type: Boolean,
-                value: true
-            },
-            
             appTitle: String,
             
             ideaUri: String,
             
-            _appConfigLoaded: {
-                type: Boolean,
-                readOnly: true,
-                value: false
-
-            }
+            resourcesToImport: String
         }
     }
 
     ready () {
         super.ready();
-        //setting the uuid for this master.
-        this.uuid = this.is + '/' + generateUUID();
-        //Init master related functions.
-        this.entityType = "ua.com.fielden.platform.entity.ApplicationConfigEntity";
-        this.entityId = "new";
-        this.postRetrieved = (entity, bindingEntity, customObject) => {
-            this.$.appConfig.setMinDesktopWidth(entity.minDesktopWidth);
-            this.$.appConfig.setMinTabletWidth(entity.minTabletWidth);
-            this.$.appConfig.setLocale(entity.locale);
-            this.$.appConfig.setMasterActionOptions(entity.masterActionOptions);
-            this.$.appConfig.setFirstDayOfWeek(entity.firstDayOfWeek);
-            this.$.appConfig.setSiteAllowlist(entity.siteAllowlist.map(site => new RegExp(site)));
-            this.$.appConfig.setDaysUntilSitePermissionExpires(entity.daysUntilSitePermissionExpires);
-            this.$.appConfig.setCurrencySymbol(entity.currencySymbol);
-            if (entity.timeZone) {
-                moment.tz.setDefault(entity.timeZone);
-            }
-            moment.locale('custom-locale', {
-                longDateFormat: {
-                    LTS: entity.timeWithMillisFormat,
-                    LT: entity.timeFormat,
-                    L: entity.dateFormat
+        
+        this._processAppConfigResponse = (e) => {
+            if (e.detail.xhr.status === 200 && e.detail.response) {
+                const entity = e.detail.response;
+                this.$.appConfig.setMinDesktopWidth(entity.minDesktopWidth);
+                this.$.appConfig.setMinTabletWidth(entity.minTabletWidth);
+                this.$.appConfig.setLocale(entity.locale);
+                this.$.appConfig.setMasterActionOptions(entity.masterActionOptions);
+                this.$.appConfig.setFirstDayOfWeek(entity.firstDayOfWeek);
+                this.$.appConfig.setSiteAllowlist(entity.siteAllowlist.map(site => new RegExp(site)));
+                this.$.appConfig.setDaysUntilSitePermissionExpires(entity.daysUntilSitePermissionExpires);
+                this.$.appConfig.setCurrencySymbol(entity.currencySymbol);
+                if (entity.timeZone) {
+                    moment.tz.setDefault(entity.timeZone);
                 }
-            });
-            this._set_appConfigLoaded(true);
+                moment.locale('custom-locale', {
+                    longDateFormat: {
+                        LTS: entity.timeWithMillisFormat,
+                        LT: entity.timeFormat,
+                        L: entity.dateFormat
+                    }
+                });
+                this._importAppAndLoadIntoBody();
+            }
+            
+        };
+        this._processAppConfigError = (e) => {
+            console.log('PROCESS ERROR', error);
+            const xhr = e.xhr;
+            if (xhr.status === 500) { // internal server error, which could either be due to business rules or have some other cause due to a bug or db connectivity issue
+                this._openErrorToast('Server responded with error.', xhr.errorMsg, true);
+            } else if (xhr.status === 403) { // forbidden!
+                this._openErrorToast('Access denied.', 'The current session has expired. Please login and try again.', true);
+            } else if (xhr.status === 503) { // service unavailable
+                this._openErrorToast('Service Unavailable.', 'Server responded with error 503 (Service Unavailable).', true);
+            } else if (xhr.status >= 400) { // other client or server error codes
+                this._openErrorToast('Service Error (' + xhr.status + ').', 'Server responded with error code ' + xhr.status, true);
+            } else {
+                // this situation may occur if the server was accessible, but the return status code does not match any of the expected ones, or
+                // the server should not be reached, for example, due to a network failure, or
+                // the request was aborted -- aborted requests should not report any errors to users
+                console.warn('Server responded with error code ', xhr.status);
+                if (!request.aborted) {
+                    const [msgHeader, msgBody] = xhr.status === 0 // if status is 0 then it is most likely a network failure
+                                                ? ['Could not process the request.', 'Please make sure your device is connected to the network.']
+                                                : ['Unexpected error occurred.', `Error code [${xhr.status}]. Please contact support.`];
+                    this._openErrorToast(`${msgHeader}`, error.message, true);
+                }
+            }
         };
         setTimeout(() => {
-            const context = this._reflector().createContextHolder(null, null, null, null, null, null, null);
-            
-            this.retrieve(context);
-            this._toastGreeting().text = "Loading configurations...";
-            this._toastGreeting().hasMore = false;
-            this._toastGreeting().showProgress = true;
-            this._toastGreeting().msgHeading = "Info";
-            this._toastGreeting().isCritical = false;
-            this._toastGreeting().show();
+            this.$.configLoader.generateRequest();
+            this._openLoadToast();
         }, 0);
     }
 
-
-   //Entity master related functions
-
-    _masterDom () {
-        return this.$.masterDom;
+    _importAppAndLoadIntoBody() {
+        import(this.resourcesToImport).then((module) => {
+            const appElement = document.createElement("tg-app-template");
+            appElement.classList.add("layout", "vertical");
+            appElement.appTitle = this.appTitle;
+            appElement.ideaUri = this.ideaUri;
+            document.body.appendChild(appElement);
+        });
     }
 
-    /**
-     * The core-ajax component for entity retrieval.
-     */
-    _ajaxRetriever () {
-        return this._masterDom()._ajaxRetriever();
+    _openLoadToast() {
+        this.$.messageToast.text = "Loading configurations...";
+        this.$.messageToast.hasMore = false;
+        this.$.messageToast.showProgress = true;
+        this.$.messageToast.msgHeading = "Info";
+        this.$.messageToast.isCritical = false;
+        this.$.messageToast.show();
     }
 
-    /**
-     * The core-ajax component for entity saving.
-     */
-    _ajaxSaver () {
-        return this._masterDom()._ajaxSaver();
-    }
-
-    /**
-     * The validator component.
-     */
-    _validator () {
-        return this._masterDom()._validator();
-    }
-
-    /**
-     * The component for entity serialisation.
-     */
-    _serialiser () {
-        return this._masterDom()._serialiser();
-    }
-
-    /**
-     * The reflector component.
-     */
-    _reflector () {
-        return this._masterDom()._reflector();
-    }
-
-    /**
-     * The toast component.
-     */
-    _toastGreeting () {
-        return this._masterDom()._toastGreeting();
+    _openErrorToast (toastMsg, moreInfo, isCritical) {
+        this.$.messageToast.isCritical = isCritical;
+        this.$.messageToast.text = toastMsg;
+        if (moreInfo) {
+            this.$.messageToast.hasMore = true;
+            this.$.messageToast.msgText = moreInfo;
+        }
+        this.$.messageToast.showProgress = false;
+        this.$.messageToast.msgHeading = "Error";
+        this.$.messageToast.show();
     }
 }
 
