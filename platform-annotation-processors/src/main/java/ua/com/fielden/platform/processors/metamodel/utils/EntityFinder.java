@@ -617,4 +617,18 @@ public class EntityFinder extends ElementFinder {
         return new EntityElement(typeElement, getPackageOfTypeElement(typeElement).getQualifiedName().toString());
     }
 
+    /// Assuming that `daoElt` represents a DAO companion class, tries to find its corresponding entity type.
+    ///
+    public Optional<TypeElement> findEntityForDao(final TypeElement daoElt) {
+        final var atEntityType = daoElt.getAnnotation(EntityType.class);
+        if (atEntityType == null) {
+            return Optional.empty();
+        }
+        else {
+            final TypeMirror entityType = getAnnotationElementValueOfClassType(atEntityType, a -> a.value());
+            // missing types have TypeKind.ERROR
+            return entityType.getKind() == TypeKind.ERROR ? Optional.empty() : Optional.of(asTypeElementOfTypeMirror(entityType));
+        }
+    }
+
 }

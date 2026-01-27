@@ -17,6 +17,8 @@ import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.s
 
 public class SaveWithFetchVerifier extends AbstractCompanionVerifier {
 
+    private static final String ABSTRACT_JOB_FQN = "fielden.jmc.api.AbstractJob";
+
     public SaveWithFetchVerifier(final ProcessingEnvironment processingEnv) {
         super(processingEnv);
     }
@@ -48,7 +50,12 @@ public class SaveWithFetchVerifier extends AbstractCompanionVerifier {
                     if (maybeOverriddenSaveWithFetch.isPresent()) {
                         return Optional.of(new ViolatingElement(maybeOverriddenSave.get(), ERROR, errMustNotOverrideBothSaves()));
                     }
-                    else {
+
+                    if (entityFinder.findEntityForDao(typeElement)
+                            .filter(entityElt -> entityFinder.isPersistentEntityType(entityFinder.newEntityElement(entityElt))
+                                                 && !elementFinder.isSubClass(entityElt, ABSTRACT_JOB_FQN))
+                            .isPresent())
+                    {
                         return Optional.of(new ViolatingElement(maybeOverriddenSave.get(), MANDATORY_WARNING, warnShouldMigrateToSaveWithFetch()));
                     }
                 }
