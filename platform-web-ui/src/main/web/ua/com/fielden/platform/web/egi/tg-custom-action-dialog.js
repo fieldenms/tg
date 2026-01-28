@@ -1817,9 +1817,10 @@ Polymer({
             if (this._deepestMaster === null && !entityType.compoundOpenerType() && !entityType.isCompoundMenuItem() && !entityMaster.masterWithMaster) {
                 this._deepestMaster = entityMaster;
             }
-            if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
+            if (this._mainEntityType === null && ((entityType.compoundOpenerType() && this._reflector.getType(entityType.compoundOpenerType()).isPersistent()) || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
-            } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item
+            }
+            else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item
                 // _masterMenu is present in above condition because of two possible cases:
                 // 1. _masterMenu attaches before parent compound opener master during first-time-creation+attachment of that master; and after that the master of concrete menu item creates and attaches through tg-element-loader in tg-master-menu-item-section after activation
                 // 2. for cached compound opener master it attaches in the following order: compound opener master => _masterMenu => previously opened menu item
