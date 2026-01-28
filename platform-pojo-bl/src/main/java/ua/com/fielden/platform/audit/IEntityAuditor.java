@@ -13,12 +13,8 @@ public interface IEntityAuditor<E extends AbstractEntity<?>> {
 
     /// Performs an audit of the audited entity, identified by its ID.
     /// This results in:
-    ///
     /// -  An audit record is created.
     /// -  For each _changed property_, an audit-prop record is created.
-    ///
-    ///    It is considered that no property were changed for newly persisted entity instances.
-    ///    Therefore, no audit-prop records get created for such instances.
     ///
     /// If none of the audited properties are dirty, auditing is not performed.
     ///
