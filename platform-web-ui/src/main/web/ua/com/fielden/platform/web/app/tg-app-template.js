@@ -10,9 +10,6 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
-// this import is required to ensure the SSE initialisation upon loading of a web client
-import '/app/tg-app-config.js';
-
 import '/resources/views/tg-app-menu.js';
 import '/resources/views/tg-app-view.js';
 import '/resources/master/tg-entity-master.js';
@@ -51,7 +48,6 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <tg-app-config id="appConfig"></tg-app-config>
     <tg-global-error-handler id="errorHandler" toaster="[[toaster]]"></tg-global-error-handler>
     <app-location id="location" no-decode dwell-time="-1" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></app-location>
     <app-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></app-route>

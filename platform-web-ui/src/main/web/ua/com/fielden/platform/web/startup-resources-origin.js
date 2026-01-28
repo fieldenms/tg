@@ -1,4 +1,6 @@
 /* main-app related resources */
+// this import is required to ensure the SSE initialisation upon loading of a web client
+import '/resources/components/tg-event-source.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 // IMPORTANT: The following import for rich-text styles must always occur
 // before any other component import. This prevents early style processing
