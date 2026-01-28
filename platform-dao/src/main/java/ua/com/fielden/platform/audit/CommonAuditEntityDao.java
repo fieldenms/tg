@@ -281,10 +281,8 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
             try (final PreparedStatement ps = conn.prepareStatement(smtp)) {
                 pdAuditProps.forEach(pd -> {
                     try {
-                        final Long id = nextIdValue(ID_SEQUENCE_NAME, getSession());
-                        ps.setLong(1, id);
-                        ps.setLong(2, auditedEntityId);
-                        ps.setString(3, pd.toString());
+                        ps.setLong(1, auditedEntityId);
+                        ps.setString(2, pd.toString());
                         ps.addBatch();
                     } catch (final SQLException ex) {
                         throw new DbException(ERR_CREATING_INSERT_STMT.formatted(pd.getEntityType().getSimpleName()), ex);

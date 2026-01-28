@@ -54,7 +54,7 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>>
 
     static final String TEMPLATE_INSERT_STMT = """
             INSERT INTO %1$s(%2$s, %3$s, %4$s, %5$s)
-            VALUES (?, 0, ?, ?);
+            VALUES (%6$s, 0, ?, ?);
             """;
 
     /// A cache for SQL insert statements, used to insert audit records.
@@ -78,7 +78,7 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>>
                 }
                 final String idCol = getDbVersion().idColumnName();
                 final String verCol = getDbVersion().versionColumnName();
-                return TEMPLATE_INSERT_STMT.formatted(tblAuditEntity, idCol, verCol, cols.getFirst(), cols.getLast());
+                return TEMPLATE_INSERT_STMT.formatted(tblAuditEntity, idCol, verCol, cols.getFirst(), cols.getLast(), getDbVersion().nextSequenceValSql());
             });
         } catch (final EntityCompanionException ex) {
             throw ex;
