@@ -5,7 +5,10 @@ import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Test;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.dbschema.PropertyInliner;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
@@ -21,6 +24,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.CHANGED_PROPS;
+import static ua.com.fielden.platform.audit.CommonAuditEntityDao.sqlInsertAuditRecordStmt;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
@@ -252,6 +256,70 @@ public class AuditingTest extends AbstractDaoTestCase {
         assertThat(coAudit.getAudits(savedEntity))
                 .hasSize(1)
                 .element(0).satisfies(audit0 -> a3t_assertions.assertThat(audit0).isAuditFor(savedEntity));
+    }
+
+    @Test
+    public void insert_statement_for_audit_entity_is_generated_correctly_even_for_props_with_explicit_column_mapping() {
+        final DbVersion dbVersion = getDbCreator().dbVersion();
+        final var idCol = dbVersion.idColumnName();
+        final var verCol = dbVersion.versionColumnName();
+        final var auditUserCol = "AUDITUSER_";
+        final var auditDateCol = "AUDITDATE_";
+        final var auditedEntityCol = "AUDITEDENTITY_";
+        final var auditedVersionCol = "AUDITEDVERSION_";
+        final var auditedTransactionGuid = "AUDITEDTRANSACTIONGUID_";
+
+        final var domainMetadata = getInstance(IDomainMetadata.class);
+        final var propInliner = getInstance(PropertyInliner.class);
+
+        final var auditedEntityType = AuditedEntity.class;
+        final var auditEntityType = auditTypeFinder.navigate(auditedEntityType).auditEntityType();
+
+        final var insertStmt = sqlInsertAuditRecordStmt(auditEntityType, auditedEntityType,
+                                                        domainMetadata, propInliner,
+                                                        idCol, verCol, auditUserCol, auditDateCol, auditedEntityCol, auditedVersionCol, auditedTransactionGuid);
+        final var expectedInsertFromSelect = """
+                INSERT INTO AUDITEDENTITY_A3T_2_( -- Audit table.
+                    _ID,
+                    _VERSION,
+                    AUDITEDENTITY_,
+                    AUDITEDVERSION_,
+                    AUDITUSER_,
+                    AUDITDATE_,
+                    AUDITEDTRANSACTIONGUID_,
+                    A3T_BOOL1_,
+                    A3T_DATE1_,
+                    A3T_INVALIDATE_,
+                    A3T_KEY_,
+                    A3T_RICHTEXT_FORMATTEDTEXT,
+                    A3T_RICHTEXT_CORETEXT,
+                    A3T_RICHTEXT_SEARCHTEXT,
+                    A3T_STR2,
+                    A3T_UNION__PROPERTYONE,
+                    A3T_UNION__PROPERTYTWO
+                )
+                SELECT
+                    ? AS _ID,
+                    0 AS _VERSION,
+                    _ID AS AUDITEDENTITY_,
+                    _VERSION AS AUDITEDVERSION_,
+                    ?  AS AUDITUSER_,
+                    ?  AS AUDITDATE_,
+                    ?  AS AUDITEDTRANSACTIONGUID_,
+                    BOOL1_ AS A3T_BOOL1_,
+                    DATE1_ AS A3T_DATE1_,
+                    INVALIDATE_ AS A3T_INVALIDATE_,
+                    KEY_ AS A3T_KEY_,
+                    RICHTEXT_FORMATTEDTEXT AS A3T_RICHTEXT_FORMATTEDTEXT,
+                    RICHTEXT_CORETEXT AS A3T_RICHTEXT_CORETEXT,
+                    RICHTEXT_SEARCHTEXT AS A3T_RICHTEXT_SEARCHTEXT,
+                    STR2 AS A3T_STR2,
+                    UNION__PROPERTYONE AS A3T_UNION__PROPERTYONE,
+                    UNION__PROPERTYTWO AS A3T_UNION__PROPERTYTWO
+                FROM AUDITEDENTITY_ -- Audited table.
+                WHERE _ID = ? AND _VERSION = ?
+                """;
+        assertEquals(expectedInsertFromSelect, insertStmt);
     }
 
     /// Performs the auditing operation in a session, as described in [IEntityAuditor#audit(AbstractEntity, String, Collection)].
