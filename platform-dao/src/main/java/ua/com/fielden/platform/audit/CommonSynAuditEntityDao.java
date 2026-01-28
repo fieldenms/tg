@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.util.Collection;
@@ -63,8 +62,8 @@ public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
     }
 
     @Override
-    public void audit(final Either<Long, E> auditedEntityOrId, final String transactionGuid, final Collection<String> dirtyProperties) {
-        coAuditEntity.audit(auditedEntityOrId, transactionGuid, dirtyProperties);
+    public void audit(final Long auditedEntityId, final Long auditedEntityVersion, final String transactionGuid, final Collection<String> dirtyProperties) {
+        coAuditEntity.audit(auditedEntityId, auditedEntityVersion, transactionGuid, dirtyProperties);
     }
 
     @Override

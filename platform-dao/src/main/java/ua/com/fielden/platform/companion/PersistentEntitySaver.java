@@ -278,7 +278,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
         // Auditing
-        lazyAuditor.get().audit(skipRefetching ? left(savedEntityAndId._1) : right(savedEntity), transactionGuid.get(), dirtyPropNames);
+        lazyAuditor.get().audit(savedEntityAndId._1, savedEntity.getVersion(), transactionGuid.get(), dirtyPropNames);
 
         return savedEntityAndId;
     }
@@ -291,7 +291,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     @FunctionalInterface
     private interface Auditor<E extends AbstractEntity<?>> {
 
-        void audit(final Either<Long, E> entity, final String transactionGuid, Collection<String> dirtyProperties);
+        void audit(final Long auditEntityId, final Long auditEntityVersion, final String transactionGuid, Collection<String> dirtyProperties);
 
     }
 
@@ -307,7 +307,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return coSynAudit::audit;
         }
         else {
-            return (entity, transactionGuid, dirtyProperties) -> {};
+            return (auditedEntityId, auditedEntityVersion, transactionGuid, dirtyProperties) -> {};
         }
     }
 
