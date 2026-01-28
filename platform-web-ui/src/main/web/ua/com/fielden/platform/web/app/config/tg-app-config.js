@@ -3,6 +3,18 @@ import { PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-elem
 import '/resources/components/postal-lib.js';
 import moment from '/resources/polymer/lib/moment-lib.js';
 
+if (window.TG_APP.timeZone) {
+    moment.tz.setDefault(window.TG_APP.timeZone);
+}
+moment.locale('custom-locale', {
+    longDateFormat: {
+        LTS: window.TG_APP.timeWithMillisFormat,
+        LT: window.TG_APP.timeFormat,
+        L: window.TG_APP.dateFormat
+    }
+});
+
+
 /**
  * Timer Id to reconnect via sse after an error.
  */
@@ -112,46 +124,6 @@ const closeEventSource = function (sourceObj) {
 //Holds all registered event sources in application.
 export const eventSource = registerEventSource();
 
-// Determines the minimum screen width at which the desktop layout is applied.
-// This variable is assigned only once.
-//
-let minDesktopWidth;
-
-// Determines the minimum screen width at which the tablet layout is applied.
-// This variable is assigned only once.
-//
-let minTabletWidth;
-
-// Determines the locale for this application.
-// This variable is assigned only once.
-//
-let locale;
-
-// A variable that defines a currency symbol, used to represent monetary values as strings.
-// This variable is assigned only once.
-//
-let currencySymbol;
-
-// Determines the options for master actions.
-// This variable is assigned only once.
-//
-let masterActionOptions;
-
-// Determines the first day of the week (Sunday, Monday,...).
-// This variable is assigned only once.
-//
-let firstDayOfWeek;
-
-// External site allowlist for hyperlinks that can be opened without a confirmation prompt.
-// This variable is assigned only once.
-//
-let siteAllowlist;
-
-// A number of days for caching user-allowed sites/links that can be opened without a confirmation prompt.
-// This variable is assigned only once.
-//
-let daysUntilSitePermissionExpires;
-
 export const MasterActionOptions = {
     ALL_ON: "ALL_ON",
     ALL_OFF: "ALL_OFF"
@@ -161,53 +133,77 @@ export class TgAppConfig extends PolymerElement {
 
     static get properties() {
         return {
+            // Determines the minimum screen width at which the desktop layout is applied.
+            // This variable is assigned only once.
+            //
             minDesktopWidth: {
                 type: Number,
                 readOnly: true,
                 notify: true,
-                value: () => minDesktopWidth
+                value: window.TG_APP.minDesktopWidth
             },
+            // Determines the minimum screen width at which the tablet layout is applied.
+            // This variable is assigned only once.
+            //
             minTabletWidth: {
                 type: Number,
                 readOnly: true,
                 notify: true,
-                value: () => minTabletWidth
+                value: window.TG_APP.minTabletWidth
             },
+            // Determines the locale for this application.
+            // This variable is assigned only once.
+            //
             locale: {
                 type: String,
                 readOnly: true,
                 notify: true,
-                value: () => locale
+                value: window.TG_APP.locale
             },
+            // A variable that defines a currency symbol, used to represent monetary values as strings.
+            // This variable is assigned only once.
+            //
             currencySymbol: {
                 type: String,
                 readOnly: true,
                 notify: true,
-                value: () => currencySymbol
+                value: window.TG_APP.currencySymbol
             },
+            // Determines the options for master actions.
+            // This variable is assigned only once.
+            //
             masterActionOptions: {
                 type: String,
                 readOnly: true,
                 notify: true,
-                value: () => masterActionOptions
+                value: window.TG_APP.masterActionOptions
             },
+            // Determines the first day of the week (Sunday, Monday,...).
+            // This variable is assigned only once.
+            //
             firstDayOfWeek: {
                 type: Number,
                 notify: true,
                 readOnly: true,
-                value: () => firstDayOfWeek
+                value: window.TG_APP.firstDayOfWeek
             },
+            // External site allowlist for hyperlinks that can be opened without a confirmation prompt.
+            // This variable is assigned only once.
+            //
             siteAllowlist: {
                 type: Array,
                 notify: true,
                 readOnly: true,
-                value: () => siteAllowlist
+                value: window.TG_APP.siteAllowlist.map(site => new RegExp(site))
             },
+            // A number of days for caching user-allowed sites/links that can be opened without a confirmation prompt.
+            // This variable is assigned only once.
+            //
             daysUntilSitePermissionExpires: {
                 type: Number,
                 notify: true,
                 readOnly: true,
-                value: () => daysUntilSitePermissionExpires
+                value: window.TG_APP.daysUntilSitePermissionExpires
             }
 
         }
@@ -216,59 +212,6 @@ export class TgAppConfig extends PolymerElement {
     ready () {
         super.ready();
         this.style.display = 'none';
-    }
-
-    setMinDesktopWidth (value) {
-        if (typeof minDesktopWidth === 'undefined') {
-            minDesktopWidth = value;
-        }
-    }
-
-    setMinTabletWidth (value) {
-        if (typeof minTabletWidth === 'undefined') {
-            minTabletWidth = value;
-        }
-    }
-
-    setLocale (value) {
-        if (typeof locale === 'undefined' && locale) {
-            locale = value;
-        }
-    }
-
-    // Set the provided currency symbol if previous was empty and provided one is not empty.
-    // It means that currency symbol can be set only once.
-    //
-    // @param {String} value - currency symbol to set
-    //
-    setCurrencySymbol (value) {
-        if (typeof currencySymbol === 'undefined' && currencySymbol) {
-            currencySymbol = value;
-        }
-    }
-
-    setMasterActionOptions (value) {
-        if (typeof masterActionOptions === 'undefined' && masterActionOptions) {
-            masterActionOptions = value;
-        }
-    }
-
-    setFirstDayOfWeek (value) {
-        if (typeof firstDayOfWeek === 'undefined') {
-            firstDayOfWeek = value;
-        }
-    }
-
-    setSiteAllowlist (value) {
-        if (typeof siteAllowlist === 'undefined') {
-            siteAllowlist = value;
-        }
-    }
-
-    setDaysUntilSitePermissionExpires (value) {
-        if (typeof daysUntilSitePermissionExpires === 'undefined') {
-            daysUntilSitePermissionExpires = value;
-        }
     }
 }
 
