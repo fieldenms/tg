@@ -22,7 +22,7 @@
         <log4j.version>2.25.3</log4j.version>
         <hibernate.version>5.6.15.Final</hibernate.version>
         <postgresql.version>42.7.8</postgresql.version>
-        <mssql.version>13.2.0.jre11</mssql.version>
+        <mssql.version>13.2.1.jre11</mssql.version>
         <HikariCP.version>6.3.0</HikariCP.version>
         <javapoet.version>1.13.0</javapoet.version>
         <antlr.version>4.13.2</antlr.version>
