@@ -64,7 +64,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
             AUDIT_DATE_COL = "AUDITDATE_",
             AUDITED_ENTITY_COL = "AUDITEDENTITY_",
             AUDITED_VERSION_COL = "AUDITEDVERSION_",
-            AUDITED_TRANSACTION_GUID = "AUDITEDTRANSACTIONGUID_";
+            AUDITED_TRANSACTION_GUID_COL = "AUDITEDTRANSACTIONGUID_";
 
     // All fields below are effectively final, but cannot be declared so due to late initialisation.
     // TODO: use Stable Values (https://openjdk.org/jeps/502) once out of preview.
@@ -182,19 +182,8 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
 
     /// Returns an SQL insert statement for inserting an audit record.
     ///
-    static String sqlInsertAuditRecordStmt(
-            final Class<? extends AbstractAuditEntity<?>> auditEntityType,
-            final Class<? extends AbstractEntity<?>> auditedEntityType,
-            final IDomainMetadata domainMetadata,
-            final PropertyInliner propInliner,
-            final String idCol,
-            final String verCol,
-            final String auditUserCol,
-            final String auditDateCol,
-            final String auditedEntityCol,
-            final String auditedVersionCol,
-            final String auditedTransactionGuid)
-    {
+    protected String sqlInsertAuditRecordStmt() {
+        final var auditEntityType = getEntityType();
         try {
             return CACHE_SQL_INSERT_AUDIT_RECORD_STMT.get(auditEntityType, () -> {
                 final var auditedToAuditPropNames = makeAuditedToAuditPropertyNames(domainMetadata, auditEntityType);
@@ -224,7 +213,10 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
                         .collect(joining(",\n    "));
 
                 return TEMPLATE_INSERT_FROM_SELECT_STMT.formatted(
-                        tblAuditEntity, idCol, verCol, auditedEntityCol, auditedVersionCol, auditUserCol, auditDateCol, auditedTransactionGuid,
+                        tblAuditEntity,
+                        getDbVersion().idColumnName(),
+                        getDbVersion().versionColumnName(),
+                        AUDITED_ENTITY_COL, AUDITED_VERSION_COL, AUDIT_USER_COL, AUDIT_DATE_COL, AUDITED_TRANSACTION_GUID_COL,
                         auditColumnsForSql, auditedColumnsForSql, tblAuditedEntity);
 
             });
@@ -244,21 +236,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
     /// @return an ID of the audit entity that was inserted
     ///
     private Long insertAudit(final Long auditedEntityId,  final Long auditedEntityVersion, final String transactionGuid) {
-        final String idCol = getDbVersion().idColumnName();
-        final String verCol = getDbVersion().versionColumnName();
-
-        final var insertStmt = sqlInsertAuditRecordStmt(
-                getEntityType() /* audit entity type */,
-                auditedEntityType,
-                domainMetadata,
-                propInliner,
-                idCol,
-                verCol,
-                AUDIT_USER_COL,
-                AUDIT_DATE_COL,
-                AUDITED_ENTITY_COL,
-                AUDITED_VERSION_COL,
-                AUDITED_TRANSACTION_GUID);
+        final var insertStmt = sqlInsertAuditRecordStmt();
         final Long id = nextIdValue(ID_SEQUENCE_NAME, getSession());
         getSession().doWork(conn -> {
             try (final PreparedStatement ps = conn.prepareStatement(insertStmt)) {
