@@ -12,13 +12,19 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 ///
 interface IAuditPropInstantiator<E extends AbstractEntity<?>> {
 
-
     /// Returns an insert SQL statement for a new audit-prop entity.
     ///
     String sqlInsertAuditPropStmt();
 
-    /// Returns a property descriptor for `propName`,
-    /// belonging to a synthetic entity that corresponds to the audit entity type `E`.
+    /// Returns a property descriptor for `propName`, which represents a property of a synthetic audit entity type that
+    /// corresponds to the audited entity type `E`.
     ///
-    PropertyDescriptor<? extends AbstractSynAuditEntity<E>> pd(final String propName);
+    /// @param propName  the name of a property of the synthetic audit entity type
+    ///
+    PropertyDescriptor<? extends AbstractSynAuditEntity<E>> pd(String propName);
+
+    /// Returns the associated audit-prop entity type.
+    ///
+    Class<? extends AbstractAuditProp<E>> auditPropEntityType();
+
 }

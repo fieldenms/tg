@@ -12,7 +12,6 @@ import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -20,11 +19,8 @@ import ua.com.fielden.platform.eql.dbschema.PropertyInliner;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -46,6 +42,7 @@ import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
+import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
 /// Base type for implementations of audit-entity companion objects.
 ///
@@ -60,49 +57,41 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
 
     private static final String
             ERR_AUDIT_PROPERTY_UNEXPECTED_NAME = "Audit-property [%s.%s] has unexpected name.",
-            ERR_CREATING_INSERT_STMT = "Could not create insert for [%s].";
+            ERR_CREATING_INSERT_STMT = "Could not create an insert statement for [%s].";
 
-    private static final int AUDIT_PROP_BATCH_SIZE = 100;
-
-    private final String auditUserCol = "AUDITUSER_";
-    private final String auditDateCol = "AUDITDATE_";
-    private final String auditedEntityCol = "AUDITEDENTITY_";
-    private final String auditedVersionCol = "AUDITEDVERSION_";
-    private final String auditedTransactionGuid = "AUDITEDTRANSACTIONGUID_";
+    private static final String
+            AUDIT_USER_COL = "AUDITUSER_",
+            AUDIT_DATE_COL = "AUDITDATE_",
+            AUDITED_ENTITY_COL = "AUDITEDENTITY_",
+            AUDITED_VERSION_COL = "AUDITEDVERSION_",
+            AUDITED_TRANSACTION_GUID = "AUDITEDTRANSACTIONGUID_";
 
     // All fields below are effectively final, but cannot be declared so due to late initialisation.
     // TODO: use Stable Values (https://openjdk.org/jeps/502) once out of preview.
     private IAuditPropInstantiator<E> auditPropInstantiator;
     private IDomainMetadata domainMetadata;
+    private PropertyInliner propInliner;
     private Class<E> auditedEntityType;
     private fetch<E> fetchModelForAuditing;
 
-    private PropertyInliner propInliner;
-
-    private IUserProvider userProvider;
-    /// Names of properties of the audited entity that are required to create an audit record.
-    private Set<String> propertiesForAuditing;
     /// Key: audited property. Value: audit-property.
     private Map<String, String> auditedToAuditPropertyNames;
 
     @Inject
     protected void init(
             final AuditingMode auditingMode,
-            final IUserProvider userProvider,
             final IAuditTypeFinder a3tFinder,
             final IDomainMetadata domainMetadata,
-            final PropertyInliner propInliner,
-            final ICompanionObjectFinder coFinder)
+            final PropertyInliner propInliner)
     {
         if (auditingMode == AuditingMode.DISABLED) {
             throw AuditingModeException.cannotBeUsed(this.getClass(), auditingMode);
         }
 
-        this.userProvider = userProvider;
         this.domainMetadata = domainMetadata;
         this.propInliner = propInliner;
         auditedToAuditPropertyNames = makeAuditedToAuditPropertyNames(domainMetadata, getEntityType());
-        propertiesForAuditing = collectPropertiesForAuditing(auditedToAuditPropertyNames.keySet());
+        final var propertiesForAuditing = collectPropertiesForAuditing(auditedToAuditPropertyNames.keySet());
         fetchModelForAuditing = makeFetchModelForAuditing(a3tFinder.navigateAudit(getEntityType()).auditedType(), propertiesForAuditing, domainMetadata);
         auditedEntityType = a3tFinder.navigateAudit(getEntityType()).auditedType();
         final var auditPropType = a3tFinder.navigateAudit(getEntityType()).auditPropType();
@@ -150,7 +139,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         if (newEntityOrHasChangesToAudit) {
             final Long auditEntityId = insertAudit(auditedEntityId, auditedEntityVersion, transactionGuid);
 
-            if (!dirtyProperties.isEmpty()) {
+            if (!dirtyAuditedPropertyNames.isEmpty()) {
                 // Audit information about changed properties.
                 final List<PropertyDescriptor<? extends AbstractSynAuditEntity<E>>> auditProps = dirtyAuditedPropertyNames.stream()
                         .map(this::getAuditPropertyName)
@@ -163,7 +152,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         }
     }
 
-    static final String TEMPLATE_INSERT_FROM_SELECT_STMT = """
+    private static final String TEMPLATE_INSERT_FROM_SELECT_STMT = """
                 INSERT INTO %1$s( -- Audit table.
                     %2$s,
                     %3$s,
@@ -187,11 +176,11 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
                 WHERE %2$s = ? AND %3$s = ?
                 """;
 
-    /// A cache for SQL insert statements, used to insert audit records.
-    /// The key is the audit entity type.
+    /// A cache for SQL insert statements for audit records.
+    /// Keys are audit entity types.
     private static final Cache<Class<?>, String> CACHE_SQL_INSERT_AUDIT_RECORD_STMT = CacheBuilder.newBuilder().weakKeys().initialCapacity(10).maximumSize(100).concurrencyLevel(50).build();
 
-    /// Returns an insert SQL statement for inserting an audit record.
+    /// Returns an SQL insert statement for inserting an audit record.
     ///
     static String sqlInsertAuditRecordStmt(
             final Class<? extends AbstractAuditEntity<?>> auditEntityType,
@@ -215,22 +204,24 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
                 final var mdAuditedEntity = domainMetadata.forEntity(auditedEntityType);
                 final var tblAuditedEntity = mdAuditedEntity.asPersistent().map(md -> md.data().tableName()).orElseThrow();
 
-                final var auditColumnNames = domainMetadata.forEntity(auditEntityType).properties().stream()
+                final var auditColumnNames = mdAuditEntity.properties().stream()
                                              .filter(pm -> auditedToAuditPropNames.containsValue(pm.name()))
                                              .sorted()
                                              .flatMap(p -> p.asPersistent().stream())
                                              .flatMap(pm -> propInliner.inline(pm).orElseGet(() -> List.of(pm)).stream())
-                                             .map(pm -> pm.data().column().name).toList();
-                final var auditedColumnNames = domainMetadata.forEntity(auditedEntityType).properties().stream()
+                                             .map(pm -> pm.data().column().name)
+                                             .toList();
+                final var auditedColumnNames = mdAuditedEntity.properties().stream()
                                                .filter(pm -> auditedToAuditPropNames.containsKey(pm.name()))
                                                .sorted()
                                                .flatMap(p -> p.asPersistent().stream())
                                                .flatMap(pm -> propInliner.inline(pm).orElseGet(() -> List.of(pm)).stream())
-                                               .map(pm -> pm.data().column().name).toList();
+                                               .map(pm -> pm.data().column().name)
+                                               .toList();
 
                 final var auditColumnsForSql = String.join(",\n    ", auditColumnNames);
-                final var auditedColumnsForSql = StreamUtils.zip(auditedColumnNames, auditColumnNames, T2::t2)
-                                                            .map(t -> t._1 + " AS " + t._2).collect(joining(",\n    "));
+                final var auditedColumnsForSql = zip(auditedColumnNames, auditColumnNames, (col, a3t_col) -> col + " AS " + a3t_col)
+                        .collect(joining(",\n    "));
 
                 return TEMPLATE_INSERT_FROM_SELECT_STMT.formatted(
                         tblAuditEntity, idCol, verCol, auditedEntityCol, auditedVersionCol, auditUserCol, auditDateCol, auditedTransactionGuid,
@@ -242,22 +233,32 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         }
     }
 
-    /// Inserts a record of the audit entity as a copy of the audited entity, identified with `auditedEntityId` and `auditedEntityVersion`.
+    /// Inserts a record of the audit entity as a copy of the audited entity.
     ///
     /// @param auditedEntityId
     ///         the audited entity ID, used to identify a record to be audited
+    /// @param auditedEntityVersion
+    ///         the audited entity version, used to identify a record to be audited
     /// @param transactionGuid
     ///         identifier of a transaction that was used to save the audited entity
-    /// @return an ID of the audit entity that just inserted
+    /// @return an ID of the audit entity that was inserted
     ///
     private Long insertAudit(final Long auditedEntityId,  final Long auditedEntityVersion, final String transactionGuid) {
         final String idCol = getDbVersion().idColumnName();
         final String verCol = getDbVersion().versionColumnName();
 
-        final var insertStmt = sqlInsertAuditRecordStmt(getEntityType() /* audit entity type */, auditedEntityType,
-                                                        domainMetadata, propInliner,
-                                                        idCol, verCol,
-                                                        auditUserCol, auditDateCol, auditedEntityCol, auditedVersionCol, auditedTransactionGuid);
+        final var insertStmt = sqlInsertAuditRecordStmt(
+                getEntityType() /* audit entity type */,
+                auditedEntityType,
+                domainMetadata,
+                propInliner,
+                idCol,
+                verCol,
+                AUDIT_USER_COL,
+                AUDIT_DATE_COL,
+                AUDITED_ENTITY_COL,
+                AUDITED_VERSION_COL,
+                AUDITED_TRANSACTION_GUID);
         final Long id = nextIdValue(ID_SEQUENCE_NAME, getSession());
         getSession().doWork(conn -> {
             try (final PreparedStatement ps = conn.prepareStatement(insertStmt)) {
@@ -274,25 +275,23 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         return id;
     }
 
-    private int insertAuditProps(final Long auditedEntityId, final List<PropertyDescriptor<? extends AbstractSynAuditEntity<E>>> pdAuditProps) {
-        final String smtp = auditPropInstantiator.sqlInsertAuditPropStmt();
+    private void insertAuditProps(final Long auditEntityId, final List<PropertyDescriptor<? extends AbstractSynAuditEntity<E>>> pdAuditProps) {
+        final String stmt = auditPropInstantiator.sqlInsertAuditPropStmt();
 
-        return getSession().doReturningWork(conn -> {
-            try (final PreparedStatement ps = conn.prepareStatement(smtp)) {
+        getSession().doWork(conn -> {
+            try (final PreparedStatement ps = conn.prepareStatement(stmt)) {
                 pdAuditProps.forEach(pd -> {
                     try {
-                        ps.setLong(1, auditedEntityId);
+                        ps.setLong(1, auditEntityId);
                         ps.setString(2, pd.toString());
                         ps.addBatch();
                     } catch (final SQLException ex) {
-                        throw new DbException(ERR_CREATING_INSERT_STMT.formatted(pd.getEntityType().getSimpleName()), ex);
+                        throw new DbException(ERR_CREATING_INSERT_STMT.formatted(auditPropInstantiator.auditPropEntityType().getSimpleName()), ex);
                     }
                 });
-                final int[] batchCounts = ps.executeBatch();
-                return java.util.Arrays.stream(batchCounts).sum();
+                ps.executeBatch();
             }
         });
-
     }
 
     @Override
