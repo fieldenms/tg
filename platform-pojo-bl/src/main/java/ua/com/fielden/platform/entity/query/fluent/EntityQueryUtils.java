@@ -1,10 +1,5 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import static java.util.stream.Collectors.toMap;
-
-import java.util.Map;
-import java.util.Optional;
-
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -14,6 +9,11 @@ import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+
+import java.util.Map;
+import java.util.Optional;
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Provides convenient entry points to start building EQL statements and fetch models.

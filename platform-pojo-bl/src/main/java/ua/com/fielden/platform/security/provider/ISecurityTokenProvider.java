@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.security.provider;
 
+import java.util.Collection;
+import java.util.Optional;
+import java.util.SortedSet;
+
 import com.google.inject.ImplementedBy;
 import ua.com.fielden.platform.security.ISecurityToken;
 
@@ -11,6 +15,14 @@ import java.util.SortedSet;
 ///
 /// One of the objectives for this contract is to provide a singleton implementation that could cache computationally intensive results for reading and transformation of tokens.
 ///
+/// A contract for providing convenient access to security tokens and their representation as [SecurityTokenNode]s.
+///
+/// One of the objectives for this contract is to provide a singleton implementation that could cache computationally intensive results for reading and transformation of tokens.
+///
+/// The default implementation is {@link SecurityTokenProvider}, which should be subclassed if some custom logic is needed in an application.
+///
+/// @author TG Team
+/// @see ISecurityTokenNodeTransformation
 @ImplementedBy(SecurityTokenProvider.class)
 public interface ISecurityTokenProvider {
 

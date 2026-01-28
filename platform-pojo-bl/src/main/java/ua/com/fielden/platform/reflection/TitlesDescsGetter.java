@@ -159,12 +159,11 @@ public class TitlesDescsGetter {
     }
 
     /**
-     * If <code>dotNotationExp</code> refers to an entity-typed property of <code>propOwnerType</code> then a pair of title and description of the entity-type is returned.
-     * Otherwise, it builds title and description from property name splitting it by camel case character and capitalizing the first word.
+     * Returns the title and description of a property based on its type.
+     * If a property is entity-typed, that entity's title and description are used.
+     * Otherwise, title and description are derived from the property's name.
      *
-     * @param dotNotationExp
-     * @param propOwnerType
-     * @return
+     * @param propOwnerType  root type at which the property path starts
      */
     public static Optional<Pair<String, String>> getTitleAndDescOfPropertyType(final String dotNotationExp, final Class<?> propOwnerType) {
         final Class<?> propertyType = determinePropertyType(propOwnerType, dotNotationExp);
@@ -175,6 +174,41 @@ public class TitlesDescsGetter {
         final String propName = isDotExpression(dotNotationExp) ? penultAndLast(dotNotationExp).getValue() : dotNotationExp;
         final String readablePropertyName = join(asList(splitByCharacterTypeCamelCase(capitalize(propName))), " ");
         return of(pair(readablePropertyName, readablePropertyName));
+    }
+
+    /**
+     * Returns the title and description of a property based on its type.
+     * If a property is entity-typed, that entity's title and description are used.
+     * Otherwise, title and description are derived from the property's name.
+     *
+     * @param type  root type at which the property path starts
+     */
+    public static Pair<String, String> titleAndDescOfPropertyType(final CharSequence propertyPath, final Class<?> type) {
+        final Class<?> propertyType = determinePropertyType(type, propertyPath);
+        if (AbstractEntity.class.isAssignableFrom(propertyType)) {
+            return getEntityTitleAndDesc((Class<? extends AbstractEntity<?>>) propertyType);
+        }
+        final var propName = isDotExpression(propertyPath) ? penultAndLast(propertyPath).getValue() : propertyPath;
+        final var readablePropName = titleFromPropertyName(propName);
+        return pair(readablePropName, readablePropName);
+    }
+
+    public static String titleFromPropertyName(final CharSequence property) {
+        return String.join(" ", splitByCharacterTypeCamelCase(capitalize(property.toString())));
+    }
+
+    /**
+     * Retrieves the title of a property. If the title is blank, provides a non-blank default title.
+     */
+    public static String nonBlankPropertyTitle(final CharSequence propPath, final Class<?> entityType) {
+        var title = getTitleAndDesc(propPath, entityType).getKey();
+        if (title.isBlank()) {
+            title = titleAndDescOfPropertyType(propPath, entityType).getKey();
+        }
+        if (title.isBlank()) {
+            title = titleFromPropertyName(propPath);
+        }
+        return title;
     }
 
     /**
@@ -190,16 +224,27 @@ public class TitlesDescsGetter {
     }
 
     /**
-     * Returns {@link Pair} with key set to entity title and value set to entity description. Traverses <code>entityType</code> hierarchy bottom-up in search of the specified
-     * entity title and description.
-     *
-     * @param entityType
-     * @return
+     * Returns the title and description of the specified entity type.
+     * <p>
+     * The most specific {@link EntityTitle} in the hierarchy is used.
+     * If there is no such annotation, entity type's name is used.
      */
     public static Pair<String, String> getEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> entityType) {
         return AnnotationReflector.getAnnotationOptionally(entityType, EntityTitle.class)
                .map(annotation -> pair(annotation.value(), annotation.desc()))
                .orElseGet(() -> getDefaultEntityTitleAndDesc(entityType));
+    }
+
+    /**
+     * Returns the title of the specified entity type.
+     * <p>
+     * The most specific {@link EntityTitle} in the hierarchy is used.
+     * If there is no such annotation, entity type's name is used.
+     */
+    public static String getEntityTitle(final Class<? extends AbstractEntity<?>> entityType) {
+        return AnnotationReflector.getAnnotationOptionally(entityType, EntityTitle.class)
+                .map(EntityTitle::value)
+                .orElseGet(() -> getDefaultEntityTitle(entityType));
     }
 
     /**
@@ -211,11 +256,22 @@ public class TitlesDescsGetter {
     }
 
     /**
-     * Provides default values of title and description for entity. (e.g. "VehicleFinDetails.class" => "Vehicle Fin Details" and "Vehicle Fin Details entity")
+     * Provides default title and description for the specified entity type.
+     * <p>
+     * (E.g. {@code VehicleFinDetails.class} => "Vehicle Fin Details" and "Vehicle Fin Details entity")
      */
     public static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> klass) {
-        final String s = breakClassName(klass.getSimpleName());
+        final String s = getDefaultEntityTitle(klass);
         return pair(s, s + " entity");
+    }
+
+    /**
+     * Provides a default title for the specified entity type.
+     * <p>
+     * (E.g. {@code VehicleFinDetails.class} => "Vehicle Fin Details")
+     */
+    public static String getDefaultEntityTitle(final Class<? extends AbstractEntity<?>> klass) {
+        return breakClassName(klass.getSimpleName());
     }
 
     /**

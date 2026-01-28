@@ -5,6 +5,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.lang.reflect.Field;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,8 +31,11 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
+import static ua.com.fielden.platform.eql.dbschema.ColumnIndex.Order.ASC;
+import static ua.com.fielden.platform.eql.dbschema.ColumnIndex.Order.DESC;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -69,7 +74,8 @@ public class ColumnDefinitionExtractor {
      * </ul>
      */
     public Map<String, ColumnDefinition> extractFromProperty(
-            final String propName, 
+            final Class<? extends AbstractEntity<?>> enclosingEntityType,
+            final String propName,
             final Class<?> propType, 
             final IsProperty isProperty, 
             final MapTo mapTo, 
@@ -85,7 +91,8 @@ public class ColumnDefinitionExtractor {
         final int scale = isProperty.scale();
 
         if (isUnionEntityType(propType)) {
-            return unionProperties((Class<? extends AbstractUnionEntity>) propType).stream()
+            final var propUnionEntityType = (Class<? extends AbstractUnionEntity>) propType;
+            return unionProperties(propUnionEntityType).stream()
                     .collect(toImmutableMap(
                             sField -> propName + '.' + sField.getName(),
                             sField -> {
@@ -103,7 +110,9 @@ public class ColumnDefinitionExtractor {
                                 return new ColumnDefinition(unique, compositeKeyMemberOrder, true, sColumnName,
                                                             sField.getType(), jdbcSqlTypeFor((Type) hibType),
                                                             sIsProperty.length(), sIsProperty.scale(), sIsProperty.precision(),
-                                                            sMapTo.defaultValue(), false, dialect);
+                                                            sMapTo.defaultValue(),
+                                                            maybeIndexFor(propUnionEntityType, sField.getType(), sField.getName()),
+                                                            dialect);
                             }));
         } else {
             if (hibType instanceof Type t) {
@@ -111,13 +120,17 @@ public class ColumnDefinitionExtractor {
                                        new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
-                                                            length, scale, precision, mapTo.defaultValue(), false, dialect));
+                                                            length, scale, precision, mapTo.defaultValue(),
+                                                            maybeIndexFor(enclosingEntityType, propType, propName),
+                                                            dialect));
             } else if (hibType instanceof UserType t) {
                 return ImmutableMap.of(propName,
                                        new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
-                                                            length, scale, precision, mapTo.defaultValue(), false, dialect));
+                                                            length, scale, precision, mapTo.defaultValue(),
+                                                            maybeIndexFor(enclosingEntityType, propType, propName),
+                                                            dialect));
             } else if (hibType instanceof CompositeUserType compositeUserType) {
                 final List<Pair<String, Integer>> subProps = jdbcSqlTypeFor(compositeUserType);
                 return subProps.stream().collect(
@@ -169,17 +182,17 @@ public class ColumnDefinitionExtractor {
                                            final String sColumnName = subProps.size() == 1 ? parentColumn
                                                    : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(sColumnNameSuggestion) ? sName.toUpperCase() : sColumnNameSuggestion));
 
-                                           final boolean sRequiresIndex;
+                                           final Optional<ColumnIndex> sMaybeIndex;
                                            if (RichText.class.isAssignableFrom(propType) && RichText.SEARCH_TEXT.equals(sField.getName())) {
-                                               sRequiresIndex = true;
+                                               sMaybeIndex = Optional.of(new ColumnIndex(ASC));
                                            } else {
-                                               sRequiresIndex = false;
+                                               sMaybeIndex = maybeIndexFor(sType, sField.getType(), sName);
                                            }
 
                                            return new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                                        sColumnName, sField.getType(), sSqlType,
                                                                        sLength, sScale, sPrecision,
-                                                                       sMapTo.defaultValue(), sRequiresIndex, dialect);
+                                                                       sMapTo.defaultValue(), sMaybeIndex, dialect);
                                        })
                 );
             } else {
@@ -188,28 +201,44 @@ public class ColumnDefinitionExtractor {
         }
     }
 
+    private Optional<ColumnIndex> maybeIndexFor(
+            final Class<?> enclosingType,
+            final Class<?> propType,
+            final String propName)
+    {
+        if (isAuditEntityType(enclosingType) && propName.equals(AbstractAuditEntity.AUDIT_DATE) && propType == Date.class) {
+            return Optional.of(new ColumnIndex(DESC));
+        }
+        if (isPersistentEntityType(propType)) {
+            return Optional.of(new ColumnIndex(ASC));
+        }
+        else {
+            return empty();
+        }
+    }
+
     private boolean isNullable(final Class<?> propType, final boolean required) {
         return !required && !boolean.class.isAssignableFrom(propType) && !Boolean.class.isAssignableFrom(propType);
     }
     
-    public ColumnDefinition extractVersionProperty() {
+    public ColumnDefinition extractVersionProperty(final Class<? extends AbstractEntity<?>> enclosingEntityType) {
         final Field versionField = Finder.getFieldByName(AbstractEntity.class, VERSION);
-        final var columns = extractFromProperty(versionField.getName(), versionField.getType(), defaultIsPropertyAnnotation, getAnnotation(versionField, MapTo.class), null, true, false, empty());
+        final var columns = extractFromProperty(enclosingEntityType, versionField.getName(), versionField.getType(), defaultIsPropertyAnnotation, getAnnotation(versionField, MapTo.class), null, true, false, empty());
         return first(columns.values()).orElseThrow();
     }
 
-    public ColumnDefinition extractIdProperty() {
+    public ColumnDefinition extractIdProperty(final Class<? extends AbstractEntity<?>> enclosingEntityType) {
         final Field idField = Finder.getFieldByName(AbstractEntity.class, ID);
-        final var columns =  extractFromProperty(idField.getName(), idField.getType(), defaultIsPropertyAnnotation, getAnnotation(idField, MapTo.class), null, true, false, empty());
+        final var columns =  extractFromProperty(enclosingEntityType, idField.getName(), idField.getType(), defaultIsPropertyAnnotation, getAnnotation(idField, MapTo.class), null, true, false, empty());
         return first(columns.values()).orElseThrow();
     }
 
-    public Optional<ColumnDefinition> extractSimpleKeyProperty(final Class<? extends AbstractEntity<?>> entityType) {
-        if (isCompositeEntity(entityType) || isOneToOne(entityType)) {
+    public Optional<ColumnDefinition> extractSimpleKeyProperty(final Class<? extends AbstractEntity<?>> enclosingEntityType) {
+        if (isCompositeEntity(enclosingEntityType) || isOneToOne(enclosingEntityType)) {
             return empty();
         }
         final Field keyField = Finder.getFieldByName(AbstractEntity.class, KEY);
-        final var columns = extractFromProperty(keyField.getName(), getKeyType(entityType), getAnnotation(keyField, IsProperty.class), getAnnotation(keyField, MapTo.class), null, true, true, empty());
+        final var columns = extractFromProperty(enclosingEntityType, keyField.getName(), getKeyType(enclosingEntityType), getAnnotation(keyField, IsProperty.class), getAnnotation(keyField, MapTo.class), null, true, true, empty());
         return of(first(columns.values()).orElseThrow());
     }
     

@@ -40,7 +40,7 @@ public class ColumnDefinition {
     public final int scale;
     public final int precision;
     public final String defaultValue;
-    public final boolean requiresIndex;
+    public final Optional<ColumnIndex> maybeIndex;
     public final boolean indexApplicable;
 
     public ColumnDefinition(
@@ -54,7 +54,7 @@ public class ColumnDefinition {
             final int scale,
             final int precision,
             final String defaultValue,
-            final boolean requiresIndex,
+            final Optional<ColumnIndex> maybeIndex,
             final Dialect dialect)
     {
         if (StringUtils.isEmpty(name)) {
@@ -70,8 +70,8 @@ public class ColumnDefinition {
         this.scale = scale <= -1 ? DEFAULT_NUMERIC_SCALE : scale;
         this.precision = precision <= -1 ? DEFAULT_NUMERIC_PRECISION : precision;
         this.defaultValue = defaultValue;
-        this.requiresIndex = requiresIndex;
         this.sqlTypeName = sqlTypeName(dialect);
+        this.maybeIndex = maybeIndex;
         this.indexApplicable = switch (dbVersion(dialect)) {
             // Not all columns can be indexable.
             // Refer to https://learn.microsoft.com/en-us/sql/t-sql/statements/create-index-transact-sql for more details.

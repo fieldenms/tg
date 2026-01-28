@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import java.lang.reflect.Array;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public final class ArrayUtils {
 
@@ -35,6 +36,17 @@ public final class ArrayUtils {
             }
         }
         return false;
+    }
+
+    /// Returns the index of the first element that satisifes the predicate.
+    /// If no such element is found, `-1` is returned.
+    public static <X> int findIndex(final X[] xs, final Predicate<? super X> predicate) {
+        for (int i = 0; i < xs.length; i++) {
+            if (predicate.test(xs[i])) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private ArrayUtils() {}

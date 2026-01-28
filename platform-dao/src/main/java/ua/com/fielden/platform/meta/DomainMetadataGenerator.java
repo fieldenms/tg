@@ -6,6 +6,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.audit.AuditUtils;
+import ua.com.fielden.platform.audit.InactiveAuditProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -18,6 +20,8 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.eql.retrieval.EntityContainerEnhancer;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
+import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
+import ua.com.fielden.platform.meta.PropertyMetadataUtils.SubPropertyNaming;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -28,6 +32,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -36,6 +41,8 @@ import static java.util.Objects.requireNonNullElseGet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
+import static ua.com.fielden.platform.audit.AuditUtils.isSynAuditEntityType;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
@@ -185,7 +192,7 @@ final class DomainMetadataGenerator {
 
         // PERSISTENT
         if (atMapTo != null) {
-            final String columnName = mkColumnName(field.getName(), atMapTo);
+            final String columnName = propColumnName(field.getDeclaringClass(), field.getName());
             builder = persistentProp(field.getName(), propTypeMd,
                                      hibTypeGenerator.generate(propTypeMd).use(field).get(),
                                      PropertyNature.Persistent.data(propColumn(columnName, atIsProperty)));
@@ -298,7 +305,7 @@ final class DomainMetadataGenerator {
         switch (entityBuilder) {
             case EntityMetadataBuilder.Union u -> {
                 return ImmutableList.<PropertyMetadata>builder()
-                        .addAll(generateUnionImplicitCalcSubprops(u.getJavaType(), entityBuilder))
+                        .addAll(generateUnionImplicitCalcSubprops(u.getJavaType(), entityBuilder, SubPropertyNaming.SIMPLE))
                         // union members
                         .addAll(unionProperties(u.getJavaType()).stream()
                                         .map(field -> mkProp(field, u)).flatMap(Optional::stream)
@@ -343,7 +350,7 @@ final class DomainMetadataGenerator {
                                         .required(true).build());
             case EntityMetadataBuilder.Persistent $ ->
                     Optional.of(persistentProp(VERSION, mkPropertyTypeOrThrow(Long.class), H_LONG,
-                                               PropertyNature.Persistent.data(propColumn(VERSION)))
+                                               PropertyNature.Persistent.data(propColumn(propColumnName(entityBuilder.getJavaType(), VERSION))))
                                         .required(true).build());
             default -> Optional.empty();
         };
@@ -358,7 +365,8 @@ final class DomainMetadataGenerator {
         if (isOneToOne(entityBuilder.getJavaType())) {
             return switch (entityBuilder) {
                 case EntityMetadataBuilder.Persistent $ ->
-                        Optional.of(persistentProp(KEY, mkPropertyTypeOrThrow(keyType), H_ENTITY, PropertyNature.Persistent.data(propColumn(ID)))
+                        Optional.of(persistentProp(KEY, mkPropertyTypeOrThrow(keyType), H_ENTITY,
+                                                   PropertyNature.Persistent.data(propColumn(propColumnName(entityBuilder.getJavaType(), ID))))
                                             .required(true).build());
                 case EntityMetadataBuilder.Synthetic $ ->
                         Optional.of(plainProp(KEY, mkPropertyTypeOrThrow(keyType), H_ENTITY).required(true).build());
@@ -406,7 +414,7 @@ final class DomainMetadataGenerator {
      */
     private Optional<PropertyMetadata> mkPropId(final EntityMetadataBuilder<?, ?> entityBuilder) {
         final PropertyMetadata propId = persistentProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY,
-                                                       PropertyNature.Persistent.data(propColumn(ID)))
+                                                       PropertyNature.Persistent.data(propColumn(propColumnName(entityBuilder.getJavaType(), ID))))
                 .required(true).build();
 
         return switch (entityBuilder) {
@@ -478,12 +486,12 @@ final class DomainMetadataGenerator {
         // TODO: Should an exception be thrown for incorrect definitions?
         //       It is probably best to delegate verification of property declarations to the compile time verifier.
         else if (atMapTo != null && !entityBuilder.getNature().isSynthetic() && atCalculated == null) {
-            final String columnName = mkColumnName(field.getName(), atMapTo);
             final var propTypeMd = mkPropertyTypeOrThrow(field);
             builder = Optional.of(
                     persistentProp(field.getName(), propTypeMd,
                                    hibTypeGenerator.generate(propTypeMd).use(field).get(),
-                                   PropertyNature.Persistent.data(propColumn(columnName, atIsProperty))));
+                                   PropertyNature.Persistent.data(propColumn(propColumnName(field.getDeclaringClass(), field.getName()),
+                                                                             atIsProperty))));
         }
         // CALCULATED
         else if (atCalculated != null) {
@@ -510,7 +518,8 @@ final class DomainMetadataGenerator {
         return builder
                 // Scan the property for any additional metadata
                 .map(bld -> bld.required(isRequiredByDefinition(field, enclosingEntityType)))
-                .map(bld -> getAnnotationOptionally(field, CompositeKeyMember.class).map(annot -> bld.with(KEY_MEMBER, annot)).orElse(bld));
+                .map(bld -> getAnnotationOptionally(field, CompositeKeyMember.class).map(annot -> bld.with(KEY_MEMBER, annot)).orElse(bld))
+                .map(builder1 -> enhanceWithAuditingData(builder1, entityBuilder));
     }
 
     private Optional<PropertyMetadataImpl.Builder<?, ?>> mkOne2OneProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
@@ -576,8 +585,23 @@ final class DomainMetadataGenerator {
     //// Persistent Entity ////
     ///////////////////////////
 
-    private static String mkColumnName(final String propName, final MapTo mapTo) {
-        return isNotEmpty(mapTo.value()) ? mapTo.value() : propName.toUpperCase() + "_";
+    String propColumnName(final Class<?> owner, final String propName) {
+        return Optional.ofNullable(specialPropColumns.get(propName))
+                .map(propColumn -> propColumn.name)
+                .orElseGet(() -> getPropertyAnnotationOptionally(MapTo.class, owner, propName)
+                        .filter(atMapTo -> isNotEmpty(atMapTo.value()))
+                        .map(MapTo::value)
+                        .orElseGet(() -> propName.toUpperCase() + "_"));
+    }
+
+    String propColumnNameForUnion(final String propColumnName, final String memberColumnName) {
+        final var result = propColumnName + "_" + memberColumnName;
+        return result.endsWith("_") ? result.substring(0, result.length() - 1) : result;
+    }
+
+    String propColumnNameForComponent(final String propColumnName, final String componentColumnName) {
+        final var result =  propColumnName + (propColumnName.endsWith("_") ? "" : "_") + componentColumnName;
+        return result.endsWith("_") ? result.substring(0, result.length() - 1) : result;
     }
 
     PropColumn propColumn(final String columnName, final Optional<IsProperty> optIsProperty) {
@@ -589,7 +613,7 @@ final class DomainMetadataGenerator {
     PropColumn propColumn(final String columnName) {
         return requireNonNullElseGet(
                 specialPropColumns.getOrDefault(columnName, null),
-                () -> new PropColumn(removeObsoleteUnderscore(columnName)));
+                () -> new PropColumn(columnName));
     }
 
     PropColumn propColumn(final String columnName, final IsProperty isProperty) {
@@ -599,14 +623,8 @@ final class DomainMetadataGenerator {
                     final var length = isProperty.length() > 0 ? isProperty.length() : null;
                     final var precision = isProperty.precision() >= 0 ? isProperty.precision() : null;
                     final var scale = isProperty.scale() >= 0 ? isProperty.scale() : null;
-                    return new PropColumn(removeObsoleteUnderscore(columnName), length, precision, scale);
+                    return new PropColumn(columnName, length, precision, scale);
                 });
-    }
-
-    private static String removeObsoleteUnderscore(final String name) {
-        return name.endsWith("_") && name.substring(0, name.length() - 1).contains("_")
-                ? name.substring(0, name.length() - 1)
-                : name;
     }
 
     private static String mkTableName(final Class<? extends AbstractEntity<?>> entityType) {
@@ -672,21 +690,27 @@ final class DomainMetadataGenerator {
     List<PropertyMetadata> generateUnionImplicitCalcSubprops(
             final Class<? extends AbstractUnionEntity> unionType,
             @Nullable final String contextPropName,
-            final EntityMetadataBuilder<?, ?> entityBuilder)
+            final EntityMetadataBuilder<?, ?> entityBuilder,
+            final SubPropertyNaming naming)
     {
         final List<Field> unionMembers = unionProperties(unionType);
         if (unionMembers.isEmpty()) {
             throw new EntityDefinitionException(ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS.formatted(unionType.getTypeName()));
         }
+
+        final Function<String, String> makeName = contextPropName == null
+                ? Function.identity()
+                : subPropName -> naming.apply(contextPropName, subPropName);
+
         final List<String> unionMembersNames = unionMembers.stream().map(Field::getName).toList();
         final List<PropertyMetadata> props = new ArrayList<>();
-        props.add(calculatedProp(KEY, mkPropertyTypeOrThrow(String.class), H_STRING,
+        props.add(calculatedProp(makeName.apply(KEY), mkPropertyTypeOrThrow(String.class), H_STRING,
                                  PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, KEY, contextPropName), true, false))
                           .build());
-        props.add(calculatedProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY,
+        props.add(calculatedProp(makeName.apply(ID), mkPropertyTypeOrThrow(Long.class), H_ENTITY,
                                  PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName), true, false))
                           .build());
-        props.add(calculatedProp(DESC, mkPropertyTypeOrThrow(String.class), H_STRING,
+        props.add(calculatedProp(makeName.apply(DESC), mkPropertyTypeOrThrow(String.class), H_STRING,
                                  PropertyNature.Calculated.data(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName), true, false))
                           .build());
 
@@ -697,7 +721,8 @@ final class DomainMetadataGenerator {
             }
             final Field commonPropField = findFieldByName(firstUnionEntityPropType, commonProp);
             final PropertyTypeMetadata typeMetadata = mkPropertyTypeOrThrow(commonPropField);
-            props.add(calculatedProp(commonProp, typeMetadata,
+            props.add(calculatedProp(makeName.apply(commonProp),
+                                     typeMetadata,
                                      hibTypeGenerator.generate(typeMetadata).use(commonPropField).get(),
                                      PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName), true, false))
                               .build());
@@ -706,10 +731,12 @@ final class DomainMetadataGenerator {
         return unmodifiableList(props);
     }
 
-    private List<PropertyMetadata> generateUnionImplicitCalcSubprops
-            (final Class<? extends AbstractUnionEntity> unionType, final EntityMetadataBuilder<?, ?> entityBuilder)
+    private List<PropertyMetadata> generateUnionImplicitCalcSubprops(
+            final Class<? extends AbstractUnionEntity> unionType,
+            final EntityMetadataBuilder<?, ?> entityBuilder,
+            final SubPropertyNaming naming)
     {
-        return generateUnionImplicitCalcSubprops(unionType, null, entityBuilder);
+        return generateUnionImplicitCalcSubprops(unionType, null, entityBuilder, naming);
     }
 
     private ExpressionModel generateUnionCommonDescPropExpressionModel(final List<Field> unionMembers, final @Nullable String contextPropName) {
@@ -778,6 +805,28 @@ final class DomainMetadataGenerator {
         }
     }
 
+    /////////////////////////////
+    ////// Auditing ////////////
+    ////////////////////////////
+
+    private <N extends PropertyNature, D extends PropertyNature.Data<N>> PropertyMetadataImpl.Builder<N, D> enhanceWithAuditingData(
+            final PropertyMetadataImpl.Builder<N, D> propBuilder,
+            final EntityMetadataBuilder<?, ?> entityBuilder)
+    {
+        if (isAuditEntityType(entityBuilder.getJavaType()) || isSynAuditEntityType(entityBuilder.getJavaType())) {
+            // Inactive audit properties are annotated.
+            if (AuditUtils.isAuditProperty(propBuilder.name())) {
+                final var active = getPropertyAnnotation(InactiveAuditProperty.class, entityBuilder.getJavaType(), propBuilder.name()) == null;
+                return propBuilder.with(PropertyMetadataKeys.AUDIT_PROPERTY, new KAuditProperty.Data(active));
+            }
+            else {
+                return propBuilder;
+            }
+        }
+        else {
+            return propBuilder;
+        }
+    }
 
     /////////////////////////////
     ////// Misc. utilities /////

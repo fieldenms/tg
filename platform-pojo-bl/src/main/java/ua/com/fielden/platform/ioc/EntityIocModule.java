@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.ioc;
 
+import ua.com.fielden.platform.audit.AuditingIocModule;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -45,6 +46,8 @@ public abstract class EntityIocModule extends AbstractPlatformIocModule {
 
         install(DynamicPropertyAccessIocModule.options().fromProperties(properties));
         install(new DynamicPropertyAccessIocModule());
+
+        install(new AuditingIocModule());
     }
 
 }

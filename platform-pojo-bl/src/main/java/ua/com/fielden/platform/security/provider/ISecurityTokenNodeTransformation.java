@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.security.provider;
 
+import java.util.SortedSet;
+
 import com.google.inject.ImplementedBy;
 
 import java.util.SortedSet;

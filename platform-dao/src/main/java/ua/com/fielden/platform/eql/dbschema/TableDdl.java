@@ -11,12 +11,11 @@ import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 import java.lang.reflect.Field;
-import java.util.Optional;
 import java.util.*;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
@@ -60,28 +59,28 @@ public class TableDdl {
     private static Map<String, ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         final var columns = ImmutableMap.<String, ColumnDefinition> builder();
 
-        columns.put(ID, columnDefinitionExtractor.extractIdProperty());
+        columns.put(ID, columnDefinitionExtractor.extractIdProperty(entityType));
 
         columnDefinitionExtractor.extractSimpleKeyProperty(entityType).ifPresent(colDef -> columns.put(KEY, colDef));
 
-        columns.put(VERSION, columnDefinitionExtractor.extractVersionProperty());
+        columns.put(VERSION, columnDefinitionExtractor.extractVersionProperty(entityType));
 
         for (final Field propField : findRealProperties(entityType, MapTo.class)) {
-            if (!shouldIgnore(propField, entityType)) {
+            if (!shouldIgnore(propField)) {
                 final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propField.getName());
                 final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, entityType, propField.getName());
                 final PersistentType persistedType = getPropertyAnnotation(PersistentType.class, entityType, propField.getName());
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(propField, entityType);
                 final boolean unique = propField.isAnnotationPresent(Unique.class);
                 final Optional<Integer> compositeKeyMemberOrder = Optional.ofNullable(propField.getAnnotation(CompositeKeyMember.class)).map(ann -> ann.value());
-                columns.putAll(columnDefinitionExtractor.extractFromProperty(propField.getName(), propField.getType(), isProperty, mapTo, persistedType, required, unique, compositeKeyMemberOrder));
+                columns.putAll(columnDefinitionExtractor.extractFromProperty(entityType, propField.getName(), propField.getType(), isProperty, mapTo, persistedType, required, unique, compositeKeyMemberOrder));
             }
         }
 
         return columns.buildOrThrow();
     }
 
-    private static boolean shouldIgnore(final Field propField, final Class<? extends AbstractEntity<?>> entityType) {
+    private static boolean shouldIgnore(final Field propField) {
         return KEY.equals(propField.getName());
     }
 
@@ -200,17 +199,24 @@ public class TableDdl {
     public List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
         return cols
-                .filter(col -> col.requiresIndex || isPersistentEntityType(col.javaType))
-                .filter(col -> {
+                .map(col -> col.maybeIndex.map(index -> {
                     if (!col.indexApplicable) {
                         LOGGER.warn("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
-                                    .formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
-                        return false;
-                    } else {
-                        return true;
+                                            .formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
+                        return "";
                     }
-                })
-                .map(col -> "CREATE INDEX %s ON %s(%s)".formatted(indexName(this.tableName, col.name), this.tableName, col.name))
+                    else {
+                        return "CREATE INDEX %s ON %s(%s %s)".formatted(
+                                indexName(this.tableName, col.name),
+                                this.tableName,
+                                col.name,
+                                switch (index.order()) {
+                                    case ASC -> "ASC";
+                                    case DESC -> "DESC";
+                                });
+                    }
+                }).orElse(""))
+                .filter(s -> !s.isEmpty())
                 .collect(toList());
     }
 
