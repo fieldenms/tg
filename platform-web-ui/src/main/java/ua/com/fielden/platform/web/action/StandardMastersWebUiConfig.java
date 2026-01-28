@@ -166,10 +166,6 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(PersistentEntityInfo.class, PersistentEntityInfoProducer.class, masterConfig, injector);
     }
 
-    public static EntityMaster<ApplicationConfigEntity> createApplicationConfigMaster(final Injector injector) {
-        return new EntityMaster<>(ApplicationConfigEntity.class, ApplicationConfigEntityProducer.class, null, injector);
-    }
-
     public static EntityMaster<Menu> createMenuMaster(final Injector injector, final MainMenuBuilder desktopMenuBuilder, final MainMenuBuilder mobileMenuBuilder) {
         return new EntityMaster<Menu>(Menu.class, MenuProducer.class, null, injector) {
             @Override

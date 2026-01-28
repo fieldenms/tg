@@ -35,6 +35,8 @@ public class CriteriaGeneratorTestIocModule extends EntityTestIocModuleWithPrope
         bindConstant().annotatedWith(Names.named("workflow")).to("development");
         bindConstant().annotatedWith(Names.named("auth.mode")).to("SSO");
         bindConstant().annotatedWith(Names.named("currency.symbol")).to("$");
+        bindConstant().annotatedWith(Names.named("externalSites.allowlist")).to("");
+        bindConstant().annotatedWith(Names.named("externalSites.expiresIn")).to("10");
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class);
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
