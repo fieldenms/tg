@@ -6,6 +6,7 @@ import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAnd
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -14,7 +15,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
@@ -97,9 +97,11 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final Class<?> menuItemType,
             final User user,
             final String name,
-            final EntityCentreConfigCo eccCompanion) {
-        return ofNullable(eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model()))
-                .map(ecc -> restoreDiffFrom(ecc, eccCompanion, format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user)));
+            final ICompanionObjectFinder coFinder)
+    {
+        final var co$EntityCentreConfig = coFinder.find(EntityCentreConfig.class);
+        return ofNullable(co$EntityCentreConfig.getEntity(from(modelFor(user, menuItemType.getName(), name)).model()))
+                .map(ecc -> restoreDiffFrom(ecc, coFinder, format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user)));
     }
     
     /**
@@ -115,7 +117,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
             // params for actual deserialisation
             final EntityCentreConfig ecc,
             // params for: deserialisation failed -- create empty and save
-            final EntityCentreConfigCo eccCompanion,
+            final ICompanionObjectFinder coFinder,
             // params for: deserialisation failed -- logging
             final String loggingSuffix) {
         try {
@@ -126,7 +128,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
             logger.error(format("Creating and saving of empty diff %s...", loggingSuffix));
             final Map<String, Object> emptyDiff = createEmptyDifferences();
             ecc.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(emptyDiff));
-            eccCompanion.saveWithRetry(ecc); // this rare saving case should never be conflicted -- however, we still use saveWithRetry here
+            final EntityCentreConfigCo co$EntityCentreConfig = coFinder.find(EntityCentreConfig.class);
+            co$EntityCentreConfig.saveWithRetry(ecc); // this rare saving case should never be conflicted -- however, we still use saveWithRetry here
             logger.error(format("Creating and saving of empty diff %s...done", loggingSuffix));
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
             return emptyDiff;
@@ -142,11 +145,10 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final User user,
         final String newName,
         final String newDesc,
-        final EntityCentreConfigCo eccCompanion,
-        final MainMenuItemCo mmiCompanion,
+        final ICompanionObjectFinder coFinder,
         final Function<EntityCentreConfig, EntityCentreConfig> adjustConfig
     ) {
-        saveNewEntityCentreManager(CENTRE_DIFF_SERIALISER.serialise(differences), menuItemType, user, newName, newDesc, eccCompanion, mmiCompanion, adjustConfig);
+        saveNewEntityCentreManager(CENTRE_DIFF_SERIALISER.serialise(differences), menuItemType, user, newName, newDesc, coFinder, adjustConfig);
         return differences;
     }
 
@@ -161,17 +163,18 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final User user,
         final String newName,
         final String newDesc,
-        final EntityCentreConfigCo eccCompanion,
-        final MainMenuItemCo mmiCompanion,
+        final ICompanionObjectFinder coFinder,
         final Function<EntityCentreConfig, EntityCentreConfig> adjustConfig
     ) {
-        final MainMenuItem menuItem = mmiCompanion.findByKeyOptional(menuItemType.getName()).orElseGet(() -> {
-            final MainMenuItem newMainMenuItem = mmiCompanion.new_();
+        final var co$MainMenuItem = coFinder.find(MainMenuItem.class);
+        final MainMenuItem menuItem = co$MainMenuItem.findByKeyOptional(menuItemType.getName()).orElseGet(() -> {
+            final MainMenuItem newMainMenuItem = co$MainMenuItem.new_();
             newMainMenuItem.setKey(menuItemType.getName());
-            return mmiCompanion.save(newMainMenuItem);
+            return co$MainMenuItem.save(newMainMenuItem);
         });
-        final EntityCentreConfig ecc = adjustConfig.apply(eccCompanion.new_().setOwner(user).setTitle(newName).setMenuItem(menuItem).setConfigBody(serialisedDifferences).setDesc(newDesc));
-        return eccCompanion.saveWithRetry(ecc);
+        final EntityCentreConfigCo co$EntityCentreConfig = coFinder.find(EntityCentreConfig.class);
+        final EntityCentreConfig ecc = adjustConfig.apply(co$EntityCentreConfig.new_().setOwner(user).setTitle(newName).setMenuItem(menuItem).setConfigBody(serialisedDifferences).setDesc(newDesc));
+        return co$EntityCentreConfig.saveWithRetry(ecc);
     }
     
     /**
@@ -184,19 +187,19 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final User user,
         final String name,
         final String newDesc,
-        final EntityCentreConfigCo eccCompanion,
-        final MainMenuItemCo mmiCompanion,
-        final Function<EntityCentreConfig, EntityCentreConfig> adjustConfig
-    ) {
-        final EntityCentreConfig config = eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model());
+        final ICompanionObjectFinder coFinder,
+        final Function<EntityCentreConfig, EntityCentreConfig> adjustConfig)
+    {
+        final EntityCentreConfigCo co$EntityCentreConfig = coFinder.find(EntityCentreConfig.class);
+        final EntityCentreConfig config = co$EntityCentreConfig.getEntity(from(modelFor(user, menuItemType.getName(), name)).model());
         if (config == null) {
-            saveNewEntityCentreManager(differences, menuItemType, user, name, newDesc, eccCompanion, mmiCompanion, adjustConfig);
+            saveNewEntityCentreManager(differences, menuItemType, user, name, newDesc, coFinder, adjustConfig);
         } else {
             if (newDesc != null) {
                 config.setDesc(newDesc);
             }
             config.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
-            eccCompanion.saveWithRetry(adjustConfig.apply(config));
+            co$EntityCentreConfig.saveWithRetry(adjustConfig.apply(config));
         }
         return differences;
     }
@@ -210,8 +213,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * @param eccCompanion
      * @return
      */
-    protected static EntityCentreConfig findConfig(final Class<?> miType, final User user, final String deviceSpecificDiffName, final EntityCentreConfigCo eccCompanion) {
-        return eccCompanion.getEntity(
+    protected static EntityCentreConfig findConfig(final Class<?> miType, final User user, final String deviceSpecificDiffName, final ICompanionObjectFinder coFinder) {
+        final EntityCentreConfigCo coEntityCentreConfig = coFinder.find(EntityCentreConfig.class);
+        return coEntityCentreConfig.getEntity(
             from(modelFor(user, miType.getName(), deviceSpecificDiffName)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency").with("runAutomatically").fetchModel()).model()
         );
     }
@@ -219,8 +223,15 @@ public class CentreUpdaterUtils extends CentreUpdater {
     /**
      * Finds optional configuration for {@code user}, {@code miType} and {@code deviceSpecificDiffName} with custom {@code fetch}.
      */
-    public static Optional<EntityCentreConfig> findConfigOpt(final Class<?> miType, final User user, final String deviceSpecificDiffName, final EntityCentreConfigCo eccCompanion, final fetch<EntityCentreConfig> fetch) {
-        return eccCompanion.getEntityOptional(
+    public static Optional<EntityCentreConfig> findConfigOpt(
+            final Class<?> miType,
+            final User user,
+            final String deviceSpecificDiffName,
+            final ICompanionObjectFinder coFinder,
+            final fetch<EntityCentreConfig> fetch)
+    {
+        final EntityCentreConfigCo coEntityCentreConfig = coFinder.find(EntityCentreConfig.class);
+        return coEntityCentreConfig.getEntityOptional(
             from(modelFor(user, miType.getName(), deviceSpecificDiffName)).with(fetch).model()
         );
     }
@@ -228,8 +239,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
     /**
      * Finds optional configuration for {@code model} and {@code uuid} with predefined fetch model, sufficient for most situations.
      */
-    private static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final EntityCentreConfigCo eccCompanion) {
-        return eccCompanion.getEntityOptional(from(model
+    private static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final ICompanionObjectFinder coFinder) {
+        final EntityCentreConfigCo coEntityCentreConfig = coFinder.find(EntityCentreConfig.class);
+        return coEntityCentreConfig.getEntityOptional(from(model
             .and().prop("configUuid").eq().val(uuid).model()
         ).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("owner.base").with("configBody").with("runAutomatically").fetchModel()).model());
     }
@@ -237,15 +249,28 @@ public class CentreUpdaterUtils extends CentreUpdater {
     /**
      * Finds optional configuration for {@code uuid}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
      */
-    public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final EntityCentreConfigCo eccCompanion) {
-        return findConfigOptByUuid(centreConfigQueryFor(miType, device, surrogateName), uuid, eccCompanion);
+    public static Optional<EntityCentreConfig> findConfigOptByUuid(
+            final String uuid,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final DeviceProfile device,
+            final String surrogateName,
+            final ICompanionObjectFinder coFinder)
+    {
+        return findConfigOptByUuid(centreConfigQueryFor(miType, device, surrogateName), uuid, coFinder);
     }
     
     /**
      * Finds optional configuration for {@code uuid}, {@code user}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
      */
-    public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final EntityCentreConfigCo eccCompanion) {
-        return findConfigOptByUuid(centreConfigQueryFor(user, miType, device, surrogateName), uuid, eccCompanion);
+    public static Optional<EntityCentreConfig> findConfigOptByUuid(
+            final String uuid,
+            final User user,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final DeviceProfile device,
+            final String surrogateName,
+            final ICompanionObjectFinder coFinder)
+    {
+        return findConfigOptByUuid(centreConfigQueryFor(user, miType, device, surrogateName), uuid, coFinder);
     }
     
     /**
@@ -254,8 +279,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * @param menuItemType
      * @param names
      */
-    public static void removeCentres(final User user, final Class<?> menuItemType, final EntityCentreConfigCo eccCompanion, final String ... names) {
-        eccCompanion.delete(multiModelFor(user, menuItemType.getName(), names));
+    public static void removeCentres(final User user, final Class<?> menuItemType, final ICompanionObjectFinder coFinder, final String ... names) {
+        final var coEntityCentreConfig = coFinder.find(EntityCentreConfig.class);
+        coEntityCentreConfig.delete(multiModelFor(user, menuItemType.getName(), names));
     }
     
     ///////////////////////////// EQL MODELS /////////////////////////////
