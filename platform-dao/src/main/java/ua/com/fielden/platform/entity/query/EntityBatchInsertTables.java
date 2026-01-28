@@ -18,7 +18,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 @Singleton
-final class EntityBatchInsertTables {
+public final class EntityBatchInsertTables {
 
     private final Map<String, TableStructForBatchInsertion> tables;
 
@@ -42,7 +42,8 @@ final class EntityBatchInsertTables {
     }
 
     private static TableStructForBatchInsertion generateTableStructForBatchInsertion(
-            final IDomainMetadata domainMetadata, final EntityMetadata.Persistent entityMetadata)
+            final IDomainMetadata domainMetadata,
+            final EntityMetadata.Persistent entityMetadata)
     {
         // a way to do inner helper methods (avoids pollution of the outer class method namespace)
         class $ {
