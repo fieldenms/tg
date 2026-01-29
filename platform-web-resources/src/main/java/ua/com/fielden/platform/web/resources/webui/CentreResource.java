@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -34,15 +33,12 @@ import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.creat
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
 
-/**
- * The web resource for criteria serves as a back-end mechanism of centre management. It provides a base implementation for handling the following methods:
- * <ul>
- * <li>save centre -- POST request.
- * </ul>
- *
- * @author TG Team
- *
- */
+/// The web resource for criteria serves as a back-end mechanism of centre management.
+///
+/// It provides a base implementation for handling the following methods:
+///
+/// * save centre -- POST request.
+///
 public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends AbstractWebResource {
     private final RestServerUtil restUtil;
     
@@ -86,11 +82,9 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
         this.sharingModel = sharingModel;
     }
     
-    /**
-     * Handles PUT request resulting from tg-entity-centre <code>discard()</code> method.
-     *
-     * Internally validation process is also performed.
-     */
+    /// Handles PUT request resulting from tg-entity-centre <code>discard()</code> method.
+    /// Internally validation process is also performed.
+    ///
     @Put
     public Representation discard(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
@@ -134,9 +128,8 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
         }, restUtil);
     }
     
-    /**
-     * Discards configuration that represents own save-as configuration (possibly converted from inherited), default or link.
-     */
+    /// Discards configuration that represents own save-as configuration (possibly converted from inherited), default or link.
+    ///
     private ICentreDomainTreeManagerAndEnhancer discardOwnSaveAsConfig(final User user, final Optional<String> actualSaveAsName) {
         final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder);
         // discards fresh centre's changes (fresh centre could have no changes)

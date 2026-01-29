@@ -17,12 +17,8 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.complementCriteriaEntityBeforeRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
 
-/**
- * An implementation of pojo-bl's interface that is dependent on Web UI infrastructure (centre configuration etc.).
- * 
- * @author TG Team
- *
- */
+/// An implementation of [ICriteriaEntityRestorer] that is dependent on the Web UI infrastructure (centre configuration etc.).
+///
 @Singleton
 public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
     private final ICompanionObjectFinder companionFinder;

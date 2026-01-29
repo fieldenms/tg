@@ -118,7 +118,7 @@ import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedName
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 import static ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget.createDefaultAdditionalProps;
 
-/// Represents the entity centre.
+/// Represents an entity centre.
 ///
 public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 

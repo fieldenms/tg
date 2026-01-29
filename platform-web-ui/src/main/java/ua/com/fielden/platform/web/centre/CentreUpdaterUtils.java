@@ -33,29 +33,22 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 
-/**
- * This utility class contains additional methods applicable to {@link CentreUpdater}.
- *
- * @author TG Team
- *
- */
+/// This utility class contains additional methods applicable to [CentreUpdater].
+///
 public class CentreUpdaterUtils extends CentreUpdater {
     private final static Logger logger = getLogger(CentreUpdaterUtils.class);
     public static final fetch<EntityCentreConfig> FETCH_CONFIG_AND_INSTRUMENT = fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class);
     public static final fetch<EntityCentreConfig> FETCH_CONFIG = fetchKeyAndDescOnly(EntityCentreConfig.class);
     
-    /** Protected default constructor to prevent instantiation. */
+    /// Protected default constructor to prevent instantiation.
+    ///
     protected CentreUpdaterUtils() {
     }
     
     ///////////////////////////// CENTRE CREATION /////////////////////////////
-    /**
-     * Creates default centre for concrete menu item type. Looks for Centre DSL config in {@link IWebUiConfig}.
-     * 
-     * @param menuItemType
-     * @param webUiConfig
-     * @return
-     */
+
+    /// Creates default centre for concrete menu item type. Looks for Centre DSL config in [IWebUiConfig].
+    ///
     protected static ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final Class<?> menuItemType, final IWebUiConfig webUiConfig) {
         final EntityCentre<?> entityCentre = webUiConfig.getCentres().get(menuItemType);
         if (entityCentre != null) {
@@ -65,15 +58,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
         }
     }
     
-    /**
-     * Creates empty centre manager with calculated and custom properties.
-     * 
-     * @param root
-     * @param entityFactory
-     * @param calculatedAndCustomProperties
-     * @param miType
-     * @return
-     */
+    /// Creates empty centre manager with calculated and custom properties.
+    ///
     public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final EntityFactory entityFactory, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties, final Class<? extends MiWithConfigurationSupport<?>> miType) {
         final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(entityFactory, setOf(root), calculatedAndCustomProperties);
         // initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
@@ -83,16 +69,10 @@ public class CentreUpdaterUtils extends CentreUpdater {
     }
     
     ///////////////////////////// CENTRE MAINTENANCE /////////////////////////////
-    /**
-     * Retrieves diff instance from database if there is any.
-     * Restores it from binary representation.
-     * 
-     * @param menuItemType
-     * @param user
-     * @param name
-     * @param eccCompanion
-     * @return
-     */
+
+    /// Retrieves diff instance from database if there is any.
+    /// Restores it from binary representation.
+    ///
     public static Optional<Map<String, Object>> retrieveDiff(
             final Class<?> menuItemType,
             final User user,
@@ -104,15 +84,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
                 .map(ecc -> restoreDiffFrom(ecc, coFinder, format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user)));
     }
     
-    /**
-     * Restores diff instance from {@link EntityCentreConfig} instance's binary data.
-     * In case of failure, initialises new empty instance, saves it and returns as a result.
-     * 
-     * @param ecc
-     * @param eccCompanion
-     * @param loggingSuffix
-     * @return
-     */
+    /// Restores diff instance from [EntityCentreConfig] instance's binary data.
+    /// In case of failure, initialises new empty instance, saves it and returns as a result.
+    ///
     private static Map<String, Object> restoreDiffFrom(
             // params for actual deserialisation
             final EntityCentreConfig ecc,
@@ -136,9 +110,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
         }
     }
     
-    /**
-     * Saves new {@link EntityCentreConfig} instance with serialised diff inside.
-     */
+    /// Saves new [EntityCentreConfig] instance with serialised diff inside.
+    ///
     public static Map<String, Object> saveNewEntityCentreManager(
         final Map<String, Object> differences,
         final Class<?> menuItemType,
@@ -152,11 +125,10 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return differences;
     }
 
-    /**
-     * Saves new {@link EntityCentreConfig} instance with {@code serialisedDifferences} inside.
-     * 
-     * @param adjustConfig -- function to adjust newly created centre config just before saving
-     */
+    /// Saves new [EntityCentreConfig] instance with `serialisedDifferences` inside.
+    ///
+    /// @param adjustConfig  function to adjust newly created centre config just before saving
+    ///
     public static Long saveNewEntityCentreManager(
         final byte[] serialisedDifferences,
         final Class<?> menuItemType,
@@ -177,10 +149,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return co$EntityCentreConfig.saveWithRetry(ecc);
     }
     
-    /**
-     * Overrides existing {@link EntityCentreConfig} instance with new serialised diff.
-     * Otherwise, in case where there is no such instance in database, creates and saves new {@link EntityCentreConfig} instance with serialised diff inside.
-     */
+    /// Overrides existing [EntityCentreConfig] instance with new serialised diff.
+    /// Otherwise, in case where there is no such instance in database, creates and saves new [EntityCentreConfig] instance with serialised diff inside.
+    ///
     public static Map<String, Object> saveEntityCentreManager(
         final Map<String, Object> differences,
         final Class<?> menuItemType,
@@ -204,15 +175,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return differences;
     }
     
-    /**
-     * Finds {@link EntityCentreConfig} instance to be sufficient for changing 'preferred' / 'title' / 'desc' / 'configUuid' properties.
-     * 
-     * @param miType
-     * @param user
-     * @param deviceSpecificDiffName
-     * @param eccCompanion
-     * @return
-     */
+    /// Finds [EntityCentreConfig] instance to be sufficient for changing 'preferred' / 'title' / 'desc' / 'configUuid' properties.
+    ///
     protected static EntityCentreConfig findConfig(final Class<?> miType, final User user, final String deviceSpecificDiffName, final ICompanionObjectFinder coFinder) {
         final EntityCentreConfigCo coEntityCentreConfig = coFinder.find(EntityCentreConfig.class);
         return coEntityCentreConfig.getEntity(
@@ -220,9 +184,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
         );
     }
     
-    /**
-     * Finds optional configuration for {@code user}, {@code miType} and {@code deviceSpecificDiffName} with custom {@code fetch}.
-     */
+    /// Finds optional configuration for `user`, `miType` and `deviceSpecificDiffName` with custom `fetch`.
+    ///
     public static Optional<EntityCentreConfig> findConfigOpt(
             final Class<?> miType,
             final User user,
@@ -236,9 +199,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
         );
     }
     
-    /**
-     * Finds optional configuration for {@code model} and {@code uuid} with predefined fetch model, sufficient for most situations.
-     */
+    /// Finds optional configuration for `model` and `uuid` with predefined fetch model, sufficient for most situations.
+    ///
     private static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final ICompanionObjectFinder coFinder) {
         final EntityCentreConfigCo coEntityCentreConfig = coFinder.find(EntityCentreConfig.class);
         return coEntityCentreConfig.getEntityOptional(from(model
@@ -246,9 +208,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
         ).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("owner.base").with("configBody").with("runAutomatically").fetchModel()).model());
     }
     
-    /**
-     * Finds optional configuration for {@code uuid}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
-     */
+    /// Finds optional configuration for `uuid`, `miType`, `device` and `surrogateName` with predefined fetch model, sufficient for most situations.
+    ///
     public static Optional<EntityCentreConfig> findConfigOptByUuid(
             final String uuid,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
@@ -259,9 +220,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return findConfigOptByUuid(centreConfigQueryFor(miType, device, surrogateName), uuid, coFinder);
     }
     
-    /**
-     * Finds optional configuration for {@code uuid}, {@code user}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
-     */
+    /// Finds optional configuration for `uuid`, `user`, `miType`, `device` and `surrogateName` with predefined fetch model, sufficient for most situations.
+    ///
     public static Optional<EntityCentreConfig> findConfigOptByUuid(
             final String uuid,
             final User user,
@@ -273,55 +233,32 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return findConfigOptByUuid(centreConfigQueryFor(user, miType, device, surrogateName), uuid, coFinder);
     }
     
-    /**
-     * Removes centre configurations from persistent storage.
-     * 
-     * @param menuItemType
-     * @param names
-     */
+    /// Removes centre configurations from persistent storage.
+    ///
     public static void removeCentres(final User user, final Class<?> menuItemType, final ICompanionObjectFinder coFinder, final String ... names) {
         final var coEntityCentreConfig = coFinder.find(EntityCentreConfig.class);
         coEntityCentreConfig.delete(multiModelFor(user, menuItemType.getName(), names));
     }
     
     ///////////////////////////// EQL MODELS /////////////////////////////
-    /**
-     * Creates partial model to retrieve {@link EntityCentreConfig} instances for specified <code>user</code> and <code>menuItemTypeName</code>.
-     *
-     * @param user
-     * @param menuItemTypeName
-     * 
-     * @return
-     */
+
+    /// Creates partial model to retrieve [EntityCentreConfig] instances for specified <code>user</code> and <code>menuItemTypeName</code>.
+    ///
     private static ICompoundCondition0<EntityCentreConfig> modelFor(final User user, final String menuItemTypeName) {
         return select(EntityCentreConfig.class).where()
             .prop("owner").eq().val(user).and() // look for entity-centres for only current user
             .prop("menuItem.key").eq().val(menuItemTypeName);
     }
     
-    /**
-     * Creates a model to retrieve {@link EntityCentreConfig} instances for specified <code>user</code>, <code>title</code> and <code>menuItemTypeName</code>.
-     *
-     * @param user
-     * @param menuItemTypeName
-     * @param title
-     * 
-     * @return
-     */
+    /// Creates a model to retrieve [EntityCentreConfig] instances for specified <code>user</code>, <code>title</code> and <code>menuItemTypeName</code>.
+    ///
     static EntityResultQueryModel<EntityCentreConfig> modelFor(final User user, final String menuItemTypeName, final String title) {
         return modelFor(user, menuItemTypeName).and()
             .prop("title").eq().val(title).model();
     }
     
-    /**
-     * Creates a model to retrieve {@link EntityCentreConfig} instances for specified <code>user</code>, <code>titles</code> and <code>menuItemTypeName</code>.
-     *
-     * @param user
-     * @param menuItemTypeName
-     * @param titles
-     * 
-     * @return
-     */
+    /// Creates a model to retrieve [EntityCentreConfig] instances for specified <code>user</code>, <code>titles</code> and <code>menuItemTypeName</code>.
+    ///
     private static EntityResultQueryModel<EntityCentreConfig> multiModelFor(final User user, final String menuItemTypeName, final String... titles) {
         return modelFor(user, menuItemTypeName).and()
             .prop("title").in().values(titles).model();
