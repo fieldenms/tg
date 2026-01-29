@@ -83,6 +83,9 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     private final String title;
     private final Optional<String> ideaUri;
+    private String panelColor = "";
+    private String watermark = "";
+    private String watermarkStyle = "";
     private WebUiBuilder webUiBuilder;
     private Injector injector;
 
@@ -292,9 +295,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genAppIndex() {
-        final String indexSource = webUiBuilder.getAppIndex(injector().getInstance(IDates.class))
-                .replace("@title", title)
-                .replace("@ideaUri", ideaUri.orElse(""));
+        final String indexSource = webUiBuilder.getAppIndex(injector().getInstance(IDates.class));
         if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {
@@ -597,6 +598,31 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
+    public String title() {
+        return title;
+    }
+
+    @Override
+    public String ideaUri() {
+        return ideaUri.orElse("");
+    }
+
+    @Override
+    public String mainPanelColor() {
+        return panelColor;
+    }
+
+    @Override
+    public String watermark() {
+        return watermark;
+    }
+
+    @Override
+    public String watermarkStyle() {
+        return watermarkStyle;
+    }
+
+    @Override
     public AbstractWebUiConfig setMinDesktopWidth(final int width) {
         this.minDesktopWidth = width;
         return this;
@@ -632,4 +658,19 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return this;
     }
 
+    @Override
+    public AbstractWebUiConfig setMainPanelColor(final String panelColor) {
+        this.panelColor = panelColor;
+        return this;
+    }
+
+    public AbstractWebUiConfig setWatermark(final String watermark) {
+        this.watermark = watermark;
+        return this;
+    }
+
+    public AbstractWebUiConfig setWatermarkStyle(final String watermarkStyle) {
+        this.watermarkStyle = watermarkStyle;
+        return this;
+    }
 }

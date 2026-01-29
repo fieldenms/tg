@@ -36,4 +36,25 @@ public interface IWebAppConfigProvider {
     /// Returns value that indicates what options should be available in master actions.
     ///
     String masterActionOptions();
+
+    /// Returns the application title displayed as the tab title.
+    ///
+    String title();
+
+    /// Returns the page URI of idea action.
+    ///
+    String ideaUri();
+
+    /// Returns the colour of the application’s main top panel.
+    ///
+    String mainPanelColor();
+
+    /// Returns the watermark text displayed on the application’s main top panel.
+    ///
+    String watermark();
+
+    /// Returns the style of the watermark text.
+    ///
+    String watermarkStyle();
+
 }

@@ -13,4 +13,10 @@ public interface IWebAppConfigSetter {
     IWebAppConfigSetter setTimeWithMillisFormat(final String timeWithMillisFormat);
 
     IWebAppConfigSetter setDateFormat(final String dateFormat);
+
+    IWebAppConfigSetter setMainPanelColor(final String panelColor);
+
+    IWebAppConfigSetter setWatermark(final String watermark);
+
+    IWebAppConfigSetter setWatermarkStyle(final String watermarkStyle);
 }

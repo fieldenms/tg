@@ -76,6 +76,11 @@ public class ApplicationConfigurationResource extends AbstractWebResource {
         // Need to set the first day of week, which is used by the date picker component to correctly render a weekly representation of a month.
         // Because IDates use a number range from 1 to 7 to represent Mon to Sun and JS uses 0 for Sun, we need to convert the value coming from IDates.
         configs.put("firstDayOfWeek", dates.startOfWeek() % 7);
+        configs.put("title", webAppConfigProvider.title());
+        configs.put("ideaUri", webAppConfigProvider.ideaUri());
+        configs.put("panelColor", webAppConfigProvider.mainPanelColor());
+        configs.put("watermark", webAppConfigProvider.watermark());
+        configs.put("watermarkStyle", webAppConfigProvider.watermarkStyle());
         return restUtil.webApiResultRepresentation(configs);
     }
 }

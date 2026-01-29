@@ -232,10 +232,7 @@ public class WebUiBuilder implements IWebUiBuilder {
     }
 
     public String getAppIndex(final IDates dates) {
-        return getText("ua/com/fielden/platform/web/index.html")
-                .replace("@panelColor", panelColor.map(val -> "--tg-main-pannel-color: " + val + ";").orElse(""))
-                .replace("@watermark", "'" + watermark.orElse("") + "'")
-                .replace("@cssStyle", watermarkStyle.orElse(""));
+        return getText("ua/com/fielden/platform/web/index.html");
     }
 
     @Override
@@ -249,9 +246,9 @@ public class WebUiBuilder implements IWebUiBuilder {
      */
     @Override
     public IWebUiBuilder withTopPanelStyle(final Optional<String> backgroundColour, final Optional<String> watermark, final Optional<String> cssWatermark) {
-        this.panelColor = backgroundColour;
-        this.watermark = watermark;
-        this.watermarkStyle = cssWatermark;
+        this.webUiConfig.setMainPanelColor(backgroundColour.orElse(""));
+        this.webUiConfig.setWatermark(watermark.orElse(""));
+        this.webUiConfig.setWatermarkStyle(cssWatermark.orElse(""));
         return this;
     }
 }
