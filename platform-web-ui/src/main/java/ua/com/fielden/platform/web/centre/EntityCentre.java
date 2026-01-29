@@ -29,16 +29,12 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeConditionEnum;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
-import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -209,9 +205,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private Optional<JsCode> customImports = empty();
 
     private final IWebUiConfig webUiConfig;
-    private final EntityCentreConfigCo eccCompanion;
-    private final MainMenuItemCo mmiCompanion;
-    private final IUser userCompanion;
 
     /// Constructs an entity centre based on the specified configuration.
     ///
@@ -244,9 +237,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.postCentreCreated = postCentreCreated;
 
         webUiConfig = injector.getInstance(IWebUiConfig.class);
-        eccCompanion = companionFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
-        mmiCompanion = companionFinder.find(MainMenuItem.class);
-        userCompanion = companionFinder.find(User.class);
     }
 
     /// Validates root type corresponding to `menuItemType`.
