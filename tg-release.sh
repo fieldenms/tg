@@ -157,7 +157,7 @@ if [[ "$mergeAnswer" =~ ^[Mm]$ ]]; then
     git push origin ${BASE_BRANCH} && git push origin master && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
 else
     info "Push changes to remote - ${BASE_BRANCH} and tags (but not master)."
-    git push origin ${BASE_BRANCH} && && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
+    git push origin ${BASE_BRANCH} && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
 fi
 
 success "Successfully released ${RELEASE_VERSION}"
