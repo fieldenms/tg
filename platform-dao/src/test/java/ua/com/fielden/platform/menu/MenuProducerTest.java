@@ -1,9 +1,8 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.menu;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.menu.*;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;

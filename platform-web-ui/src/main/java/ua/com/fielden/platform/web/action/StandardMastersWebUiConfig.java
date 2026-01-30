@@ -7,6 +7,7 @@ import ua.com.fielden.platform.attachment.producers.AttachmentPreviewEntityActio
 import ua.com.fielden.platform.attachment.producers.AttachmentsUploadActionProducer;
 import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.menu.Menu;
+import ua.com.fielden.platform.menu.MenuProducer;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
