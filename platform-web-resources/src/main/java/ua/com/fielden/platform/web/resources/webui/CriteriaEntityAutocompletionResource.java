@@ -16,15 +16,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
-import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -123,9 +118,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             //            throw new IllegalStateException("Illegal state during criteria entity searching.");
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
             final User user = userProvider.getUser();
-            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
-            final IUser userCompanion = companionFinder.find(User.class);
 
             final M criteriaEntity;
             final M enhancedCentreEntityQueryCriteria;
@@ -135,16 +127,16 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
                 criteriaEntity = null;
                 enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(
-                    miType, saveAsName,
-                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
-                    companionFinder, critGenerator, 0L,
-                    user,
-                    device(),
-                    webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
+                        miType, saveAsName,
+                        updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder),
+                        companionFinder, critGenerator, 0L,
+                        user,
+                        device(),
+                        webUiConfig, sharingModel
                 );
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getType();
             } else {
-                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, device(), webUiConfig, sharingModel);
                 enhancedCentreEntityQueryCriteria = criteriaEntity;
                 criteriaType = (Class<M>) criteriaEntity.getType();
             }
@@ -179,9 +171,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 contextConfig,
                 criterionPropertyName,
                 device(),
-                eccCompanion,
-                mmiCompanion,
-                userCompanion,
                 sharingModel
             );
             if (context.isPresent()) {

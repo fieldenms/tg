@@ -159,9 +159,6 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                                                  critGenerator,
                                                  0,
                                                  device(),
-                                                 companionFinder.find(EntityCentreConfig.class),
-                                                 companionFinder.find(MainMenuItem.class),
-                                                 companionFinder.find(User.class),
                                                  sharingModel);
 
             final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
