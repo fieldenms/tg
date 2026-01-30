@@ -83,10 +83,7 @@ const template = html`
         }
         .tile-toolbar[action-disabled] ::slotted(tg-ui-action) {
             pointer-events: none;
-        }
-        #watermark {
-            @apply --tg-watermark-style;
-        }        
+        }     
         .truncate {
             white-space: nowrap;
             overflow: hidden;
@@ -95,12 +92,11 @@ const template = html`
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
 
-    <div id="watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
-
     <div id="toolbar" class="tool-bar">
         <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-        <div id="logoutContainer" class="layout horizontal center" style="display: contents">
-            <span class="flex truncate" style="font-size:1rem; padding-right:8px; text-align: right;">[[menuConfig.userName]]</span>
+        <div id="watermark" hidden$="[[!_watermark]]" style="[[_watermarkCss]]">[[_watermark]]</div>
+        <div id="logoutContainer" class="layout horizontal center">
+            <span class="truncate" style="font-size:1rem; padding-right:8px; text-align: right;">[[menuConfig.userName]]</span>
             <paper-icon-button id="ideaButton" hidden$="[[!ideaUri]]" icon="icons:lightbulb-outline" tooltip-text$="[[_getIdeaTooltip(ideaUri)]]" on-tap="_showIdeas"></paper-icon-button>
             <slot name="helpAction"></slot>
             <paper-icon-button id="logoutButton" icon="tg-icons:logout" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
@@ -195,6 +191,7 @@ Polymer({
     
     ready: function () {
         this._watermark = window.TG_APP.watermark;
+        this._watermarkCss = window.TG_APP.watermarkStyle;
         if (isMobileApp() && isIPhoneOs()) {
             this.$.toolbar.removeChild(this.$.menuSearcher);
             this.$.logoutContainer.insertBefore(this.$.menuSearcher, this.$.logoutButton);

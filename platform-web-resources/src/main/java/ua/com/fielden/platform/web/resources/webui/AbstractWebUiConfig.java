@@ -83,10 +83,19 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     private final String title;
     private final Optional<String> ideaUri;
+    private String panelColor = "";
+    private String watermark = "";
+    private String watermarkStyle = "";
     private WebUiBuilder webUiBuilder;
     private Injector injector;
 
     private final EventSourceDispatchingEmitter dispatchingEmitter;
+
+    private int minDesktopWidth = 980, minTabletWidth = 768;
+    private String locale = "en-AU";
+    private String dateFormat = "DD/MM/YYYY";
+    private String timeFormat = "h:mm A";
+    private String timeWithMillisFormat = "h:mm:ss.SSS A";
 
     protected MainMenuBuilder desktopMainMenuConfig;
     protected MainMenuBuilder mobileMainMenuConfig;
@@ -101,7 +110,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Workflows workflow;
     private final Map<String, String> checksums;
     private final boolean independentTimeZone;
-    private final MasterActionOptions masterActionOptions;
+    private final String masterActionOptions;
 
     /**
      * Holds the map between embedded entity centres' menu item types and [entity centre, entity master] pair.
@@ -129,7 +138,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.title = title;
         this.ideaUri = ideaUri.map(uri -> validateIdeaUri(uri).getInstanceOrElseThrow());
         this.independentTimeZone = independentTimeZone;
-        this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
+        this.masterActionOptions = masterActionOptions.orElse(ALL_OFF).name();
         this.webUiBuilder = new WebUiBuilder(this);
         this.dispatchingEmitter = new EventSourceDispatchingEmitter();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -207,6 +216,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public void initConfiguration() {
+        final EntityMaster<Menu> menuMaster = StandardMastersWebUiConfig.createMenuMaster(injector(), desktopMainMenuConfig, mobileMainMenuConfig);
         final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> genericEntityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
         final EntityMaster<ReferenceHierarchy> genericReferenceHierarchyMaster = ReferenceHierarchyWebUiConfig.createReferenceHierarchyMaster(injector());
@@ -231,7 +241,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(genericEntityDeleteActionMaster)
         .addMaster(genericEntityExportActionMaster)
         .addMaster(genericMenuSaveMaster)
-        .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig, mobileMainMenuConfig).master)
+        .addMaster(menuMaster)
         .addMaster(userMenuAssociatorWebUiConfig.master)
         .addMaster(userDefinableHelpMaster)
         .addMaster(persistentEntityInfoMaster)
@@ -285,9 +295,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genAppIndex() {
-        final String indexSource = webUiBuilder.getAppIndex(injector().getInstance(IDates.class))
-                .replace("@title", title)
-                .replace("@ideaUri", ideaUri.orElse(""));
+        final String indexSource = webUiBuilder.getAppIndex(injector().getInstance(IDates.class));
         if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {
@@ -400,7 +408,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public MasterActionOptions masterActionOptions() {
+    public String masterActionOptions() {
         return masterActionOptions;
     }
 
@@ -559,4 +567,110 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return successful(webAddress);
     }
 
+    @Override
+    public int minDesktopWidth() {
+        return minDesktopWidth;
+    }
+
+    @Override
+    public int minTabletWidth() {
+        return minTabletWidth;
+    }
+
+    @Override
+    public String locale() {
+        return locale;
+    }
+
+    @Override
+    public String dateFormat() {
+        return dateFormat;
+    }
+
+    @Override
+    public String timeFormat() {
+        return timeFormat;
+    }
+
+    @Override
+    public String timeWithMillisFormat() {
+        return timeWithMillisFormat;
+    }
+
+    @Override
+    public String title() {
+        return title;
+    }
+
+    @Override
+    public String ideaUri() {
+        return ideaUri.orElse("");
+    }
+
+    @Override
+    public String mainPanelColor() {
+        return panelColor;
+    }
+
+    @Override
+    public String watermark() {
+        return watermark;
+    }
+
+    @Override
+    public String watermarkStyle() {
+        return watermarkStyle;
+    }
+
+    @Override
+    public AbstractWebUiConfig setMinDesktopWidth(final int width) {
+        this.minDesktopWidth = width;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setMinTabletWidth(final int width) {
+        this.minTabletWidth = width;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setLocale(final String locale) {
+        this.locale = locale;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setTimeFormat(final String timeFormat) {
+        this.timeFormat = timeFormat;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setTimeWithMillisFormat(final String timeWithMillisFormat) {
+        this.timeWithMillisFormat = timeWithMillisFormat;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setDateFormat(final String dateFormat) {
+        this.dateFormat = dateFormat;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setMainPanelColor(final String panelColor) {
+        this.panelColor = panelColor;
+        return this;
+    }
+
+    public AbstractWebUiConfig setWatermark(final String watermark) {
+        this.watermark = watermark;
+        return this;
+    }
+
+    public AbstractWebUiConfig setWatermarkStyle(final String watermarkStyle) {
+        this.watermarkStyle = watermarkStyle;
+        return this;
+    }
 }

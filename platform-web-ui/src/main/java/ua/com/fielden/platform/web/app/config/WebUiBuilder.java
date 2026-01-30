@@ -11,7 +11,10 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -32,11 +35,6 @@ public class WebUiBuilder implements IWebUiBuilder {
      */
     private final IWebUiConfig webUiConfig;
 
-    private int minDesktopWidth = 980, minTabletWidth = 768;
-    private String locale = "en-AU";
-    private String dateFormat = "DD/MM/YYYY";
-    private String timeFormat = "h:mm A";
-    private String timeWithMillisFormat = "h:mm:ss.SSS A";
     private Optional<String> panelColor = Optional.empty();
     private Optional<String> watermark = Optional.empty();
     private Optional<String> watermarkStyle = Optional.empty();
@@ -75,37 +73,37 @@ public class WebUiBuilder implements IWebUiBuilder {
 
     @Override
     public IWebUiBuilder setMinDesktopWidth(final int width) {
-        this.minDesktopWidth = width;
+        this.webUiConfig.setMinDesktopWidth(width);
         return this;
     }
 
     @Override
     public IWebUiBuilder setMinTabletWidth(final int width) {
-        this.minTabletWidth = width;
+        this.webUiConfig.setMinTabletWidth(width);
         return this;
     }
 
     @Override
     public IWebUiBuilder setLocale(final String locale) {
-        this.locale = locale;
+        this.webUiConfig.setLocale(locale);
         return this;
     }
 
     @Override
     public IWebUiBuilder setTimeFormat(final String timeFormat) {
-        this.timeFormat = timeFormat;
+        this.webUiConfig.setTimeFormat(timeFormat);
         return this;
     }
 
     @Override
     public IWebUiBuilder setTimeWithMillisFormat(final String timeWithMillisFormat) {
-        this.timeWithMillisFormat = timeWithMillisFormat;
+        this.webUiConfig.setTimeWithMillisFormat(timeWithMillisFormat);
         return this;
     }
 
     @Override
     public IWebUiBuilder setDateFormat(final String dateFormat) {
-        this.dateFormat = dateFormat;
+        this.webUiConfig.setDateFormat(dateFormat);
         return this;
     }
 
@@ -230,28 +228,11 @@ public class WebUiBuilder implements IWebUiBuilder {
      * @return
      */
     public String genWebUiPrefComponent() {
-        if (this.minDesktopWidth <= this.minTabletWidth) {
-            throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
-        }
-        return getText("ua/com/fielden/platform/web/app/config/tg-app-config.js").
-                replace("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
-                replace("@minTabletWidth", Integer.toString(this.minTabletWidth)).
-                replace("@locale", "\"" + this.locale + "\"").
-                replace("@independentTimeZoneSetting", webUiConfig.independentTimeZone() ? format("moment.tz.setDefault('%s');", TimeZone.getDefault().getID()) : "").
-                replace("@dateFormat", "\"" + this.dateFormat + "\"").
-                replace("@timeFormat", "\"" + this.timeFormat + "\"").
-                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
-                replace("@masterActionOptions", "\"" + webUiConfig.masterActionOptions() + "\"");
+        return getText("ua/com/fielden/platform/web/app/config/tg-app-config.js");
     }
 
     public String getAppIndex(final IDates dates) {
-        return getText("ua/com/fielden/platform/web/index.html")
-                .replace("@panelColor", panelColor.map(val -> "--tg-main-pannel-color: " + val + ";").orElse(""))
-                .replace("@watermark", "'" + watermark.orElse("") + "'")
-                .replace("@cssStyle", watermarkStyle.orElse("") )
-                // Need to inject the first day of week, which is used by the date picker component to correctly render a weekly representation of a month.
-                // Because IDates use a number range from 1 to 7 to represent Mon to Sun and JS uses 0 for Sun, we need to convert the value coming from  IDates.
-                .replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7));
+        return getText("ua/com/fielden/platform/web/index.html");
     }
 
     @Override
@@ -265,9 +246,9 @@ public class WebUiBuilder implements IWebUiBuilder {
      */
     @Override
     public IWebUiBuilder withTopPanelStyle(final Optional<String> backgroundColour, final Optional<String> watermark, final Optional<String> cssWatermark) {
-        this.panelColor = backgroundColour;
-        this.watermark = watermark;
-        this.watermarkStyle = cssWatermark;
+        this.webUiConfig.setMainPanelColor(backgroundColour.orElse(""));
+        this.webUiConfig.setWatermark(watermark.orElse(""));
+        this.webUiConfig.setWatermarkStyle(cssWatermark.orElse(""));
         return this;
     }
 }
