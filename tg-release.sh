@@ -108,9 +108,17 @@ mvn versions:set -DnewVersion=${RELEASE_VERSION} -DprocessAllModules=true -Dgene
 info "Commit the changes"
 git add pom.xml **/pom.xml && git commit -m "Update versions for release ${RELEASE_VERSION}" || { error "Failed to commit version changes"; abort_release; }
 
-info "Merge release branch into master and tag the release ${RELEASE_VERSION}"
-git checkout master && git pull origin master && \
+# Skip merging into master. Such si
+read -r -p "Shall skip or merge into master? [s/M] " mergeAnswer
+if [[ "$mergeAnswer" =~ ^[Mm]$ ]]; then
+    info "Merge release branch into master."
+    git checkout master && git pull origin master && \
     git merge --no-ff release-${RELEASE_VERSION} -m "Merged ${RELEASE_VERSION} into master." || { error "Failed to merge release branch into master"; abort_release; }
+else
+    info "Skipped merging release branch into master."
+fi
+
+info "Tag the release ${RELEASE_VERSION}"
 git tag -a ${RELEASE_VERSION} -m "Release ${RELEASE_VERSION}" || { error "Failed to tag the release"; abort_release; }
 
 read -r -s -p $'Press ENTER to build and deploy...'
@@ -143,7 +151,13 @@ git branch -d release-${RELEASE_VERSION} || { error "Failed to delete the releas
 
 read -r -s -p "Press ENTER to push changes to remote - make sure your have the privileges for that..."
 
-info "Push changes to remote - ${BASE_BRANCH}, master, and tags."
-git push origin ${BASE_BRANCH} && git push origin master && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
+
+if [[ "$mergeAnswer" =~ ^[Mm]$ ]]; then
+    info "Push changes to remote - ${BASE_BRANCH}, master, and tags."
+    git push origin ${BASE_BRANCH} && git push origin master && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
+else
+    info "Push changes to remote - ${BASE_BRANCH} and tags (but not master)."
+    git push origin ${BASE_BRANCH} && && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
+fi
 
 success "Successfully released ${RELEASE_VERSION}"
