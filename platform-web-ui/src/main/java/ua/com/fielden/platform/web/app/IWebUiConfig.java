@@ -14,10 +14,7 @@ import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 /// Represent a contract for Web UI configuring.
@@ -235,4 +232,12 @@ public interface IWebUiConfig extends IMenuRetriever {
     /// Returns the style of the watermark text.
     ///
     String watermarkStyle();
+
+    /// Site white list that user can visit without confirmation.
+    ///
+    Set<String> siteAllowList();
+
+    /// Defines how long an allowed site remains trusted before requiring re-confirmation.
+    ///
+    int daysUntilSitePermissionExpires();
 }

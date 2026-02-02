@@ -65,8 +65,8 @@ public class ApplicationConfigurationResource extends AbstractWebResource {
             return restUtil.webApiResultRepresentation(CollectionUtil.linkedMapOf(T2.t2("errorMsg", ERR_DEVICE_SCREEN_WIDTH)));
         }
         final Map<String, Object> configs = new LinkedHashMap<>();
-        configs.put("siteAllowlist", appSettings.siteAllowList());
-        configs.put("daysUntilSitePermissionExpires", appSettings.daysUntilSitePermissionExpires());
+        configs.put("siteAllowlist", webUiConfig.siteAllowList());
+        configs.put("daysUntilSitePermissionExpires", webUiConfig.daysUntilSitePermissionExpires());
         configs.put("currencySymbol", appSettings.currencySymbol());
         configs.put("timeZone", webUiConfig.independentTimeZone() ? TimeZone.getDefault().getID() : "");
         configs.put("minDesktopWidth", webUiConfig.minDesktopWidth());

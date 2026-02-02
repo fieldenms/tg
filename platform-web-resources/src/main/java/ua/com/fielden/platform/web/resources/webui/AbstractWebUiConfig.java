@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.logging.log4j.LogManager;
@@ -13,7 +15,9 @@ import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
+import ua.com.fielden.platform.menu.exceptions.MenuInitialisationException;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
+import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -49,8 +53,11 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -672,5 +679,26 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public AbstractWebUiConfig setWatermarkStyle(final String watermarkStyle) {
         this.watermarkStyle = watermarkStyle;
         return this;
+    }
+
+    @Override
+    public Set<String> siteAllowList() {
+        return TryWrapper.Try( () -> stream(injector().getInstance(Key.get(String.class, Names.named("externalSites.allowlist"))).trim().split("\\s*,\\s*"))
+                        // Exclude blank entries.
+                        .filter(StringUtils::isNotBlank)
+                        // Wildcard subdomains should expand to include the corresponding domains.
+                        // For example, `*.google.com` should expand to `*.google.com` and `google.com`.
+                        .flatMap(site -> site.startsWith("*.") ? Stream.of(site, site.substring(2)) : Stream.of(site))
+                        // Convert sites to JavaScript regular expressions.
+                        .map(site -> site.toLowerCase().replaceAll("[\"']", "").replace(".", "\\.").replace("*", ".*"))
+                        .collect(toSet()))
+                .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'siteAllowlist': %s".formatted(ex.getMessage())));
+    }
+
+    @Override
+    public int daysUntilSitePermissionExpires() {
+        String expiryDays = injector().getInstance(Key.get(String.class, Names.named("externalSites.expiresIn")));
+        return TryWrapper.Try( () -> isEmpty(expiryDays) ? DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS : Integer.parseInt(expiryDays) )
+                .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'daysUntilSitePermissionExpires': %s".formatted(ex.getMessage())));
     }
 }
