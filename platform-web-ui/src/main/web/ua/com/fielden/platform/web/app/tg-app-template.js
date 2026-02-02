@@ -33,7 +33,6 @@ import { InsertionPointManager } from '/resources/centre/tg-insertion-point-mana
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
-import moment from '/resources/polymer/lib/moment-lib.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 import * as appActions from '/app/tg-app-actions.js';
@@ -266,26 +265,20 @@ Polymer({
     },
 
     _searchMenu: function (event) {
-        const pages = this.shadowRoot.querySelector("#pages");
-        if (pages) {
-            const selectedElement = this.shadowRoot.querySelector("[name='" + pages.selected + "']");
-            if (selectedElement && selectedElement.searchMenu) {
-                this.persistActiveElement();
-                selectedElement.searchMenu();
-                tearDownEvent(event);
-            }
+        const selectedElement = this.shadowRoot.querySelector(`[name=${this.$.pages.selected}]`);
+        if (selectedElement && selectedElement.searchMenu) {
+            this.persistActiveElement();
+            selectedElement.searchMenu();
+            tearDownEvent(event);
         }
     },
     
     _openModuleMenu: function (event) {
-        const pages = this.shadowRoot.querySelector("#pages");
-        if (pages) {
-            const selectedElement = this.shadowRoot.querySelector("[name='" + pages.selected + "']");
-            if (selectedElement && selectedElement.openModuleMenu) {
-                this.persistActiveElement();
-                selectedElement.openModuleMenu();
-                tearDownEvent(event);
-            }
+        const selectedElement = this.shadowRoot.querySelector(`[name=${this.$.pages.selected}]`);
+        if (selectedElement && selectedElement.openModuleMenu) {
+            this.persistActiveElement();
+            selectedElement.openModuleMenu();
+            tearDownEvent(event);
         }
     },
 

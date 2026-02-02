@@ -6,22 +6,24 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
-import ua.com.fielden.platform.menu.IWebAppConfigProvider;
 import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.ApplicationConfigurationResource;
 
+/// Resource for web application configuration.
+///
 public class ApplicationConfigurationResourceFactory extends Restlet {
 
     private final RestServerUtil restUtil;
-    private final IWebAppConfigProvider webAppConfigProvider;
+    private final IWebUiConfig webUiConfig;
     private final IApplicationSettings appSettings;
     private final IDeviceProvider deviceProvider;
     private final IDates dates;
 
-    public ApplicationConfigurationResourceFactory(final IWebAppConfigProvider webAppConfigProvider, final Injector injector) {
-        this.webAppConfigProvider = webAppConfigProvider;
+    public ApplicationConfigurationResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
+        this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.appSettings = injector.getInstance(IApplicationSettings.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
@@ -35,7 +37,7 @@ public class ApplicationConfigurationResourceFactory extends Restlet {
         if (Method.GET == request.getMethod()) {
             new ApplicationConfigurationResource(
                     restUtil,
-                    webAppConfigProvider,
+                    webUiConfig,
                     appSettings,
                     deviceProvider,
                     dates,

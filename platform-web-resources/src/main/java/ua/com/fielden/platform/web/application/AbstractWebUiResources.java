@@ -22,15 +22,11 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
 
-/**
- * Represents a web application that is running on the server.
- * It is responsible for request routing and serving web resources.
- * <p>
- * This abstract implementation should be extend in concrete TG-based web applications to registers domain specific entity centres, entity masters and other views.
- *
- * @author TG Team
- *
- */
+/// Represents a web application that is running on the server.
+/// It is responsible for request routing and serving web resources.
+///
+/// This abstract implementation should be extended in concrete TG-based web applications to registers domain specific entity centres, entity masters and other views.
+///
 public abstract class AbstractWebUiResources extends Application {
     protected final Injector injector;
 
@@ -41,20 +37,13 @@ public abstract class AbstractWebUiResources extends Application {
     protected final IDeviceProvider deviceProvider;
     protected final IDates dates;
 
-    /**
-     * Creates an instance of {@link AbstractWebUiResources} with custom application name, description, author, owner and resource paths.
-     *
-     * @param context
-     * @param injector
-     * @param appName
-     *            - meaningful application name.
-     * @param desc
-     *            - short description for this application.
-     * @param owner
-     *            - the application owner.
-     * @param author
-     *            - the application author
-     */
+    /// Creates an instance of [AbstractWebUiResources] with custom application name, description, author, owner and resource paths.
+    ///
+    /// @param appName meaningful application name.
+    /// @param desc short description for this application.
+    /// @param owner the application owner.
+    /// @param author the application author
+    ///
     public AbstractWebUiResources(
             final Context context,
             final Injector injector,
@@ -83,20 +72,14 @@ public abstract class AbstractWebUiResources extends Application {
         setAuthor(author);
     }
 
-    /**
-     * An insertion point for registering a domain specific web resources. The provided router is guarded, making all domain web resources automatically secure.
-     *
-     * @param router
-     * @param webApp2
-     */
+    /// An insertion point for registering a domain specific web resources. The provided router is guarded, making all domain web resources automatically secure.
+    ///
     protected void registerDomainWebResources(final Router router, final IWebUiConfig webApp) {
         // The implementation is empty to ensure backward compatibility with existing projects.
     }
 
-    /**
-     * Creates the application router and configures it with default web resources.
-     *
-     */
+    /// Creates the application router and configures it with default web resources.
+    ///
     @Override
     public final Restlet createInboundRoot() {
         // Create router and web application for registering resources.
@@ -161,12 +144,8 @@ public abstract class AbstractWebUiResources extends Application {
         return mainRouter;
     }
 
-    /**
-     * Attaches all resources relevant to entity masters (entity resource, entity validation resource, UI resources etc.).
-     *
-     * @param router
-     * @param masters
-     */
+    /// Attaches all resources relevant to entity masters (entity resource, entity validation resource, UI resources etc.).
+    ///
     private void attachMasterResources(final Router router, final IWebUiConfig webUiConfig, final RestServerUtil restUtil) {
         logger.info("\t\tEntity master resources attaching...");
         router.attach("/entity/{entityType}/{entity-id}", new EntityResourceFactory(webUiConfig, injector));
@@ -179,23 +158,15 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/custom_view/{viewName}", new CustomViewResourceFactory(webResourceLoader, restUtil, deviceProvider, dates));
     }
 
-    /**
-     * Attaches all resources relevant to autocompletion.
-     *
-     * @param router
-     * @param webUiConfig
-     */
+    /// Attaches all resources relevant to autocompletion.
+    ///
     private void attachAutocompletionResources(final Router router, final IWebUiConfig webUiConfig) {
         logger.info("\t\tAutocompletion resources attaching...");
         router.attach("/autocompletion/{type}/{property}", new EntityAutocompletionResourceFactory(webUiConfig, injector));
     }
 
-    /**
-     * Configures router for entity centre resources.
-     *
-     * @param router
-     * @param webUiConfig
-     */
+    /// Configures router for entity centre resources.
+    ///
     private void attachCentreResources(final Router router, final IWebUiConfig webUiConfig, final RestServerUtil restUtil) {
         logger.info("\t\tCentre resources attaching...");
         router.attach("/criteria/{mitype}/{saveAsName}", new CriteriaResourceFactory(webUiConfig, injector));
@@ -203,11 +174,8 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(webResourceLoader, restUtil, deviceProvider, dates));
     }
 
-    /**
-     * Configures router for file resources needed for web browser client.
-     *
-     * @param router
-     */
+    /// Configures router for file resources needed for web browser client.
+    ///
     private void attachResources(final Router router) {
         logger.info("\t\tResources attaching for following resource paths:" + "\n\t\t|" + StringUtils.join(webApp.resourcePaths(), "|\n\t\t|") + "|\n");
         router.attach("/resources/", new FileResourceFactory(webResourceLoader, webApp.resourcePaths(), deviceProvider, dates), Template.MODE_STARTS_WITH);

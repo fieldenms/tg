@@ -3,8 +3,6 @@ package ua.com.fielden.platform.web.app;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.menu.IMenuRetriever;
-import ua.com.fielden.platform.menu.IWebAppConfigProvider;
-import ua.com.fielden.platform.menu.IWebAppConfigSetter;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -24,7 +22,7 @@ import java.util.stream.Stream;
 
 /// Represent a contract for Web UI configuring.
 ///
-public interface IWebUiConfig extends IWebAppConfigProvider, IWebAppConfigSetter, IMenuRetriever {
+public interface IWebUiConfig extends IMenuRetriever {
 
     /// Should return a port that an application server is listening to for incoming requests.
     ///
@@ -149,4 +147,92 @@ public interface IWebUiConfig extends IWebAppConfigProvider, IWebAppConfigSetter
     ///
     List<EntityActionConfig> centreConfigShareActions();
 
+    /// Sets the value of the minimal screen size treated as a desktop screen.
+    ///
+    IWebUiConfig setMinDesktopWidth(final int width);
+
+    /// Sets the value of the minimal screen size treated as a tablet screen.
+    ///
+    IWebUiConfig setMinTabletWidth(final int width);
+
+    /// Sets the locale that should be used to format numbers on the client side of application.
+    ///
+    IWebUiConfig setLocale(final String locale);
+
+    /// Sets the time format to be used on the client side of application.
+    ///
+    IWebUiConfig setTimeFormat(final String timeFormat);
+
+    /// Sets the time with milliseconds format to be used on the client side of application.
+    ///
+    IWebUiConfig setTimeWithMillisFormat(final String timeWithMillisFormat);
+
+    /// Sets the date format to be used on the client side of application.
+    ///
+    IWebUiConfig setDateFormat(final String dateFormat);
+
+    /// Sets the colour of the web application’s main top panel.
+    ///
+    IWebUiConfig setMainPanelColor(final String panelColor);
+
+    /// Sets the watermark text displayed on the application’s main top panel.
+    ///
+    IWebUiConfig setWatermark(final String watermark);
+
+    /// Sets the style of the watermark text.
+    ///
+    IWebUiConfig setWatermarkStyle(final String watermarkStyle);
+
+    /// Returns true if server and client applications operate in the same time-zone, otherwise false.
+    /// The only exception is handling of 'now': it calculates based on real user time-zone (and later converts to server time-zone).
+    ///
+    boolean independentTimeZone();
+
+    /// Returns the minimum screen size at which the device is treated as a desktop.
+    ///
+    int minDesktopWidth();
+
+    /// Returns the minimum screen size at which the device is treated as a tablet.
+    ///
+    int minTabletWidth();
+
+    /// Returns the locale that should be used to format numbers on the client side of application.
+    ///
+    String locale();
+
+    /// Returns the date format to be used on the client side of application.
+    ///
+    String dateFormat();
+
+    /// Returns the time format to be used on the client side of application.
+    ///
+    String timeFormat();
+
+    /// Returns the time with milliseconds format to be used on the client side of application.
+    ///
+    String timeWithMillisFormat();
+
+    /// Returns value that indicates what options should be available in master actions.
+    ///
+    String masterActionOptions();
+
+    /// Returns the application title displayed as the tab title.
+    ///
+    String title();
+
+    /// Returns the page URI of idea action.
+    ///
+    String ideaUri();
+
+    /// Returns the colour of the application’s main top panel.
+    ///
+    String mainPanelColor();
+
+    /// Returns the watermark text displayed on the application’s main top panel.
+    ///
+    String watermark();
+
+    /// Returns the style of the watermark text.
+    ///
+    String watermarkStyle();
 }

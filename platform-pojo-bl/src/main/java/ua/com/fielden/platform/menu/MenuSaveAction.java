@@ -23,7 +23,7 @@ public class MenuSaveAction extends AbstractFunctionalEntityWithCentreContext<St
     private Set<String> invisibleMenuItems = new HashSet<>();
 
     @Observable
-    public MenuSaveAction setInvisibleMenuItems(final Set<String> invisibleMenuItems) {
+    protected MenuSaveAction setInvisibleMenuItems(final Set<String> invisibleMenuItems) {
         this.invisibleMenuItems.clear();
         this.invisibleMenuItems.addAll(invisibleMenuItems);
         return this;
@@ -34,7 +34,7 @@ public class MenuSaveAction extends AbstractFunctionalEntityWithCentreContext<St
     }
 
     @Observable
-    public MenuSaveAction setVisibleMenuItems(final Set<String> visibleMenuItems) {
+    protected MenuSaveAction setVisibleMenuItems(final Set<String> visibleMenuItems) {
         this.visibleMenuItems.clear();
         this.visibleMenuItems.addAll(visibleMenuItems);
         return this;

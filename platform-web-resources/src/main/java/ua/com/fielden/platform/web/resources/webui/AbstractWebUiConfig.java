@@ -16,7 +16,6 @@ import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
@@ -58,6 +57,7 @@ import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTPS;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -280,7 +280,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genWebUiPreferences() {
-        return webUiBuilder.genWebUiPrefComponent();
+        return getText("ua/com/fielden/platform/web/app/config/tg-app-config.js");
     }
 
     @Override
@@ -295,7 +295,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genAppIndex() {
-        final String indexSource = webUiBuilder.getAppIndex(injector().getInstance(IDates.class));
+        final String indexSource = getText("ua/com/fielden/platform/web/index.html");
         if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {

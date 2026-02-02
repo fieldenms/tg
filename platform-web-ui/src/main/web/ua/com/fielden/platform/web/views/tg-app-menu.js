@@ -94,7 +94,7 @@ const template = html`
 
     <div id="toolbar" class="tool-bar">
         <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-        <div id="watermark" hidden$="[[!_watermark]]" style="[[_watermarkCss]]">[[_watermark]]</div>
+        <div id="watermark" hidden$="[[!_watermark]]" style$="[[_watermarkCss]]">[[_watermark]]</div>
         <div id="logoutContainer" class="layout horizontal center">
             <span class="truncate" style="font-size:1rem; padding-right:8px; text-align: right;">[[menuConfig.userName]]</span>
             <paper-icon-button id="ideaButton" hidden$="[[!ideaUri]]" icon="icons:lightbulb-outline" tooltip-text$="[[_getIdeaTooltip(ideaUri)]]" on-tap="_showIdeas"></paper-icon-button>

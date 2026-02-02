@@ -36,7 +36,6 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
 
-///
 /// A set of factory methods for various standard platform-level entity masters such as Export to Excel.
 ///
 public class StandardMastersWebUiConfig {
@@ -135,11 +134,7 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(AttachmentsUploadAction.class, AttachmentsUploadActionProducer.class, masterConfig, injector);
     }
 
-    ///
-    /// Creates an entity master configuration for {@link PersistentEntityInfo}.
-    ///
-    /// @param injector
-    /// @return
+    /// Creates an entity master configuration for [PersistentEntityInfo].
     ///
     public static EntityMaster<PersistentEntityInfo> createPersistentEntityInfoMaster(final Injector injector) {
         final String desktopLayout = cell(cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN)).repeat(3),layout().withStyle("padding", MARGIN_PIX).end()).toString();
@@ -167,6 +162,8 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(PersistentEntityInfo.class, PersistentEntityInfoProducer.class, masterConfig, injector);
     }
 
+    /// Creates an entity master for the [Menu] entity.
+    ///
     public static EntityMaster<Menu> createMenuMaster(final Injector injector, final MainMenuBuilder desktopMenuBuilder, final MainMenuBuilder mobileMenuBuilder) {
         return new EntityMaster<Menu>(Menu.class, MenuProducer.class, null, injector) {
             @Override

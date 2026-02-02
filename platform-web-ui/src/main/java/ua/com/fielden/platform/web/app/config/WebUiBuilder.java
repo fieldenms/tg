@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.app.config;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -20,33 +19,25 @@ import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 
-/**
- * Implementation of the {@link IWebUiBuilder}.
- *
- * @author TG Team
- *
- */
+/// Implementation of the [IWebUiBuilder].
+///
 public class WebUiBuilder implements IWebUiBuilder {
     private final Logger logger = getLogger(getClass());
-    /**
-     * The {@link IWebUiConfig} instance for which this configuration object was created.
-     */
+    /// The [IWebUiConfig] instance for which this configuration object was created.
+    ///
     private final IWebUiConfig webUiConfig;
 
     private Optional<String> panelColor = Optional.empty();
     private Optional<String> watermark = Optional.empty();
     private Optional<String> watermarkStyle = Optional.empty();
 
-    /**
-     * Holds the map between master's entity type and its master component.
-     */
+    /// Holds the map between master's entity type and its master component.
+    ///
     private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new ConcurrentHashMap<>();
 
-    /**
-     * Holds the map between entity centre's menu item type and entity centre.
-     */
+    /// Holds the map between entity centre's menu item type and entity centre.
+    ///
     private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new ConcurrentHashMap<>();
 
     private final Map<Class<? extends AbstractEntity<?>>, EntityActionConfig> openMasterActions = new ConcurrentHashMap<>();
@@ -57,16 +48,12 @@ public class WebUiBuilder implements IWebUiBuilder {
     ///
     private final Map<String, EntityActionConfig> extraActionsMap = new ConcurrentHashMap<>();
 
-    /**
-     * Holds the map between custom view name and custom view instance.
-     */
+    /// Holds the map between custom view name and custom view instance.
+    ///
     private final Map<String, AbstractCustomView> viewMap = new LinkedHashMap<>();
 
-    /**
-     * Creates new instance of {@link WebUiBuilder} for the specified {@link IWebUiConfig} instance.
-     *
-     * @param webUiConfig
-     */
+    /// Creates new instance of [WebUiBuilder] for the specified [IWebUiConfig] instance.
+    ///
     public WebUiBuilder(final IWebUiConfig webUiConfig) {
         this.webUiConfig = webUiConfig;
     }
@@ -222,28 +209,12 @@ public class WebUiBuilder implements IWebUiBuilder {
         return viewMap;
     }
 
-    /**
-     * Generates a HTML representation of the web application UI preferences.
-     *
-     * @return
-     */
-    public String genWebUiPrefComponent() {
-        return getText("ua/com/fielden/platform/web/app/config/tg-app-config.js");
-    }
-
-    public String getAppIndex(final IDates dates) {
-        return getText("ua/com/fielden/platform/web/index.html");
-    }
-
     @Override
     public IWebUiBuilder addCustomView(final AbstractCustomView customView) {
         viewMap.put(customView.getViewName(), customView);
         return this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public IWebUiBuilder withTopPanelStyle(final Optional<String> backgroundColour, final Optional<String> watermark, final Optional<String> cssWatermark) {
         this.webUiConfig.setMainPanelColor(backgroundColour.orElse(""));
