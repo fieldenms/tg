@@ -779,8 +779,8 @@ public class CentreUpdater {
      * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
      * @return
      */
-    static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
-        return select(EntityCentreConfig.class).where()
+    public static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+        return select(EntityCentreConfig.class).as("e").where()
             .prop("title").like().val(deviceSpecific(surrogateName, device) + "[%")
             .and().prop("title").notLike().val(deviceSpecific(surrogateName, opposite(device)) + "[%")
             .and().prop("menuItem.key").eq().val(miType.getName());

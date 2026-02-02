@@ -108,7 +108,18 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
         // TODO
         final var device = DeviceProfile.DESKTOP;
-        final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(configUuid, miType, device, FRESH_CENTRE_NAME, eccCompanion);
+        final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(
+            centreConfigQueryFor(miType, device, FRESH_CENTRE_NAME)
+            .and().exists(
+                centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME)
+                .and().prop("configUuid").eq().val(configUuid)
+                .and().prop("owner").eq().extProp("e.owner")
+                .model()
+            ),
+            configUuid,
+            eccCompanion
+        );
+        //findConfigOptByUuid(configUuid, miType, device, FRESH_CENTRE_NAME, eccCompanion);
         if (!freshConfigOpt.isPresent()) {
             return left(Result.failure("Config with uuid %s does not exist.".formatted(configUuid)));
         }
