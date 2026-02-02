@@ -14,10 +14,9 @@ import java.util.List;
 public interface EntityCentreAPI {
 
     <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>
-    Either<Result, T2<List<T>, Hyperlink>> entityCentreResult(
+    Either<Result, List<T>> entityCentreResult(
         String miTypeForStandaloneCentreName,
-        String configUuid,
-        String userName
+        String configUuid
     );
 
 }

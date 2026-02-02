@@ -93,10 +93,9 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
     }
 
     @Override
-    public <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Result, T2<List<T>, Hyperlink>> entityCentreResult(
+    public <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Result, List<T>> entityCentreResult(
         final String miTypeNameForStandaloneCentre,
-        final String configUuid,
-        final String userName
+        final String configUuid
     ) {
         final Class<?> miTypeGen;
         try {
@@ -106,7 +105,14 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
         }
         Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miTypeGen;
         final IUser coUser = companionFinder.find(User.class, true);
-        final User user = coUser.findUser(userName);
+        final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
+        // TODO
+        final var device = DeviceProfile.DESKTOP;
+        final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(configUuid, miType, device, FRESH_CENTRE_NAME, eccCompanion);
+        if (!freshConfigOpt.isPresent()) {
+            return left(Result.failure("Config with uuid %s does not exist.".formatted(configUuid)));
+        }
+        final User user = coUser.findUser(freshConfigOpt.get().getOwner().getKey());
 
         final User currentUser = userProvider.getUser();
 
@@ -120,12 +126,9 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             final boolean isRunning = true;
             final boolean isSorting = false;
 
-            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
 
-            // TODO
-            final var device = DeviceProfile.DESKTOP;
 
 //            final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity = createCriteriaEntityWithoutConflicts(
 //                centreContextHolder.getModifHolder(),
@@ -147,56 +150,38 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             // we look only through [link, own save-as, inherited from base, inherited from shared] set of configurations;
             // default configurations are excluded in the lookup;
             // only FRESH kind are looked for;
-            final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(configUuid, user, miType, device, FRESH_CENTRE_NAME, eccCompanion);
             final Optional<String> actualSaveAsName;
-            if (freshConfigOpt.isPresent()) {
-                // for current user we already have FRESH configuration with uuid loaded;
-                final Optional<String> preliminarySaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device));
-                // updating is required from upstream configuration;
-                if (!LINK_CONFIG_TITLE.equals(preliminarySaveAsName.get())) { // (but not for link configuration);
-                    actualSaveAsName = updateFromUpstream(configUuid, preliminarySaveAsName, miType, device, eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, sharingModel, companionFinder)._1;
-                } else {
-                    actualSaveAsName = preliminarySaveAsName;
-                }
-            } else {
-                // if there is no FRESH configuration then there are no [link, own save-as] configuration with the specified uuid;
-                // however there can exist [base, shared] config for other user with the specified uuid;
-                actualSaveAsName = firstTimeLoadingFrom(
-                    validateUuidAndGetUpstreamConfig(configUuid, miType, device, eccCompanion, user).orElseThrow(Result::asRuntime), // TODO use Either here
-                    miType,
-                    device,
-                    eccCompanion,
-                    user,
-                    webUiConfig,
-                    mmiCompanion,
-                    userCompanion,
-                    sharingModel,
-                    companionFinder
-                )._1;
-            }
+            // for current user we already have FRESH configuration with uuid loaded;
+            final Optional<String> preliminarySaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device));
+//            // updating is required from upstream configuration;
+//            if (!LINK_CONFIG_TITLE.equals(preliminarySaveAsName.get())) { // (but not for link configuration);
+//                actualSaveAsName = updateFromUpstream(configUuid, preliminarySaveAsName, miType, device, eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, sharingModel, companionFinder)._1;
+//            } else {
+            actualSaveAsName = preliminarySaveAsName;
+//            }
             if (!actualSaveAsName.isPresent() || LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) {
                 return left(failure("Default / Link configs are not available for API running (%s).".formatted(actualSaveAsName)));
             }
             final var saveAsName = actualSaveAsName;
 
             // load / update fresh centre if it is not loaded yet / stale
-            updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            //final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
 
             final M validationPrototype = createCriteriaValidationPrototype(miType, saveAsName, originalCdtmae, companionFinder, critGenerator, CRITERIA_ENTITY_ID /* TODO prevVersion + 1 */, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
-            final M savedCriteriaEntity = resetMetaStateForCriteriaValidationPrototype(
+            final M freshCriteriaEntity = resetMetaStateForCriteriaValidationPrototype(
                 validationPrototype,
                 getOriginalManagedType(validationPrototype.getType(), originalCdtmae)
             );
 
             // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
-            final Result validationResult = savedCriteriaEntity.isValid();
+            final Result validationResult = freshCriteriaEntity.isValid();
             if (!validationResult.isSuccessful()) {
                 return left(validationResult);
             }
 
-            final Result authorisationResult = authoriseCriteriaEntity(savedCriteriaEntity, miType, authorisationModel, securityTokenProvider);
+            final Result authorisationResult = authoriseCriteriaEntity(freshCriteriaEntity, miType, authorisationModel, securityTokenProvider);
             if (!authorisationResult.isSuccessful()) {
                 return left(authorisationResult);
             }
@@ -213,10 +198,10 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
 
                 // create and execute a generator instance
                 final var generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
-                final Map<String, Optional<?>> params = savedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
+                final Map<String, Optional<?>> params = freshCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
                         (final MetaProperty<?> mp) -> mp.getName(),
                         (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
-                params.putAll(savedCriteriaEntity.getParameters().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> Optional.ofNullable(entry.getValue()))));
+                params.putAll(freshCriteriaEntity.getParameters().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> Optional.ofNullable(entry.getValue()))));
                 if (shouldForceRegeneration(customObject)) { // TODO always force regeneration
                     params.put(FORCE_REGENERATION_KEY, of(true));
                 }
@@ -239,7 +224,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
                 customObject,
                 complementCriteriaEntityBeforeRunning( // complements previouslyRunCriteriaEntity instance
-                        savedCriteriaEntity,
+                        freshCriteriaEntity,
                         webUiConfig,
                         companionFinder,
                         user,
@@ -266,7 +251,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
             // FIXME Need to investigate why this is the case.
             processedEntities.forEach(entity -> list.add((T) entity) );
-            return Either.right(t2(list, new Hyperlink("https://192.168.1.40/#/Timesheets/Leave/Leave%20Request/48b767df-bf45-48b7-932a-d2892eec47e8")));
+            return Either.right(list);
 
             //            // Build dynamic properties object
 //            final List<Pair<ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
