@@ -14,9 +14,6 @@ import java.io.File;
  */
 @Singleton
 public class ApplicationSettings implements IApplicationSettings {
-
-    private static final int DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS = 183;
-
     private final String appName;
     private final String pathToStorage;
     private final String classPath;
