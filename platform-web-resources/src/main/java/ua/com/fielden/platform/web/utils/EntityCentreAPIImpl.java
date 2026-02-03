@@ -25,6 +25,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 
@@ -265,36 +266,35 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                     centre.getCustomPropertiesAsignmentHandler(),
                     pair.getValue().stream());
 
+            // Build dynamic properties object
+            final var resPropsWithContext = getDynamicResultProperties(
+                    centre,
+                    webUiConfig,
+                    companionFinder,
+                    user,
+                    critGenerator,
+                    entityFactory,
+                    centreContextHolder,
+                    (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?>) freshCriteriaEntity,
+                    device,
+                    eccCompanion,
+                    mmiCompanion,
+                    userCompanion,
+                    sharingModel);
+
+            //Enhance entities with values defined with consumer in each dynamic property.
+            processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
+//            //Enhance rendering hints with styles for each dynamic column.
+//            processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
+
             final List<T> list = new ArrayList<>();
-//            list.add(isRunning ? previouslyRunCriteriaEntity : null);
-//            list.add(pair.getKey());
+            //            list.add(isRunning ? previouslyRunCriteriaEntity : null);
+            //            list.add(pair.getKey());
 
             // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
             // FIXME Need to investigate why this is the case.
             processedEntities.forEach(entity -> list.add((T) entity) );
             return Either.right(list);
-
-            //            // Build dynamic properties object
-//            final List<Pair<ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
-//                    centre,
-//                    webUiConfig,
-//                    companionFinder,
-//                    user,
-//                    critGenerator,
-//                    entityFactory,
-//                    centreContextHolder,
-//                    previouslyRunCriteriaEntity,
-//                    device,
-//                    eccCompanion,
-//                    mmiCompanion,
-//                    userCompanion,
-//                    sharingModel);
-//
-//            //Enhance entities with values defined with consumer in each dynamic property.
-//            processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
-//            //Enhance rendering hints with styles for each dynamic column.
-//            processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
-
 
         } finally {
             userProvider.setUser(currentUser);
