@@ -19,11 +19,11 @@
         };
         const loadAppResources = function (resourcesToLoad) {
             fetch("/app/configuration").then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error(`HTTP error! Status: ${response.status}`);
+                return response.json()
             }).then(config => {
+                if (config.errorMsg) {
+                    throw new Error(config.errorMsg);
+                }
                 window.TG_APP = config;
                 setTitle();
                 setStyles();
