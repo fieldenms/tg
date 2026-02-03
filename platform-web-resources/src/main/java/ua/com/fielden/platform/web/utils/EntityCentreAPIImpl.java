@@ -2,9 +2,7 @@ package ua.com.fielden.platform.web.utils;
 
 import com.google.inject.Inject;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -18,22 +16,17 @@ import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.either.Either;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
-import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,22 +34,22 @@ import java.util.stream.Stream;
 
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static org.apache.poi.hslf.usermodel.HSLFFontInfo.FontRenderType.device;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.maybeVersion;
 
 public class EntityCentreAPIImpl implements EntityCentreAPI {
     private final ICompanionObjectFinder companionFinder;
@@ -94,36 +87,37 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
 
     @Override
     public <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Result, List<T>> entityCentreResult(
-        final String miTypeNameForStandaloneCentre,
         final String configUuid
     ) {
-        final Class<?> miTypeGen;
-        try {
-            miTypeGen = Class.forName(miTypeNameForStandaloneCentre);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miTypeGen;
         final IUser coUser = companionFinder.find(User.class, true);
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
         // TODO
         final var device = DeviceProfile.DESKTOP;
-        final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(
-            centreConfigQueryFor(miType, device, FRESH_CENTRE_NAME)
-            .and().exists(
-                centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME)
-                .and().prop("configUuid").eq().val(configUuid)
-                .and().prop("owner").eq().extProp("e.owner")
-                .model()
-            ),
-            configUuid,
-            eccCompanion
+        final Optional<EntityCentreConfig> freshConfigOpt = eccCompanion.getEntityOptional(
+                from(centreConfigQueryFor(configUuid, device, FRESH_CENTRE_NAME)
+                        .and().exists(
+                                centreConfigQueryFor(configUuid, device, SAVED_CENTRE_NAME)
+                                        .and().prop("owner").eq().extProp("e.owner")
+                                        .model()
+                        ).model())
+                        .with(
+                                fetchWithKeyAndDesc(EntityCentreConfig.class, true)
+                                        .with("owner", "menuItem", "title")
+                                        .fetchModel()
+                        ).model()
         );
-        //findConfigOptByUuid(configUuid, miType, device, FRESH_CENTRE_NAME, eccCompanion);
+
         if (!freshConfigOpt.isPresent()) {
             return left(Result.failure("Config with uuid %s does not exist.".formatted(configUuid)));
         }
         final User user = coUser.findUser(freshConfigOpt.get().getOwner().getKey());
+        final Class<?> miTypeGen;
+        try {
+            miTypeGen = Class.forName(freshConfigOpt.get().getMenuItem().getKey());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miTypeGen;
 
         final User currentUser = userProvider.getUser();
 

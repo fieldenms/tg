@@ -228,24 +228,28 @@ public class CentreUpdaterUtils extends CentreUpdater {
     /**
      * Finds optional configuration for {@code model} and {@code uuid} with predefined fetch model, sufficient for most situations.
      */
-    public static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final EntityCentreConfigCo eccCompanion) {
-        return eccCompanion.getEntityOptional(from(model
-            .and().prop("configUuid").eq().val(uuid).model()
-        ).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("owner.base").with("configBody").with("runAutomatically").fetchModel()).model());
+    private static Optional<EntityCentreConfig> findConfigOptByModel(final ICompoundCondition0<EntityCentreConfig> model, final EntityCentreConfigCo eccCompanion) {
+        return eccCompanion.getEntityOptional(
+            from(model.model())
+            .with(fetchWithKeyAndDesc(EntityCentreConfig.class, true)
+                .with("preferred", "configUuid", "owner.base", "configBody", "runAutomatically")
+                .fetchModel()
+            ).model()
+        );
     }
     
     /**
      * Finds optional configuration for {@code uuid}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
      */
     public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final EntityCentreConfigCo eccCompanion) {
-        return findConfigOptByUuid(centreConfigQueryFor(miType, device, surrogateName), uuid, eccCompanion);
+        return findConfigOptByModel(centreConfigQueryFor(uuid, miType, device, surrogateName), eccCompanion);
     }
     
     /**
      * Finds optional configuration for {@code uuid}, {@code user}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
      */
     public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final EntityCentreConfigCo eccCompanion) {
-        return findConfigOptByUuid(centreConfigQueryFor(user, miType, device, surrogateName), uuid, eccCompanion);
+        return findConfigOptByModel(centreConfigQueryFor(uuid, miType, device, surrogateName).and().condition(centreConfigCondFor(user)), eccCompanion);
     }
     
     /**

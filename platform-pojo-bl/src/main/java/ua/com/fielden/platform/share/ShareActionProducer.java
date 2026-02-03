@@ -80,7 +80,7 @@ public class ShareActionProducer extends DefaultEntityProducerWithContext<ShareA
                 }
             });
 
-            final var result = entityCentreAPI.entityCentreResult("fielden.main.menu.personnel.MiLeaveRequest", "48b767df-bf45-48b7-932a-d2892eec47e8"); // Daniel.Truong Troy.Plecas
+            final var result = entityCentreAPI.entityCentreResult("48b767df-bf45-48b7-932a-d2892eec47e8"); // Daniel.Truong Troy.Plecas
             System.out.println("----------- API Execution (...) ------------");
             if (result.isRight()) {
                 result.asRight().value().forEach(ent -> {

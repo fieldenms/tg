@@ -15,7 +15,6 @@ public interface EntityCentreAPI {
 
     <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>
     Either<Result, List<T>> entityCentreResult(
-        String miTypeForStandaloneCentreName,
         String configUuid
     );
 
