@@ -17,23 +17,50 @@
             propertyAndValue.forEach(propAndValue => newElement[propAndValue[0]] = propAndValue[1]);
             headElement.appendChild(newElement);
         };
-        const loadAppResources = function (resourcesToLoad) {
-            fetch("/app/configuration").then(response => {
-                return response.json()
-            }).then(config => {
-                if (config.errorMsg) {
-                    throw new Error(config.errorMsg);
+        // Delays execution for the specified number of milliseconds.
+        // Returns a Promise that resolves after the specified delay; therefore, this method can be awaited.
+        const delay = function (ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        };
+        // Loads application resources.
+        // If loading a resource fails on the first attempt, the method retries up to 10 times, waiting 10 seconds between each attempt.
+        const loadAppResources = async function (resourcesToLoad) {
+            let retries = 0;
+            let successfulLoad = false;
+            while (!(window.TG_APP && successfulLoad) && retries < 10) {
+                if (retries > 0) {
+                    await delay(10000);
                 }
-                window.TG_APP = config;
-                setTitle();
-                setStyles();
-                return import(resourcesToLoad);
-            }).then(module => {
-                addAppTemplate();
-                addQrCodeScanner();
-            }).catch(e => {
-                console.error(`Something went wrong: ${e.message}`);
-            });
+                successfulLoad = await fetchResources(resourcesToLoad);
+                retries++;
+            }
+        }
+        // Fetches the application configuration resource.
+        // If it succeeds in loading the configuration, it then loads the main application resource
+        // specified by the resourceToLoad parameter.
+        // If the main application resource is loaded successfully, it adds the tg-app-template
+        // and tg-qr-code-scanner elements to the DOM.
+        // If all these steps are successful, the method returns true, indicating that the main
+        // application resource was loaded successfully; otherwise, it returns false.
+        const fetchResources = function (resourcesToLoad) {
+            return fetch("/app/configuration").then(response => {
+                    return response.json()
+                }).then(config => {
+                    if (config.errorMsg) {
+                        throw new Error(config.errorMsg);
+                    }
+                    window.TG_APP = config;
+                    setTitle();
+                    setStyles();
+                    return import(resourcesToLoad);
+                }).then(module => {
+                    addAppTemplate();
+                    addQrCodeScanner();
+                    return true;
+                }).catch(e => {
+                    console.error(`Something went wrong: ${e.message}`);
+                    return false
+                });
         };
         const setTitle = function () {
             document.title = TG_APP.title;
@@ -49,7 +76,6 @@
             if (splashText) {
                 splashText.innerText = `Loading ${TG_APP.title}...`;
             }
-
         }
         const setStyles = function () {
             document.documentElement.style.setProperty('--tg-main-pannel-color', window.TG_APP.panelColor);
