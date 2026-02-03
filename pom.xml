@@ -4,7 +4,7 @@
     <groupId>fielden</groupId>
     <artifactId>platform-parent</artifactId>
     <packaging>pom</packaging>
-    <version>2.2.2-SNAPSHOT</version>
+    <version>2.2.4-SNAPSHOT</version>
     <name>Trident Genesis Platform Parent</name>
     <description>
         Trident Genesis is a software application platform designed for development of EAM/ERP type applications.
@@ -19,10 +19,11 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <log4j.version>2.25.2</log4j.version>
+        <log4j.version>2.25.3</log4j.version>
+        <slf4j.version>2.0.17</slf4j.version>
         <hibernate.version>5.6.15.Final</hibernate.version>
-        <postgresql.version>42.7.8</postgresql.version>
-        <mssql.version>13.2.0.jre11</mssql.version>
+        <postgresql.version>42.7.9</postgresql.version>
+        <mssql.version>13.2.1.jre11</mssql.version>
         <HikariCP.version>6.3.0</HikariCP.version>
         <javapoet.version>1.13.0</javapoet.version>
         <antlr.version>4.13.2</antlr.version>
@@ -62,10 +63,16 @@
                 <artifactId>log4j-core</artifactId>
                 <version>${log4j.version}</version>
             </dependency>
+
             <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-slf4j-impl</artifactId>
-                <version>${log4j.version}</version>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>${slf4j.version}</version>
             </dependency>
 
             <dependency>
@@ -77,7 +84,7 @@
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
-                <version>3.27.6</version>
+                <version>3.27.7</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
