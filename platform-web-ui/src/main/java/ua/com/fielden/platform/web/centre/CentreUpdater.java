@@ -777,12 +777,12 @@ public class CentreUpdater {
             .and().prop("title").notLike().val(PREFIX_OF.apply(surrogateName).apply(opposite(device)));
     }
 
-    public static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final DeviceProfile device, final String surrogateName) {
+    private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final DeviceProfile device, final String surrogateName) {
         return centreConfigQueryFor(device, surrogateName)
             .and().condition(centreConfigCondFor(uuid));
     }
 
-    public static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+    static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
         return centreConfigQueryFor(uuid, device, surrogateName)
             .and().condition(centreConfigCondFor(miType));
     }

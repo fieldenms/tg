@@ -108,7 +108,6 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
     ) {
         final IUser coUser = companionFinder.find(User.class, true);
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-        // TODO
         final Optional<EntityCentreConfig> freshConfigOpt = eccCompanion.getEntityOptional(
                 from(centreConfigQueryFor(configUuid, FRESH_CENTRE_NAME, of("ecc"))
                         .and().exists(

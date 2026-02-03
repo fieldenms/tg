@@ -226,7 +226,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
     }
     
     /**
-     * Finds optional configuration for {@code model} and {@code uuid} with predefined fetch model, sufficient for most situations.
+     * Finds optional configuration for {@code model} with predefined fetch model, sufficient for most situations.
      */
     private static Optional<EntityCentreConfig> findConfigOptByModel(final ICompoundCondition0<EntityCentreConfig> model, final EntityCentreConfigCo eccCompanion) {
         return eccCompanion.getEntityOptional(
