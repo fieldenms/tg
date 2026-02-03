@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
@@ -26,27 +27,29 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
+import static java.util.Optional.*;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.PREFIX_OF;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
@@ -85,6 +88,20 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
         this.securityTokenProvider = securityTokenProvider;
     }
 
+    private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String surrogateName, final Optional<String> maybeAlias) {
+        final var selectStart = select(EntityCentreConfig.class);
+        return maybeAlias.map(selectStart::as).orElse(selectStart)
+            .where().begin()
+                .prop("title").like().val(PREFIX_OF.apply(surrogateName).apply(DESKTOP))
+                .or().prop("title").like().val(PREFIX_OF.apply(surrogateName).apply(MOBILE))
+            .end();
+    }
+
+    private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final String surrogateName, final Optional<String> maybeAlias) {
+        return centreConfigQueryFor(surrogateName, maybeAlias)
+            .and().condition(centreConfigCondFor(uuid));
+    }
+
     @Override
     public <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Result, List<T>> entityCentreResult(
         final String configUuid
@@ -92,12 +109,11 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
         final IUser coUser = companionFinder.find(User.class, true);
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
         // TODO
-        final var device = DeviceProfile.DESKTOP;
         final Optional<EntityCentreConfig> freshConfigOpt = eccCompanion.getEntityOptional(
-                from(centreConfigQueryFor(configUuid, device, FRESH_CENTRE_NAME)
+                from(centreConfigQueryFor(configUuid, FRESH_CENTRE_NAME, of("ecc"))
                         .and().exists(
-                                centreConfigQueryFor(configUuid, device, SAVED_CENTRE_NAME)
-                                        .and().prop("owner").eq().extProp("e.owner")
+                                centreConfigQueryFor(configUuid, SAVED_CENTRE_NAME, empty())
+                                        .and().prop("owner").eq().extProp("ecc.owner")
                                         .model()
                         ).model())
                         .with(
@@ -118,6 +134,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             throw new RuntimeException(e);
         }
         Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miTypeGen;
+        final var device = freshConfigOpt.get().getTitle().startsWith(MOBILE.name()) ? MOBILE : DESKTOP;
 
         final User currentUser = userProvider.getUser();
 

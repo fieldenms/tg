@@ -177,7 +177,8 @@ public class CentreUpdater {
      * Function to get title of surrogate configuration from surrogate name, save-as name and device.
      */
     public static final Function<String, Function<Optional<String>, Function<DeviceProfile, String>>> NAME_OF = surrogateName -> saveAs -> device -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
-    
+    public static final Function<String, Function<DeviceProfile, String>> PREFIX_OF = surrogateName -> device -> deviceSpecific(surrogateName, device) + "[%";
+
     /** Protected default constructor to prevent instantiation. */
     protected CentreUpdater() {
     }
@@ -771,9 +772,9 @@ public class CentreUpdater {
     }
 
     private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final DeviceProfile device, final String surrogateName) {
-        return select(EntityCentreConfig.class).as("e")
-            .where().prop("title").like().val(deviceSpecific(surrogateName, device) + "[%")
-            .and().prop("title").notLike().val(deviceSpecific(surrogateName, opposite(device)) + "[%");
+        return select(EntityCentreConfig.class)
+            .where().prop("title").like().val(PREFIX_OF.apply(surrogateName).apply(device))
+            .and().prop("title").notLike().val(PREFIX_OF.apply(surrogateName).apply(opposite(device)));
     }
 
     public static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final DeviceProfile device, final String surrogateName) {
@@ -786,7 +787,7 @@ public class CentreUpdater {
             .and().condition(centreConfigCondFor(miType));
     }
 
-    static ConditionModel centreConfigCondFor(final String uuid) {
+    public static ConditionModel centreConfigCondFor(final String uuid) {
         return cond().prop("configUuid").eq().val(uuid).model();
     }
 
