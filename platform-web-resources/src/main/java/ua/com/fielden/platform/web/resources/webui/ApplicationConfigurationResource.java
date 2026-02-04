@@ -27,7 +27,7 @@ import java.util.TimeZone;
 public class ApplicationConfigurationResource extends AbstractWebResource {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String ERR_DEVICE_SCREEN_WIDTH = "The desktop width can not be less then or equal tablet width.";
+    private static final String ERR_DEVICE_SCREEN_WIDTH = "The desktop width cannot be less than or equal to the tablet width.";
 
     private final RestServerUtil restUtil;
 

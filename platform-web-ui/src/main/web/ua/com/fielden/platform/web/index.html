@@ -10,6 +10,8 @@
     <!-- Load Roboto font (as in roboto.js) as soon as possible to be used by the 'Loading...' message -->
     <link rel="stylesheet" type="text/css" crossorigin="anonymous" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Roboto:400,300,300italic,400italic,500,500italic,700,700italic"></link>
     <script type="module" crossorigin="use-credentials">
+        import { loadAppResources } from '/resources/app/tg-app-resource-loader.js';
+
         window.polymerSkipLoadingFontRoboto = true; // skip loading of Roboto font later on
         const loadTag = function (tagName, ...propertyAndValue) {
             const headElement = document.getElementsByTagName('head')[0];
@@ -17,100 +19,7 @@
             propertyAndValue.forEach(propAndValue => newElement[propAndValue[0]] = propAndValue[1]);
             headElement.appendChild(newElement);
         };
-        // Delays execution for the specified number of milliseconds.
-        // Returns a Promise that resolves after the specified delay; therefore, this method can be awaited.
-        const delay = function (ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        };
-        // Loads application resources.
-        // If loading a resource fails on the first attempt, the method retries up to 10 times, waiting 10 seconds between each attempt.
-        const loadAppResources = async function (resourcesToLoad) {
-            let retries = 0;
-            let successfulLoad = false;
-            while (!(window.TG_APP && successfulLoad) && retries < 10) {
-                if (retries > 0) {
-                    await delay(10000);
-                }
-                successfulLoad = await fetchResources(resourcesToLoad);
-                retries++;
-            }
-        }
-        // Fetches the application configuration resource.
-        // If it succeeds in loading the configuration, it then loads the main application resource
-        // specified by the resourceToLoad parameter.
-        // If the main application resource is loaded successfully, it adds the tg-app-template
-        // and tg-qr-code-scanner elements to the DOM.
-        // If all these steps are successful, the method returns true, indicating that the main
-        // application resource was loaded successfully; otherwise, it returns false.
-        const fetchResources = function (resourcesToLoad) {
-            return fetch("/app/configuration").then(response => {
-                    return response.json()
-                }).then(config => {
-                    if (config.errorMsg) {
-                        throw new Error(config.errorMsg);
-                    }
-                    window.TG_APP = config;
-                    setTitle();
-                    setStyles();
-                    return import(resourcesToLoad);
-                }).then(module => {
-                    addAppTemplate();
-                    addQrCodeScanner();
-                    return true;
-                }).catch(e => {
-                    console.error(`Something went wrong: ${e.message}`);
-                    return false
-                });
-        };
-        const setTitle = function () {
-            document.title = TG_APP.title;
-            const metaApplicationName = document.querySelector('meta[name="application-name"]');
-            if (metaApplicationName) {
-                metaApplicationName.setAttribute("content", TG_APP.title);
-            }
-            const metaMobileWebAppTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-            if (metaMobileWebAppTitle) {
-                metaMobileWebAppTitle.setAttribute("content", TG_APP.title);
-            }
-            const splashText = document.getElementById("splash-text");
-            if (splashText) {
-                splashText.innerText = `Loading ${TG_APP.title}...`;
-            }
-        }
-        const setStyles = function () {
-            document.documentElement.style.setProperty('--tg-main-pannel-color', window.TG_APP.panelColor);
-        }
-        const addAppTemplate = function () {
-            const appElement = document.createElement("tg-app-template");
-            appElement.classList.add("layout", "vertical");
-            appElement.setAttribute("id", "app")
-            appElement.appTitle = window.TG_APP.title;
-            appElement.ideaUri = window.TG_APP.ideaUri;
-            const splashText = document.getElementById("splash-text");
-            if (splashText) {
-                splashText.after(appElement);
-            } else {
-                document.body.appendChild(appElement);
-            }
-        };
-        const addQrCodeScanner = function () {
-            const qrCodeScanner = document.createElement("tg-qr-code-scanner");
-            qrCodeScanner.appendChild(createVideoFeedElement());
-            qrCodeScanner.setAttribute("id", "qrScanner")
-            const appElement = document.getElementById("app");
-            if (appElement) {
-                appElement.after(qrCodeScanner);
-            } else {
-                document.body.appendChild(qrCodeScanner);
-            }
-        }
-        const createVideoFeedElement = function () {
-            const videoFeedElement = document.createElement("div");
-            videoFeedElement.setAttribute("id", "tgQrScanner");
-            videoFeedElement.setAttribute("slot", "scanner");
-            videoFeedElement.classList.add("no-padding");
-            return videoFeedElement;
-        }
+
         const loadTags = function () {
             loadTag('link', ['rel', 'manifest'], ['href', '/resources/manifest.webmanifest']);
             loadTag('link', ['rel', 'icon'], ['sizes', '192x192'], ['href', '/resources/icons/tg-icon192x192.png']);
