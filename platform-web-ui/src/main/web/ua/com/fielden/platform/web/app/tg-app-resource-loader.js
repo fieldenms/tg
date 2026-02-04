@@ -17,7 +17,7 @@ export async function loadAppResources (resourcesToLoad) {
         addAppTemplate();
         addQrCodeScanner();
     } catch (err) {
-        showMessage(err.message);
+        showMessage(err.message + ".\nPlease try refreshing the page later.");
     }
 }
 
