@@ -14,7 +14,7 @@
 
     <properties>
         <restlet.version>2.6.0</restlet.version>
-        <jetty.version>12.1.4</jetty.version>
+        <jetty.version>12.1.5</jetty.version>
     </properties>
 
     <dependencies>
@@ -82,6 +82,86 @@
                 <exclusion>
                     <groupId>org.eclipse.jetty</groupId>
                     <artifactId>jetty-util</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-alpn-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-alpn-java-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-alpn-java-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-slf4j-impl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http2</groupId>
+                    <artifactId>jetty-http2-client-transport</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http2</groupId>
+                    <artifactId>jetty-http2-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http2</groupId>
+                    <artifactId>jetty-http2-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http2</groupId>
+                    <artifactId>jetty-http2-hpack</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http2</groupId>
+                    <artifactId>jetty-http2-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http3</groupId>
+                    <artifactId>jetty-http3-client-transport</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http3</groupId>
+                    <artifactId>jetty-http3-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http3</groupId>
+                    <artifactId>jetty-http3-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http3</groupId>
+                    <artifactId>jetty-http3-qpack</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http3</groupId>
+                    <artifactId>jetty-http3-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.quic</groupId>
+                    <artifactId>jetty-quic-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.quic</groupId>
+                    <artifactId>jetty-quic-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.quic</groupId>
+                    <artifactId>jetty-quic-quiche-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.quic</groupId>
+                    <artifactId>jetty-quic-quiche-foreign</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.quic</groupId>
+                    <artifactId>jetty-quic-quiche-jna</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.quic</groupId>
+                    <artifactId>jetty-quic-server</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
