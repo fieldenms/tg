@@ -760,6 +760,13 @@ Polymer({
             // selection happens by id, but for all for safety reasons; for example, for web tests these elements do not exist
             document.querySelectorAll("#splash-background").forEach(bg => bg.style.display = 'none'); // background
             document.querySelectorAll("#splash-text").forEach(txt => txt.style.display = 'none'); // text
+            // Show toaster if application configuration is stale or default, which means that configuration failed to load.
+            if (window.TG_APP.isStale) {
+                this.toaster && this.toaster.openToastForError('Configuration load error', `Faild to load configuration because: ${window.TG_APP.errorMsg}<br>Fallback to previously saved configuration.`, true)
+            } else if (window.TG_APP.isDefault) {
+                this.toaster && this.toaster.openToastForError('Configuration load error', `Faild to load configuration because: ${window.TG_APP.errorMsg}<br>Fallback to default configuration.`, true)
+            }
+
         }.bind(this);
         this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
         this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};

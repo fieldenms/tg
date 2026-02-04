@@ -48,7 +48,6 @@ async function tryLoadingConfiguration(delayConfig) {
         } else {
             //Otherwise fallback to default one
             return {
-                title: 'TG App',
                 isDefault: true,
                 errorMsg: err.message
             }
