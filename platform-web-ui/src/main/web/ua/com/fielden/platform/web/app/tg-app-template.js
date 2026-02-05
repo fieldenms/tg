@@ -762,10 +762,8 @@ Polymer({
             document.querySelectorAll("#splash-text").forEach(txt => txt.style.display = 'none'); // text
             // Show toaster if application configuration is stale or default, which means that configuration failed to load.
             if (window.TG_APP.isStale) {
-                this.toaster && this.toaster.openToastForError('Configuration load error', `Faild to load configuration because: ${window.TG_APP.errorMsg}<br>Fallback to previously saved configuration.`, true)
-            } else if (window.TG_APP.isDefault) {
-                this.toaster && this.toaster.openToastForError('Configuration load error', `Faild to load configuration because: ${window.TG_APP.errorMsg}<br>Fallback to default configuration.`, true)
-            }
+                this.toaster && this.toaster.openToastForError('Configuration load error', `${window.TG_APP.errorMsg}`, true)
+            } 
 
         }.bind(this);
         this.postValidated = function (validatedEntity, bindingEntity, customObject) {};

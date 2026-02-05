@@ -17,7 +17,7 @@ export async function loadAppResources (resourcesToLoad) {
         addAppTemplate();
         addQrCodeScanner();
     } catch (err) {
-        showMessage(err.message + ".\nPlease try refreshing the page later.");
+        showMessage(`${err.message.endsWith(".") ? err.message : (err.message + ".")}\nRefresh to try again.`);
     }
 }
 
@@ -31,26 +31,28 @@ export async function loadAppResources (resourcesToLoad) {
 async function tryLoadingConfiguration(delayConfig) {
     try {
         const res = await fetchConfiguration(delayConfig);
-        const appConfig = await res.json();
-        if (appConfig.errorMsg) {
-            throw new Error(appConfig.errorMsg);
+        if (!res.ok) {
+            if (res.status == 500) {
+                const error = await res.json();
+                throw new Error(`${error.errorMsg || error.message || "Connection issue."}`);
+            } else {
+                throw new Error(`Connection issue.`);
+            }
         }
-        localStorage.setItem(APPLICATION_CONFIGURATION_KEY, JSON.stringify(appConfig))
+        const appConfig = await res.json();
+        localStorage.setItem(APPLICATION_CONFIGURATION_KEY, JSON.stringify(appConfig));
         return appConfig;
     } catch (err) {
         const appConfigValue = localStorage.getItem(APPLICATION_CONFIGURATION_KEY);
         if (appConfigValue) {
-            //Fallback to the saved one
+            // Fallback to the saved one.
             const appConfig = JSON.parse(appConfigValue);
             appConfig.isStale = true;
-            appConfig.errorMsg = err.message;
+            appConfig.errorMsg = `Could not load configuration: ${err.message.endsWith(".") ? err.message.toLowerCase() : (err.message.toLowerCase() + ".")}\nUsing saved configuration instead. Refresh to try again.`;
             return appConfig;
         } else {
-            //Otherwise fallback to default one
-            return {
-                isDefault: true,
-                errorMsg: err.message
-            }
+            // Otherwise throw exception indicating that configuration could not be loaded.
+            throw new Error (`Could not load configuration: ${err.message.toLowerCase()}`);
         }
     }
 }
@@ -102,7 +104,7 @@ async function tryLoadingAppResources(modulePath, { maxRetries = DEFAULT_MAX_RET
             return await import(modulePath);
         } catch (error) {
             if (attempt >= maxRetries || !isRetryableError(error)) {
-                throw error;
+                throw new Error(`Could not load all required resources.`);
             }
             await delay(baseDelay, attempt - 1);
         }
@@ -128,14 +130,14 @@ function isRetryableError(error) {
  * Uses the formula: `delay = baseDelay * 2^attempt + jitter`, where jitter adds
  * controlled randomness (±20% of calculated delay) to prevent thundering herd issues.
  *
- * @param {number} baseDelay - Base delay in milliseconds (typically 1000)
+ * @param {number} baseDelay - Base delay in milliseconds (typically 500)
  * @param {number} attempt - Current retry attempt number (0 = first retry, 1 = second, etc.)
  * @returns {Promise<void>} Resolves after the calculated delay (non-rejecting)
  */
 function delay (baseDelay, attempt) {
     const delay = baseDelay * 2 ** attempt;
     const jitter = delay * (Math.random() * 0.4 - 0.2);
-    return new Promise(resolve => setTimeout(resolve, delay+ jitter));
+    return new Promise(resolve => setTimeout(resolve, delay + jitter));
 }
 
 /**
