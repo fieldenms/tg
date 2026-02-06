@@ -37,7 +37,6 @@ import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
-import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
 import static ua.com.fielden.platform.reflection.Finder.commonPropertiesForUnion;
 import static ua.com.fielden.platform.reflection.Finder.unionProperties;
@@ -396,11 +395,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeAllFirstLevelPrimPropsAndKey() {
-            // Always include `desc`.
-            // This category should be a superset of KEY_AND_DESC.
-            if (entityMetadata.hasProperty(DESC)) {
-                with(DESC);
-            }
+            includeKeyAndDescOnly();
 
             forEachProperty((prop, optPropMetadata) -> {
                 // Exclude all calculated properties except for components (legacy EQL2 behaviour).
@@ -409,11 +404,9 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 else {
                     // Recursive key structures are not supported, and will lead to non-termination (see #2452).
 
-                    // Explore further if property is a union member or a key member.
+                    // Explore further only if property is a union member.
                     final boolean exploreEntities = optPropMetadata
-                            .map(propMetadata -> entityMetadata.isUnion() && propMetadata.type().isEntity()
-                                                 || KEY.equals(propMetadata.name())
-                                                 || propMetadata.has(KEY_MEMBER))
+                            .map(propMetadata -> entityMetadata.isUnion() && propMetadata.type().isEntity())
                             .orElse(TRUE);
 
                     with(prop.name, !exploreEntities);
@@ -440,11 +433,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeAllFirstLevelProps() {
-            // Always include `desc`.
-            // This category should be a superset of KEY_AND_DESC.
-            if (entityMetadata.hasProperty(DESC)) {
-                with(DESC);
-            }
+            includeKeyAndDescOnly();
 
             forEachProperty((prop, optPropMetadata) -> {
                 // Exclude all calculated properties except for components (legacy EQL2 behaviour).
