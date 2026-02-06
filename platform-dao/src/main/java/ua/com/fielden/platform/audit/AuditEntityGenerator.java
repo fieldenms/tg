@@ -275,7 +275,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                 })
                 .forEach(a3tBuilder::addProperty);
 
-        return a3tBuilder.build(addSkipEntityExistsValidation)
+        return a3tBuilder.build()
                 .map2(typeSpec -> JavaFile.builder(auditPkg, typeSpec).build());
     }
 
@@ -338,7 +338,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                 })
                 .forEach(a3tBuilder::addProperty);
 
-        return a3tBuilder.build(addSkipEntityExistsValidation)
+        return a3tBuilder.build()
                 .map2(typeSpec -> JavaFile.builder(auditPkg, typeSpec).build());
     }
 
@@ -382,18 +382,6 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
         return builder.build();
     }
-
-    /// Annotates each entity-typed property with [SkipEntityExistsValidation], unless this annotation is already present.
-    ///
-    private final AuditEntitySpecBuilder.Processor addSkipEntityExistsValidation = new AuditEntitySpecBuilder.Processor() {
-        public PropertySpec processProperty(final AuditEntitySpecBuilder builder, final PropertySpec propSpec) {
-            return javaPoet.reflectType(propSpec.type()) instanceof Class klass
-                   && domainMetadata.forEntityOpt(klass).isPresent()
-                   && !propSpec.hasAnnotation(javaPoet.getClassName(SkipEntityExistsValidation.class))
-                    ? propSpec.toBuilder().addAnnotation(javaPoet.getAnnotation(SkipEntityExistsValidation.class)).build()
-                    : propSpec;
-        }
-    };
 
     /// Combines properties following the rules of Java: declared properties hide inherited properties with the same name.
     /// The resulting collection will not contain hidden properties.
@@ -468,7 +456,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
             this.annotations = new ArrayList<>();
         }
 
-        public T2<AuditEntitySpec, TypeSpec> build(final Processor processor) {
+        public T2<AuditEntitySpec, TypeSpec> build() {
             final var builder = classBuilder(className)
                     .addModifiers(PUBLIC)
                     .superclass(superclassName())
@@ -484,7 +472,6 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                     .addAnnotations(annotations);
             properties.stream()
                     .sorted(comparing(PropertySpec::name))
-                    .map(prop -> processor.processProperty(this, prop))
                     .forEach(propSpec -> {
                         builder.addField(propSpec.toFieldSpec(environment));
                         builder.addMethod(propSpec.getAccessorSpec(environment));
