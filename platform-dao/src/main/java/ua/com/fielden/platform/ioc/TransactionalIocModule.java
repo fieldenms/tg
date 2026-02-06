@@ -71,6 +71,7 @@ public abstract class TransactionalIocModule extends EntityIocModule {
 
         install(new FactoryModuleBuilder().build(EntityBatchDeleteByQueryModelOperation.Factory.class));
 
+        // Start the services for generating and assigning the EQL models to the generated synthetic entities.
         requestStaticInjection(SynAuditModelInitService.class);
         requestStaticInjection(SynModelInitService.class);
     }
