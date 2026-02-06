@@ -23,18 +23,16 @@ import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 
-/**
- * Generates hibernate class mappings from MapTo annotations on domain entity types.
- *
- * @author TG Team
- *
- */
+/// Generates hibernate mappings for persistent domain entity types.
+///
 public class HibernateMappingsGenerator {
     private static final Logger LOGGER = getLogger(HibernateMappingsGenerator.class);
 
     public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
 
     private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
+
+    public static final String ERR_UNEXPECTED_PROP_NATURE = "Expected property [%s] to have nature [%s].";
 
     private final IDomainMetadata domainMetadata;
     private final IDomainMetadataUtils domainMetadataUtils;
@@ -44,11 +42,13 @@ public class HibernateMappingsGenerator {
     private final PropertyInliner propertyInliner;
 
     @Inject
-    public HibernateMappingsGenerator(final IDomainMetadata domainMetadata,
-                                      final IDomainMetadataUtils domainMetadataUtils,
-                                      final IDbVersionProvider dbVersionProvider,
-                                      final EqlTables eqlTables,
-                                      final PropertyInliner propertyInliner) {
+    public HibernateMappingsGenerator(
+            final IDomainMetadata domainMetadata,
+            final IDomainMetadataUtils domainMetadataUtils,
+            final IDbVersionProvider dbVersionProvider,
+            final EqlTables eqlTables,
+            final PropertyInliner propertyInliner)
+    {
         this.eqlTables = eqlTables;
         this.domainMetadata = domainMetadata;
         this.domainMetadataUtils = domainMetadataUtils;
@@ -141,9 +141,8 @@ public class HibernateMappingsGenerator {
         return sb.toString();
     }
 
-    /**
-     * @param column  either a single column or multiple column names
-     */
+    /// @param column  either a single column or multiple column names
+    ///
     private static String generatePlainPropertyMapping(
             final String propName,
             final Either<PropColumn, List<String>> column,
@@ -180,9 +179,8 @@ public class HibernateMappingsGenerator {
                 });
     }
 
-    /**
-     * Generates mapping for an entity type.
-     */
+    /// Generates mapping for an entity type.
+    ///
     private String generateEntityClassMapping(
             final IDomainMetadata domainMetadata,
             final EntityMetadata em,
@@ -218,9 +216,8 @@ public class HibernateMappingsGenerator {
         return sb.toString();
     }
 
-    /**
-     * Generates mapping string for common property based on it persistence info.
-     */
+    /// Generates mapping string for a common property based on it persistence info.
+    ///
     private String generatePropertyMappingFromPropertyMetadata(
             final IDomainMetadata domainMetadata,
             final PropertyMetadata.Persistent prop)
@@ -253,7 +250,7 @@ public class HibernateMappingsGenerator {
     }
 
     private static DbSchemaException unexpectedPropNature(final String prop, final PropertyNature expectedNature) {
-        return new DbSchemaException("Expected property [%s] to have nature [%s].".formatted(prop, expectedNature));
+        return new DbSchemaException(ERR_UNEXPECTED_PROP_NATURE.formatted(prop, expectedNature));
     }
 
 }
