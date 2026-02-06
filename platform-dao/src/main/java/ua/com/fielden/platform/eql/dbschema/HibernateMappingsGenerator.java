@@ -28,7 +28,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 public class HibernateMappingsGenerator {
     private static final Logger LOGGER = getLogger(HibernateMappingsGenerator.class);
 
-    public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
+    /// @deprecated use [DbVersion#ID_SEQUENCE_NAME] instead
+    @Deprecated(forRemoval = true)
+    public static final String ID_SEQUENCE_NAME = DbVersion.ID_SEQUENCE_NAME;
 
     private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
 
