@@ -377,7 +377,7 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                                  CREATED_DATE, CREATED_BY, CREATED_TRANSACTION_GUID,
                                  ACTIVE, REF_COUNT,
                                  "location", "bogieClass")
-                .subModel("location", a -> a.containsExactly("wagonSlot", "workshop"))
+                .subModel("location", a -> a.containsExactly(ID, KEY, "wagonSlot", "workshop"))
                 .subModel("location.wagonSlot", a -> a.equalsModel(DEFAULT))
                 .subModel("location.workshop", a -> a.equalsModel(DEFAULT))
                 .subModel("bogieClass", a -> a.equalsModel(DEFAULT));
@@ -394,12 +394,10 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                 .containsExactly(ID, KEY, "qty", "cost", "cost.amount")
                 .proxiesExactly();
         assertRetrievalModel(TgAverageFuelUsage.class, ALL)
-                // TODO: Should contain ID.
-                .containsExactly(KEY, "qty", "cost", "cost.amount")
+                .containsExactly(ID, KEY, "qty", "cost", "cost.amount")
                 .proxiesExactly();
         assertRetrievalModel(TgAverageFuelUsage.class, DEFAULT)
-                // TODO: Should contain ID.
-                .containsExactly(KEY, "qty", "cost", "cost.amount")
+                .containsExactly(ID, KEY, "qty", "cost", "cost.amount")
                 .proxiesExactly();
         assertRetrievalModel(TgAverageFuelUsage.class, KEY_AND_DESC)
                 .containsExactly(ID, KEY)
@@ -523,8 +521,7 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                         .subModel("entity", a -> a.contains("union"))
                         .subModel("entity.union", a -> a.contains("entity"))
                         .subModel("entity.union.entity", a -> a.contains("union"))
-                        .subModel("entity.union.entity.union", a -> a.contains("entity"))
-                        .subModel("entity.union.entity.union.entity", a -> a.equalsModel(ID_ONLY)));
+                        .subModel("entity.union.entity.union", a -> a.equalsModel(ID_ONLY)));
     }
 
     @Test
