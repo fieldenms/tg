@@ -8,10 +8,10 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
+import ua.com.fielden.platform.audit.exceptions.AuditingRuntimeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
@@ -34,7 +34,6 @@ import java.util.stream.Stream;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
-import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toSet;
@@ -61,6 +60,12 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
     private static final Logger LOGGER = getLogger();
     public static final String INACTIVE_AUDIT_PROPERTY_TITLE_SUFFIX = " [removed]";
+    public static final String TEMPLATE_TITLE_DESC = "[%s] at the time of the audited event.";
+    public static final String
+            ERR_WRITING_GENERATED_AUDIT_SOURCE = "Failed to write a generated audit source for audited type [%s]",
+            ERR_NON_AUDITED_ENTITY_TYPE = "Entity type [%s] cannot be audited. It must be annotated with @%s.",
+            ERR_GENERATING_AUDIT_TYPE = "Failed to generate audit types (version: %s) for [%s].",
+            ERR_CANNOT_GENERATE_SYNTHETIC_AUDIT_ENTITY = "Synthetic audit-entity type for [%s] cannot be generated: there are no audit-entity types.";
 
     private final AuditingMode auditingMode;
     private final IDomainMetadata domainMetadata;
@@ -100,7 +105,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                         try {
                             path = jf.writeToPath(sourceRoot);
                         } catch (final IOException ex) {
-                            throw new RuntimeException("Failed to write a generated audit source for audited type [%s]".formatted(type.getTypeName()), ex);
+                            throw new AuditingRuntimeException(ERR_WRITING_GENERATED_AUDIT_SOURCE.formatted(type.getTypeName()), ex);
                         }
                         LOGGER.info(() -> "Created an audit source: [%s]".formatted(path));
                         return path;
@@ -136,8 +141,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
     private static void validateAuditedType(final Class<? extends AbstractEntity<?>> auditedType) {
         if (!AuditUtils.isAudited(auditedType)) {
-            throw new InvalidArgumentException(format("Entity type [%s] cannot be audited. It must be annotated with @%s.",
-                                                      auditedType.getTypeName(), Audited.class.getTypeName()));
+            throw new AuditingRuntimeException(ERR_NON_AUDITED_ENTITY_TYPE.formatted(auditedType.getTypeName(), Audited.class.getTypeName()));
         }
     }
 
@@ -148,7 +152,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         final var lastAuditTypeVersion = auditTypeFinder.navigate(auditedType)
                 .findAuditEntityType()
                 .map(AuditUtils::getAuditTypeVersion);
-        final var newAuditTypeVersion = switch (versionStrategy) {
+        final int newAuditTypeVersion = switch (versionStrategy) {
             case NEW -> lastAuditTypeVersion.map(v -> v + 1).orElse(1);
             case OVERWRITE_LAST -> lastAuditTypeVersion.orElse(1);
         };
@@ -170,7 +174,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
             synAuditEntity = generateSynAuditEntity(auditedType, auditPkg, auditEntitySpec);
             synAuditPropEntity = generateSynAuditPropEntity(auditedType, auditPkg);
         } catch (final Exception ex) {
-            throw new RuntimeException("Failed to generate audit types (version: %s) for [%s]".formatted(newAuditTypeVersion, auditedType.getTypeName()), ex);
+            throw new AuditingRuntimeException(ERR_GENERATING_AUDIT_TYPE.formatted(newAuditTypeVersion, auditedType.getTypeName()), ex);
         }
 
         final var genDate = new Date();
@@ -196,19 +200,16 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         }
     }
 
-    /**
-     * Generates an audit-entity whose version is > 1.
-     * <p>
-     * The structure is as follows:
-     * <ul>
-     *   <li> Use the previous audit-entity type version as the superclass.
-     *   <li> Declare audit-properties for new audited properties.
-     *        An audited property is "new" if it is not audited by the latest audit-entity type.
-     *   <li> Declare inactive audit-properties for removed audited properties.
-     *        When an audited property is removed, we no longer want to inherit its audit-property, so we must hide it
-     *        by declaring it anew as a plain property annotated with {@link InactiveAuditProperty}.
-     * </ul>
-     */
+    /// Generates an audit-entity whose version is greater than `1`.
+    ///
+    /// The structure is as follows:
+    /// -  Use the previous audit-entity type version as the superclass.
+    /// -  Declare audit-properties for new audited properties.
+    ///    An audited property is "new" if it is not audited by the latest audit-entity type.
+    /// -  Declare inactive audit-properties for removed audited properties.
+    ///    When an audited property is removed, we no longer want to inherit its audit-property, so we must hide it
+    ///    by declaring it anew as a plain property annotated with [InactiveAuditProperty].
+    ///
     private T2<AuditEntitySpec, JavaFile> generateAuditEntityN(
             final Class<? extends AbstractEntity<?>> auditedType,
             final String auditPkg,
@@ -252,7 +253,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
                     final var propTitle = nonBlankPropertyTitle(pm.name(), auditedType);
                     if (!propTitle.isEmpty()) {
-                        propBuilder.addAnnotation(AnnotationSpecs.title(propTitle, "[%s] at the time of the audited event.".formatted(propTitle)));
+                        propBuilder.addAnnotation(AnnotationSpecs.title(propTitle, TEMPLATE_TITLE_DESC.formatted(propTitle)));
                     }
 
                     return propBuilder.build();
@@ -267,7 +268,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
                     final var propTitle = nonBlankPropertyTitle(pm.name(), prevAuditEntityType);
                     if (!propTitle.isEmpty()) {
-                        propBuilder.addAnnotation(title(propTitle + INACTIVE_AUDIT_PROPERTY_TITLE_SUFFIX, "[%s] at the time of the audited event.".formatted(propTitle)));
+                        propBuilder.addAnnotation(title(propTitle + INACTIVE_AUDIT_PROPERTY_TITLE_SUFFIX, TEMPLATE_TITLE_DESC.formatted(propTitle)));
                     }
 
                     return propBuilder.build();
@@ -293,6 +294,8 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                && auditedProp.type().genericJavaType().equals(auditProp.type().genericJavaType());
     }
 
+    /// Generates the first version of the audit entity.
+    ///
     private T2<AuditEntitySpec, JavaFile> generateAuditEntity1(
             final Class<? extends AbstractEntity<?>> auditedType,
             final String auditPkg,
@@ -328,7 +331,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
                     final var propTitle = nonBlankPropertyTitle(pm.name(), auditedType);
                     if (!propTitle.isEmpty()) {
-                        propBuilder.addAnnotation(AnnotationSpecs.title(propTitle, "[%s] at the time of the audited event.".formatted(propTitle)));
+                        propBuilder.addAnnotation(AnnotationSpecs.title(propTitle, TEMPLATE_TITLE_DESC.formatted(propTitle)));
                     }
 
                     return propBuilder.build();
@@ -346,7 +349,8 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                && !isPropertyAnnotationPresent(DisableAuditing.class, auditedType, propName);
     }
 
-    /// Builds an {@link IsProperty} annotation for an audit-property from the specified annotation for a corresponding audited property.
+    /// Builds an [IsProperty] annotation for an audit-property from the specified annotation for a corresponding audited property.
+    ///
     private AnnotationSpec mkIsPropertyForAudit(final IsProperty isProperty) {
         final var builder = AnnotationSpec.builder(IsProperty.class);
 
@@ -379,9 +383,8 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         return builder.build();
     }
 
-    /**
-     * Annotates each entity-typed property with {@link SkipEntityExistsValidation}, unless this annotation is already present.
-     */
+    /// Annotates each entity-typed property with [SkipEntityExistsValidation], unless this annotation is already present.
+    ///
     private final AuditEntitySpecBuilder.Processor addSkipEntityExistsValidation = new AuditEntitySpecBuilder.Processor() {
         public PropertySpec processProperty(final AuditEntitySpecBuilder builder, final PropertySpec propSpec) {
             return javaPoet.reflectType(propSpec.type()) instanceof Class klass
@@ -392,23 +395,21 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         }
     };
 
-    /**
-     * Combines properties following the rules of Java: declared properties hide inherited properties with the same name.
-     * The resulting collection will not contain hidden properties.
-     */
+    /// Combines properties following the rules of Java: declared properties hide inherited properties with the same name.
+    /// The resulting collection will not contain hidden properties.
+    ///
     private static List<PropertySpec> mergeProperties(final Collection<PropertySpec> declaredProps, final Collection<PropertySpec> inheritedProps) {
         return StreamUtils.distinct(Stream.concat(declaredProps.stream(), inheritedProps.stream()), PropertySpec::name)
                 .toList();
     }
 
-    /**
-     * Represents an audit-entity type.
-     * This structure unifies runtime (metadata) and source code representations of audit-entities.
-     * This becomes necessary when a new audit-entity type is being generated (so there is no metadata for it, as it doesn't yet exist),
-     * and we want to use this new audit-entity type and all prior audit-entity types for the generation of a synthetic audit-entity type.
-     *
-     * @param properties  all properties (declared and inherited)
-     */
+    /// Represents an audit-entity type.
+    /// This structure unifies runtime (metadata) and source code representations of audit-entities.
+    /// This becomes necessary when a new audit-entity type is being generated (so there is no metadata for it, as it doesn't yet exist),
+    /// and we want to use this new audit-entity type and all prior audit-entity types for the generation of a synthetic audit-entity type.
+    ///
+    /// @param properties  all properties (declared and inherited)
+    ///
     private record AuditEntitySpec
             (ClassName className,
              List<PropertySpec> properties,
@@ -448,7 +449,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
     class AuditEntitySpecBuilder {
         final ClassName className;
         final Class<? extends AbstractEntity<?>> auditedType;
-        /** Declared properties. */
+        /// Declared properties.
         final ArrayList<PropertySpec> properties;
         final ArrayList<MethodSpec> methods;
         final ArrayList<AnnotationSpec> annotations;
@@ -575,9 +576,8 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                 .addAnnotation(javaPoet.getAnnotation(DenyIntrospection.class))
                 .addAnnotation(keyType(DynamicEntityKey.class));
 
-        // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
-        // For the setter we need two methods: a regular setter and an override of the setter from the base type,
-        // which has a different signature.
+        // By virtue of its name, this property's accessor and setter implement abstract methods in the base type.
+        // For the setter we need two methods: a regular setter and an override of the setter from the base type, which has a different signature.
         // The override will delegate to the regular setter.
         final var auditEntityProp = propertyBuilder(AUDIT_ENTITY, auditEntityClassName)
                 .addAnnotation(compositeKeyMember(1))
@@ -588,7 +588,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
         PropertySpec.addProperty(environment, builder, auditPropClassName, auditEntityProp);
 
-        // Overriden setter.
+        // Now the overridden setter.
         final var auditEntityPropSetter = auditEntityProp.getSetterSpec(environment, auditPropClassName);
         builder.addMethod(methodBuilder(auditEntityPropSetter.name)
                                   .addModifiers(PUBLIC)
@@ -637,6 +637,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     /// @param auditEntitySpec  the latest audit-entity type
+    ///
     private JavaFile generateSynAuditEntity(
             final Class<? extends AbstractEntity<?>> auditedType,
             final String auditPkg,
@@ -661,15 +662,14 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
     /// * Declare all audit-properties, both active and inactive, from the latest audit-entity type.
     ///
     /// @param auditEntitySpecs  all persistent audit-entity types
+    ///
     private JavaFile generateSynAuditEntity(
             final Class<? extends AbstractEntity<?>> auditedType,
             final List<AuditEntitySpec> auditEntitySpecs,
             final ClassName synAuditEntityClassName)
     {
         if (auditEntitySpecs.isEmpty()) {
-            throw new InvalidArgumentException(
-                    format("Synthetic audit-entity type for [%s] cannot be generated: there are no audit-entity types.",
-                           auditedType.getSimpleName()));
+            throw new AuditingRuntimeException(ERR_CANNOT_GENERATE_SYNTHETIC_AUDIT_ENTITY.formatted(auditedType.getSimpleName()));
         }
 
         final var builder = classBuilder(synAuditEntityClassName);
@@ -739,7 +739,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                             ? substringBeforeLast(title, INACTIVE_AUDIT_PROPERTY_TITLE_SUFFIX)
                             : title;
                     final var propBuilder = propertyBuilder(prop.name(), prop.type());
-                    propBuilder.addAnnotation(title(title, "[%s] at the time of the audited event.".formatted(origTitle)));
+                    propBuilder.addAnnotation(title(title, TEMPLATE_TITLE_DESC.formatted(origTitle)));
                     if (prop.hasAnnotation(InactiveAuditProperty.class)) {
                         propBuilder.addAnnotation(InactiveAuditProperty.class);
                     }
@@ -778,8 +778,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                 .addAnnotation(AnnotationSpecs.keyTitle("%s Audit and Changed Property".formatted(auditedEntityTitle)));
 
         // By virtue of its name, this property's accessor implements the abstract method in the base type.
-        // For the setter we need two methods: a regular setter and an override of the setter from the base type,
-        // which has a different signature.
+        // For the setter we need two methods: a regular setter and an override of the setter from the base type, which has a different signature.
         // The override will delegate to the regular setter.
         final var auditEntityProp = propertyBuilder(AbstractSynAuditProp.AUDIT_ENTITY, synAuditClassName)
                 .addAnnotation(compositeKeyMember(1))
@@ -788,7 +787,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                 .build();
         PropertySpec.addProperty(environment, builder, synAuditPropClassName, auditEntityProp);
 
-        // Overriden setter.
+        // The overridden setter.
         final var auditEntityPropSetter = auditEntityProp.getSetterSpec(environment, synAuditPropClassName);
         builder.addMethod(methodBuilder(auditEntityPropSetter.name)
                                   .addModifiers(PUBLIC)
