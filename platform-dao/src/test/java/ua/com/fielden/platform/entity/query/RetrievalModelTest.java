@@ -530,9 +530,12 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                 .allSatisfy(cat -> assertRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, cat)
                         .notContains("union"));
 
-        assertThat(List.of(ID_ONLY, ID_AND_VERSION, NONE))
+        assertThat(List.of(ID_ONLY, ID_AND_VERSION))
                 .allSatisfy(cat -> assertRetrievalModel(Circular_UnionEntity.class, cat)
-                        .notContains("entity"));
+                        .subModel("entity", it -> it.equalsModel(ID_ONLY)));
+
+        assertRetrievalModel(Circular_UnionEntity.class, NONE)
+                .notContains("entity");
     }
 
     /*----------------------------------------------------------------------------
@@ -589,13 +592,23 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
     }
 
     @Test
-    public void strategy_ID_ONLY_union_members_are_not_included() {
-        _union_members_are_not_included(ID_ONLY);
+    public void strategy_ID_ONLY_union_members_are_included_with_ID_ONLY() {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        assertRetrievalModel(UnionEntity.class, ID_ONLY)
+                .containsExactly(ID, UnionEntity.Property.propertyOne, UnionEntity.Property.propertyTwo)
+                .subModel(UnionEntity.Property.propertyOne, it -> it.equalsModel(ID_ONLY))
+                .subModel(UnionEntity.Property.propertyTwo, it -> it.equalsModel(ID_ONLY));
     }
 
     @Test
-    public void strategy_ID_AND_VERSION_union_members_are_not_included() {
-        _union_members_are_not_included(ID_AND_VERSION);
+    public void strategy_ID_AND_VERSION_union_members_are_included_with_ID_ONLY() {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        assertRetrievalModel(UnionEntity.class, ID_AND_VERSION)
+                .containsExactly(ID, UnionEntity.Property.propertyOne, UnionEntity.Property.propertyTwo)
+                .subModel(UnionEntity.Property.propertyOne, it -> it.equalsModel(ID_ONLY))
+                .subModel(UnionEntity.Property.propertyTwo, it -> it.equalsModel(ID_ONLY));
     }
 
     @Test

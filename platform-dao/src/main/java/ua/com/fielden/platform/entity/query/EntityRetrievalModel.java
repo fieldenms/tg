@@ -450,14 +450,14 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeIdOnly() {
-            primProps.add(ID);
+            with(ID);
         }
 
         private void includeIdAndVersionOnly() {
             // NOTE: Shouldn't this category produce a superset of ID_ONLY?
             //       It does not always include ID, unlike ID_ONLY.
             if (querySourceInfo.hasProp(ID)) {
-                primProps.add(ID);
+                with(ID);
             }
             if (entityMetadata.isPersistent()) {
                 primProps.add(VERSION);
@@ -477,6 +477,13 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
         private void with(final String propName, final boolean skipEntities) {
             getPropMetadata(propName).ifPresentOrElse(pm -> {
+                if (ID.equals(propName) && entityMetadata.isUnion()) {
+                    primProps.add(propName);
+                    // Active union property must be present to access ID of a union.
+                    domainMetadata.entityMetadataUtils().unionMembers(entityMetadata.asUnion().orElseThrow()).forEach(unionMember -> {
+                        with(unionMember.name(), fetchIdOnly(unionMember.type().asEntity().orElseThrow().javaType()));
+                    });
+                }
                 if (pm.type().isCompositeKey()) {
                     // Do not include the key itself.
                     // See the documentation of this class.
