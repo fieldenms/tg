@@ -543,11 +543,10 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
        }
 
        private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-            final var stackElement = new StackElement(propName, fetchModel);
-
             // If a cycle is detected, override `fetchModel` with an ID_ONLY one.
             // This is a form of partial support for cycles.
             if (stack.stream().anyMatch(elt -> elt.fetch().equals(fetchModel))) {
+                final var stackElement = new StackElement(propName, fetchModel);
                 LOGGER.warn(() -> format(WARN_GRAPH_CYCLE,
                                          StreamUtils.prepend(stackElement, stack.stream())
                                                  .map(elt -> format("%s: (%s, %s)",
@@ -555,7 +554,16 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                                                                     elt.fetch().getEntityType().getSimpleName(),
                                                                     elt.fetch().getFetchCategory()))
                                                  .collect(joining("\n"))));
-                with(propName, new fetch<>(fetchModel.getEntityType(), ID_ONLY));
+
+                final var fetchIdOnly = new fetch<>(fetchModel.getEntityType(), ID_ONLY);
+                // An ID_ONLY fetch model should never result in a cycle as it does not add depth.
+                // Still, let's be defensive.
+                if (fetchModel.equals(fetchIdOnly)) {
+                    entityProps.put(propName, new EntityRetrievalModel<>(fetchIdOnly, domainMetadata, qsip, false, prepend(stackElement, stack)));
+                }
+                else {
+                    with(propName, fetchIdOnly);
+                }
                 return;
             }
 
@@ -585,7 +593,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 includeCommonUnionProperty(propName, Optional.of(finalFetch));
             }
             else {
-                final var model = new EntityRetrievalModel<>(finalFetch, domainMetadata, qsip, false, prepend(stackElement, stack));
+                final var model = new EntityRetrievalModel<>(finalFetch, domainMetadata, qsip, false, prepend(new StackElement(propName, finalFetch), stack));
                 entityProps.put(propName, model);
             }
         }
