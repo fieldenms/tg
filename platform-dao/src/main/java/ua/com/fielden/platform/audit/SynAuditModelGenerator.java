@@ -5,8 +5,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
+import ua.com.fielden.platform.audit.exceptions.AuditingRuntimeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -21,7 +21,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.*;
@@ -36,6 +35,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 @Singleton
 final class SynAuditModelGenerator implements ISynAuditModelGenerator {
 
+    public static final String ERR_NOT_SYNTHETIC_AUDIT_TYPE = "[%s] is not a synthetic audit type.";
     private final AuditingMode auditingMode;
     private final IAuditTypeFinder auditTypeFinder;
     private final IDomainMetadata domainMetadata;
@@ -64,7 +64,7 @@ final class SynAuditModelGenerator implements ISynAuditModelGenerator {
             return generateSynAuditPropModel((Class) synAuditEntityType);
         }
         else {
-            throw new InvalidArgumentException(format("[%s] is not a synthetic audit type.", synAuditEntityType.getTypeName()));
+            throw new AuditingRuntimeException(ERR_NOT_SYNTHETIC_AUDIT_TYPE.formatted(synAuditEntityType.getTypeName()));
         }
     }
 
@@ -94,10 +94,9 @@ final class SynAuditModelGenerator implements ISynAuditModelGenerator {
         return ImmutableList.of(query);
     }
 
-    /**
-     * Builds a query with persistent audit-entity type {@code auditEntityType} as its source and synthetic audit-entity type {@code synAuditEntityType} as its result.
-     * The query will yield into all properties of {@code synAuditEntityType}.
-     */
+    /// Builds a query with persistent audit-entity type `auditEntityType` as its source and synthetic audit-entity type `synAuditEntityType` as its result.
+    /// The query will yield into all properties of `synAuditEntityType`.
+    ///
     private <E extends AbstractEntity<?>> EntityResultQueryModel<AbstractSynAuditEntity<E>> makeAuditEntitySourceQuery(
             final Class<AbstractSynAuditEntity<E>> synAuditEntityType,
             final Class<AbstractAuditEntity<E>> auditEntityType)
@@ -124,12 +123,14 @@ final class SynAuditModelGenerator implements ISynAuditModelGenerator {
                          nullYields);
     }
 
-    /// Expands a property into sub-properties whose names form a path with the property (e.g., `money.amount`).
-    /// This applies only if the property type is a component type or a union entity type.
+    /// Expands a property into its sub-properties, forming a full path from the parent property (e.g. `money.amount`).
+    ///
+    /// Expansion occurs only if the property’s type is a component type or a union entity type.
     /// Otherwise, the property is expanded to itself.
     ///
-    /// This process is necessary to overcome the limitation of EQL -- to yield a union-typed or component-typed property,
-    /// all sub-properties must be yielded.
+    /// This expansion is required to address an EQL limitation:
+    /// when yielding a union-typed or component-typed property, all of its sub-properties must also be yielded explicitly.
+    ///
     private Stream<PropertyMetadata> expand(final PropertyMetadata property) {
         return switch (property.type()) {
             case Component $ -> domainMetadata.propertyMetadataUtils().subProperties(property, SubPropertyNaming.PATH).stream();
@@ -164,13 +165,11 @@ final class SynAuditModelGenerator implements ISynAuditModelGenerator {
                 .collect(toImmutableList());
     }
 
-
-    /**
-     * Builds a query with the specified yields.
-     *
-     * @param propYields  names of properties that are yielded as is (e.g., {@code yield().prop("key").as("key")})
-     * @param valueYields  a map with the form of {@code {alias : value}} that describes yields with the form of {@code yield().val(value).as(alias)}
-     */
+    /// Builds a query using the specified yields.
+    ///
+    /// @param propYields the names of properties to be yielded directly, such as `yield().prop("key").as("key")`.
+    /// @param valueYields A map of `{ alias : value }` pairs describing yields in the form `yield().val(value).as(alias)`.
+    ///
     private static <E extends AbstractEntity<?>> EntityResultQueryModel<E> makeModel(
             final Class<? extends AbstractEntity<?>> sourceType,
             final Class<E> resultType,
@@ -219,14 +218,13 @@ final class SynAuditModelGenerator implements ISynAuditModelGenerator {
         return part;
     }
 
-    /**
-     * Creates a map of yields with the form of {@code {alias : value}}, where {@code value} is always {@code null}.
-     * If {@code null} is not applicable, some default value is used.
-     * <p>
-     * The definition of <i>default value</i> may be refined in the future.
-     *
-     * @param properties  properties for which null-yields are to be created;
-     */
+    /// Creates a map of yields in the form `{ alias : value }`, where each `value` is initially `null`.
+    /// If `null` is not suitable for a particular property, a default value is used instead.
+    ///
+    /// The exact definition of the _default value_ may evolve in future implementations.
+    ///
+    /// @param properties the properties for which null-based yields should be created
+    ///
     private static Map<String, Object> makeNullYields(final Collection<? extends PropertyMetadata> properties) {
         if (properties.isEmpty()) {
             return ImmutableMap.of();
