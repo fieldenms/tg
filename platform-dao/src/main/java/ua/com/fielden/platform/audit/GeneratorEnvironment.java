@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.audit;
 
-/**
- * Provides various facilities for the generation of audit-entities.
- */
+/// Provides various facilities for the generation of audit-entities.
+///
 final class GeneratorEnvironment {
 
     private final JavaPoet javaPoet;
 
     public GeneratorEnvironment() {
-        this.javaPoet = JavaPoet.getInstance();
+        this.javaPoet = new JavaPoet();
     }
 
     public JavaPoet javaPoet() {
