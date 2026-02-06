@@ -48,7 +48,7 @@ async function tryLoadingConfiguration(delayConfig) {
             // Fallback to the saved one.
             const appConfig = JSON.parse(appConfigValue);
             appConfig.isStale = true;
-            appConfig.errorMsg = `Could not load configuration: ${err.message.endsWith(".") ? err.message.toLowerCase() : (err.message.toLowerCase() + ".")}\nUsing saved configuration instead. Refresh to try again.`;
+            appConfig.errorMsg = `Could not load configuration: ${err.message.endsWith(".") ? err.message.toLowerCase() : (err.message.toLowerCase() + ".")}\nUsing saved configuration instead.`;
             return appConfig;
         } else {
             // Otherwise throw exception indicating that configuration could not be loaded.
