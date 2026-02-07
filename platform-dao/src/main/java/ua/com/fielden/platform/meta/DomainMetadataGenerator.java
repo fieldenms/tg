@@ -63,67 +63,68 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
-/**
- * <h3> Property Metadata </h3>
- * Given a Java type that has properties (e.g., entity type or component type), metadata is optionally generated for each property.
- * <p>
- * For the purpose of metadata generation properties can be divided into <i>special</i> and <i>ordinary</i> groups.
- * <p>
- * Special properties include: "id", "version", "key", one-to-one associations.
- * <p>
- * Whether metadata is generated for a property depends on several factors: the nature of its enclosing type (e.g., persistent entity),
- * the nature and the type of the property itself.
- *
- * <h4> Property Type Metadata </h4>
- * Metadata is also generated for property types, see {@link PropertyTypeMetadata}.
- * <p>
- * Properties whose type cannot be modelled by metadata are skipped.
- * However, for some properties it is required that their type be modelled, otherwise the property's definition must be incorrect.
- * These include:
- * <ul>
- *   <li> Special properties.
- *   <li> Persistent properties.
- *   <li> Calculated properties.
- *   <li> CritOnly properties.
- * </ul>
- *
- * <h4> Collectional Properties </h4>
- * Although collectional properties are implicitly calculated, the nature of any given collectional property gets inferred from its definition (typically it is {@link PropertyNature.Plain}).
- * The calculation part is performed independently by {@link EntityContainerEnhancer}.
- *
- * <h4>General verification rules for entities</h4>
- * <ul>
- *   <li>Synthetic based on Persistent entities cannot have an entity-typed key.
- *   <li>Union entities cannot be used as keys or composite key members.
- * </ul>
- *
- */
+/// ###  Property Metadata
+/// Given a Java type that has properties (e.g. entity type or component type), metadata is optionally generated for each property.
+///
+/// For the purpose of metadata generation properties can be divided into _special_ and _ordinary_ groups.
+///
+/// Special properties include: `id`, `version`, `key`, and one-2-one associations.
+///
+/// Whether metadata is generated for a property depends on several factors:
+/// 1. the nature of its enclosing type (e.g. persistent entity), and
+/// 2. the nature and the type of the property itself.
+///
+/// ####  Property Type Metadata
+/// Metadata is also generated for property types, see [PropertyTypeMetadata].
+///
+/// Properties whose type cannot be modelled by metadata are skipped.
+/// However, for some properties it is required that their type be modelled, otherwise the property's definition must be incorrect.
+///
+/// These include:
+/// -  Special properties.
+/// -  Persistent properties.
+/// -  Calculated properties.
+/// -  CritOnly properties.
+///
+/// ####  Collectional Properties
+/// Although collectional properties are implicitly calculated, the nature of any given collectional property gets inferred from its definition (typically it is [PropertyNature.Plain]).
+/// The calculation part is performed independently by [EntityContainerEnhancer].
+///
+/// #### General verification rules for entities
+///
+/// - Synthetic based on Persistent entities cannot have an entity-typed key.
+/// - Union entities cannot be used as keys or composite key members.
+///
 final class DomainMetadataGenerator {
 
     private static final Logger LOGGER = getLogger(DomainMetadataGenerator.class);
 
     private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
 
-    public static final String ERR_COULD_NOT_LOAD_TYPE = "Could not load type [%s].";
-    public static final String ERR_CANNOT_OBTAIN_EXPRESSION_MODEL_FOR_CALCULATED_PROPERTY = "Cannot obtain expression model for calculated property [%s].";
-    public static final String ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS = "Ill-defined union entity [%s] has no union members.";
-    public static final String ERR_UNION_ENTITY_PROPERTY_NAME_CONFLICT =
-    """
-    Ill-defined union entity: %s
-    Common property and union property share the same name [%s].\
-    """;
-    public static final String ERR_TABLE_NAME_NOT_DETERMINED = "Could not determine table name for entity [%s].";
-    public static final String ERR_SYNTHETIC_ENTITY_WITH_UNSUPPORTED_KEY_TYPE = "Entity [%s] is recognised as synthetic-based-on-persistent having an entity-typed key. This is not supported.";
+    public static final String
+            ERR_COULD_NOT_LOAD_TYPE = "Could not load type [%s].",
+            ERR_CANNOT_OBTAIN_EXPRESSION_MODEL_FOR_CALCULATED_PROPERTY = "Cannot obtain expression model for calculated property [%s].",
+            ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS = "Ill-defined union entity [%s] has no union members.",
+            ERR_UNION_ENTITY_PROPERTY_NAME_CONFLICT =
+                """
+                Ill-defined union entity: %s
+                Common property and union property share the same name [%s].\
+                """,
+            ERR_TABLE_NAME_NOT_DETERMINED = "Could not determine table name for entity [%s].",
+            ERR_SYNTHETIC_ENTITY_WITH_UNSUPPORTED_KEY_TYPE = "Entity [%s] is recognised as synthetic-based-on-persistent having an entity-typed key. This is not supported.",
+            ERR_GENERATING_METADATA_FOR_ENTITY = "Failed to generate metadata for entity [%s].",
+            ERR_GENERATING_METADATA_FOR_PROPERTY = "Failed to generate metadata for property [%s].",
+            ERR_DETERMINING_KEY_TYPE = "Cannot determine key type of [%s].";
 
     private final PropertyTypeMetadataGenerator propTypeMetadataGenerator = new PropertyTypeMetadataGenerator();
     private final HibernateTypeGenerator hibTypeGenerator;
     private final Map<String, PropColumn> specialPropColumns;
 
-    /** Long-lasting (but not necessarily permanent) cache for entity types. */
+    /// Long-lasting (but not necessarily permanent) cache for entity types.
     private final Cache<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataCache;
-    /** Temporary cache for entity types. */
+    /// Temporary cache for entity types.
     private final Cache<Class<? extends AbstractEntity<?>>, EntityMetadata> tmpEntityMetadataCache;
-    /** Permanent cache for component types. */
+    /// Permanent cache for component types.
     private final Cache<Class<?>, TypeMetadata.Component> componentTypeMetadataCache;
 
     DomainMetadataGenerator(final HibernateTypeMappings hibernateTypeMappings, final IDbVersionProvider dbVersionProvider) {
@@ -149,9 +150,9 @@ final class DomainMetadataGenerator {
                 .build();
     }
 
-    ////////////////////////////////////
-    ////// Component Type Metadata /////
-    ////////////////////////////////////
+    //:::::::::::::::::::::::::::::::::::
+    //:::: Component Type Metadata ::::::
+    //:::::::::::::::::::::::::::::::::::
 
     public Optional<TypeMetadata.Component> forComponent(final Class<?> type) {
         final var cached = componentTypeMetadataCache.getIfPresent(type);
@@ -169,9 +170,8 @@ final class DomainMetadataGenerator {
         return Optional.of(metadata);
     }
 
-    /**
-     * Builds metadata for properties of a given component type.
-     */
+    /// Builds metadata for properties of a given component type.
+    ///
     private Iterable<? extends PropertyMetadata> buildProperties(final ComponentTypeMetadataImpl.Builder typeBuilder) {
         // DO NOT MODIFY THE GIVEN BUILDER
         return Arrays.stream(typeBuilder.getJavaType().getDeclaredFields())
@@ -206,9 +206,9 @@ final class DomainMetadataGenerator {
         return Optional.of(builder.build());
     }
 
-    ////////////////////////////////////
-    /////// Entity Type Metadata ///////
-    ////////////////////////////////////
+    //:::::::::::::::::::::::::::::::::::
+    //::::::: Entity Type Metadata ::::::
+    //:::::::::::::::::::::::::::::::::::
 
     public Optional<EntityMetadata> forEntity(final Class<? extends AbstractEntity<?>> entityType) {
         final var cached = getCachedEntityMetadata(entityType);
@@ -220,8 +220,8 @@ final class DomainMetadataGenerator {
         try {
             metadata = forEntity_(entityType);
         } catch (final Exception ex) {
-            // rethrow to facilitate debugging
-            throw new DomainMetadataGenerationException("Failed to generate metadata for entity [%s].".formatted(entityType), ex);
+            // Rethrow to facilitate debugging.
+            throw new DomainMetadataGenerationException(ERR_GENERATING_METADATA_FOR_ENTITY.formatted(entityType), ex);
         }
 
         if (metadata == null) {
@@ -233,8 +233,7 @@ final class DomainMetadataGenerator {
     }
 
     private EntityMetadata requireForEntity(final Class<? extends AbstractEntity<?>> entityType) {
-        return forEntity(entityType).orElseThrow(() -> new DomainMetadataGenerationException(
-                "Could not generate metadata for entity [%s].".formatted(entityType.getTypeName())));
+        return forEntity(entityType).orElseThrow(() -> new DomainMetadataGenerationException(ERR_GENERATING_METADATA_FOR_ENTITY.formatted(entityType.getTypeName())));
     }
 
     private @Nullable EntityMetadata getCachedEntityMetadata(final Class<? extends AbstractEntity<?>> entityType) {
@@ -255,7 +254,8 @@ final class DomainMetadataGenerator {
     private @Nullable EntityMetadata forEntity_(final Class<? extends AbstractEntity<?>> entityType) {
         final EntityMetadataBuilder<?, ?> entityBuilder;
 
-        // Note: if entityType is a generated entity type with the same nature as its original type, then it is possible to reuse the data from the original type's nature
+        // Note: If entityType is a generated entity type with the same nature as its original type,
+        //       then it is possible to reuse the data from the original type's nature.
         switch (inferEntityNature(entityType)) {
             case EntityNature.Union $ -> {
                 final var unionEntityType = (Class<? extends AbstractUnionEntity>) entityType;
@@ -277,9 +277,8 @@ final class DomainMetadataGenerator {
         return entityBuilder == null ? null : entityBuilder.properties(buildProperties(entityBuilder)).build();
     }
 
-    /**
-     * If {@code entityType} is generated, returns the metadata for its parent type, otherwise returns an empty optional.
-     */
+    /// If `entityType` is generated, returns the metadata for its parent type, otherwise returns an empty optional.
+    ///
     private Optional<EntityMetadata> metadataForParentOfGenerated(final Class<? extends AbstractEntity<?>> entityType) {
         if (isGenerated(entityType)) {
             final var parentEntityType = (Class<? extends AbstractEntity<?>>) entityType.getSuperclass();
@@ -290,21 +289,21 @@ final class DomainMetadataGenerator {
     }
 
     private Iterable<? extends PropertyMetadata> buildProperties(final EntityMetadataBuilder<?, ?> entityBuilder) {
-        // if an entity type is generated and has the same nature as its parent entity type, we can reuse parent's properties metadata
+        // If an entity type is generated and has the same nature as its parent entity type,
+        // then we can reuse parent's properties metadata.
         return metadataForParentOfGenerated(entityBuilder.getJavaType())
                 .filter(parentEntityMetadata -> parentEntityMetadata.nature().equals(entityBuilder.getNature()))
                 .map(parentEntityMetadata -> buildPropertiesForGeneratedEntity(entityBuilder, parentEntityMetadata))
                 .orElseGet(() -> buildPropertiesFull(entityBuilder));
     }
 
-    /**
-     * Builds metadata for properties of a given entity.
-     */
+    /// Builds metadata for properties of a given entity.
+    ///
     private Iterable<PropertyMetadata> buildPropertiesFull(final EntityMetadataBuilder<?, ?> entityBuilder) {
         // DO NOT MODIFY THE GIVEN BUILDER
-        switch (entityBuilder) {
+        return switch (entityBuilder) {
             case EntityMetadataBuilder.Union u -> {
-                return ImmutableList.<PropertyMetadata>builder()
+                yield ImmutableList.<PropertyMetadata>builder()
                         .addAll(generateUnionImplicitCalcSubprops(u.getJavaType(), entityBuilder, SubPropertyNaming.SIMPLE))
                         // union members
                         .addAll(unionProperties(u.getJavaType()).stream()
@@ -325,9 +324,9 @@ final class DomainMetadataGenerator {
                         .flatMap(Optional::stream)
                         .map(PropertyMetadataImpl.Builder::build)
                         .forEach(props::add);
-                return props.build();
+                yield props.build();
             }
-        }
+        };
     }
 
     private Iterable<PropertyMetadata> buildPropertiesForGeneratedEntity(final EntityMetadataBuilder<?, ?> entityBuilder,
@@ -359,7 +358,7 @@ final class DomainMetadataGenerator {
     private Optional<PropertyMetadata> mkPropKey(final EntityMetadataBuilder<?, ?> entityBuilder) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityBuilder.getJavaType());
         if (keyType == null) {
-            throw new EntityDefinitionException("Cannot determine key type of [%s].".formatted(entityBuilder.getJavaType().getTypeName()));
+            throw new EntityDefinitionException(ERR_DETERMINING_KEY_TYPE.formatted(entityBuilder.getJavaType().getTypeName()));
         }
 
         if (isOneToOne(entityBuilder.getJavaType())) {
@@ -400,18 +399,13 @@ final class DomainMetadataGenerator {
         }
     }
 
-    /**
-     * Semantics of {@code id} depends on the enclosing entity's nature:
-     * <ul>
-     *   <li> Persistent - included as persistent.
-     *   <li> Synthetic:
-     *     <ul>
-     *       <li> Entity-typed key - implicitly calculated making it equal to {@code key}.
-     *       <li> Else - included as plain.
-     *     </ul
-     *   <li> Else - excluded.
-     * </ul>
-     */
+    /// Semantics of `id` depends on the enclosing entity's nature:
+    /// - **Persistent**: included as persistent.
+    /// - **Synthetic**:
+    ///   -  Entity-typed key — implicitly calculated making it equal to `key`.
+    ///   -  Else — included as plain.
+    /// - **Otherwise**: excluded.
+    ///
     private Optional<PropertyMetadata> mkPropId(final EntityMetadataBuilder<?, ?> entityBuilder) {
         final PropertyMetadata propId = persistentProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY,
                                                        PropertyNature.Persistent.data(propColumn(propColumnName(entityBuilder.getJavaType(), ID))))
@@ -440,21 +434,19 @@ final class DomainMetadataGenerator {
         };
     }
 
-    /**
-     * The most general property metadata generation method.
-     * <p>
-     * Special cases:
-     * <ul>
-     *   <li> One-2-one association - implicitly calculated with an EQL expression generated dynamically and included as part of the property metadata.
-     *   <li> One-2-many associations - represented by collectional properties, which could also be recognised as implicitly calculated, but are recognised as transient (plain), with {@link EntityContainerEnhancer} completing their processing at the time of query execution. </li>
-     * </ul>
-     */
+    /// The most general property metadata generation method.
+    ///
+    /// Special cases:
+    /// - **One-2-one association**: implicitly calculated with an EQL expression generated dynamically and included as part of the property metadata.
+    /// - **One-2-many associations**: represented by collectional properties, which could also be recognised as implicitly calculated,
+    ///                                but are recognised as transient (plain), with [EntityContainerEnhancer] completing their processing at the time of query execution.
+    ///
     Optional<PropertyMetadataImpl.Builder<?, ?>> mkProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
         try {
             return mkProp_(field, entityBuilder);
         } catch (final Exception ex) {
-            // rethrow to facilitate debugging
-            throw new DomainMetadataGenerationException("Failed to generate metadata for property [%s].".formatted(field), ex);
+            // Rethrow to facilitate debugging.
+            throw new DomainMetadataGenerationException(ERR_GENERATING_METADATA_FOR_PROPERTY.formatted(field), ex);
         }
     }
 
@@ -551,6 +543,7 @@ final class DomainMetadataGenerator {
         });
         return optPtm;
     }
+
     // A cache for primitive property types that exists throughout the lifetime of this generator
     private final ConcurrentHashMap<Type, PropertyTypeMetadata.Primitive> primitivePropTypeMetadataCache = new ConcurrentHashMap<>();
 
@@ -581,9 +574,9 @@ final class DomainMetadataGenerator {
                         "Failed to generate metadata for property type [%s].".formatted(type.getTypeName())));
     }
 
-    ///////////////////////////
-    //// Persistent Entity ////
-    ///////////////////////////
+    //:::::::::::::::::::::::::::::::::::
+    //::::::::: Persistent Entity :::::::
+    //:::::::::::::::::::::::::::::::::::
 
     String propColumnName(final Class<?> owner, final String propName) {
         return Optional.ofNullable(specialPropColumns.get(propName))
@@ -640,17 +633,12 @@ final class DomainMetadataGenerator {
         }
     }
 
-    ///////////////////////////////////
-    ////////// Union Entity ///////////
-    ///////////////////////////////////
+    //:::::::::::::::::::::::::::::::::::
+    //:::::::::: Union Entity :::::::::::
+    //:::::::::::::::::::::::::::::::::::
 
-    /**
-     * Generates EQL models to retrieve each union-property, defined in {@code unionType}.
-     *
-     * @param unionType
-     * @return
-     * @param <ET>
-     */
+    /// Generates EQL models to retrieve each union-property, defined in `unionType`.
+    ///
     private static <ET extends AbstractUnionEntity> List<EntityResultQueryModel<ET>>
     produceUnionEntityModels(final Class<ET> unionType) {
         final List<Field> unionProps = unionProperties(unionType);
@@ -659,19 +647,17 @@ final class DomainMetadataGenerator {
                 .toList();
     }
 
-    /**
-     * Given a list of union properties and the current property from that list, constructs a query that yields {@code id}
-     * under the selected property's name, and {@code null} under names of other properties.
-     *
-     * {@snippet lang=none :
-     * ["a", "b", "c"], "b"
-     * ->
-     * select(B).yield().val(null).as("a")
-     *          .yield().prop("id").as("b")
-     *          .yield().val(null).as("c")
-     * }
-     * where {@code B} is the type of property {@code "b"}.
-     */
+    /// Given a list of union properties and the current property from that list, constructs a query that yields `id`
+    /// under the selected property's name, and `null` under names of other properties.
+    /// ```
+    ///  ["a", "b", "c"], "b"
+    ///  ->
+    ///  select(B).yield().val(null).as("a")
+    ///           .yield().prop("id").as("b")
+    ///           .yield().val(null).as("c")
+    /// ```
+    /// where `B` is the type of property `"b"`.
+    ///
     private static EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded<?>
     generateModelForUnionEntityProperty(final List<Field> unionProps, final Field currProp)
     {
@@ -767,12 +753,14 @@ final class DomainMetadataGenerator {
         return expressionModelInProgress.end().model();
     }
 
-    //////////////////////////////////////////
-    ////// Calculated property utilities /////
-    //////////////////////////////////////////
+    //:::::::::::::::::::::::::::::::::::
+    //:: Calculated property utilities ::
+    //:::::::::::::::::::::::::::::::::::
 
-    private static ExpressionModel extractExpressionModelForCalculatedProperty
-            (final Class<? extends AbstractEntity<?>> entityType, final Field prop, final Calculated atCalculated)
+    private static ExpressionModel extractExpressionModelForCalculatedProperty(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final Field prop,
+            final Calculated atCalculated)
     {
         try {
             if (isNotEmpty(atCalculated.value())) {
@@ -805,11 +793,12 @@ final class DomainMetadataGenerator {
         }
     }
 
-    /////////////////////////////
-    ////// Auditing ////////////
-    ////////////////////////////
+    //:::::::::::::::::::::::::::::::::::
+    //:::::::::::: Auditing :::::::::::::
+    //:::::::::::::::::::::::::::::::::::
 
-    private <N extends PropertyNature, D extends PropertyNature.Data<N>> PropertyMetadataImpl.Builder<N, D> enhanceWithAuditingData(
+    private <N extends PropertyNature, D extends PropertyNature.Data<N>> PropertyMetadataImpl.Builder<N, D>
+    enhanceWithAuditingData(
             final PropertyMetadataImpl.Builder<N, D> propBuilder,
             final EntityMetadataBuilder<?, ?> entityBuilder)
     {
@@ -828,9 +817,9 @@ final class DomainMetadataGenerator {
         }
     }
 
-    /////////////////////////////
-    ////// Misc. utilities /////
-    ////////////////////////////
+    //:::::::::::::::::::::::::::::::::::
+    //::::::::: Misc. utilities :::::::::
+    //:::::::::::::::::::::::::::::::::::
 
     static EntityNature inferEntityNature(final Class<? extends AbstractEntity<?>> entityType) {
         if (isPersistentEntityType(entityType)) {
@@ -856,7 +845,7 @@ final class DomainMetadataGenerator {
     }
 
     private static boolean isGenerated(final Class<?> type) {
-        // NOTE: it would be nice if all generated types implemented a marker interface (e.g., IGenerated)
+        // NOTE: It would be nice if all generated types implemented a marker interface (e.g. IGenerated).
         return DynamicEntityClassLoader.isGenerated(type)
                 || isInstrumented(type)
                 || isProxied(type)
