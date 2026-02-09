@@ -240,8 +240,16 @@ public class AuditingTest extends AbstractDaoTestCase {
         }
     }
 
+    /// Verifies that an entity which becomes invalid upon retrieval can still be audited successfully.
+    ///
+    /// This scenario can occur if validation errors are suppressed (intentionally or due to a defect), allowing an invalid entity to be saved.
+    /// When the same entity is retrieved after saving (e.g. as part of the save workflow), it may get recognised as invalid.
+    ///
+    /// Depending on the auditing implementation, attempts to audit such invalid entities may fail.
+    /// This test guards against regressions in the auditing mechanism by ensuring that entities that become invalid upon retrieval remain auditable.
+    /// 
     @Test
-    public void invalid_entities_can_be_audited() {
+    public void entity_that_becomes_invalid_upon_retrieval_can_be_audited() {
         final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
 
         final var newEntity = new_(AuditedEntity.class, "A").setInvalidate(true);
