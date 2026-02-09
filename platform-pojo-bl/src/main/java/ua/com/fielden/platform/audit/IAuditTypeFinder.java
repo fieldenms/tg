@@ -47,12 +47,18 @@ public interface IAuditTypeFinder {
     ///
     <E extends AbstractEntity<?>> Navigator<E> navigateSynAuditProp(Class<AbstractSynAuditProp<E>> type);
 
-    /// Provides access to audited type `E` and its audit types.
-    /// Handling of exceptional situations depends on the {@linkplain AuditingMode auditing mode} in use.
-    /// In general, if the auditing mode is [#ENABLED], all expected audit types must exist.
-    /// If the auditing mode is [#GENERATION], all or some audit types may not exist.
+    /// Provides a uniform API for accessing an audited type `E` and all of its associated audit types.
     ///
-    /// @param <E>  the audited type
+    /// It supports:
+    /// * locating synthetic and persistent audit-entity and audit-prop types;
+    /// * selecting a specific audit type by version;
+    /// * obtaining all related audit types in a stable, version-aware order.
+    ///
+    /// Handling of exceptional situations depends on the active [AuditingMode].
+    /// When the auditing mode is [AuditingMode#ENABLED], all expected audit types are required to exist.
+    /// When the auditing mode is [AuditingMode#GENERATION], some or all audit types may legitimately be absent.
+    ///
+    /// @param <E> the audited entity type
     ///
     interface Navigator<E extends AbstractEntity<?>> {
 
