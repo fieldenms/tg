@@ -63,7 +63,7 @@ public class AuditingTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void values_for_proxied_audited_properties_are_refetched_to_create_an_audit_record() {
+    public void values_for_proxied_audited_properties_are_present_in_an_audit_record() {
         // Fetch essential properties for saving and `price` to be modified.
         final var car1WithProxies = co$(TgVehicle.class)
                 .findByKeyAndFetch(fetchNone(TgVehicle.class).with("id", "version", "key", "price"),
