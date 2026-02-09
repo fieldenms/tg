@@ -450,15 +450,14 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeIdOnly() {
-            with(ID);
-        }
-
-        private void includeIdAndVersion() {
-            // NOTE: Shouldn't this category produce a superset of ID_ONLY?
-            //       It does not always include ID, unlike ID_ONLY.
             if (querySourceInfo.hasProp(ID)) {
                 with(ID);
             }
+        }
+
+        private void includeIdAndVersion() {
+            includeIdOnly();
+
             if (entityMetadata.isPersistent()) {
                 primProps.add(VERSION);
                 if (isActivatableEntityType(entityType)) {

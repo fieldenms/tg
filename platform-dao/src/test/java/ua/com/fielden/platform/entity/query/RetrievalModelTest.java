@@ -275,10 +275,9 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
         assertRetrievalModel(SynEntityWithYieldId.class, ID_ONLY).contains("id");
     }
 
-    // ID_ONLY uncoditionally includes ID
     @Test
-    public void strategy_ID_ONLY_id_is_included_if_synthetic_model_does_not_yield_into_it() {
-        assertRetrievalModel(SynEntityWithoutYieldId.class, ID_ONLY).contains("id");
+    public void strategy_ID_ONLY_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
+        assertRetrievalModel(SynEntityWithoutYieldId.class, ID_ONLY).notContains("id");
     }
 
     @Test
