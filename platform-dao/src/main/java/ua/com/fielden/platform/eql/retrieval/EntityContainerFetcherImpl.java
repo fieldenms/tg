@@ -107,22 +107,18 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qpm) {
         class $ {
-            /**
-             * This predicate identifies cases where only ID is yielded, and a query needs to be extended to a query for retrieving an entity with that ID instead of just an ID value as a number.
-             */
+            /// This predicate identifies cases where only ID is yielded, and a query needs to be extended to a query for retrieving an entity with that ID instead of just an ID value as a number.
+            ///
             static boolean isIdOnlyQuery(final QueryModelResult<?> queryModelResult) {
                 return isPersistentEntityType(queryModelResult.resultType())
                        && queryModelResult.yieldedColumns().size() == 1
-                       && ID.equals(queryModelResult.yieldedColumns().getFirst().name())
-                       && !(queryModelResult.fetchModel().getPrimProps().size() == 1 && queryModelResult.fetchModel().getPrimProps().contains(ID) &&
-                            queryModelResult.fetchModel().getRetrievalModels().isEmpty());
+                       && ID.equals(queryModelResult.yieldedColumns().getFirst().name());
             }
         }
 
         final QueryModelResult<E> modelResult = eqlQueryTransformer.getModelResult(qpm, userProvider.getUsername());
 
-        // This piece of code is responsible for "re-fetching the whole entity by ID in order to be able to enhance it".
-        // This is necessary to convert yielded IDs to fully-fledged entities.
+        // If the query yields ID only, wrap it to retrieve an entity of the expected type with that ID.
         // This does not apply to entity aggregates where IDs might be yielded – they are treated as numbers.
         // See Issue #1991 (https://github.com/fieldenms/tg/issues/1991).
         if ($.isIdOnlyQuery(modelResult)) {
