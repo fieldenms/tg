@@ -157,11 +157,11 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         final var builder = new Builder(originalFetch.getEntityType(), domainMetadata, qsip, stack);
 
         switch (originalFetch.getFetchCategory()) {
-            case ALL_INCL_CALC -> builder.includeAllFirstLevelPropsInclCalc();
-            case ALL -> builder.includeAllFirstLevelProps();
-            case DEFAULT -> builder.includeAllFirstLevelPrimPropsAndKey();
-            case KEY_AND_DESC -> builder.includeKeyAndDescOnly();
-            case ID_AND_VERSION -> builder.includeIdAndVersionOnly();
+            case ALL_INCL_CALC -> builder.includeAllInclCalc();
+            case ALL -> builder.includeAll();
+            case DEFAULT -> builder.includeDefault();
+            case KEY_AND_DESC -> builder.includeKeyAndDesc();
+            case ID_AND_VERSION -> builder.includeIdAndVersion();
             case ID_ONLY -> builder.includeIdOnly();
             case NONE -> {}
         }
@@ -394,8 +394,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             unionProperties(unionType).forEach(prop -> with(prop.getName()));
         }
 
-        private void includeAllFirstLevelPrimPropsAndKey() {
-            includeKeyAndDescOnly();
+        private void includeDefault() {
+            includeKeyAndDesc();
 
             forEachProperty((prop, optPropMetadata) -> {
                 // Exclude all calculated properties except for components (legacy EQL2 behaviour).
@@ -422,8 +422,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             }
         }
 
-        private void includeKeyAndDescOnly() {
-            includeIdAndVersionOnly();
+        private void includeKeyAndDesc() {
+            includeIdAndVersion();
 
             with(KEY, false);
 
@@ -432,8 +432,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             }
         }
 
-        private void includeAllFirstLevelProps() {
-            includeKeyAndDescOnly();
+        private void includeAll() {
+            includeKeyAndDesc();
 
             forEachProperty((prop, optPropMetadata) -> {
                 // Exclude all calculated properties except for components (legacy EQL2 behaviour).
@@ -445,7 +445,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             });
         }
 
-        private void includeAllFirstLevelPropsInclCalc() {
+        private void includeAllInclCalc() {
             forEachProperty((prop, optPropMetadata) -> with(prop.name));
         }
 
@@ -453,7 +453,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             with(ID);
         }
 
-        private void includeIdAndVersionOnly() {
+        private void includeIdAndVersion() {
             // NOTE: Shouldn't this category produce a superset of ID_ONLY?
             //       It does not always include ID, unlike ID_ONLY.
             if (querySourceInfo.hasProp(ID)) {
