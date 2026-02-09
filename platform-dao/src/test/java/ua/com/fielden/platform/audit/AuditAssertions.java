@@ -22,9 +22,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 
-/**
- * Extension for AssertJ that provides assertions for audit-entities.
- */
+/// Extension for AssertJ that provides assertions for audit-entities.
+///
 final class AuditAssertions {
 
     private final IDomainMetadata domainMetadata;
@@ -43,10 +42,9 @@ final class AuditAssertions {
     final class SynAuditEntityAssert<E extends AbstractEntity<?>> extends AbstractAssert<SynAuditEntityAssert<E>, AbstractSynAuditEntity<E>> {
 
         private final Lazy<ISynAuditEntityDao<E>> lazyCoAudit;
-        /**
-         * Either the same audit-entity as received in the constructor or a refetched instance.
-         * Refetching is needed if the audit-entity lack properties (i.e. they are proxied) that are necessary for comparison with an audited entity.
-         */
+
+        /// Either the same audit-entity as received in the constructor or a refetched instance.
+        /// Refetching is needed if the audit-entity lack properties (i.e. they are proxied) that are necessary for comparison with an audited entity.
         private final Lazy<AbstractSynAuditEntity<E>> lazyRefetchedAudit;
 
         SynAuditEntityAssert(final AbstractSynAuditEntity<E> a3t) {
@@ -56,10 +54,9 @@ final class AuditAssertions {
             lazyRefetchedAudit = lazySupplier(() -> refetchAudit(a3t));
         }
 
-        /**
-         * Asserts that the audit-entity under test wholly corresponds to the specified audited entity.
-         * Each active audit-property's value must be equal to that of a corresponding audited property.
-         */
+        /// Asserts that the audit-entity under test wholly corresponds to the specified audited entity.
+        /// Each active audit-property's value must be equal to that of a corresponding audited property.
+        ///
         public SynAuditEntityAssert<E> isAuditFor(final E entity) {
             Assertions.assertThat(entity).isNotNull();
 
@@ -77,11 +74,10 @@ final class AuditAssertions {
             return this;
         }
 
-        /**
-         * Asserts that the audit-entity under test <b>is not</b> an audit record for the specified audited entity.
-         * This assertion is true if the specified entity's ID or version is different from that of the audited one.
-         * It is assumed that if ID and version are the same, then the rest of the properties are equal.
-         */
+        /// Asserts that the audit-entity under test **is not** an audit record for the specified audited entity.
+        /// This assertion is true if the specified entity's ID or version is different from that of the audited one.
+        /// It is assumed that if ID and version are the same, then the rest of the properties are equal.
+        ///
         public SynAuditEntityAssert<E> isNotAuditFor(final E entity) {
             Assertions.assertThat(entity).isNotNull();
 
@@ -97,9 +93,8 @@ final class AuditAssertions {
             return this;
         }
 
-        /**
-         * Asserts that the audited entity's property has a value that is equal to that of a corresponding audit-property in the audit-entity under test.
-         */
+        /// Asserts that the audited entity's property has a value that is equal to that of a corresponding audit-property in the audit-entity under test.
+        ///
         public SynAuditEntityAssert<E> isAuditPropertyFor(final E entity, final CharSequence auditedProperty) {
             assertAuditPropertyEqualsToAudited(lazyRefetchedAudit.get(), entity, auditedProperty);
             return this;
