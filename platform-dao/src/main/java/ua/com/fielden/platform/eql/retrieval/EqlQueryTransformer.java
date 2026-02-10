@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
+import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
+import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.IDates;
@@ -26,6 +28,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.util.Collections.unmodifiableList;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 /**
  * An entry point for transforming an EQL query to SQL.
@@ -85,6 +92,24 @@ public final class EqlQueryTransformer {
     }
 
     public <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform(
+            final QueryProcessingModel<E, ?> qpm,
+            final Optional<String> username)
+    {
+        final var result = transform_(qpm, username);
+
+        if (isForeignIdOnlyQuery(result.item)) {
+            final var idOnlyQuery = select((Class<E>) result.item.resultType)
+                    .where().prop(ID).in().model((SingleResultQueryModel<?>) qpm.queryModel)
+                    .model();
+            final var idOnlyQpm = new QueryProcessingModel<>(idOnlyQuery, qpm.orderModel, qpm.fetchModel, qpm.getParamValues(), qpm.lightweight);
+            return transform_(idOnlyQpm, username);
+        }
+        else {
+            return result;
+        }
+    }
+
+    private <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform_(
             final QueryProcessingModel<E, ?> qem,
             final Optional<String> username)
     {
@@ -111,6 +136,18 @@ public final class EqlQueryTransformer {
 
     private static List<YieldedColumn> getYieldedColumns(final Yields3 model) {
         return unmodifiableList(model.getYields().stream().map(yield -> new YieldedColumn(yield.alias(), yield.type(), yield.column())).toList());
+    }
+
+    private static boolean isForeignIdOnlyQuery(final ResultQuery3 resultQuery) {
+        final Yield3 yield;
+        return isPersistentEntityType(resultQuery.resultType)
+               && resultQuery.yields.size() == 1
+               && (yield = first(resultQuery.yields.getYields()).orElseThrow())
+                  .alias().equals(ID)
+               // The type of ID can be either an entity or Long.
+               // If it is an entity type, this is a foreign id-only query (a whole entity is being yielded).
+               // Otherwise, ID is yielded as a number (a local id-only query).
+               && isEntityType(yield.type().javaType());
     }
 
 }
