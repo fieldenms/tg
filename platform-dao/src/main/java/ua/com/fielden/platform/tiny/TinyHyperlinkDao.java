@@ -280,11 +280,11 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             object.put("valId", entity.getId());
             if (isUnionEntityType(propertyType)) {
                 final var unionValue = (AbstractUnionEntity) value;
-                // TODO #2466 This assertion will be subject to removal.
-                if (unionValue.activePropertyName() == null) {
+                final var activePropertyName = unionValue.activePropertyName();
+                if (activePropertyName == null) {
                     throw new InvalidArgumentException(ERR_INVALID_UNION_VALUE.formatted(prop));
                 }
-                object.put("activeProperty", unionValue.activePropertyName());
+                object.put("activeProperty", activePropertyName);
             }
             return object;
         }

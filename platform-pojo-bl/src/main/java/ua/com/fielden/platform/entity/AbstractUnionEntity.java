@@ -1,12 +1,15 @@
 package ua.com.fielden.platform.entity;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
+import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
+import ua.com.fielden.platform.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -14,12 +17,10 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Stream;
 
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
-import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.reflection.exceptions.ReflectionException.requireNotNullArgument;
 
 /// A base class for implementing synthetic entities to be used for modelling situations where a property of some entity can be of multiple types,
@@ -42,14 +43,26 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
                                ERR_NULL_IS_NOT_ACCEPTABLE = "Null is not a valid value for union-properties (union entity [%s]).",
                                ERR_MISSING_ACTIVE_PROP_TO_CHECK_MEMBERSHIP = "Active property cannot be null when checking for membership in [%s].";
 
-    /// Points out the name of a non-null property.
+    /// Represents the name of the assigned union member.
+    ///
+    /// This field should be initialised only once, and this may happen in several places:
+    /// * Instantiation of query results by the EQL engine, where [#ensureUnion(String)] is called.
+    /// * [ObservableMutatorInterceptor] calls [#ensureUnion].
+    ///
+    /// This field may remain uninitialised, in which case [#activePropertyName()] will perform eager search.
+    /// This can occur when:
+    /// * A union entity is loaded by Hibernate.
+    /// * A union entity is instantiated directly (via [IEntityInstantiator#new_()]).
+    ///
     private String activePropertyName;
 
     /// Enforces union rule: only one property can be set and only once from the moment of union entity instantiation.
     /// Such property drives values for properties `id`, `key` and `desc`.
     ///
+    /// **Note**: This method is for platform use only.
+    ///
     public final void ensureUnion(final String propertyName) {
-        if (!isEmpty(activePropertyName)) {
+        if (activePropertyName != null) {
             throw new EntityException(ERR_UNION_PROPERTY_ALREADY_HAS_VALUE.formatted(propertyName, getType().getSimpleName(),  activePropertyName));
         }
         activePropertyName = propertyName;
@@ -96,9 +109,9 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     }
 
     private void ensureActiveProperty() {
-        if (isEmpty(activePropertyName)) {
+        if (activePropertyName == null) {
             activePropertyName = getNameOfAssignedUnionProperty();
-            if (isEmpty(activePropertyName)) {
+            if (activePropertyName == null) {
                 throw new EntityException(ERR_ACTIVE_PROPERTY_NOT_DETERMINED.formatted(getType().getSimpleName()));
             }
         }
@@ -133,61 +146,48 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     }
 
     private String getNameOfAssignedUnionProperty() {
-        final List<Field> fields = findRealProperties(getType());
-        for (final Field field : fields) {
-            field.setAccessible(true);
-            try {
-                if (field.get(this) != null) {
-                    return field.getName();
-                }
-            } catch (final Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        return null;
+        return unionProperties((Class<? extends AbstractUnionEntity>) getType())
+                .stream()
+                .map(Field::getName)
+                .filter(prop -> !isPropertyProxied(this, prop))
+                .filter(prop -> get(prop) != null)
+                .findFirst()
+                .orElse(null);
     }
 
-    /// A convenient method to obtain the value of an active property. Returns null if all properties are null.
+    /// Returns the value of the assigned union property, as determined by [#activePropertyName()].
+    /// If none of the union properties are assigned, returns `null`.
     ///
-    public final AbstractEntity<?> activeEntity() {
-        final Stream<String> propertyNames = streamRealProperties(getType()).map(Field::getName);
-
-        return propertyNames
-                .filter(propName -> !Reflector.isPropertyProxied(this, propName) && get(propName) != null)
-                .findFirst() // returns Optional
-                .map(propName -> (AbstractEntity<?>) get(propName)) // map optional propName value to an actual property value
-                .orElse(null); // return the property value or null if there was no matching propName
+    public final @Nullable AbstractEntity<?> activeEntity() {
+        final var prop = activePropertyName();
+        return prop == null ? null : get(prop);
     }
 
-    /// A convenient method for setting a union property to a non-null value.
-    /// It should only be used on union entity instances that do not yet have an active union-property.
+    /// A convenient method for assigning a non-null value to a union property.
+    /// It should only be used on union entity instances that do not yet have an assigned union property.
     ///
-    ///
-    /// This method looks for an appropriate union-property based on the type of `value`, which gets assigned to that property.
-    /// If no appropriate union-property is found, exception [EntityException] is thrown.
+    /// This method looks for an appropriate union property based on the type of `value`, which gets assigned to that property.
+    /// If no appropriate union property is found, exception [EntityException] is thrown.
     ///
     /// @param value a non-null value
     /// @return an instance of this union entity
-    /// @param <T> a type of the union entity as a convenience for method chaining
+    /// @param <T> the type of this union entity for convenient method chaining
     ///
     public final <T extends AbstractUnionEntity> T setUnionProperty(@Nonnull final AbstractEntity<?> value) {
-        // If null is being assigned then we only need to clear the active union property, if it exists.
         if (value == null) {
             throw new EntityException(ERR_NULL_IS_NOT_ACCEPTABLE.formatted(getType().getSimpleName()));
         }
+
         // A non-null value can only be assigned if it matches one of the union properties by type.
-        final Optional<Field> maybeMatchingProp = streamRealProperties(getType()).filter(field -> field.getType().equals(value.getType())).findFirst();
-        if (maybeMatchingProp.isPresent()) {
-            final String propertyName = maybeMatchingProp.get().getName();
-            if (!isEmpty(activePropertyName)) {
-                throw new EntityException(ERR_UNION_PROPERTY_ALREADY_HAS_VALUE.formatted(propertyName, getType().getSimpleName(),  activePropertyName));
-            }
-            // property setter should be used to trigger the assignment logic
-            this.set(propertyName, value);
-            return (T) this;
+        final var propName = unionPropertyNameByType((Class<? extends AbstractUnionEntity>) this.getType(), value.getType())
+                .orElseThrow(() -> new EntityException(ERR_NO_MATCHING_PROP_TYPE.formatted(value.getType().getSimpleName())));
+
+        if (activePropertyName != null) {
+            throw new EntityException(ERR_UNION_PROPERTY_ALREADY_HAS_VALUE.formatted(propName, getType().getSimpleName(),  activePropertyName));
         }
-        // If no matching union property is found, we throw an exception.
-        throw new EntityException(ERR_NO_MATCHING_PROP_TYPE.formatted(value.getType().getSimpleName()));
+        // Property setter should be used to trigger the assignment logic.
+        this.set(propName, value);
+        return (T) this;
     }
 
     /// Returns a set of property names that are common to all members of the specified union type.
@@ -196,8 +196,12 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         return Finder.commonPropertiesForUnion(type);
     }
 
-    public String activePropertyName() {
-        return activePropertyName;
+    /// Returns the name of the assigned union property.
+    /// If none of the union properties are assigned, returns `null`.
+    ///
+    public @Nullable String activePropertyName() {
+        // In most cases, `activePropertyName` will be assigned, but, if not, search for it eagerly.
+        return activePropertyName != null ? activePropertyName : getNameOfAssignedUnionProperty();
     }
 
     /// Returns a list of properties that represent the members of the specified union type.
