@@ -32,6 +32,7 @@ import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQuer
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.produceQueryWithoutPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.build;
 import static ua.com.fielden.platform.eql.retrieval.HibernateScalarsExtractor.getSortedScalars;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 @Singleton
@@ -107,21 +108,22 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qpm) {
         class $ {
-            /// This predicate identifies cases where only ID is yielded, and a query needs to be extended to a query for retrieving an entity with that ID instead of just an ID value as a number.
-            ///
-            static boolean isIdOnlyQuery(final QueryModelResult<?> queryModelResult) {
+            static boolean isForeignIdOnlyQuery(final QueryModelResult<?> queryModelResult) {
                 return isPersistentEntityType(queryModelResult.resultType())
                        && queryModelResult.yieldedColumns().size() == 1
-                       && ID.equals(queryModelResult.yieldedColumns().getFirst().name());
+                       && ID.equals(queryModelResult.yieldedColumns().getFirst().name())
+                       // The type of ID can be either an entity or Long.
+                       // If it is an entity type, this is a foreign id-only query (a whole entity is being yielded).
+                       // Otherwise, ID is yielded as a number (a local id-only query).
+                       && isEntityType(queryModelResult.yieldedColumns().getFirst().propType().javaType());
             }
         }
 
         final QueryModelResult<E> modelResult = eqlQueryTransformer.getModelResult(qpm, userProvider.getUsername());
 
-        // If the query yields ID only, wrap it to retrieve an entity of the expected type with that ID.
+        // Foreign id-only queries should be wrapped to access the whole graph of the entities being yielded.
         // This does not apply to entity aggregates where IDs might be yielded – they are treated as numbers.
-        // See Issue #1991 (https://github.com/fieldenms/tg/issues/1991).
-        if ($.isIdOnlyQuery(modelResult)) {
+        if ($.isForeignIdOnlyQuery(modelResult)) {
             final var idOnlyQuery = select(modelResult.resultType())
                     .where().prop(ID).in().model((SingleResultQueryModel<?>) qpm.queryModel)
                     .model();
