@@ -34,7 +34,7 @@ import { UnreportableError } from '/resources/components/tg-global-error-handler
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
 import { createDialog } from '/resources/egi/tg-dialog-util.js';
-import { openShareAction } from '/resources/reflection/tg-share-utils.js';
+import { TgShareableResourceBehavior, getShareActionTemplate } from '/resources/reflection/tg-shareable-resource-behavior.js';
 
 const ST_WIDTH = '_width';
 const ST_HEIGHT = '_height';
@@ -207,7 +207,8 @@ const template = html`
         </div>
     </div>
     <iron-icon id="resizer" hidden$=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-down="_handleResizeDown" on-track="resizeDialog" tooltip-text="Drag to resize<br>Double tap to reset dimensions" on-tap="resetDimensions"></iron-icon>
-    <tg-toast id="toaster"></tg-toast>`;
+    <tg-toast id="toaster"></tg-toast>
+    ${getShareActionTemplate()}`;
 
 template.setAttribute('strip-whitespace', '');
 
@@ -256,7 +257,8 @@ Polymer({
         TgBackButtonBehavior,
         TgElementSelectorBehavior,
         TgResizableMovableBehavior,
-        TgDoubleTapHandlerBehavior
+        TgDoubleTapHandlerBehavior,
+        TgShareableResourceBehavior
     ],
 
     listeners: {
@@ -1917,7 +1919,7 @@ Polymer({
                 getSharedUri = null;
             }
 
-            openShareAction(
+            this.openShareAction(
                 this.$.toaster,
                 uuid,
                 this._showDialog,
