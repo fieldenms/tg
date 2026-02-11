@@ -5,7 +5,6 @@ import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerIocModule;
-import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.Properties;
 
@@ -35,8 +34,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         }
     }
 
-    @SafeVarargs
-    private static Properties getProperties(final Properties properties, final T2<String, String>... pairs) {
+    private static Properties getProperties(final Properties properties) {
         final Properties props = new Properties(properties);
         // application properties
         props.setProperty("workflow", "development");
@@ -65,11 +63,6 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         props.setProperty("dynamicPropertyAccess.typeCache.expireAfterAccess", "12h");
         props.setProperty("dynamicPropertyAccess.tempTypeCache.maxSize", "2048");
         props.setProperty("dynamicPropertyAccess.tempTypeCache.expireAfterWrite", "10m");
-
-        for (final var pair : pairs) {
-            props.setProperty(pair._1, pair._2);
-        }
-
         return props;
     }
 
