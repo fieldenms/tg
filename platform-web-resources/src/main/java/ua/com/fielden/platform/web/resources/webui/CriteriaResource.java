@@ -588,6 +588,24 @@ public class CriteriaResource extends AbstractWebResource {
                : entityAuthorisationResult;
     }
 
+    public static Result validateCriteriaBeforeRunning(
+        final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IAuthorisationModel authorisationModel,
+        final ISecurityTokenProvider securityTokenProvider
+    ) {
+        final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
+        if (!validationResult.isSuccessful()) {
+            return validationResult;
+        }
+
+        final Result authorisationResult = authoriseCriteriaEntity(freshCentreAppliedCriteriaEntity, miType, authorisationModel, securityTokenProvider);
+        if (!authorisationResult.isSuccessful()) {
+            return authorisationResult;
+        }
+        return Result.successful();
+    }
+
     /// Handles `PUT` requests triggered by the `tg-selection-criteria.run()` method.
     ///
     @SuppressWarnings("unchecked")
@@ -645,19 +663,12 @@ public class CriteriaResource extends AbstractWebResource {
                     }
 
                     // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
-                    final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
+                    final Result validationResult = validateCriteriaBeforeRunning(freshCentreAppliedCriteriaEntity, miType, authorisationModel, securityTokenProvider);
                     if (!validationResult.isSuccessful()) {
-                        LOGGER.debug("CRITERIA_RESOURCE: run finished (validation failed).");
-                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                        return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication)));
-                    }
-
-                    final Result authorisationResult = authoriseCriteriaEntity(freshCentreAppliedCriteriaEntity, miType, authorisationModel, securityTokenProvider);
-                    if (!authorisationResult.isSuccessful()) {
-                        LOGGER.debug("CRITERIA_RESOURCE: run failed (authorisation validation failed).");
+                        LOGGER.debug("CRITERIA_RESOURCE: run failed (validation failed).");
                         final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                         return restUtil.resultJSONRepresentation(
-                            authorisationResult.copyWith(List.of(
+                            validationResult.copyWith(List.of(
                                 freshCentreAppliedCriteriaEntity,
                                 updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication))
                             ))

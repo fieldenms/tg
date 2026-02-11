@@ -197,15 +197,9 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                 getOriginalManagedType(validationPrototype.getType(), originalCdtmae)
             );
 
-            // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
-            final Result validationResult = freshCriteriaEntity.isValid();
+            final Result validationResult = validateCriteriaBeforeRunning(freshCriteriaEntity, miType, authorisationModel, securityTokenProvider);
             if (!validationResult.isSuccessful()) {
                 return left(validationResult);
-            }
-
-            final Result authorisationResult = authoriseCriteriaEntity(freshCriteriaEntity, miType, authorisationModel, securityTokenProvider);
-            if (!authorisationResult.isSuccessful()) {
-                return left(authorisationResult);
             }
 
             final EntityCentre<AbstractEntity<?>> centre = getEntityCentre(miType.getName(), webUiConfig);
