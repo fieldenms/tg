@@ -9,46 +9,56 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.A3T;
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 
-/**
- * Static utilities for auditing.
- * <p>
- * To locate audit types, {@link IAuditTypeFinder} should be used.
- */
+/// Static utilities for working with auditing.
+///
+/// This class provides helpers for:
+/// * determining whether a given entity type is audited;
+/// * deriving audit-property names from audited property names and vice versa;
+/// * constructing and inspecting audit-entity and audit-prop entity type names;
+/// * obtaining the version associated with a particular audit type.
+///
+/// To locate and navigate audit types for a given audited entity, use [IAuditTypeFinder].
+///
 public final class AuditUtils {
 
     public static final String AUDIT_PROP_NAME_PREFIX = A3T + "_";
 
-    /**
-     * This predicate is true for entity types that are audited.
-     * This includes canonical entity types annotated with {@link Audited} and generated entity types based on them.
-     */
+    /// This predicate is true for entity types that are audited.
+    /// This includes canonical entity types annotated with [Audited] and generated entity types based on them.
+    ///
+    /// @param type the entity type to examine
+    /// @return `true` if the entity type is audited; `false` otherwise
+    ///
     public static boolean isAudited(final Class<? extends AbstractEntity<?>> type) {
         return PropertyTypeDeterminator.baseEntityType(type).isAnnotationPresent(Audited.class);
     }
 
-    /**
-     * The specified property name is assumed to be the name of an audited property.
-     * This method constructs a name for a corresponding property of an audit-entity.
-     */
+    /// Constructs the name of the audit property corresponding to the given audited property name.
+    /// The argument `auditedPropertyName` is assumed to be the name of an audited property on the audited entity.
+    ///
+    /// @param auditedPropertyName the name of the audited property
+    /// @return the corresponding audit-property name
+    ///
     public static String auditPropertyName(final CharSequence auditedPropertyName) {
         return AUDIT_PROP_NAME_PREFIX + auditedPropertyName;
     }
 
-    /**
-     * If the specified property name was constructed with {@link #auditPropertyName(CharSequence)}, this method works as an inverse,
-     * and returns the name of the audited property.
-     * Otherwise, {@code null} is returned.
-     * <p>
-     * In other words, given the name of a property of an audit-entity type, this method may return the name of a corresponding
-     * property of an audited entity type.
-     * <p>
-     * It is an error if {@code auditedPropertyName} is {@code null} or blank.
-     */
+    /// If the given property name was constructed with [#auditPropertyName(CharSequence)],
+    /// returns the name of the corresponding audited property.
+    /// Otherwise, returns `null`.
+    ///
+    /// In other words, given the name of a property on an audit-entity type, this method may
+    /// return the name of the corresponding property on the audited entity type.
+    ///
+    /// It is an error if `auditPropertyName` is `null` or blank.
+    ///
+    /// @param auditPropertyName the name of the audit property
+    /// @return the corresponding audited property name, or `null` if the input is not an audit property
+    ///
     public static @Nullable String auditedPropertyName(final CharSequence auditPropertyName) {
         requireNonNull(auditPropertyName, "auditPropertyName");
         if (StringUtils.isBlank(auditPropertyName)) {
@@ -58,9 +68,12 @@ public final class AuditUtils {
         return result.isEmpty() ? null : result;
     }
 
-    /**
-     * Returns {@code true} if the specified property names an audit property (i.e., was constructed with {@link #auditPropertyName(CharSequence)}).
-     */
+    /// Returns `true` if the given property name represents an audit property
+    /// (i.e. if it was constructed via [#auditPropertyName(CharSequence)]).
+    ///
+    /// @param property the property name to examine
+    /// @return `true` if the property name denotes an audit property; `false` otherwise
+    ///
     public static boolean isAuditProperty(final CharSequence property) {
         requireNonNull(property, "property");
         return property.toString().startsWith(AUDIT_PROP_NAME_PREFIX);
@@ -71,6 +84,15 @@ public final class AuditUtils {
         return type.getPackageName() + "." + simpleName;
     }
 
+    // Constructs the simple name of an audit-entity type for the given audited type name and version.
+    ///
+    /// The simple audited type name is expected (i.e. not fully qualified),
+    /// and the version is appended using the audit name prefix.
+    ///
+    /// @param auditedTypeName the simple name of the audited type
+    /// @param version         the audit type version
+    /// @return the simple name of the corresponding audit-entity type
+    ///
     public static String getAuditTypeName(final CharSequence auditedTypeName, final int version) {
         return auditedTypeName + "_" + AUDIT_PROP_NAME_PREFIX + version;
     }
@@ -91,13 +113,13 @@ public final class AuditUtils {
         return AbstractAuditProp.class.isAssignableFrom(type);
     }
 
-    /**
-     * Returns the version of the specified audit type, which must be annotated with {@link AuditFor}.
-     */
+    /// Returns the version of the specified audit type, which must be annotated with [AuditFor].
+    /// Otherwise, an exception is thrown.
+    ///
     public static int getAuditTypeVersion(Class<? extends AbstractEntity<?>> type) {
         final var atAuditFor = type.getAnnotation(AuditFor.class);
         if (atAuditFor == null) {
-            throw new EntityDefinitionException("Audit type [%s] is missing required annotation @%s".formatted(type.getTypeName(), AuditFor.class.getSimpleName()));
+            throw new EntityDefinitionException("Audit type [%s] is missing required annotation @%s.".formatted(type.getTypeName(), AuditFor.class.getSimpleName()));
         }
         return atAuditFor.version();
     }
