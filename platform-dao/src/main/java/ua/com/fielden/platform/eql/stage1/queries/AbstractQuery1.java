@@ -100,7 +100,7 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
      * @return
      */
     protected QueryComponents2 transformSourceless(final TransformationContextFromStage1To2 context) {
-        return new QueryComponents2(Optional.empty(), whereConditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
+        return new QueryComponents2(Optional.empty(), whereConditions.transform(context), yields.transform(context, this), groups.transform(context), orderings.transform(context));
     }
 
     /**
@@ -116,7 +116,7 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
         final TransformationContextFromStage1To2 enhancedContext = joinRootTr.updatedContext;
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
         final Conditions2 whereConditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context, whereConditions.transform(enhancedContext));
-        final Yields2 yields2 = yields.transform(enhancedContext);
+        final Yields2 yields2 = yields.transform(enhancedContext, this);
         final GroupBys2 groups2 = enhanceGroupBys(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhanceOrderBys(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         // it is important to enhance yields after orderings to enable functioning of 'orderBy().yield(..)' in application to properties rather than true yields
