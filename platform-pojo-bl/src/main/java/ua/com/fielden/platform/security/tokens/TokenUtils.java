@@ -61,14 +61,14 @@ public class TokenUtils {
 
     /// Validates the criteria values to determine whether they can be applied under the authorisation model.
     ///
-    public static Result authoriseCriteria(final List<QueryProperty> queryProperties, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
+    public static Result authoriseCriteria(final List<QueryProperty> queryProperties, final IAuthorisationModel authorisation) {
         return queryProperties.stream()
             .map(queryProperty -> {
                 // Criterion without any conditions is authorised.
                 // Root property (aka "entity itself") is always authorised.
                 if (!queryProperty.isEmptyWithoutMnemonics() && !"".equals(queryProperty.getPropertyName())) {
                     final var originalType = getOriginalType(stripIfNeeded(queryProperty.getEntityClass()));
-                    return authorisePropertyReading(originalType, queryProperty.getPropertyName(), authorisation, securityTokenProvider);
+                    return authorisePropertyReading(originalType, queryProperty.getPropertyName(), authorisation);
                 }
                 return Optional.<Result>empty();
             })
@@ -78,7 +78,7 @@ public class TokenUtils {
             .orElseGet(Result::successful);
     }
 
-    public static Optional<Result> authorisePropertyReading(final Class<?> entityType, final String propertyName, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
+    public static Optional<Result> authorisePropertyReading(final Class<?> entityType, final String propertyName, final IAuthorisationModel authorisation) {
         return getPropertyAnnotationOptionally(Authorise.class, entityType, propertyName)
                .map(annot -> (Class<? extends ISecurityToken>) annot.value())
                .map(authorisation::authorise);

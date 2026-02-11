@@ -584,7 +584,7 @@ public class CriteriaResource extends AbstractWebResource {
     ) {
         final var entityAuthorisationResult = authoriseReading(getEntityType(miType).getSimpleName(), READ, authorisationModel, securityTokenProvider);
         return entityAuthorisationResult.isSuccessful()
-               ? authoriseCriteria(criteriaEntity.queryProperties.get(), authorisationModel, securityTokenProvider)
+               ? authoriseCriteria(criteriaEntity.queryProperties.get(), authorisationModel)
                : entityAuthorisationResult;
     }
 

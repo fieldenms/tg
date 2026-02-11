@@ -68,7 +68,7 @@ public class EntityQueryCriteriaUtils {
         // Root property (aka "entity itself") is always authorised.
         return property.isEmpty()
             // Non-root property access is governed by *_CanRead_property_* tokens, where the `property` part is never empty.
-            || authorisePropertyReading(root, property, authorisationModel, securityTokenProvider).orElseGet(Result::successful).isSuccessful();
+            || authorisePropertyReading(root, property, authorisationModel).orElseGet(Result::successful).isSuccessful();
     }
 
     /// Creates an Entity Centre query for a list of [QueryProperty] and other parameters.
@@ -91,7 +91,7 @@ public class EntityQueryCriteriaUtils {
         final IDates dates)
     {
         authoriseReading(type.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
-        authoriseCriteria(queryProperties, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
+        authoriseCriteria(queryProperties, authorisationModel).ifFailure(Result::throwRuntime);
         if (createdByUserConstraint.isPresent()) {
             final QueryProperty queryProperty = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(managedType, "createdBy");
             final List<String> createdByCriteria = new ArrayList<>();
