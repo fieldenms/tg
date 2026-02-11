@@ -336,6 +336,7 @@ public final class AnnotationReflector {
     }
 
     /// Same as [#getPropertyAnnotation(Class, Class, String)] but throws instead of returning null.
+    ///
     public static <A extends Annotation> A requirePropertyAnnotation(
             final Class<A> annotationType,
             final Class<?> forType,
@@ -343,8 +344,7 @@ public final class AnnotationReflector {
     {
         final var annotation = getPropertyAnnotation(annotationType, forType, propertyPath.toString());
         if (annotation == null) {
-            throw new ReflectionException(format("Missing annotation @%s on property [%s] in [%s]",
-                                                 annotationType.getTypeName(), propertyPath, forType.getTypeName()));
+            throw new ReflectionException("Missing annotation @%s on property [%s] in [%s].".formatted(annotationType.getTypeName(), propertyPath, forType.getTypeName()));
         }
         return annotation;
     }

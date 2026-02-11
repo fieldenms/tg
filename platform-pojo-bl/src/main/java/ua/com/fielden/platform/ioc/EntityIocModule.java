@@ -11,11 +11,8 @@ import java.util.Properties;
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
 
-/**
- * This Guice module ensures that properties for all {@link AbstractEntity} descendants are provided with an interceptor for executing BCE and ACE handlers.
- *
- * @author TG Team
- */
+/// This Guice module ensures that properties for all [AbstractEntity] descendants are provided with an interceptor for executing BCE and ACE handlers.
+///
 public abstract class EntityIocModule extends AbstractPlatformIocModule {
 
     private final Properties properties;
@@ -28,9 +25,8 @@ public abstract class EntityIocModule extends AbstractPlatformIocModule {
         this(new Properties());
     }
 
-    /**
-     * Binds intercepter for observable property mutators to ensure property change observation and validation. Only descendants of {@link AbstractEntity} are processed.
-     */
+    /// Binds interceptor for observable property mutators to ensure property change observation and validation. Only descendants of [AbstractEntity] are processed.
+    ///
     @Override
     protected void configure() {
         // observable interceptor
