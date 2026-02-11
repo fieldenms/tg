@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import jakarta.annotation.Nullable;
+import ua.com.fielden.platform.audit.annotations.AuditFor;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;

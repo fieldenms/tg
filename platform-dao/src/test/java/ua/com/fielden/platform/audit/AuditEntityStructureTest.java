@@ -3,6 +3,7 @@ package ua.com.fielden.platform.audit;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.junit.Test;
+import ua.com.fielden.platform.audit.annotations.DisableAuditing;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;

@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.audit.Audited;
-import ua.com.fielden.platform.audit.DisableAuditing;
-import ua.com.fielden.platform.audit.InactiveAuditProperty;
+import ua.com.fielden.platform.audit.annotations.Audited;
+import ua.com.fielden.platform.audit.annotations.DisableAuditing;
+import ua.com.fielden.platform.audit.annotations.InactiveAuditProperty;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;

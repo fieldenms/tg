@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.junit.Ignore;
 
-import ua.com.fielden.platform.audit.Audited;
+import ua.com.fielden.platform.audit.annotations.Audited;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;

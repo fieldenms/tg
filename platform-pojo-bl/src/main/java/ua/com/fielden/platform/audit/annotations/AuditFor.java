@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.audit;
+package ua.com.fielden.platform.audit.annotations;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 

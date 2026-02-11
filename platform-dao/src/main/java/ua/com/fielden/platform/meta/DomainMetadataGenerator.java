@@ -7,7 +7,7 @@ import com.google.common.collect.Iterables;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AuditUtils;
-import ua.com.fielden.platform.audit.InactiveAuditProperty;
+import ua.com.fielden.platform.audit.annotations.InactiveAuditProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;

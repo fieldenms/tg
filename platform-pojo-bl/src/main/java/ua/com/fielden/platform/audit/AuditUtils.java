@@ -2,6 +2,8 @@ package ua.com.fielden.platform.audit;
 
 import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
+import ua.com.fielden.platform.audit.annotations.AuditFor;
+import ua.com.fielden.platform.audit.annotations.Audited;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
