@@ -183,7 +183,7 @@ const template = html`
             </div>
             <div class="layout horizontal center">
                 <!-- Get A Link button -->
-                <paper-icon-button hidden$="[[_shareHidden(_mainEntityType, _lastAction)]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
+                <paper-icon-button hidden$="[[_shareHidden(_mainEntityType, _mainEntityId, _lastAction)]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
                 <paper-icon-button hidden$="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
@@ -1775,13 +1775,12 @@ Polymer({
     /**
      * Returns 'true' if Share button is hidden, 'false' otherwise.
      */
-    _shareHidden: function (_mainEntityType, _lastAction) {
+    _shareHidden: function (_mainEntityType, _mainEntityId, _lastAction) {
         return !(
-            // Visible for all persistent masters either with NEW or persisted instance.
+            // Visible for all persisted entities.
             // This covers simple and compound masters.
-            // Action identifier can be empty for NEW (custom action) -- it then shows info message `Please save and try again.`
-            _mainEntityType
-            // Visible also for all functional masters with explicit action identifier.
+            _mainEntityType !== null && _mainEntityId !== null
+            // Visible for all other entities with an explicit action identifier.
             || _lastAction && _lastAction.attrs && _lastAction.attrs.actionIdentifier
         );
     },
@@ -1896,14 +1895,12 @@ Polymer({
      * 3. Otherwise, link generation is not supported, and a corresponding message will be displayed.
      */
     _getLink: function () {
-        const isPersistedEntity = this._mainEntityType !== null && this._mainEntityId !== null;
-        if (isPersistedEntity
-            || this._lastAction && this._lastAction.attrs && this._lastAction.attrs.actionIdentifier)
-        {
+        if (!this._shareHidden(this._mainEntityType, this._mainEntityId, this._lastAction)) {
             // Find a deepest embdedded master, which will contain master entity for share action.
             const deepestMaster = this._deepestMaster;
             // this dialog's `uuid` to be used for action.
             const uuid = this.uuid;
+            const isPersistedEntity = this._mainEntityType !== null && this._mainEntityId !== null;
 
             let getSharedUri;
             if (isPersistedEntity) {
@@ -1931,14 +1928,6 @@ Polymer({
                 },
                 this
             );
-        }
-        else {
-            this.$.toaster.text = 'Please save and try again.';
-            this.$.toaster.hasMore = false;
-            this.$.toaster.msgText = '';
-            this.$.toaster.showProgress = false;
-            this.$.toaster.isCritical = false;
-            this.$.toaster.show();
         }
     },
     
