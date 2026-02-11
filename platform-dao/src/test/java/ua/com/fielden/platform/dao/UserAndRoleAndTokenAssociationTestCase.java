@@ -13,8 +13,6 @@ import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static org.assertj.core.api.Assertions.assertThat;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
