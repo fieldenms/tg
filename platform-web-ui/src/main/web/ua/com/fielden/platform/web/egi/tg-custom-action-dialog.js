@@ -34,7 +34,7 @@ import { UnreportableError } from '/resources/components/tg-global-error-handler
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
 import { createDialog } from '/resources/egi/tg-dialog-util.js';
-import { TgShareableResourceBehavior, getShareActionTemplate } from '/resources/reflection/tg-shareable-resource-behavior.js';
+import { openShareAction } from '/resources/reflection/tg-share-utils.js';
 
 const ST_WIDTH = '_width';
 const ST_HEIGHT = '_height';
@@ -207,8 +207,7 @@ const template = html`
         </div>
     </div>
     <iron-icon id="resizer" hidden$=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-down="_handleResizeDown" on-track="resizeDialog" tooltip-text="Drag to resize<br>Double tap to reset dimensions" on-tap="resetDimensions"></iron-icon>
-    <tg-toast id="toaster"></tg-toast>
-    ${getShareActionTemplate()}`;
+    <tg-toast id="toaster"></tg-toast>`;
 
 template.setAttribute('strip-whitespace', '');
 
@@ -257,8 +256,7 @@ Polymer({
         TgBackButtonBehavior,
         TgElementSelectorBehavior,
         TgResizableMovableBehavior,
-        TgDoubleTapHandlerBehavior,
-        TgShareableResourceBehavior
+        TgDoubleTapHandlerBehavior
     ],
 
     listeners: {
@@ -1919,7 +1917,7 @@ Polymer({
                 getSharedUri = null;
             }
 
-            this.openShareAction(
+            openShareAction(
                 this.$.toaster,
                 uuid,
                 this._showDialog,
@@ -1930,7 +1928,9 @@ Polymer({
                 shareAction => {
                     // Persist reference to the dialog to easily get it in `tg-ui-action._createContextHolderForAction`.
                     shareAction._dialog = this;
-                });
+                },
+                this
+            );
         }
         else {
             this.$.toaster.text = 'Please save and try again.';
