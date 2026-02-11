@@ -1927,14 +1927,6 @@ Polymer({
                     shareAction._dialog = this;
                 });
         }
-        else {
-            this.$.toaster.text = 'Please save and try again.';
-            this.$.toaster.hasMore = false;
-            this.$.toaster.msgText = '';
-            this.$.toaster.showProgress = false;
-            this.$.toaster.isCritical = false;
-            this.$.toaster.show();
-        }
     },
     
     _embeddedMasterTypeKey: function () {
