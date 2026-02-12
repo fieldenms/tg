@@ -11,8 +11,8 @@ const DEFAULT_BASE_DELAY = 500;
 export async function loadAppResources (resourcesToLoad) {
     try {
         window.TG_APP = await tryLoadingConfiguration();
-        setTitle();
-        setMainPanelColour();
+        initTitle();
+        initMainPanelColour();
         await tryLoadingAppResources(resourcesToLoad);
         addAppTemplate();
         addQrCodeScanner();
@@ -153,9 +153,9 @@ function showMessage(message) {
 }
 
 /**
- * Sets the title property in the main application where needed (i.e., title tag and meta tags).
+ * Initialises the title property in the main application where needed (i.e., title tag and meta tags).
  */
-function setTitle () {
+function initTitle () {
     document.title = TG_APP.title;
     const metaApplicationName = document.querySelector('meta[name="application-name"]');
     if (metaApplicationName) {
@@ -169,9 +169,9 @@ function setTitle () {
 }
 
 /**
- * Sets the color value for the CSS property controlling the main top panel's background color.
+ * Initialises the color value for the CSS property controlling the main top panel's background color.
  */
-function setMainPanelColour () {
+function initMainPanelColour () {
     if (window.TG_APP && window.TG_APP.panelColor) {
         document.documentElement.style.setProperty('--tg-main-pannel-color', window.TG_APP.panelColor);
     }
