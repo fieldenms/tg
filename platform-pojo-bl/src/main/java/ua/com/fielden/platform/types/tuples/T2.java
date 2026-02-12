@@ -8,14 +8,11 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
-/**
- * A data structure to represent a tuple of 2 values.
- * 
- * @author TG Team
- *
- * @param <T_1>
- * @param <T_2>
- */
+/// A data structure to represent a tuple of 2 values.
+///
+/// @param <T_1>  the type for the first member
+/// @param <T_2>  the type for the second member
+///
 public class T2<T_1, T_2> {
     
     public final T_1 _1;
@@ -26,13 +23,11 @@ public class T2<T_1, T_2> {
         this._2 = _2;
     }
     
-    /**
-     * A convenient factory method for shorthand instantiation of this class.
-     *  
-     * @param _1
-     * @param _2
-     * @return
-     */
+    /// A convenient factory method for shorthand instantiation of this class.
+    ///
+    /// @param _1
+    /// @param _2
+    /// @return
     public static <T_1, T_2> T2<T_1, T_2> t2(final T_1 _1, final T_2 _2) {
         return new T2<>(_1, _2);
     }
@@ -45,9 +40,9 @@ public class T2<T_1, T_2> {
         return _2;
     }
 
-    ////////////////////////////////////
-    //////// Mapping functions /////////
-    ////////////////////////////////////
+    //::::::::::::::::::::::::::::::::::
+    //:::::::: Mapping functions :::::::
+    //::::::::::::::::::::::::::::::::::
     public <R> T2<R, T_2> map1(final Function<? super T_1, R> mapper) {
         return new T2<>(mapper.apply(_1), _2);
     }
@@ -59,37 +54,33 @@ public class T2<T_1, T_2> {
     public <R> R map(final BiFunction<? super T_1, ? super T_2, R> mapper) {
         return mapper.apply(this._1, this._2);
     }
-    ////////////////////////////////////
 
-    ////////////////////////////////////
-    //////// Running functions /////////
-    ////////////////////////////////////
 
-    /**
-     * Applies the specified action to the first value.
-     */
+    //::::::::::::::::::::::::::::::::::
+    //::::::: Running functions ::::::::
+    //::::::::::::::::::::::::::::::::::
+
+    /// Applies the specified action to the first value.
+    ///
     public void run1(final Consumer<? super T_1> action) {
         action.accept(_1);
     }
 
-    /**
-     * Applies the specified action to the second value.
-     */
+    /// Applies the specified action to the second value.
+    ///
     public void run2(final Consumer<? super T_2> action) {
         action.accept(_2);
     }
 
-    /**
-     * Applies the specified action to the contents of this tuple.
-     */
+    /// Applies the specified action to the contents of this tuple.
+    ///
     public void run(final BiConsumer<? super T_1, ? super T_2> action) {
         action.accept(_1, _2);
     }
-    ////////////////////////////////////
 
-    ////////////////////////////////////
-    //////// Utilities /////////////////
-    ////////////////////////////////////
+    //::::::::::::::::::::::::::::::::::
+    //:::::::::: Utilities :::::::::::::
+    //::::::::::::::::::::::::::::::::::
 
     public static <A, B> Collector<T2<A, B>, ?, Map<A, B>> toMap() {
         return Collectors.toMap(T2::_1, T2::_2);
@@ -103,7 +94,7 @@ public class T2<T_1, T_2> {
         return Collectors.toMap(T2::_1, T2::_2, mergeFunction, mapFactory);
     }
 
-    ////////////////////////////////////
+    //::::::::::::::::::::::::::::::::::
 
     @Override
     public int hashCode() {
@@ -137,4 +128,5 @@ public class T2<T_1, T_2> {
     public String toString() {
         return format("(%s, %s)", _1, _2);
     }
+
 }
