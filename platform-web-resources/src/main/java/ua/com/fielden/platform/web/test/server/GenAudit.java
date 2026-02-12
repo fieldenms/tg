@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.test.server;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.IAuditEntityGenerator;
 import ua.com.fielden.platform.audit.IAuditEntityGenerator.VersionStrategy;
-import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
 import java.io.FileInputStream;
@@ -11,17 +10,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
 
-import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.ioc.exceptions.MissingParameterDependencyException.requireNonEmpty;
 
-/**
- * This is a helper class, which generates audit-entities.
- *
- * @author TG Team
- */
+/// This is a helper class, which generates audit-entities.
+///
 public class GenAudit {
     private static final Logger LOGGER = getLogger();
 
@@ -29,6 +23,7 @@ public class GenAudit {
         LOGGER.info("Initialising...");
         final var props = new Properties();
         final String propsFileSuffix; // is used to load either application-PostreSql.properties or application-SqlServer.properties
+
         // Three system properties are required: databaseUri, databaseUser and databasePasswd.
 
         final var databaseUri = requireNonEmpty(System.getProperties(), "databaseUri");
@@ -64,8 +59,7 @@ public class GenAudit {
                 List.of(TgVehicle.class),
                 Path.of("../platform-pojo-bl/src/audit/java"),
                 VersionStrategy.NEW);
-        LOGGER.info(format("Generated audit types:\n%s",
-                           results.stream().map(p -> p.toAbsolutePath().normalize().toString()).collect(joining("\n"))));
+        LOGGER.info(() -> "Generated audit types:\n%s".formatted(results.stream().map(p -> p.toAbsolutePath().normalize().toString()).collect(joining("\n"))));
     }
 
 }

@@ -15,12 +15,9 @@ import java.util.Properties;
 
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 
-/**
- * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityIocModule}, this module binds
- * {@link IMetaPropertyFactory}.
- *
- * @author TG Team
- */
+/// This Guice module ensures that all observable and validatable properties are handled correctly. In addition to [EntityIocModule],
+/// this module binds [IMetaPropertyFactory].
+///
 public class EntityTestIocModuleWithPropertyFactory extends EntityIocModule {
 
     public EntityTestIocModuleWithPropertyFactory() {
@@ -31,16 +28,12 @@ public class EntityTestIocModuleWithPropertyFactory extends EntityIocModule {
         super(properties);
     }
 
-    /**
-     * 
-     * Please note that order of validator execution is also defined by the order of binding.
-     */
+    /// Please note that order of validator execution is also defined by the order of binding.
+    ///
     @Override
     protected void configure() {
         super.configure();
-        //////////////////////////////////////////////
-        //////////// bind property factory ///////////
-        //////////////////////////////////////////////
+
         bind(IMetaPropertyFactory.class).to(TestMetaPropertyFactory.class);
 
         bind(IReferenceHierarchy.class).to(ReferenceHierarchyDaoStub.class);
