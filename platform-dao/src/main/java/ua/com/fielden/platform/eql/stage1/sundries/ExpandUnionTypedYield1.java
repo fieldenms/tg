@@ -21,19 +21,19 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 /// This transformation must be applied before [AppendIdToUnionTypedProp1].
 /// The order is ensured by this implementation.
 ///
-public class ExpandUnionTypedPropYield1 {
+public class ExpandUnionTypedYield1 {
 
-    public static ExpandUnionTypedPropYield1 getInstance() {
+    public static ExpandUnionTypedYield1 getInstance() {
         return INSTANCE;
     }
 
     @Inject
-    private static ExpandUnionTypedPropYield1 INSTANCE;
+    private static ExpandUnionTypedYield1 INSTANCE;
 
     private final IDomainMetadata domainMetadata;
 
     @Inject
-    protected ExpandUnionTypedPropYield1(final IDomainMetadata domainMetadata) {
+    protected ExpandUnionTypedYield1(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
     }
 

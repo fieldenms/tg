@@ -11,7 +11,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.sample.domain.UnionEntityDetails.Property.union;
 import static ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypes.Property.unionEntityDetails;
 
-public class ExpandUnionTypedPropYield1Test extends EqlStage2TestCase {
+public class ExpandUnionTypedYield1Test extends EqlStage2TestCase {
 
     @Test
     public void union_typed_prop_yield_is_transformed_into_yields_for_all_union_members() {
