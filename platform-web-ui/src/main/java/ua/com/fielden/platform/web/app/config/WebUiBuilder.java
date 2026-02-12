@@ -28,10 +28,6 @@ public class WebUiBuilder implements IWebUiBuilder {
     ///
     private final IWebUiConfig webUiConfig;
 
-    private Optional<String> panelColor = Optional.empty();
-    private Optional<String> watermark = Optional.empty();
-    private Optional<String> watermarkStyle = Optional.empty();
-
     /// Holds the map between master's entity type and its master component.
     ///
     private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new ConcurrentHashMap<>();
