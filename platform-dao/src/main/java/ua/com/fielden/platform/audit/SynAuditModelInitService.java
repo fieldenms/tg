@@ -9,23 +9,23 @@ import ua.com.fielden.platform.reflection.Reflector;
 
 import java.util.List;
 
-import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isFinal;
 import static ua.com.fielden.platform.audit.AuditUtils.isSynAuditEntityType;
 import static ua.com.fielden.platform.audit.AuditUtils.isSynAuditPropEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.findSyntheticModelFieldFor;
 
-/**
- * Performs initialisation of synthetic audit-entity types.
- * For each synthetic audit-entity type, generates its EQL model and assigns it to the static field {@code models_} that must be declared by that type.
- * <p>
- * The purpose of this process is to support code where {@link ISyntheticModelProvider} cannot be used.
- * Such code accesses synthetic models through static fields of corresponding entity types.
- * <p>
- * Launched by the IoC framework upon creating an {@link Injector}.
- * <p>
- * Effectful only if auditing is enabled.
- */
+/// Performs the initialisation of synthetic audit-entity types.
+///
+/// For each such type, this method generates its EQL model and assigns it to the static field `models_`,
+/// which must be declared by that type.
+///
+/// The purpose of this process is to support scenarios where [ISyntheticModelProvider] cannot be used.
+/// In such cases, synthetic models are accessed via the static fields of their corresponding entity types.
+///
+/// This method is invoked automatically by the IoC framework during the creation of an [Injector].
+///
+/// It has an effect only when auditing is enabled.
+///
 public final class SynAuditModelInitService {
 
     private static final String ERR_MISSING_MODELS_FIELD =
@@ -38,7 +38,7 @@ public final class SynAuditModelInitService {
             final AuditingMode auditingMode)
     {
         switch (auditingMode) {
-            // If generation is occuring, definitions of audit types may be malformed, so we do nothing.
+            // If generation is occurring, definitions of audit types may be malformed, so we do nothing.
             // Synthetic models should not be used in this mode anyway.
             case GENERATION -> {}
             case DISABLED -> {}
@@ -56,7 +56,7 @@ public final class SynAuditModelInitService {
                                 Reflector.assignStatic(field, synModelProvider.getModels(entityType));
                             }
                             else {
-                                throw new EntityDefinitionException(format(ERR_MISSING_MODELS_FIELD, entityType.getSimpleName()));
+                                throw new EntityDefinitionException(ERR_MISSING_MODELS_FIELD.formatted(entityType.getSimpleName()));
                             }
                         });
             }

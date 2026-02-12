@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.audit;
+package ua.com.fielden.platform.audit.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

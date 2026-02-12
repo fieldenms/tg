@@ -46,7 +46,10 @@ public class EntityResourceContinuationsHelper {
             return entity;
         }
 
-        return NeedMoreDataStorage.callWithMoreData(continuations, () -> co.save(entity));
+        return NeedMoreDataStorage.callWithMoreData(continuations, () -> {
+            co.setContinuationSupported(true);
+            return co.save(entity);
+        });
     }
     
     /// Validates entity skipping required checks for its properties that are both [CritOnly] and [Required], and not skipping these checks for other properties.

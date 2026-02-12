@@ -36,7 +36,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Optional.ofNullable;
@@ -54,6 +53,8 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.requireAnno
 ///
 @Singleton
 public class SecurityTokenProvider implements ISecurityTokenProvider {
+
+    public static final String ERR_UNREGISTERED_SECURITY_TOKENS = "There are %s unregistered tokens. They should be registered with [%s]. Unregistered tokens: [%s].";
 
     static final Set<Class<? extends ISecurityToken>> PLATFORM_TOKENS = Set.of(
             User_CanSave_Token.class,
@@ -254,7 +255,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     ///
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends ISecurityToken > Optional < Class < T >> getTokenByName(final String tokenClassSimpleName) {
+    public <T extends ISecurityToken> Optional<Class<T>> getTokenByName(final String tokenClassSimpleName) {
         final Class<T> classBySimpleName = (Class<T>) tokenClassesBySimpleName.get(tokenClassSimpleName);
         return ofNullable(classBySimpleName != null ? classBySimpleName : (Class<T>) tokenClassesByName.get(tokenClassSimpleName));
     }
@@ -273,11 +274,10 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
 
         if (tokenTypeToNode.size() != Iterables.size(allTokens)) {
             final var unregisteredTokens = disjunction(tokenTypeToNode.keySet(), allTokens);
-            throw new SecurityException(format(
-                    "There are %s unregistered tokens. They should be registered with [%s]. Unregistered tokens: [%s]",
-                    unregisteredTokens.size(),
-                    ISecurityTokenProvider.class.getSimpleName(),
-                    CollectionUtil.toString(unregisteredTokens, Class::getSimpleName, ", ")));
+            throw new SecurityException(ERR_UNREGISTERED_SECURITY_TOKENS.formatted(
+                                        unregisteredTokens.size(),
+                                        ISecurityTokenProvider.class.getSimpleName(),
+                                        CollectionUtil.toString(unregisteredTokens, Class::getSimpleName, ", ")));
         }
 
         return tokenTypeToNode.values()
@@ -288,6 +288,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
 
     /// Builds a token node for `tokenType`.
     /// Mutates `tokenTypeToNode` in the process.
+    ///
     private static SecurityTokenNode buildTokenNodes_(
             final Class<? extends ISecurityToken> tokenType,
             final Map<Class<? extends ISecurityToken>, SecurityTokenNode> tokenTypeToNode)

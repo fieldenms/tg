@@ -26,18 +26,18 @@ final class CompanionGeneratorImpl implements ICompanionGenerator {
     }
 
     @Override
-    public Class<?> generateCompanion(final Class<? extends AbstractEntity> type) {
+    public Class<?> generateCompanion(final Class<? extends AbstractEntity<?>> type) {
         if (isAuditEntityType(type)) {
             return auditCoGenerator.generateCompanion((Class<? extends AbstractAuditEntity<?>>) type);
         }
         else if (isAuditPropEntityType(type)) {
-            return auditCoGenerator.generateCompanionForAuditProp((Class<? extends AbstractAuditProp>) type);
+            return auditCoGenerator.generateCompanionForAuditProp((Class<? extends AbstractAuditProp<?>>) type);
         }
         else if (isSynAuditEntityType(type)) {
-            return auditCoGenerator.generateCompanionForSynAuditEntity((Class<? extends AbstractSynAuditEntity>) type);
+            return auditCoGenerator.generateCompanionForSynAuditEntity((Class<? extends AbstractSynAuditEntity<?>>) type);
         }
         else if (isSynAuditPropEntityType(type)) {
-            return auditCoGenerator.generateCompanionForSynAuditProp((Class<? extends AbstractSynAuditProp>) type);
+            return auditCoGenerator.generateCompanionForSynAuditProp((Class<? extends AbstractSynAuditProp<?>>) type);
         }
         else {
             return generateSimpleCompanion(type);

@@ -10,10 +10,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
-/**
- * Generated companions should always be based on the original entity type.
- * If an instrumented entity type is provided, its original type should be used.
- */
+/// A generator responsible for generating companion objects at runtime for audit entities.
+///
+/// Generated companions are always based on the _original_ entity type.
+/// If an _instrumented_ entity type is provided, its _original_ type is used.
+///
 @Singleton
 final class AuditCompanionGenerator implements IAuditCompanionGenerator {
 
@@ -25,72 +26,41 @@ final class AuditCompanionGenerator implements IAuditCompanionGenerator {
     }
 
     @Override
-    public Class<?> generateCompanion(final Class<? extends AbstractAuditEntity> type) {
-        if (auditingMode == AuditingMode.DISABLED) {
-            throw AuditingModeException.cannotBeUsed(IAuditCompanionGenerator.class, auditingMode);
-        }
-
-        final var baseType = PropertyTypeDeterminator.baseEntityType((Class<? extends AbstractEntity<?>>) type);
-
-        return new ByteBuddy()
-                .subclass(CommonAuditEntityDao.class)
-                .name(baseType.getCanonicalName() + "Dao")
-                .annotateType(AnnotationDescription.Builder.ofType(EntityType.class)
-                                      .define("value", baseType)
-                                      .build())
-                .make()
-                .load(baseType.getClassLoader())
-                .getLoaded();
+    public Class<?> generateCompanion(final Class<? extends AbstractAuditEntity<?>> type) {
+        return generateCompanionCommon(type, CommonAuditEntityDao.class);
     }
 
     @Override
-    public Class<?> generateCompanionForAuditProp(final Class<? extends AbstractAuditProp> type) {
-        if (auditingMode == AuditingMode.DISABLED) {
-            throw AuditingModeException.cannotBeUsed(IAuditCompanionGenerator.class, auditingMode);
-        }
-
-        final var baseType = PropertyTypeDeterminator.baseEntityType((Class<? extends AbstractEntity<?>>) type);
-
-        return new ByteBuddy()
-                .subclass(CommonAuditPropDao.class)
-                .name(baseType.getCanonicalName() + "Dao")
-                .annotateType(AnnotationDescription.Builder.ofType(EntityType.class)
-                                      .define("value", baseType)
-                                      .build())
-                .make()
-                .load(baseType.getClassLoader())
-                .getLoaded();
+    public Class<?> generateCompanionForAuditProp(final Class<? extends AbstractAuditProp<?>> type) {
+        return generateCompanionCommon(type, CommonAuditPropDao.class);
     }
 
     @Override
-    public Class<?> generateCompanionForSynAuditEntity(final Class<? extends AbstractSynAuditEntity> type) {
-        if (auditingMode == AuditingMode.DISABLED) {
-            throw AuditingModeException.cannotBeUsed(IAuditCompanionGenerator.class, auditingMode);
-        }
-
-        final var baseType = PropertyTypeDeterminator.baseEntityType((Class<? extends AbstractEntity<?>>) type);
-
-        return new ByteBuddy()
-                .subclass(CommonSynAuditEntityDao.class)
-                .name(baseType.getCanonicalName() + "Dao")
-                .annotateType(AnnotationDescription.Builder.ofType(EntityType.class)
-                                      .define("value", baseType)
-                                      .build())
-                .make()
-                .load(baseType.getClassLoader())
-                .getLoaded();
+    public Class<?> generateCompanionForSynAuditEntity(final Class<? extends AbstractSynAuditEntity<?>> type) {
+        return generateCompanionCommon(type, CommonSynAuditEntityDao.class);
     }
 
     @Override
-    public Class<?> generateCompanionForSynAuditProp(final Class<? extends AbstractSynAuditProp> type) {
+    public Class<?> generateCompanionForSynAuditProp(final Class<? extends AbstractSynAuditProp<?>> type) {
+        // CommonEntityDao is used correct here,
+        // but it will need to be replaced with a dedicated CommonSynAuditProp, if such companion is ever going to be introduced.
+        return generateCompanionCommon(type, CommonEntityDao.class);
+    }
+
+    /// A helper method for generating a new companion implementation extending `coSuperclass` for entity `type`.
+    ///
+    /// @param type an entity type for which the companion implementation needs to be generated
+    /// @param coSuperclass a base type for the companion implementation.
+    /// 
+    private Class<?> generateCompanionCommon(final Class<? extends AbstractEntity<?>> type, final Class<?> coSuperclass) {
         if (auditingMode == AuditingMode.DISABLED) {
             throw AuditingModeException.cannotBeUsed(IAuditCompanionGenerator.class, auditingMode);
         }
 
-        final var baseType = PropertyTypeDeterminator.baseEntityType((Class<? extends AbstractEntity<?>>) type);
+        final var baseType = PropertyTypeDeterminator.baseEntityType(type);
 
         return new ByteBuddy()
-                .subclass(CommonEntityDao.class)
+                .subclass(coSuperclass)
                 .name(baseType.getCanonicalName() + "Dao")
                 .annotateType(AnnotationDescription.Builder.ofType(EntityType.class)
                                       .define("value", baseType)

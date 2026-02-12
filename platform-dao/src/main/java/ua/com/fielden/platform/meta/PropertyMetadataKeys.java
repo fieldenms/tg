@@ -9,9 +9,8 @@ public final class PropertyMetadataKeys {
             REQUIRED = mkAnyKey("Required"),
             UNION_MEMBER = mkAnyKey("Union Member");
 
-    /**
-     * Denotes a composite key member. Does not apply to simple keys.
-     */
+    /// Denotes a composite key member. Does not apply to simple keys.
+    ///
     public static final KCompositeKeyMember KEY_MEMBER = KCompositeKeyMember.INSTANCE;
 
     public static final KAuditProperty AUDIT_PROPERTY = KAuditProperty.INSTANCE;
@@ -35,9 +34,9 @@ public final class PropertyMetadataKeys {
         }
     }
 
-    /**
-     * Denotes a composite key member. Does not apply to simple keys.
-     */
+    /// Denotes a composite key member.
+    /// Does not apply to simple keys.
+    ///
     public static class KCompositeKeyMember extends AnyKeyImpl<CompositeKeyMember> {
         private static final KCompositeKeyMember INSTANCE = new KCompositeKeyMember();
         private KCompositeKeyMember() {

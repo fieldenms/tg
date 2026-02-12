@@ -4,9 +4,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import jakarta.annotation.Nullable;
+import ua.com.fielden.platform.audit.annotations.AuditFor;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 import java.util.*;
@@ -20,6 +23,23 @@ import static java.util.Comparator.comparingLong;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.*;
 
+/// Finds and provides navigation over audit types related to a given audited entity type.
+///
+/// This implementation scans the provided types and, depending on the [AuditingMode],
+/// discovers and groups:
+/// * synthetic audit-entity and audit-prop types,
+/// * persistent audit-entity and audit-prop types,
+/// * their versions and relationships to the audited entity type.
+///
+/// The resulting [IAuditTypeFinder.Navigator] instances expose a uniform API for:
+/// * resolving the audited type;
+/// * locating synthetic and persistent audit-entity / audit-prop types;
+/// * selecting a specific audit type by version;
+/// * obtaining all related audit types in a stable, version-aware order.
+///
+/// If auditing is disabled, this finder cannot be used and will throw [AuditingModeException]
+/// upon navigation.
+///
 final class AuditTypeFinder implements IAuditTypeFinder {
 
     private static final String
@@ -32,13 +52,19 @@ final class AuditTypeFinder implements IAuditTypeFinder {
             ERR_MUST_HAVE_ONE_SYN_AUDIT_PROP_TYPE = "Audited type [%s] must have exactly one synthetic audit-prop type, but had %s: [%s].",
             ERR_MUST_HAVE_AT_LEAST_ONE_PERSISTENT_AUDIT_ENTITY_TYPE = "Audited type [%s] must have at least one persistent audit-entity type, but none were found.",
             ERR_VERSION_MUST_BE_GREATER_THAN_ZERO = "Version must be greater than zero, but was %s.",
-            ERR_NO_RELATED_AUDIT_TYPES = "Could not find audit types related to [%s]. Ensure that the given type is either audited or is a discoverable audit type.";
+            ERR_NO_RELATED_AUDIT_TYPES = "Could not find audit types related to [%s]. Ensure that the given type is either audited or is a discoverable audit type.",
+            ERR_SYN_AUDIT_ENTITY_TYPE_MISSING = "Synthetic audit-entity type does not exist for audited type [%s].",
+            ERR_SYN_AUDIT_PROP_TYPE_MISSING = "Synthetic audit-prop type does not exist for audited type [%s].",
+            ERR_AUDIT_ENTITY_TYPE_MISSING = "Persistent audit-entity type does not exist for audited type [%s].",
+            ERR_AUDIT_ENTITY_TYPE_VERSION_MISSING = "Persistent audit-entity type with version %s for [%s] does not exist.",
+            ERR_AUDIT_PROP_TYPE_MISSING = "Persistent audit-prop type does not exist for audited type [%s].",
+            ERR_AUDIT_PROP_TYPE_VERSION_MISSING = "Persistent audit-prop type with version %s for [%s] does not exist.",
+            ERR_UNEXPECTED_AUDIT_TYPE = "Expected an audit type, but the actual type was [%s].";
 
     private final AuditingMode auditingMode;
-    /**
-     * Key: audited type or audit type.
-     * Value: context.
-     */
+
+    /// Key: audited type or audit type.
+    /// Value: context.
     private final Map<Class<?>, Context<?>> contextMap;
 
     AuditTypeFinder(final Iterable<Class<?>> types, final AuditingMode auditingMode) {
@@ -82,7 +108,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
 
         final var context = contextMap.get(baseType);
         if (context == null) {
-            throw new IllegalArgumentException(format(ERR_NO_RELATED_AUDIT_TYPES, baseType.getTypeName()));
+            throw new InvalidArgumentException(ERR_NO_RELATED_AUDIT_TYPES.formatted(baseType.getTypeName()));
         }
         return context;
     }
@@ -112,12 +138,11 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         return (Navigator<E>) _navigate(type);
     }
 
-    /**
-     * @param _auditEntityTypes  sorted by version ascending
-     * @param _auditPropTypes  sorted by version ascending
-     * @param _synAuditEntityType  may be null if the auditing mode is {@link AuditingMode#GENERATION}
-     * @param _synAuditPropType  may be null if the auditing mode is {@link AuditingMode#GENERATION}
-     */
+    /// @param _auditEntityTypes  sorted by version ascending
+    /// @param _auditPropTypes  sorted by version ascending
+    /// @param _synAuditEntityType  may be null if the auditing mode is [#GENERATION]
+    /// @param _synAuditPropType  may be null if the auditing mode is [#GENERATION]
+    ///
     private record Context<E extends AbstractEntity<?>> (
             Class<E> _auditedType,
             List<Class<AbstractAuditEntity<E>>> _auditEntityTypes,
@@ -135,7 +160,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Class<AbstractSynAuditEntity<E>> synAuditEntityType() {
             if (_synAuditEntityType == null) {
-                throw new IllegalStateException(format("Synthetic audit-entity type does not exist for audited type [%s].", _auditedType));
+                throw new InvalidStateException(ERR_SYN_AUDIT_ENTITY_TYPE_MISSING.formatted(_auditedType));
             }
             return _synAuditEntityType;
         }
@@ -148,7 +173,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Class<AbstractSynAuditProp<E>> synAuditPropType() {
             if (_synAuditPropType == null) {
-                throw new IllegalStateException(format("Synthetic audit-prop type does not exist for audited type [%s].", _auditedType));
+                throw new InvalidStateException(ERR_SYN_AUDIT_PROP_TYPE_MISSING.formatted(_auditedType));
             }
             return _synAuditPropType;
         }
@@ -166,7 +191,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Class<AbstractAuditEntity<E>> auditEntityType() {
             if (_auditEntityTypes.isEmpty()) {
-                throw new IllegalStateException(format("Persistent audit-entity type does not exist for audited type [%s].", _auditedType.getSimpleName()));
+                throw new InvalidStateException(ERR_AUDIT_ENTITY_TYPE_MISSING.formatted(_auditedType.getSimpleName()));
             }
 
             return _auditEntityTypes.getLast();
@@ -180,10 +205,10 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Class<AbstractAuditEntity<E>> auditEntityType(final int version) {
             if (version <= 0) {
-                throw new IllegalArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
+                throw new InvalidArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
             }
             if (version > _auditEntityTypes.size()) {
-                throw new IllegalArgumentException("Persistent audit-entity type with version %s for [%s] does not exist.".formatted(version, _auditedType.getSimpleName()));
+                throw new InvalidArgumentException(ERR_AUDIT_ENTITY_TYPE_VERSION_MISSING.formatted(version, _auditedType.getSimpleName()));
 
             }
             return _auditEntityTypes.get(version - 1);
@@ -192,7 +217,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Optional<Class<AbstractAuditEntity<E>>> findAuditEntityType(final int version) {
             if (version <= 0) {
-                throw new IllegalArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
+                throw new InvalidArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
             }
             return version > _auditEntityTypes.size()
                     ? Optional.empty()
@@ -207,7 +232,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Class<AbstractAuditProp<E>> auditPropType() {
             if (_auditPropTypes.isEmpty()) {
-                throw new IllegalStateException(format("Persistent audit-prop type does not exist for audited type [%s].", _auditedType.getSimpleName()));
+                throw new InvalidStateException(ERR_AUDIT_PROP_TYPE_MISSING.formatted(_auditedType.getSimpleName()));
             }
 
             return _auditPropTypes.getLast();
@@ -221,10 +246,10 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Class<AbstractAuditProp<E>> auditPropType(final int version) {
             if (version <= 0) {
-                throw new IllegalArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
+                throw new InvalidArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
             }
             if (version > _auditPropTypes.size()) {
-                throw new IllegalArgumentException("Persistent audit-prop type with version %s for [%s] does not exist.".formatted(version, _auditedType.getSimpleName()));
+                throw new InvalidArgumentException(ERR_AUDIT_PROP_TYPE_VERSION_MISSING.formatted(version, _auditedType.getSimpleName()));
 
             }
             return _auditPropTypes.get(version - 1);
@@ -233,7 +258,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Optional<Class<AbstractAuditProp<E>>> findAuditPropType(final int version) {
             if (version <= 0) {
-                throw new IllegalArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
+                throw new InvalidArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
             }
             return version > _auditPropTypes.size()
                     ? Optional.empty()
@@ -286,7 +311,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
                         return Kind.SYN_AUDIT_PROP;
                     }
                     else {
-                        throw new IllegalStateException("Expected an audit type, but the actual type was [%s].".formatted(ty.getTypeName()));
+                        throw new InvalidStateException(ERR_UNEXPECTED_AUDIT_TYPE.formatted(ty.getTypeName()));
                     }
                 }));
 

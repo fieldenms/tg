@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.test.server;
 
 import com.google.inject.Injector;
 import ua.com.fielden.platform.audit.AuditingMode;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
@@ -13,17 +14,15 @@ import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 import static ua.com.fielden.platform.utils.MiscUtilities.propertiesUnionLeft;
 
-/**
- * Configures the test application to enable generation of audit types.
- *
- * @author TG Team
- */
+/// Configures the test application to enable generation of audit types.
+///
 public final class AuditGenerationConfig implements IDomainDrivenTestCaseConfiguration {
 
     private final Injector injector;
 
     /// Creates a configuration using the provided properties.
     /// Some default properties are set by this constructor, but the provided ones take precedence.
+    ///
     public AuditGenerationConfig(final Properties props) {
         try {
             // application properties
@@ -49,7 +48,7 @@ public final class AuditGenerationConfig implements IDomainDrivenTestCaseConfigu
                     .add(new DataFilterTestIocModule())
                     .getInjector();
         } catch (final Exception e) {
-            throw new IllegalStateException("Could not create audit generation configuration.", e);
+            throw new InvalidStateException("Could not create audit generation configuration.", e);
         }
     }
 

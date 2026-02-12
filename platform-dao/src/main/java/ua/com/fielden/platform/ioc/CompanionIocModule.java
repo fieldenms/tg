@@ -25,11 +25,12 @@ public class CompanionIocModule extends CommonFactoryIocModule {
 
     private final List<Class<? extends AbstractEntity<?>>> domainEntityTypes;
 
-    /**
-     * @param domainEntityTypes  domain entity types that have an explicit companion (i.e., annotated with {@link CompanionObject})
-     */
-    public CompanionIocModule(final Properties props,
-                              final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
+    /// @param domainEntityTypes  domain entity types that have explicit companions (i.e. annotated with [CompanionObject])
+    ///
+    public CompanionIocModule(
+            final Properties props,
+            final List<Class<? extends AbstractEntity<?>>> domainEntityTypes)
+    {
         super(props);
         this.domainEntityTypes = domainEntityTypes;
     }

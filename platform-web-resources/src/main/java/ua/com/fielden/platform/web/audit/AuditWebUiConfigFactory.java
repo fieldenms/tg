@@ -98,7 +98,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addTopAction(standardExportAction)
 
                 .addCrit(AUDIT_DATE).asRange().dateTime().also()
-                .addCrit(USER).asMulti().autocompleter(User.class).also()
+                .addCrit(AUDIT_USER).asMulti().autocompleter(User.class).also()
                 .addCrit(AUDITED_VERSION).asRange().integer().also()
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType));
 
@@ -117,7 +117,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addProp(AUDITED_VERSION).order(1).desc().minWidth(50)
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching audit records.").also()
                 .addProp(AUDIT_DATE).minWidth(150).also()
-                .addProp(USER).minWidth(80).also()
+                .addProp(AUDIT_USER).minWidth(80).also()
                 .addProp(CHANGED_PROPS).minWidth(120);
 
         for (final var prop : auditProperties) {
@@ -153,7 +153,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
 
                 .addCrit(AUDITED_ENTITY).asMulti().autocompleter(auditedType).also()
                 .addCrit(AUDIT_DATE).asRange().dateTime().also()
-                .addCrit(USER).asMulti().autocompleter(User.class).also()
+                .addCrit(AUDIT_USER).asMulti().autocompleter(User.class).also()
                 .addCrit(AUDITED_VERSION).asRange().integer().also()
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType));
 
@@ -173,7 +173,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 // Order by audit date, since this is a top-level centre that includes all audit records.
                 // Moreover, there is no standalone index for auditedVersion to make such an ordering performant.
                 .addProp(AUDITED_ENTITY).order(2).desc().minWidth(140).also()
-                .addProp(USER).minWidth(80).also()
+                .addProp(AUDIT_USER).minWidth(80).also()
                 .addProp(AUDITED_VERSION).minWidth(50).also()
                 .addProp(CHANGED_PROPS).minWidth(120);
 

@@ -15,17 +15,12 @@ import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.CHANGED_PROPS;
-import static ua.com.fielden.platform.audit.CommonAuditEntityDao.ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED;
-import static ua.com.fielden.platform.audit.CommonAuditEntityDao.ERR_ONLY_PERSISTED_INSTANCES_CAN_BE_AUDITED;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
@@ -63,12 +58,12 @@ public class AuditingTest extends AbstractDaoTestCase {
         a3t_assertions.assertThat(car2_a3t).isAuditFor(car2);
 
         assertNotNull(car2_a3t.getAuditDate());
-        assertNotNull(car2_a3t.getUser());
+        assertNotNull(car2_a3t.getAuditUser());
         assertNotNull(car2_a3t.getAuditedTransactionGuid());
     }
 
     @Test
-    public void values_for_proxied_audited_properties_are_refetched_to_create_an_audit_record() {
+    public void values_for_proxied_audited_properties_are_present_in_an_audit_record() {
         // Fetch essential properties for saving and `price` to be modified.
         final var car1WithProxies = co$(TgVehicle.class)
                 .findByKeyAndFetch(fetchNone(TgVehicle.class).with("id", "version", "key", "price"),
@@ -83,12 +78,12 @@ public class AuditingTest extends AbstractDaoTestCase {
         a3t_assertions.assertThat(car1_a3t).isAuditFor(car1);
 
         assertNotNull(car1_a3t.getAuditDate());
-        assertNotNull(car1_a3t.getUser());
+        assertNotNull(car1_a3t.getAuditUser());
         assertNotNull(car1_a3t.getAuditedTransactionGuid());
     }
 
     @Test
-    public void only_changed_properties_with_nonnull_values_are_audited_when_new_TgVehicle_is_saved() {
+    public void all_properties_are_audited_when_new_TgVehicle_is_saved() {
         final var m1 = co(TgVehicleModel.class).findByKey(TgVehicleModels.m1.key);
         final var car2 = save(new_(TgVehicle.class, "CAR2").
                                       setInitDate(date("2001-01-01 00:00:00")).
@@ -104,7 +99,7 @@ public class AuditingTest extends AbstractDaoTestCase {
                 .with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
 
         final var changedProps = car2_a3t.getChangedProps();
-        final var expectedChangedPropNames = Stream.of("key", "initDate", "model", "price", "purchasePrice", "active", "leased")
+        final var expectedChangedPropNames = Stream.of("key", "desc", "initDate", "model", "price", "purchasePrice", "active", "leased", "station", "replacedBy", "lastMeterReading")
                 .map(AuditUtils::auditPropertyName)
                 .collect(toSet());
         assertEquals(expectedChangedPropNames,
@@ -245,27 +240,16 @@ public class AuditingTest extends AbstractDaoTestCase {
         }
     }
 
+    /// Verifies that an entity which becomes invalid upon retrieval can still be audited successfully.
+    ///
+    /// This scenario can occur if validation errors are suppressed (intentionally or due to a defect), allowing an invalid entity to be saved.
+    /// When the same entity is retrieved after saving (e.g. as part of the save workflow), it may get recognised as invalid.
+    ///
+    /// Depending on the auditing implementation, attempts to audit such invalid entities may fail.
+    /// This test guards against regressions in the auditing mechanism by ensuring that entities that become invalid upon retrieval remain auditable.
+    /// 
     @Test
-    public void dirty_entities_cannot_be_audited() {
-        final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
-
-        final var entity = save(new_(AuditedEntity.class, "A"))
-                .setStr2("foo");
-        assertThatThrownBy(() -> audit(coAudit, entity, generateTransactionGuid(), Set.of(AuditedEntity.Property.str2.toString())))
-                .hasMessageContaining(ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED);
-    }
-
-    @Test
-    public void non_persisted_entities_cannot_be_audited() {
-        final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
-
-        final var entity = new_(AuditedEntity.class, "A").setStr2("foo");
-        assertThatThrownBy(() -> audit(coAudit, entity, generateTransactionGuid(), Set.of(KEY, AuditedEntity.Property.str2.toString())))
-                .hasMessageContaining(ERR_ONLY_PERSISTED_INSTANCES_CAN_BE_AUDITED);
-    }
-
-    @Test
-    public void invalid_entities_can_be_audited() {
+    public void entity_that_becomes_invalid_upon_retrieval_can_be_audited() {
         final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
 
         final var newEntity = new_(AuditedEntity.class, "A").setInvalidate(true);
@@ -278,15 +262,66 @@ public class AuditingTest extends AbstractDaoTestCase {
                 .element(0).satisfies(audit0 -> a3t_assertions.assertThat(audit0).isAuditFor(savedEntity));
     }
 
+    @Test
+    public void insert_statement_for_audit_entity_is_generated_correctly_even_for_props_with_explicit_column_mapping() {
+        final var auditedEntityType = AuditedEntity.class;
+        final var auditEntityType = auditTypeFinder.navigate(auditedEntityType).auditEntityType();
+        final CommonAuditEntityDao<AuditedEntity> coAudit = co(auditEntityType);
+        final var insertStmt = coAudit.sqlInsertAuditRecordStmt();
+        final var expectedInsertFromSelect = """
+                INSERT INTO AUDITEDENTITY_A3T_2_( -- Audit table.
+                    _ID,
+                    _VERSION,
+                    AUDITEDENTITY_,
+                    AUDITEDVERSION_,
+                    AUDITUSER_,
+                    AUDITDATE_,
+                    AUDITEDTRANSACTIONGUID_,
+                    A3T_BOOL1_,
+                    A3T_DATE1_,
+                    A3T_INVALIDATE_,
+                    A3T_KEY_,
+                    A3T_RICHTEXT_FORMATTEDTEXT,
+                    A3T_RICHTEXT_CORETEXT,
+                    A3T_RICHTEXT_SEARCHTEXT,
+                    A3T_STR2,
+                    A3T_UNION__PROPERTYONE,
+                    A3T_UNION__PROPERTYTWO
+                )
+                SELECT
+                    ? AS _ID,
+                    0 AS _VERSION,
+                    _ID AS AUDITEDENTITY_,
+                    _VERSION AS AUDITEDVERSION_,
+                    ?  AS AUDITUSER_,
+                    ?  AS AUDITDATE_,
+                    ?  AS AUDITEDTRANSACTIONGUID_,
+                    BOOL1_ AS A3T_BOOL1_,
+                    DATE1_ AS A3T_DATE1_,
+                    INVALIDATE_ AS A3T_INVALIDATE_,
+                    KEY_ AS A3T_KEY_,
+                    RICHTEXT_FORMATTEDTEXT AS A3T_RICHTEXT_FORMATTEDTEXT,
+                    RICHTEXT_CORETEXT AS A3T_RICHTEXT_CORETEXT,
+                    RICHTEXT_SEARCHTEXT AS A3T_RICHTEXT_SEARCHTEXT,
+                    STR2 AS A3T_STR2,
+                    UNION__PROPERTYONE AS A3T_UNION__PROPERTYONE,
+                    UNION__PROPERTYTWO AS A3T_UNION__PROPERTYTWO
+                FROM AUDITEDENTITY_ -- Audited table.
+                WHERE _ID = ? AND _VERSION = ?
+                """;
+        assertEquals(expectedInsertFromSelect, insertStmt);
+    }
+
     /// Performs the auditing operation in a session, as described in [IEntityAuditor#audit(AbstractEntity, String, Collection)].
     @SessionRequired
     protected <E extends AbstractEntity<?>> void audit(
             final ISynAuditEntityDao<E> coAudit,
-            final E auditedEntity,
+            final Long auditedEntityId,
+            final Long auditedEntityVersion,
             final String transactionGuid,
             final Collection<String> dirtyProperties)
     {
-        coAudit.audit(auditedEntity, transactionGuid, dirtyProperties);
+        coAudit.audit(auditedEntityId, auditedEntityVersion, transactionGuid, dirtyProperties);
     }
 
     @Override

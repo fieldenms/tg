@@ -14,11 +14,8 @@ import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 import static ua.com.fielden.platform.ioc.exceptions.MissingParameterDependencyException.requireNonEmpty;
 
-/**
- * This is a helper class, which generates DDL script for one or several entities.
- *
- * @author TG Team
- */
+/// This is a helper class, which generates DDL script for one or several entities.
+///
 public class GenDdl {
     private static final Logger LOGGER = getLogger();
 
@@ -26,6 +23,7 @@ public class GenDdl {
         LOGGER.info("Initialising...");
         final var props = new Properties();
         final String propsFileSuffix; // is used to load either application-PostreSql.properties or application-SqlServer.properties
+
         // Three system properties are required: databaseUri, databaseUser and databasePasswd.
 
         final var databaseUri = requireNonEmpty(System.getProperties(), "databaseUri");

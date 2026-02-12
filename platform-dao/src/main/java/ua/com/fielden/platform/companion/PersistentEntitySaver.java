@@ -42,6 +42,7 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -53,7 +54,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -79,22 +79,18 @@ import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionH
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 import static ua.com.fielden.platform.utils.MiscUtilities.optional;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
-/**
- * The default implementation of contract {@link IEntityActuator} to save/update persistent entities.
- * 
- * @author TG Team
- *
- * @param <T>
- */
+/// The default implementation of contract [IEntityActuator] to save/update persistent entities.
+///
 public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements IEntityActuator<T> {
 
     public static final String ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES = "Could not resolve conflicting changes.";
@@ -182,19 +178,21 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final Logger logger);
     }
     
-    /**
-     * Saves the provided entity. This method checks entity version and throws StaleObjectStateException if the provided entity is stale. There is no in-memory referential
-     * integrity guarantee -- the returned instance is always a different instance. However, from the perspective of data loading, it is guaranteed that the object graph of the
-     * returned instance contains the object graph of the passed in entity as its subgraph (i.e. it can be wider, but not narrower).
-     * <p>
-     * New or already persisted entity instances should not be reused after successful saving.
-     * There is no guarantee as to what properties may or may not get mutated as part of the saving logic.
-     * For example, saving new entities does not result in assigning their {@code ID} values to the passed in instances.
-     * Instead, the returned instances should be used.
-     * The future direction is complete immutability where setting any property value would not modify that entity, but return a new instance with the new property value assigned. 
-     * <p>
-     * This method must be invoked in the context of an open DB session and supports saving only of persistent entities. Otherwise, an exception is thrown. 
-     */
+    /// Saves the provided entity.
+    /// This method checks entity version and throws StaleObjectStateException if the provided entity is stale.
+    /// There is no in-memory referential integrity guarantee — the returned instance is always a different instance.
+    /// However, from the perspective of data loading, it is guaranteed that the object graph of the returned instance contains the object graph of the passed in entity as its subgraph
+    /// (i.e. it can be wider, but not narrower).
+    ///
+    /// New or already persisted entity instances should not be reused after successful saving.
+    /// There is no guarantee as to what properties may or may not get mutated as part of the saving logic.
+    /// For example, saving new entities does not result in assigning their `ID` values to the passed in instances.
+    /// Instead, the returned instances should be used.
+    /// The future direction is complete immutability where setting any property value would not modify that entity, but return a new instance with the new property value assigned.
+    ///
+    /// This method must be invoked in the context of an open DB session and supports saving only of persistent entities.
+    /// Otherwise, an exception is thrown.
+    ///
     @Override
     public T save(final T entity) {
         return coreSave(entity, false, empty())._2;
@@ -221,7 +219,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     }
                     else {
                         final var fillModelBld = new FillModelBuilder(domainMetadata);
-                        plainProps.stream().forEach(dmp -> {
+                        plainProps.forEach(dmp -> {
                             final var value = entity.get(dmp.name());
                             if (value != null) {
                                 fillModelBld.set(dmp.name(), value);
@@ -251,9 +249,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return propName;
         }).collect(toSet());
 
-        // Auditing requires an audited entity to be refetched so that audit records can be created.
-        final boolean reallySkipRefetching = skipRefetching && !audited;
-
         final T2<Long, T> savedEntityAndId;
         // let's try to save entity
         try {
@@ -266,9 +261,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                savedEntityAndId = saveNewEntity(entity, reallySkipRefetching, maybeFetch, fillModel, session.get());
+                savedEntityAndId = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
             } else { // so, this is a modified entity
-                savedEntityAndId = saveModifiedEntity(entity, reallySkipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
+                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
@@ -276,25 +271,27 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         final T savedEntity = savedEntityAndId._2;
 
-        // this call never throws any exceptions
+        // This call never throws any exceptions.
+        //
+        // NOTE: `savedEntity` will be a Hibernate proxy if refetching is skipped.
+        //       This may be confusing if "after-save" logic expects an entity instantiated in the usual way (via EntityFactory).
         processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
         // Auditing
-        lazyAuditor.get().audit(savedEntity, transactionGuid.get(), dirtyPropNames);
+        lazyAuditor.get().audit(savedEntityAndId._1, savedEntity.getVersion(), transactionGuid.get(), dirtyPropNames);
 
         return savedEntityAndId;
     }
 
-    /**
-     * Performs the auditing function if auditing is enabled and the entity type is audited.
-     * Otherwise, has no effect.
-     * <p>
-     * The benefit of this abstraction over plain code statements is performance: the initialisation phase will occur only once.
-     */
+    /// Performs the auditing function if auditing is enabled and the entity type is audited.
+    /// Otherwise, has no effect.
+    ///
+    /// The benefit of this abstraction over plain code statements is performance: the initialisation phase will occur only once.
+    ///
     @FunctionalInterface
     private interface Auditor<E extends AbstractEntity<?>> {
 
-        void audit(final E entity, final String transactionGuid, Collection<String> dirtyProperties);
+        void audit(final Long auditEntityId, final Long auditEntityVersion, final String transactionGuid, Collection<String> dirtyProperties);
 
     }
 
@@ -310,7 +307,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return coSynAudit::audit;
         }
         else {
-            return (entity, transactionGuid, dirtyProperties) -> {};
+            return (auditedEntityId, auditedEntityVersion, transactionGuid, dirtyProperties) -> {};
         }
     }
 

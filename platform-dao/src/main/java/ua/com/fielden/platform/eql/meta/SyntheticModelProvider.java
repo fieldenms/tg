@@ -30,8 +30,7 @@ final class SyntheticModelProvider implements ISyntheticModelProvider {
             ERR_NON_SYNTHETIC_ENTITY_TYPE = "Cannot provide a synthetic model for non-synthetic entity type [%s].",
             ERR_MISSING_MODEL_FIELD = "Invalid synthetic entity [%s] definition: neither static field [model_] nor [models_] could be found.",
             ERR_MULTI_INHERITANCE_GENERATOR_NOT_CONFIGURED = "Synthetic models for generated multi-inheritance entity types cannot be provided because the generator is not configured. The expected cause is EqlTestCase.",
-            ERR_AUDIT_GENERATOR_NOT_CONFIGURED =
-            "Synthetic models for audit types cannot be provided because the generator is not configured. The expected cause is EqlTestCase.";
+            ERR_AUDIT_GENERATOR_NOT_CONFIGURED = "Synthetic models for audit types cannot be provided because the generator is not configured. The expected cause is EqlTestCase.";
 
     // Nullable because of EqlTestCase that needs to be refactored to use IoC.
     // Meanwhile, EqlTestCase will not be able to use synthetic models for audit types (it does not currently use them).

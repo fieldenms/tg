@@ -3,6 +3,7 @@ package ua.com.fielden.platform.audit;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import ua.com.fielden.platform.audit.annotations.AuditFor;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.utils.Pair;

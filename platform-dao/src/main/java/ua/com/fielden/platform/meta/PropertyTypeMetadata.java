@@ -11,43 +11,41 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Represents a property type.
- * This abstraction can be viewed as being in a class-instance relationship with {@link TypeMetadata}:
- * {@link PropertyTypeMetadata} is an instance of {@link TypeMetadata}.
- * This means that {@link PropertyTypeMetadata} can extend {@link TypeMetadata} with additional information.
- * <p>
- * However, the mentioned class-instance relationship is not a universal rule.
- * There are property types that do not correspond directly to any {@link TypeMetadata}.
- * For example, types of collectional properties or primitive types such as {@link String}.
- *
- * <h5> Property types that aren't modelled </h5>
- * This abstraction is not exhaustive – it does not cover all possible property types.
- * <p>
- * Examples of property types that are not modelled:
- * <ul>
- *   <li> {@link Map};
- *   <li> Collectional types parameterised with unmodelled property types (e.g., with a type variable).
- * </ul>
- */
+/// Represents a property type.
+///
+/// This abstraction can be viewed as being in a class-instance relationship with [TypeMetadata]:
+/// * [PropertyTypeMetadata] is an instance of [TypeMetadata].
+///
+/// This means that [PropertyTypeMetadata] can extend [TypeMetadata] with additional information.
+///
+/// However, the mentioned class-instance relationship is not a universal rule.
+/// There are property types that do not correspond directly to any [TypeMetadata].
+/// For example, types of collectional properties or primitive types such as [String].
+///
+/// #####  Property types that aren't modelled
+/// This abstraction is not exhaustive – it does not cover all possible property types.
+///
+/// Examples of property types that are not modelled:
+///
+/// -  [Map];
+/// -  Collectional types parameterised with unmodelled property types (e.g. with a type variable).
+///
 public sealed interface PropertyTypeMetadata {
 
-    /**
-     * Returns a {@link Class} object that identifies the declared property type.
-     * <p>
-     * If the property type is parameterised, its raw type is returned.
-     *
-     * @see #genericJavaType()
-     */
+    /// Returns a [Class] object that identifies the declared property type.
+    ///
+    /// If the property type is parameterised, its raw type is returned.
+    ///
+    /// @see #genericJavaType()
+    ///
     Class<?> javaType();
 
-    /**
-     * Returns a {@link Type} object that identifies the declared property type.
-     * <p>
-     * If the property type is parameterised, the returned type is a {@link ParameterizedType}.
-     *
-     * @see #javaType()
-     */
+    /// Returns a [Type] object that identifies the declared property type.
+    ///
+    /// If the property type is parameterised, the returned type is a [ParameterizedType].
+    ///
+    /// @see #javaType()
+    ///
     Type genericJavaType();
 
     default boolean isPrimitive() {
@@ -98,13 +96,12 @@ public sealed interface PropertyTypeMetadata {
         return this instanceof NoKey it ? Optional.of(it) : Optional.empty();
     }
 
-    /**
-     * Type of primitive properties.
-     * <p>
-     * Examples: {@link String}, {@link BigDecimal}, {@link Integer}.
-     * <p>
-     * Has no corresponding {@link TypeMetadata}.
-     */
+    /// Type of primitive properties.
+    ///
+    /// Examples: [String], [BigDecimal], [Integer].
+    ///
+    /// Has no corresponding [TypeMetadata].
+    ///
     non-sealed interface Primitive extends PropertyTypeMetadata {
         @Override
         Class<?> javaType();
@@ -115,23 +112,21 @@ public sealed interface PropertyTypeMetadata {
         }
     }
 
-    /**
-     * Type of entity-typed properties.
-     * <p>
-     * Corresponds to {@link EntityMetadata}.
-     */
+    /// Type of entity-typed properties.
+    ///
+    /// Corresponds to [EntityMetadata].
+    ///
     non-sealed interface Entity extends PropertyTypeMetadata {
         @Override
         Class<? extends AbstractEntity<?>> javaType();
     }
 
-    /**
-     * Type for representing collectional properties.
-     * <p>
-     * Has no corresponding {@link TypeMetadata}.
-     * <p>
-     * Is a wrapper type: wraps a collection's element type.
-     */
+    /// Type for representing collectional properties.
+    ///
+    /// Has no corresponding [TypeMetadata].
+    ///
+    /// Is a wrapper type: wraps a collection's element type.
+    ///
     non-sealed interface Collectional extends PropertyTypeMetadata, Wrapper {
         Class<?> collectionType();
 
@@ -153,25 +148,23 @@ public sealed interface PropertyTypeMetadata {
         }
     }
 
-    /**
-     * Type for representing properties that are component-like product types that have one or more distinct attributes.
-     * <p>
-     * Examples: {@link Money}.
-     * <p>
-     * Corresponds to {@link TypeMetadata.Component}.
-     */
+    /// Type for representing properties that are component-like product types that have one or more distinct attributes.
+    ///
+    /// Examples: [Money].
+    ///
+    /// Corresponds to [TypeMetadata.Component].
+    ///
     sealed interface Component extends PropertyTypeMetadata permits ComponentPropertyTypeMetadata {
         Class<?> javaType();
     }
 
     CompositeKey COMPOSITE_KEY = new CompositeKey();
 
-    /**
-     * Type representing a composite key property, in other words, property named "key" defined in an entity whose key type is {@link DynamicEntityKey}.
-     * Such properties hava Java type {@link String} and they are implicitly calculated by concatenating the values of all composite key members with a corresponding key separator.
-     * <p>
-     * Has no corresponding {@link TypeMetadata}.
-     */
+    /// Type representing a composite key property, in other words, property named "key" defined in an entity whose key type is [DynamicEntityKey].
+    /// Such properties hava Java type [String] and they are implicitly calculated by concatenating the values of all composite key members with a corresponding key separator.
+    ///
+    /// Has no corresponding [TypeMetadata].
+    ///
     final class CompositeKey implements PropertyTypeMetadata {
         private CompositeKey() {}
 

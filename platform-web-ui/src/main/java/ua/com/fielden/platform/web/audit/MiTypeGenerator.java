@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 
 /// Generates Mi types (subclasses of [MiWithConfigurationSupport]).
+///
 @Singleton
 final class MiTypeGenerator {
 
@@ -26,9 +27,9 @@ final class MiTypeGenerator {
     }
 
     @SuppressWarnings("unchecked")
-    <E extends AbstractEntity<?>> Class<MiWithConfigurationSupport<E>> generate(
-            final String simpleName,
-            final Class<E> type)
+    <E extends AbstractEntity<?>> Class<MiWithConfigurationSupport<E>>
+    generate(final String simpleName,
+             final Class<E> type)
     {
         final var baseType = baseEntityType(type);
 

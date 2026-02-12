@@ -23,18 +23,18 @@ import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 
-/**
- * Generates hibernate class mappings from MapTo annotations on domain entity types.
- *
- * @author TG Team
- *
- */
+/// Generates hibernate mappings for persistent domain entity types.
+///
 public class HibernateMappingsGenerator {
     private static final Logger LOGGER = getLogger(HibernateMappingsGenerator.class);
 
-    public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
+    /// @deprecated use [DbVersion#ID_SEQUENCE_NAME] instead
+    @Deprecated(forRemoval = true)
+    public static final String ID_SEQUENCE_NAME = DbVersion.ID_SEQUENCE_NAME;
 
     private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
+
+    public static final String ERR_UNEXPECTED_PROP_NATURE = "Expected property [%s] to have nature [%s].";
 
     private final IDomainMetadata domainMetadata;
     private final IDomainMetadataUtils domainMetadataUtils;
@@ -44,11 +44,13 @@ public class HibernateMappingsGenerator {
     private final PropertyInliner propertyInliner;
 
     @Inject
-    public HibernateMappingsGenerator(final IDomainMetadata domainMetadata,
-                                      final IDomainMetadataUtils domainMetadataUtils,
-                                      final IDbVersionProvider dbVersionProvider,
-                                      final EqlTables eqlTables,
-                                      final PropertyInliner propertyInliner) {
+    public HibernateMappingsGenerator(
+            final IDomainMetadata domainMetadata,
+            final IDomainMetadataUtils domainMetadataUtils,
+            final IDbVersionProvider dbVersionProvider,
+            final EqlTables eqlTables,
+            final PropertyInliner propertyInliner)
+    {
         this.eqlTables = eqlTables;
         this.domainMetadata = domainMetadata;
         this.domainMetadataUtils = domainMetadataUtils;
@@ -104,8 +106,8 @@ public class HibernateMappingsGenerator {
 
     private static String generateEntityVersionMapping(final String name, final String columnName, final String hibTypeName) {
         final var sb = new StringBuilder();
-        // insert: whether or not to include the version column in SQL insert statements.
-        //         Defaults to true, but you can set it to false if the database column is defined with a default value of 0.
+        // Attribute `insert` defines whether to include the version column in SQL insert statements.
+        // Defaults to `true`, but in our case column `_VERSION` has default value `0`, which is why `insert="false"`.
         sb.append("\t<version name=\"").append(name).append("\" type=\"").append(hibTypeName).append("\" access=\"field\" insert=\"false\">\n");
         sb.append("\t\t<column name=\"").append(columnName).append("\" default=\"0\" />\n");
         sb.append("\t</version>\n");
@@ -141,9 +143,8 @@ public class HibernateMappingsGenerator {
         return sb.toString();
     }
 
-    /**
-     * @param column  either a single column or multiple column names
-     */
+    /// @param column  either a single column or multiple column names
+    ///
     private static String generatePlainPropertyMapping(
             final String propName,
             final Either<PropColumn, List<String>> column,
@@ -180,9 +181,8 @@ public class HibernateMappingsGenerator {
                 });
     }
 
-    /**
-     * Generates mapping for an entity type.
-     */
+    /// Generates mapping for an entity type.
+    ///
     private String generateEntityClassMapping(
             final IDomainMetadata domainMetadata,
             final EntityMetadata em,
@@ -218,9 +218,8 @@ public class HibernateMappingsGenerator {
         return sb.toString();
     }
 
-    /**
-     * Generates mapping string for common property based on it persistence info.
-     */
+    /// Generates mapping string for a common property based on it persistence info.
+    ///
     private String generatePropertyMappingFromPropertyMetadata(
             final IDomainMetadata domainMetadata,
             final PropertyMetadata.Persistent prop)
@@ -253,7 +252,7 @@ public class HibernateMappingsGenerator {
     }
 
     private static DbSchemaException unexpectedPropNature(final String prop, final PropertyNature expectedNature) {
-        return new DbSchemaException("Expected property [%s] to have nature [%s].".formatted(prop, expectedNature));
+        return new DbSchemaException(ERR_UNEXPECTED_PROP_NATURE.formatted(prop, expectedNature));
     }
 
 }

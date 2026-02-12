@@ -15,11 +15,8 @@ import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
-/**
- * Represents results of a compilation: status (success/failure) and collected diagnostics.
- *
- * @author TG Team
- */
+/// Represents results of a compilation: status (success/failure) and collected diagnostics.
+///
 public final class CompilationResult {
 
     private final boolean success;
@@ -55,19 +52,17 @@ public final class CompilationResult {
         return outputClasses;
     }
 
-    /**
-     * Returns all diagnostics.
-     *
-     * @return a list view of all diagnostics
-     */
+    /// Returns all diagnostics.
+    ///
+    /// @return a list view of all diagnostics
+    ///
     public List<Diagnostic<? extends JavaFileObject>> diagnostics() {
         return Collections.unmodifiableList(diagnostics);
     }
 
-    /**
-     * Returns a grouping of all diagnostics.
-     * The returned map contains an entry for each diagnostic kind.
-     */
+    /// Returns a grouping of all diagnostics.
+    /// The returned map contains an entry for each diagnostic kind.
+    ///
     public Map<Kind, List<Diagnostic<? extends JavaFileObject>>> groupDiagnostics() {
         final var groups = diagnostics.stream()
                 .collect(Collectors.groupingBy(Diagnostic::getKind, HashMap::new, toList()));
@@ -105,17 +100,17 @@ public final class CompilationResult {
         return diagnosticsByKind(Kind.OTHER);
     }
 
-    /** A convenient method that prints collected diagnostics to {@link System#out}. */
+    /// A convenient method that prints collected diagnostics to [#out].
+    ///
     public void printDiagnostics() {
         System.out.println(diagnostics.stream().map(Diagnostic::toString).collect(joining("\n")));
     }
 
-    /**
-     * If this compilation result is unsuccessful, throws a runtime exception, using the specified function to create an error message.
-     * Otherwise, returns this instance.
-     *
-     * @param errMsgFn  function that creates an error message; its first parameter is a message produced by the compiler.
-     */
+    /// If this compilation result is unsuccessful, throws a runtime exception, using the specified function to create an error message.
+    /// Otherwise, returns this instance.
+    ///
+    /// @param errMsgFn  function that creates an error message; its first parameter is a message produced by the compiler.
+    ///
     public CompilationResult throwIfFailed(final Function<String, String> errMsgFn) {
         if (success) {
             return this;
@@ -171,11 +166,10 @@ public final class CompilationResult {
         sink.append(diagnostic.getMessage(Locale.getDefault()));
     }
 
-    /**
-     * @param name  binary name of the class
-     * @param javaFileObject  {@link JavaFileObject} representing the class
-     */
-    public record ClassFile (String name, JavaFileObject javaFileObject) {
+    /// @param name            binary name of the class
+    /// @param javaFileObject  [JavaFileObject] representing the class
+    ///
+    public record ClassFile(String name, JavaFileObject javaFileObject) {
 
         public byte[] getBytes() {
             try (final var is = javaFileObject.openInputStream()) {

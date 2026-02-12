@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.audit;
 
 import com.squareup.javapoet.*;
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 
-import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -12,21 +12,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Provides efficient access to some parts of the JavaPoet library.
- * <p>
- * It is recommended to use this facility instead of JavaPoet where possible, as this facility is designed to be more efficient
- * (for example, it performs caching of reusable elements).
- */
+/// Provides efficient access to some parts of the JavaPoet library.
+///
+/// It is recommended to use this facility instead of JavaPoet where possible, as this facility is designed to be more efficient
+/// For example, it performs caching of reusable elements.
+///
 final class JavaPoet {
-
-    private static final JavaPoet INSTANCE = new JavaPoet();
-
-    public static JavaPoet getInstance() {
-        return INSTANCE;
-    }
-
-    private JavaPoet() {};
 
     private final Map<Type, TypeName> typeNameCache = new ConcurrentHashMap<>();
     private final Map<Class<?>, AnnotationSpec> markerAnnotationCache = new ConcurrentHashMap<>();
@@ -43,15 +34,13 @@ final class JavaPoet {
         return markerAnnotationCache.computeIfAbsent(annotationType, k -> AnnotationSpec.builder(k).build());
     }
 
-    /**
-     * Converts the named type to a Java reflection object, if such type exists; otherwise, returns {@code null}.
-     * <p>
-     * Limitations:
-     * <ul>
-     *   <li> Unsupported types: arrays, wildcards, type variables.
-     *   <li> For parameterised type names, only the raw type is used.
-     * </ul>
-     */
+    /// Converts the named type to a Java reflection object, if such type exists.
+    /// Otherwise, returns `null`.
+    ///
+    /// Limitations:
+    /// -  Unsupported types: arrays, wildcards, type variables.
+    /// -  For parameterised type names, only the raw type is used.
+    ///
     public @Nullable Class<?> reflectType(final TypeName typeName) {
         class $ {
             static final Map<TypeName, Class<?>> PRIMITIVES = Map.of(
@@ -84,9 +73,8 @@ final class JavaPoet {
         }
     }
 
-    /**
-     * Returns the contents of the specified java file.
-     */
+    /// Returns the contents of the specified java file.
+    ///
     public static String readJavaFile(final JavaFile javaFile) {
         final var sb = new StringBuilder();
         try {
@@ -101,10 +89,9 @@ final class JavaPoet {
         return Optional.ofNullable(annotSpec.members.get(memberName)).map(List::getFirst);
     }
 
-    /**
-     * Returns a class name for the specified fully-qualified name which must name a top-level class.
-     * Although, this requirement cannot be enforced.
-     */
+    /// Returns a class name for the specified fully-qualified name which must name a top-level class.
+    /// Although, this requirement cannot be enforced.
+    ///
     public static ClassName topLevelClassName(final CharSequence fqn) {
         final var dotIdx = StringUtils.lastIndexOf(fqn, '.');
         if (dotIdx == -1) {

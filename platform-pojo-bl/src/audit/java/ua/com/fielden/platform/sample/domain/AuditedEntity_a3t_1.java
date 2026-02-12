@@ -6,7 +6,7 @@ import java.util.Date;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.AbstractAuditEntity;
-import ua.com.fielden.platform.audit.AuditFor;
+import ua.com.fielden.platform.audit.annotations.AuditFor;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -37,7 +37,7 @@ import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 @DenyIntrospection
 public class AuditedEntity_a3t_1 extends AbstractAuditEntity<AuditedEntity> {
   @IsProperty
-  @MapTo("A3T_BOOL1")
+  @MapTo
   @Final
   @Title(
       value = "Bool 1",
@@ -46,7 +46,7 @@ public class AuditedEntity_a3t_1 extends AbstractAuditEntity<AuditedEntity> {
   private boolean a3t_bool1;
 
   @IsProperty
-  @MapTo("A3T_DATE1")
+  @MapTo
   @Final
   @Title(
       value = "Date 1",
@@ -55,7 +55,7 @@ public class AuditedEntity_a3t_1 extends AbstractAuditEntity<AuditedEntity> {
   private Date a3t_date1;
 
   @IsProperty
-  @MapTo("A3T_KEY")
+  @MapTo
   @Final
   @Title(
       value = "Key",
@@ -64,7 +64,7 @@ public class AuditedEntity_a3t_1 extends AbstractAuditEntity<AuditedEntity> {
   private String a3t_key;
 
   @IsProperty
-  @MapTo("A3T_STR1")
+  @MapTo
   @Final
   @Title(
       value = "Str 1",

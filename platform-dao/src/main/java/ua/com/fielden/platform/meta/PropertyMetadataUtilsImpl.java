@@ -82,7 +82,9 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
     {
         // union members must be persistent
         return member.asPersistent().map(persistentMember -> {
-            final var columnName = parent.asPersistent().map(p -> p.data().column() + "_").orElse("") + persistentMember.data().column();
+            final var columnName = parent.asPersistent()
+                    .map(p -> generator.propColumnNameForUnion(p.data().column().name, persistentMember.data().column().name))
+                    .orElseGet(() -> persistentMember.data().column().name);
             return persistentProp(naming.apply(parent.name(), member.name()), member.type(), member.hibType(),
                                   PropertyNature.Persistent.data(generator.propColumn(columnName)))
                     .with(UNION_MEMBER, true)
@@ -146,11 +148,8 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
             final var headerColName = prop.data().column().name;
             final var columnName = subPropNames.length == 1
                     ? headerColName
-                    : (headerColName
-                       + (headerColName.endsWith("_") ? "" : "_")
-                       + (isEmpty(mapToColumn) ? subPropName.toUpperCase() : mapToColumn));
-            final var propColumn = generator.propColumn(
-                    columnName, getPropertyAnnotationOptionally(IsProperty.class, componentJavaType, subPropName));
+                    : generator.propColumnNameForComponent(headerColName, isEmpty(mapToColumn) ? subPropName.toUpperCase() : mapToColumn);
+            final var propColumn = generator.propColumn(columnName, getPropertyAnnotationOptionally(IsProperty.class, componentJavaType, subPropName));
             return persistentProp(naming.apply(prop.name(), subPropName),
                                   subProp.type(),
                                   subHibType,

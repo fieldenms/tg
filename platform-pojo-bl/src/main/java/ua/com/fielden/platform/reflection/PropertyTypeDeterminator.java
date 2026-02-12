@@ -418,10 +418,9 @@ public class PropertyTypeDeterminator {
         return Optional.empty();
     }
 
-    /**
-     * If the specified type is a parameterised collection type, returns a pair (raw collectional type, element type);
-     * otherwise, returns an empty optional.
-     */
+    /// If the specified type is a parameterised collection type, returns a pair of `(raw collectional type, element type)`.
+    /// Otherwise, returns an empty optional.
+    ///
     public static Optional<T2<Class<?>, Class<?>>> collectionalType(final Type type) {
         if (type instanceof ParameterizedType paramType) {
             if (paramType.getRawType() instanceof Class<?> rawClass && EntityUtils.isCollectional(rawClass)) {

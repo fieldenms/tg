@@ -3,8 +3,10 @@ package ua.com.fielden.platform.audit;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.junit.Test;
+import ua.com.fielden.platform.audit.annotations.DisableAuditing;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
 import ua.com.fielden.platform.meta.PropertyNature;
 import ua.com.fielden.platform.sample.domain.AuditedEntity;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
@@ -20,10 +22,12 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY;
 import static ua.com.fielden.platform.audit.AuditUtils.auditPropertyName;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.meta.PropertyNature.*;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.Finder.streamProperties;
@@ -82,7 +86,7 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                         new Prop(AbstractAuditEntity.AUDITED_VERSION, Long.class, PERSISTENT),
                         new Prop(AbstractAuditEntity.AUDIT_DATE, Date.class, PERSISTENT),
                         new Prop(AbstractAuditEntity.AUDITED_TRANSACTION_GUID, String.class, PERSISTENT),
-                        new Prop(AbstractAuditEntity.USER, User.class, PERSISTENT),
+                        new Prop(AbstractAuditEntity.AUDIT_USER, User.class, PERSISTENT),
                         new Prop(KEY, String.class, CALCULATED),
                         new Prop(ID, Long.class, PERSISTENT),
                         new Prop(VERSION, Long.class, PERSISTENT),
@@ -138,6 +142,23 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                 .toList();
 
         assertEquals(expectedProps, actualProps);
+    }
+
+    @Test
+    public void naming_of_columns_for_audit_properties() {
+        final var domainMetadata = getInstance(IDomainMetadata.class);
+
+        final var auditType = auditTypeFinder.navigate(AuditedEntity.class).auditEntityType();
+        domainMetadata.forEntity(auditType)
+                .properties()
+                .stream()
+                .filter(p -> p.get(AUDIT_PROPERTY).filter(KAuditProperty.Data::active).isPresent())
+                .forEach(auditProp -> {
+                    final var persistentAuditProp = assertThat(auditProp.asPersistent()).isPresent().get().actual();
+                    final var auditedProp = domainMetadata.forProperty(AuditedEntity.class, AuditUtils.auditedPropertyName(auditProp.name()));
+                    final var persistentAuditedProp = assertThat(auditedProp.asPersistent()).isPresent().get().actual();
+                    assertEquals("A3T_" + persistentAuditedProp.data().column().name, persistentAuditProp.data().column().name);
+                });
     }
 
 }

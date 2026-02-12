@@ -29,7 +29,8 @@ class DdlGeneratorImpl implements IDdlGenerator {
     }
 
     DdlGeneratorImpl(final HibernateTypeMappings hibernateTypeMappings,
-            final Supplier<Collection<Class<? extends AbstractEntity<?>>>> entityTypes) {
+                     final Supplier<Collection<Class<? extends AbstractEntity<?>>>> entityTypes)
+    {
         this.hibernateTypeMappings = hibernateTypeMappings;
         this.entityTypes = entityTypes;
     }

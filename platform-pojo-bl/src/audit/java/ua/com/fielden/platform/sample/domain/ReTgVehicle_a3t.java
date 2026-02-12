@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-04-22 12:36:51 EEST
+// Generation timestamp: 2026-01-12 16:58:42 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
-import ua.com.fielden.platform.audit.AuditFor;
+import ua.com.fielden.platform.audit.annotations.AuditFor;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -62,11 +62,18 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
   private PropertyDescriptor<ReTgVehicle_a3t> changedPropsCrit;
 
   @Title(
-      value = "Key",
-      desc = "[Key] at the time of the audited event."
+      value = "Active",
+      desc = "[Active] at the time of the audited event."
   )
   @IsProperty
-  private String a3t_key;
+  private boolean a3t_active;
+
+  @Title(
+      value = "Description",
+      desc = "[Description] at the time of the audited event."
+  )
+  @IsProperty
+  private String a3t_desc;
 
   @Title(
       value = "Init Date",
@@ -76,18 +83,25 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
   private Date a3t_initDate;
 
   @Title(
-      value = "Tg Vehicle",
-      desc = "[Tg Vehicle] at the time of the audited event."
+      value = "Key",
+      desc = "[Key] at the time of the audited event."
   )
   @IsProperty
-  private TgVehicle a3t_replacedBy;
+  private String a3t_key;
 
   @Title(
-      value = "Tg Org Unit5",
-      desc = "[Tg Org Unit5] at the time of the audited event."
+      value = "Last meter reading",
+      desc = "[Last meter reading] at the time of the audited event."
   )
   @IsProperty
-  private TgOrgUnit5 a3t_station;
+  private BigDecimal a3t_lastMeterReading;
+
+  @Title(
+      value = "Leased?",
+      desc = "[Leased?] at the time of the audited event."
+  )
+  @IsProperty
+  private boolean a3t_leased;
 
   @Title(
       value = "Model",
@@ -111,32 +125,18 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
   private Money a3t_purchasePrice;
 
   @Title(
-      value = "Active",
-      desc = "[Active] at the time of the audited event."
+      value = "Tg Vehicle",
+      desc = "[Tg Vehicle] at the time of the audited event."
   )
   @IsProperty
-  private boolean a3t_active;
+  private TgVehicle a3t_replacedBy;
 
   @Title(
-      value = "Leased?",
-      desc = "[Leased?] at the time of the audited event."
+      value = "Tg Org Unit5",
+      desc = "[Tg Org Unit5] at the time of the audited event."
   )
   @IsProperty
-  private boolean a3t_leased;
-
-  @Title(
-      value = "Last meter reading",
-      desc = "[Last meter reading] at the time of the audited event."
-  )
-  @IsProperty
-  private BigDecimal a3t_lastMeterReading;
-
-  @Title(
-      value = "Description",
-      desc = "[Description] at the time of the audited event."
-  )
-  @IsProperty
-  private String a3t_desc;
+  private TgOrgUnit5 a3t_station;
 
   public TgVehicle getAuditedEntity() {
     return this.auditedEntity;
@@ -170,13 +170,23 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
     return this;
   }
 
-  public String getA3t_key() {
-    return this.a3t_key;
+  public boolean isA3t_active() {
+    return this.a3t_active;
   }
 
   @Observable
-  public ReTgVehicle_a3t setA3t_key(final String a3t_key) {
-    this.a3t_key = a3t_key;
+  public ReTgVehicle_a3t setA3t_active(final boolean a3t_active) {
+    this.a3t_active = a3t_active;
+    return this;
+  }
+
+  public String getA3t_desc() {
+    return this.a3t_desc;
+  }
+
+  @Observable
+  public ReTgVehicle_a3t setA3t_desc(final String a3t_desc) {
+    this.a3t_desc = a3t_desc;
     return this;
   }
 
@@ -190,23 +200,33 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
     return this;
   }
 
-  public TgVehicle getA3t_replacedBy() {
-    return this.a3t_replacedBy;
+  public String getA3t_key() {
+    return this.a3t_key;
   }
 
   @Observable
-  public ReTgVehicle_a3t setA3t_replacedBy(final TgVehicle a3t_replacedBy) {
-    this.a3t_replacedBy = a3t_replacedBy;
+  public ReTgVehicle_a3t setA3t_key(final String a3t_key) {
+    this.a3t_key = a3t_key;
     return this;
   }
 
-  public TgOrgUnit5 getA3t_station() {
-    return this.a3t_station;
+  public BigDecimal getA3t_lastMeterReading() {
+    return this.a3t_lastMeterReading;
   }
 
   @Observable
-  public ReTgVehicle_a3t setA3t_station(final TgOrgUnit5 a3t_station) {
-    this.a3t_station = a3t_station;
+  public ReTgVehicle_a3t setA3t_lastMeterReading(final BigDecimal a3t_lastMeterReading) {
+    this.a3t_lastMeterReading = a3t_lastMeterReading;
+    return this;
+  }
+
+  public boolean isA3t_leased() {
+    return this.a3t_leased;
+  }
+
+  @Observable
+  public ReTgVehicle_a3t setA3t_leased(final boolean a3t_leased) {
+    this.a3t_leased = a3t_leased;
     return this;
   }
 
@@ -240,43 +260,23 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
     return this;
   }
 
-  public boolean isA3t_active() {
-    return this.a3t_active;
+  public TgVehicle getA3t_replacedBy() {
+    return this.a3t_replacedBy;
   }
 
   @Observable
-  public ReTgVehicle_a3t setA3t_active(final boolean a3t_active) {
-    this.a3t_active = a3t_active;
+  public ReTgVehicle_a3t setA3t_replacedBy(final TgVehicle a3t_replacedBy) {
+    this.a3t_replacedBy = a3t_replacedBy;
     return this;
   }
 
-  public boolean isA3t_leased() {
-    return this.a3t_leased;
+  public TgOrgUnit5 getA3t_station() {
+    return this.a3t_station;
   }
 
   @Observable
-  public ReTgVehicle_a3t setA3t_leased(final boolean a3t_leased) {
-    this.a3t_leased = a3t_leased;
-    return this;
-  }
-
-  public BigDecimal getA3t_lastMeterReading() {
-    return this.a3t_lastMeterReading;
-  }
-
-  @Observable
-  public ReTgVehicle_a3t setA3t_lastMeterReading(final BigDecimal a3t_lastMeterReading) {
-    this.a3t_lastMeterReading = a3t_lastMeterReading;
-    return this;
-  }
-
-  public String getA3t_desc() {
-    return this.a3t_desc;
-  }
-
-  @Observable
-  public ReTgVehicle_a3t setA3t_desc(final String a3t_desc) {
-    this.a3t_desc = a3t_desc;
+  public ReTgVehicle_a3t setA3t_station(final TgOrgUnit5 a3t_station) {
+    this.a3t_station = a3t_station;
     return this;
   }
 }

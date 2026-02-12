@@ -6,7 +6,7 @@ import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.AbstractSynAuditProp;
-import ua.com.fielden.platform.audit.AuditFor;
+import ua.com.fielden.platform.audit.annotations.AuditFor;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;

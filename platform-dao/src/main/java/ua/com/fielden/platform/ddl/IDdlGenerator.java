@@ -29,8 +29,8 @@ public interface IDdlGenerator {
     /// This includes tables for persistent entity types, column constraints and indices.
     ///
     default List<String> generateDatabaseDdl(final Dialect dialect,
-            final Class<? extends AbstractEntity<?>> type,
-            final Class<? extends AbstractEntity<?>>... types)
+                                             final Class<? extends AbstractEntity<?>> type,
+                                             final Class<? extends AbstractEntity<?>>... types)
     {
         return generateDatabaseDdl(dialect, true, type, types);
     }
@@ -42,9 +42,9 @@ public interface IDdlGenerator {
     ///               specify `false` to skip foreign keys.
     ///
     List<String> generateDatabaseDdl(Dialect dialect,
-            boolean withFk,
-            Class<? extends AbstractEntity<?>> type,
-            Class<? extends AbstractEntity<?>>... types);
+                                     boolean withFk,
+                                     Class<? extends AbstractEntity<?>> type,
+                                     Class<? extends AbstractEntity<?>>... types);
 
     /// Returns a list of DDL statements that will create a schema for the application using only the specified entity types.
     /// This includes tables for persistent entity types, column constraints and indices.

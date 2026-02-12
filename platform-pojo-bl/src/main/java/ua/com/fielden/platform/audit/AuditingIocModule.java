@@ -34,6 +34,7 @@ import static ua.com.fielden.platform.utils.MiscUtilities.mkProperties;
 /// 2. Application property.
 ///
 /// If the auditing mode is not specified, the default is [AuditingMode#ENABLED].
+///
 public final class AuditingIocModule extends AbstractPlatformIocModule {
 
     /// Application property (**not a system property**) that specifies the location of class files for audit types.
@@ -43,6 +44,7 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
     /// This name is to be used with the [jakarta.inject.Named] annotation.
     /// An optional binding is created for this name.
     /// Blank values are treated as if absent.
+    ///
     public static final String AUDIT_PATH = "audit.path";
     // We could support audit path as a system property, but that would require other IoC modules to use OptionalBinder to bind an audit path.
     // More details can be found in the documentation of OptionalBinder.
@@ -58,11 +60,16 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
     ///
     /// **NOTE**: Any code outside of this module should inject [AuditingMode] directly instead of this named binding.
     /// This is because the value of a system property, if specified, will be reflected in [AuditingMode], but not in the named binding.
+    ///
     public static final String AUDIT_MODE = "audit.mode";
 
     private static final IValueParser<Object, AuditingMode> auditingModeParser = enumIgnoreCaseParser(AuditingMode.values());
 
-    private static final String ERR_MISSING_APP_PROPERTY = "Application property [%s] must be specified when auditing mode is [%s].";
+    private static final String
+            ERR_MISSING_APP_PROPERTY = "Application property [%s] must be specified when auditing mode is [%s].",
+            ERR_RETRIEVING_CLASSES = "Error while retrieving all classes from JAR or directory at [%s].",
+            ERR_PARSING_SYSTEM_PROPERTY = "Could not parse system property [%s].",
+            ERR_PARSING_APP_PROPERTY = "Could not parse application property [%s].";
 
     private static final AuditingMode DEFAULT_AUDITING_MODE = AuditingMode.ENABLED;
 
@@ -92,7 +99,7 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
                 try {
                     types = ClassesRetriever.getAllClassesInPackage(auditPath, "");
                 } catch (final Exception ex) {
-                    throw new ReflectionException("Error while retrieving all classes from JAR or directory at [%s]".formatted(auditPath), ex);
+                    throw new ReflectionException(ERR_RETRIEVING_CLASSES.formatted(auditPath), ex);
                 }
                 yield new AuditTypeFinder(types, auditingMode);
             }
@@ -100,17 +107,18 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
     }
 
     /// Decides which of the configured auditing modes is the definite one.
+    ///
     @Provides
     @Singleton
     AuditingMode auditingMode(final @Named(AUDIT_MODE) Optional<String> maybeAppAuditMode) {
         final var parser = optPropertyParser(AUDIT_MODE, auditingModeParser);
         return parser.apply(System.getProperties())
-                .refineError(() -> "Could not parse system property [%s]".formatted(AUDIT_MODE))
+                .refineError(() -> ERR_PARSING_SYSTEM_PROPERTY.formatted(AUDIT_MODE))
                 .getOrThrow()
                 .or(() -> maybeAppAuditMode
                         .filter(not(String::isBlank))
                         .flatMap(it -> parser.apply(mkProperties(AUDIT_MODE, it))
-                                .refineError(() -> "Could not parse application property [%s]".formatted(AUDIT_MODE))
+                                .refineError(() -> ERR_PARSING_APP_PROPERTY.formatted(AUDIT_MODE))
                                 .getOrThrow()))
                 .orElse(DEFAULT_AUDITING_MODE);
     }

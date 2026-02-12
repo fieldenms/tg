@@ -2,6 +2,7 @@ package ua.com.fielden.platform.audit;
 
 import com.google.common.collect.ImmutableList;
 import com.squareup.javapoet.*;
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -10,7 +11,6 @@ import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import jakarta.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -48,28 +48,30 @@ final class PropertySpec {
         return new Builder(name, TypeName.get(type), ImmutableList.of());
     }
 
-    /**
-     * Adds the specified property, along with its accessor and setter, to the specified builder.
-     *
-     * @param typeName name of the type being built (whether this is true is not checked by this method)
-     */
-    public static TypeSpec.Builder addProperty(
+    /// Adds the specified property, along with its accessor and setter methods,
+    /// to the provided `builder` instance.
+    ///
+    /// @param typeName The name of the type being built.
+    ///                 This method does not verify whether the name actually corresponds to the builder’s target type.
+    ///
+    public static void addProperty(
             final GeneratorEnvironment environment,
             final TypeSpec.Builder builder,
             final TypeName typeName,
             final PropertySpec propertySpec)
     {
-        return builder.addField(propertySpec.toFieldSpec(environment))
+        builder.addField(propertySpec.toFieldSpec(environment))
                 .addMethod(propertySpec.getAccessorSpec(environment))
                 .addMethod(propertySpec.getSetterSpec(environment, typeName));
     }
 
-    /**
-     * Adds the specified properties, along with their accessors and setters, to the specified builder.
-     *
-     * @param typeName name of the type being built (whether this is true is not checked by this method)
-     */
-    public static TypeSpec.Builder addProperties(
+    /// Adds the specified properties, along with their accessor and setter methods,
+    /// to the provided `builder` instance.
+    ///
+    /// @param typeName The name of the type being built.
+    ///                 This method does not verify whether the name actually corresponds to the builder’s target type.
+    ///
+    public static void addProperties(
             final GeneratorEnvironment environment,
             final TypeSpec.Builder builder,
             final TypeName typeName,
@@ -80,7 +82,6 @@ final class PropertySpec {
         for (final var spec : propertySpecs) {
             addProperty(environment, builder, typeName, spec);
         }
-        return builder;
     }
 
     public Builder toBuilder() {
@@ -144,15 +145,17 @@ final class PropertySpec {
 
     /// Creates a method that represents a setter for this property.
     ///
-    /// @param declaringTypeName  name of the type that declares this setter
+    /// @param declaringTypeName  the name of the type that declares this setter
+    ///
     public MethodSpec getSetterSpec(final GeneratorEnvironment environment, final TypeName declaringTypeName) {
         return getSetterSpecWithParamType(environment, declaringTypeName, typeName);
     }
 
     /// Creates a method that represents a setter for this property.
     ///
-    /// @param declaringTypeName  name of the type that declares this setter
-    /// @param paramTypeName  name of the parameter type
+    /// @param declaringTypeName  the name of the type that declares this setter
+    /// @param paramTypeName  the name of the parameter type
+    ///
     public MethodSpec getSetterSpecWithParamType(final GeneratorEnvironment environment, final TypeName declaringTypeName, final TypeName paramTypeName) {
         final var builder = MethodSpec.methodBuilder("set" + StringUtils.capitalize(name))
                 .addModifiers(PUBLIC)

@@ -17,15 +17,13 @@ import java.util.Properties;
 
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 
-/**
- * This Guice module ensures that all observable and validatable properties are handled correctly.
- * In addition to {@link EntityIocModule}, this module binds {@link IMetaPropertyFactory}.
- * This modules disables auditing, but this can be changed by overriding {@link #auditingMode()}.
- * <p>
- * <b>IMPORTANT</b>: This module is strictly for testing purposes!
- * 
- * @author TG Team
- */
+/// This Guice module ensures that all observable and validatable properties are handled correctly.
+/// In addition to [EntityIocModule], this module binds [IMetaPropertyFactory].
+/// This module disables auditing, but this can be changed by overriding [#auditingMode()].
+///
+/// **IMPORTANT**: This module is strictly for testing purposes!
+///
+///
 public class CommonEntityTestIocModuleWithPropertyFactory extends EntityTestIocModuleWithPropertyFactory {
 
     public CommonEntityTestIocModuleWithPropertyFactory() {

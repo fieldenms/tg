@@ -12,22 +12,23 @@ import java.util.Optional;
 
 import static ua.com.fielden.platform.entity.query.DbVersion.*;
 
-/**
- * A data structure to capture the information required to generate column DDL statement.
- *
- */
+/// A data structure to capture the information required to generate column DDL statement.
+///
 public class ColumnDefinition {
     public static final int DEFAULT_STRING_LENGTH = 255;
     public static final int DEFAULT_NUMERIC_PRECISION = 18;
     public static final int DEFAULT_NUMERIC_SCALE = 2;
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final String WARN_NVARCHAR_NOT_SUPPORTED_POSTGRESQL =
-    """
-    NVARCHAR is not supported by PostgreSQL. Using VARCHAR instead for column [%s]. \
-    The database must have a multi-byte encoding (e.g., UTF-8) for this to work as expected.""";
-
-    public static final String WARN_NVARCHAR_SIZE = "The size of NVARCHAR column [%s] was changed from [%s] to [MAX]. SQL Server uses MAX for size above 4000.";
+    public static final String
+            WARN_NVARCHAR_NOT_SUPPORTED_POSTGRESQL =
+                """
+                NVARCHAR is not supported by PostgreSQL. Using VARCHAR instead for column [%s]. \
+                The database must have a multi-byte encoding (e.g., UTF-8) for this to work as expected.
+                """,
+            WARN_NVARCHAR_SIZE = "The size of NVARCHAR column [%s] was changed from [%s] to [MAX]. SQL Server uses MAX for size above 4000.",
+            ERR_EMPTY_COLUMN_NAME = "Column name cannot be empty!",
+            ERR_UNRECOGNISED_HIBERNATE_DIALECT = "Unrecognised Hibernate dialect: %s.";
 
     public final boolean unique;
     public final Optional<Integer> compositeKeyMemberOrder;
@@ -58,7 +59,7 @@ public class ColumnDefinition {
             final Dialect dialect)
     {
         if (StringUtils.isEmpty(name)) {
-            throw new DbSchemaException("Column name cannot be empty!");
+            throw new DbSchemaException(ERR_EMPTY_COLUMN_NAME);
         }
         this.unique = unique;
         this.compositeKeyMemberOrder = compositeKeyMemberOrder;
@@ -83,11 +84,10 @@ public class ColumnDefinition {
         };
     }
 
-    /**
-     * Generates a DDL statement for a column based on provided RDBMS dialect.
-     *
-     * @param ignoreRequiredness  if {@code true}, the requiredness constraint is ignored ({@code NOT NULL} is not included)
-     */
+    /// Generates a DDL statement for a column based on provided RDBMS dialect.
+    ///
+    /// @param ignoreRequiredness  if `true`, the requiredness constraint is ignored (`NOT NULL` is not included)
+    ///
     public String schemaString(final Dialect dialect, final boolean ignoreRequiredness) {
         final StringBuilder sb = new StringBuilder();
         sb.append(name);
@@ -107,17 +107,15 @@ public class ColumnDefinition {
         return sb.toString();
     }
 
-    /**
-     * Generates a DDL statement for a column based on provided RDBMS dialect.
-     */
+    /// Generates a DDL statement for a column based on provided RDBMS dialect.
+    ///
     public String schemaString(final Dialect dialect) {
         return schemaString(dialect, false);
     }
 
-    /**
-     * Converts a number that represents an SQL type to a human-readable descriptive text.
-     * For example, MSSQL type {@code 12} becomes {@code "varchar(max)"}.
-     */
+    /// Converts a number that represents an SQL type to a human-readable descriptive text.
+    /// For example, MSSQL type `12` becomes `"varchar(max)"`.
+    ///
     private String sqlTypeName(final Dialect dialect) {
         if (length == Integer.MAX_VALUE && String.class == javaType) {
             return switch (dbVersion(dialect)) {
@@ -130,13 +128,13 @@ public class ColumnDefinition {
             return switch(dbVersion(dialect)) {
                 case POSTGRESQL -> {
                     // Alternatively, "text" could be used, but it would disregard the length constraint.
-                    LOGGER.warn(WARN_NVARCHAR_NOT_SUPPORTED_POSTGRESQL.formatted(name));
+                    LOGGER.warn(() -> WARN_NVARCHAR_NOT_SUPPORTED_POSTGRESQL.formatted(name));
                     yield dialect.getTypeName(Types.VARCHAR, length, precision, scale);
                 }
                 case MSSQL -> {
                     final var typeName = dialect.getTypeName(sqlType, length, precision, scale);
                     if (typeName.toLowerCase().contains("max")) {
-                        LOGGER.warn(WARN_NVARCHAR_SIZE.formatted(name, length));
+                        LOGGER.warn(() -> WARN_NVARCHAR_SIZE.formatted(name, length));
                     }
                     yield typeName;
                 }
@@ -158,7 +156,7 @@ public class ColumnDefinition {
         else if (dialect.getClass().getSimpleName().startsWith("H2Dialect")) {
             return H2;
         }
-        throw new DbSchemaException("Unrecognised Hibernate dialect: %s".formatted(dialect));
+        throw new DbSchemaException(ERR_UNRECOGNISED_HIBERNATE_DIALECT.formatted(dialect));
     }
 
     @Override

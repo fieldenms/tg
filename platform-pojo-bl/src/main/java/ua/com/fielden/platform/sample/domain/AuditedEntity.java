@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.audit.Audited;
-import ua.com.fielden.platform.audit.DisableAuditing;
+import ua.com.fielden.platform.audit.annotations.Audited;
+import ua.com.fielden.platform.audit.annotations.DisableAuditing;
+import ua.com.fielden.platform.audit.annotations.InactiveAuditProperty;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
@@ -10,10 +11,14 @@ import ua.com.fielden.platform.types.RichText;
 
 import java.util.Date;
 
-/**
- * Entity for testing of auditing facilitites.
- * Its use should be limited to auditing tests, as its structure is prone to change.
- */
+/// Entity for testing of auditing facilities.
+/// Its use should be limited to auditing tests, as its structure is prone to change.
+///
+/// This entity emulates a scenario where its structure has changed over time,
+/// resulting in two audit-entity types: [AuditedEntity_a3t_1] and [AuditedEntity_a3t_2].
+/// The change concerns the removal of property `str1`, which is reflected in
+/// [AuditedEntity_a3t_2] as property `a3t_str1`, annotated with [InactiveAuditProperty].
+///
 @KeyType(String.class)
 @MapEntityTo
 @CompanionObject(AuditedEntityCo.class)
@@ -38,7 +43,7 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
     private boolean bool1;
 
     @IsProperty
-    @MapTo
+    @MapTo("STR2") // To test generation of @MapTo in the audit-entity.
     private String str2;
 
     @IsProperty

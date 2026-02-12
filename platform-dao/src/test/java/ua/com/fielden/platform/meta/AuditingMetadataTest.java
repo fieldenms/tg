@@ -18,7 +18,7 @@ import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 public class AuditingMetadataTest {
 
     // TODO: Refactor this test class to use IoC.
-    //       Then, use IAuditTypeFinder instead of acessing audit types directly.
+    //       Then, use IAuditTypeFinder instead of accessing audit types directly.
 
     private final TestDomainMetadataGenerator generator;
 

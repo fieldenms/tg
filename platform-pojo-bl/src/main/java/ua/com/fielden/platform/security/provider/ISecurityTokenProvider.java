@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.security.provider;
 
-import java.util.Collection;
-import java.util.Optional;
-import java.util.SortedSet;
-
 import com.google.inject.ImplementedBy;
 import ua.com.fielden.platform.security.ISecurityToken;
 
@@ -21,8 +17,8 @@ import java.util.SortedSet;
 ///
 /// The default implementation is {@link SecurityTokenProvider}, which should be subclassed if some custom logic is needed in an application.
 ///
-/// @author TG Team
 /// @see ISecurityTokenNodeTransformation
+///
 @ImplementedBy(SecurityTokenProvider.class)
 public interface ISecurityTokenProvider {
 

@@ -28,6 +28,18 @@ import static ua.com.fielden.platform.utils.EntityUtils.entityTypeHierarchy;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.StreamUtils.*;
 
+/// Generates domain metadata models for entity types and their properties,
+/// producing [DomainTypeData] and [DomainPropertyData] structures used by the EQL metadata layer.
+///
+/// The generator operates over an [IDomainMetadata] instance and a [PropertyInliner] to:
+/// * derive domain-type metadata for entity types and relevant property types  (including union, primitive, and component types),
+/// * determine persistent bases for synthetic entities,
+/// * inline component and union-typed properties into sub-properties where applicable, and
+/// * assign stable identifiers and ordering information for types and properties.
+///
+/// Generated domain metadata is later consumed by query construction, validation,
+/// and tooling that relies on a consistent, model-level view of entities and their properties.
+///
 public final class DomainMetadataModelGenerator {
 
     private final IDomainMetadata domainMetadata;
@@ -109,9 +121,8 @@ public final class DomainMetadataModelGenerator {
                                      (h, i) -> h.f().apply(i));
     }
 
-    /**
-     * If given a synthetic-based-on-persistent entity, returns the persistent type it's based on.
-     */
+    /// If given a synthetic-based-on-persistent entity, returns the persistent type it's based on.
+    ///
     private Optional<EntityMetadata.Persistent> persistentBaseForSynthetic(final EntityMetadata em) {
         return em.asSynthetic()
                 .map(EntityMetadata::javaType)
@@ -189,12 +200,12 @@ public final class DomainMetadataModelGenerator {
         return result;
     }
 
-    /**
-     * Determines the column name of the specified property.
-     * <p>
-     * Properties that have a component type are handles specially.
-     * If the component type has a single component, that component's column name is returned; otherwise, null is returned.
-     */
+    /// Determines the column name for the specified property.
+    ///
+    /// Properties with a component type are handled specially.
+    /// If the component type has a single component, this method returns that component’s column name.
+    /// Otherwise, it returns `null`.
+    ///
     private @Nullable String determinePropColumn(final PropertyMetadata pm) {
         return switch (pm) {
             case PropertyMetadata.CritOnly $ -> CRITERION;
