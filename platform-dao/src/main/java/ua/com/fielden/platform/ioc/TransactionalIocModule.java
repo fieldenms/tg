@@ -17,8 +17,6 @@ import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperati
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
-import ua.com.fielden.platform.eql.stage1.sundries.ExpandUnionTypedYield1;
-import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -73,8 +71,6 @@ public abstract class TransactionalIocModule extends EntityIocModule {
         install(new FactoryModuleBuilder().build(EntityBatchDeleteByQueryModelOperation.Factory.class));
 
         requestStaticInjection(SynModelInitService.class);
-        requestStaticInjection(ExpandUnionTypedYield1.class);
-        requestStaticInjection(Yield2.class);
     }
 
     @Provides

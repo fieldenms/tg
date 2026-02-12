@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.sundries;
 
-import jakarta.inject.Inject;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -23,17 +22,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 ///
 public class ExpandUnionTypedYield1 {
 
-    public static ExpandUnionTypedYield1 getInstance() {
-        return INSTANCE;
-    }
-
-    @Inject
-    private static ExpandUnionTypedYield1 INSTANCE;
-
     private final IDomainMetadata domainMetadata;
 
-    @Inject
-    protected ExpandUnionTypedYield1(final IDomainMetadata domainMetadata) {
+    public ExpandUnionTypedYield1(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
     }
 

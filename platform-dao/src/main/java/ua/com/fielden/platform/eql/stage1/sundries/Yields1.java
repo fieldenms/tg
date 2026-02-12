@@ -45,7 +45,8 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.
             final TransformationContextFromStage1To2 context,
             final AbstractQuery1 query)
     {
-        return yields.flatMap(y -> ExpandUnionTypedYield1.getInstance().apply(y, context, query)
+        final var expandUnionTypedYield1 = new ExpandUnionTypedYield1(context.domainMetadata);
+        return yields.flatMap(y -> expandUnionTypedYield1.apply(y, context, query)
                                        .orElseGet(() -> Stream.of(y.transform(context))));
     }
 

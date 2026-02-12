@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.sundries;
 
-import jakarta.inject.Inject;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
@@ -9,7 +8,6 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.queries.AbstractQuery2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Component;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.CompositeKey;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Entity;
@@ -23,9 +21,6 @@ public record Yield2(ISingleOperand2<? extends ISingleOperand3> operand, String 
         implements ToString.IFormattable
 {
 
-    @Inject
-    private static IDomainMetadata domainMetadata;
-
     public TransformationResultFromStage2To3<Yield3> transform(
             final TransformationContextFromStage2To3 context,
             final AbstractQuery2 query)
@@ -37,7 +32,7 @@ public record Yield2(ISingleOperand2<? extends ISingleOperand3> operand, String 
         // This makes type information more precise, enabling us to generate explicit type casts for PostgreSQL.
         final PropType type;
         if (operand.type().isNull() && query.resultType != null && query.resultType != EntityAggregates.class && isEntityType(query.resultType)) {
-            type = domainMetadata.forPropertyOpt(query.resultType, alias())
+            type = context.domainMetadata().forPropertyOpt(query.resultType, alias())
                     .filter(pm -> pm.hibType() != null)
                     .map(pm -> switch (pm.type()) {
                         case Component it -> propType(it.javaType(), pm.hibType());
