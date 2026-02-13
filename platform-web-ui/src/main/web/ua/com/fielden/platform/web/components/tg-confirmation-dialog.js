@@ -119,6 +119,58 @@ export const TgConfirmationDialog = Polymer({
 
     behaviors: [TgFocusRestorationBehavior],
 
+    /**
+     * Displays a confirmation dialog with the specified message and buttons.
+     * Optionally, it can include a list of checkbox options that the user can select.
+     * The selected options are returned when the promise is resolved.
+     *
+     * @param {String} message - The message displayed in the confirmation dialog.
+     *
+     * @param {Array<Object>} buttons - The list of buttons displayed in the dialog.
+     * Each button is represented as an object with the following properties:
+     *   `name` {String}      - The button label.
+     *   [`confirm`] {Boolean}  - If true, resolves the returned promise; otherwise, rejects it.
+     *   [`autofocus`] {Boolean}- If true, the button receives focus by default.
+     *   [`style`] {String}     - Inline CSS styles applied to the button.
+     *   [`classes`] {String}   - Comma-separated list of CSS classes applied to the button.
+     *
+     * Example:
+     * [
+     *   { name: 'Cancel' },
+     *   { name: 'Ok', confirm: true, autofocus: true, style: 'background-color: green' }
+     * ]
+     *
+     * @param {Object} [options] - Optional configuration object. May contain:
+     *   `withProgress` {Boolean} - Indicates whether the dialog displays a progress indicator (spinner).
+     *                              This property is mutually exclusive with `options`.
+     *   `options` {Array<String>}- List of checkbox labels displayed below the message.
+     *   `single` {Boolean}       - If true, only one checkbox can be selected at a time.
+     *                              Has effect only if `options` is provided.
+     *
+     * Example:
+     * { single: true, options: ["Don't show this again for this link", "Don't show this again for this site"] }
+     *
+     * or:
+     * { withProgress: true }
+     *
+     * @param {String} [title] - The confirmation dialog title.
+     *
+     * @returns {Promise<Object|ExpectedError>}
+     * A promise that is resolved or rejected depending on the button pressed.
+     * If `options.options` is provided, the resolved value contains an object
+     * where each key corresponds to a checkbox label and the value indicates
+     * whether the checkbox was selected.
+     *
+     * Example resolved value:
+     * {
+     *   "Don't show this again for this link": true,
+     *   "Don't show this again for this site": false
+     * }
+     * 
+     * If the promise is rejected, the rejection reason is an `ExpectedError`
+     * containing a string that indicates how the promise was rejected
+     * (e.g., by button action or by pressing the ESC key).
+     */
     showConfirmationDialog: function (message, buttons, options, title) {
         this.persistActiveElement();
         if (this._lastPromise) {
