@@ -28,8 +28,9 @@ public class ExpandUnionTypedYield1 {
         this.domainMetadata = domainMetadata;
     }
 
-    /// If a union-typed property is yielded by `yield`, the result is a stream of yields that yield all corresponding union members.
-    /// Otherwise, the result is an empty optional.
+    /// * If a union-typed property is yielded by `yield`, the result is a stream of yields that yield all corresponding union members.
+    /// * If null is yielded into a union-typed property, the result is a stream of yields that all yield null into the corresponding union members.
+    /// * Otherwise, the result is an empty optional.
     ///
     public Optional<Stream<Yield2>> apply(
             final Yield1 yield,
