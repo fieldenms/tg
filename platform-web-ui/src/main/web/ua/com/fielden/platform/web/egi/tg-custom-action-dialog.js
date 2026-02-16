@@ -798,9 +798,11 @@ Polymer({
         if (e.detail && e.detail.keyboardEvent && e.detail.keyboardEvent.skipNavigation) {
             return;
         }
-        if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
+        if (this._isNavigationBarVisible(this._lastAction, this._minimised)
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
-            this._lastAction.firstEntry(this.reloadDialog.bind(this));
+            this.canClose().then(obj => {
+                this._lastAction.firstEntry(this.reloadDialog.bind(this));
+            });
         }
     },
     
@@ -808,9 +810,11 @@ Polymer({
         if (e.detail && e.detail.keyboardEvent && e.detail.keyboardEvent.skipNavigation) {
             return;
         }
-        if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
+        if (this._isNavigationBarVisible(this._lastAction, this._minimised) 
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
-            this._lastAction.previousEntry(this.reloadDialog.bind(this));
+            this.canClose().then(obj => {
+                this._lastAction.previousEntry(this.reloadDialog.bind(this));
+            });
         }
     },
     
@@ -818,9 +822,11 @@ Polymer({
         if (e.detail && e.detail.keyboardEvent && e.detail.keyboardEvent.skipNavigation) {
             return;
         }
-        if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
+        if (this._isNavigationBarVisible(this._lastAction, this._minimised) 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
-            this._lastAction.nextEntry(this.reloadDialog.bind(this));
+            this.canClose().then(obj => {
+                this._lastAction.nextEntry(this.reloadDialog.bind(this));
+            });
         }
     },
     
@@ -828,9 +834,11 @@ Polymer({
         if (e.detail && e.detail.keyboardEvent && e.detail.keyboardEvent.skipNavigation) {
             return;
         }
-        if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
+        if (this._isNavigationBarVisible(this._lastAction, this._minimised) 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
-            this._lastAction.lastEntry(this.reloadDialog.bind(this));
+            this.canClose().then(obj => {
+                this._lastAction.lastEntry(this.reloadDialog.bind(this));
+            });
         }
     },
     
@@ -962,67 +970,48 @@ Polymer({
 
     closeDialog: function(forceClosing) {
         if (forceClosing === true) {
-            this._closeChildren(true);
-            this._closeDialogAndIndicateActionCompletion();
+            return this._closeChildren(true).then(obj => {
+                this._closeDialogAndIndicateActionCompletion();
+            });
         } else {
             if (forceClosing && forceClosing.target) { // check whether forceClosing is not null or empty and it is an event object
                 tearDownEvent(forceClosing);
             }
-            //Try to close children first.
-            const canClose = this.canClose();
-            if (canClose === true) {
+            return this.canClose().then(obj => {
                 this._closeDialogAndIndicateActionCompletion();
-            }
+            });
         }
     },
     
     canClose: function () {
-        let canClose = this._closeChildren();
-        if (canClose && this._lastElement.classList.contains('canLeave')) {
-            const reason = this._lastElement.canLeave();
-            if (reason) {
-                canClose = false;
-                // the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
-                // for example, when closing a master for a functional entity, the reason states the need to save changes,
-                // while it is also possible and safe to simple cancel them
-                // so, the message below is a good compromise
-                // however, the reason can still insist by providing an imperative hint
-                if (reason.imperative === true) {
-                    this.$.toaster.text = reason.msg;
-                } else {
-                    this.$.toaster.text = "Please save or cancel changes.";
-                }
-                this.$.toaster.hasMore = false;
-                this.$.toaster.msgText = "";
-                this.$.toaster.showProgress = false;
-                this.$.toaster.isCritical = false;
-                this.$.toaster.show();
-            }
-        }
-        return canClose;
-    },
-
-    _closeChildren: function(forceClosing) {
-        let canClose = true;
-
-        this._childDialogs.slice().forEach(function(dialog) {
-            dialog.closeDialog(forceClosing);
-            if (dialog.opened) {
-                canClose = false;
-                if (dialog._minimised) {
-                    dialog._invertDialogState('_minimised');
-                }
-                if (!dialog._maximised) {
-                    dialog.center();
-                }
-                if (dialog._childDialogs.length === 0) {
-                    // focuses child dialog view in case if it wasn't closed and does not have its own child dialogs;
-                    //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
-                    dialog._focusDialogView();
-                }
+        return this._closeChildren().then(obj => {
+            if (this._lastElement.classList.contains('canLeave')) {
+                return this._lastElement.canLeave();
             }
         });
-        return canClose;
+    },
+
+    _closeChildren: async function(forceClosing) {
+        const childCopy = this._childDialogs.slice();
+        for(let i = 0; i < childCopy.length; i++) {
+            try {
+                await childCopy[i].closeDialog(forceClosing);
+            } catch (e) {
+                if (childCopy[i]._minimised) {
+                    childCopy[i]._invertDialogState('_minimised');
+                }
+                if (!childCopy[i]._maximised) {
+                    childCopy[i].center();
+                }
+                if (childCopy[i]._childDialogs.length === 0) {
+                    // focuses child dialog view in case if it wasn't closed and does not have its own child dialogs;
+                    //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
+                    childCopy[i]._focusDialogView();
+                }
+                throw e;
+            }
+        }
+        return true;
     },
     
     /**
@@ -1083,8 +1072,10 @@ Polymer({
 
     _handleCloseEvent: function(data, envelope) {
         // Close this dialog only when the event data permits it and all child dialogs have been closed. 
-        if (data.canClose === true && this._closeChildren()) {
-            this._closeDialogAndIndicateActionCompletion();
+        if (data.canClose === true) {
+            this._closeChildren().then(obj => {
+                this._closeDialogAndIndicateActionCompletion();
+            });
         }
     },
 

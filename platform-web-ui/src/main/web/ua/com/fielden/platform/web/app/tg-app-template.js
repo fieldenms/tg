@@ -463,14 +463,15 @@ Polymer({
                 if (!this.disableNextHistoryChange) {
                     if (historySteps > 0) { // moving back
                         if (historySteps > 1) { // 'multiple back' action
-                            if (!this._closeAllDialogs()) { // try to close all dialogs and, if not closed, go forward to remain history not changed
-                                window.history.go(historySteps);
-                            } else { // otherwise the history changes already occurred and just change the page
-                                this._changePage();
-                            }
+                            this._closeAllDialogs().then(obj => {// Attempts to close all dialogs.
+                                this._changePage(); // If it resolves, just change the page because the history change has already occurred.
+                            }).catch (e => {
+                                window.history.go(historySteps); // If it rejects, then go forward to keep the history unchanged.
+                            });
                         } else { // 'single back' action
-                            window.history.forward(); // to remain history not changed
-                            this._closeDialog(currentOverlay);
+                            this._closeDialog(currentOverlay).finally(() => {// Attempts to close all dialogs.
+                                window.history.forward(); // to remain history not changed
+                            });
                         }
                     } else { // moving forward ('multiple forward' action or 'forward' action)
                         window.history.go(historySteps); // to remain history not changed
@@ -521,20 +522,28 @@ Polymer({
      * In case where 'multiple back' occurs then all dialogs will be closed (if able) and multiple history back action will be performed.
      *
      * This method skips all overlays and insertion points elements that should 'skipHistoryAction'.
+     * Returns a promise that resolves if all dialogs and insertion points are closed successfully; otherwise, it is rejected.
      */
     _closeAllDialogs: function () {
-        return this._closeDialogsInTheList(this._manager._overlays) && this._closeDialogsInTheList(InsertionPointManager._insertionPoints);
+        return this._closeDialogsInTheList(this._manager._overlays).then(obj => {
+            return this._closeDialogsInTheList(InsertionPointManager._insertionPoints);
+        });
     },
 
-    _closeDialogsInTheList : function (overlays) {
+    /**
+     * Tries to close all dialogs in the given list. Returns a promise that resolves when all dialogs are closed successfully or rejects when the first promise is rejected.
+     * 
+     * @param {Array} overlays - list of all the dialogs to close.
+     * @returns 
+     */
+    _closeDialogsInTheList : async function (overlays) {
         for (let i = overlays.length - 1; i >= 0; i--) {
             if (!skipHistoryAction(overlays[i])) {
-                this._closeDialog(overlays[i]);
-            }
-        }
-        for (let i = overlays.length - 1; i >= 0; i--) {
-            if (overlays[i].opened && !skipHistoryAction(overlays[i])) {
-                return false;
+                try {
+                    await this._closeDialog(overlays[i]);
+                } catch (e) {
+                    throw e;
+                }
             }
         }
         return true;
@@ -542,12 +551,14 @@ Polymer({
     
     /**
      * Performs dialog/insertion-point closing through custom method 'closeDialog' (or in the simplest case just uses iron-overlay-behavior's 'close' method).
+     * Returns a promise that resolves if the dialog is closed successfully; otherwise, it is rejected.
      */
     _closeDialog: function (dialog) {
         if (dialog.closeDialog) {
-            dialog.closeDialog();
+            return dialog.closeDialog();
         } else {
             dialog.close();
+            return Promise.resolve(true);
         }
     },
     

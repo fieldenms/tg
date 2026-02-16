@@ -212,10 +212,13 @@ export const TgConfirmationDialog = Polymer({
              * 
              * This custom logic is necessary in tg-app-template _closeDialog logic, where BACK button must reject confirmation dialog (mobile profile only).
              * Otherwise, _lastPromise will be forever pending and all other confirmation dialogs would never open.
+             * 
+             * Returns a resolved promise because the dialog is always closed.
              */
             dialogModel.$.confirmDialog.closeDialog = function () {
                 this.close();
                 dialogModel.rejectDialog();
+                return Promise.resolve(true);
             };
 
             dialogModel._action = function (e) {

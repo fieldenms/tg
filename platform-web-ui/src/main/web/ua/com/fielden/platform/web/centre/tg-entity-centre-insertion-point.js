@@ -891,10 +891,11 @@ Polymer({
     },
 
     /**
-     * The method, that is used during Back button pressing (see tg-app-template).
+     * The method, that is used during Back button pressing (see tg-app-template). Returns a resolved promise, because dialog is always closed.
      */
     closeDialog: function () {
         this._toggleMaximise();
+        return Promise.resolve();
     },
 
     /******************** minimise button related logic *************************/
