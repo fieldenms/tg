@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.master.MasterInfo;
 
 import java.util.*;
@@ -53,8 +53,12 @@ public class EntityType extends AbstractEntity<String> {
     private Boolean _persistent;
 
     @IsProperty
-    @Title(value = "Persistent with audit data?", desc = "Indicates whether the associated entity type represents a persistent entity with audit data.")
-    private Boolean _persistentWithAudit;
+    @Title(value = "Persistent with version?", desc = "Indicates whether the associated entity type represents a persistent entity with version data.")
+    private Boolean _persistentWithVersion;
+
+    @IsProperty
+    @Title(value = "Is Audited?", desc = "Indicates whether the associated entity type is audited.")
+    private Boolean _audited;
 
     @IsProperty
     @Title(value = "Should Display Description?", desc = "Indicates whether editors for values of this type should display values descriptions")
@@ -172,13 +176,23 @@ public class EntityType extends AbstractEntity<String> {
         return _displayDesc;
     }
 
-    public Boolean get_persistentWithAudit() {
-        return _persistentWithAudit;
+    public Boolean get_persistentWithVersion() {
+        return _persistentWithVersion;
     }
 
     @Observable
-    public EntityType set_persistentWithAudit(final Boolean _persistentWithAudit) {
-        this._persistentWithAudit = _persistentWithAudit;
+    public EntityType set_persistentWithVersion(final Boolean _persistentWithVersion) {
+        this._persistentWithVersion = _persistentWithVersion;
+        return this;
+    }
+
+    public Boolean get_audited() {
+        return _audited;
+    }
+
+    @Observable
+    public EntityType set_audited(final Boolean _audited) {
+        this._audited = _audited;
         return this;
     }
 

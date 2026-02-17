@@ -32,52 +32,68 @@ public class Compound {
     protected static <K extends AbstractEntity<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miMaster(
             final Class<MENU_ITEM> menuItemType,
             final EntityMaster<? extends AbstractEntity<?>> embeddedMaster,
-            final Injector injector) {
-        return new EntityMaster<MENU_ITEM>(
+            final Injector injector)
+    {
+        return new EntityMaster<>(
                 menuItemType,
                 new MasterWithMasterBuilder<MENU_ITEM>()
-                /*  */.forEntityWithSaveOnActivate(menuItemType)
-                /*  */.withMaster(embeddedMaster)
-                /*  */.done(),
+                        .forEntityWithSaveOnActivate(menuItemType)
+                        .withMaster(embeddedMaster)
+                        .done(),
                 injector);
     }
 
     protected static <K extends AbstractEntity<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miCentre(
             final Class<MENU_ITEM> menuItemType,
             final EntityCentre<? extends AbstractEntity<?>> embeddedCentre,
-            final Injector injector) {
-        return new EntityMaster<MENU_ITEM>(
+            final Injector injector)
+    {
+        return new EntityMaster<>(
                 menuItemType,
                 new MasterWithCentreBuilder<MENU_ITEM>()
-                    .forEntityWithSaveOnActivate(menuItemType)
-                    .withCentre(embeddedCentre)
-                    .done(),
+                        .forEntityWithSaveOnActivate(menuItemType)
+                        .withCentre(embeddedCentre)
+                        .done(),
+                injector);
+    }
+
+    protected static <K extends AbstractEntity<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miPolymorphicCentre(
+            final Class<MENU_ITEM> menuItemType,
+            final Injector injector)
+    {
+        return new EntityMaster<>(
+                menuItemType,
+                new MasterWithCentreBuilder<MENU_ITEM>()
+                        .forEntityWithSaveOnActivate(menuItemType)
+                        .done(),
                 injector);
     }
 
     public static <DETAILS_ACTION extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<DETAILS_ACTION> detailsCentre(
             final Class<DETAILS_ACTION> menuItemType,
             final EntityCentre<? extends AbstractEntity<?>> embeddedCentre,
-            final Injector injector) {
-        return new EntityMaster<DETAILS_ACTION>(
+            final Injector injector)
+    {
+        return new EntityMaster<>(
                 menuItemType,
                 new MasterWithCentreBuilder<DETAILS_ACTION>()
-                    .forEntityWithSaveOnActivate(menuItemType)
-                    .withCentre(embeddedCentre)
-                    .done(),
+                        .forEntityWithSaveOnActivate(menuItemType)
+                        .withCentre(embeddedCentre)
+                        .done(),
                 injector);
     }
 
     public static <DETAILS_ACTION extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<DETAILS_ACTION> detailsMaster(
             final Class<DETAILS_ACTION> menuItemType,
             final EntityMaster<? extends AbstractEntity<?>> embeddedMaster,
-            final Injector injector) {
-        return new EntityMaster<DETAILS_ACTION>(
+            final Injector injector)
+    {
+        return new EntityMaster<>(
                 menuItemType,
                 new MasterWithMasterBuilder<DETAILS_ACTION>()
-                    .forEntityWithSaveOnActivate(menuItemType)
-                    .withMaster(embeddedMaster)
-                    .done(),
+                        .forEntityWithSaveOnActivate(menuItemType)
+                        .withMaster(embeddedMaster)
+                        .done(),
                 injector);
     }
 
@@ -85,7 +101,8 @@ public class Compound {
             final Class<MENU_ITEM> menuItemType,
             final String icon,
             final String shortDesc,
-            final String longDesc) {
+            final String longDesc)
+    {
         return action(menuItemType)
                 .withContext(context().withMasterEntity().build())
                 .icon(icon)

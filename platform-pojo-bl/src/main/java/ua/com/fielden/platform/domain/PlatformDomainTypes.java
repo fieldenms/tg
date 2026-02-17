@@ -22,6 +22,13 @@ import ua.com.fielden.platform.security.user.locator.UserLocator;
 import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenMain_MenuItem;
 import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenUserAndRoleAssociation_MenuItem;
 import ua.com.fielden.platform.security.user.ui_actions.OpenUserMasterAction;
+import ua.com.fielden.platform.ui.config.*;
+import ua.com.fielden.platform.web.centre.*;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import ua.com.fielden.platform.share.ShareAction;
 import ua.com.fielden.platform.tiny.TinyHyperlink;
 import ua.com.fielden.platform.ui.config.*;
@@ -120,6 +127,9 @@ public class PlatformDomainTypes {
         types.add(UserMaster_OpenUserAndRoleAssociation_MenuItem.class);
         types.add(UserDefinableHelp.class);
         types.add(PersistentEntityInfo.class);
+        types.add(OpenPersistentEntityInfoAction.class);
+        types.add(PersistentEntityInfoMaster_OpenMain_MenuItem.class);
+        types.add(AuditCompoundMenuItem.class);
 
         typesDependentOnWebUI.add(EntityExportAction.class);
         typesDependentOnWebUI.add(CentreConfigUpdater.class);
@@ -127,6 +137,7 @@ public class PlatformDomainTypes {
         typesDependentOnWebUI.add(CentreConfigEditAction.class);
         typesDependentOnWebUI.add(CentreConfigSaveAction.class);
         typesDependentOnWebUI.add(CentreConfigConfigureAction.class);
+        typesDependentOnWebUI.add(AuditCompoundMenuItem.class);
 
         typesNotDependentOnWebUI.addAll(types);
         typesNotDependentOnWebUI.removeAll(typesDependentOnWebUI);

@@ -633,15 +633,10 @@ public class EntityUtils {
         }
     }
 
+    /// Determines whether an entity type is persistent and has version information, such as created/updated by, created/updated date, version number.
     ///
-    /// Determines whether the provided entity type represents a persistent entity and has versioning information like created/updated, version, etc.
-    /// This type should extend [AbstractPersistentEntity].
-    ///
-    /// @param type
-    /// @return
-    ///
-    public static boolean isPersistentWithAuditData(@Nullable final Class<?> type) {
-        return isPersistentEntityType(type) && AbstractPersistentEntity.class.isAssignableFrom(type);
+    public static boolean isPersistentWithVersionData(@Nullable final Class<?> type) {
+        return type != null && AbstractPersistentEntity.class.isAssignableFrom(type) && isPersistentEntityType(type);
     }
 
     /**
