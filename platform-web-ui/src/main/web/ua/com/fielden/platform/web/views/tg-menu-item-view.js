@@ -287,6 +287,6 @@ Polymer({
         if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.canLeave === 'function') {
             return elementToLoad.loadedElement.canLeave();
         }
-        return undefined;
+        return Promise.resolve(true);
     }
 });

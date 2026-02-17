@@ -487,9 +487,11 @@
                                 assert.strictEqual(masterMenu().route, 'TgCompoundEntityMaster_OpenMain_MenuItem'); // ASSERT
                                 assert.strictEqual(masterMenu().sectionRoute, 'TgCompoundEntityMaster_OpenMain_MenuItem');
                                 assert.isOk(masterMenu().currentSection());
-                                assert.isOk(masterMenu().currentSection().canLeave());
-                                assert.strictEqual(masterMenu().currentSection().canLeave().msg, 'Please save or cancel your changes.'); // toast shows 'Cannot leave "Main".'
-                                done();
+                                masterMenu().currentSection().canLeave().catch(reason => {
+                                    assert.isOk(reason);
+                                    assert.strictEqual(reason.msg, 'Please save or cancel your changes.'); // toast shows 'Cannot leave "Main".'
+                                    done();
+                                });
                             }
                         });
                     });

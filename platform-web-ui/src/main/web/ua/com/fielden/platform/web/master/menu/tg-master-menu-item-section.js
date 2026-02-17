@@ -104,8 +104,7 @@ Polymer({
         if (this._element !== null && typeof this._element.canLeave !== 'undefined') {
             return this._element.canLeave();
         }
-
-        return undefined;
+        return Promise.resolve(true);
     },
 
     _getElement: function (customAction) {

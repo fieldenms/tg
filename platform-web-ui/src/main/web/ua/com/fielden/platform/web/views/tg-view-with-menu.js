@@ -507,17 +507,20 @@ Polymer({
         return this._selectedPage;
     },
 
-    canLeave: function () {
-        var items = this.shadowRoot.querySelectorAll("tg-menu-item-view");
-        var changedViews = [];
-        var canLeaveResult, itemIndex;
-        for (itemIndex = 0; itemIndex < items.length; itemIndex++) {
-            canLeaveResult = items[itemIndex].canLeave();
-            if (canLeaveResult) {
+    canLeave: async function () {
+        const items = this.shadowRoot.querySelectorAll("tg-menu-item-view");
+        const changedViews = [];
+        for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+            try {
+                await items[itemIndex].canLeave();
+            } catch (e) {
                 changedViews.push(items[itemIndex].submoduleId);
             }
         }
-        return changedViews.length > 0 ? changedViews : undefined;
+        if (changedViews.length > 0) {
+            throw changedViews;
+        }
+        return true;
     },
 
     searchMenu: function (event) {

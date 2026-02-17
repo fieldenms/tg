@@ -2313,10 +2313,11 @@ Polymer({
      */
     canLeave: function () {
         if (this.isEditing()) {
-            return {
+            return Promise.reject({
                 msg: MSG_SAVE_OR_CANCEL
-            }
+            });
         }
+        return Promise.resolve(true);
     },
 
     //Performs custom tasks before leaving this EGI.

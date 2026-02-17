@@ -417,10 +417,11 @@ Polymer({
     
     canLeave: function () {
         if (this.entities && this.entities.some(entity => entity.isChanged())) {
-            return {
+            return Promise.reject({
                 msg: "Please save or cancel changes."
-            };
+            });
         }
+        return Promise.resolve(true);
     },
 
     filterTokens: function (text) {

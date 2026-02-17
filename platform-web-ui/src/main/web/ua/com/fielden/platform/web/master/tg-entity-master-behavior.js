@@ -1481,7 +1481,7 @@ const TgEntityMasterBehaviorImpl = {
                 try {
                     await nodesWithCanLeave[index].canLeave();
                 } catch (e) {
-                    throw reason;
+                    throw e;
                 }
             }
         }
@@ -1492,9 +1492,7 @@ const TgEntityMasterBehaviorImpl = {
             // Refer to the _bindingEntityModified property of tg-entity-binder-behavior for more information.
             if (((this._editedPropsExist || this._bindingEntityModified) && this._currBindingEntity.isPersisted()) ||
                 (this._currBindingEntity.type().isPersistent() && !this._currBindingEntity.isPersisted())) {
-                    const reason = {msg: "Please save or cancel changes."};
-                    this.toaster.openToastWithoutEntity(reason.msg, false, "", false);
-                    throw reason;
+                    throw {msg: "Please save or cancel changes."};
             }
         }
         return true;

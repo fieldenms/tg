@@ -148,16 +148,20 @@ Polymer({
         this.$.view._selectMenu(subroute);
     },
 
-    canLeave: function() {
-        const viewThatWasChanged = this.$.view.canLeave();
-        const viewsDesc = [];
-        if (Array.isArray(viewThatWasChanged)) {
-            viewThatWasChanged.forEach(function (element) {
-                viewsDesc.push(this.menuItem.key + " \u2192 " +  element);
-            }.bind(this));
-            return viewsDesc;
+    canLeave: async function() {
+        try {
+            await this.$.view.canLeave();
+            return true;
+        } catch (viewThatWasChanged) {
+            const viewsDesc = [];
+            if (Array.isArray(viewThatWasChanged)) {
+                viewThatWasChanged.forEach(function (element) {
+                    viewsDesc.push(this.menuItem.key + " \u2192 " +  element);
+                }.bind(this));
+                throw viewsDesc;
+            }
+            throw viewThatWasChanged;
         }
-        return viewThatWasChanged;
     },
 
     _calcStyleForItem: function (menuItem) {

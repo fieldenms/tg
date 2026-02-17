@@ -972,8 +972,6 @@ Polymer({
         if (forceClosing === true) {
             return this._closeChildren(true).then(obj => {
                 this._closeDialogAndIndicateActionCompletion();
-            }).catch (e => {
-                throw new ExpectedError(e);
             });
         } else {
             if (forceClosing && forceClosing.target) { // check whether forceClosing is not null or empty and it is an event object
@@ -981,8 +979,6 @@ Polymer({
             }
             return this.canClose().then(obj => {
                 this._closeDialogAndIndicateActionCompletion();
-            }).catch(e => {
-                throw new ExpectedError(e);
             });
         }
     },
@@ -990,7 +986,24 @@ Polymer({
     canClose: function () {
         return this._closeChildren().then(obj => {
             if (this._lastElement.classList.contains('canLeave')) {
-                return this._lastElement.canLeave();
+                return this._lastElement.canLeave().catch(reason => {
+                    // the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
+                    // for example, when closing a master for a functional entity, the reason states the need to save changes,
+                    // while it is also possible and safe to simple cancel them
+                    // so, the message below is a good compromise
+                    // however, the reason can still insist by providing an imperative hint
+                    if (reason.imperative === true) {
+                        this.$.toaster.text = reason.msg;
+                    } else {
+                        this.$.toaster.text = "Please save or cancel changes.";
+                    }
+                    this.$.toaster.hasMore = false;
+                    this.$.toaster.msgText = "";
+                    this.$.toaster.showProgress = false;
+                    this.$.toaster.isCritical = false;
+                    this.$.toaster.show();
+                    throw new ExpectedError(reason);
+                });
             }
         });
     },

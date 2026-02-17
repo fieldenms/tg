@@ -72,7 +72,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         + "    if (embeddedMaster && embeddedMaster.classList.contains('canLeave')) {\n"
                         + "        return embeddedMaster.canLeave();\n"
                         + "    }\n"
-                        + "    return undefined;\n"
+                        + "    return Promise.resolve(true);\n"
                         + "}.bind(this);\n"
                         + "this.addEventListener('after-load', " + getAfterLoadListener() + ");\n")
                 .replace("@prefDim", "null")
