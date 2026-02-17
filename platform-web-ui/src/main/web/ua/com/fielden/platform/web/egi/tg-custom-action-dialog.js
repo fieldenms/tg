@@ -30,7 +30,7 @@ import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-
 import { TgBackButtonBehavior } from '/resources/views/tg-back-button-behavior.js'
 import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
+import { UnreportableError, ExpectedError } from '/resources/components/tg-global-error-handler.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
 import { createDialog } from '/resources/egi/tg-dialog-util.js';
@@ -972,6 +972,8 @@ Polymer({
         if (forceClosing === true) {
             return this._closeChildren(true).then(obj => {
                 this._closeDialogAndIndicateActionCompletion();
+            }).catch (e => {
+                throw new ExpectedError(e);
             });
         } else {
             if (forceClosing && forceClosing.target) { // check whether forceClosing is not null or empty and it is an event object
@@ -979,6 +981,8 @@ Polymer({
             }
             return this.canClose().then(obj => {
                 this._closeDialogAndIndicateActionCompletion();
+            }).catch(e => {
+                throw new ExpectedError(e);
             });
         }
     },

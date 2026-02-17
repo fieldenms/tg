@@ -1473,14 +1473,16 @@ const TgEntityMasterBehaviorImpl = {
      * Method implementing .canLeave contract as disignated in classList.
      * It is used to identify whether master can be "left/closed" without any adverse effect on the data it represents (i.e. there was no unsaved changes).
      */
-    canLeave: function () {
+    canLeave: async function () {
         // check all the child nodes with canLeave contract if they can be left...
         const nodesWithCanLeave = queryElements(this, '.canLeave');
         if (nodesWithCanLeave.length > 0) {
             for (let index = 0; index < nodesWithCanLeave.length; index++) {
-                nodesWithCanLeave[index].canLeave().catch(reason => {
-                    return Promise.reject(reason);
-                });
+                try {
+                    await nodesWithCanLeave[index].canLeave();
+                } catch (e) {
+                    throw reason;
+                }
             }
         }
 
@@ -1490,22 +1492,12 @@ const TgEntityMasterBehaviorImpl = {
             // Refer to the _bindingEntityModified property of tg-entity-binder-behavior for more information.
             if (((this._editedPropsExist || this._bindingEntityModified) && this._currBindingEntity.isPersisted()) ||
                 (this._currBindingEntity.type().isPersistent() && !this._currBindingEntity.isPersisted())) {
-                    return this.confirm("The entity was changed would you like to save changes to continue?",
-                        [{name: "Yes", confirm: true}, {name: "No", confirm: true}, {name: "Cancel"}],
-                        null,
-                        "Save changes?"
-                    ).then(buttonName => {
-                        if (buttonName === "Yes") {
-                            return this.save();
-                        } else {
-                            return Promise.resolve(buttonName);
-                        }
-                    }).then(savedEntity => {
-                        return Promise.resolve(savedEntity);
-                    });
+                    const reason = {msg: "Please save or cancel changes."};
+                    this.toaster.openToastWithoutEntity(reason.msg, false, "", false);
+                    throw reason;
             }
         }
-        return Promise.resolve(true);
+        return true;
     },
 
     //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
