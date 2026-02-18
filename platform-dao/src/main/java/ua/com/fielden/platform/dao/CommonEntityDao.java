@@ -50,6 +50,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
@@ -280,7 +281,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
         if (this instanceof ISaveWithFetch<?> it) {
             return ((ISaveWithFetch<T>) it)
-                    .save(entity, entity.isPersistent() ? Optional.of(FetchModelReconstructor.reconstruct(entity)) : empty())
+                    .save(entity, Optional.of(entity.isPersistent() ? FetchModelReconstructor.reconstruct(entity) : fetch(getEntityType())))
                     .asRight().value();
         }
         if (!entity.isPersistent()) {

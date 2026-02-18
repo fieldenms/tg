@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 import org.junit.Test;
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -16,6 +17,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.ERR_ACTIVE_PROPERTY_NOT_DETERMINED;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.utils.CollectionUtil.first;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
@@ -120,6 +122,17 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void standard_save_for_a_non_persistent_functional_entity_that_supports_saveWithFetch_returns_entity_itself() {
+        assertFalse(isPersistentEntityType(TgNoopAction.class));
+        final var co$Action = co$(TgNoopAction.class);
+        assertThat(co$Action.getClass()).isAssignableTo(ISaveWithFetch.class);
+        final var action = new_(TgNoopAction.class);
+        assertNull(action.getId());
+        final var savedAction = co$Action.save(action);
+        assertSame(action, savedAction);
+    }
+
+    @Test
     public void saveWithFetch_for_a_synthetic_entity_returns_entity_ID_as_left_if_fetch_model_is_absent() {
         final ITgReVehicleModel co$ReVehicleModel = co$(TgReVehicleModel.class);
         assertTrue(isSyntheticEntityType(TgReVehicleModel.class));
@@ -172,6 +185,31 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
             final var either = co$ReVehicleModel.save(entity, Optional.of(fetch(TgReVehicleModel.class)));
             assertTrue(either.isRight());
             assertSame(entity, either.asRight().value());
+        }
+    }
+
+    @Test
+    public void standard_save_for_a_non_persistent_synthetic_entity_that_supports_saveWithFetch_returns_entity_itself() {
+        assertTrue(isSyntheticEntityType(TgReVehicleModel.class));
+        final var co$ReVehicleModel = co$(TgReVehicleModel.class);
+        assertThat(co$ReVehicleModel.getClass()).isAssignableTo(ISaveWithFetch.class);
+
+        {
+            // New entity.
+            final var entity = new_(TgReVehicleModel.class);
+            final var savedEntity = co$ReVehicleModel.save(entity);
+            assertSame(entity, savedEntity);
+        }
+
+        {
+            // Retrieved entity.
+            final var entity = assertThat(first(co(TgReVehicleModel.class).getFirstEntities(
+                    from(select(TgReVehicleModel.class).model()).model(), 1)))
+                    .isPresent()
+                    .get().actual();
+            assertNotNull(entity.getId());
+            final var savedEntity = co$ReVehicleModel.save(entity);
+            assertSame(entity, savedEntity);
         }
     }
 
@@ -241,6 +279,29 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
             final var either = co$UnionEntity.save(entity, Optional.of(fetch(UnionEntity.class)));
             assertTrue(either.isRight());
             assertSame(entity, either.asRight().value());
+        }
+    }
+
+    @Test
+    public void standard_save_for_a_union_entity_that_supports_saveWithFetch_returns_entity_itself() {
+        assertTrue(isUnionEntityType(UnionEntity.class));
+        final var co$UnionEntity = co$(UnionEntity.class);
+        assertThat(co$UnionEntity.getClass()).isAssignableTo(ISaveWithFetch.class);
+
+        final var one = save(new_(EntityOne.class, "ONE1"));
+
+        {
+            // New entity.
+            final var entity = new_(UnionEntity.class).setPropertyOne(one);
+            final var savedEntity = co$UnionEntity.save(entity);
+            assertSame(entity, savedEntity);
+        }
+
+        {
+            // Retrieved entity.
+            final var entity = co$UnionEntity.findById(one.getId());
+            final var savedEntity = co$UnionEntity.save(entity);
+            assertSame(entity, savedEntity);
         }
     }
 
