@@ -437,6 +437,17 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     //--------------------- Continuation related methods ----------------//
     //-------------------------------------------------------------------//
 
+    // Indicates whether continuations are supported to provide "more data" in the caller's context.
+    private boolean continuationSupported = false;
+    public CommonEntityDao<T> setContinuationSupported(final boolean supported) {
+        this.continuationSupported = supported;
+        return this;
+    }
+
+    public boolean isContinuationSupported() {
+        return this.continuationSupported;
+    }
+
     /// A convenient method to set a single "more data" instance for a given key.
     /// Mostly useful for unit tests.
     ///

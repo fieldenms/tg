@@ -125,7 +125,7 @@ public class EntityFinder extends ElementFinder {
                     final boolean isKey = KEY.contentEquals(prop.getSimpleName());
                     final var propType = isKey ? determineKeyType(propOwner).orElse(null) : prop.getType();
                     final var otherPropType = isKey ? determineKeyType(otherPropsOwner).orElse(null) : otherProp.getType();
-                    return propType != null && otherPropType != null && propType.equals(otherPropType);
+                    return propType != null && otherPropType != null && types.isSameType(propType, otherPropType);
                 });
     }
 
