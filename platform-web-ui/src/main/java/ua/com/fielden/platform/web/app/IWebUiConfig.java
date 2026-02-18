@@ -13,225 +13,241 @@ import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-import ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
-/**
- * Represent a contract for Web UI configuring.
- *
- * @author TG Team
- *
- */
+/// A contract for configuring the Web UI.
+///
 public interface IWebUiConfig extends IMenuRetriever {
 
-    /**
-     * Should return a port that an application server is listening to for incoming requests.
-     *
-     * @return
-     */
+    /// Returns the port on which the application server listens for incoming requests.
+    ///
     int getPort();
 
-    /**
-     * Should return a domain name of a server like <code>tgdev.com</code> where the application is to be deployed.
-     *
-     * @return
-     */
+    /// Returns the domain name of the server (for example, `tgdev.com`) where the application is deployed.
+    ///
     String getDomainName();
 
-    /**
-     * Should return a path that follows the domain name where the application is to be bound to. For example, <code>/</code> for an application that is directly bound to the
-     * domain name. Or, <code>/trident-fleet</code> is the application is bound to <code>https://www.fielden.com.au/trident-fleet</code>.
-     *
-     * @return
-     */
+    /// Returns the context path under the domain where the application is bound.
+    /// For example, `/` for an application bound directly to the domain,
+    /// or `/trident-fleet` if the application is bound to `https://www.fielden.com.au/trident-fleet`.
+    ///
     String getPath();
 
-    /**
-     * Provides access to the global application configuration object.
-     *
-     * @return
-     */
+    /// Provides access to the global Web UI application configuration builder.
+    ///
     IWebUiBuilder configApp();
 
-    /**
-     * Provides access to the desktop application's main menu configuration object.
-     *
-     * @return
-     */
+    /// Provides access to the desktop application's main menu configuration builder.
+    ///
     IMainMenuBuilder configDesktopMainMenu();
 
-    /**
-     * Provides access to the mobile application's main menu configuration object.
-     *
-     * @return
-     */
+    /// Provides access to the mobile application's main menu configuration builder.
+    ///
     IMainMenuBuilder configMobileMainMenu();
 
-    /**
-     * Generates the main html file of web application.
-     *
-     * @return
-     */
+    /// Generates the main HTML entry file of the Web application.
+    ///
     String genAppIndex();
 
-    /**
-     * Generates the main menu component for desktop application.
-     *
-     * @return
-     */
+    /// Generates the main menu component for the desktop Web application.
+    ///
     String genMainWebUIComponent();
 
-    /**
-     * Generates the global configuration component.
-     *
-     * @return
-     */
+    /// Generates the global Web UI configuration/preferences component.
+    ///
     String genWebUiPreferences();
 
-    /**
-     * Returns the instance of {@link IEventSourceEmitterRegister} that will is created for this web application to manage registered clients.
-     *
-     * @return
-     */
+    /// Returns the instance of [IEventSourceEmitterRegister] created for this web application to manage registered clients.
+    ///
     IEventSourceEmitterRegister getEventSourceEmitterRegister();
 
-    /**
-     * Creates and registers an instance of {@code eventSrouceClass}, if it was not created before.
-     *
-     * @return
-     */
+    /// Creates and registers an instance of `eventSourceClass` if it has not been created before.
+    ///
     IWebUiConfig createAndRegisterEventSource(Class<? extends IEventSource> eventSourceClass);
 
-    /**
-     * Returns the map of entity masters for this web application.
-     *
-     * @return
-     */
-    Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> getMasters();
+    /// Returns the map of entity masters configured for this web application.
+    ///
+    Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>>
+    getMasters();
 
-    /**
-     * Returns the map of entity centres for this web application.
-     *
-     * @return
-     */
-    Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres();
+    /// Returns the map of entity centres configured for this web application.
+    ///
+    Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>>
+    getCentres();
 
-    /// Creates a stream of all action configurations in the whole Web UI configuration.
+    /// Creates a stream of all action configurations defined in this Web UI configuration.
     ///
     Stream<EntityActionConfig> streamActionConfigs();
 
-    /// Searches the whole Web UI configuration for an action with the specified identifier.
+    /// Searches this Web UI configuration for an action with the specified identifier.
     ///
     Optional<EntityActionConfig> findAction(CharSequence actionIdentifier);
 
-    /// Returns all registered "extra" actions, which are not exposed in the UI, but exist for other server-side purposes.
+    /// Returns all registered “extra” actions that are not exposed in the UI but exist for server-side use only.
     ///
     Collection<EntityActionConfig> getExtraActions();
 
-    /**
-     * Returns the map of custom views for this web application.
-     *
-     * @return
-     */
+    /// Returns the map of custom views registered for this web application, keyed by view identifier.
+    ///
     Map<String, AbstractCustomView> getCustomViews();
 
-    /**
-     * Implement this in order to provide custom configurations for entity centre, master and other views.
-     */
+    /// Implement this method to provide custom configuration for entity centres, masters,
+    /// and other Web UI views.
+    ///
     void initConfiguration();
 
-    /**
-     * Iterates through all registered {@link EntityCentre}s and creates default configurations for each one.
-     */
+    /// Iterates through all registered [EntityCentre]s and creates default configurations for each of them.
+    ///
     void createDefaultConfigurationsForAllCentres();
 
-    /**
-     * Returns the map of embedded entity centres (and masters containing them) for this web application.
-     */
-    Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> getEmbeddedCentres();
+    /// Returns the map of embedded entity centres and their containing masters for this web application.
+    ///
+    Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>>
+    getEmbeddedCentres();
 
-    /**
-     * Loads all standalone / embedded default centres for concrete 'entityType' (with their generated types and criteria types).
-     */
+    /// Loads all standalone and embedded default centres for the given `entityType`,
+    /// including their generated types and criteria types.
+    ///
     void loadCentreGeneratedTypesAndCriteriaTypes(final Class<?> entityType);
 
-    /**
-     * Determines whether the centre, represented by {@code miType}, is embedded.
-     *
-     * @param miType
-     * @return
-     */
+    /// Determines whether the centre represented by `miType` is embedded.
+    ///
     default boolean isEmbeddedCentre(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         return getEmbeddedCentres().containsKey(miType);
     }
 
-    /**
-     * Determines whether the centre, represented by {@code miType}, is embedded and does not allow customisation.
-     *
-     * @param miType
-     * @return
-     */
+    /// Determines whether the centre represented by `miType` is embedded and does not allow customisation.
+    ///
     default boolean isEmbeddedCentreAndNotAllowCustomised(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         return isEmbeddedCentre(miType) && getEmbeddedCentres().get(miType)._1.isRunAutomaticallyAndNotAllowCustomised();
     }
 
-    /**
-     * Clears all centre, master and menu configurations that were initialised before.
-     */
+    /// Clears all centre, master, and menu configurations that were previously initialised.
+    ///
     void clearConfiguration();
 
-    /**
-     * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
-     * with other custom paths. When client asks for a resource then this application will search for that resource in these paths starting from the custom ones.
-     */
+    /// Returns the list of base paths for static file resources needed by the Web client.
+    /// These paths are mapped under the `/resources/` router path and may be augmented with additional custom paths.
+    /// When a client requests a resource, the application searches these paths in order, starting from the custom ones.
+    ///
     List<String> resourcePaths();
 
-    /**
-     * The current {@link Workflows} of the server and client applications.
-     *
-     * @return
-     */
+    /// Returns the current server- and client-side workflows configuration.
+    ///
     Workflows workflow();
 
-    /**
-     * Loads checksum for resource if available. Otherwise, returns empty {@link Optional}.
-     * <p>
-     * Checksums are available for static resources in deployment mode. 'startup-resources-vulcanized.js' file is primary in this category.
-     * Client-side Service Worker script intercepts requests to get checksum first to compare whether resource has changed.
-     * If that is true then full resource will be re-downloaded and re-cached on the client side.
-     * Otherwise the cached resource will be used straight away.
-     *
-     * @param resourceURI
-     * @return
-     */
+    /// Loads the checksum for a resource, if available, otherwise returns an empty [Optional].
+    ///
+    /// Checksums are available for selected static resources in deployment mode (e.g. `startup-resources-vulcanized.js`).
+    /// The client-side Service Worker first requests the checksum to detect changes.
+    /// If the checksum differs, the full resource is re-fetched and re-cached.
+    /// Otherwise, the cached version is used.
+    ///
     Optional<String> checksum(final String resourceURI);
 
-    /**
-     * Returns true if server and client applications operate in the same time-zone, otherwise false.
-     * The only exception is handling of 'now': it calculates based on real user time-zone (and later converts to server time-zone).
-     *
-     * @return
-     */
+    /// Returns the set of actions used for centre configuration sharing.
+    ///
+    List<EntityActionConfig> centreConfigShareActions();
+
+    /// Sets the minimum screen width at which the UI is treated as a desktop layout.
+    ///
+    IWebUiConfig setMinDesktopWidth(final int width);
+
+    /// Sets the minimum screen width at which the UI is treated as a tablet layout.
+    ///
+    IWebUiConfig setMinTabletWidth(final int width);
+
+    /// Sets the locale to use for client-side number formatting.
+    ///
+    IWebUiConfig setLocale(final String locale);
+
+    /// Sets the time format pattern to be used on the client side of the application.
+    ///
+    IWebUiConfig setTimeFormat(final String timeFormat);
+
+    /// Sets the time format pattern with milliseconds to be used on the client side of the application.
+    ///
+    IWebUiConfig setTimeWithMillisFormat(final String timeWithMillisFormat);
+
+    /// Sets the date format pattern to be used on the client side of the application.
+    ///
+    IWebUiConfig setDateFormat(final String dateFormat);
+
+    /// Sets the colour of the web application’s main top panel.
+    ///
+    IWebUiConfig setMainPanelColor(final String panelColor);
+
+    /// Sets the watermark text displayed on the application’s main top panel.
+    ///
+    IWebUiConfig setWatermark(final String watermark);
+
+    /// Sets the style to use for rendering the watermark text.
+    ///
+    IWebUiConfig setWatermarkStyle(final String watermarkStyle);
+
+    /// Indicates whether the server and client applications operate in independent time zones.
+    ///
+    /// The only difference is handling of `now`, which is calculated in the real user time zone
+    /// and then converted to the server time zone.
+    ///
     boolean independentTimeZone();
 
+    /// Returns the minimum screen width at which the device is treated as a desktop.
+    ///
+    int minDesktopWidth();
 
-    /**
-     * Returns {@link MasterActionOptions} instance that indicates what options should be available in master actions.
-     *
-     * @return
-     */
-    MasterActionOptions masterActionOptions();
+    /// Returns the minimum screen width at which the device is treated as a tablet.
+    ///
+    int minTabletWidth();
 
-    /**
-     * A set of domain-specific actions for centre configurations sharing.
-     *
-     * @return
-     */
-    List<EntityActionConfig> centreConfigShareActions();
+    /// Returns the locale to use for client-side number formatting.
+    ///
+    String locale();
+
+    /// Returns the date format pattern to be used on the client side of the application.
+    ///
+    String dateFormat();
+
+    /// Returns the time format pattern to be used on the client side of the application.
+    ///
+    String timeFormat();
+
+    /// Returns the time-with-milliseconds format pattern to be used on the client side of the application.
+    ///
+    String timeWithMillisFormat();
+
+    /// Returns the value that determines which options should be available in master actions.
+    ///
+    String masterActionOptions();
+
+    /// Returns the application title displayed in the browser tab.
+    ///
+    String title();
+
+    /// Returns the URI of the “idea” action.
+    ///
+    String ideaUri();
+
+    /// Returns the colour of the application’s main top panel.
+    ///
+    String mainPanelColor();
+
+    /// Returns the watermark text displayed on the application’s main top panel.
+    ///
+    String watermark();
+
+    /// Returns the style of the watermark text.
+    ///
+    String watermarkStyle();
+
+    /// Returns the set of site URLs that users may visit without confirmation.
+    ///
+    Set<String> siteAllowList();
+
+    /// Returns the number of days an allowed site remains trusted before requiring re-confirmation.
+    ///
+    int daysUntilSitePermissionExpires();
 
 }
