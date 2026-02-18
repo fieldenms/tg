@@ -1,15 +1,15 @@
 /**
- * Timer Id to reconnect via sse after an error.
+ * Timer identifier used to schedule SSE reconnection after an error.
  */
 let timerIdForReconnection = null;
 
 /**
- *  Registers new single event source for this client.
+ *  Registers a new single event source for this client.
  */
 const registerEventSource = function () {
     const uid = crypto.randomUUID();
     const source = {initialised: false, sseUid: uid, uri: `/sse/${uid}`, shouldReconnectWhenError: true, errorReconnectionDelay: 15000};
-    console.log('Determine if EventSrouce needs polyfilling: ', window.EventSource)
+    console.log('Determine if EventSource needs polyfilling: ', window.EventSource)
     if (window.EventSource == undefined) {
         console.warn('EventSource polyfilling is in progress.');
         const esPoly = document.createElement('script');
@@ -30,9 +30,7 @@ const registerEventSourceHandlers = function (sourceObj) {
     sourceObj.initialised = true;
 
     source.addEventListener('message', function (e) {
-
         const data = JSON.parse(e.data);
-
         postal.publish({
             channel: "sse-event",
             topic: `${data.eventSourceClass ? "/" + data.eventSourceClass : ""}${data.jobUid ? "/" + data.jobUid : ""}/message`,
@@ -58,7 +56,7 @@ const registerEventSourceHandlers = function (sourceObj) {
     source.addEventListener('error', function (e) {
         console.log('an error occurred: ', e);
 
-        // publish event for error handling
+        // Publish event for error handling.
         postal.publish({
             channel: "sse-event",
             topic: "error",
@@ -68,16 +66,17 @@ const registerEventSourceHandlers = function (sourceObj) {
             }
         });
 
-        // only after custom error handling should we attempt to reconnect
-        // this is because the decision to reconnect can be made in the custom error handler
+        // Attempt reconnection only after custom error handling has completed,
+        // so that the handler can decide whether reconnection should occur.
         if (sourceObj.shouldReconnectWhenError === true && e.eventPhase === EventSource.CLOSED) {
-            // connection was closed by the server;
-            // ensure client-side EventSource to be closed and initialised flag to be false;
-            // ensure also that previous reconnection timeout is cancelled and made null;
-            // previous reconnection timeout should not be possible here because SSE EventSource (and server side resource) will be closed prior to this;
-            // however it is not harmful to check -- see closeEventSource() method
+            // Connection was closed by the server.
+            // Ensure the client-side EventSource is closed and its "initialised" flag is reset.
+            // Also cancel any pending reconnection timeout, if present.
+            // In practice a previous reconnection timeout should not exist here because the
+            // EventSource (and its server-side resource) is closed before this point, but the extra check is prudent and harmless (see closeEventSource()).
             closeEventSource(sourceObj);
-            // Let's kick a timer for reconnection...
+
+            // Schedule a reconnection attempt after the configured delay.
             timerIdForReconnection = setTimeout(() => {
                 try {
                     registerEventSourceHandlers(sourceObj);
@@ -90,7 +89,10 @@ const registerEventSourceHandlers = function (sourceObj) {
     }, false);
 };
 
-/* Closes an existing event source connection. This operation also ensures that any scheduled reconnections are cancelled and cleared after EventSource closing. */
+/*
+ * Closes an existing EventSource connection.
+ * Also cancels any scheduled reconnection attempts and clears their timer once the EventSource is closed.
+ */
 const closeEventSource = function (sourceObj) {
     if (sourceObj.source) {
         sourceObj.initialised = false;
@@ -98,11 +100,11 @@ const closeEventSource = function (sourceObj) {
         sourceObj.source = null;
         src.close();
     }
-    if (typeof timerIdForReconnection === 'number') { // if there is in-progress timeout handling reconnection
+    if (typeof timerIdForReconnection === 'number') { // if there is an in-progress timeout handling reconnection
         clearTimeout(timerIdForReconnection); // then cancel this timeout immediately
         timerIdForReconnection = null;
     }
 };
 
-//Holds all registered event sources in application.
+// Holds all registered event sources in the application.
 export const eventSource = registerEventSource();
