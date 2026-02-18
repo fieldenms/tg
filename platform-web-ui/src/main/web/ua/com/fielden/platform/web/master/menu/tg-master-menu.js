@@ -837,10 +837,15 @@ Polymer({
                     const cannotLeaveMessage = cannotLeaveReason.msg || cannotLeaveReason;
                     this.route = this.sectionRoute;
                     this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage);
+                }).finally(() => {
+                    this.fire('tg-master-menu-route-change-completed', this.route);
                 });
             } else {
                 this.sectionRoute = newRoute;
+                this.fire('tg-master-menu-route-change-completed', this.route);
             }
+        } else {
+            this.fire('tg-master-menu-route-change-completed', this.route);
         }
     },
     

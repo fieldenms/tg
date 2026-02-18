@@ -482,16 +482,20 @@
                         const entity = event.detail;
                         setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
                             if (entity.type()._simpleClassName() === 'TgCompoundEntity') { // retrieval only
+                                // Add tg-master-menu-route-change-completed listener to find out when route form mastermenu changed
+                                const menuRouteChanged = event => {
+                                    assert.strictEqual(masterMenu().route, 'TgCompoundEntityMaster_OpenMain_MenuItem'); // ASSERT
+                                    assert.strictEqual(masterMenu().sectionRoute, 'TgCompoundEntityMaster_OpenMain_MenuItem');
+                                    assert.isOk(masterMenu().currentSection());
+                                    masterMenu().currentSection().canLeave().catch(reason => {
+                                        assert.isOk(reason);
+                                        assert.strictEqual(reason.msg, 'Please save or cancel changes.'); // toast shows 'Cannot leave "Main".'
+                                        done();
+                                    });
+                                    masterMenu().removeEventListener('tg-master-menu-route-change-completed', menuRouteChanged);
+                                };
+                                masterMenu().addEventListener('tg-master-menu-route-change-completed', menuRouteChanged);
                                 masterMenu().route = 'TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem'; // CHANGE =>
-
-                                assert.strictEqual(masterMenu().route, 'TgCompoundEntityMaster_OpenMain_MenuItem'); // ASSERT
-                                assert.strictEqual(masterMenu().sectionRoute, 'TgCompoundEntityMaster_OpenMain_MenuItem');
-                                assert.isOk(masterMenu().currentSection());
-                                masterMenu().currentSection().canLeave().catch(reason => {
-                                    assert.isOk(reason);
-                                    assert.strictEqual(reason.msg, 'Please save or cancel your changes.'); // toast shows 'Cannot leave "Main".'
-                                    done();
-                                });
                             }
                         });
                     });
