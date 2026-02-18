@@ -12,8 +12,8 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,32 +53,34 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         final Menu menu;
         if (chosenPropertyEqualsTo("desktop")) {
             menu = buildMenuConfiguration();
-        } else { // chosenPropertyEqualsTo("mobile")
-            menu = menuRetriever.getMenuEntity(MOBILE).setUserName(userProvider.getUser().getKey()).setCanEdit(false);
+        }
+        // Otherwise, chosenPropertyEqualsTo("mobile")
+        else {
             // At this stage all items are visible for mobile profile.
             // In case where invisibility logic should be implemented, there is a need to extend persistent WebMenuItemInvisibility entity.
+            menu = menuRetriever.getMenuEntity(MOBILE).setUserName(userProvider.getUser().getKey()).setCanEdit(false);
         }
         return menu.copyTo(entity);
     }
 
     private Menu buildMenuConfiguration() {
         final Menu menu = menuRetriever.getMenuEntity(DESKTOP).setUserName(userProvider.getUser().getKey()).setCanEdit(userProvider.getUser().isBase());
-        //Get all invisible menu items
+        // Get all invisible menu items
         final Map<String, Set<User>> invisibleItems = miInvisible.getAllEntities(createMenuInvisibilityQuery()).stream()
                 .collect(groupingBy(WebMenuItemInvisibility::getMenuItemUri, Collectors.mapping(WebMenuItemInvisibility::getOwner, toSet())));
         final Set<User> availableUsers = getAvailableUsers();
-        //Remove or make invisible all retrieved invisible menu items those are in menu entity.
+        // Remove or make invisible all retrieved invisible menu items those are in menu entity.
         for (final String menuItem : invisibleItems.keySet()) {
-            //Split menu items by '/' and decode it with URL decoder
+            // Split menu items by '/' and decode it with URL decoder
             final List<String> menuParts = decodeParts(menuItem.split("/"));
-            //Find menu path that is a list of menu managers starting from menu, then module menu and so on, that corresponds to menuParts
+            // Find menu path that is a list of menu managers starting from menu, then module menu and so on, that corresponds to menuParts
             final List<IMenuManager> menuPath = findMenuPath(menu, menuParts);
-            //If menu item was found (e.a. menu path is not empty) then process each menu item with his parent until module menu to set their visible and semiVisible properties
+            // If menu item was found (e.a. menu path is not empty) then process each menu item with his parent until module menu to set their visible and semiVisible properties
             final Set<User> excludedUsers = invisibleItems.get(menuItem);
             if (menuPath.size() > 2) {
-                //Compute visibility of the leaf menu item
-                computeVisibility(menuPath.get(menuPath.size() - 2), menuPath.get(menuPath.size() - 1).getTitle(), excludedUsers, availableUsers);
-                //Compute visibility of all group menu items
+                // Compute visibility of the leaf menu item
+                computeVisibility(menuPath.get(menuPath.size() - 2), menuPath.getLast().getTitle(), excludedUsers, availableUsers);
+                // Compute visibility of all group menu items
                 for (int itemIndex = menuPath.size() - 2; itemIndex > 1; itemIndex--) {
                     computeVisibilityForGroup(menuPath.get(itemIndex - 1), menuPath.get(itemIndex));
                 }
@@ -107,7 +109,8 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         }
     }
 
-    /// Returns all active based-on users if current user is base. Otherwise, returns a list with only the current user.
+    /// Returns all active based-on users if current user is base.
+    /// Otherwise, returns a list with only the current user.
     ///
     private Set<User> getAvailableUsers() {
         final Set<User> availableUsers = new LinkedHashSet<>();
@@ -125,12 +128,8 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     ///
     public static List<String> decodeParts(final String[] menuParts) {
         final List<String> decodedParts = new ArrayList<>();
-        try {
-            for (int partIndex = 0; partIndex < menuParts.length; partIndex++) {
-                decodedParts.add(URLDecoder.decode(menuParts[partIndex], "UTF-8"));
-            }
-        } catch (final UnsupportedEncodingException e) {
-            LOGGER.error(e.getMessage());
+        for (final String menuPart : menuParts) {
+            decodedParts.add(URLDecoder.decode(menuPart, StandardCharsets.UTF_8));
         }
         return decodedParts;
     }
@@ -141,7 +140,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         final List<IMenuManager> menuPath = new  ArrayList<>();
         menuPath.add(menu);
         for (final String menuPart : menuParts) {
-            final IMenuManager lastItem = menuPath.get(menuPath.size() - 1);
+            final IMenuManager lastItem = menuPath.getLast();
             final Optional<IMenuManager> nextItem = lastItem.getMenuItem(menuPart);
             if (nextItem.isPresent()) {
                 menuPath.add(nextItem.get());
@@ -157,7 +156,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     private void computeVisibility(final IMenuManager parentItem, final String menuItemTitle, final Set<User> excludedUsers, final Set<User> availableUsers) {
         final User currentUser = userProvider.getUser();
         if (currentUser.isBase()) {
-            //If menu item is invisible for all available non-base user then it is invisible otherwise it is semi visible.
+            // If menu item is invisible for all available non-base user then it is invisible otherwise it is semi visible.
             if (excludedUsers.containsAll(availableUsers)) {
                 parentItem.makeMenuItemInvisible(menuItemTitle);
             } else {
@@ -189,7 +188,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     ///
     private boolean isMenuVisible(final IMenuManager menuItem) {
         if (userProvider.getUser().isBase()) {
-            return menuItem.getMenu().stream().anyMatch(item -> item.isVisible());
+            return menuItem.getMenu().stream().anyMatch(IMenuManager::isVisible);
         } else {
             return !menuItem.getMenu().isEmpty();
         }
@@ -203,4 +202,5 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         }
         return false;
     }
+
 }
