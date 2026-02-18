@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.app.config;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -11,44 +10,41 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 
-/**
- * Implementation of the {@link IWebUiBuilder}.
- *
- * @author TG Team
- *
- */
+/// Implementation of the [IWebUiBuilder].
+///
 public class WebUiBuilder implements IWebUiBuilder {
-    private final Logger logger = getLogger(getClass());
-    /**
-     * The {@link IWebUiConfig} instance for which this configuration object was created.
-     */
+    private static final Logger LOGGER = getLogger();
+
+    public static final String
+            ERR_MASTER_CONFIGURATION_ALREADY_REGISTERED = "The master configuration for type [%s] has been already registered.",
+            ERR_CENTRE_CONFIGURATION_ALREADY_REGISTERED = "The centre configuration for type [%s] has been already registered.",
+            ERR_OPEN_MASTER_ACTION_CONFIG_ALREADY_PRESENT = "An open-master action config is already present for entity [%s].",
+            ERR_ACTION_WITH_IDENTIFIER_ALREADY_REGISTERED = "An action with identifier [%s] has already been registered.",
+            ERR_MISSING_ACTION_IDENTIFIER = "Action identifier must be present to register an action configuration.",
+            ERR_MISSING_OPEN_MASTER_ACTION_CONFIGURATION = """
+                An attempt is made to obtain open-master action configuration for entity [%s], but none is found. \
+                Please register a corresponding action configuration by using WebUiBuilder.registerOpenMasterAction.""",
+            ERR_INVALID_ARGUMENTS_TO_REGISTER_OPEN_MASTER_ACTIONS = "None of the arguments to register open master actions can be null.";
+
+    /// The [IWebUiConfig] instance for which this configuration object was created.
+    ///
     private final IWebUiConfig webUiConfig;
 
-    private int minDesktopWidth = 980, minTabletWidth = 768;
-    private String locale = "en-AU";
-    private String dateFormat = "DD/MM/YYYY";
-    private String timeFormat = "h:mm A";
-    private String timeWithMillisFormat = "h:mm:ss.SSS A";
-    private Optional<String> panelColor = Optional.empty();
-    private Optional<String> watermark = Optional.empty();
-    private Optional<String> watermarkStyle = Optional.empty();
-
-    /**
-     * Holds the map between master's entity type and its master component.
-     */
+    /// Holds the map between master's entity type and its master component.
+    ///
     private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new ConcurrentHashMap<>();
 
-    /**
-     * Holds the map between entity centre's menu item type and entity centre.
-     */
+    /// Holds the map between entity centre's menu item type and entity centre.
+    ///
     private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new ConcurrentHashMap<>();
 
     private final Map<Class<? extends AbstractEntity<?>>, EntityActionConfig> openMasterActions = new ConcurrentHashMap<>();
@@ -59,53 +55,49 @@ public class WebUiBuilder implements IWebUiBuilder {
     ///
     private final Map<String, EntityActionConfig> extraActionsMap = new ConcurrentHashMap<>();
 
-    /**
-     * Holds the map between custom view name and custom view instance.
-     */
+    /// Holds the map between custom view name and custom view instance.
+    ///
     private final Map<String, AbstractCustomView> viewMap = new LinkedHashMap<>();
 
-    /**
-     * Creates new instance of {@link WebUiBuilder} for the specified {@link IWebUiConfig} instance.
-     *
-     * @param webUiConfig
-     */
+    /// Creates new instance of [WebUiBuilder] for the specified [IWebUiConfig] instance.
+    ///
     public WebUiBuilder(final IWebUiConfig webUiConfig) {
         this.webUiConfig = webUiConfig;
     }
 
     @Override
     public IWebUiBuilder setMinDesktopWidth(final int width) {
-        this.minDesktopWidth = width;
+        this.webUiConfig.setMinDesktopWidth(width);
         return this;
     }
 
     @Override
     public IWebUiBuilder setMinTabletWidth(final int width) {
-        this.minTabletWidth = width;
+        this.webUiConfig.setMinTabletWidth(width);
         return this;
     }
 
     @Override
     public IWebUiBuilder setLocale(final String locale) {
-        this.locale = locale;
+        this.webUiConfig.setLocale(locale);
         return this;
     }
 
     @Override
     public IWebUiBuilder setTimeFormat(final String timeFormat) {
-        this.timeFormat = timeFormat;
+        this.webUiConfig.setTimeFormat(timeFormat);
         return this;
     }
 
     @Override
     public IWebUiBuilder setTimeWithMillisFormat(final String timeWithMillisFormat) {
-        this.timeWithMillisFormat = timeWithMillisFormat;
+        this.webUiConfig.setTimeWithMillisFormat(timeWithMillisFormat);
         return this;
     }
 
     @Override
     public IWebUiBuilder setDateFormat(final String dateFormat) {
-        this.dateFormat = dateFormat;
+        this.webUiConfig.setDateFormat(dateFormat);
         return this;
     }
 
@@ -119,9 +111,9 @@ public class WebUiBuilder implements IWebUiBuilder {
         final Optional<EntityMaster<T>> masterOptional = getMaster(master.getEntityType());
         if (masterOptional.isPresent()) {
             if (masterOptional.get() != master) {
-                throw new WebUiBuilderException(format("The master configuration for type [%s] has been already registered.", master.getEntityType().getSimpleName()));
+                throw new WebUiBuilderException(ERR_MASTER_CONFIGURATION_ALREADY_REGISTERED.formatted(master.getEntityType().getSimpleName()));
             } else {
-                logger.debug(format("\tThere is a try to register exactly the same master configuration instance for type [%s], that has been already registered.", master.getEntityType().getSimpleName()));
+                LOGGER.debug(() -> "\tThere is a try to register exactly the same master configuration instance for type [%s], that has been already registered.".formatted(master.getEntityType().getSimpleName()));
                 return this;
             }
         } else {
@@ -145,11 +137,11 @@ public class WebUiBuilder implements IWebUiBuilder {
     @Override
     public <T extends AbstractEntity<?>> IWebUiBuilder registerOpenMasterAction(final Class<T> entityType, final EntityActionConfig openMasterActionConfig) {
         if (entityType == null || openMasterActionConfig == null) {
-            throw new WebUiBuilderException("None of the arguments to register open master actions can be null.");
+            throw new WebUiBuilderException(ERR_INVALID_ARGUMENTS_TO_REGISTER_OPEN_MASTER_ACTIONS);
         }
 
         if (openMasterActions.containsKey(entityType)) {
-            throw new WebUiBuilderException(format("An open-master action config is already present for entity [%s].", entityType.getName()));
+            throw new WebUiBuilderException(ERR_OPEN_MASTER_ACTION_CONFIG_ALREADY_PRESENT.formatted(entityType.getName()));
         }
 
         openMasterActions.putIfAbsent(entityType, openMasterActionConfig);
@@ -163,19 +155,19 @@ public class WebUiBuilder implements IWebUiBuilder {
             if (openMasterActions.containsKey(entityType)) {
                 return Optional.of(openMasterActions.get(entityType));
             }
-            throw new WebUiBuilderException(format("An attempt is made to obtain open-master action configuration for entity [%s], but none is found. Please register a corresonding action configuration by using WebUiBuilder.registerOpenMasterAction.", entityType.getName()));
+            throw new WebUiBuilderException(ERR_MISSING_OPEN_MASTER_ACTION_CONFIGURATION.formatted(entityType.getName()));
         };
     }
 
     @Override
     public IWebUiBuilder registerExtraAction(final EntityActionConfig actionConfig) {
         if (actionConfig.actionIdentifier.isEmpty()) {
-            throw new WebUiBuilderException("Action identifier must be present to register an action configuration.");
+            throw new WebUiBuilderException(ERR_MISSING_ACTION_IDENTIFIER);
         }
         final var actionIdentifier = actionConfig.actionIdentifier.get();
         final var prev = extraActionsMap.putIfAbsent(actionIdentifier, actionConfig);
         if (prev != null) {
-            throw new WebUiBuilderException("An action with identifier [%s] has already been registered.".formatted(actionIdentifier));
+            throw new WebUiBuilderException(ERR_ACTION_WITH_IDENTIFIER_ALREADY_REGISTERED.formatted(actionIdentifier));
         }
         return this;
     }
@@ -185,14 +177,14 @@ public class WebUiBuilder implements IWebUiBuilder {
         final Optional<EntityCentre<?>> centreOptional = getCentre(centre.getMenuItemType());
         if (centreOptional.isPresent()) {
             if (centreOptional.get() != centre) {
-                throw new WebUiBuilderException(format("The centre configuration for type [%s] has been already registered.", centre.getMenuItemType().getSimpleName()));
+                throw new WebUiBuilderException(ERR_CENTRE_CONFIGURATION_ALREADY_REGISTERED.formatted(centre.getMenuItemType().getSimpleName()));
             } else {
-                logger.debug(format("\tThere is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
+                LOGGER.debug(() -> "\tThere is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.".formatted(centre.getMenuItemType().getSimpleName()));
                 return this;
             }
         } else {
             centreMap.put(centre.getMenuItemType(), centre);
-            centre.eventSourceClass().ifPresent(eventSourceClass -> webUiConfig.createAndRegisterEventSource(eventSourceClass));
+            centre.eventSourceClass().ifPresent(webUiConfig::createAndRegisterEventSource);
             return this;
         }
     }
@@ -224,50 +216,18 @@ public class WebUiBuilder implements IWebUiBuilder {
         return viewMap;
     }
 
-    /**
-     * Generates a HTML representation of the web application UI preferences.
-     *
-     * @return
-     */
-    public String genWebUiPrefComponent() {
-        if (this.minDesktopWidth <= this.minTabletWidth) {
-            throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
-        }
-        return getText("ua/com/fielden/platform/web/app/config/tg-app-config.js").
-                replace("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
-                replace("@minTabletWidth", Integer.toString(this.minTabletWidth)).
-                replace("@locale", "\"" + this.locale + "\"").
-                replace("@independentTimeZoneSetting", webUiConfig.independentTimeZone() ? format("moment.tz.setDefault('%s');", TimeZone.getDefault().getID()) : "").
-                replace("@dateFormat", "\"" + this.dateFormat + "\"").
-                replace("@timeFormat", "\"" + this.timeFormat + "\"").
-                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
-                replace("@masterActionOptions", "\"" + webUiConfig.masterActionOptions() + "\"");
-    }
-
-    public String getAppIndex(final IDates dates) {
-        return getText("ua/com/fielden/platform/web/index.html")
-                .replace("@panelColor", panelColor.map(val -> "--tg-main-pannel-color: " + val + ";").orElse(""))
-                .replace("@watermark", "'" + watermark.orElse("") + "'")
-                .replace("@cssStyle", watermarkStyle.orElse("") )
-                // Need to inject the first day of week, which is used by the date picker component to correctly render a weekly representation of a month.
-                // Because IDates use a number range from 1 to 7 to represent Mon to Sun and JS uses 0 for Sun, we need to convert the value coming from  IDates.
-                .replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7));
-    }
-
     @Override
     public IWebUiBuilder addCustomView(final AbstractCustomView customView) {
         viewMap.put(customView.getViewName(), customView);
         return this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public IWebUiBuilder withTopPanelStyle(final Optional<String> backgroundColour, final Optional<String> watermark, final Optional<String> cssWatermark) {
-        this.panelColor = backgroundColour;
-        this.watermark = watermark;
-        this.watermarkStyle = cssWatermark;
+        this.webUiConfig.setMainPanelColor(backgroundColour.orElse(""));
+        this.webUiConfig.setWatermark(watermark.orElse(""));
+        this.webUiConfig.setWatermarkStyle(cssWatermark.orElse(""));
         return this;
     }
+
 }
