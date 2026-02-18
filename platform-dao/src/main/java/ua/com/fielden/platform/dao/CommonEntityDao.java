@@ -251,11 +251,25 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
-    /// @deprecated To facilitate the transition to save-with-fetch, place all custom saving logic in [#save(AbstractEntity, Optional)]
-    ///             and make the corresponding companion interface (`*Co`) extend [ISaveWithFetch].
-    ///             Do not override this method, which will likely become `final` in the future.
-    ///             This deprecation notice concerns only the implementation of `save`, not its use.
-    ///             This method will not be removed, but the deprecation will last until the transition is complete.
+    /// @deprecated
+    /// To facilitate transition to save-with-fetch, place all custom saving logic in [#save(AbstractEntity, Optional)]
+    /// and make the corresponding companion interface extend [ISaveWithFetch].
+    /// Do not override this method, which will likely become `final` in the future.
+    ///
+    /// Once save-with-fetch is implemented, this method **must not be called within the companion** to avoid non-termination.
+    /// Specifically, `this.save(entity)` and `super.save(entity)` must be replaced with calls to save-with-fetch.
+    /// Note that this does not apply to external calls.
+    /// For example, it is valid to call `PersonCo.save(person)` outside of `PersonCo` and `PersonDao` even if save-with-fetch
+    /// is implemented for `Person`.
+    ///
+    /// Refactoring hint:
+    /// ```
+    /// var savedEntity = super.save(entity);
+    /// // Is equivalent to
+    /// var savedEntity = super.save(entity, Optional.of(FetchModelReconstructor.reconstruct(entity))).asRight().value();
+    /// ```
+    /// Note that such a refactoring is applicable only to persistent entities, as it is an error to use [FetchModelReconstructor] with non-persistent entities.
+    /// In general, it is unnecessary to call `super.save` with non-persistent entities.
     ///
     @Override
     @SessionRequired
