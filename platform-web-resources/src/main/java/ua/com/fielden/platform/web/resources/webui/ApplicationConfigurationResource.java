@@ -69,15 +69,15 @@ public class ApplicationConfigurationResource extends AbstractWebResource {
         final Map<String, Object> configs = new LinkedHashMap<>();
         configs.put("siteAllowlist", webUiConfig.siteAllowList());
         configs.put("daysUntilSitePermissionExpires", webUiConfig.daysUntilSitePermissionExpires());
-        configs.put("currencySymbol", appSettings.currencySymbol());
-        configs.put("timeZone", webUiConfig.independentTimeZone() ? TimeZone.getDefault().getID() : "");
         configs.put("minDesktopWidth", webUiConfig.minDesktopWidth());
         configs.put("minTabletWidth", webUiConfig.minTabletWidth());
+        configs.put("currencySymbol", appSettings.currencySymbol());
+        configs.put("timeZone", webUiConfig.independentTimeZone() ? TimeZone.getDefault().getID() : "");
         configs.put("locale", webUiConfig.locale());
         configs.put("dateFormat", webUiConfig.dateFormat());
         configs.put("timeFormat", webUiConfig.timeFormat());
-        configs.put("masterActionOptions", webUiConfig.masterActionOptions());
         configs.put("timeWithMillisFormat", webUiConfig.timeWithMillisFormat());
+        configs.put("masterActionOptions", webUiConfig.masterActionOptions());
         // Need to set the first day of week, which is used by the date picker component to correctly render a weekly representation of a month.
         // Because IDates use a number range from 1 to 7 to represent Mon to Sun and JS uses 0 for Sun, we need to convert the value coming from IDates.
         configs.put("firstDayOfWeek", dates.startOfWeek() % 7);
