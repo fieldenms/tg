@@ -10,6 +10,7 @@ import { UnreportableError } from '/resources/components/tg-global-error-handler
  * @param {Function} createContextHolder - createContextHolder function of the parent element or some other custom logic for parent context creation
  * @param {Function} [calculateSharedUri] - optional function that produces a URL to be recorded as TinyHyperlink.target 
  * @param {Function} [enhanceAction] - mutator function of resultant action to be performed before _run()
+ *   a care must be taken with this function conditional implementation, because `shareAction` can be cached.
  * @param {HTMLElement} [parentElement] - the element where the share action should be added
  */
 export function openShareAction(toast, parentUuid, showDialog, createContextHolder, calculateSharedUri, enhanceAction, parentElement) {
@@ -52,6 +53,10 @@ export function openShareAction(toast, parentUuid, showDialog, createContextHold
             throw new Error("The result of [calculateSharedUri] must not be null.");
         }
         shareAction._sharedUri = uri;
+    }
+    // Share action can be cached. If so, it's state must be cleared.
+    else {
+        shareAction._sharedUri = null;
     }
 
     shareAction._run();
