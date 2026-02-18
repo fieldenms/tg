@@ -20,9 +20,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
-/// A web-accessible resource that provides configuration data required by a web application at runtime.
-/// The configuration is consumed by frontend clients during application startup or refresh
-/// to dynamically adjust behaviour without requiring redeployment.
+/// A web resource that exposes the client-side application configuration.
+/// Extend this resource when additional platform-level configuration settings are needed.
+///
+/// Frontend clients consume this resource during startup or refresh to
+/// dynamically adjust behavior without requiring a redeployment.
 ///
 public class ApplicationConfigurationResource extends AbstractWebResource {
 
@@ -86,4 +88,5 @@ public class ApplicationConfigurationResource extends AbstractWebResource {
         configs.put("watermarkStyle", webUiConfig.watermarkStyle());
         return restUtil.webApiResultRepresentation(configs);
     }
+
 }
