@@ -71,6 +71,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityForColourMaster.class);
         add(TgCreatePersistentStatusAction.class);
         add(TgDummyAction.class);
+        add(TgNoopAction.class);
         add(TgEntityWithPropertyDependency.class);
         add(TgEntityWithPropertyDescriptor.class);
         add(TgEntityWithPropertyDescriptorExt.class);

@@ -101,10 +101,10 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
 
     @Test
     public void saveWithFetch_for_a_non_persistent_functional_entity_returns_entity_ID_as_left_if_fetch_model_is_absent() {
-        final ITgDummyAction co$TgDummyAction = co$(TgDummyAction.class);
-        final var action = new_(TgDummyAction.class);
+        final TgNoopActionCo co$Action = co$(TgNoopAction.class);
+        final var action = new_(TgNoopAction.class);
         assertNull(action.getId());
-        final var either = co$TgDummyAction.save(action, Optional.empty());
+        final var either = co$Action.save(action, Optional.empty());
         assertTrue(either.isLeft());
         assertNull(either.asLeft().value());
         assertEquals(action.getId(), either.asLeft().value());
@@ -112,9 +112,9 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
 
     @Test
     public void saveWithFetch_for_a_non_persistent_functional_entity_returns_entity_itself_as_right_if_fetch_model_is_present() {
-        final ITgDummyAction co$TgDummyAction = co$(TgDummyAction.class);
-        final var action = new_(TgDummyAction.class);
-        final var either = co$TgDummyAction.save(action, Optional.of(fetch(TgDummyAction.class)));
+        final TgNoopActionCo co$Action = co$(TgNoopAction.class);
+        final var action = new_(TgNoopAction.class);
+        final var either = co$Action.save(action, Optional.of(fetch(TgNoopAction.class)));
         assertTrue(either.isRight());
         assertSame(action, either.asRight().value());
     }
