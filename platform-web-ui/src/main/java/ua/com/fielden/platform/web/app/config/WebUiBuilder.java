@@ -17,13 +17,24 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 /// Implementation of the [IWebUiBuilder].
 ///
 public class WebUiBuilder implements IWebUiBuilder {
-    private final Logger logger = getLogger(getClass());
+    private static final Logger LOGGER = getLogger();
+
+    public static final String
+            ERR_MASTER_CONFIGURATION_ALREADY_REGISTERED = "The master configuration for type [%s] has been already registered.",
+            ERR_CENTRE_CONFIGURATION_ALREADY_REGISTERED = "The centre configuration for type [%s] has been already registered.",
+            ERR_OPEN_MASTER_ACTION_CONFIG_ALREADY_PRESENT = "An open-master action config is already present for entity [%s].",
+            ERR_ACTION_WITH_IDENTIFIER_ALREADY_REGISTERED = "An action with identifier [%s] has already been registered.",
+            ERR_MISSING_ACTION_IDENTIFIER = "Action identifier must be present to register an action configuration.",
+            ERR_MISSING_OPEN_MASTER_ACTION_CONFIGURATION = """
+                An attempt is made to obtain open-master action configuration for entity [%s], but none is found. \
+                Please register a corresponding action configuration by using WebUiBuilder.registerOpenMasterAction.""",
+            ERR_INVALID_ARGUMENTS_TO_REGISTER_OPEN_MASTER_ACTIONS = "None of the arguments to register open master actions can be null.";
+
     /// The [IWebUiConfig] instance for which this configuration object was created.
     ///
     private final IWebUiConfig webUiConfig;
@@ -100,9 +111,9 @@ public class WebUiBuilder implements IWebUiBuilder {
         final Optional<EntityMaster<T>> masterOptional = getMaster(master.getEntityType());
         if (masterOptional.isPresent()) {
             if (masterOptional.get() != master) {
-                throw new WebUiBuilderException(format("The master configuration for type [%s] has been already registered.", master.getEntityType().getSimpleName()));
+                throw new WebUiBuilderException(ERR_MASTER_CONFIGURATION_ALREADY_REGISTERED.formatted(master.getEntityType().getSimpleName()));
             } else {
-                logger.debug(format("\tThere is a try to register exactly the same master configuration instance for type [%s], that has been already registered.", master.getEntityType().getSimpleName()));
+                LOGGER.debug(() -> "\tThere is a try to register exactly the same master configuration instance for type [%s], that has been already registered.".formatted(master.getEntityType().getSimpleName()));
                 return this;
             }
         } else {
@@ -126,11 +137,11 @@ public class WebUiBuilder implements IWebUiBuilder {
     @Override
     public <T extends AbstractEntity<?>> IWebUiBuilder registerOpenMasterAction(final Class<T> entityType, final EntityActionConfig openMasterActionConfig) {
         if (entityType == null || openMasterActionConfig == null) {
-            throw new WebUiBuilderException("None of the arguments to register open master actions can be null.");
+            throw new WebUiBuilderException(ERR_INVALID_ARGUMENTS_TO_REGISTER_OPEN_MASTER_ACTIONS);
         }
 
         if (openMasterActions.containsKey(entityType)) {
-            throw new WebUiBuilderException(format("An open-master action config is already present for entity [%s].", entityType.getName()));
+            throw new WebUiBuilderException(ERR_OPEN_MASTER_ACTION_CONFIG_ALREADY_PRESENT.formatted(entityType.getName()));
         }
 
         openMasterActions.putIfAbsent(entityType, openMasterActionConfig);
@@ -144,19 +155,19 @@ public class WebUiBuilder implements IWebUiBuilder {
             if (openMasterActions.containsKey(entityType)) {
                 return Optional.of(openMasterActions.get(entityType));
             }
-            throw new WebUiBuilderException(format("An attempt is made to obtain open-master action configuration for entity [%s], but none is found. Please register a corresonding action configuration by using WebUiBuilder.registerOpenMasterAction.", entityType.getName()));
+            throw new WebUiBuilderException(ERR_MISSING_OPEN_MASTER_ACTION_CONFIGURATION.formatted(entityType.getName()));
         };
     }
 
     @Override
     public IWebUiBuilder registerExtraAction(final EntityActionConfig actionConfig) {
         if (actionConfig.actionIdentifier.isEmpty()) {
-            throw new WebUiBuilderException("Action identifier must be present to register an action configuration.");
+            throw new WebUiBuilderException(ERR_MISSING_ACTION_IDENTIFIER);
         }
         final var actionIdentifier = actionConfig.actionIdentifier.get();
         final var prev = extraActionsMap.putIfAbsent(actionIdentifier, actionConfig);
         if (prev != null) {
-            throw new WebUiBuilderException("An action with identifier [%s] has already been registered.".formatted(actionIdentifier));
+            throw new WebUiBuilderException(ERR_ACTION_WITH_IDENTIFIER_ALREADY_REGISTERED.formatted(actionIdentifier));
         }
         return this;
     }
@@ -166,14 +177,14 @@ public class WebUiBuilder implements IWebUiBuilder {
         final Optional<EntityCentre<?>> centreOptional = getCentre(centre.getMenuItemType());
         if (centreOptional.isPresent()) {
             if (centreOptional.get() != centre) {
-                throw new WebUiBuilderException(format("The centre configuration for type [%s] has been already registered.", centre.getMenuItemType().getSimpleName()));
+                throw new WebUiBuilderException(ERR_CENTRE_CONFIGURATION_ALREADY_REGISTERED.formatted(centre.getMenuItemType().getSimpleName()));
             } else {
-                logger.debug(format("\tThere is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
+                LOGGER.debug(() -> "\tThere is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.".formatted(centre.getMenuItemType().getSimpleName()));
                 return this;
             }
         } else {
             centreMap.put(centre.getMenuItemType(), centre);
-            centre.eventSourceClass().ifPresent(eventSourceClass -> webUiConfig.createAndRegisterEventSource(eventSourceClass));
+            centre.eventSourceClass().ifPresent(webUiConfig::createAndRegisterEventSource);
             return this;
         }
     }
@@ -218,4 +229,5 @@ public class WebUiBuilder implements IWebUiBuilder {
         this.webUiConfig.setWatermarkStyle(cssWatermark.orElse(""));
         return this;
     }
+
 }
