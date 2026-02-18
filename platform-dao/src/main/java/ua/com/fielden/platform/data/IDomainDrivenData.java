@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.data;
 
+import jakarta.annotation.Nullable;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -38,7 +39,7 @@ public interface IDomainDrivenData {
     ///
     /// To specify an empty optional for `maybeFetch`, consider using [#noFetch()], or simply use [#saveNoFetch(AbstractEntity)] instead.
     ///
-    <T extends AbstractEntity<?>> Either<Long, T> save(T instance, Optional<fetch<T>> maybeFetch);
+    <T extends AbstractEntity<?>> Either</*@Nullable*/ Long, T> save(T instance, Optional<fetch<T>> maybeFetch);
 
     /// A convenient method that returns an empty optional typed with a fetch model parameterised with an entity type inferred from context.
     /// It is intended to be used with [#save(AbstractEntity, Optional)].
@@ -62,8 +63,10 @@ public interface IDomainDrivenData {
     /// @see #save(AbstractEntity)
     /// @see #save(AbstractEntity, Optional)
     ///
-    default Long saveNoFetch(AbstractEntity<?> instance) {
-        return save(instance, noFetch()).asLeft().value();
+    /// @return the ID of the saved entity if it is persistent; otherwise `entity.id`, which may be null.
+    ///
+    default @Nullable Long saveNoFetch(final AbstractEntity<?> entity) {
+        return save(entity, noFetch()).asLeft().value();
     }
 
     <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass);
