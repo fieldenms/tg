@@ -10,15 +10,15 @@ public interface ICustomisableCanLeave {
 
     /// Indicates whether the master view for this entity can be exited.
     ///
-    boolean canLeave();
+    boolean isCanLeave();
 
     /// Provides the reason why the master view for this entity cannot be exited.
     ///
-    String cannotLeaveReason();
+    String getCannotLeaveReason();
 
     /// Returns the set of buttons to be displayed in the confirmation dialog
     /// during the execution of the `canLeave` method.
     ///
-    CanLeaveOptions canLeaveOptions();
+    CanLeaveOptions getCanLeaveOptions();
 
 }

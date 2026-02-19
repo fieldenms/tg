@@ -9,6 +9,12 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+
+const CanLeaveOptions  = {
+    YES_NO: [{name: "Yes", confirm: true}, {name: "No"}],
+    YES_NO_CANCEL: [{name: "Yes", confirm: true}, {name: "No", confirm: true}, {name: "Cancel"}],
+}
 
 /**
  * Returns enabled invalid input if there is one.
@@ -1496,6 +1502,28 @@ const TgEntityMasterBehaviorImpl = {
             }
         }
         return true;
+    },
+
+    customCanLeave: function () {
+        return this.save().then(obj => {
+            if (obj.xhr.status === 200 && obj.response) { // successful execution of the request with written response; timeout errors can lead to status 200 and e.detail.response === null; also 504 error is possible, but this will be handled in _processError
+                //e.detail.successful = true;
+                const deserialisedResult = this._serialiser().deserialise(obj.response);
+
+                if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
+                    return Promise.reject({msg: resultMessages(deserialisedResult).short});
+                } else {
+                    const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
+                    if (savedEntity.canLeave) {
+                        return Promise.resolve(true);
+                    } else {
+                        return this.confirm(savedEntity.cannotLeaveReason, CanLeaveOptions[savedEntity.canLeaveOptions]);
+                    }
+                }
+            } else { // other codes
+                return Promise.reject({msg: `Error happend during save with status: ${obj.xhr.status}`});
+            }
+        });
     },
 
     //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
