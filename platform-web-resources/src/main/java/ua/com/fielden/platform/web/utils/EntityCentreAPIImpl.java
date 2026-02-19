@@ -203,31 +203,12 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             }
 
             final EntityCentre<AbstractEntity<?>> centre = getEntityCentre(miType.getName(), webUiConfig);
-
-            // if the run() invocation warrants data generation (e.g. it has nothing to do with sorting)
-            // then for an entity centre configuration check if a generator was provided
-            final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
-            final boolean generationShouldOccur = isRunning && !isSorting && createdByConstraintShouldOccur;
-            if (generationShouldOccur) {
-                // obtain the type for entities to be generated
-                final Class<? extends AbstractEntity<?>> generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();
-
-                // create and execute a generator instance
-                final var generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
-                final Map<String, Optional<?>> params = freshCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
-                        (final MetaProperty<?> mp) -> mp.getName(),
-                        (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
-                params.putAll(freshCriteriaEntity.getParameters().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> Optional.ofNullable(entry.getValue()))));
-                if (shouldForceRegeneration(customObject)) { // TODO always force regeneration
-                    params.put(FORCE_REGENERATION_KEY, of(true));
-                }
-                final Result generationResult = generator.gen(generatorEntityType, params);
-                // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
-                // otherwise, proceed with the request handling further to actually query the data
-                // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
-                if (!generationResult.isSuccessful()) {
-                    return left(generationResult);
-                }
+            final Result generationResult = generateDataIfNeeded(freshCriteriaEntity, centre, isRunning, isSorting, customObject);
+            // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
+            // otherwise, proceed with the request handling further to actually query the data
+            // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
+            if (!generationResult.isSuccessful()) {
+                return left(generationResult);
             }
 
             //final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = savedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
