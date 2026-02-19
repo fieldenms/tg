@@ -1,18 +1,21 @@
 import '/resources/actions/tg-ui-action.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
-/// Opens share action master with tiny URL and QR code.
-///
-/// @param {TgToast} toast - <tg-toast> for displaying informational toasts
-/// @param {String} parentUuid - uuid of the parent element
-/// @param {Function} showDialog - showDialog function of the parent element
-/// @param {Function} createContextHolder - createContextHolder function of the parent element or some other custom logic for parent context creation
-/// @param {Function} [calculateSharedUri] - optional function that produces a URL to be recorded as TinyHyperlink.target
-/// @param {Function} [enhanceAction] - mutator function of resultant action to be performed before _run()
-///
-export function openShareAction (toast, parentUuid, showDialog, createContextHolder, calculateSharedUri, enhanceAction) {
+/**
+ * Opens share action master with tiny URL and QR code.
+ * 
+ * @param {TgToast} toast - <tg-toast> for displaying informational toasts
+ * @param {String} parentUuid - uuid of the parent element
+ * @param {Function} showDialog - showDialog function of the parent element 
+ * @param {Function} createContextHolder - createContextHolder function of the parent element or some other custom logic for parent context creation
+ * @param {Function} [calculateSharedUri] - optional function that produces a URL to be recorded as TinyHyperlink.target 
+ * @param {Function} [enhanceAction] - mutator function of resultant action to be performed before _run()
+ *   a care must be taken with this function conditional implementation, because `shareAction` can be cached.
+ * @param {HTMLElement} [parentElement] - the element where the share action should be added
+ */
+export function openShareAction(toast, parentUuid, showDialog, createContextHolder, calculateSharedUri, enhanceAction, parentElement) {
     // Create a dynamic share action.
-    const shareAction = document.createElement('tg-ui-action');
+    const shareAction = getShareAction(parentElement);
 
     // Provide only the necessary attributes.
     // Avoid shouldRefreshParentCentreAfterSave, because there is no need to refresh parent master.
@@ -51,12 +54,42 @@ export function openShareAction (toast, parentUuid, showDialog, createContextHol
         }
         shareAction._sharedUri = uri;
     }
+    // Share action can be cached. If so, it's state must be cleared.
+    else {
+        shareAction._sharedUri = null;
+    }
 
     shareAction._run();
 }
 
-/// Copies `link` to the clipboard, if non-empty, and shows an informational toast.
-///
+/**
+ * Gets or creates the share action (`tg-ui-action#shareAction`) in the specified `parentElement`.
+ * 
+ * Searches first in `parentElement.shadowRoot` (if it has Shadow DOM), then falls back to light DOM.
+ * If the share action doesn't exist, creates and appends a new hidden share action to the shadow or light DOM.
+ * If no `parentElement` is specified, creates and returns a new share action without appending.
+ *
+ * @param {HTMLElement} [parentElement] - Container element for the share action
+ * @returns {HTMLElement} Existing or newly created `tg-ui-action#shareAction` element
+ */
+function getShareAction(parentElement) {
+    const elementToSearchIn = parentElement && parentElement.shadowRoot ? parentElement.shadowRoot : parentElement;
+    const action = elementToSearchIn && elementToSearchIn.querySelector('tg-ui-action#shareAction');
+    if (!action) {
+        const newShareAction = document.createElement('tg-ui-action');
+        newShareAction.setAttribute('id', 'shareAction');
+        newShareAction.setAttribute('hidden', '');
+        if (elementToSearchIn) {
+            elementToSearchIn.appendChild(newShareAction);
+        }
+        return newShareAction;
+    }
+    return action;
+}
+
+/**
+ * Copies `link` to the clipboard, if non-empty, and shows an informational toast.
+ */
 function _copyLinkToClipboard (link, toast) {
     if (link) {
         // Writing into clipboard is mostly permitted for currently open tab

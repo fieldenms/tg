@@ -1925,7 +1925,9 @@ Polymer({
                 shareAction => {
                     // Persist reference to the dialog to easily get it in `tg-ui-action._createContextHolderForAction`.
                     shareAction._dialog = this;
-                });
+                },
+                this
+            );
         }
     },
     
