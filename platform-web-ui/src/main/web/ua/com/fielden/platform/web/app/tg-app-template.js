@@ -6,10 +6,9 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 import '/resources/polymer/@polymer/app-route/app-location.js';
 import '/resources/polymer/@polymer/app-route/app-route.js';
 
-import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
-// this import is required to ensure the SSE initialisation upon loading of a web client
-import '/app/tg-app-config.js';
+import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
 import '/resources/views/tg-app-menu.js';
 import '/resources/views/tg-app-view.js';
@@ -32,9 +31,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
-import { setCurrencySymbol } from '/resources/reflection/tg-numeric-utils.js';
 import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
-import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
@@ -50,7 +47,6 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <tg-app-config id="appConfig"></tg-app-config>
     <tg-global-error-handler id="errorHandler" toaster="[[toaster]]"></tg-global-error-handler>
     <app-location id="location" no-decode dwell-time="-1" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></app-location>
     <app-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></app-route>
@@ -202,10 +198,6 @@ Polymer({
         },
         appTitle: String,
         ideaUri: String,
-        currencySymbol: {
-            type: String,
-            observer: '_currencySymbolChanged'
-        },
         entityType: String,
 
         _manager: {
@@ -224,7 +216,7 @@ Polymer({
             observer: "_selectedSubmoduleChanged"
         },
 
-        //action related properties.
+        // Action related properties.
         _attrs: Object,
         _saveIdentifier: Number,
         _visibleMenuItems: Array,
@@ -272,12 +264,8 @@ Polymer({
         "tg-module-menu-closed": "_restoreLastFocusedElement"
     },
 
-    _currencySymbolChanged: function(newValue, oldValue) {
-        setCurrencySymbol(newValue);
-    },
-
     _searchMenu: function (event) {
-        const selectedElement = this.shadowRoot.querySelector("[name='" + this.$.pages.selected + "']");
+        const selectedElement = this.shadowRoot.querySelector(`[name=${this.$.pages.selected}]`);
         if (selectedElement && selectedElement.searchMenu) {
             this.persistActiveElement();
             selectedElement.searchMenu();
@@ -286,7 +274,7 @@ Polymer({
     },
     
     _openModuleMenu: function (event) {
-        const selectedElement = this.shadowRoot.querySelector("[name='" + this.$.pages.selected + "']");
+        const selectedElement = this.shadowRoot.querySelector(`[name=${this.$.pages.selected}]`);
         if (selectedElement && selectedElement.openModuleMenu) {
             this.persistActiveElement();
             selectedElement.openModuleMenu();
@@ -760,9 +748,6 @@ Polymer({
         this.entityType = "ua.com.fielden.platform.menu.Menu";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
-            this.$.appConfig.setSiteAllowlist(entity.siteAllowlist.map(site => new RegExp(site)));
-            this.$.appConfig.setDaysUntilSitePermissionExpires(entity.daysUntilSitePermissionExpires);
-            this.currencySymbol = entity.currencySymbol;
             entity.menu.forEach(menuItem => {
                 menuItem.actions.forEach(action => {
                     action._showDialog = this._showDialog;
@@ -786,6 +771,11 @@ Polymer({
             // selection happens by id, but for all for safety reasons; for example, for web tests these elements do not exist
             document.querySelectorAll("#splash-background").forEach(bg => bg.style.display = 'none'); // background
             document.querySelectorAll("#splash-text").forEach(txt => txt.style.display = 'none'); // text
+            // Show toaster if application configuration is stale or default, which means that configuration failed to load.
+            if (window.TG_APP.isStale) {
+                this.toaster && this.toaster.openToastForError('Configuration load error', `${window.TG_APP.errorMsg}`, true)
+            } 
+
         }.bind(this);
         this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
         this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
