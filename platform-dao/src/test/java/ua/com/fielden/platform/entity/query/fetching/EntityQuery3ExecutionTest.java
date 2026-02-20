@@ -34,9 +34,17 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     private final IEntityAggregatesOperations aggregateDao = getInstance(IEntityAggregatesOperations.class);
 
     @Test
-    public void local_id_only_query_returns_entities_with_ID_present() {
+    public void local_id_only_query_with_id_only_fetch_returns_entities_with_ID_present() {
         final var query = select(TgVehicle.class).model();
         final var entities = co(TgVehicle.class).getAllEntities(from(query).with(fetchIdOnly(TgVehicle.class)).model());
+        assertFalse(entities.isEmpty());
+        entities.forEach(entity -> assertNotNull(entity.getId()));
+    }
+
+    @Test
+    public void foreign_id_only_query_with_id_only_fetch_returns_entities_with_ID_present() {
+        final var query = select(TgVehicle.class).yield().prop("model").modelAsEntity(TgVehicleModel.class);
+        final var entities = co(TgVehicleModel.class).getAllEntities(from(query).with(fetchIdOnly(TgVehicleModel.class)).model());
         assertFalse(entities.isEmpty());
         entities.forEach(entity -> assertNotNull(entity.getId()));
     }
@@ -48,14 +56,6 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         assertThat(entities)
                 .isNotEmpty()
                 .allSatisfy(model -> assertThat(model.proxiedPropertyNames()).isEmpty());
-    }
-
-    @Test
-    public void foreign_id_only_query_with_id_only_fetch_returns_entities_with_ID_present() {
-        final var query = select(TgVehicle.class).yield().prop("model").modelAsEntity(TgVehicleModel.class);
-        final var entities = co(TgVehicleModel.class).getAllEntities(from(query).with(fetchIdOnly(TgVehicleModel.class)).model());
-        assertFalse(entities.isEmpty());
-        entities.forEach(entity -> assertNotNull(entity.getId()));
     }
 
     @Test
