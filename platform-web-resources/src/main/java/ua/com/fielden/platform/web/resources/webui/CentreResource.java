@@ -9,13 +9,9 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -37,15 +33,12 @@ import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.creat
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
 
-/**
- * The web resource for criteria serves as a back-end mechanism of centre management. It provides a base implementation for handling the following methods:
- * <ul>
- * <li>save centre -- POST request.
- * </ul>
- *
- * @author TG Team
- *
- */
+/// The web resource for criteria serves as a back-end mechanism of centre management.
+///
+/// It provides a base implementation for handling the following methods:
+///
+/// * save centre -- POST request.
+///
 public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends AbstractWebResource {
     private final RestServerUtil restUtil;
     
@@ -89,19 +82,13 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
         this.sharingModel = sharingModel;
     }
     
-    /**
-     * Handles PUT request resulting from tg-entity-centre <code>discard()</code> method.
-     *
-     * Internally validation process is also performed.
-     */
+    /// Handles PUT request resulting from tg-entity-centre <code>discard()</code> method.
+    /// Internally validation process is also performed.
+    ///
     @Put
     public Representation discard(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
             final User user = userProvider.getUser();
-            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
-            final IUser userCompanion = companionFinder.find(User.class);
-            
             final Map<String, Object> wasRunHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
             
@@ -113,40 +100,40 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             if (isInherited) {
                 if (inheritedFromBase(loadableConfig).isPresent()) { // inherited from base
                     // remove cached instances of surrogate centres before updating from base user
-                    removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+                    removeCentres(user, miType, device(), saveAsName, companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                     // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-                    newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+                    newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder);
+                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
                     // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones)
                     makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig);
                     actualSaveAsName = saveAsName;
                 } else { // inherited from shared
-                    final Optional<EntityCentreConfig> upstreamConfig = updateInheritedFromShared(loadableConfig.get().getConfig() != null ? loadableConfig.get().getConfig().getConfigUuid() : null, miType, device(), saveAsName, user, eccCompanion, empty());
+                    final Optional<EntityCentreConfig> upstreamConfig = updateInheritedFromShared(loadableConfig.get().getConfig() != null ? loadableConfig.get().getConfig().getConfigUuid() : null, miType, device(), saveAsName, user, companionFinder, empty());
                     if (upstreamConfig.isPresent()) {
                         actualSaveAsName = of(obtainTitleFrom(upstreamConfig.get().getTitle(), SAVED_CENTRE_NAME, device()));
-                        newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                        newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder);
                     } else {
                         actualSaveAsName = saveAsName;
-                        newFreshCentre = discardOwnSaveAsConfig(user, eccCompanion, mmiCompanion, userCompanion, actualSaveAsName); // in some very unlikely (but possible) scenario original creator of shared config has deleted it since findLoadableConfig above invocation -- need to fallback to discarding as if the configuration is own save-as
+                        newFreshCentre = discardOwnSaveAsConfig(user, actualSaveAsName); // in some very unlikely (but possible) scenario original creator of shared config has deleted it since findLoadableConfig above invocation -- need to fallback to discarding as if the configuration is own save-as
                     }
                 }
             } else {
                 actualSaveAsName = saveAsName;
-                newFreshCentre = discardOwnSaveAsConfig(user, eccCompanion, mmiCompanion, userCompanion, actualSaveAsName);
+                newFreshCentre = discardOwnSaveAsConfig(user, actualSaveAsName);
             }
             
-            final var criteriaIndication = createCriteriaIndication(wasRun, newFreshCentre, miType, actualSaveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            return createCriteriaDiscardEnvelope(newFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, criteriaIndication, device(), isInherited ? of(ofNullable(updateCentreDesc(user, miType, actualSaveAsName, device(), eccCompanion))) : empty(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+            final var criteriaIndication = createCriteriaIndication(wasRun, newFreshCentre, miType, actualSaveAsName, user, companionFinder, device(), webUiConfig
+            );
+            return createCriteriaDiscardEnvelope(newFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, criteriaIndication, device(), isInherited ? of(ofNullable(updateCentreDesc(user, miType, actualSaveAsName, device(), companionFinder))) : empty(), webUiConfig, sharingModel);
         }, restUtil);
     }
     
-    /**
-     * Discards configuration that represents own save-as configuration (possibly converted from inherited), default or link.
-     */
-    private ICentreDomainTreeManagerAndEnhancer discardOwnSaveAsConfig(final User user, final EntityCentreConfigCo eccCompanion, final MainMenuItemCo mmiCompanion, final IUser userCompanion, final Optional<String> actualSaveAsName) {
-        final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+    /// Discards configuration that represents own save-as configuration (possibly converted from inherited), default or link.
+    ///
+    private ICentreDomainTreeManagerAndEnhancer discardOwnSaveAsConfig(final User user, final Optional<String> actualSaveAsName) {
+        final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder);
         // discards fresh centre's changes (fresh centre could have no changes)
-        return commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), updatedSavedCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        return commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), updatedSavedCentre, null /* newDesc */, webUiConfig, companionFinder);
     }
     
 }
