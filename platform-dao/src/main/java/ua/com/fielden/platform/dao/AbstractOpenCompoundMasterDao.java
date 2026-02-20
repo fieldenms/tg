@@ -35,43 +35,37 @@ import ua.com.fielden.platform.web.centre.IQueryEnhancer;
  * <p>
  * Binding between the menu items and respective logic for determining the existence of the underlying data is achieved by using methods {@code addViewBinding} as part of the companion's constructor.
  * For example, a companion to open master action of entity {@code Category} may have the following constructor:
- * <pre>
- * {@code
- *   public OpenCategoryMasterActionDao(final IFilter filter, final IEntityAggregatesOperations coAggregates) {
- *       super(filter, coAggregates);
- *       addViewBinding(SYSTEMS, Systema.class, "category");
- *   }
+ * {@snippet :
+ * public OpenCategoryMasterActionDao(final IFilter filter, final IEntityAggregatesOperations coAggregates) {
+ *     super(filter, coAggregates);
+ *     addViewBinding(SYSTEMS, Systema.class, "category");
  * }
- * </pre>
+ * }
  * In the above snippet, line {@code addViewBinding(SYSTEMS, Systema.class, "category");} binds the logic to check existence of entities {@code Systema} for a given {@code Category}.
  * The Web UI configuration for the master would have a corresponding view defined. For example:
- * <pre>
- * {@code
- *         compoundMaster = CompoundMasterBuilder.<Category, OpenCategoryMasterAction>create(injector, builder)
-            .forEntity(OpenCategoryMasterAction.class)
-            .withProducer(OpenCategoryMasterActionProducer.class)
-            // potentially many other menu items...
-            // but we're interested in SYSTEMS menu item
-            .addMenuItem(CategoryMaster_OpenSystema_MenuItem.class)
-                .icon("icons:view-module")
-                .shortDesc(SYSTEMS)
-                .longDesc("Systems in this category")
-                .withView(createSystemaCentre(editSystemaAction))
-            .done();
+ * {@snippet :
+ * compoundMaster = CompoundMasterBuilder.<Category, OpenCategoryMasterAction>create(injector, builder)
+ *  .forEntity(OpenCategoryMasterAction.class)
+ *  .withProducer(OpenCategoryMasterActionProducer.class)
+ *  // potentially many other menu items...
+ *  // but we're interested in SYSTEMS menu item
+ *  .addMenuItem(CategoryMaster_OpenSystema_MenuItem.class)
+ *      .icon("icons:view-module")
+ *      .shortDesc(SYSTEMS)
+ *      .longDesc("Systems in this category")
+ *      .withView(createSystemaCentre(editSystemaAction))
+ *  .done();
  * }
- * </code>
  * Internally {@code addViewBindings} use on of the overloaded utility functions {@code enhanceEmbededCentreQuery}, which should also be used as part of the Web UI configuration of corresponding embedded centres for implementing {@link IQueryEnhancer}.
  * In case of the already established example, we could have something like this:
- * <pre>
- * {@code
-    private static class CategoryMaster_SystemaCentre_QueryEnhancer implements IQueryEnhancer<Systema> {
-        @Override
-        public ICompleted<Systema> enhanceQuery(final IWhere0<Systema> where, final Optional<CentreContext<Systema, ?>> context) {
-            return enhanceEmbededCentreQuery(where, "category", context.get().getMasterEntity().getKey());
-        }
-    }
+ * {@snippet :
+ * private static class CategoryMaster_SystemaCentre_QueryEnhancer implements IQueryEnhancer<Systema> {
+ *     @Override
+ *     public ICompleted<Systema> enhanceQuery(final IWhere0<Systema> where, final Optional<CentreContext<Systema, ?>> context) {
+ *         return enhanceEmbededCentreQuery(where, "category", context.get().getMasterEntity().getKey());
+ *     }
  * }
- * </pre>
+ * }
  *
  * @author TG Team
  *

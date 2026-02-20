@@ -147,6 +147,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgInventory.class);
         add(TgInventoryBin.class);
         add(TgInventoryIssue.class);
+        add(AuditedEntity.class);
         add(UnionEntityDetails.class);
         add(Union.class);
         add(Member1.class);

@@ -46,18 +46,18 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
             ERR_INVALID_NUMBER_OF_KEY_VALUES = "Number of key values is %s but should be %s.",
             ERR_MISSING_SESSION = "Session is missing, most likely, due to missing @SessionRequired annotation.";
 
-    private DbCreator dbCreator;
-    private static ICompanionObjectFinder coFinder;
-    private static EntityFactory factory;
-    private static Function<Class<?>, Object> instantiator;
-
     private static final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateFormat DATE_TIME_FORMAT_WITHOUT_SECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private static final DateFormat DATE_TIME_FORMAT_WITHOUT_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final DateFormat DATE_TIME_FORMAT_WITH_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
+    // The following three static fields are reflectively assigned only once, by the platform test runner.
+    private static ICompanionObjectFinder coFinder;
+    private static EntityFactory factory;
+    private static Function<Class<?>, Object> instantiator;
 
+    private DbCreator dbCreator;
     private Session session;
     private String transactionGuid;
 

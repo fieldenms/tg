@@ -27,6 +27,7 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUser;
@@ -981,15 +982,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         if (centreContextHolder.getCustomObject().get("@@miType") == null || isEmpty(!centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>())) {
             return null;
         }
-        final Class<? extends MiWithConfigurationSupport<?>> miType;
-        final Optional<String> saveAsName;
-        try {
-            miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getCustomObject().get("@@miType"));
-            final String saveAsNameString = (String) centreContextHolder.getCustomObject().get("@@saveAsName");
-            saveAsName = "".equals(saveAsNameString) ? empty() : of(saveAsNameString);
-        } catch (final ClassNotFoundException e) {
-            throw new IllegalStateException(e);
-        }
+        final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>)
+                ClassesRetriever.findClass((String) centreContextHolder.getCustomObject().get("@@miType"));
+        final String saveAsNameString = (String) centreContextHolder.getCustomObject().get("@@saveAsName");
+        final Optional<String> saveAsName = "".equals(saveAsNameString) ? empty() : of(saveAsNameString);
 
         final M criteriaEntity = (M) createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, saveAsName, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel).setCentreContextHolder(centreContextHolder);
         criteriaEntity.setExportQueryRunner(customObject -> stream(webUiConfig, user, entityFactory, companionFinder, critGenerator, centreContextHolder, criteriaEntity, customObject, device, eccCompanion, mmiCompanion, userCompanion, sharingModel));

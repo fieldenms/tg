@@ -12,10 +12,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -52,7 +49,7 @@ public class ClassesRetriever {
     /// @param typePredicate used to include only the types in the result, which satisfy the predicate.
     ///
     public static List<Class<?>> getClassesInPackage(final String path, final String packageName, final Predicate<Class<?>> typePredicate) throws Exception {
-        final SortedSet<Class<?>> classes = new TreeSet<>((o1, o2) -> o1.getName().compareTo(o2.getName()));
+        final SortedSet<Class<?>> classes = new TreeSet<>(Comparator.comparing(Class::getName));
         final String packagePath = packageName.replace('.', '/');
         addPath(path.replace("%20", " "));
         if (path.indexOf(".jar") > 0) {
@@ -121,7 +118,8 @@ public class ClassesRetriever {
         return getClassesInPackage(path, packageName, testClass -> isClassDerivedFrom(testClass, superClass) && !Modifier.isAbstract(testClass.getModifiers()) && !testClass.getName().contains("$"));
     }
 
-    /// Finds and loads class for with `className`.
+    /// Finds a class with the specified binary name.
+    /// Throws an exception if it cannot be found.
     ///
     public static Class<?> findClass(final String className) {
         try {
@@ -139,9 +137,29 @@ public class ClassesRetriever {
         }
     }
 
+    /// Finds a class with the specified binary name.
+    ///
+    public static Optional<Class<?>> maybeFindClass(final String className) {
+        try {
+            return Optional.of(DynamicEntityClassLoader.loadType(className));
+        } catch (final ClassNotFoundException $1) {
+            try {
+                return Optional.of(URL_CLASS_LOADER.loadClass(className));
+            } catch (final ClassNotFoundException $2) {
+                return Optional.ofNullable(ADHOC_CLASSES.getIfPresent(className));
+            }
+        }
+    }
+
     /// Returns all classes in the package and its sub-packages from the directory according to condition specified by `typePredicate`.
     ///
     private static List<Class<?>> getFromDirectory(final File directory, final String packageName, final Predicate<Class<?>> typePredicate) throws ClassNotFoundException {
+        class $ {
+            static String joinNames(final String a, final String b) {
+                return a.isEmpty() ? b : a + '.' + b;
+            }
+        }
+
         final List<Class<?>> classes = new ArrayList<>();
         final List<Pair<File, String>> directories = new ArrayList<>();
         directories.add(new Pair<File, String>(directory, packageName));
@@ -150,13 +168,13 @@ public class ClassesRetriever {
             if (nextDirectory.getKey().exists()) {
                 for (final File file : nextDirectory.getKey().listFiles()) {
                     if (file.getName().endsWith(".class")) {
-                        final String name = nextDirectory.getValue() + '.' + stripFilenameExtension(file.getName());
+                        final String name = $.joinNames(nextDirectory.getValue(), stripFilenameExtension(file.getName()));
                         final Class<?> clazz = URL_CLASS_LOADER.loadClass(name);
                         if (typePredicate == null || typePredicate.test(clazz)) {
                             classes.add(clazz);
                         }
                     } else if (file.isDirectory() && hasNoSpaces(file.getName())) {
-                        directories.add(new Pair<File, String>(file, nextDirectory.getValue() + '.' + file.getName()));
+                        directories.add(new Pair<File, String>(file, $.joinNames(nextDirectory.getValue(), file.getName())));
                     }
                 }
             }
@@ -173,7 +191,8 @@ public class ClassesRetriever {
 
     /// Returns all classes in the package and its sub-packages from the `*.jar` archive according to condition specified by `typePredicate`.
     ///
-    private static List<Class<?>> getFromJarFile(final String jar, final String packageName, final Predicate<Class<?>> typePredicate) throws ClassNotFoundException, IOException {
+    private static List<Class<?>> getFromJarFile(final String jar, final String packagePath, final Predicate<Class<?>> typePredicate) throws ClassNotFoundException, IOException {
+        final String packagePrefix = packagePath.isEmpty() ? "" : packagePath + "/";
         final List<Class<?>> classes = new ArrayList<>();
         try (final JarInputStream jarFile = new JarInputStream(new FileInputStream(jar))) {
             JarEntry jarEntry;
@@ -183,7 +202,7 @@ public class ClassesRetriever {
                     String className = jarEntry.getName();
                     if (className.endsWith(".class")) {
                         className = stripFilenameExtension(className);
-                        if (className.startsWith(packageName + "/")) {
+                        if (className.startsWith(packagePrefix)) {
                             final Class<?> clazz = URL_CLASS_LOADER.loadClass(className.replace('/', '.'));
                             if (typePredicate != null && typePredicate.test(clazz)) {
                                 classes.add(clazz);

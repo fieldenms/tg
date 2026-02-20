@@ -49,12 +49,15 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
     private static final Logger LOGGER = LogManager.getLogger(PlatformTestServerIocModule.class);
 
+    private final Properties props;
+
     public PlatformTestServerIocModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Properties props)
     {
         super(applicationDomainProvider, domainEntityTypes, props);
+        this.props = props;
     }
 
     @Override
@@ -103,6 +106,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(ITgCategory.class).to(TgCategoryDao.class);
         bind(ITgCategoryAttachment.class).to(TgCategoryAttachmentDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
+        bind(AuditedEntityCo.class).to(AuditedEntityDao.class);
         bind(TgReVehicleWithHighPriceCo.class).to(TgReVehicleWithHighPriceDao.class);
         bind(TeNamedValuesVectorCo.class).to(TeNamedValuesVectorDao.class);
         bind(TeProductPriceCo.class).to(TeProductPriceDao.class);

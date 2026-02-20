@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 /**
@@ -77,8 +78,8 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
      */
     public Class<?> getMenuItemType() {
         try {
-            return Class.forName(getKey());
-        } catch (final ClassNotFoundException e) {
+            return ClassesRetriever.findClass(getKey());
+        } catch (final Exception e) {
             throw new IllegalStateException("Menu item key '" + getKey() + "' is not a valid class name.");
         }
     }
