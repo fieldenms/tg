@@ -2,6 +2,7 @@ package ua.com.fielden.platform.companion;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /// A contract that combines [IPersistentEntityDeleter] and [IEntityActuator] as a convenience in cases where
@@ -19,9 +20,12 @@ public interface IPersistentEntityMutator<T extends AbstractEntity<?>> extends I
     /// The implication is that this method should execute faster by skipping the steps required to re-fetch the resultant entity.
     /// This method is relevant only for simple cases where method `save` is not overridden to provide an application specific logic.
     ///
-    /// **Important:** A more modern and better alternative is method `save(T entity, Optional<fetch<T>> maybeFetch)` in class `CommonEntityDao`.
-    /// Prefer that method over [#quickSave(AbstractEntity)].
+    /// @deprecated This method will be gradually phased out and replaced by [ISaveWithFetch#save(AbstractEntity, Optional)].
+    ///             If the companion that you are calling this method on supports [ISaveWithFetch], use the supported alternative.
+    ///             Otherwise, consider enhancing the companion to support [ISaveWithFetch].
+    ///             Only if the enhancement cannot be achieved within existing constraints, should this method be used.
     ///
+    @Deprecated(forRemoval = true)
     default long quickSave(final T entity) {
         throw new UnsupportedOperationException(); 
     }

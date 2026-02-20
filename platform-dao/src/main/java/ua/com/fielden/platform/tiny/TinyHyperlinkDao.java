@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
-import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
@@ -63,17 +62,11 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         return FETCH_PROVIDER;
     }
 
-    @Override
-    @SessionRequired
-    public TinyHyperlink save(final TinyHyperlink tinyHyperlink) {
-        return save(tinyHyperlink, Optional.of(FetchModelReconstructor.reconstruct(tinyHyperlink))).asRight().value();
-    }
-
     /// The definitive save method.
     ///
     @SessionRequired
     @Override
-    protected Either<Long, TinyHyperlink> save(final TinyHyperlink tinyHyperlink, final Optional<fetch<TinyHyperlink>> maybeFetch) {
+    public Either<Long, TinyHyperlink> save(final TinyHyperlink tinyHyperlink, final Optional<fetch<TinyHyperlink>> maybeFetch) {
         if (!tinyHyperlink.isPersisted()) {
             validateRequiredProperties(tinyHyperlink).ifFailure(Result::throwRuntime);
             final var hash = hash(tinyHyperlink);

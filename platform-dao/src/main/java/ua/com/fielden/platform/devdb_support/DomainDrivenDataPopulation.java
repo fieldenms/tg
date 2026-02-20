@@ -3,20 +3,25 @@ package ua.com.fielden.platform.devdb_support;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
@@ -30,6 +35,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
  *
  */
 public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
+
+    private static final String ERR_SAVE_WITH_FETCH_NOT_IMPLEMENTED =
+            "Save-with-fetch cannot be used because the companion for entity [%s] does not implement [" + ISaveWithFetch.class.getSimpleName() + "].";
 
     public final IDomainDrivenTestCaseConfiguration config;
 
@@ -64,6 +72,17 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
     public final <T extends AbstractEntity<?>> T save(final T instance) {
         final IEntityDao<T> pp = provider.find((Class<T>) instance.getType());
         return pp.save(instance);
+    }
+
+    @Override
+    public <T extends AbstractEntity<?>> Either<Long, T> save(final T instance, final Optional<fetch<T>> maybeFetch) {
+        final IEntityDao<T> pp = provider.find((Class<T>) instance.getType());
+        if (pp instanceof ISaveWithFetch<?> it) {
+            return ((ISaveWithFetch<T>) it).save(instance, maybeFetch);
+        }
+        else {
+            throw new EntityCompanionException(format(ERR_SAVE_WITH_FETCH_NOT_IMPLEMENTED, instance.getType().getSimpleName()));
+        }
     }
 
     @Override

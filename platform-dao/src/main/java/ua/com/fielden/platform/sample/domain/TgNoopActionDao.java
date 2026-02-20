@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.domain.metadata;
+package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -8,12 +8,12 @@ import ua.com.fielden.platform.types.either.Either;
 
 import java.util.Optional;
 
-@EntityType(DomainProperty.class)
-public class DomainPropertyDao extends CommonEntityDao<DomainProperty> implements DomainPropertyCo {
+@EntityType(TgNoopAction.class)
+public class TgNoopActionDao extends CommonEntityDao<TgNoopAction> implements TgNoopActionCo {
 
     @Override
     @SessionRequired
-    public Either<Long, DomainProperty> save(final DomainProperty entity, final Optional<fetch<DomainProperty>> maybeFetch) {
+    public Either<Long, TgNoopAction> save(final TgNoopAction entity, final Optional<fetch<TgNoopAction>> maybeFetch) {
         return super.save(entity, maybeFetch);
     }
 

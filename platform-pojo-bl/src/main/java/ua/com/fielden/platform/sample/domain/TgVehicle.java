@@ -32,7 +32,6 @@ import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 @KeyType(String.class)
 @MapEntityTo
 @DescTitle("Description")
-@Ignore
 @CompanionObject(ITgVehicle.class)
 @Audited
 public class TgVehicle extends AbstractEntity<String> {

@@ -25,6 +25,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.*;
@@ -49,6 +50,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
@@ -219,11 +221,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return getEntitiesOnPage(query, null, null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /// {@inheritDoc}
+    ///
+    /// @deprecated See [IPersistentEntityMutator#quickSave(AbstractEntity)].
+    /// 
     @Override
     @SessionRequired
+    @Deprecated(forRemoval = true)
     public long quickSave(final T entity) {
         if (hasSaveOverridden == null) {
             hasSaveOverridden = isMethodOverriddenOrDeclared(CommonEntityDao.class, getClass(), "save", getEntityType());
@@ -248,35 +252,57 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
+    /// @deprecated
+    /// To facilitate transition to save-with-fetch, place all custom saving logic in [#save(AbstractEntity, Optional)]
+    /// and make the corresponding companion interface extend [ISaveWithFetch].
+    /// Do not override this method, which will likely become `final` in the future.
+    ///
+    /// Once save-with-fetch is implemented, this method **must not be called within the companion** to avoid non-termination.
+    /// Specifically, `this.save(entity)` and `super.save(entity)` must be replaced with calls to save-with-fetch.
+    /// Note that this does not apply to external calls.
+    /// For example, it is valid to call `PersonCo.save(person)` outside of `PersonCo` and `PersonDao` even if save-with-fetch
+    /// is implemented for `Person`.
+    ///
+    /// Refactoring hint:
+    /// ```
+    /// var savedEntity = super.save(entity);
+    /// // Is equivalent to
+    /// var savedEntity = super.save(entity, Optional.of(FetchModelReconstructor.reconstruct(entity))).asRight().value();
+    /// ```
+    /// Note that such a refactoring is applicable only to persistent entities, as it is an error to use [FetchModelReconstructor] with non-persistent entities.
+    /// In general, it is unnecessary to call `super.save` with non-persistent entities.
+    ///
     @Override
     @SessionRequired
+    @Deprecated(since = "[See the JavaDoc]")
     public T save(final T entity) {
         if (entity == null) {
             throw new EntityCompanionException(format("Null entity of type [%s] cannot be saved.", entityType.getName()));
-        } else if (!entity.isPersistent()) {
+        }
+        if (this instanceof ISaveWithFetch<?> it) {
+            return ((ISaveWithFetch<T>) it)
+                    .save(entity, Optional.of(entity.isPersistent() ? FetchModelReconstructor.reconstruct(entity) : fetch(getEntityType())))
+                    .asRight().value();
+        }
+        if (!entity.isPersistent()) {
             return entity;
         } else {
             return entitySaver.get().save(entity);
         }
     }
 
-    /**
-     * Experimental API with the potential to replace {@link #save(AbstractEntity)} if proven superior in practice.
-     * <p>
-     * This method could be used as an alternative to {@link #quickSave(AbstractEntity)} by passing in an empty instance of {@code Optional<fetch<T>>}.
-     * The right way to go about it, would be to override this method and place all the logic into this method instead of the potentially overridden {@link #save(AbstractEntity)},
-     * and simply call it from {@link #save(AbstractEntity)} with the appropriate fetch model.
-     * This way would guarantee a single path for validation and other related logic when saving entities.
-     * <p>
-     * The return type {@code Either<Long, T>} represents either an entity id (left) or an entity instance (right).
-     * Passing an empty instance of {@code Optional<fetch<T>>} should always skip refetching and return the left result (i.e. id) – this is analogous to {@link #quickSave(AbstractEntity)}.
-     *
-     * @param entity
-     * @param maybeFetch
-     * @return
-     */
+    /// The core implementation of [ISaveWithFetch#save(AbstractEntity, Optional)].
+    ///
+    /// This method does not override [ISaveWithFetch#save(AbstractEntity, Optional)].
+    /// Companion interfaces are expected to extend [ISaveWithFetch] and delegate to this method via `super` to perform the actual saving.
+    ///
+    /// @see ISaveWithFetch#save(AbstractEntity, Optional)
+    ///
     @SessionRequired
     protected Either<Long, T> save(final T entity, final Optional<fetch<T>> maybeFetch) {
+        if (!entity.isPersistent()) {
+            return maybeFetch.isPresent() ? right(entity) : left(entity.getId());
+        }
         // if maybeFetch is empty then we skip re-fetching
         final boolean skipRefetching = !maybeFetch.isPresent();
         final T2<Long, T> result = entitySaver.get().coreSave(entity, skipRefetching, maybeFetch);
