@@ -1518,7 +1518,9 @@ const TgEntityMasterBehaviorImpl = {
                     if (savedEntity.canLeave) {
                         return Promise.resolve(true);
                     } else {
-                        return this.confirm(savedEntity.cannotLeaveReason, CanLeaveOptions[savedEntity.canLeaveOptions]);
+                        return this.confirm(savedEntity.cannotLeaveReason, CanLeaveOptions[savedEntity.canLeaveOptions]).catch(e => {
+                            throw {msg: savedEntity.closeInstructions, imperative: true};
+                        });
                     }
                 }
             } else { // other codes

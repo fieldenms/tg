@@ -19,7 +19,6 @@ import ua.com.fielden.platform.sample.domain.compound.ui_actions.producers.OpenT
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
-import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -42,7 +41,6 @@ import java.util.Optional;
 import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.editAction;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.actionAddDesc;
@@ -137,15 +135,7 @@ public class TgCompoundEntityWebUiConfig {
                 .withScrollingConfig(standardStandaloneScrollingConfig(0))
                 .addProp("this").order(1).asc().minWidth(100)
                     .withSummary("total_count_", "COUNT(SELF)", String.format("Count:The total number of matching %ss.", TgCompoundEntity.ENTITY_TITLE))
-                .withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
-                    .preAction(new EntityNavigationPreAction("Cool entity"))
-                    .icon("editor:mode-edit")
-                    .withStyle("color: green")
-                    .shortDesc("Edit entity")
-                    .longDesc("Opens master for editing this entity")
-                    .withNoParentCentreRefresh()
-                    .build())
-                    .also()
+                    .withAction(editTgCompoundEntityAction).also()
                 .addProp("desc").minWidth(300)
                     .withAction(editTgCompoundEntityAction) // opens TgCompoundEntityDetail menu item immediately
                 .addPrimaryAction(editTgCompoundEntityAction)
