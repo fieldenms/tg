@@ -27,7 +27,6 @@ import ua.com.fielden.platform.utils.IDates;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.CollectionUtil.first;
@@ -129,7 +128,7 @@ public final class EqlQueryTransformer {
     }
 
     private static List<YieldedColumn> getYieldedColumns(final Yields3 model) {
-        return unmodifiableList(model.getYields().stream().map(yield -> new YieldedColumn(yield.alias(), yield.type(), yield.column())).toList());
+        return model.getYields().stream().map(yield -> new YieldedColumn(yield.alias(), yield.type(), yield.column())).toList();
     }
 
     private static boolean isForeignIdOnlyQuery(final ResultQuery3 resultQuery) {
