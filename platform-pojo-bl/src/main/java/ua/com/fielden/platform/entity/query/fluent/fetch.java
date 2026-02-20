@@ -84,6 +84,7 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
         /// Sole property `id` is included iff it is defined for the entity type.
         /// Property `id` is defined for all persistent and union entity types.
         /// For synthetic entity types, `id` is defined if it is explicitly yielded or is calculated (one-2-one synthetic entity type).
+        /// More on `id`s for synthetic entities can be found [here](https://github.com/fieldenms/tg/wiki/Synthetic-entities#entity-ids).
         ///
         ID_ONLY,
 
