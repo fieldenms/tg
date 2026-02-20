@@ -34,35 +34,29 @@ import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
-/**
- * An entry point for transforming an EQL query to SQL.
- * <p>
- * The transformation of EQL into SQL happens in 4 stages:
- * <ol>
- * <li> <b>Stage 0: parsing</b>.
- *      A {@linkplain ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource sequence of EQL tokens} is transformed into a {@linkplain ResultQuery1 stage 1 AST}.
- *      See {@link ua.com.fielden.platform.eql.antlr.EqlCompiler}.
- * <li> <b>Stage 1: property resolution</b>.
- *      Properties are resolved to their respective sources.
- *      An important part of this stage is the resolution of dot-notated properties.
- * <li> <b>Stage 2</b>.
- *      <ul>
- *        <li> Processing of dot-expressions: builds up implicit table joins that result from dot-expressions,
- *             substitutes calculated property names used in dot-expressions with their respective expressions.
- *        <li> Substitution of literal values with parameters (crucial for strings as to prevent SQL injection).
- *        <li> Optimisation of union queries with an ordering.
- *      </ul>
- *
- * <li> <b>Stage 3: SQL generation</b>.
- *      This stage also gathers the information, needed to instantiate entities from the SQL query result.
- * </ol>
- * For stages 1-3 there is a corresponding package, named {@code ua.com.fielden.platform.eql.stage$N}, where {@code $N} is the stage number.
- * Each package contains classes that comprise a stage-specific AST.
- * These classes are named with a suffix that corresponds to their stage number.
- * For example, {@code Prop1} represents a property in stage 1, and is a result of stage 0.
- *
- * @author TG Team
- */
+/// An entry point for transforming an EQL query to SQL.
+///
+/// The transformation of EQL into SQL happens in 4 stages:
+///
+/// 1. **Stage 0: parsing**.
+///    A [sequence of EQL tokens][ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource] is transformed into a [stage 1 AST][ResultQuery1].
+///    See [ua.com.fielden.platform.eql.antlr.EqlCompiler].
+/// 2. **Stage 1: property resolution**.
+///    Properties are resolved to their respective sources.
+///    An important part of this stage is the resolution of dot-notated properties.
+/// 3. **Stage 2**.
+///    - Processing of dot-expressions: builds up implicit table joins that result from dot-expressions,
+///      substitutes calculated property names used in dot-expressions with their respective expressions.
+///    - Substitution of literal values with parameters (crucial for strings as to prevent SQL injection).
+///    - Optimisation of union queries with an ordering.
+/// 4. **Stage 3: SQL generation**.
+///    This stage also gathers the information, needed to instantiate entities from the SQL query result.
+///
+/// For stages 1-3 there is a corresponding package, named `ua.com.fielden.platform.eql.stage$N`, where `$N` is the stage number.
+/// Each package contains classes that comprise a stage-specific AST.
+/// These classes are named with a suffix that corresponds to their stage number.
+/// For example, `Prop1` represents a property in stage 1, and is a result of stage 0.
+///
 @Singleton
 public final class EqlQueryTransformer {
 
