@@ -4,9 +4,9 @@ import org.junit.Test;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator;
 
 /// A test case that verifies that invariants of [AbstractUnionEntity] hold for union instances retrieved from the database.
@@ -147,6 +147,27 @@ public class AbstractUnionEntityRetrievalTest extends AbstractDaoTestCase {
             final var wagon1Slot1 = co(TgWagonSlot.class).findByKey(String.join(getKeyMemberSeparator(TgWagonSlot.class), "WAGON1", "1"));
             assertEquals(wagon1Slot1, location.activeEntity());
         }
+    }
+
+    @Test
+    public void if_union_is_retrieved_with_ID_ONLY_by_itself_it_is_possible_to_access_its_ID_and_the_ID_of_its_active_member() {
+        final var expectedId = co(TgWorkshop.class).findByKey("WSHOP1").getId();
+
+        final var idOnlyUnion = co(TgBogieLocation.class).findByKeyAndFetch(fetchIdOnly(TgBogieLocation.class), "WSHOP1");
+        assertEquals(expectedId, idOnlyUnion.getId());
+        assertThat(idOnlyUnion.activeEntity()).isInstanceOf(TgWorkshop.class);
+        assertEquals(expectedId, idOnlyUnion.activeEntity().getId());
+    }
+
+    @Test
+    public void if_union_is_retrieved_with_ID_ONLY_inside_another_entity_it_is_possible_to_access_its_ID_and_the_ID_of_its_active_member() {
+        final var expectedId = co(TgWorkshop.class).findByKey("WSHOP1").getId();
+
+        final var bogie = co(TgBogie.class).findByKeyAndFetch(fetch(TgBogie.class).with("location", fetchIdOnly(TgBogieLocation.class)), "BOGIE1");
+        final var idOnlyUnion = bogie.getLocation();
+        assertEquals(expectedId, idOnlyUnion.getId());
+        assertThat(idOnlyUnion.activeEntity()).isInstanceOf(TgWorkshop.class);
+        assertEquals(expectedId, idOnlyUnion.activeEntity().getId());
     }
 
     @Override
