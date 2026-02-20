@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.error;
 
-import java.util.ArrayList;
+import jakarta.annotation.Nullable;
+
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -14,326 +15,372 @@ import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
-/**
- * Represents a result (an error or success) of some custom logic. That could be a result of some validation or application of some other business rules.
- * <p>
- * Result is considered successful if no exception {@code ex} was specified.
- * <p>
- * `Result` itself is an exception, and thus cannot only be returned as a method result, but also thrown if appropriate.
- *
- * @author TG Team
- *
- */
+/// Represents a result of a computation, which could describe success, failure, warning or contain an informative message.
+/// Such a computation could represent validation or application of some other business rules.
+///
+/// A result can be empty, or it can contain a value, which can be accessed via [#getInstance].
+///
+/// The kind of a result can be determined using methods [#isSuccessful], [#isWarning], [#isInformative].
+///
+/// `Result` is an exception type, and thus can also be thrown.
+/// Subclasses of `Result` can control whether a stack trace will be captured through the primary constructor.
+/// Stack trace is always disabled for successful results, and enabled for failures.
+///
 public class Result extends RuntimeException {
 
     // Field names
     public static final String MESSAGE = "message", INSTANCE = "instance", EX = "ex";
+
+    public static final String NO_MESSAGE = "no message";
 
     private static final String SUCCESSFUL = "Successful";
     private static final String NULL_POINTER_EXCEPTION = "Null pointer exception";
     private static final String EXT_SEPARATOR = "<extended/>";
     private static final String EXT_SEPARATOR_PATTERN = quote(EXT_SEPARATOR);
 
-    private final Exception ex;
-    private final String message;
-    private final Object instance;
-
-    /**
-     * Mainly used for serialisation.
-     */
-    protected Result() {
-        ex = null;
-        message = null;
-        instance = null;
-    }
-
-    private Result(final Object instance, final String message, final Exception exception) {
-        this.instance = instance;
-        this.message = message;
-        this.ex = exception;
-    }
+    protected final Exception ex;
+    protected final String message;
+    protected final Object instance;
 
     ///////////////////////////////////////////// Successful /////////////////////////////////////////////
 
-    /**
-     * Convenient factory method for creating a successful {@link Result}.
-     */
+    /// Returns an empty successful result.
+    ///
     public static Result successful() {
         return successful(null);
     }
 
-    /**
-     * Convenient factory method for creating a successful {@link Result} with specified {@code instance}.
-     */
+    /// Creates a successful [Result] that will contain `instance`.
+    ///
     public static Result successful(final Object instance) {
-        return new Result(instance, SUCCESSFUL);
+        return new Result(instance, SUCCESSFUL, null, false);
     }
 
     ///////////////////////////////////////////// Informative /////////////////////////////////////////////
 
-    /**
-     * Convenient factory method for creating {@link Informative} with specified {@code message}.
-     */
     public static Informative informative(final String message) {
         return informative(null, message);
     }
 
-    /**
-     * Convenient factory method for creating {@link Informative} with specified {@code message}, formatted with {@code args} using {@link String#format(String, Object...)}.
-     */
-    public static Informative informativef(final String message, final Object... args) {
-        return informative(format(message, args));
+    /// Creates an informative result whose message is constructed by formatting `fmt` with `args`.
+    ///
+    public static Informative informativef(final String fmt, final Object... args) {
+        return informative(format(fmt, args));
     }
 
-    /**
-     * Convenient factory method for creating {@link Informative} with specified {@code shortMessage} and {@code extendedMessage}.
-     * <p>
-     * Use {@code shortMessage} parameter to define concise message, that would nicely fit to short areas.
-     * Use {@code extendedMessage} parameter to define more detailed and longer version of {@code shortMessage}. It may have multiple lines and HTML formatting.
-     */
+    /// Creates an informative result with an additional extended messsage.
+    ///
+    /// @param shortMessage a concise message, which may contain HTML.
+    /// @param extendedMessage a more detailed message, which may span multiple lines and contain HTML.
+    ///
     public static Informative informativeEx(final String shortMessage, final String extendedMessage) {
         return informative(shortMessage + EXT_SEPARATOR + extendedMessage);
     }
 
-    /**
-     * Convenient factory method for creating {@link Informative} with specified {@code instance} and {@code message}.
-     */
+    /// Creates an informative result that will contain `instance` and have message `message`.
+    ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when informative results are processed, only the message is.
+    ///
+    /// @see #informative(String)
+    ///
     public static Informative informative(final Object instance, final String message) {
         return new Informative(instance, message);
     }
 
-    /**
-     * Convenient factory method for creating {@link Informative} with specified {@code instance}, {@code shortMessage} and {@code extendedMessage}.
-     * <p>
-     * Use {@code shortMessage} parameter to define concise message, that would nicely fit to short areas.
-     * Use {@code extendedMessage} parameter to define more detailed and longer version of {@code shortMessage}. It may have multiple lines and HTML formatting.
-     */
+    /// Creates an informative result with an additional extended messsage.
+    ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when informative results are processed, only the message is.
+    ///
+    /// @param instance a value that the result will contain.
+    /// @param shortMessage a concise message, which may contain HTML.
+    /// @param extendedMessage a more detailed message, which may span multiple lines and contain HTML.
+    ///
+    /// @see #informativeEx(String, String)
+    ///
     public static Informative informativeEx(final Object instance, final String shortMessage, final String extendedMessage) {
         return informative(instance, shortMessage + EXT_SEPARATOR + extendedMessage);
     }
 
     ///////////////////////////////////////////// Warning /////////////////////////////////////////////
 
-    /**
-     * Convenient factory method for creating {@link Warning} with specified {@code message}.
-     */
     public static Warning warning(final String message) {
         return warning(null, message);
     }
 
-    /**
-     * Convenient factory method for creating {@link Warning} with specified {@code message}, formatted with {@code args} using {@link String#format(String, Object...)}.
-     */
-    public static Warning warningf(final String message, final Object... args) {
-        return warning(format(message, args));
+    /// Creates a warning whose message is constructed by formatting `fmt` with `args`.
+    ///
+    public static Warning warningf(final String fmt, final Object... args) {
+        return warning(format(fmt, args));
     }
 
-    /**
-     * Convenient factory method for creating {@link Warning} with specified {@code shortMessage} and {@code extendedMessage}.
-     * <p>
-     * Use {@code shortMessage} parameter to define concise message, that would nicely fit to short areas.
-     * Use {@code extendedMessage} parameter to define more detailed and longer version of {@code shortMessage}. It may have multiple lines and HTML formatting.
-     */
+    /// Creates a warning with an additional extended messsage.
+    ///
+    /// @param shortMessage a concise message, which may contain HTML.
+    /// @param extendedMessage a more detailed message, which may span multiple lines and contain HTML.
+    ///
     public static Warning warningEx(final String shortMessage, final String extendedMessage) {
         return warning(shortMessage + EXT_SEPARATOR + extendedMessage);
     }
 
-    /**
-     * Convenient factory method for creating {@link Warning} with specified {@code instance} and {@code message}.
-     */
+    /// Creates a warning that will contain `instance` and have message `message`.
+    ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when warnings are processed, only the message is.
+    ///
+    /// @see #warning(String)
+    ///
     public static Warning warning(final Object instance, final String message) {
         return new Warning(instance, message);
     }
 
-    /**
-     * Convenient factory method for creating {@link Warning} with specified {@code instance}, {@code shortMessage} and {@code extendedMessage}.
-     * <p>
-     * Use {@code shortMessage} parameter to define concise message, that would nicely fit to short areas.
-     * Use {@code extendedMessage} parameter to define more detailed and longer version of {@code shortMessage}. It may have multiple lines and HTML formatting.
-     */
+    /// Creates a warning with an additional extended messsage.
+    ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when warnings are processed, only the message is.
+    ///
+    /// @param instance a value that the result will contain.
+    /// @param shortMessage a concise message, which may contain HTML.
+    /// @param extendedMessage a more detailed message, which may span multiple lines and contain HTML.
+    ///
+    /// @see #warningEx(String, String)
+    ///
     public static Warning warningEx(final Object instance, final String shortMessage, final String extendedMessage) {
         return warning(instance, shortMessage + EXT_SEPARATOR + extendedMessage);
     }
 
     ///////////////////////////////////////////// Failure /////////////////////////////////////////////
 
-    /**
-     * Convenient factory method for creating a failure {@link Result} with specified {@code reason}.
-     * Should be used when neither an object in error nor the actual exception type are important.
-     * 
-     * @param reason -- reason for failure
-     */
+    /// Creates a failure with message `reason`.
+    /// Should be used when neither an object in error nor the cause are important.
+    ///
     public static Result failure(final String reason) {
         return failure(null, reason);
     }
 
-    /**
-     * Convenient factory method for creating a failure {@link Result} with specified {@code reason}, formatted with {@code args} using {@link String#format(String, Object...)}.
-     * Should be used when neither an object in error nor the actual exception type are important.
-     * 
-     * @param reason -- reason for failure
-     */
-    public static Result failuref(final String reason, final Object... args) {
-        return failure(format(reason, args));
+    /// Creates a failure whose message is constructed by formatting `fmt` with `args`.
+    /// Should be used when neither an object in error nor the cause are important.
+    ///
+    public static Result failuref(final String fmt, final Object... args) {
+        return failure(format(fmt, args));
     }
 
-    /**
-     * Convenient factory method for creating a failure {@link Result} with specified {@code shortReason} and {@code extendedReason}.
-     * Should be used when neither an object in error nor the actual exception type are important.
-     * <p>
-     * Use {@code shortReason} parameter to define concise reason, that would nicely fit to short areas.
-     * Use {@code extendedReason} parameter to define more detailed and longer version of {@code shortReason}. It may have multiple lines and HTML formatting.
-     */
+    /// Creates a warning with an additional extended messsage.
+    /// Should be used when neither an object in error nor the cause are important.
+    ///
+    /// @param shortReason a concise message, which may contain HTML.
+    /// @param extendedReason a more detailed message, which may span multiple lines and contain HTML.
+    ///
     public static Result failureEx(final String shortReason, final String extendedReason) {
         return failure(shortReason + EXT_SEPARATOR + extendedReason);
     }
 
-    /**
-     * Convenient factory method for creating a failure {@link Result} with specified {@code exception}.
-     * In some cases there is no need to pass in an instance that is in error -- just an error itself.
-     * 
-     * @param exception -- associated exception that caused failure
-     */
+    /// Creates a failure from an existing `exception`.
+    ///
+    /// Use this method when the exception originates outside the current execution boundary (e.g., from a library call or I/O operation).
+    ///
+    /// ```
+    /// // Proper use of failure(Exception).
+    /// try {
+    ///     ...
+    /// } catch (Exception ex) {
+    ///     return failure(ex); // Or throw
+    /// }
+    /// ```
+    ///
+    /// Creating both the exception and the `Result` at the same point of execution is an anti-pattern.
+    /// In that case no error is being handled, only wrapped.
+    /// [Result#failure] is meant to capture an already thrown exception, rather than create one ad-hoc.
+    ///
+    /// ```
+    /// // Anti-pattern: creating an exception and wrapping it immediately.
+    /// return failure(new InvalidArgumentException("..."));
+    /// ```
+    ///
+    /// Instead, construct a `Result` using the error message directly.
+    ///
     public static Result failure(final Exception exception) {
         return failure(null, exception);
     }
 
-    /**
-     * Convenient factory method for creating a failure {@link Result} with specified {@code instance} and {@code reason}.
-     * Should be used when no particular exception is at fault.
-     * 
-     * @param instance -- instance that is in error
-     * @param reason -- reason for failure
-     */
+    /// Creates a failure that will contain `instance` and have message `message`.
+    /// Should be used when the cause is missing or is not important.
+    ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when failures are processed, only the message and the cause are.
+    ///
+    /// @see #failure(String)
+    /// @see #failure(Exception)
+    ///
     public static Result failure(final Object instance, final String reason) {
+        // NOTE: This is sub-optimal, both `new Exception` and this Result will capture almost the same stack trace.
+        //       We should not disable the stack trace for this Result, because then `Result.getStackTrace` will be empty, leaking implementation details.
+        //       There is no simple change around `new Exception` without adding complexity to the implementation.
+        //       Therefore, let's leave this as is for now.
+        //       In the future, we could introduce separate types for failures and successful results.
         return failure(instance, new Exception(reason));
     }
 
-    /**
-     * Convenient factory method for creating a failure {@link Result} with specified {@code instance}, {@code shortReason} and {@code extendedReason}.
-     * Should be used when no particular exception is at fault.
-     * <p>
-     * Use {@code shortReason} parameter to define concise reason, that would nicely fit to short areas.
-     * Use {@code extendedReason} parameter to define more detailed and longer version of {@code shortReason}. It may have multiple lines and HTML formatting.
-     * 
-     * @param instance -- instance that is in error
-     */
+    /// Creates a failure with an additional extended messsage.
+    /// Should be used when the cause is missing or is not important.
+    ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when failures are processed, only the message and the cause are.
+    ///
+    /// @param instance a value that the result will contain.
+    /// @param shortReason a concise message, which may contain HTML.
+    /// @param extendedReason a more detailed message, which may span multiple lines and contain HTML.
+    ///
+    /// @see #failureEx(String, String)
+    ///
     public static Result failureEx(final Object instance, final String shortReason, final String extendedReason) {
         return failure(instance, shortReason + EXT_SEPARATOR + extendedReason);
     }
 
-    /**
-     * Convenient factory method for creating a failure {@link Result} with specified {@code instance} and {@code exception}.
-     * 
-     * @param instance -- instance that is in error
-     * @param exception -- associated exception that caused failure
-     */
+    /// Creates a failure that will contain `instance` and have `exception` as its cause.
+    ///
+    /// When using this method, consider whether `instance` really needs to be captured.
+    /// In most cases, `instance` is never accessed when failures are processed, only the message and the cause are.
+    ///
+    /// Also see [Result#failure(Exception)] for guidance on capturing a cause.
+    ///
+    /// @see #failure(Object, String)
+    /// @see #failure(String)
+    /// @see #failure(Exception)
+    ///
     public static Result failure(final Object instance, final Exception exception) {
-        return new Result(instance, exception);
+        return new Result(instance, exception.getMessage(), exception, true);
     }
 
-    ///////////////////////////////////////////////
-    ////////////////// constructors ///////////////
-    ///////////////////////////////////////////////
-    /** Creates successful result. */
+    ///////////////////////////////////////////// Constructors /////////////////////////////////////////////
+
+    /// @deprecated Use [#successful(Object)].
+    ///
+    @Deprecated(forRemoval = true)
     public Result(final Object instance, final String message) {
+        this(instance, message, null, false);
+    }
+
+    /// @deprecated Use [#successful()].
+    ///
+    @Deprecated(forRemoval = true)
+    public Result(final String msg) {
+        this(null, msg, null, false);
+    }
+
+    /// @deprecated Consider if `instance` and/or `ex` really need to be captured, and, if not, use [#failure(String)] or [#failure(Exception)].
+    ///
+    @Deprecated(forRemoval = true)
+    public Result(final Object instance, final Exception ex) {
+        this(instance, ex.getMessage(), ex, true);
+    }
+
+    /// @deprecated Use [#failure(Exception)].
+    ///
+    @Deprecated(forRemoval = true)
+    public Result(final Exception ex) {
+        this(null, ex.getMessage(), ex, true);
+    }
+
+    /// Mainly used for serialisation.
+    ///
+    protected Result() {
+        this(null, null, null, true);
+    }
+
+    /// The primary constructor that provides the most control.
+    ///
+    /// @param writableStackTrace
+    ///        If `true`, a stack trace will be captured.
+    ///        For result types that do not need a stack trace, it is recommended to use `false`.
+    ///
+    protected Result(final Object instance, final String message, final Exception exception, final boolean writableStackTrace) {
+        super(message, exception, true, writableStackTrace);
         this.instance = instance;
         this.message = message;
-        this.ex = null;
+        this.ex = exception;
     }
 
-    /** Creates successful result. */
-    public Result(final String msg) {
-        this.instance = null;
-        this.message = msg;
-        this.ex = null;
+    /// Calls the primary constructor using the message in `exception` as the result's message.
+    ///
+    protected Result(final Object instance, final Exception exception, final boolean writableStackTrace) {
+        this(instance, exception == null ? null : exception.getMessage(), exception, writableStackTrace);
     }
 
-    /** Creates a failed result. */
-    public Result(final Object instance, final Exception ex) {
-        super(ex);
-        this.instance = instance;
-        this.message = ex.getMessage();
-        this.ex = ex;
+    /// Calls the primary constructor using the message in `exception` as the result's message.
+    ///
+    protected Result(final Exception exception, final boolean writableStackTrace) {
+        this(null, exception, writableStackTrace);
     }
 
-    /** Creates a failed result. */
-    public Result(final Exception ex) {
-        super(ex);
-        this.instance = null;
-        this.message = ex.getMessage();
-        this.ex = ex;
-    }
-
+    /// Returns the message associated with this result, or [#NO_MESSAGE] if there is no message and no cause.
+    ///
+    /// Unlike [Throwable#getMessage()], this method never returns `null`.
+    ///
     @Override
     public String getMessage() {
         // There are exceptions that have no message, returning null.
         // This is not very useful and in fact was confusing in practice.
         // Let's return a full name of the exception in such cases.
         //return message != null ? message : ex != null ? ex.getMessage() : "no message";
-        return message != null ? message : ex != null ? !isEmpty(ex.getMessage()) ? ex.getMessage() : ex instanceof NullPointerException ? NULL_POINTER_EXCEPTION : ex.getClass().getName() : "no message";
+        return message != null ? message : ex != null ? !isEmpty(ex.getMessage()) ? ex.getMessage() : ex instanceof NullPointerException ? NULL_POINTER_EXCEPTION : ex.getClass().getName() : NO_MESSAGE;
     }
 
-    public Exception getEx() {
+    public @Nullable Exception getEx() {
         return ex;
     }
 
-    public Object getInstance() {
+    public @Nullable Object getInstance() {
         return instance;
     }
 
-    public <T> T getInstance(final Class<T> expectedType) {
+    public <T> @Nullable T getInstance(final Class<T> expectedType) {
         return expectedType.cast(instance);
     }
 
-    /**
-     * Mapping over a successful result.
-     * <p>
-     * Function {@code f} is applied to {@code this} if it is successful, and the returned result is the result of {@code f(this)}.
-     * Otherwise, {@code this} is returned.
-     *
-     * @param f
-     * @return
-     */
+    /// Mapping over a successful result.
+    ///
+    /// If `this` is successful, returns `f(this)`.
+    /// Otherwise, returns `this`.
+    ///
     public Result map(final Function<? super Result, ? extends Result> f) {
         requireNonNull(f);
         return this.isSuccessful() ? f.apply(this) : this;
     }
 
-    /**
-     * A convenient method to get an instance associated with a successful result or throw an exception otherwise.
-     * This method is analogous to {@link Optional#orElseThrow(Supplier)}.
-     *
-     * @return
-     */
-    public <T> T getInstanceOrElseThrow() {
+    /// If this result is not a failure, returns the contained value.
+    /// Otherwise, throws this result.
+    ///
+    /// This method is analogous to [Optional#orElseThrow(Supplier)].
+    ///
+    public <T> @Nullable T getInstanceOrElseThrow() {
         ifFailure(Result::throwRuntime);
         return (T) getInstance();
     }
 
-    /**
-     * Copy this result with an overridden instance.
-     *
-     * @param anotherInstance
-     * @return
-     */
+    /// Returns a copy of this result, replacing the contained value by `anotherInstance`.
+    ///
+    /// Subclasses that override the behaviour of capturing a stack trace should also override this method.
+    ///
     public Result copyWith(final Object anotherInstance) {
-        return new Result(anotherInstance, message, ex);
+        return new Result(anotherInstance, message, ex, !isSuccessful());
     }
 
     public boolean isSuccessful() {
         return ex == null;
     }
 
-    /**
-     * A convenient construct to perform some action for a result that represents a failure.
-     * For example, it could be used to throw an exception as it often happens in case of unsuccessful validations.
-     * <p>
-     * If {@code consumer} does not throw an exception or the result is successful, then {@code this} itself is returned for further use.
-     *
-     * @param consumer
-     * @return {@code this}
-     */
+    /// If this result is a failure, calls `consumer` with the cause of the failure.
+    ///
+    /// This method is used in a common pattern:
+    ///
+    /// ```
+    /// myResult.ifFailure(Result::throwRuntime);
+    /// ```
+    ///
+    /// @return this result
+    ///
     public Result ifFailure(final Consumer<? super Exception> consumer) {
         if (!isSuccessful()) {
             consumer.accept(ex);
@@ -341,57 +388,38 @@ public class Result extends RuntimeException {
         return this;
     }
 
-    /**
-     * A convenient method that returns the passed in {@code ex} if it is of type {@link Result}, or wraps it into a {@code failure} of type {@link Result}.
-     *
-     * @param ex
-     * @return
-     */
+    /// If `ex` is a runtime exception, returns it, otherwise returns a failure [Result] with `ex` as its cause.
+    ///
     public static RuntimeException asRuntime(final Exception ex) {
         return ex instanceof RuntimeException ? (RuntimeException) ex : failure(ex);
     }
 
-    /**
-     * A convenient method to throw a runtime exception that is obtained by passing {@code ex} into {@link #asRuntime(Exception)}.
-     *
-     * @param ex
-     */
+    /// Throws `ex` as a runtime exception.
+    ///
     public static void throwRuntime(final Exception ex) {
         throw asRuntime(ex);
     }
 
-    /**
-     * Returns true if this {@link Result} is not {@link Warning} instance and is successful.
-     *
-     * @return
-     */
+    /// Returns `true` if this result is successful and is not a [warning][Warning].
+    ///
     public boolean isSuccessfulWithoutWarning() {
         return isSuccessful() && !(this instanceof Warning);
     }
 
-    /**
-     * Returns true if this {@link Result} is not {@link Warning} / {@link Informative} instance and is successful.
-     *
-     * @return
-     */
+    /// Returns `true` if this result is successful and is not a [warning][Warning], nor an [informative][Informative].
+    ///
     public boolean isSuccessfulWithoutWarningAndInformative() {
         return isSuccessfulWithoutWarning() && !(this instanceof Informative);
     }
 
-    /**
-     * Returns true only if this {@link Result} is successful and is instance of {@link Warning} class.
-     *
-     * @return
-     */
+    /// Returns `true` if this result is a [warning][Warning].
+    ///
     public boolean isWarning() {
         return isSuccessful() && this instanceof Warning;
     }
 
-    /**
-     * Returns true only if this {@link Result} is successful and is instance of {@link Informative} class.
-     *
-     * @return
-     */
+    /// Returns `true` if this result is an [informative][Informative].
+    ///
     public boolean isInformative() {
         return isSuccessful() && this instanceof Informative;
     }
@@ -408,43 +436,32 @@ public class Result extends RuntimeException {
         }
 
         int result = 1;
-        result = 31 * result + (ex == null ? 0 : (ex.getClass().hashCode() + (ex.getMessage() != null ? ex.getMessage().hashCode() : 0)));
-        result = 31 * result + (message == null ? 0 : message.hashCode());
-        result = 31 * result + (instance == null ? 0 : instance.hashCode());
+        result = 31 * result + (ex == null ? 0 : (ex.getClass().hashCode() + Objects.hash(ex.getMessage())));
+        result = 31 * result + Objects.hashCode(message);
+        result = 31 * result + Objects.hashCode(instance);
         return result;
     }
 
-    /**
-     * There are three significant fields -- {@code ex}, {@code message} and {@code instance} -- that determine uniqueness of {@code Result} instance.
-     * Exceptions may not have {@code equals} overridden for them.
-     * This is why, two values of field {@code ex} are considered equal if their types and messages are identical.
-     * Equality of fields {@code message} and {@code instance} rely upon their respective implementations of {@code equals}.
-     */
+    /// There are three significant fields -- `ex`, `message` and `instance` -- that determine uniqueness of a `Result` instance.
+    /// Exceptions may not have `equals` overridden.
+    /// This is why, two values of field `ex` are considered equal if their types and messages are identical.
+    /// Equality of fields `message` and `instance` rely upon their respective implementations of `equals`.
+    ///
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Result)) {
-            return false;
-        }
-
-        final Result that = (Result) obj;
-        return (this.ex == null && that.ex == null ||
-                (this.ex != null && that.ex != null && Objects.equals(this.ex.getClass(), that.ex.getClass()) && Objects.equals(this.ex.getMessage(), that.ex.getMessage()))) &&
-               Objects.equals(this.message, that.message) &&
-               Objects.equals(this.instance, that.instance);
+        return this == obj
+               || obj instanceof Result that
+                  && Objects.equals(this.message, that.message)
+                  && (this.ex == null && that.ex == null
+                      || (this.ex != null && that.ex != null
+                          && Objects.equals(this.ex.getClass(), that.ex.getClass())
+                          && Objects.equals(this.ex.getMessage(), that.ex.getMessage())))
+                  && Objects.equals(this.instance, that.instance);
     }
 
-    /**
-     * Returns a pair of { shortMessage: ..., extendedMessage: ... } messages, associated with the {@code result}.
-     * The {@code result} may be of type {@link Result}, {@link Warning} or {@link Informative}.
-     * 
-     * {@code result} message should never be {@code null} (see {@link Result#getMessage()}), except the case where NPE was causing failure {@link Result} -- in this case we return 'Null pointer exception' for both short and extended messages.
-     * If {@link Result} was constructed with single message, it will be used for both short and extended messages.
-     * Otherwise we do splitting by <extended/> part (and try to be smart if there are missing parts before or after <extended/>).
-     */
+    /// Returns a pair of messages, short and extended, associated with `result`.
+    /// If `result` has a single message, it will be used for both short and extended messages.
+    ///
     public static ResultMessages resultMessages(final Result result) {
         final String message = result.getMessage();
         if (message == null) {
@@ -461,11 +478,8 @@ public class Result extends RuntimeException {
         }
     }
 
-    /**
-     * A pair of { shortMessage: ..., extendedMessage: ... } messages, associated with the {@link Result}.
-     * 
-     * @author TG Team
-     */
+    /// A pair of messages, short and extended, associated with a [Result].
+    ///
     public static class ResultMessages {
         public final String shortMessage;
         public final String extendedMessage;
@@ -476,12 +490,8 @@ public class Result extends RuntimeException {
         }
     }
 
-    /**
-     * Creates a copy of {@code result} with new instance representing properly serialisable {@link ArrayList} of previous instance and {@code customObject} map.
-     * 
-     * @param customObject
-     * @return
-     */
+    /// Creates a copy of this result that will contain a serialisable list of the value contained by this result and `customObject`.
+    ///
     public Result extendResultWithCustomObject(final Map<String, Object> customObject) {
         return copyWith(listOf(getInstance(), customObject));
     }

@@ -148,7 +148,8 @@ public interface IDomainTreeEnhancer extends IRootTyped {
         }
 
         public IncorrectCalcPropertyException(final String msg, final Exception cause) {
-            super(null, new Exception(msg, cause));
+            // The created Exception will capture a stack trace, hence no need to do the same for Result.
+            super(null, new Exception(msg, cause), false);
         }
     }
 
