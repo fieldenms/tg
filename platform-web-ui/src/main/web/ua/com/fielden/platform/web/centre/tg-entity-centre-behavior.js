@@ -718,9 +718,7 @@ const TgEntityCentreBehaviorImpl = {
 
     _getMasterEntityAssigned: function (newValue, oldValue) {
         if (this._reflector.isEntity(this.$.selection_criteria._currBindingEntity)) {
-            if (this.getMasterEntity().originallyProducedEntity && !this.getMasterEntity().originallyProducedEntity.closing) {
-                this._abortPreviousAndInitiateNewRunForEmbeddedCentre();
-            }
+            this._abortPreviousAndInitiateNewRunForEmbeddedCentre();
         } else {
             // cancel previous retrieval requests except the last one -- if it exists then run process will be chained on top of that last retrieval process,
             // otherwise -- run process will simply start immediately

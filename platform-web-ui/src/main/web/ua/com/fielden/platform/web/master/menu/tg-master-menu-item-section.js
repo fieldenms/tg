@@ -38,7 +38,7 @@ const template = html`
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
     <div id="loadingPanel" class="fit layout horizontal">
-        <div style="margin: auto;" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
+        <div style="margin: auto; padding: 20px; text-align: center;" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
     </div>
     <div id="dialogLoader" class="flex layout horizontal">
         <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>

@@ -904,6 +904,22 @@ const TgEntityMasterBehaviorImpl = {
             return this._savingPromise;
         }).bind(self);
 
+        self._createCanLeavePromise = () => {
+            const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+            return this._runCanLeave(this._reset(holder));
+        };
+
+        self.remoteCanLeave = () => {
+
+            return new Promise((resolve, reject) => {
+                this.debounce('invoke-canLeave', function () {
+                    // cancel the 'invoke-saving' debouncer if there is any active one:
+                    this.cancelDebouncer('invoke-canLeave');
+                    return resolve(this._createCanLeavePromise());
+                }, 50);
+            });
+        };
+
         /**
          * In case where main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
          * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
@@ -1421,6 +1437,13 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     /**
+     * The core-ajax component for custom canLeave logic.
+     */
+    _canLeaveAjax: function () {
+        throw "_canLeaveAjax: not implemented";
+    },
+
+    /**
      * The function for binding property title -- entity.type().prop(property).title(). The argument 'entity' will be changed in future. Polymer will listen to that change.
      * The function for binding property desc -- entity.type().prop(property).desc(). The argument 'entity' will be changed in future. Polymer will listen to that change.
      */
@@ -1475,6 +1498,13 @@ const TgEntityMasterBehaviorImpl = {
         return this._ajaxSaver().generateRequest().completes;
     },
 
+    _runCanLeave: function (modifiedPropertiesHolder) {
+        const idNumber = modifiedPropertiesHolder.id;
+        const originallyProducedEntity = this._reflector()._validateOriginallyProducedEntity(this._originallyProducedEntity, idNumber);
+        this._canLeaveAjax().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(originallyProducedEntity, modifiedPropertiesHolder)));
+        return this._canLeaveAjax().generateRequest().completes;
+    },
+
     /**
      * Method implementing .canLeave contract as disignated in classList.
      * It is used to identify whether master can be "left/closed" without any adverse effect on the data it represents (i.e. there was no unsaved changes).
@@ -1506,12 +1536,15 @@ const TgEntityMasterBehaviorImpl = {
 
     customCanLeave: function () {
         this._currEntity.closing = true;
-        return this.save().then(obj => {
+        return this.remoteCanLeave().then(obj => {
             if (obj.xhr.status === 200 && obj.response) { // successful execution of the request with written response; timeout errors can lead to status 200 and e.detail.response === null; also 504 error is possible, but this will be handled in _processError
                 //e.detail.successful = true;
                 const deserialisedResult = this._serialiser().deserialise(obj.response);
 
                 if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
+                    if (deserialisedResult.ex.message.includes("Can Access")) {
+                        return Promise.resolve(true);
+                    }
                     return Promise.reject({msg: resultMessages(deserialisedResult).short});
                 } else {
                     const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
