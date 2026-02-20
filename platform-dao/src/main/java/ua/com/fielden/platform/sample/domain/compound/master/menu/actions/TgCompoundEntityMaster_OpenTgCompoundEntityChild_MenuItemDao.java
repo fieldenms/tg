@@ -31,13 +31,16 @@ public class TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItemDao extend
     @SessionRequired
     @Authorise(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess_Token.class)
     public TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem save(final TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem entity) {
-        final EntityResultQueryModel<TgCompoundEntityChild> query = select(TgCompoundEntityChild.class)
-                .where().prop("tgCompoundEntity").eq().val(entity.getKey()).model();
-        boolean childExist = co(TgCompoundEntityChild.class).exists(query);
-        entity.setCanLeave(!childExist);
-        if (childExist) {
-            entity.setCannotLeaveReason("There are not completed items. Would you like to close this master?");
-            entity.setCanLeaveOptions(CanLeaveOptions.Options.YES_NO.getCanLeaveOptions());
+        if (entity.isClosing()) {
+            final EntityResultQueryModel<TgCompoundEntityChild> query = select(TgCompoundEntityChild.class)
+                    .where().prop("tgCompoundEntity").eq().val(entity.getKey()).model();
+            boolean childExist = co(TgCompoundEntityChild.class).exists(query);
+            entity.setCanLeave(!childExist);
+            if (childExist) {
+                entity.setCannotLeaveReason("There are not completed items. Would you like to close this master?");
+                entity.setCloseInstructions("Please complete all tasks.");
+                entity.setCanLeaveOptions(CanLeaveOptions.Options.YES_NO.getCanLeaveOptions());
+            }
         }
         return super.save(entity);
     }
