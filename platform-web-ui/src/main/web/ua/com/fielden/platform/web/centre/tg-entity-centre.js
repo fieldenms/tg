@@ -841,12 +841,12 @@ Polymer({
         }, 100);
     },
 
-    closeConfirmationDialog: function () {
-        return this.$.confirmationDialog.close();
+    confirmationDialog: function (action) {
+        return action(this._confirmationDialog());
     },
 
     confirm: function (message, buttons, options) {
-        return this.$.confirmationDialog.showConfirmationDialog(message, buttons, options);
+        return this._confirmationDialog().showConfirmationDialog(message, buttons, options);
     },
 
     /**
