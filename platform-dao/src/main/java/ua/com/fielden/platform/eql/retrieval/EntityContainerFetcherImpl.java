@@ -108,6 +108,9 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qpm) {
         class $ {
+            // A "foreign query" is a query whose single explicit yield is an entity-typed property.
+            // This predicate identifies whether `queryModelResult` represents a "foreign query".
+            // An equivalent predicate is present in [EqlQueryTransformer] as method `isForeignIdOnlyQuery`.
             static boolean isForeignIdOnlyQuery(final QueryModelResult<?> queryModelResult) {
                 return isPersistentEntityType(queryModelResult.resultType())
                        && queryModelResult.yieldedColumns().size() == 1
