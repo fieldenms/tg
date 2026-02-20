@@ -35,6 +35,36 @@ public class TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem extends A
     @Title("Can Leave Options")
     private CanLeaveOptions canLeaveOptions;
 
+    @IsProperty
+    @Title(value = "Is Closing?", desc = "Indicates whether this menu item is closing")
+    private boolean closing;
+
+    @IsProperty
+    @Title("Close Instructions")
+    private String closeInstructions;
+
+    @Override
+    public String getCloseInstructions() {
+        return closeInstructions;
+    }
+
+    @Observable
+    public TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem setCloseInstructions(final String closeInstructions) {
+        this.closeInstructions = closeInstructions;
+        return this;
+    }
+
+    @Override
+    public boolean isClosing() {
+        return closing;
+    }
+
+    @Observable
+    public TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem setClosing(final boolean closing) {
+        this.closing = closing;
+        return this;
+    }
+
     @Override
     public CanLeaveOptions getCanLeaveOptions() {
         return canLeaveOptions;

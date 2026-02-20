@@ -21,4 +21,12 @@ public interface ICustomisableCanLeave {
     ///
     CanLeaveOptions getCanLeaveOptions();
 
+    /// Indicates whether the master view for this entity is closing.
+    ///
+    boolean isClosing();
+
+    /// Returns the message displayed after the user rejects leaving the master view for this entity.
+    /// The message explains what the user can do to close the master view without confirmation.
+    ///
+    String getCloseInstructions();
 }
