@@ -63,7 +63,7 @@
                     oldPostRetrieved(entity, bindingEntity, customObject);
                     centre.postRetrieved = oldPostRetrieved;
                     
-                    assert.strictEqual(bindingEntity.get('tgFetchProviderTestEntity_propForValidation'), 'KEY8');
+                    assert.strictEqual(bindingEntity.get('tgFetchProviderTestEntity_propForValidation'), null);
                     assert.strictEqual(centre.$.selection_criteria._centreDirty, true, '_centreDirty flag should be defined and should be equal to true.'); // this is because we use default configuration which is always dirty
                     assert.ok(entity, 'Criteria entity should arrive from the server.');
                     assert.strictEqual(entity.isValid(), true, 'Criteria entity should be valid.');

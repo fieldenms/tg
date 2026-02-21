@@ -48,10 +48,7 @@ public class EntityCentreAPITest extends AbstractDaoTestCase {
     public void executing_entityCentreResult_method_returns_entities_for_named_configuration_for_no_additional_criteria() {
         setupUser(User.system_users.UNIT_TEST_USER, "example.tg.test");
 
-        // Initialise data for `MiTgCompoundEntity` Entity Centre execution.
-
-        // This instance is required for some default values in WebUiConfig-registered centres.
-        // TODO save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(3609999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
+        //////// Initialise data for `MiTgCompoundEntity` Entity Centre execution. ////////
 
         // Create entity instance first.
         save(new_(TgCompoundEntity.class, "KEY1").setActive(true).setDesc("desc 1"));
@@ -69,9 +66,12 @@ public class EntityCentreAPITest extends AbstractDaoTestCase {
         // Create "saved" config for current user too, which indicates that the user own it.
         createConfig("SAVED", mainMenuItem, diffObject, uuid);
 
+        //////// Run Entity Centre through the API ////////
 
         final var entityCentreApi = getInstance(EntityCentreAPI.class);
         final var result = entityCentreApi.entityCentreResult(uuid);
+
+        //////// Check the result ////////
 
         assertNotNull(result);
         assertTrue(result.isRight());
