@@ -104,8 +104,7 @@ class HibernateTypeGenerator {
                                            atPersistentType));
                         }
                     }).orElseGet(() -> {
-                        // this helps us get the raw class of parameterized types such as PropertyDescriptor
-                        final Class<?> klass = classFrom(typeMetadata.javaType());
+                        final Class<?> klass = typeMetadata.javaType();
                         if (klass != null) {
                             return hibernateTypeMappings.getHibernateType(klass)
                                     // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults

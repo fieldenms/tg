@@ -21,6 +21,7 @@ public final class AuthenticationTestIocModule extends AbstractPlatformIocModule
 
         bindConstant().annotatedWith(Names.named("tokens.path")).to("../platform-pojo-bl/target/test-classes");
         bindConstant().annotatedWith(Names.named("tokens.package")).to("ua.com.fielden.platform.security.tokens");
+
         requestStaticInjection(EntityQueryCriteriaUtils.class);
     }
 

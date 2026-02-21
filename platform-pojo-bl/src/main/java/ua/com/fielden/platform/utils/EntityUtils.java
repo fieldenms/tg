@@ -961,7 +961,7 @@ public class EntityUtils {
     }
 
     /**
-     * {@link #laxSplitPropPathToArray(CharSequence)} and wrap the result into an unmodifiable list.
+     * {@link #splitPropPathToArray(CharSequence)} and wrap the result into an unmodifiable list.
      */
     public static List<String> splitPropPath(final CharSequence path) {
         return unmodifiableListOf(splitPropPathToArray(path));

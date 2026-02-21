@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 /// This interface defines the generator of entity companion object types.
 ///
-public interface IEntityCompanionGenerator {
+public interface ICompanionGenerator {
 
     /// Generates a companion object implementation for the specified entity type.
     ///

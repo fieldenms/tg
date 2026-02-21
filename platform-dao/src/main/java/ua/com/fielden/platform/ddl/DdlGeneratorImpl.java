@@ -17,7 +17,6 @@ import java.util.stream.Stream;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 class DdlGeneratorImpl implements IDdlGenerator {
-
     private final HibernateTypeMappings hibernateTypeMappings;
     private final Supplier<Collection<Class<? extends AbstractEntity<?>>>> entityTypes;
 
@@ -30,7 +29,8 @@ class DdlGeneratorImpl implements IDdlGenerator {
     }
 
     DdlGeneratorImpl(final HibernateTypeMappings hibernateTypeMappings,
-                     final Supplier<Collection<Class<? extends AbstractEntity<?>>>> entityTypes) {
+                     final Supplier<Collection<Class<? extends AbstractEntity<?>>>> entityTypes)
+    {
         this.hibernateTypeMappings = hibernateTypeMappings;
         this.entityTypes = entityTypes;
     }
@@ -69,7 +69,6 @@ class DdlGeneratorImpl implements IDdlGenerator {
 
         final Set<String> ddlTables = new LinkedHashSet<>();
         final Set<String> ddlFKs = new LinkedHashSet<>();
-
         types.filter(EntityUtils::isPersistentEntityType).forEach(entityType -> {
             final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
             ddlTables.add(tableDefinition.createTableSchema(dialect));
@@ -83,5 +82,4 @@ class DdlGeneratorImpl implements IDdlGenerator {
         return Stream.concat(ddlTables.stream(), ddlFKs.stream())
                 .collect(toImmutableList());
     }
-
 }

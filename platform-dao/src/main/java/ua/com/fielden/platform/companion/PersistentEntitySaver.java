@@ -9,6 +9,9 @@ import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
+import ua.com.fielden.platform.audit.AuditingMode;
+import ua.com.fielden.platform.audit.IAuditTypeFinder;
+import ua.com.fielden.platform.audit.ISynAuditEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -39,9 +42,11 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.Lazy;
 
 import javax.persistence.OptimisticLockException;
 import java.util.*;
@@ -57,6 +62,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
+import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -73,20 +79,18 @@ import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionH
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 import static ua.com.fielden.platform.utils.MiscUtilities.optional;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
-/**
- * The default implementation of contract {@link IEntityActuator} to save/update persistent entities.
- * 
- * @author TG Team
- *
- * @param <T>
- */
+/// The default implementation of contract [IEntityActuator] to save/update persistent entities.
+///
 public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements IEntityActuator<T> {
 
     public static final String ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES = "Could not resolve conflicting changes.";
@@ -108,12 +112,14 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final IEntityFetcher entityFetcher;
     private final IUserProvider userProvider;
     private final Supplier<DateTime> now;
-    
+
     private final BiConsumer<T, Set<String>> processAfterSaveEvent;
     private final Consumer<MetaProperty<?>> assignBeforeSave;
 
     private final FindEntityById<T> findById;
     private final Function<EntityResultQueryModel<T>, Boolean> entityExists;
+    private final boolean audited;
+    private final Lazy<Auditor<T>> lazyAuditor;
 
     private Boolean targetEntityTypeHasValidateOverridden;
     
@@ -135,7 +141,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final IUserProvider userProvider,
             final IUniversalConstants universalConstants,
             final ICompanionObjectFinder coFinder,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final IAuditTypeFinder auditTypeFinder,
+            final AuditingMode auditingMode)
     {
         this.session = session;
         this.transactionGuid = transactionGuid;
@@ -152,6 +160,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.now = universalConstants::now;
         this.coFinder = coFinder;
         this.domainMetadata = domainMetadata;
+        this.audited = auditingMode == AuditingMode.ENABLED && isAudited(entityType);
+        this.lazyAuditor = lazySupplier(() -> makeAuditor(entityType, audited, auditTypeFinder, coFinder));
     }
 
     @ImplementedBy(FactoryImpl.class)
@@ -168,19 +178,21 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final Logger logger);
     }
     
-    /**
-     * Saves the provided entity. This method checks entity version and throws StaleObjectStateException if the provided entity is stale. There is no in-memory referential
-     * integrity guarantee -- the returned instance is always a different instance. However, from the perspective of data loading, it is guaranteed that the object graph of the
-     * returned instance contains the object graph of the passed in entity as its subgraph (i.e. it can be wider, but not narrower).
-     * <p>
-     * New or already persisted entity instances should not be reused after successful saving.
-     * There is no guarantee as to what properties may or may not get mutated as part of the saving logic.
-     * For example, saving new entities does not result in assigning their {@code ID} values to the passed in instances.
-     * Instead, the returned instances should be used.
-     * The future direction is complete immutability where setting any property value would not modify that entity, but return a new instance with the new property value assigned. 
-     * <p>
-     * This method must be invoked in the context of an open DB session and supports saving only of persistent entities. Otherwise, an exception is thrown. 
-     */
+    /// Saves the provided entity.
+    /// This method checks entity version and throws StaleObjectStateException if the provided entity is stale.
+    /// There is no in-memory referential integrity guarantee — the returned instance is always a different instance.
+    /// However, from the perspective of data loading, it is guaranteed that the object graph of the returned instance contains the object graph of the passed in entity as its subgraph
+    /// (i.e. it can be wider, but not narrower).
+    ///
+    /// New or already persisted entity instances should not be reused after successful saving.
+    /// There is no guarantee as to what properties may or may not get mutated as part of the saving logic.
+    /// For example, saving new entities does not result in assigning their `ID` values to the passed in instances.
+    /// Instead, the returned instances should be used.
+    /// The future direction is complete immutability where setting any property value would not modify that entity, but return a new instance with the new property value assigned.
+    ///
+    /// This method must be invoked in the context of an open DB session and supports saving only of persistent entities.
+    /// Otherwise, an exception is thrown.
+    ///
     @Override
     public T save(final T entity) {
         return coreSave(entity, false, empty())._2;
@@ -207,7 +219,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     }
                     else {
                         final var fillModelBld = new FillModelBuilder(domainMetadata);
-                        plainProps.stream().forEach(dmp -> {
+                        plainProps.forEach(dmp -> {
                             final var value = entity.get(dmp.name());
                             if (value != null) {
                                 fillModelBld.set(dmp.name(), value);
@@ -258,10 +270,45 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
 
         final T savedEntity = savedEntityAndId._2;
-        // this call never throws any exceptions
+
+        // This call never throws any exceptions.
+        //
+        // NOTE: `savedEntity` will be a Hibernate proxy if refetching is skipped.
+        //       This may be confusing if "after-save" logic expects an entity instantiated in the usual way (via EntityFactory).
         processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
+        // Auditing
+        lazyAuditor.get().audit(savedEntityAndId._1, savedEntity.getVersion(), transactionGuid.get(), dirtyPropNames);
+
         return savedEntityAndId;
+    }
+
+    /// Performs the auditing function if auditing is enabled and the entity type is audited.
+    /// Otherwise, has no effect.
+    ///
+    /// The benefit of this abstraction over plain code statements is performance: the initialisation phase will occur only once.
+    ///
+    @FunctionalInterface
+    private interface Auditor<E extends AbstractEntity<?>> {
+
+        void audit(final Long auditEntityId, final Long auditEntityVersion, final String transactionGuid, Collection<String> dirtyProperties);
+
+    }
+
+    private static <E extends AbstractEntity<?>> Auditor<E> makeAuditor(
+            final Class<E> entityType,
+            final boolean audited,
+            final IAuditTypeFinder auditTypeFinder,
+            final ICompanionObjectFinder coFinder)
+    {
+        if (audited) {
+            // Performance benefit: the companion is created only once.
+            final ISynAuditEntityDao<E> coSynAudit = coFinder.find(auditTypeFinder.navigate(entityType).synAuditEntityType());
+            return coSynAudit::audit;
+        }
+        else {
+            return (auditedEntityId, auditedEntityVersion, transactionGuid, dirtyProperties) -> {};
+        }
     }
 
     /**
@@ -880,6 +927,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         private final IUniversalConstants universalConstants;
         private final ICompanionObjectFinder coFinder;
         private final IDomainMetadata domainMetadata;
+        private final IAuditTypeFinder auditTypeFinder;
+        private final AuditingMode auditingMode;
 
         @Inject
         FactoryImpl(final IDbVersionProvider dbVersionProvider,
@@ -887,13 +936,18 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     final IUserProvider userProvider,
                     final IUniversalConstants universalConstants,
                     final ICompanionObjectFinder coFinder,
-                    final IDomainMetadata domainMetadata) {
+                    final IDomainMetadata domainMetadata,
+                    final IAuditTypeFinder auditTypeFinder,
+                    final AuditingMode auditingMode)
+        {
             this.dbVersionProvider = dbVersionProvider;
             this.entityFetcher = entityFetcher;
             this.userProvider = userProvider;
             this.universalConstants = universalConstants;
             this.coFinder = coFinder;
             this.domainMetadata = domainMetadata;
+            this.auditTypeFinder = auditTypeFinder;
+            this.auditingMode = auditingMode;
         }
 
         public <E extends AbstractEntity<?>> PersistentEntitySaver<E> create(
@@ -910,7 +964,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return new PersistentEntitySaver<>(session, transactionGuid, entityType, keyType, processAfterSaveEvent,
                                                assignBeforeSave, findById, entityExists, logger,
                                                dbVersionProvider, entityFetcher, userProvider, universalConstants,
-                                               coFinder, domainMetadata);
+                                               coFinder, domainMetadata, auditTypeFinder, auditingMode);
         }
     }
 

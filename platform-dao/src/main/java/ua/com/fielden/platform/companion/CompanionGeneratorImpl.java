@@ -6,25 +6,45 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.matcher.ElementMatchers;
+import ua.com.fielden.platform.audit.*;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 
+import static ua.com.fielden.platform.audit.AuditUtils.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
 @Singleton
-final class EntityCompanionGeneratorImpl implements IEntityCompanionGenerator {
+final class CompanionGeneratorImpl implements ICompanionGenerator {
+
+    private final IAuditCompanionGenerator auditCoGenerator;
 
     @Inject
-    EntityCompanionGeneratorImpl() {}
+    public CompanionGeneratorImpl(final IAuditCompanionGenerator auditCoGenerator) {
+        this.auditCoGenerator = auditCoGenerator;
+    }
 
     @Override
     public Class<?> generateCompanion(final Class<? extends AbstractEntity<?>> type) {
-        return generateSimpleCompanion(type);
+        if (isAuditEntityType(type)) {
+            return auditCoGenerator.generateCompanion((Class<? extends AbstractAuditEntity<?>>) type);
+        }
+        else if (isAuditPropEntityType(type)) {
+            return auditCoGenerator.generateCompanionForAuditProp((Class<? extends AbstractAuditProp<?>>) type);
+        }
+        else if (isSynAuditEntityType(type)) {
+            return auditCoGenerator.generateCompanionForSynAuditEntity((Class<? extends AbstractSynAuditEntity<?>>) type);
+        }
+        else if (isSynAuditPropEntityType(type)) {
+            return auditCoGenerator.generateCompanionForSynAuditProp((Class<? extends AbstractSynAuditProp<?>>) type);
+        }
+        else {
+            return generateSimpleCompanion(type);
+        }
     }
 
-    private Class<?> generateSimpleCompanion(final Class<? extends AbstractEntity<?>> type) {
+    private Class<?> generateSimpleCompanion(final Class<? extends AbstractEntity> type) {
         // Always use the base type.
         // * ByteBuddy will create a new class loader just for the generated companion type.
         // * The companion type does not need to reference `type`, only its base type.

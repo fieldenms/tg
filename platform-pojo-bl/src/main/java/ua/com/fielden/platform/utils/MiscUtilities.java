@@ -6,19 +6,15 @@ import ua.com.fielden.platform.types.either.Either;
 
 import javax.swing.filechooser.FileFilter;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class MiscUtilities {
 
-    /**
-     * Creates file filter for files with specified extensions and filter name.
-     *
-     * @param extensionPatterns
-     * @param filterName
-     * @return
-     */
+    /// Creates file filter for files with specified extensions and filter name.
+    ///
     public static FileFilter createFileFilter(final String filterName, final String... extensionPatterns) {
         return new FileFilter() {
             @Override
@@ -43,9 +39,8 @@ public class MiscUtilities {
         };
     }
 
-    /**
-     * Creates a new array of values based on the passed list by changing * to %.
-     */
+    /// Creates a new array of values based on the passed list by changing `*` to `%`.
+    ///
     public static String[] prepare(final List<String> criteria) {
         if (criteria == null) {
             return new String[0];
@@ -57,13 +52,9 @@ public class MiscUtilities {
                 .toArray(String[]::new);
     }
 
-    /**
-     * Returns true if value matches valuePattern, false otherwise. This method behaves like autocompleter's value matcher
-     *
-     * @param value
-     * @param valuePattern
-     * @return
-     */
+    /// Returns `true` if value matches `valuePattern`, `false` otherwise.
+    /// This method behaves like autocompleter's value matcher.
+    ///
     public static boolean valueMatchesPattern(final String value, final String valuePattern) {
         final String adjustedValuePattern = valuePattern.contains("*") ? valuePattern.replaceAll("\\*", "%") : valuePattern + "%";
 
@@ -74,9 +65,8 @@ public class MiscUtilities {
         return Pattern.compile(strPattern).matcher(value).find();
     }
 
-    /**
-     * Converts auto-completer-like regular expression to normal regular expression (simply replaces all '*' with '%' characters)
-     */
+    /// Converts auto-completer-like regular expression to normal regular expression by replaceing all `*` with `%`.
+    ///
     public static String prepare(final String autocompleterExp) {
         final var trimmed = autocompleterExp.trim();
         if ("*".equals(trimmed)) {
@@ -85,17 +75,15 @@ public class MiscUtilities {
         return trimmed.replace('*', '%');
     }
 
-    /**
-     * Converts the content of the input stream into a string.
-     *
-     * @param ins
-     * @return depending on the context of the input stream, may return either single or multi-line string
-     * @throws IOException
-     */
+    /// Converts the content of the input stream into a string.
+    ///
+    /// @param ins the input stream
+    /// @return depending on the context of the input stream, may return either single or multi-line string
+    ///
     public static String convertToString(final InputStream ins) throws IOException {
         final StringBuilder sb = new StringBuilder();
         String line;
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(ins, "UTF-8"));
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(ins, StandardCharsets.UTF_8));
         boolean needNewLine = false;
         while ((line = reader.readLine()) != null) {
             if (needNewLine) {
@@ -108,25 +96,14 @@ public class MiscUtilities {
         return sb.toString();
     }
 
-    /**
-     * Converts a string value to an instance of {@link InputStream} using UTF-8 encoding.
-     *
-     * @param value
-     * @return
-     * @throws UnsupportedEncodingException
-     */
+    /// Converts a string value to an instance of [InputStream] using UTF-8 encoding.
+    ///
     public static InputStream convertToInputStream(final String value) throws UnsupportedEncodingException {
-        return new ByteArrayInputStream(value.getBytes("UTF-8"));
+        return new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8));
     }
 
-    /**
-     * Loads the specified property file returning a corresponding instance of {@link Properties}.
-     *
-     * @param fileName
-     * @return
-     * @throws IOException
-     * @throws Exception
-     */
+    /// Loads the specified property file returning a corresponding instance of [Properties].
+    ///
     public static Properties propertyExtractor(final String fileName) throws IOException {
         try (final InputStream st = new FileInputStream(fileName)) {
             final Properties props = new Properties();
@@ -144,31 +121,50 @@ public class MiscUtilities {
         }
     }
 
-    /**
-     * Creates a {@link Properties} instance populated with entries from the given map.
-     */
+    /// Creates a [Properties] instance populated with entries from the given map.
+    ///
     public static Properties mkProperties(final Map<String, String> map) {
         final var properties = new Properties();
         properties.putAll(map);
         return properties;
     }
-    
-    /**
-     * Returns a function accepting a format string and returning that string formatted with {@code args}.
-     * <p>
-     * Useful when the same value is used repeatedly to create a formatted string.
-     * 
-     * @param args
-     * @return
-     */
+
+    /// Creates a [Properties] instance populated with the specified entries.
+    ///
+    public static Properties mkProperties(final String key, final String value) {
+        final var properties = new Properties();
+        properties.put(key, value);
+        return properties;
+    }
+
+    /// Left-biased union of properties.
+    ///
+    public static Properties propertiesUnionLeft(final Properties left, final Properties right) {
+        if (left.isEmpty()) {
+            return right;
+        }
+        if (right.isEmpty()) {
+            return right;
+        }
+        else {
+            final var result = new Properties();
+            result.putAll(right);
+            result.putAll(left);
+            return result;
+        }
+    }
+
+    /// Returns a function accepting a format string and returning that string formatted with `args`.
+    ///
+    /// Useful when the same value is used repeatedly to create a formatted string.
+    ///
     public static Function<String, String> stringFormatter(final Object... args) {
         return (format -> format.formatted(args)); 
     }
 
-    /**
-     * Checks if a non-null value has the given type.
-     * If it does, returns {@link Either} with the right value of the specified type, otherwise - {@link Either} with the left value as exception.
-     */
+    /// Checks if a non-null value has the given type.
+    /// If it does, returns [Either] with the right value of the specified type, otherwise - [Either] with the left value as exception.
+    ///
     public static <T> Either<Exception, T> checkType(final Object value, final Class<T> type) {
         if (value == null) {
             return Either.left(new InvalidArgumentException("Expected value of type [%s], but was: null"));

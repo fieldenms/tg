@@ -21,7 +21,7 @@ public interface EntityMetadataUtils {
     List<PropertyMetadata> keyMembers(EntityMetadata entityMetadata);
 
     /**
-     * Returns union member (aka union properties) for a union entity.
+     * Returns union members (aka union properties) for a union entity.
      *
      * @param entityMetadata
      * @return
