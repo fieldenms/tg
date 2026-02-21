@@ -8,16 +8,14 @@ import ua.com.fielden.platform.ioc.IModuleWithInjector;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
+import ua.com.fielden.platform.web.utils.EntityCentreAPI;
+import ua.com.fielden.platform.web.utils.EntityCentreAPIImpl;
 
 import java.util.List;
 import java.util.Properties;
 
-/**
- * Guice injector module for TG Testing Server (WebApp-enabled).
- *
- * @author TG Team
- *
- */
+/// Guice injector module for TG Testing Server (WebApp-enabled).
+///
 public class TgTestWebApplicationServerIocModule extends TgTestApplicationServerIocModule implements IBasicWebApplicationServerModule, IModuleWithInjector {
 
     private final Properties props;
@@ -36,6 +34,7 @@ public class TgTestWebApplicationServerIocModule extends TgTestApplicationServer
         super.configure();
         bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
         bindWebAppResources(new WebUiConfig(props));
+        bind(EntityCentreAPI.class).to(EntityCentreAPIImpl.class);
     }
 
     @Override
