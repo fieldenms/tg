@@ -50,6 +50,9 @@ public class EntityCentreAPITest extends AbstractDaoTestCase {
 
         // Initialise data for `MiTgCompoundEntity` Entity Centre execution.
 
+        // This instance is required for some default values in WebUiConfig-registered centres.
+        // TODO save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(3609999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
+
         // Create entity instance first.
         save(new_(TgCompoundEntity.class, "KEY1").setActive(true).setDesc("desc 1"));
         // Define uuid for named configuration.

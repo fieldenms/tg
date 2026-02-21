@@ -258,13 +258,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction()).also()
                         .addTopAction(StandardActions.EXPORT_ACTION.mkAction(TgFetchProviderTestEntity.class))
                         .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).also()
-                        .addCrit("propForValidation").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                            .setDefaultValue(
-                                single()
-                                .entity(TgPersistentEntityWithProperties.class)
-                                .setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))
-                                .value()
-                            ).
+                        .addCrit("propForValidation").asSingle().autocompleter(TgPersistentEntityWithProperties.class).
+//                            .setDefaultValue(
+//                                single()
+//                                .entity(TgPersistentEntityWithProperties.class)
+//                                .setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))
+//                                .value()
+//                            ).
                         setLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkGridForCentre(1, 2))
 
                         .addProp("property")
@@ -1565,7 +1565,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
                 .withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
                 .lightDesc()
-                /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
+//                /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class).setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8")).value())
                 .also()
                 .addCrit("userParam").asSingle().autocompleter(User.class)
                 .withProps(pair("base", false), pair("basedOnUser", false))
