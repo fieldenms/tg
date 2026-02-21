@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import test_config.SqlServerDomainDrivenTestCaseRunnerForWebTests;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerContextSelectorForWebTests;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 
@@ -20,7 +20,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 /// Tests for {@link EntityCentreAPI}.
 /// These should serve as an example of how end-application tests can be implemented.
 ///
-@RunWith(SqlServerDomainDrivenTestCaseRunnerForWebTests.class)
+@RunWith(H2OrPostgreSqlOrSqlServerContextSelectorForWebTests.class)
 public class EntityCentreAPITest extends AbstractDaoTestCase {
 
     /// Creates Entity Centre persisted configuration for concrete surrogate version of it (FRESH or SAVED).
