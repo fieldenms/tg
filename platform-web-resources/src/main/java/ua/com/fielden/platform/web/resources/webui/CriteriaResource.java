@@ -82,8 +82,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.*;
 import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
@@ -550,11 +549,12 @@ public class CriteriaResource extends AbstractWebResource {
 
     public static Result generateDataIfNeeded(
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity,
-        final EntityCentre<AbstractEntity<?>> centre,
+        final IWebUiConfig webUiConfig,
         final boolean isRunning,
         final boolean isSorting,
         final Map<String, Object> customObject
     ) {
+        final EntityCentre<AbstractEntity<?>> centre = getEntityCentre(criteriaEntity.miType().getName(), webUiConfig);
         // if the run() invocation warrants data generation (e.g. it has nothing to do with sorting)
         // then for an entity centre configuration check if a generator was provided
         final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
@@ -650,7 +650,7 @@ public class CriteriaResource extends AbstractWebResource {
                     freshCentreAppliedCriteriaEntity = null;
                 }
 
-                final var generationResult = generateDataIfNeeded(freshCentreAppliedCriteriaEntity, centre, isRunning, isSorting, customObject);
+                final var generationResult = generateDataIfNeeded(freshCentreAppliedCriteriaEntity, webUiConfig, isRunning, isSorting, customObject);
                 // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
                 // otherwise, proceed with the request handling further to actually query the data
                 // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
@@ -701,8 +701,7 @@ public class CriteriaResource extends AbstractWebResource {
 
                     miType,
                     saveAsName,
-                    device(),
-                    centre
+                    device()
                 );
 
                 // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
@@ -737,9 +736,9 @@ public class CriteriaResource extends AbstractWebResource {
 
         final Class<? extends MiWithConfigurationSupport<?>> miType,
         final Optional<String> saveAsName,
-        final DeviceProfile device,
-        final EntityCentre<AbstractEntity<?>> centre
+        final DeviceProfile device
     ) {
+        final EntityCentre<AbstractEntity<?>> centre = getEntityCentre(criteriaEntity.miType().getName(), webUiConfig);
         final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
                 customObject,
                 complementCriteriaEntityBeforeRunning( // complements criteriaEntity instance

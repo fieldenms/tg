@@ -179,8 +179,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                 return left(validationResult);
             }
 
-            final EntityCentre<AbstractEntity<?>> centre = getEntityCentre(configSettings.miType.getName(), webUiConfig);
-            final Result generationResult = generateDataIfNeeded(freshCriteriaEntity, centre, isRunning, isSorting, customObject);
+            final Result generationResult = generateDataIfNeeded(freshCriteriaEntity, webUiConfig, isRunning, isSorting, customObject);
             // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
             // otherwise, proceed with the request handling further to actually query the data
             // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
@@ -207,8 +206,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
 
                 configSettings.miType,
                 configSettings.saveAsName,
-                configSettings.device,
-                centre
+                configSettings.device
             );
 
             final List<T> list = new ArrayList<>();
