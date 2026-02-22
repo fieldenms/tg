@@ -522,11 +522,10 @@ public class CriteriaResource extends AbstractWebResource {
 
     public static Result authoriseCriteriaEntity(
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity,
-        final Class<? extends MiWithConfigurationSupport<?>> miType,
         final IAuthorisationModel authorisationModel,
         final ISecurityTokenProvider securityTokenProvider
     ) {
-        final var entityAuthorisationResult = authoriseReading(getEntityType(miType).getSimpleName(), READ, authorisationModel, securityTokenProvider);
+        final var entityAuthorisationResult = authoriseReading(getEntityType(criteriaEntity.miType()).getSimpleName(), READ, authorisationModel, securityTokenProvider);
         return entityAuthorisationResult.isSuccessful()
                ? authoriseCriteria(criteriaEntity.queryProperties.get(), authorisationModel)
                : entityAuthorisationResult;
@@ -534,7 +533,6 @@ public class CriteriaResource extends AbstractWebResource {
 
     public static Result validateCriteriaBeforeRunning(
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity,
-        final Class<? extends MiWithConfigurationSupport<?>> miType,
         final IAuthorisationModel authorisationModel,
         final ISecurityTokenProvider securityTokenProvider
     ) {
@@ -543,7 +541,7 @@ public class CriteriaResource extends AbstractWebResource {
             return validationResult;
         }
 
-        final Result authorisationResult = authoriseCriteriaEntity(criteriaEntity, miType, authorisationModel, securityTokenProvider);
+        final Result authorisationResult = authoriseCriteriaEntity(criteriaEntity, authorisationModel, securityTokenProvider);
         if (!authorisationResult.isSuccessful()) {
             return authorisationResult;
         }
@@ -636,7 +634,7 @@ public class CriteriaResource extends AbstractWebResource {
                     }
 
                     // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
-                    final Result validationResult = validateCriteriaBeforeRunning(freshCentreAppliedCriteriaEntity, miType, authorisationModel, securityTokenProvider);
+                    final Result validationResult = validateCriteriaBeforeRunning(freshCentreAppliedCriteriaEntity, authorisationModel, securityTokenProvider);
                     if (!validationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run failed (validation failed).");
                         final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
@@ -672,7 +670,7 @@ public class CriteriaResource extends AbstractWebResource {
                 // Performs criteria validation on centre refresh / navigate.
                 // It is needed if the user changed token role association between run and refresh actions.
                 if (!isRunning) {
-                    final Result authorisationResult = authoriseCriteriaEntity(previouslyRunCriteriaEntity, miType, authorisationModel, securityTokenProvider);
+                    final Result authorisationResult = authoriseCriteriaEntity(previouslyRunCriteriaEntity, authorisationModel, securityTokenProvider);
                     if (!authorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: refresh failed (authorisation validation failed).");
                         return restUtil.resultJSONRepresentation(

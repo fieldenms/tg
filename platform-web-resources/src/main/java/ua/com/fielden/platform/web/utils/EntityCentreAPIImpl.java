@@ -174,7 +174,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                 configSettings.owner, configSettings.device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
             );
 
-            final Result validationResult = validateCriteriaBeforeRunning(freshCriteriaEntity, configSettings.miType, authorisationModel, securityTokenProvider);
+            final Result validationResult = validateCriteriaBeforeRunning(freshCriteriaEntity, authorisationModel, securityTokenProvider);
             if (!validationResult.isSuccessful()) {
                 return left(validationResult);
             }
