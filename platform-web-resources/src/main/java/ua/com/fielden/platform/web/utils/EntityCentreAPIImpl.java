@@ -178,55 +178,31 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                 return left(generationResult);
             }
 
-            final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
+            final var resultList = run(
+                empty(),
+                isRunning,
+
                 customObject,
-                complementCriteriaEntityBeforeRunning( // complements previouslyRunCriteriaEntity instance
-                        freshCriteriaEntity,
-                        webUiConfig,
-                        companionFinder,
-                        user,
-                        critGenerator,
-                        entityFactory,
-                        centreContextHolder,
-                        eccCompanion,
-                        mmiCompanion,
-                        userCompanion,
-                        sharingModel
-                )
+                (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?>) freshCriteriaEntity,
+                webUiConfig,
+                companionFinder,
+                user,
+                critGenerator,
+                entityFactory,
+                centreContextHolder,
+                eccCompanion,
+                mmiCompanion,
+                userCompanion,
+                sharingModel,
+
+                miType,
+                saveAsName,
+                device,
+                centre
             );
 
-            Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
-                    centre,
-                    centre.getCustomPropertiesDefinitions(),
-                    centre.getCustomPropertiesAsignmentHandler(),
-                    pair.getValue().stream());
-
-            // Build dynamic properties object
-            final var resPropsWithContext = getDynamicResultProperties(
-                    centre,
-                    webUiConfig,
-                    companionFinder,
-                    user,
-                    critGenerator,
-                    entityFactory,
-                    centreContextHolder,
-                    (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?>) freshCriteriaEntity,
-                    device,
-                    eccCompanion,
-                    mmiCompanion,
-                    userCompanion,
-                    sharingModel);
-
-            //Enhance entities with values defined with consumer in each dynamic property.
-            processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
-
             final List<T> list = new ArrayList<>();
-            //            list.add(isRunning ? previouslyRunCriteriaEntity : null);
-            //            list.add(pair.getKey());
-
-            // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
-            // FIXME Need to investigate why this is the case.
-            processedEntities.forEach(entity -> list.add((T) entity) );
+            resultList.forEach(entity -> list.add((T) entity) );
             return Either.right(list);
 
         } finally {

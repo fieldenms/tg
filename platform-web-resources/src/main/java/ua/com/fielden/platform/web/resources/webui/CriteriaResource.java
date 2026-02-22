@@ -740,10 +740,69 @@ public class CriteriaResource extends AbstractWebResource {
                         );
                     }
                 }
-                final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
+
+                final var resultList = run(
+                    of(t2(updatedFreshCentre, previouslyRunCentre)),
+                    isRunning,
+
                     customObject,
-                    complementCriteriaEntityBeforeRunning( // complements previouslyRunCriteriaEntity instance
-                        previouslyRunCriteriaEntity,
+                    previouslyRunCriteriaEntity,
+                    webUiConfig,
+                    companionFinder,
+                    user,
+                    critGenerator,
+                    entityFactory,
+                    centreContextHolder,
+                    eccCompanion,
+                    mmiCompanion,
+                    userCompanion,
+                    sharingModel,
+
+                    miType,
+                    saveAsName,
+                    device(),
+                    centre
+                );
+
+                // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
+                // throw new IllegalStateException("Illegal state during criteria running.");
+                LOGGER.debug("CRITERIA_RESOURCE: run finished.");
+                return restUtil.rawListJsonRepresentation(resultList.toArray());
+            } finally {
+                if (lockAcquired) {
+                    // it is necessary to unlock Lock in finally block (exceptions will be handled properly then)
+                    lock.unlock();
+                }
+            }
+        }, restUtil);
+    }
+
+    public static List<Object> run(
+        final Optional<T2<ICentreDomainTreeManagerAndEnhancer,ICentreDomainTreeManagerAndEnhancer>> updatedFreshCentreAndPreviouslyRunCentre,
+        final boolean isRunning,
+
+        final Map<String, Object> customObject,
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder,
+        final User user,
+        final ICriteriaGenerator critGenerator,
+        final EntityFactory entityFactory,
+        final CentreContextHolder centreContextHolder,
+        final EntityCentreConfigCo eccCompanion,
+        final MainMenuItemCo mmiCompanion,
+        final IUser userCompanion,
+        final ICentreConfigSharingModel sharingModel,
+
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final DeviceProfile device,
+        final EntityCentre<AbstractEntity<?>> centre
+    ) {
+        final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
+                customObject,
+                complementCriteriaEntityBeforeRunning( // complements criteriaEntity instance
+                        criteriaEntity,
                         webUiConfig,
                         companionFinder,
                         user,
@@ -754,70 +813,71 @@ public class CriteriaResource extends AbstractWebResource {
                         mmiCompanion,
                         userCompanion,
                         sharingModel
-                    )
-                );
-                if (isRunning) {
-                    final var updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                    final var changedCriteriaIndication = createChangedCriteriaIndication(updatedFreshCentre, updatedSavedCentre);
-                    updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculatorWithSavedSupplier().apply(() -> updatedSavedCentre), miType, saveAsName, previouslyRunCentre, pair.getKey(), of(changedCriteriaIndication));
-                }
-
-                // Running the rendering customiser for result set of entities.
-                pair.getKey().put("renderingHints", createRenderingHints(pair.getValue()));
-
-                // Apply primary and secondary action selectors
-                pair.getKey().putAll(linkedMapOf(createPrimaryActionIndicesForCentre(pair.getValue(), centre)));
-                pair.getKey().putAll(linkedMapOf(createSecondaryActionIndicesForCentre(pair.getValue(), centre)));
-                pair.getKey().putAll(linkedMapOf(createPropertyActionIndicesForCentre(pair.getValue(), centre)));
-
-                // Build dynamic properties object
-                final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
-                        centre,
-                        webUiConfig,
-                        companionFinder,
-                        user,
-                        critGenerator,
-                        entityFactory,
-                        centreContextHolder,
-                        previouslyRunCriteriaEntity,
-                        device(),
-                        eccCompanion,
-                        mmiCompanion,
-                        userCompanion,
-                        sharingModel);
-
-                pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext));
-
-                Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
-                        centre,
-                        centre.getCustomPropertiesDefinitions(),
-                        centre.getCustomPropertiesAsignmentHandler(),
-                        pair.getValue().stream());
-
-                //Enhance entities with values defined with consumer in each dynamic property.
-                processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
-                //Enhance rendering hints with styles for each dynamic column.
-                processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
-
-                final var list = new ArrayList<Object>();
-                list.add(isRunning ? previouslyRunCriteriaEntity : null);
-                list.add(pair.getKey());
-
-                // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
-                // FIXME Need to investigate why this is the case.
-                processedEntities.forEach(list::add);
-
-                // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
-                // throw new IllegalStateException("Illegal state during criteria running.");
-                LOGGER.debug("CRITERIA_RESOURCE: run finished.");
-                return restUtil.rawListJsonRepresentation(list.toArray());
-            } finally {
-                if (lockAcquired) {
-                    // it is necessary to unlock Lock in finally block (exceptions will be handled properly then)
-                    lock.unlock();
-                }
+                )
+        );
+        final var skipCustomObjectCalculations = updatedFreshCentreAndPreviouslyRunCentre.isEmpty();
+        if (!skipCustomObjectCalculations) {
+            if (isRunning) {
+                final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updatedFreshCentreAndPreviouslyRunCentre.get()._1;
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updatedFreshCentreAndPreviouslyRunCentre.get()._2;
+                final var updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                final var changedCriteriaIndication = createChangedCriteriaIndication(updatedFreshCentre, updatedSavedCentre);
+                updateResultantCustomObject(criteriaEntity.centreDirtyCalculatorWithSavedSupplier().apply(() -> updatedSavedCentre), miType, saveAsName, previouslyRunCentre, pair.getKey(), of(changedCriteriaIndication));
             }
-        }, restUtil);
+
+            // Running the rendering customiser for result set of entities.
+            pair.getKey().put("renderingHints", createRenderingHints(pair.getValue(), centre));
+
+            // Apply primary and secondary action selectors
+            pair.getKey().putAll(linkedMapOf(createPrimaryActionIndicesForCentre(pair.getValue(), centre)));
+            pair.getKey().putAll(linkedMapOf(createSecondaryActionIndicesForCentre(pair.getValue(), centre)));
+            pair.getKey().putAll(linkedMapOf(createPropertyActionIndicesForCentre(pair.getValue(), centre)));
+        }
+
+        // Build dynamic properties object
+        final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
+                centre,
+                webUiConfig,
+                companionFinder,
+                user,
+                critGenerator,
+                entityFactory,
+                centreContextHolder,
+                criteriaEntity,
+                device,
+                eccCompanion,
+                mmiCompanion,
+                userCompanion,
+                sharingModel);
+
+        if (!skipCustomObjectCalculations) {
+            pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext, centre));
+        }
+
+        Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
+                centre,
+                centre.getCustomPropertiesDefinitions(),
+                centre.getCustomPropertiesAsignmentHandler(),
+                pair.getValue().stream());
+
+        //Enhance entities with values defined with consumer in each dynamic property.
+        processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
+        if (!skipCustomObjectCalculations) {
+            //Enhance rendering hints with styles for each dynamic column.
+            processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
+        }
+
+        final var list = new ArrayList<Object>();
+        if (!skipCustomObjectCalculations) {
+            list.add(isRunning ? criteriaEntity : null);
+            list.add(pair.getKey());
+        }
+
+        // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
+        // FIXME Need to investigate why this is the case.
+        processedEntities.forEach(list::add);
+
+        return list;
     }
 
     /// A method to try acquiring a lock for running a centre.
@@ -842,7 +902,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// Calculates rendering hints for the given `entities`.
     ///
-    private List<Object> createRenderingHints(final List<AbstractEntity<?>> entities) {
+    private static List<Object> createRenderingHints(final List<AbstractEntity<?>> entities, final EntityCentre<AbstractEntity<?>> centre) {
         final Optional<IRenderingCustomiser<?>> renderingCustomiser = centre.getRenderingCustomiser();
         if (renderingCustomiser.isPresent()) {
             final IRenderingCustomiser<?> renderer = renderingCustomiser.get();
@@ -871,7 +931,7 @@ public class CriteriaResource extends AbstractWebResource {
         });
     }
 
-    private Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyRenderingHints(
+    private static Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyRenderingHints(
             final Stream<AbstractEntity<?>> stream, List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
             final List<Object> renderingHints)
     {
@@ -937,7 +997,7 @@ public class CriteriaResource extends AbstractWebResource {
         return resList;
     }
 
-    private Map<String, List<Map<String, Object>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
+    private static Map<String, List<Map<String, Object>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext, final EntityCentre<AbstractEntity<?>> centre) {
         final Map<String, List<Map<String, Object>>> dynamicColumns = new LinkedHashMap<>();
         resPropsWithContext.forEach(resPropWithContext -> {
             centre.getDynamicColumnBuilderFor(resPropWithContext.getKey())
@@ -990,7 +1050,7 @@ public class CriteriaResource extends AbstractWebResource {
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         if (queryEnhancerConfig.isPresent()) {
-            return Optional.of(new Pair<>(
+            return of(new Pair<>(
                 queryEnhancerConfig.get().getKey(),
                 CentreResourceUtils.createCentreContext(
                     true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
