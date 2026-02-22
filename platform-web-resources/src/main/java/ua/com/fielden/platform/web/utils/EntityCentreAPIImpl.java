@@ -3,12 +3,10 @@ package ua.com.fielden.platform.web.utils;
 import com.google.inject.Inject;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
@@ -23,38 +21,34 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static java.lang.Class.forName;
-import static java.util.Optional.*;
-import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
-import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
-import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREFIX_OF;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 
 public class EntityCentreAPIImpl implements EntityCentreAPI {
     private final ICompanionObjectFinder companionFinder;
@@ -101,10 +95,14 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             .and().condition(centreConfigCondFor(uuid));
     }
 
-    @Override
-    public <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Result, List<T>> entityCentreResult(
-        final String configUuid
-    ) {
+    public record ConfigSettings (
+        Optional<String> saveAsName,
+        User owner,
+        DeviceProfile device,
+        Class<? extends MiWithConfigurationSupport<?>> miType
+    ) {}
+
+    private static Either<Result, ConfigSettings> findConfigSettings(final String configUuid, final ICompanionObjectFinder companionFinder) {
         final IUser coUser = companionFinder.find(User.class, true);
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
         final Optional<EntityCentreConfig> freshConfigOpt = eccCompanion.getEntityOptional(
@@ -134,11 +132,30 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
         Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miTypeGen;
         final var device = freshConfigOpt.get().getTitle().startsWith(MOBILE.name()) ? MOBILE : DESKTOP;
 
+        final Optional<String> saveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device));
+        if (LINK_CONFIG_TITLE.equals(saveAsName.get())) {
+            return left(failure("Default / Link configs are not available for API running (%s).".formatted(saveAsName)));
+        }
+
+        return right(new ConfigSettings(saveAsName, user, device, miType));
+    }
+
+    @Override
+    public <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Result, List<T>> entityCentreResult(
+        final String configUuid
+    ) {
+        final var resultOrConfigSettings = findConfigSettings(configUuid, companionFinder);
+        if (resultOrConfigSettings.isLeft()) {
+            return left(resultOrConfigSettings.asLeft().value());
+        }
+
+        final var configSettings = resultOrConfigSettings.asRight().value();
+
         final User currentUser = userProvider.getUser();
 
         try {
 
-            userProvider.setUser(user);
+            userProvider.setUser(configSettings.owner);
 
             final CentreContextHolder centreContextHolder = null;
             final Map<String, Object> customObject = mapOf(t2("@@action", RunActions.RUN.toString()));
@@ -148,28 +165,21 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
 
             final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
-            final Optional<String> saveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device));
-            if (LINK_CONFIG_TITLE.equals(saveAsName.get())) {
-                return left(failure("Default / Link configs are not available for API running (%s).".formatted(saveAsName)));
-            }
 
-            // load / update fresh centre if it is not loaded yet / stale
-            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-            //final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
 
-            final M validationPrototype = createCriteriaValidationPrototype(miType, saveAsName, originalCdtmae, companionFinder, critGenerator, CRITERIA_ENTITY_ID /* TODO prevVersion + 1 */, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-
-            final M freshCriteriaEntity = resetMetaStateForCriteriaValidationPrototype(
-                validationPrototype,
-                getOriginalManagedType(validationPrototype.getType(), originalCdtmae)
+            final M freshCriteriaEntity = createCriteriaValidationPrototypeForAPI(
+                FRESH_CENTRE_NAME,
+                configSettings.miType, configSettings.saveAsName, companionFinder, critGenerator,
+                configSettings.owner, configSettings.device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
             );
 
-            final Result validationResult = validateCriteriaBeforeRunning(freshCriteriaEntity, miType, authorisationModel, securityTokenProvider);
+            final Result validationResult = validateCriteriaBeforeRunning(freshCriteriaEntity, configSettings.miType, authorisationModel, securityTokenProvider);
             if (!validationResult.isSuccessful()) {
                 return left(validationResult);
             }
 
-            final EntityCentre<AbstractEntity<?>> centre = getEntityCentre(miType.getName(), webUiConfig);
+            final EntityCentre<AbstractEntity<?>> centre = getEntityCentre(configSettings.miType.getName(), webUiConfig);
             final Result generationResult = generateDataIfNeeded(freshCriteriaEntity, centre, isRunning, isSorting, customObject);
             // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
             // otherwise, proceed with the request handling further to actually query the data
@@ -186,7 +196,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                 (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?>) freshCriteriaEntity,
                 webUiConfig,
                 companionFinder,
-                user,
+                configSettings.owner,
                 critGenerator,
                 entityFactory,
                 centreContextHolder,
@@ -195,15 +205,15 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                 userCompanion,
                 sharingModel,
 
-                miType,
-                saveAsName,
-                device,
+                configSettings.miType,
+                configSettings.saveAsName,
+                configSettings.device,
                 centre
             );
 
             final List<T> list = new ArrayList<>();
             resultList.forEach(entity -> list.add((T) entity) );
-            return Either.right(list);
+            return right(list);
 
         } finally {
             userProvider.setUser(currentUser);

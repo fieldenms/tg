@@ -471,6 +471,41 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
     }
 
+    ///
+    ///
+    /// @param name -- surrogate name of the centre (fresh, previouslyRun etc.);
+    ///
+    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaValidationPrototypeForAPI(
+            final String name,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final Optional<String> saveAsName,
+            final ICompanionObjectFinder companionFinder,
+            final ICriteriaGenerator critGenerator,
+            final User user,
+            final DeviceProfile device,
+            final IWebUiConfig webUiConfig,
+            final EntityCentreConfigCo eccCompanion,
+            final MainMenuItemCo mmiCompanion,
+            final IUser userCompanion,
+            final ICentreConfigSharingModel sharingModel) {
+
+        // load / update fresh centre if it is not loaded yet / stale
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(
+            user, miType, name, saveAsName,
+            device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder
+        );
+
+        final M validationPrototype = createCriteriaValidationPrototype(
+            miType, saveAsName, originalCdtmae, companionFinder, critGenerator, CRITERIA_ENTITY_ID /* TODO prevVersion + 1 */,
+            user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
+        );
+
+        return resetMetaStateForCriteriaValidationPrototype(
+            validationPrototype,
+            getOriginalManagedType(validationPrototype.getType(), originalCdtmae)
+        );
+    }
+
     /// Creates the validation prototype for criteria entity of concrete `miType`.
     ///
     /// The entity creation process uses rigorous generation of criteria type and the instance every time (based on cdtmae of concrete miType).
