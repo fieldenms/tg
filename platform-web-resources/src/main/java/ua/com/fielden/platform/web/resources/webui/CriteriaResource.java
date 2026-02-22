@@ -205,25 +205,14 @@ public class CriteriaResource extends AbstractWebResource {
                     final Optional<String> preliminarySaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device()));
                     // updating is required from upstream configuration;
                     if (!LINK_CONFIG_TITLE.equals(preliminarySaveAsName.get())) { // (but not for link configuration);
-                        actualSaveAsNameAndSharedIndicator = updateFromUpstream(configUuid.get(), preliminarySaveAsName, miType, device(), eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, sharingModel, companionFinder);
+                        actualSaveAsNameAndSharedIndicator = updateFromUpstream(configUuid.get(), preliminarySaveAsName);
                     } else {
                         actualSaveAsNameAndSharedIndicator = t2(preliminarySaveAsName, false);
                     }
                 } else {
                     // if there is no FRESH configuration then there are no [link, own save-as] configuration with the specified uuid;
                     // however there can exist [base, shared] config for other user with the specified uuid;
-                    actualSaveAsNameAndSharedIndicator = firstTimeLoadingFrom(
-                        validateUuidAndGetUpstreamConfig(configUuid.get(), miType, device(), eccCompanion, user).orElseThrow(Result::asRuntime),
-                        miType,
-                        device(),
-                        eccCompanion,
-                        user,
-                        webUiConfig,
-                        mmiCompanion,
-                        userCompanion,
-                        sharingModel,
-                        companionFinder
-                    );
+                    actualSaveAsNameAndSharedIndicator = firstTimeLoadingFrom(validateUuidAndGetUpstreamConfig(configUuid.get()).orElseThrow(Result::asRuntime));
                 }
                 actualSaveAsName = actualSaveAsNameAndSharedIndicator._1;
                 final boolean isInheritedFromShared = actualSaveAsNameAndSharedIndicator._2;
@@ -237,7 +226,7 @@ public class CriteriaResource extends AbstractWebResource {
                     final Optional<String> preliminarySaveAsName = retrievePreferredConfigName(user, miType, device(), companionFinder, webUiConfig); // preferred configuration should be loaded
                     resolvedConfigUuid = updateCentreConfigUuid(user, miType, preliminarySaveAsName, device(), eccCompanion);
                     if (resolvedConfigUuid.isPresent()) { // preferred config can be inherited from base / shared (link configs can not be preferred, no need to check it here)
-                        actualSaveAsName = updateFromUpstream(resolvedConfigUuid.get(), preliminarySaveAsName, miType, device(), eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, sharingModel, companionFinder)._1; // it needs updating from upstream -- only for the configs that has configUuid aka non-default
+                        actualSaveAsName = updateFromUpstream(resolvedConfigUuid.get(), preliminarySaveAsName)._1; // it needs updating from upstream -- only for the configs that has configUuid aka non-default
                     } else {
                         actualSaveAsName = preliminarySaveAsName;
                     }
@@ -255,15 +244,9 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// Validates `configUuid` to ensure the configuration exists and can be shared with the current `user`.
     ///
-    public static Either<Result, EntityCentreConfig> validateUuidAndGetUpstreamConfig(
-        final String configUuid,
-        final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final DeviceProfile device,
-        final EntityCentreConfigCo eccCompanion,
-        final User user
-    ) {
+    private Either<Result, EntityCentreConfig> validateUuidAndGetUpstreamConfig(final String configUuid) {
         // we look only for owners; "owning" is indicated by presence of SAVED configuration with the specified uuid
-        final var savedConfigOptForOtherUser = findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion);
+        final var savedConfigOptForOtherUser = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, eccCompanion);
         if (savedConfigOptForOtherUser.isEmpty()) {
             // configuration does not exist (no SAVED surrogate centre) -- legitimate error; this can happen if configuration has been already deleted or didn't exist due to URI mistyping
             return left(failure(CONFIG_DOES_NOT_EXIST));
@@ -274,7 +257,7 @@ public class CriteriaResource extends AbstractWebResource {
             // so from two categories [base, shared] we can only consider [shared];
             // so, at this stage, we prohibit loading of [inherited from shared] configurations for base users -- not really practical scenario and possibly will never be required
             return left(failure(format(CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER, user)));
-        } else if (LINK_CONFIG_TITLE.equals(obtainTitleFrom(savedConfigOptForOtherUser.get().getTitle(), SAVED_CENTRE_NAME, device))) {
+        } else if (LINK_CONFIG_TITLE.equals(obtainTitleFrom(savedConfigOptForOtherUser.get().getTitle(), SAVED_CENTRE_NAME, device()))) {
             // link-configs can not be shared anywhere neither from base user nor from base/non-base user that gave its uuid as part of sharing process
             return left(failure(LINK_CONFIG_COULD_NOT_BE_SHARED));
         }
@@ -283,21 +266,10 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// Implements the first-time loading of a configuration into `inherited from base / shared`.
     ///
-    public static T2<Optional<String>, Boolean> firstTimeLoadingFrom(
-        final EntityCentreConfig upstreamConfig,
-        final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final DeviceProfile device,
-        final EntityCentreConfigCo eccCompanion,
-        final User user,
-        final IWebUiConfig webUiConfig,
-        final MainMenuItemCo mmiCompanion,
-        final IUser userCompanion,
-        final ICentreConfigSharingModel sharingModel,
-        final ICompanionObjectFinder companionFinder
-    ) {
+    private T2<Optional<String>, Boolean> firstTimeLoadingFrom(final EntityCentreConfig upstreamConfig) {
         final String configUuid = upstreamConfig.getConfigUuid();
         final User upstreamConfigCreator = upstreamConfig.getOwner();
-        final String preliminarySaveAsName = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device);
+        final String preliminarySaveAsName = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device());
         final Optional<String> actualSaveAsName;
         if (upstreamConfigCreator.isBase() && areEqual(upstreamConfigCreator, user.getBasedOnUser() /*id-only-proxy*/)) {
             // we have base => basedOn relationship between current user and the creator of savedConfig;
@@ -305,25 +277,25 @@ public class CriteriaResource extends AbstractWebResource {
             // CentreUpdater.updateCentre and .updateDifferences method should take care of that process;
             // at least FRESH config should be prepared -- making it preferred requires existence
             actualSaveAsName = of(preliminarySaveAsName);
-            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             return t2(actualSaveAsName, false);
         } else {
             // if current user does not have access to shared configuration then sharing process should be prevented
             sharingModel.isSharedWith(configUuid, user).ifFailure(Result::throwRuntime);
             // current user gets uuid as part of sharing process from other base/non-base user;
             // need to determine non-conflicting name for current user from preliminarySaveAsName
-            actualSaveAsName = of(determineNonConflictingName(preliminarySaveAsName, -1, miType, device, eccCompanion, user));
+            actualSaveAsName = of(determineNonConflictingName(preliminarySaveAsName, -1));
             final Function<String, Function<Boolean, Function<String, Consumer<Optional<String>>>>> createInheritedFromShared = surrogateName -> runAutomatically -> newDescription -> uuid -> saveNewEntityCentreManager(
                 upstreamConfig.getConfigBody(),
                 miType,
                 user,
-                NAME_OF.apply(surrogateName).apply(actualSaveAsName).apply(device),
+                NAME_OF.apply(surrogateName).apply(actualSaveAsName).apply(device()),
                 newDescription,
                 eccCompanion,
                 mmiCompanion,
                 ecc -> uuid.map(ecc::setConfigUuid).orElse(ecc).setRunAutomatically(runAutomatically)
             );
-            final EntityCentreConfig freshConfigForCreator = findConfigOptByUuid(configUuid, upstreamConfigCreator, miType, device, FRESH_CENTRE_NAME, eccCompanion).get(); // need to retrieve FRESH config to get 'desc' -- that's because SAVED centres haven't stored descriptions, only FRESH do; this config must be present, otherwise savedConfigForOtherUser would not exist
+            final EntityCentreConfig freshConfigForCreator = findConfigOptByUuid(configUuid, upstreamConfigCreator, miType, device(), FRESH_CENTRE_NAME, eccCompanion).get(); // need to retrieve FRESH config to get 'desc' -- that's because SAVED centres haven't stored descriptions, only FRESH do; this config must be present, otherwise savedConfigForOtherUser would not exist
             createInheritedFromShared.apply(FRESH_CENTRE_NAME).apply(freshConfigForCreator.isRunAutomatically()).apply(freshConfigForCreator.getDesc()).accept(of(configUuid)); // update (FRESH only) with upstream description and configUuid during creation
             createInheritedFromShared.apply(SAVED_CENTRE_NAME).apply(false).apply(null).accept(empty());
             return t2(actualSaveAsName, true);
@@ -337,43 +309,24 @@ public class CriteriaResource extends AbstractWebResource {
     /// If that still conflicts, numeric suffixes `(shared 1)` through `(shared 9)` are attempted.
     /// If no unique name can be generated, an error is thrown.
     ///
-    private static String determineNonConflictingName(
-        final String preliminaryName,
-        final int index,
-        final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final DeviceProfile device,
-        final EntityCentreConfigCo eccCompanion,
-        final User user
-    ) {
+    private String determineNonConflictingName(final String preliminaryName, final int index) {
         final String name;
         if (index > 9) {
             throw failure(format(COULD_NOT_LOAD_CONFLICTING_SHARED_CONFIGURATION, preliminaryName));
         } else {
             name = preliminaryName + (index == -1 ? "" : format(CONFLICTING_TITLE_SUFFIX, index == 0 ? "" : " " + index));
         }
-        return findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(of(name)).apply(device), eccCompanion, FETCH_CONFIG)
-            .map(conflictingConfig -> determineNonConflictingName(preliminaryName, index + 1, miType, device, eccCompanion, user))
+        return findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(of(name)).apply(device()), eccCompanion, FETCH_CONFIG)
+            .map(conflictingConfig -> determineNonConflictingName(preliminaryName, index + 1))
             .orElse(name);
     }
 
     /// Updates a configuration already loaded by the `user` with the concrete `configUuid`
     /// from its upstream configuration, if it is inherited.
     ///
-    public static T2<Optional<String>, Boolean> updateFromUpstream(
-        final String configUuid,
-        final Optional<String> saveAsName,
-        final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final DeviceProfile device,
-        final EntityCentreConfigCo eccCompanion,
-        final User user,
-        final IWebUiConfig webUiConfig,
-        final MainMenuItemCo mmiCompanion,
-        final IUser userCompanion,
-        final ICentreConfigSharingModel sharingModel,
-        final ICompanionObjectFinder companionFinder
-    ) {
+    private T2<Optional<String>, Boolean> updateFromUpstream(final String configUuid, final Optional<String> saveAsName) {
         // look for config creator
-        final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion);
+        final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, eccCompanion);
         if (savedConfigOpt.isPresent()) {
             // the creator is current user or other
             final EntityCentreConfig savedConfig = savedConfigOpt.get();
@@ -382,20 +335,20 @@ public class CriteriaResource extends AbstractWebResource {
                 // current user didn't create this config -> it is inherited and needs updating
                 if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser() /*id-only-proxy*/)) {
                     // inherited from base
-                    if (isCentreChanged(saveAsName, miType, device, eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, companionFinder)) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
-                        removeCentres(user, miType, device, saveAsName, eccCompanion, SAVED_CENTRE_NAME);
+                    if (isCentreChanged(saveAsName)) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
+                        removeCentres(user, miType, device(), saveAsName, eccCompanion, SAVED_CENTRE_NAME);
                     } else { // otherwise base user changes will be loaded immediately after centre loading
-                        removeCentres(user, miType, device, saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+                        removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                     }
-                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
 
-                    makePreferred(user, miType, saveAsName, device, companionFinder, webUiConfig); // inherited from base always gets preferred on loading; must leave it preferred after deletion
+                    makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig); // inherited from base always gets preferred on loading; must leave it preferred after deletion
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
                         // inherited from shared
-                        updateInheritedFromShared(savedConfig, miType, device, saveAsName, user, eccCompanion, of(() -> isCentreChanged(saveAsName, miType, device, eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, companionFinder)));
-                        return t2(of(obtainTitleFrom(savedConfig.getTitle(), SAVED_CENTRE_NAME, device)), true);
+                        updateInheritedFromShared(savedConfig, miType, device(), saveAsName, user, eccCompanion, of(() -> isCentreChanged(saveAsName)));
+                        return t2(of(obtainTitleFrom(savedConfig.getTitle(), SAVED_CENTRE_NAME, device())), true);
                     } // already loaded inherited from shared config was made unshared; the inherited from shared configuration now acts like own save-as configuration
                 }
             } // if the current user is creator then no 'updating from upstream' is needed -- it is own save-as
@@ -436,20 +389,10 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// Determines whether the FRESH configuration has been modified compared to the SAVED one.
     ///
-    private static boolean isCentreChanged(
-        final Optional<String> actualSaveAsName,
-        final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final DeviceProfile device,
-        final EntityCentreConfigCo eccCompanion,
-        final User user,
-        final IWebUiConfig webUiConfig,
-        final MainMenuItemCo mmiCompanion,
-        final IUser userCompanion,
-        final ICompanionObjectFinder companionFinder
-    ) {
+    private boolean isCentreChanged(final Optional<String> actualSaveAsName) {
         return isFreshCentreChanged(
-            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
-            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
+            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
         );
     }
 

@@ -245,7 +245,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     ///
     /// @param updatedPreviouslyRunCriteriaEntity criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action), but not yet actually used for running
     ///
-    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<AbstractEntity<?>>> createCriteriaMetaValuesCustomObjectWithResult(
+    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<AbstractEntity<?>>> createCriteriaMetaValuesCustomObjectWithResult(
             final Map<String, Object> customObject,
             final M updatedPreviouslyRunCriteriaEntity) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
