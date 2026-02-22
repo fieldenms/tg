@@ -22,9 +22,8 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.resources.webui.ConfigSettings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +43,6 @@ import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREFIX_OF;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
@@ -94,13 +92,6 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
         return centreConfigQueryFor(surrogateName, maybeAlias)
             .and().condition(centreConfigCondFor(uuid));
     }
-
-    public record ConfigSettings (
-        Optional<String> saveAsName,
-        User owner,
-        DeviceProfile device,
-        Class<? extends MiWithConfigurationSupport<?>> miType
-    ) {}
 
     private static Either<Result, ConfigSettings> findConfigSettings(final String configUuid, final ICompanionObjectFinder companionFinder) {
         final IUser coUser = companionFinder.find(User.class, true);
@@ -155,7 +146,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
 
         try {
 
-            userProvider.setUser(configSettings.owner);
+            userProvider.setUser(configSettings.owner());
 
             final CentreContextHolder centreContextHolder = null;
             final Map<String, Object> customObject = mapOf(t2("@@action", RunActions.RUN.toString()));
@@ -169,9 +160,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
 
             final M freshCriteriaEntity = createCriteriaValidationPrototypeForAPI(
-                FRESH_CENTRE_NAME,
-                configSettings.miType, configSettings.saveAsName, companionFinder, critGenerator,
-                configSettings.owner, configSettings.device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
+                FRESH_CENTRE_NAME, configSettings, companionFinder, critGenerator, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
             );
 
             final Result validationResult = validateCriteriaBeforeRunning(freshCriteriaEntity, authorisationModel, securityTokenProvider);
@@ -188,6 +177,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             }
 
             final var resultList = run(
+                configSettings,
                 empty(),
                 isRunning,
 
@@ -195,18 +185,13 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                 (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?>) freshCriteriaEntity,
                 webUiConfig,
                 companionFinder,
-                configSettings.owner,
                 critGenerator,
                 entityFactory,
                 centreContextHolder,
                 eccCompanion,
                 mmiCompanion,
                 userCompanion,
-                sharingModel,
-
-                configSettings.miType,
-                configSettings.saveAsName,
-                configSettings.device
+                sharingModel
             );
 
             final List<T> list = new ArrayList<>();

@@ -683,6 +683,7 @@ public class CriteriaResource extends AbstractWebResource {
                 }
 
                 final var resultList = run(
+                    new ConfigSettings(saveAsName, user, device(), miType),
                     of(t2(updatedFreshCentre, previouslyRunCentre)),
                     isRunning,
 
@@ -690,18 +691,13 @@ public class CriteriaResource extends AbstractWebResource {
                     previouslyRunCriteriaEntity,
                     webUiConfig,
                     companionFinder,
-                    user,
                     critGenerator,
                     entityFactory,
                     centreContextHolder,
                     eccCompanion,
                     mmiCompanion,
                     userCompanion,
-                    sharingModel,
-
-                    miType,
-                    saveAsName,
-                    device()
+                    sharingModel
                 );
 
                 // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
@@ -718,6 +714,7 @@ public class CriteriaResource extends AbstractWebResource {
     }
 
     public static List<Object> run(
+        final ConfigSettings configSettings,
         final Optional<T2<ICentreDomainTreeManagerAndEnhancer,ICentreDomainTreeManagerAndEnhancer>> updatedFreshCentreAndPreviouslyRunCentre,
         final boolean isRunning,
 
@@ -725,18 +722,13 @@ public class CriteriaResource extends AbstractWebResource {
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
         final IWebUiConfig webUiConfig,
         final ICompanionObjectFinder companionFinder,
-        final User user,
         final ICriteriaGenerator critGenerator,
         final EntityFactory entityFactory,
         final CentreContextHolder centreContextHolder,
         final EntityCentreConfigCo eccCompanion,
         final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
-        final ICentreConfigSharingModel sharingModel,
-
-        final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final Optional<String> saveAsName,
-        final DeviceProfile device
+        final ICentreConfigSharingModel sharingModel
     ) {
         final EntityCentre<AbstractEntity<?>> centre = getEntityCentre(criteriaEntity.miType().getName(), webUiConfig);
         final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
@@ -745,7 +737,7 @@ public class CriteriaResource extends AbstractWebResource {
                         criteriaEntity,
                         webUiConfig,
                         companionFinder,
-                        user,
+                        configSettings.owner(),
                         critGenerator,
                         entityFactory,
                         centreContextHolder,
@@ -760,9 +752,9 @@ public class CriteriaResource extends AbstractWebResource {
             if (isRunning) {
                 final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updatedFreshCentreAndPreviouslyRunCentre.get()._1;
                 final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updatedFreshCentreAndPreviouslyRunCentre.get()._2;
-                final var updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                final var updatedSavedCentre = updateCentre(configSettings.owner(), configSettings.miType(), SAVED_CENTRE_NAME, configSettings.saveAsName(), configSettings.device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 final var changedCriteriaIndication = createChangedCriteriaIndication(updatedFreshCentre, updatedSavedCentre);
-                updateResultantCustomObject(criteriaEntity.centreDirtyCalculatorWithSavedSupplier().apply(() -> updatedSavedCentre), miType, saveAsName, previouslyRunCentre, pair.getKey(), of(changedCriteriaIndication));
+                updateResultantCustomObject(criteriaEntity.centreDirtyCalculatorWithSavedSupplier().apply(() -> updatedSavedCentre), configSettings.miType(), configSettings.saveAsName(), previouslyRunCentre, pair.getKey(), of(changedCriteriaIndication));
             }
 
             // Running the rendering customiser for result set of entities.
@@ -779,12 +771,12 @@ public class CriteriaResource extends AbstractWebResource {
                 centre,
                 webUiConfig,
                 companionFinder,
-                user,
+                configSettings.owner(),
                 critGenerator,
                 entityFactory,
                 centreContextHolder,
                 criteriaEntity,
-                device,
+                configSettings.device(),
                 eccCompanion,
                 mmiCompanion,
                 userCompanion,
