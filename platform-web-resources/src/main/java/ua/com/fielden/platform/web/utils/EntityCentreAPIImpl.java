@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.Class.forName;
 import static java.util.Optional.*;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
@@ -58,7 +59,6 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalM
 public class EntityCentreAPIImpl implements EntityCentreAPI {
     private final ICompanionObjectFinder companionFinder;
     private final IUserProvider userProvider;
-//    private final IDeviceProvider deviceProvider;
     private final ICriteriaGenerator critGenerator;
     private final IWebUiConfig webUiConfig;
     private final EntityFactory entityFactory;
@@ -70,7 +70,6 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
     public EntityCentreAPIImpl(
         final ICompanionObjectFinder companionFinder,
         final IUserProvider userProvider,
-//        final IDeviceProvider deviceProvider,
         final ICriteriaGenerator critGenerator,
         final IWebUiConfig webUiConfig,
         final EntityFactory entityFactory,
@@ -80,7 +79,6 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
     ) {
         this.companionFinder = companionFinder;
         this.userProvider = userProvider;
-//        this.deviceProvider = deviceProvider;
         this.critGenerator = critGenerator;
         this.webUiConfig = webUiConfig;
         this.entityFactory = entityFactory;
@@ -123,13 +121,13 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                         ).model()
         );
 
-        if (!freshConfigOpt.isPresent()) {
+        if (freshConfigOpt.isEmpty()) {
             return left(Result.failure("Config with uuid %s does not exist.".formatted(configUuid)));
         }
         final User user = coUser.findUser(freshConfigOpt.get().getOwner().getKey());
         final Class<?> miTypeGen;
         try {
-            miTypeGen = Class.forName(freshConfigOpt.get().getMenuItem().getKey());
+            miTypeGen = forName(freshConfigOpt.get().getMenuItem().getKey());
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -150,41 +148,10 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
 
             final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
-
-
-//            final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity = createCriteriaEntityWithoutConflicts(
-//                centreContextHolder.getModifHolder(),
-//                companionFinder,
-//                critGenerator,
-//                miType,
-//                saveAsName,
-//                user,
-//                DeviceProfile.DESKTOP,
-//                webUiConfig,
-//                eccCompanion,
-//                mmiCompanion,
-//                userCompanion,
-//                sharingModel
-//            );
-
-
-            // start loading of configuration defined by concrete uuid;
-            // we look only through [link, own save-as, inherited from base, inherited from shared] set of configurations;
-            // default configurations are excluded in the lookup;
-            // only FRESH kind are looked for;
-            final Optional<String> actualSaveAsName;
-            // for current user we already have FRESH configuration with uuid loaded;
-            final Optional<String> preliminarySaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device));
-//            // updating is required from upstream configuration;
-//            if (!LINK_CONFIG_TITLE.equals(preliminarySaveAsName.get())) { // (but not for link configuration);
-//                actualSaveAsName = updateFromUpstream(configUuid, preliminarySaveAsName, miType, device, eccCompanion, user, webUiConfig, mmiCompanion, userCompanion, sharingModel, companionFinder)._1;
-//            } else {
-            actualSaveAsName = preliminarySaveAsName;
-//            }
-            if (!actualSaveAsName.isPresent() || LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) {
-                return left(failure("Default / Link configs are not available for API running (%s).".formatted(actualSaveAsName)));
+            final Optional<String> saveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device));
+            if (LINK_CONFIG_TITLE.equals(saveAsName.get())) {
+                return left(failure("Default / Link configs are not available for API running (%s).".formatted(saveAsName)));
             }
-            final var saveAsName = actualSaveAsName;
 
             // load / update fresh centre if it is not loaded yet / stale
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
@@ -210,13 +177,6 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             if (!generationResult.isSuccessful()) {
                 return left(generationResult);
             }
-
-            //final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = savedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
-
-            //commitCentreWithoutConflicts(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, updatedSavedCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-
-            //final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-            //final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
             final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
                 customObject,
@@ -259,8 +219,6 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
 
             //Enhance entities with values defined with consumer in each dynamic property.
             processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
-//            //Enhance rendering hints with styles for each dynamic column.
-//            processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
 
             final List<T> list = new ArrayList<>();
             //            list.add(isRunning ? previouslyRunCriteriaEntity : null);
