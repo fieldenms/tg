@@ -12,7 +12,7 @@ import ua.com.fielden.platform.tiny.TinyHyperlink;
 import ua.com.fielden.platform.tiny.TinyHyperlinkCo;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.utils.EntityCentreAPI;
+import ua.com.fielden.platform.web.utils.EntityCentreProcessor;
 
 import java.util.Base64;
 import java.util.Optional;
@@ -34,16 +34,16 @@ import static ua.com.fielden.platform.utils.QrCodeUtils.ImageFormat.PNG;
 public class ShareActionProducer extends DefaultEntityProducerWithContext<ShareAction> {
 
     private CentreContextHolder centreContextHolder;
-    private final EntityCentreAPI entityCentreAPI;
+    private final EntityCentreProcessor entityCentreProcessor;
 
     @Inject
     ShareActionProducer(
             final EntityFactory factory,
             final ICompanionObjectFinder companionFinder,
-            final EntityCentreAPI entityCentreAPI)
+            final EntityCentreProcessor entityCentreProcessor)
     {
         super(factory, ShareAction.class, companionFinder);
-        this.entityCentreAPI = entityCentreAPI;
+        this.entityCentreProcessor = entityCentreProcessor;
     }
 
     @Override
@@ -80,7 +80,7 @@ public class ShareActionProducer extends DefaultEntityProducerWithContext<ShareA
                 }
             });
 
-            final var result = entityCentreAPI.entityCentreResult("48b767df-bf45-48b7-932a-d2892eec47e8"); // Daniel.Truong Troy.Plecas
+            final var result = entityCentreProcessor.getResult("c95ec1ae-09e8-439f-92e7-880261fce023");
             System.out.println("----------- API Execution (...) ------------");
             if (result.isRight()) {
                 result.asRight().value().forEach(ent -> {

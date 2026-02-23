@@ -8,8 +8,8 @@ import ua.com.fielden.platform.ioc.IModuleWithInjector;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
-import ua.com.fielden.platform.web.utils.EntityCentreAPI;
-import ua.com.fielden.platform.web.utils.EntityCentreAPIImpl;
+import ua.com.fielden.platform.web.utils.EntityCentreProcessor;
+import ua.com.fielden.platform.web.utils.DefaultEntityCentreProcessor;
 
 import java.util.List;
 import java.util.Properties;
@@ -34,7 +34,7 @@ public class TgTestWebApplicationServerIocModule extends TgTestApplicationServer
         super.configure();
         bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
         bindWebAppResources(new WebUiConfig(props));
-        bind(EntityCentreAPI.class).to(EntityCentreAPIImpl.class);
+        bind(EntityCentreProcessor.class).to(DefaultEntityCentreProcessor.class);
     }
 
     @Override

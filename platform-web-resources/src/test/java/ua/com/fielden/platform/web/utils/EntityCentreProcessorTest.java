@@ -20,11 +20,11 @@ import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 
-/// Tests for {@link EntityCentreAPI}.
+/// Tests for {@link EntityCentreProcessor}.
 /// These should serve as an example of how end-application tests can be implemented.
 ///
 @RunWith(H2OrPostgreSqlOrSqlServerContextSelectorForWebTests.class)
-public class EntityCentreAPITest extends AbstractDaoTestCase {
+public class EntityCentreProcessorTest extends AbstractDaoTestCase {
 
     /// Creates Entity Centre persisted configuration for concrete surrogate version of it.
     ///
@@ -48,7 +48,7 @@ public class EntityCentreAPITest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void executing_entityCentreResult_method_returns_entities_for_named_configuration_with_data() {
+    public void executing_getResult_method_returns_entities_for_named_configuration_with_data() {
         // Define uuid for named configuration.
         final var uuid = "c95ec1ae-09e8-439f-92e7-880261fce023";
 
@@ -56,8 +56,8 @@ public class EntityCentreAPITest extends AbstractDaoTestCase {
 
         // Run Entity Centre through the API.
 
-        final var entityCentreApi = getInstance(EntityCentreAPI.class);
-        final var result = entityCentreApi.entityCentreResult(uuid);
+        final var entityCentreProcessor = getInstance(EntityCentreProcessor.class);
+        final var result = entityCentreProcessor.getResult(uuid);
 
         // Check the result.
 
@@ -69,7 +69,7 @@ public class EntityCentreAPITest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void executing_entityCentreResultExists_method_returns_true_for_named_configuration_with_data() {
+    public void executing_resultExists_method_returns_true_for_named_configuration_with_data() {
         // Define uuid for named configuration.
         final var uuid = "c95ec1ae-09e8-439f-92e7-880261fce023";
 
@@ -77,8 +77,8 @@ public class EntityCentreAPITest extends AbstractDaoTestCase {
 
         // Run Entity Centre through the API.
 
-        final var entityCentreApi = getInstance(EntityCentreAPI.class);
-        final var result = entityCentreApi.entityCentreResultExists(uuid);
+        final var entityCentreProcessor = getInstance(EntityCentreProcessor.class);
+        final var result = entityCentreProcessor.resultExists(uuid);
 
         // Check the result.
 

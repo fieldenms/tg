@@ -51,7 +51,7 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.RunActions.RUN;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
 
-public class EntityCentreAPIImpl implements EntityCentreAPI {
+public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
     private final ICompanionObjectFinder companionFinder;
     private final IUserProvider userProvider;
     private final ICriteriaGenerator critGenerator;
@@ -62,7 +62,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
     private final ISecurityTokenProvider securityTokenProvider;
 
     @Inject
-    public EntityCentreAPIImpl(
+    public DefaultEntityCentreProcessor(
         final ICompanionObjectFinder companionFinder,
         final IUserProvider userProvider,
         final ICriteriaGenerator critGenerator,
@@ -154,7 +154,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
     }
 
     @Override
-    public <T extends AbstractEntity<?>> Either<Result, List<T>> entityCentreResult(final String configUuid) {
+    public <T extends AbstractEntity<?>> Either<Result, List<T>> getResult(final String configUuid) {
         return entityCentreResult(configUuid, empty());
     }
 
@@ -234,7 +234,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
     }
 
     @Override
-    public Either<Result, Boolean> entityCentreResultExists(final String configUuid) {
+    public Either<Result, Boolean> resultExists(final String configUuid) {
         return entityCentreResult(configUuid, of(1))
             .map(result -> !result.isEmpty());
     }

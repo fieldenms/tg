@@ -6,13 +6,13 @@ import ua.com.fielden.platform.types.either.Either;
 
 import java.util.List;
 
-public interface EntityCentreAPI {
+public interface EntityCentreProcessor {
 
-    <T extends AbstractEntity<?>> Either<Result, List<T>> entityCentreResult(
+    <T extends AbstractEntity<?>> Either<Result, List<T>> getResult(
         String configUuid
     );
 
-    Either<Result, Boolean> entityCentreResultExists(
+    Either<Result, Boolean> resultExists(
         String configUuid
     );
 
