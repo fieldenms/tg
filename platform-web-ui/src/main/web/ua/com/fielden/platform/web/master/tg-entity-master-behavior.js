@@ -1531,6 +1531,11 @@ const TgEntityMasterBehaviorImpl = {
                     throw {msg: "Please save or cancel changes."};
             }
         }
+
+        if (this._reflector().findTypeByName(this.entityType).isCustomisableCanLeave()) {
+            return this.customCanLeave();
+        }
+
         return true;
     },
 

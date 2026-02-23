@@ -884,6 +884,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
         return typeof this['_compoundMenuItem'] === 'undefined' ? false : this['_compoundMenuItem'];
     }
 
+    /**
+     * Returns 'true' if the entity type implements 'ICustomisableCanLeave', indicating that its master provides a custom 'canLeave' implementation on the server.
+     *
+     */
+    EntityType.prototype.isCustomisableCanLeave = function () {
+        return typeof this['_isCustomisableCanLeave'] === 'undefined' ? false : this['_isCustomisableCanLeave'];
+    }
+
     /** 
      * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
      */

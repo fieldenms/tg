@@ -4,7 +4,6 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.ICustomisableCanLeave;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -65,7 +64,7 @@ public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T>
                         entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName()))
                 .replace("//@ready-callback",
                         "self.masterWithCentre = true;\n" +
-                        (ICustomisableCanLeave.class.isAssignableFrom(entityType) ? "" : "self.classList.remove('canLeave');\n") +
+                        "self.classList.remove('canLeave');\n" +
                         "self._focusEmbededView = function () {\n" +
                         "    if (this.wasLoaded() && this.$.loader.loadedElement.focusView) {\n" +
                         "        this.$.loader.loadedElement.focusView();\n" +
@@ -92,9 +91,6 @@ public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T>
                         "}.bind(self);\n")
                 .replace("//@attached-callback",
                         format(""
-                        +"this.canLeave = function () {\n"
-                        + "    return this.customCanLeave();\n"
-                        + "}.bind(this);\n"
                         + "self.$.loader.attrs = %s;\n"
                         + "self.registerCentreRefreshRedirector();\n",
                         attributes))

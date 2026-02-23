@@ -103,6 +103,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             entityTypeInfo.set_continuation(true);
         }
 
+        if (ICustomisableCanLeave.class.isAssignableFrom(type)) {
+            entityTypeInfo.set_isCustomisableCanLeave(true);
+        }
+
         // let's inform the client of whether value descriptions should be displayed in editors of this type
         final boolean shouldDisplayDescription = AnnotationReflector.isAnnotationPresentForClass(DisplayDescription.class, type);
         if (!isDisplayDescDefault(shouldDisplayDescription)) {
