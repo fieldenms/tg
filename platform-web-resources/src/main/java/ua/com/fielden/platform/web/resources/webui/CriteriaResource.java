@@ -682,7 +682,7 @@ public class CriteriaResource extends AbstractWebResource {
                     }
                 }
 
-                final var resultList = run(
+                final var resultList = executeEntityCentreConfiguration(
                     new ConfigSettings(saveAsName, user, device(), miType),
                     of(t2(updatedFreshCentre, previouslyRunCentre)),
                     isRunning,
@@ -713,13 +713,18 @@ public class CriteriaResource extends AbstractWebResource {
         }, restUtil);
     }
 
-    public static List<Object> run(
+    /// Executes Entity Centre configuration with [ConfigSettings]. Uses `criteriaEntity` for execution.
+    ///
+    /// @param updatedFreshCentreAndPreviouslyRunCentre an [Optional] pair of centre managers for more comprehensive and complete running;
+    ///                                                 if passed, rendering hints / UI action indices / criteria indicator will be computed
+    ///
+    public static List<Object> executeEntityCentreConfiguration(
         final ConfigSettings configSettings,
-        final Optional<T2<ICentreDomainTreeManagerAndEnhancer,ICentreDomainTreeManagerAndEnhancer>> updatedFreshCentreAndPreviouslyRunCentre,
+        final Optional<T2<ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer>> updatedFreshCentreAndPreviouslyRunCentre,
         final boolean isRunning,
-
         final Map<String, Object> customObject,
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
+
         final IWebUiConfig webUiConfig,
         final ICompanionObjectFinder companionFinder,
         final ICriteriaGenerator critGenerator,

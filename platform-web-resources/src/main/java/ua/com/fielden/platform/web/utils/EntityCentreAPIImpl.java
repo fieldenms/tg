@@ -6,7 +6,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
@@ -17,6 +16,7 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.either.Left;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -49,6 +49,7 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.RunActions.RUN;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
 
 public class EntityCentreAPIImpl implements EntityCentreAPI {
@@ -98,6 +99,8 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
 
     /// Determines [ConfigSettings] for a configuration, defined by `configUuid`.
     /// These include who owns the configuration, it's "save-as" name and [DeviceProfile], where it was created.
+    ///
+    /// Returns [Left] for invalid configuration.
     ///
     private static Either<Result, ConfigSettings> determineConfigurationSettings(final String configUuid, final ICompanionObjectFinder companionFinder) {
         // Blank uuid does not represent any centre configuration.
@@ -155,59 +158,55 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
     public <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Result, List<T>> entityCentreResult(
         final String configUuid
     ) {
+        // Find out the settings for configuration. Stop execution if the settings can not be determined or inapplicable.
         final var resultOrConfigSettings = determineConfigurationSettings(configUuid, companionFinder);
         if (resultOrConfigSettings.isLeft()) {
             return left(resultOrConfigSettings.asLeft().value());
         }
-
         final var configSettings = resultOrConfigSettings.asRight().value();
 
+        // Determine current user to be returned back into the user provider once the execution has been performed.
         final User currentUser = userProvider.getUser();
-
         try {
-
+            // Apply the configuration owner to user provider temporarily.
             userProvider.setUser(configSettings.owner());
 
-            final CentreContextHolder centreContextHolder = null;
-            final Map<String, Object> customObject = mapOf(t2("@@action", RunActions.RUN.toString()));
-
-            final boolean isRunning = true;
-            final boolean isSorting = false;
+            // Create custom object for centre running, containing all settings.
+            // The only necessary setting is indication that centre should be run (i.e. not a page refresh / navigate).
+            final Map<String, Object> customObject = mapOf(t2(RUN_ACTION_KEY, RUN.toString()));
 
             final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
-
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
 
-            final M freshCriteriaEntity = createCriteriaValidationPrototype(
-                FRESH_CENTRE_NAME, configSettings, companionFinder, critGenerator, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
-            );
+            // Create criteria entity for "fresh" surrogate configuration.
+            final M freshCriteriaEntity = createCriteriaValidationPrototype(FRESH_CENTRE_NAME, configSettings, companionFinder, critGenerator, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
+            // Validate the criteria entity. Stop execution if it is invalid.
             final Result validationResult = validateCriteriaBeforeRunning(freshCriteriaEntity, authorisationModel, securityTokenProvider);
             if (!validationResult.isSuccessful()) {
                 return left(validationResult);
             }
 
-            final Result generationResult = generateDataIfNeeded(freshCriteriaEntity, webUiConfig, isRunning, isSorting, customObject);
-            // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
-            // otherwise, proceed with the request handling further to actually query the data
-            // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
+            // Generate entities if the centre has IGenerator defined. Stop execution if generation result is not successful.
+            // `customObject` does not have parameter for generation forcing -- this parameter is not important.
+            final Result generationResult = generateDataIfNeeded(freshCriteriaEntity, webUiConfig, true, false, customObject);
             if (!generationResult.isSuccessful()) {
                 return left(generationResult);
             }
 
-            final var resultList = run(
+            // Perform actual running of `freshCriteriaEntity` with `configSettings`.
+            final var resultList = executeEntityCentreConfiguration(
                 configSettings,
                 empty(),
-                isRunning,
-
+                true,
                 customObject,
                 (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?>) freshCriteriaEntity,
                 webUiConfig,
                 companionFinder,
                 critGenerator,
                 entityFactory,
-                centreContextHolder,
+                null,
                 eccCompanion,
                 mmiCompanion,
                 userCompanion,
@@ -215,10 +214,12 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             );
 
             final List<T> list = new ArrayList<>();
-            resultList.forEach(entity -> list.add((T) entity) );
+            resultList.forEach(entity -> list.add((T) entity));
             return right(list);
-
+        } catch (final Exception exception) {
+            return left(failure(new EntityCentreExecutionException("Configuration with UUID [%s] and settings [%s] could not be executed.".formatted(configUuid, configSettings), exception)));
         } finally {
+            // Return original user back to user provider.
             userProvider.setUser(currentUser);
         }
     }

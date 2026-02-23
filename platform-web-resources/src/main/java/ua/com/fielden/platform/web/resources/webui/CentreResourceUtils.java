@@ -81,6 +81,7 @@ import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPL
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.RunActions.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.CHANGED;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.NONE;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
@@ -122,6 +123,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /// The key for customObject's value containing the config share validation error.
     static final String SHARE_ERROR = "shareError";
+
+    /// The key for [RunActions].
+    public static final String RUN_ACTION_KEY = "@@action";
 
     /// Private default constructor to prevent instantiation.
     ///
@@ -217,7 +221,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /// A predicate to determine whether `customObject` represents action `Run`.
     public static boolean isRunning(final Map<String, Object> customObject) {
-        return RunActions.RUN.toString().equals(customObject.get("@@action"));
+        return RUN.toString().equals(customObject.get(RUN_ACTION_KEY));
     }
 
     /// A predicate to determine whether `customObject` represents action with `retrieveAll` option.
@@ -227,7 +231,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /// A predicate to determine whether `customObject` represents action `Refresh`.
     public static boolean isRefreshing(final Map<String, Object> customObject) {
-        return RunActions.REFRESH.toString().equals(customObject.get("@@action"));
+        return REFRESH.toString().equals(customObject.get(RUN_ACTION_KEY));
     }
 
     /// Returns `true` if `Sorting` action is performed, otherwise `false`.
@@ -257,7 +261,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // For refresh / navigate action this instance was not changed from previous run / refresh / navigate action.
         // For run action this instance was already updated from FRESH surrogate centre and includes "fresh" pageCapacity for the purposes of running
         //  (the only way to make FRESH pageCapacity different from PREVIOUSLY_RUN is to change it using Customise Columns and press DISCARD on selection criteria).
-        final String action = (String) customObject.get("@@action");
+        final String action = (String) customObject.get(RUN_ACTION_KEY);
         final int pageNumber = isRunning(customObject) ? 0 : (Integer) customObject.get("@@pageNumber");
         final boolean retrieveAll = isRetrieveAll(customObject);
         if (isRunning(customObject)) {
@@ -283,7 +287,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 data = refreshedData.getKey();
                 resultantCustomObject.put("summary", refreshedData.getValue());
             }
-        } else if (RunActions.NAVIGATE.toString().equals(action)) {
+        } else if (NAVIGATE.toString().equals(action)) {
             final int pageCapacity = secondTick.getPageCapacity();
             try {
                 page = updatedPreviouslyRunCriteriaEntity.getPage(pageNumber, pageCapacity);
