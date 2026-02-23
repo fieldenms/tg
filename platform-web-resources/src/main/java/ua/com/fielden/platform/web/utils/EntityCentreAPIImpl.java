@@ -34,7 +34,7 @@ import java.util.Optional;
 import static java.lang.Class.forName;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static org.apache.tika.utils.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
