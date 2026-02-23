@@ -471,12 +471,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
     }
 
-    /// Creates criteria validation prototype for surrogate `name` and [ConfigSettings].
+    /// Creates criteria validation prototype for `surrogateName` and [ConfigSettings].
     ///
-    /// @param name surrogate name of the centre ([CentreUpdater#FRESH_CENTRE_NAME], [CentreUpdater#PREVIOUSLY_RUN_CENTRE_NAME] etc.);
+    /// @param surrogateName surrogate name of the centre ([CentreUpdater#FRESH_CENTRE_NAME], [CentreUpdater#PREVIOUSLY_RUN_CENTRE_NAME] etc.);
     ///
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaValidationPrototype(
-        final String name,
+        final String surrogateName,
         final ConfigSettings configSettings,
         final ICompanionObjectFinder companionFinder,
         final ICriteriaGenerator critGenerator,
@@ -487,7 +487,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final ICentreConfigSharingModel sharingModel
     ) {
         // Load / update centre manager instance from persistence storage.
-        final var centreManager = updateCentre(configSettings.owner(), configSettings.miType(), name, configSettings.saveAsName(), configSettings.device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        final var centreManager = updateCentre(configSettings.owner(), configSettings.miType(), surrogateName, configSettings.saveAsName(), configSettings.device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         // Construct criteria validation prototype.
         final M validationPrototype = createCriteriaValidationPrototype(configSettings.miType(), configSettings.saveAsName(), centreManager, companionFinder, critGenerator, -1L, configSettings.owner(), configSettings.device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         // Apply meta-state resetting.
@@ -859,7 +859,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /// UPDATE: resetting of the values has been enhanced (comparing to just invoking resetMetaState() on entity) with the functionality, for which the detailed comment is inside
     /// the method implementation.
     ///
-    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M resetMetaStateForCriteriaValidationPrototype(final M criteriaValidationPrototype, final Class<?> originalManagedType) {
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M resetMetaStateForCriteriaValidationPrototype(final M criteriaValidationPrototype, final Class<?> originalManagedType) {
         // standard resetting of meta-values: copies values into originalValues for all properties:
         criteriaValidationPrototype.resetMetaState();
 

@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.resources.webui.ConfigSettings;
 
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ import java.util.Optional;
 import static java.lang.Class.forName;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.tika.utils.StringUtils.isBlank;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -79,63 +82,80 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
         this.securityTokenProvider = securityTokenProvider;
     }
 
-    private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String surrogateName, final Optional<String> maybeAlias) {
+    /// Creates centre configuration query for config `uuid` and `surrogateName` regardless of the device profile where it was created.
+    ///
+    /// @param maybeAlias alias for [EntityCentreConfig] which can be used for some outer query
+    ///
+    private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final String surrogateName, final Optional<String> maybeAlias) {
         final var selectStart = select(EntityCentreConfig.class);
         return maybeAlias.map(selectStart::as).orElse(selectStart)
             .where().begin()
                 .prop("title").like().val(PREFIX_OF.apply(surrogateName).apply(DESKTOP))
                 .or().prop("title").like().val(PREFIX_OF.apply(surrogateName).apply(MOBILE))
-            .end();
-    }
-
-    private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final String surrogateName, final Optional<String> maybeAlias) {
-        return centreConfigQueryFor(surrogateName, maybeAlias)
+            .end()
             .and().condition(centreConfigCondFor(uuid));
     }
 
-    private static Either<Result, ConfigSettings> findConfigSettings(final String configUuid, final ICompanionObjectFinder companionFinder) {
-        final IUser coUser = companionFinder.find(User.class, true);
+    /// Determines [ConfigSettings] for a configuration, defined by `configUuid`.
+    /// These include who owns the configuration, it's "save-as" name and [DeviceProfile], where it was created.
+    ///
+    private static Either<Result, ConfigSettings> determineConfigurationSettings(final String configUuid, final ICompanionObjectFinder companionFinder) {
+        // Blank uuid does not represent any centre configuration.
+        if (isBlank(configUuid)) {
+            return left(failure("Configuration UUID [%s] is blank.".formatted(configUuid)));
+        }
+
+        // Find "fresh" persisted configuration instance for which there is a corresponding "saved" instance for the same owner.
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
         final Optional<EntityCentreConfig> freshConfigOpt = eccCompanion.getEntityOptional(
-                from(centreConfigQueryFor(configUuid, FRESH_CENTRE_NAME, of("ecc"))
-                        .and().exists(
-                                centreConfigQueryFor(configUuid, SAVED_CENTRE_NAME, empty())
-                                        .and().prop("owner").eq().extProp("ecc.owner")
-                                        .model()
-                        ).model())
-                        .with(
-                                fetchWithKeyAndDesc(EntityCentreConfig.class, true)
-                                        .with("owner", "menuItem", "title")
-                                        .fetchModel()
-                        ).model()
+            from(centreConfigQueryFor(configUuid, FRESH_CENTRE_NAME, of("ecc"))
+                .and().exists(centreConfigQueryFor(configUuid, SAVED_CENTRE_NAME, empty())
+                    .and().prop("owner").eq().extProp("ecc.owner")
+                    .model()
+                ).model()
+            )
+            .with(fetchWithKeyAndDesc(EntityCentreConfig.class, true)
+                .with("owner", "menuItem", "title")
+                .fetchModel()
+            ).model()
         );
 
+        // If there is no such configuration, return invalid `Result`.
         if (freshConfigOpt.isEmpty()) {
-            return left(Result.failure("Config with uuid %s does not exist.".formatted(configUuid)));
+            return left(failure("Configuration with [%s] UUID does not exist.".formatted(configUuid)));
         }
-        final User user = coUser.findUser(freshConfigOpt.get().getOwner().getKey());
-        final Class<?> miTypeGen;
+
+        final var freshConfig = freshConfigOpt.get();
+        // Determine owner.
+        final IUser coUser = companionFinder.find(User.class, true);
+        final User owner = coUser.findUser(freshConfig.getOwner().getKey());
+
+        // Determine menu item type.
+        final var miTypeName = freshConfig.getMenuItem().getKey();
+        final Class<? extends MiWithConfigurationSupport<?>> miType;
         try {
-            miTypeGen = forName(freshConfigOpt.get().getMenuItem().getKey());
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            miType = (Class<? extends MiWithConfigurationSupport<?>>) forName(miTypeName);
+        } catch (final ClassNotFoundException notFoundException) {
+            return left(failure(new EntityCentreExecutionException("Configuration's menu item type [%s] can not be found.".formatted(miTypeName), notFoundException)));
         }
-        Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) miTypeGen;
-        final var device = freshConfigOpt.get().getTitle().startsWith(MOBILE.name()) ? MOBILE : DESKTOP;
 
-        final Optional<String> saveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device));
+        // Determine device.
+        final var device = freshConfig.getTitle().startsWith(MOBILE.name()) ? MOBILE : DESKTOP;
+
+        // Determine "save-as" name.
+        final Optional<String> saveAsName = of(obtainTitleFrom(freshConfig.getTitle(), FRESH_CENTRE_NAME, device));
         if (LINK_CONFIG_TITLE.equals(saveAsName.get())) {
-            return left(failure("Default / Link configs are not available for API running (%s).".formatted(saveAsName)));
+            return left(failure("Link configuration [%s] is not available for API running.".formatted(saveAsName)));
         }
 
-        return right(new ConfigSettings(saveAsName, user, device, miType));
+        return right(new ConfigSettings(saveAsName, owner, device, miType));
     }
 
     @Override
     public <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Result, List<T>> entityCentreResult(
         final String configUuid
     ) {
-        final var resultOrConfigSettings = findConfigSettings(configUuid, companionFinder);
+        final var resultOrConfigSettings = determineConfigurationSettings(configUuid, companionFinder);
         if (resultOrConfigSettings.isLeft()) {
             return left(resultOrConfigSettings.asLeft().value());
         }
