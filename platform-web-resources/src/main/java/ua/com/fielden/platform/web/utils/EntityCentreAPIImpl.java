@@ -159,7 +159,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
 
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
 
-            final M freshCriteriaEntity = createCriteriaValidationPrototypeForAPI(
+            final M freshCriteriaEntity = createCriteriaValidationPrototype(
                 FRESH_CENTRE_NAME, configSettings, companionFinder, critGenerator, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
             );
 
