@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.utils;
 
 import com.google.inject.Inject;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -155,8 +154,13 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
     }
 
     @Override
-    public <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Result, List<T>> entityCentreResult(
-        final String configUuid
+    public <T extends AbstractEntity<?>> Either<Result, List<T>> entityCentreResult(final String configUuid) {
+        return entityCentreResult(configUuid, empty());
+    }
+
+    private <T extends AbstractEntity<?>> Either<Result, List<T>> entityCentreResult(
+        final String configUuid,
+        final Optional<Integer> maybeCustomPageCapacity
     ) {
         // Find out the settings for configuration. Stop execution if the settings can not be determined or inapplicable.
         final var resultOrConfigSettings = determineConfigurationSettings(configUuid, companionFinder);
@@ -180,7 +184,7 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
 
             // Create criteria entity for "fresh" surrogate configuration.
-            final M freshCriteriaEntity = createCriteriaValidationPrototype(FRESH_CENTRE_NAME, configSettings, companionFinder, critGenerator, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> freshCriteriaEntity = createCriteriaValidationPrototype(FRESH_CENTRE_NAME, configSettings, companionFinder, critGenerator, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
             // Validate the criteria entity. Stop execution if it is invalid.
             final Result validationResult = validateCriteriaBeforeRunning(freshCriteriaEntity, authorisationModel, securityTokenProvider);
@@ -195,13 +199,18 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
                 return left(generationResult);
             }
 
+            // Adjust page capacity to some custom value, if present.
+            maybeCustomPageCapacity.ifPresent(
+                customPageCapacity -> freshCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().setPageCapacity(customPageCapacity)
+            );
+
             // Perform actual running of `freshCriteriaEntity` with `configSettings`.
             final var resultList = executeEntityCentreConfiguration(
                 configSettings,
                 empty(),
                 true,
                 customObject,
-                (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?>) freshCriteriaEntity,
+                freshCriteriaEntity,
                 webUiConfig,
                 companionFinder,
                 critGenerator,
@@ -222,6 +231,12 @@ public class EntityCentreAPIImpl implements EntityCentreAPI {
             // Return original user back to user provider.
             userProvider.setUser(currentUser);
         }
+    }
+
+    @Override
+    public Either<Result, Boolean> entityCentreResultExists(final String configUuid) {
+        return entityCentreResult(configUuid, of(1))
+            .map(result -> !result.isEmpty());
     }
 
 }
