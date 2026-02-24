@@ -275,10 +275,9 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
         assertRetrievalModel(SynEntityWithYieldId.class, ID_ONLY).contains("id");
     }
 
-    // ID_ONLY uncoditionally includes ID
     @Test
-    public void strategy_ID_ONLY_id_is_included_if_synthetic_model_does_not_yield_into_it() {
-        assertRetrievalModel(SynEntityWithoutYieldId.class, ID_ONLY).contains("id");
+    public void strategy_ID_ONLY_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
+        assertRetrievalModel(SynEntityWithoutYieldId.class, ID_ONLY).notContains("id");
     }
 
     @Test
@@ -377,7 +376,7 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                                  CREATED_DATE, CREATED_BY, CREATED_TRANSACTION_GUID,
                                  ACTIVE, REF_COUNT,
                                  "location", "bogieClass")
-                .subModel("location", a -> a.containsExactly("wagonSlot", "workshop"))
+                .subModel("location", a -> a.containsExactly(ID, KEY, "wagonSlot", "workshop"))
                 .subModel("location.wagonSlot", a -> a.equalsModel(DEFAULT))
                 .subModel("location.workshop", a -> a.equalsModel(DEFAULT))
                 .subModel("bogieClass", a -> a.equalsModel(DEFAULT));
@@ -394,12 +393,10 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                 .containsExactly(ID, KEY, "qty", "cost", "cost.amount")
                 .proxiesExactly();
         assertRetrievalModel(TgAverageFuelUsage.class, ALL)
-                // TODO: Should contain ID.
-                .containsExactly(KEY, "qty", "cost", "cost.amount")
+                .containsExactly(ID, KEY, "qty", "cost", "cost.amount")
                 .proxiesExactly();
         assertRetrievalModel(TgAverageFuelUsage.class, DEFAULT)
-                // TODO: Should contain ID.
-                .containsExactly(KEY, "qty", "cost", "cost.amount")
+                .containsExactly(ID, KEY, "qty", "cost", "cost.amount")
                 .proxiesExactly();
         assertRetrievalModel(TgAverageFuelUsage.class, KEY_AND_DESC)
                 .containsExactly(ID, KEY)
@@ -523,8 +520,7 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                         .subModel("entity", a -> a.contains("union"))
                         .subModel("entity.union", a -> a.contains("entity"))
                         .subModel("entity.union.entity", a -> a.contains("union"))
-                        .subModel("entity.union.entity.union", a -> a.contains("entity"))
-                        .subModel("entity.union.entity.union.entity", a -> a.equalsModel(ID_ONLY)));
+                        .subModel("entity.union.entity.union", a -> a.equalsModel(ID_ONLY)));
     }
 
     @Test
@@ -533,9 +529,12 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                 .allSatisfy(cat -> assertRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, cat)
                         .notContains("union"));
 
-        assertThat(List.of(ID_ONLY, ID_AND_VERSION, NONE))
+        assertThat(List.of(ID_ONLY, ID_AND_VERSION))
                 .allSatisfy(cat -> assertRetrievalModel(Circular_UnionEntity.class, cat)
-                        .notContains("entity"));
+                        .subModel("entity", it -> it.equalsModel(ID_ONLY)));
+
+        assertRetrievalModel(Circular_UnionEntity.class, NONE)
+                .notContains("entity");
     }
 
     /*----------------------------------------------------------------------------
@@ -592,13 +591,23 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
     }
 
     @Test
-    public void strategy_ID_ONLY_union_members_are_not_included() {
-        _union_members_are_not_included(ID_ONLY);
+    public void strategy_ID_ONLY_union_members_are_included_with_ID_ONLY() {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        assertRetrievalModel(UnionEntity.class, ID_ONLY)
+                .containsExactly(ID, UnionEntity.Property.propertyOne, UnionEntity.Property.propertyTwo)
+                .subModel(UnionEntity.Property.propertyOne, it -> it.equalsModel(ID_ONLY))
+                .subModel(UnionEntity.Property.propertyTwo, it -> it.equalsModel(ID_ONLY));
     }
 
     @Test
-    public void strategy_ID_AND_VERSION_union_members_are_not_included() {
-        _union_members_are_not_included(ID_AND_VERSION);
+    public void strategy_ID_AND_VERSION_union_members_are_included_with_ID_ONLY() {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        assertRetrievalModel(UnionEntity.class, ID_AND_VERSION)
+                .containsExactly(ID, UnionEntity.Property.propertyOne, UnionEntity.Property.propertyTwo)
+                .subModel(UnionEntity.Property.propertyOne, it -> it.equalsModel(ID_ONLY))
+                .subModel(UnionEntity.Property.propertyTwo, it -> it.equalsModel(ID_ONLY));
     }
 
     @Test
