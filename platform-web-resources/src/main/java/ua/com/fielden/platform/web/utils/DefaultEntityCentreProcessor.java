@@ -162,16 +162,16 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
         final String configUuid,
         final Optional<Integer> maybeCustomPageCapacity
     ) {
-        // Find out the settings for configuration. Stop execution if the settings can not be determined or inapplicable.
-        final var resultOrConfigSettings = determineConfigurationSettings(configUuid, companionFinder);
-        if (resultOrConfigSettings.isLeft()) {
-            return left(resultOrConfigSettings.asLeft().value());
-        }
-        final var configSettings = resultOrConfigSettings.asRight().value();
-
         // Determine current user to be returned back into the user provider once the execution has been performed.
         final User currentUser = userProvider.getUser();
         try {
+            // Find out the settings for configuration. Stop execution if the settings can not be determined or inapplicable.
+            final var resultOrConfigSettings = determineConfigurationSettings(configUuid, companionFinder);
+            if (resultOrConfigSettings.isLeft()) {
+                return left(resultOrConfigSettings.asLeft().value());
+            }
+            final var configSettings = resultOrConfigSettings.asRight().value();
+
             // Apply the configuration owner to user provider temporarily.
             userProvider.setUser(configSettings.owner());
 
@@ -226,7 +226,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
             resultList.forEach(entity -> list.add((T) entity));
             return right(list);
         } catch (final Exception exception) {
-            return left(failure(new EntityCentreExecutionException("Configuration with UUID [%s] and settings [%s] could not be executed.".formatted(configUuid, configSettings), exception)));
+            return left(failure(new EntityCentreExecutionException("Configuration with [%s] UUID could not be executed.".formatted(configUuid), exception)));
         } finally {
             // Return original user back to user provider.
             userProvider.setUser(currentUser);
