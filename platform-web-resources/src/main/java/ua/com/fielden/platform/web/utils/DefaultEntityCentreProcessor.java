@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static java.lang.Class.forName;
 import static java.util.Optional.empty;
@@ -52,6 +53,16 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.Ru
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
 
 public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
+    private static final String ERR_EXECUTION_FAILED_PREFIX = "Entity Centre configuration execution failed. ";
+    public static final String ERR_CONFIG_UUID_IS_BLANK = ERR_EXECUTION_FAILED_PREFIX + "Config UUID [%s] is blank.";
+    public static final String ERR_CONFIG_DOES_NOT_EXIST = ERR_EXECUTION_FAILED_PREFIX + "Config with [%s] UUID does not exist.";
+    public static final String ERR_CONFIG_MENU_ITEM_TYPE_CANT_BE_FOUND = ERR_EXECUTION_FAILED_PREFIX + "[%s] config's menu item type [%s] can not be found.";
+    public static final String ERR_LINK_CONFIG_IS_NOT_AVAILABLE_FOR_RUNNING = ERR_EXECUTION_FAILED_PREFIX + "[%s] link config ([%s]) is not available for API running.";
+    public static final String ERR_DEFAULT_CONFIG_WITH_UUID_SHOULD_NOT_EXIST = ERR_EXECUTION_FAILED_PREFIX + "[%s] configuration with blank name [%s] shouldn't exist (default configuration should never have UUID).";
+
+    private static final Function<String, Function<DeviceProfile, String>> TITLE_PREFIX_INCL_DEFAULT =
+        surrogateName -> device -> PREFIX_OF.apply(surrogateName).apply(device).replace("[%", "%");
+
     private final ICompanionObjectFinder companionFinder;
     private final IUserProvider userProvider;
     private final ICriteriaGenerator critGenerator;
@@ -90,8 +101,8 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
         final var selectStart = select(EntityCentreConfig.class);
         return maybeAlias.map(selectStart::as).orElse(selectStart)
             .where().begin()
-                .prop("title").like().val(PREFIX_OF.apply(surrogateName).apply(DESKTOP))
-                .or().prop("title").like().val(PREFIX_OF.apply(surrogateName).apply(MOBILE))
+                .prop("title").like().val(TITLE_PREFIX_INCL_DEFAULT.apply(surrogateName).apply(DESKTOP))
+                .or().prop("title").like().val(TITLE_PREFIX_INCL_DEFAULT.apply(surrogateName).apply(MOBILE))
             .end()
             .and().condition(centreConfigCondFor(uuid));
     }
@@ -104,7 +115,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
     private static Either<Result, ConfigSettings> determineConfigurationSettings(final String configUuid, final ICompanionObjectFinder companionFinder) {
         // Blank uuid does not represent any centre configuration.
         if (isBlank(configUuid)) {
-            return left(failure("Configuration UUID [%s] is blank.".formatted(configUuid)));
+            return left(failure(ERR_CONFIG_UUID_IS_BLANK.formatted(configUuid)));
         }
 
         // Find "fresh" persisted configuration instance for which there is a corresponding "saved" instance for the same owner.
@@ -124,7 +135,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
 
         // If there is no such configuration, return invalid `Result`.
         if (freshConfigOpt.isEmpty()) {
-            return left(failure("Configuration with [%s] UUID does not exist.".formatted(configUuid)));
+            return left(failure(ERR_CONFIG_DOES_NOT_EXIST.formatted(configUuid)));
         }
 
         final var freshConfig = freshConfigOpt.get();
@@ -138,19 +149,21 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
         try {
             miType = (Class<? extends MiWithConfigurationSupport<?>>) forName(miTypeName);
         } catch (final ClassNotFoundException notFoundException) {
-            return left(failure(new EntityCentreExecutionException("Configuration's menu item type [%s] can not be found.".formatted(miTypeName), notFoundException)));
+            return left(failure(new EntityCentreExecutionException(ERR_CONFIG_MENU_ITEM_TYPE_CANT_BE_FOUND.formatted(configUuid, miTypeName), notFoundException)));
         }
 
         // Determine device.
         final var device = freshConfig.getTitle().startsWith(MOBILE.name()) ? MOBILE : DESKTOP;
 
         // Determine "save-as" name.
-        final Optional<String> saveAsName = of(obtainTitleFrom(freshConfig.getTitle(), FRESH_CENTRE_NAME, device));
-        if (LINK_CONFIG_TITLE.equals(saveAsName.get())) {
-            return left(failure("Link configuration [%s] is not available for API running.".formatted(saveAsName)));
+        final var saveAsNameString = freshConfig.getTitle().contains("[") ? obtainTitleFrom(freshConfig.getTitle(), FRESH_CENTRE_NAME, device) : "";
+        if (isBlank(saveAsNameString)) {
+            return left(failure(ERR_DEFAULT_CONFIG_WITH_UUID_SHOULD_NOT_EXIST.formatted(configUuid, saveAsNameString)));
         }
-
-        return right(new ConfigSettings(saveAsName, owner, device, miType));
+        if (LINK_CONFIG_TITLE.equals(saveAsNameString)) {
+            return left(failure(ERR_LINK_CONFIG_IS_NOT_AVAILABLE_FOR_RUNNING.formatted(configUuid, saveAsNameString)));
+        }
+        return right(new ConfigSettings(of(saveAsNameString), owner, device, miType));
     }
 
     @Override
