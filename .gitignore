@@ -33,6 +33,9 @@ target
 *.vrb
 *.old
 *.xwm
+ 
+# IntelliJ IDEA
+*.run.xml
 
 # Package Files #
 *.jar

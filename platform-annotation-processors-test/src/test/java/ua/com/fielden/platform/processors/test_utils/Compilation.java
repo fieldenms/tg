@@ -158,7 +158,7 @@ public final class Compilation {
         task.setProcessors(append(processors, processor));
         final boolean success = task.call();
 
-        return new CompilationResult(success, diagnosticListener.getDiagnostics(), fileManager.getGeneratedSources());
+        return new CompilationResult(success, diagnosticListener.getDiagnostics(), fileManager.getGeneratedSources(), fileManager.getOutputClasses());
     }
 
     private static final class EvaluatingProcessor extends AbstractProcessor {
@@ -208,6 +208,7 @@ public final class Compilation {
     private static final class ForwardingJavaFileManagerWithCache extends ForwardingStandardJavaFileManager {
 
         private final List<JavaFileObject> generatedJavaSources = new ArrayList<>();
+        private final List<CompilationResult.ClassFile> outputClasses = new ArrayList<>();
 
         ForwardingJavaFileManagerWithCache(StandardJavaFileManager fileManager) {
             super(fileManager);
@@ -222,11 +223,18 @@ public final class Compilation {
             if (location.isOutputLocation() && kind == JavaFileObject.Kind.SOURCE) {
                 generatedJavaSources.add(jfo);
             }
+            else if (location.isOutputLocation() && kind == JavaFileObject.Kind.CLASS) {
+                outputClasses.add(new CompilationResult.ClassFile(className, jfo));
+            }
             return jfo;
         }
 
         public List<JavaFileObject> getGeneratedSources() {
             return List.copyOf(generatedJavaSources);
+        }
+
+        public List<CompilationResult.ClassFile> getOutputClasses() {
+            return ImmutableList.copyOf(outputClasses);
         }
     }
 

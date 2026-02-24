@@ -40,6 +40,7 @@ import com.google.common.collect.Iterators;
 import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.ddl.MetadataProvider;
 
+
 /**
  * A collection of convenient DB related utilities such as to generate DDL and obtain the next value for sequence by name. 
  * 
@@ -166,18 +167,6 @@ public class DbUtils {
     public static List<String> prependDropDdlForSqlServer(final List<String> ddl) {
         final List<String> ddlWithDrop = new ArrayList<>();
         // drop all tables from the target database
-        ddlWithDrop.add("EXEC sp_msforeachtable \"ALTER TABLE ? NOCHECK CONSTRAINT all\";");
-        ddlWithDrop.add(
-                "WHILE(EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY'))"+
-                        "BEGIN"+
-                        "    DECLARE @sql_alterTable_fk NVARCHAR(4000)"+
-                        ""+
-                        "    SELECT  TOP 1 @sql_alterTable_fk = ('ALTER TABLE ' + TABLE_SCHEMA + '.[' + TABLE_NAME + '] DROP CONSTRAINT [' + CONSTRAINT_NAME + ']')"+
-                        "    FROM    INFORMATION_SCHEMA.TABLE_CONSTRAINTS"+
-                        "    WHERE   CONSTRAINT_TYPE = 'FOREIGN KEY'"+
-                        ""+
-                        "    EXEC (@sql_alterTable_fk)"+
-                "END");
         ddlWithDrop.add("EXEC sp_MSforeachtable @command1 = \"DROP TABLE ?\";");
         
         // create sequence for ID generation

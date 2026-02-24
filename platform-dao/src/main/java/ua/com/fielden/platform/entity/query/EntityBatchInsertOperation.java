@@ -32,7 +32,6 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.nCopies;
 import static java.util.Collections.unmodifiableSet;
-import static java.util.stream.Collectors.toList;
 
 /// Provides a way to save new entities using raw JDBC batch insertion.
 ///
@@ -57,9 +56,11 @@ public class EntityBatchInsertOperation {
     private final Supplier<TransactionalExecution> trExecSupplier;
 
     @Inject
-    EntityBatchInsertOperation(final IDbVersionProvider dbVersionProvider,
-                               final EntityBatchInsertTables entityBatchInsertTables,
-                               @Assisted final Supplier<TransactionalExecution> trExecSupplier) {
+    EntityBatchInsertOperation(
+            final IDbVersionProvider dbVersionProvider,
+            final EntityBatchInsertTables entityBatchInsertTables,
+            @Assisted final Supplier<TransactionalExecution> trExecSupplier)
+    {
         this.dbVersionProvider = dbVersionProvider;
         this.entityBatchInsertTables = entityBatchInsertTables;
         this.trExecSupplier = trExecSupplier;
@@ -99,9 +100,9 @@ public class EntityBatchInsertOperation {
         if (table == null) {
             throw new EqlException(ERR_DATABASE_TABLE.formatted(entities.getFirst().getType().getSimpleName()));
         }
-        final String tableName = table.name();
-        final List<String> columnNames = table.columns().stream().flatMap(x -> x.columnNames().stream()).collect(toList());
-        final String insertStmt = generateInsertStmt(tableName, columnNames, dbVersionProvider.dbVersion());
+        final var tableName = table.name();
+        final var columnNames = table.columns().stream().flatMap(x -> x.columnNames().stream()).toList();
+        final var insertStmt = generateInsertStmt(tableName, columnNames, dbVersionProvider.dbVersion());
 
         final AtomicInteger insertedCount = new AtomicInteger(0);
 

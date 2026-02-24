@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import com.google.inject.name.Names;
+import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.ioc.EntityIocModule;
@@ -14,15 +15,16 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 import java.util.Properties;
 
-/**
- * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityIocModule}, this module binds
- * {@link IMetaPropertyFactory}.
- * <p>
- * <b>IMPORTANT</b>: This module is strictly for testing purposes!
- * 
- * @author TG Team
- */
-public final class CommonEntityTestIocModuleWithPropertyFactory extends EntityTestIocModuleWithPropertyFactory {
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
+
+/// This Guice module ensures that all observable and validatable properties are handled correctly.
+/// In addition to [EntityIocModule], this module binds [IMetaPropertyFactory].
+/// This module disables auditing, but this can be changed by overriding [#auditingMode()].
+///
+/// **IMPORTANT**: This module is strictly for testing purposes!
+///
+///
+public class CommonEntityTestIocModuleWithPropertyFactory extends EntityTestIocModuleWithPropertyFactory {
 
     public CommonEntityTestIocModuleWithPropertyFactory() {
         super();
@@ -30,6 +32,10 @@ public final class CommonEntityTestIocModuleWithPropertyFactory extends EntityTe
 
     public CommonEntityTestIocModuleWithPropertyFactory(final Properties properties) {
         super(properties);
+    }
+
+    protected AuditingMode auditingMode() {
+        return AuditingMode.DISABLED;
     }
 
     @Override
@@ -44,6 +50,8 @@ public final class CommonEntityTestIocModuleWithPropertyFactory extends EntityTe
         bind(IDates.class).to(DatesForTesting.class);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
         bind(ITgPersistentEntityWithProperties.class).to(TgPersistentEntityWithPropertiesDaoStub.class);
+
+        bindConstant().annotatedWith(Names.named(AUDIT_MODE)).to(auditingMode().name());
     }
     
 }

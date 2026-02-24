@@ -22,12 +22,8 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 import ua.com.fielden.platform.utils.DbUtils;
 
-/**
- * This is a DB creator implementation for running unit tests against H2, running in file mode.
- * 
- * @author TG Team
- *
- */
+/// This is a DB creator implementation for running unit tests against H2, running in file mode.
+///
 public class H2DbCreator extends DbCreator {
 
     public H2DbCreator(
@@ -40,27 +36,24 @@ public class H2DbCreator extends DbCreator {
         super(testCaseType, props, config, maybeDdl, execDdslScripts);
     }
 
-    /**
-     * Generates DDL for creation of a test database.
-     */
+    /// Generates DDL for creation of a test database.
+    ///
     @Override
     protected List<String> genDdl(final IDdlGenerator ddlGenerator, final Dialect dialect) {
-        final List<String> createDdl = ddlGenerator.generateDatabaseDdl(dialect);
+        final List<String> createDdl = ddlGenerator.generateDatabaseDdl(dialect, false);
         return DbUtils.prependDropDdlForH2(createDdl);
     }
 
-    /**
-     * Generate the script for emptying the test database.
-     */
+    /// Generate the script for emptying the test database.
+    ///
     @Override
     public List<String> genTruncStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
         return entityMetadata.stream().map(em -> format("TRUNCATE TABLE %s;", em.data().tableName())).collect(toList());
     }
 
 
-    /**
-     * Scripts the test database once the test data has been populated, using H2's <code>SCRIPT</code> command.
-     */
+    /// Scripts the test database once the test data has been populated, using H2's `SCRIPT` command.
+    ///
     @Override
     public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
         final List<String> inserts = new ArrayList<>();
@@ -82,13 +75,9 @@ public class H2DbCreator extends DbCreator {
         return inserts;
     }
 
-    /**
-     * Transforms an insert statement for a single table, which H2 produces the VALUES part that takes a list of tuples for multiple rows, into a complete series of insert statements.
-     * This is necessary to better control insertion of individual records. 
-     * 
-     * @param origInsertStmt
-     * @return
-     */
+    /// Transforms an insert statement for a single table, which H2 produces the `VALUES` part that takes a list of tuples for multiple rows, into a complete series of insert statements.
+    /// This is necessary to better control insertion of individual records.
+    ///
     private static List<String> transformToIndividualInsertStmts(final String origInsertStmt) {
         // here is the expected structure of the passed in string as observed during H2 scripting analysis
         //            INSERT ... VALUES\n
@@ -103,7 +92,7 @@ public class H2DbCreator extends DbCreator {
             stmt.append(insertAndValuesPart);
             final String tupleStmt = lines[index].replace("\r", ""); // let's remove \r as a token of love for Windows users
             if (tupleStmt.endsWith(",")) {
-                stmt.append(tupleStmt.substring(0, tupleStmt.length() - 1));
+                stmt.append(tupleStmt, 0, tupleStmt.length() - 1);
                 stmt.append(";");
             } else {
                 stmt.append(tupleStmt);
@@ -119,4 +108,5 @@ public class H2DbCreator extends DbCreator {
     public DbVersion dbVersion() {
         return DbVersion.H2;
     }
+
 }

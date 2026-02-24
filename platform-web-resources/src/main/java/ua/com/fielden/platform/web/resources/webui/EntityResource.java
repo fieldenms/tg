@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -46,8 +47,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 import java.util.*;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.ofNullable;
+import static java.util.Optional.*;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.tiny.TinyHyperlink.CUSTOM_OBJECT_ACTION_IDENTIFIER;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
@@ -457,12 +457,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             }
         }
         else if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
-            final Class<? extends MiWithConfigurationSupport<?>> miType;
-            try {
-                miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getCustomObject().get("@@miType"));
-            } catch (final ClassNotFoundException e) {
-                throw new IllegalStateException(e);
-            }
+            final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) ClassesRetriever.findClass((String) centreContextHolder.getCustomObject().get("@@miType"));
             final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(miType);
             actionConfig = ofNullable(centre.actionConfig(
                 valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
