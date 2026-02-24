@@ -1540,16 +1540,12 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     customCanLeave: function () {
-        this._currEntity.closing = true;
+        this._currBindingEntity["closing"] = true;
         return this.remoteCanLeave().then(obj => {
             if (obj.xhr.status === 200 && obj.response) { // successful execution of the request with written response; timeout errors can lead to status 200 and e.detail.response === null; also 504 error is possible, but this will be handled in _processError
-                //e.detail.successful = true;
                 const deserialisedResult = this._serialiser().deserialise(obj.response);
 
                 if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
-                    if (deserialisedResult.ex.message.includes("Can Access")) {
-                        return Promise.resolve(true);
-                    }
                     return Promise.reject({msg: resultMessages(deserialisedResult).short});
                 } else {
                     const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
