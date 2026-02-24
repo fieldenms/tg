@@ -165,15 +165,21 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final MainMenuItemCo mmiCompanion,
         final Function<EntityCentreConfig, EntityCentreConfig> adjustConfig
     ) {
-        final MainMenuItem menuItem = mmiCompanion.findByKeyOptional(menuItemType.getName()).orElseGet(() -> {
+        final MainMenuItem menuItem = getMenuItem(menuItemType, mmiCompanion);
+        final EntityCentreConfig ecc = adjustConfig.apply(eccCompanion.new_().setOwner(user).setTitle(newName).setMenuItem(menuItem).setConfigBody(serialisedDifferences).setDesc(newDesc));
+        return eccCompanion.saveWithRetry(ecc);
+    }
+
+    /// Gets (or creates) [MainMenuItem] entity for `menuItemType`.
+    ///
+    private static MainMenuItem getMenuItem(final Class<?> menuItemType, final MainMenuItemCo mmiCompanion) {
+        return mmiCompanion.findByKeyOptional(menuItemType.getName()).orElseGet(() -> {
             final MainMenuItem newMainMenuItem = mmiCompanion.new_();
             newMainMenuItem.setKey(menuItemType.getName());
             return mmiCompanion.save(newMainMenuItem);
         });
-        final EntityCentreConfig ecc = adjustConfig.apply(eccCompanion.new_().setOwner(user).setTitle(newName).setMenuItem(menuItem).setConfigBody(serialisedDifferences).setDesc(newDesc));
-        return eccCompanion.saveWithRetry(ecc);
     }
-    
+
     /**
      * Overrides existing {@link EntityCentreConfig} instance with new serialised diff.
      * Otherwise, in case where there is no such instance in database, creates and saves new {@link EntityCentreConfig} instance with serialised diff inside.
