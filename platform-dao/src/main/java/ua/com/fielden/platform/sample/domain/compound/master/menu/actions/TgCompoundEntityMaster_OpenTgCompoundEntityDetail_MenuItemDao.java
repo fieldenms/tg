@@ -38,7 +38,7 @@ public class TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItemDao exten
                 entity.setCanLeave(true);
             } else {
                 final EntityResultQueryModel<TgCompoundEntityDetail> query = select(TgCompoundEntityDetail.class)
-                        .where().prop("tgCompoundEntity").eq().val(entity.getKey()).model();
+                        .where().prop("key").eq().val(entity.getKey()).model();
                 final var optionalCompoundEntityDetails = co(TgCompoundEntityDetail.class).getEntityOptional(from(query).with(fetchKeyAndDescOnly(TgCompoundEntityDetail.class)).model());
                 optionalCompoundEntityDetails.ifPresent(details -> {
                     if (details.getDesc().contains("desc")) {
