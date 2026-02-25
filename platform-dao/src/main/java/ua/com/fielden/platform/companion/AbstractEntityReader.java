@@ -168,23 +168,12 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         return result == 1;
     }
 
-    /**
-     * Returns a stream of entities that match the provided query.
-     * <p>
-     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
-     */
     @Override
     @SessionRequired
     public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel) {
         return stream(queryModel, 100);
     }
 
-    /**
-     * Returns a stream of entities that match the provided query. 
-     * Argument <code>fetchSize</code> provides a hint how many rows should be fetched in a batch at the time of scrolling.
-     * <p>
-     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
-     */
     @Override
     @SessionRequired
     public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize) {

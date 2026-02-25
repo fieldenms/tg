@@ -1,40 +1,31 @@
 package ua.com.fielden.platform.reflection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMap;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMappedOrCalculated;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
-
-import java.lang.ref.Reference;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.math.BigInteger;
-import java.util.List;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithCollection;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithMap;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithNumericProps;
-import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
-import ua.com.fielden.platform.reflection.test_entities.KeyEntity;
-import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
-import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
-import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
-import ua.com.fielden.platform.reflection.test_entities.UnionEntityReference;
+import ua.com.fielden.platform.reflection.test_entities.*;
+import ua.com.fielden.platform.test_utils.TestUtils;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.ref.Reference;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.math.BigInteger;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertEmpty;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 /**
  * Test case for {@link PropertyTypeDeterminator}.
@@ -358,6 +349,34 @@ public class PropertyTypeDeterminatorTest {
         } catch (final ReflectionException ex) {
             assertEquals(PropertyTypeDeterminator.ERR_TYPE_AND_PROP_REQUIRED, ex.getMessage());
         }
+    }
+
+    @Test
+    public void collectionalType_returns_a_pair_of_raw_and_element_types_for_parameterised_collection_types() {
+        class $ {
+            Set<? extends CharSequence> charSeqs;
+            Set<? super String> superStrings;
+            Collection<Number> numbers;
+            List<String> strings;
+            List rawList;
+            Object object;
+            Map<String, Integer> map;
+
+            static Type get(final String name) {
+                try {
+                    return $.class.getDeclaredField(name).getGenericType();
+                } catch (final Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        assertOptEquals(t2(Set.class, CharSequence.class), collectionalType($.get("charSeqs")));
+        assertOptEquals(t2(Set.class, Object.class), collectionalType($.get("superStrings")));
+        assertOptEquals(t2(Collection.class, Number.class), collectionalType($.get("numbers")));
+        assertOptEquals(t2(List.class, String.class), collectionalType($.get("strings")));
+        assertEmpty(collectionalType($.get("rawList")));
+        assertEmpty(collectionalType($.get("object")));
+        assertEmpty(collectionalType($.get("map")));
     }
 
 }

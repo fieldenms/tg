@@ -1,16 +1,14 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import org.junit.Test;
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.testing.*;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.security.interception.AuthenticationTestIocModule;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import java.util.List;
 import java.util.Set;
 
 import static java.util.Optional.empty;
@@ -22,12 +20,8 @@ import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryC
 public class EntityQueryCriteriaTest {
 
     private final static Injector injector = new ApplicationInjectorFactory()
+            .add(new CommonEntityTestIocModuleWithPropertyFactory())
             .add(new AuthenticationTestIocModule())
-            .add(new AbstractModule() {
-                @Override protected void configure() {
-                    bind(IApplicationDomainProvider.class).toInstance(List::of);
-                }
-            })
             .getInjector();
 
     @Test

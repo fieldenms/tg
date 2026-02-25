@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
@@ -31,6 +32,31 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     private final IEntityAggregatesOperations aggregateDao = getInstance(IEntityAggregatesOperations.class);
+
+    @Test
+    public void local_id_only_query_with_id_only_fetch_returns_entities_with_ID_present() {
+        final var query = select(TgVehicle.class).model();
+        final var entities = co(TgVehicle.class).getAllEntities(from(query).with(fetchIdOnly(TgVehicle.class)).model());
+        assertFalse(entities.isEmpty());
+        entities.forEach(entity -> assertNotNull(entity.getId()));
+    }
+
+    @Test
+    public void foreign_id_only_query_with_id_only_fetch_returns_entities_with_ID_present() {
+        final var query = select(TgVehicle.class).yield().prop("model").modelAsEntity(TgVehicleModel.class);
+        final var entities = co(TgVehicleModel.class).getAllEntities(from(query).with(fetchIdOnly(TgVehicleModel.class)).model());
+        assertFalse(entities.isEmpty());
+        entities.forEach(entity -> assertNotNull(entity.getId()));
+    }
+
+    @Test
+    public void foreign_id_only_query_returns_entities_using_the_specified_fetch_model() {
+        final var query = select(TgVehicle.class).yield().prop("model").modelAsEntity(TgVehicleModel.class);
+        final var entities = co(TgVehicleModel.class).getAllEntities(from(query).with(fetchAllInclCalc(TgVehicleModel.class)).model());
+        assertThat(entities)
+                .isNotEmpty()
+                .allSatisfy(model -> assertThat(model.proxiedPropertyNames()).isEmpty());
+    }
 
     @Test
     public void eql3_query_executes_correctly_for_vehicle_deep_tree() {

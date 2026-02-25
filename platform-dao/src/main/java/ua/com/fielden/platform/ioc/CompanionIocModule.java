@@ -6,6 +6,7 @@ import ua.com.fielden.platform.dao.EntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.query.IEntityAggregates;
 import ua.com.fielden.platform.menu.Action;
 import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchActionCo;
@@ -24,8 +25,12 @@ public class CompanionIocModule extends CommonFactoryIocModule {
 
     private final List<Class<? extends AbstractEntity<?>>> domainEntityTypes;
 
-    public CompanionIocModule(final Properties props,
-                              final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
+    /// @param domainEntityTypes  domain entity types that have explicit companions (i.e. annotated with [CompanionObject])
+    ///
+    public CompanionIocModule(
+            final Properties props,
+            final List<Class<? extends AbstractEntity<?>>> domainEntityTypes)
+    {
         super(props);
         this.domainEntityTypes = domainEntityTypes;
     }
