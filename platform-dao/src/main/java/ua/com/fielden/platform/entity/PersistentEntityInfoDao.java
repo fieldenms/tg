@@ -10,7 +10,7 @@ import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistentWithVersionData;
 
-/// DAO implementation for the {@link PersistentEntityInfoCo} companion object .
+/// DAO implementation for companion object [PersistentEntityInfoCo].
 ///
 @EntityType(PersistentEntityInfo.class)
 public class PersistentEntityInfoDao extends CommonEntityDao<PersistentEntityInfo> implements PersistentEntityInfoCo {

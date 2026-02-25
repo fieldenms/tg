@@ -160,13 +160,13 @@ export function canOpenLinkWithoutConfirmation(urlString) {
     const urlAndHostname = processURL(urlString);
     if (urlAndHostname) {
         if (isExternalURL(urlAndHostname)) {
-            const isAllowedSite = () => appConfig.getSiteAllowlist() && appConfig.getSiteAllowlist().find(pattern => pattern.test(urlAndHostname.hostname));
+            const isAllowedSite = () => appConfig.siteAllowlist && appConfig.siteAllowlist.find(pattern => pattern.test(urlAndHostname.hostname));
             const wasAcceptedByUser = () => {
                 const now = moment();
                 const isRecent = (key) =>
-                    appConfig.getDaysUntilSitePermissionExpires() && 
+                    appConfig.daysUntilSitePermissionExpires && 
                     localStorage.getItem(key) &&
-                    now.diff(moment(localStorage.getItem(key), DATE_FORMAT_FOR_LINK_OPENER), 'days') < appConfig.getDaysUntilSitePermissionExpires();
+                    now.diff(moment(localStorage.getItem(key), DATE_FORMAT_FOR_LINK_OPENER), 'days') < appConfig.daysUntilSitePermissionExpires;
 
                 return isRecent(localStorageKey(urlAndHostname.url.href)) || isRecent(localStorageKey(urlAndHostname.hostname));
             };
