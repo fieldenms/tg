@@ -1,12 +1,17 @@
 package ua.com.fielden.platform.security.provider;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import ua.com.fielden.platform.audit.AuditUtils;
+import ua.com.fielden.platform.audit.AuditingMode;
+import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Extends;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.security.AuditModuleToken;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.tokens.ISecurityTokenGenerator;
@@ -25,6 +30,7 @@ import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadM
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.*;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.util.*;
@@ -33,16 +39,22 @@ import java.util.stream.Stream;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toCollection;
+import static org.apache.commons.collections4.CollectionUtils.disjunction;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.requireAnnotation;
 
 /// Tokens are accumulated from the following sources:
 /// - The location of security tokens given by application properties `tokens.path` and `tokens.package` is scanned.
 /// - Tokens for generated multi-inheritance types are dynamically generated.
+/// - Tokens for synthetic audit-entity types are dynamically generated in package `${tokens.package}.audit`.
+///   Also see [#tokensForAuditTypes].
 ///
 /// **A fundamental assumption:** simple class names uniquely identify security tokens and entities.
 ///
 @Singleton
 public class SecurityTokenProvider implements ISecurityTokenProvider {
+
+    public static final String ERR_UNREGISTERED_SECURITY_TOKENS = "There are %s unregistered tokens. They should be registered with [%s]. Unregistered tokens: [%s].";
 
     static final Set<Class<? extends ISecurityToken>> PLATFORM_TOKENS = Set.of(
             User_CanSave_Token.class,
@@ -81,7 +93,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             KeyNumber_CanReadModel_Token.class,
             GraphiQL_CanExecute_Token.class,
             UserDefinableHelp_CanSave_Token.class,
-            PersistentEntityInfo_CanExecute_Token.class);
+            PersistentEntityInfo_CanExecute_Token.class,
+            AuditModuleToken.class);
 
     /// A map between token classes and their names.
     /// Used as a cache for obtaining class by name.
@@ -132,11 +145,17 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     ///
     @Inject
     private void init(
+            final AuditingMode auditingMode,
+            final IAuditTypeFinder auditTypeFinder,
             final IApplicationDomainProvider appDomain,
             final ISecurityTokenGenerator generator,
             final @Named("tokens.package") String tokensPkgName)
     {
         registerTokensForMultiInheritanceEntities(appDomain, generator, tokensPkgName);
+
+        if (auditingMode == AuditingMode.ENABLED) {
+            registerAuditTokens(appDomain, auditTypeFinder, generator, tokensPkgName);
+        }
 
         if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
             throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
@@ -181,6 +200,45 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                                                       Optional.of(atExtends.parentToken())));
     }
 
+    private void registerAuditTokens(
+            final IApplicationDomainProvider appDomain,
+            final IAuditTypeFinder auditTypeFinder,
+            final ISecurityTokenGenerator generator,
+            final String tokensPkgName)
+    {
+        final var auditTokensPkgName = tokensPkgName + ".audit";
+
+        appDomain.entityTypes().stream()
+                .filter(AuditUtils::isAudited)
+                .flatMap(ty -> tokensForAuditTypes(ty, auditTypeFinder, generator, auditTokensPkgName))
+                .forEach(tok -> {
+                    tokenClassesByName.put(tok.getName(), tok);
+                    tokenClassesBySimpleName.put(tok.getSimpleName(), tok);
+                });
+    }
+
+    /// Provides tokens for audit types corresponding to an audited type.
+    /// This method generates [Template#READ] and [Template#READ_MODEL] tokens for each synthetic audit type.
+    ///
+    /// @param auditedType  the audited type whose audit types should be considered
+    /// @param generator  token generator that should be used to generate audit tokens
+    /// @param auditTokensPkgName  the destination package for audit tokens
+    ///
+    protected Stream<? extends Class<? extends ISecurityToken>> tokensForAuditTypes(
+            final Class<? extends AbstractEntity<?>> auditedType,
+            final IAuditTypeFinder auditTypeFinder,
+            final ISecurityTokenGenerator generator,
+            final String auditTokensPkgName)
+    {
+        final var navigator = auditTypeFinder.navigate(auditedType);
+        return Stream.of(navigator.synAuditEntityType())
+                .flatMap(auditType -> Stream.of(Template.READ, Template.READ_MODEL)
+                        .map(templ -> generator.generateToken(auditType,
+                                                              templ,
+                                                              Optional.of(auditTokensPkgName),
+                                                              Optional.of(AuditModuleToken.class))));
+    }
+
     @Override
     public SortedSet<SecurityTokenNode> getTopLevelSecurityTokenNodes() {
         return Collections.unmodifiableSortedSet(topLevelSecurityTokenNodes);
@@ -205,47 +263,55 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     /// Transforms a set of security tokens into a hierarchy of [SecurityTokenNode] nodes.
     ///
     /// The result is a forest of trees (i.e. multiple trees), ordered according to the comparator, implemented by [SecurityTokenNode].
-    /// Roots for each tree represent one of the top most security tokens.
+    /// Roots for each tree represent one of the top-level security tokens.
+    ///
+    /// `allTokens` must contain all tokens that are contained in the resulting forest of trees.
+    /// For example, it is an error if `allTokens` contains a sub-token but does not contain its parent token.
     ///
     static SortedSet<SecurityTokenNode> buildTokenNodes(final Collection<Class<? extends ISecurityToken>> allTokens) {
-        final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
+        final Map<Class<? extends ISecurityToken>, SecurityTokenNode> tokenTypeToNode = new HashMap<>(Iterables.size(allTokens));
+        allTokens.forEach(t -> buildTokenNodes_(t, tokenTypeToNode));
 
-        allTokens.forEach(token -> {
-            // First get a list of super classes and then for each such class that doesn't exist in the hierarchy of SecurityTokenNodes, create a node and add it to the hierarchy.
-            final List<Class<? extends ISecurityToken>> tokenHierarchy = genHierarchyPath(token);
-            tokenHierarchy.stream().reduce((SecurityTokenNode) null, (tokenNode, tokenClass) -> {
-                // Argument tokenNode can only be null if tokenClass is the top most class, implementing ISecurityToken.
-                // Otherwise, tokenNode was created for a super class of tokenClass.
-                SecurityTokenNode nextNode = tokenNode == null ? topTokenNodes.get(tokenClass) : tokenNode.getSubTokenNode(tokenClass);
-                // If there is no next token node for tokenClass then create a new one, and
-                // add it to the hierarchy as a sub-node of tokenNode or, if tokenNode is null, nextNode becomes top most node.
-                if (nextNode == null) {
-                    // a token for the next node is a subtype of the token represented by tokenNode
-                    nextNode = new SecurityTokenNode(tokenClass, tokenNode);
-                    // Is next token the top most?
-                    if (tokenNode == null) {
-                        topTokenNodes.put(tokenClass, nextNode);
-                    }
-                }
-                return nextNode;
-            }, (prev, next) -> next);
-        });
+        if (tokenTypeToNode.size() != Iterables.size(allTokens)) {
+            final var unregisteredTokens = disjunction(tokenTypeToNode.keySet(), allTokens);
+            throw new SecurityException(ERR_UNREGISTERED_SECURITY_TOKENS.formatted(
+                                        unregisteredTokens.size(),
+                                        ISecurityTokenProvider.class.getSimpleName(),
+                                        CollectionUtil.toString(unregisteredTokens, Class::getSimpleName, ", ")));
+        }
 
-        return new TreeSet<>(topTokenNodes.values());
+        return tokenTypeToNode.values()
+                .stream()
+                .filter(node -> node.getSuperTokenNode() == null)
+                .collect(toCollection(TreeSet::new));
     }
 
-    /// Linearises the class hierarchy of specified token starting from class that directly implements [ISecurityToken] to the class specified as token.
+    /// Builds a token node for `tokenType`.
+    /// Mutates `tokenTypeToNode` in the process.
     ///
-    @SuppressWarnings("unchecked")
-    private static List<Class<? extends ISecurityToken>> genHierarchyPath(final Class<? extends ISecurityToken> token) {
-        final List<Class<? extends ISecurityToken>> tokenHierarchyList = new ArrayList<>();
-        Class<?> parentNode = token;
-        while (ISecurityToken.class.isAssignableFrom(parentNode)) {
-            tokenHierarchyList.add((Class<? extends ISecurityToken>) parentNode);
-            parentNode = parentNode.getSuperclass();
+    private static SecurityTokenNode buildTokenNodes_(
+            final Class<? extends ISecurityToken> tokenType,
+            final Map<Class<? extends ISecurityToken>, SecurityTokenNode> tokenTypeToNode)
+    {
+        final var existingTokenNode = tokenTypeToNode.get(tokenType);
+        if (existingTokenNode != null) {
+            return existingTokenNode;
         }
-        Collections.reverse(tokenHierarchyList);
-        return tokenHierarchyList;
+        else {
+            final SecurityTokenNode tokenNode;
+            final var superclass = tokenType.getSuperclass();
+            // Sub-token
+            if (ISecurityToken.class.isAssignableFrom(superclass)) {
+                final var superTokenNode = buildTokenNodes_((Class) superclass, tokenTypeToNode);
+                tokenNode = new SecurityTokenNode(tokenType, superTokenNode);
+            }
+            // Top-level token
+            else {
+                tokenNode = new SecurityTokenNode(tokenType, null);
+            }
+            tokenTypeToNode.put(tokenType, tokenNode);
+            return tokenNode;
+        }
     }
 
 }
