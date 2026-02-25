@@ -148,9 +148,6 @@ const template = html`
             @apply --layout-horizontal;
             @apply --layout-center;
         }
-        .watermark {
-            @apply --tg-watermark-style;
-        }
         #viewToolbarContainer {
             @apply --layout-horizontal;
             @apply --layout-center;
@@ -253,7 +250,7 @@ const template = html`
                     <paper-icon-button id="menuButton" icon="menu" tooltip-text="Module menu (tap or hit F2 to invoke)." on-tap="_togglePanel"></paper-icon-button>
                     <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
                     <div class="flex truncate" tooltip-text$="[[_calcSelectedPageDesc(_selectedPage, saveAsName, saveAsDesc)]]">[[selectedPageTitle]]</div>
-                    <div class="flex truncate watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
+                    <div class="flex truncate watermark" hidden$="[[!_watermark]]" style$="[[_watermarkCss]]">[[_watermark]]</div>
                     <paper-icon-button id="mainMenu" icon="apps" tooltip-text="Main menu (tap or hit F10 to invoke)." on-tap="_showMenu"></paper-icon-button>
                 </div>
             </div>
@@ -409,6 +406,7 @@ Polymer({
     
     ready: function () {
         this._watermark = window.TG_APP.watermark;
+        this._watermarkCss = window.TG_APP.watermarkStyle;
         this._focusNextMenuItem = this._focusNextMenuItem.bind(this.$.menu);
         this._focusPreviousMenuItem = this._focusPreviousMenuItem.bind(this.$.menu);
         this._menuVisibilitySaved = this._menuVisibilitySaved.bind(this);

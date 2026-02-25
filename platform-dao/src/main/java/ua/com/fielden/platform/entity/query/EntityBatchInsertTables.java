@@ -42,7 +42,8 @@ final class EntityBatchInsertTables {
     }
 
     private static TableStructForBatchInsertion generateTableStructForBatchInsertion(
-            final IDomainMetadata domainMetadata, final EntityMetadata.Persistent entityMetadata)
+            final IDomainMetadata domainMetadata,
+            final EntityMetadata.Persistent entityMetadata)
     {
         // a way to do inner helper methods (avoids pollution of the outer class method namespace)
         class $ {

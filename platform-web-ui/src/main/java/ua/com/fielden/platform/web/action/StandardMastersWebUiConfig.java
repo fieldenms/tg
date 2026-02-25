@@ -6,10 +6,17 @@ import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.attachment.producers.AttachmentPreviewEntityActionProducer;
 import ua.com.fielden.platform.attachment.producers.AttachmentsUploadActionProducer;
 import ua.com.fielden.platform.entity.*;
+import ua.com.fielden.platform.menu.Menu;
+import ua.com.fielden.platform.menu.MenuProducer;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
+import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -29,7 +36,6 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
 
-///
 /// A set of factory methods for various standard platform-level entity masters such as Export to Excel.
 ///
 public class StandardMastersWebUiConfig {
@@ -128,11 +134,7 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(AttachmentsUploadAction.class, AttachmentsUploadActionProducer.class, masterConfig, injector);
     }
 
-    ///
-    /// Creates an entity master configuration for {@link PersistentEntityInfo}.
-    ///
-    /// @param injector
-    /// @return
+    /// Creates an entity master configuration for [PersistentEntityInfo].
     ///
     public static EntityMaster<PersistentEntityInfo> createPersistentEntityInfoMaster(final Injector injector) {
         final String desktopLayout = cell(cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN)).repeat(3),layout().withStyle("padding", MARGIN_PIX).end()).toString();
@@ -158,6 +160,19 @@ public class StandardMastersWebUiConfig {
                 .done();
 
         return new EntityMaster<>(PersistentEntityInfo.class, PersistentEntityInfoProducer.class, masterConfig, injector);
+    }
+
+    /// Creates an entity master for the [Menu] entity.
+    ///
+    public static EntityMaster<Menu> createMenuMaster(final Injector injector, final MainMenuBuilder desktopMenuBuilder, final MainMenuBuilder mobileMenuBuilder) {
+        return new EntityMaster<Menu>(Menu.class, MenuProducer.class, null, injector) {
+            @Override
+            public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+                final IDeviceProvider deviceProvider = injector.getInstance(IDeviceProvider.class);
+                final MainMenuBuilder menuBuilder = deviceProvider.getDeviceProfile() == DeviceProfile.DESKTOP ? desktopMenuBuilder  : mobileMenuBuilder;
+                return menuBuilder.getActionConfig(actionNumber, actionKind);
+            }
+        };
     }
 
     // TODO once it will be necessary, uncomment this code to implement generic EDIT / NEW actions with 'no parent centre refresh' capability:

@@ -8,6 +8,7 @@ import com.google.inject.name.Names;
 import jakarta.inject.Singleton;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import ua.com.fielden.platform.audit.SynAuditModelInitService;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -70,6 +71,8 @@ public abstract class TransactionalIocModule extends EntityIocModule {
 
         install(new FactoryModuleBuilder().build(EntityBatchDeleteByQueryModelOperation.Factory.class));
 
+        // Start the services for generating and assigning the EQL models to the generated synthetic entities.
+        requestStaticInjection(SynAuditModelInitService.class);
         requestStaticInjection(SynModelInitService.class);
     }
 

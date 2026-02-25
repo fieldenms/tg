@@ -147,6 +147,7 @@ public class VulcanizingUtility {
             LOGGER.info(format("\tGenerating checksums..."));
             final List<String> allExternalResources = listOf(
                 "/app/tg-app-index.html",
+                "/resources/app/tg-app-resource-loader.js",
                 "/resources/startup-resources-vulcanized.js",
                 "/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js",
                 "/resources/polymer/web-animations-js/web-animations-next-lite.min.js",

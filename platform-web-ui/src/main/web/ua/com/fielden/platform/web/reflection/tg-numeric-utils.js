@@ -2,13 +2,8 @@ import { TgAppConfig } from '/app/tg-app-config.js';
 
 const _appConfig = new TgAppConfig();
 
-// A variable that defines a currency symbol, used to represent monetary values as strings.
-// This variable is assigned only once.
-//
-let currencySymbol = null;
-
 function _getCurrencySymbol () {
-    return currencySymbol || '$';
+    return _appConfig.currencySymbol || '$';
 }
 
 // A space used to separate a currency symbol from a numeric part when representing monetary value as strings.
@@ -66,18 +61,7 @@ export function formatDecimal (value, locale, scale, trailingZeros) {
         return value.toLocaleString(locale || _appConfig.locale, options);
     }
     return '';
-}
-
-// Set the provided currency symbol if previous was empty and provided one is not empty.
-// It means that currency symbol can be set only once.
-//
-// @param {String} newCurrencySymbol - currency symbol to set
-//
-export function setCurrencySymbol (newCurrencySymbol) {
-    if (!currencySymbol && newCurrencySymbol) {
-        currencySymbol = newCurrencySymbol;
-    }
-}
+} 
 
 // Formats money number to string based on locale.
 // If the value is null then returns empty string.

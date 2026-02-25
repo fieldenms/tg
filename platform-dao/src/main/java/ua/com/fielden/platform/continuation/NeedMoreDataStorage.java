@@ -37,7 +37,7 @@ public class NeedMoreDataStorage {
     public static final String
             ERR_CANNOT_ADD_MORE_DATA = "Cannot add more data because the storage is not bound in this context.",
             ERR_CANNOT_GET_MORE_DATA = "Cannot access more data because the storage is not bound in this context.",
-            WARN_UNBOUND_STORAGE = "The need more data storage is not bound in this context. This likely indicates a programming error.";
+            WARN_UNBOUND_STORAGE = "The need more data storage is not bound in this context (data key: [%s]). This may indicate a programming error.";
 
     private NeedMoreDataStorage() {}
 
@@ -121,7 +121,7 @@ public class NeedMoreDataStorage {
         if (STORAGE.isBound()) {
             return Optional.ofNullable((E) STORAGE.get().get(key));
         } else {
-            LOGGER.error(WARN_UNBOUND_STORAGE);
+            LOGGER.warn(() -> WARN_UNBOUND_STORAGE.formatted(key));
             return Optional.empty();
         }
     }
