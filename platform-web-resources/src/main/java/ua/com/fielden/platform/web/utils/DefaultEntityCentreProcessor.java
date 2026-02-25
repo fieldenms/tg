@@ -207,7 +207,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
 
             // Generate entities if the centre has IGenerator defined. Stop execution if generation result is not successful.
             // `customObject` does not have parameter for generation forcing -- this parameter is not important.
-            final Result generationResult = generateDataIfNeeded(freshCriteriaEntity, webUiConfig, true, false, customObject);
+            final Result generationResult = generateDataIfNeeded(freshCriteriaEntity, freshCriteriaEntity.miType(), webUiConfig, true, false, customObject);
             if (!generationResult.isSuccessful()) {
                 return left(generationResult);
             }
