@@ -316,7 +316,7 @@ public class CriteriaResource extends AbstractWebResource {
             name = preliminaryName + (index == -1 ? "" : format(CONFLICTING_TITLE_SUFFIX, index == 0 ? "" : " " + index));
         }
         return findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(of(name)).apply(device()), eccCompanion, FETCH_CONFIG)
-            .map(conflictingConfig -> determineNonConflictingName(preliminaryName, index + 1))
+            .map(_ -> determineNonConflictingName(preliminaryName, index + 1))
             .orElse(name);
     }
 
@@ -456,7 +456,7 @@ public class CriteriaResource extends AbstractWebResource {
         );
     }
 
-    public static Representation createCriteriaDiscardEnvelope(
+    static Representation createCriteriaDiscardEnvelope(
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
@@ -491,7 +491,7 @@ public class CriteriaResource extends AbstractWebResource {
         );
     }
 
-    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> CriteriaIndication createCriteriaIndication(
+    static CriteriaIndication createCriteriaIndication(
             final String wasRun,
             final ICentreDomainTreeManagerAndEnhancer freshCentre,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
@@ -515,7 +515,7 @@ public class CriteriaResource extends AbstractWebResource {
         return NONE;
     }
 
-    public static CriteriaIndication createChangedCriteriaIndication(final ICentreDomainTreeManagerAndEnhancer freshCentre, final ICentreDomainTreeManagerAndEnhancer savedCentre) {
+    static CriteriaIndication createChangedCriteriaIndication(final ICentreDomainTreeManagerAndEnhancer freshCentre, final ICentreDomainTreeManagerAndEnhancer savedCentre) {
         return !savedCentre.getFirstTick().selectionCriteriaEquals(freshCentre.getFirstTick()) ? CHANGED : NONE;
     }
 
@@ -547,6 +547,7 @@ public class CriteriaResource extends AbstractWebResource {
         return successful();
     }
 
+    @SuppressWarnings("unchecked")
     public static Result generateDataIfNeeded(
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity,
         final IWebUiConfig webUiConfig,
@@ -566,7 +567,7 @@ public class CriteriaResource extends AbstractWebResource {
             // create and execute a generator instance
             final var generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
             final Map<String, Optional<?>> params = criteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
-                    (final MetaProperty<?> mp) -> mp.getName(),
+                    MetaProperty::getName,
                     (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
             params.putAll(criteriaEntity.getParameters().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> Optional.ofNullable(entry.getValue()))));
             if (shouldForceRegeneration(customObject)) {
@@ -579,7 +580,6 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// Handles `PUT` requests triggered by the `tg-selection-criteria.run()` method.
     ///
-    @SuppressWarnings("unchecked")
     @Put
     @Override
     public Representation put(final Representation envelope) {
@@ -593,7 +593,7 @@ public class CriteriaResource extends AbstractWebResource {
             miType = centre.getMenuItemType();
 
             // obtain lock for current user and miType of the centre (disregard saveAsName as it is unlikely that self-concurrent running will occur for different configurations of the same centre)
-            final Lock lock = locks.computeIfAbsent(t2(user, miType), t2 -> new ReentrantLock()); // create Lock if not yet present; atomic action
+            final Lock lock = locks.computeIfAbsent(t2(user, miType), _ -> new ReentrantLock()); // create Lock if not yet present; atomic action
             final boolean lockAcquired = tryLocking(lock);
             if (!lockAcquired) {
                 LOGGER.info("The lock could not be acquired for [%s] seconds. Let's continue concurrent running of the [%s] centre and user [%s].".formatted(RUNNING_LOCK_TIMEOUT, miType.getSimpleName(), user));
@@ -804,7 +804,7 @@ public class CriteriaResource extends AbstractWebResource {
             processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) pair.getKey().get("renderingHints"));
         }
 
-        final var list = new ArrayList<Object>();
+        final var list = new ArrayList<>();
         if (!skipCustomObjectCalculations) {
             list.add(isRunning ? criteriaEntity : null);
             list.add(pair.getKey());
@@ -883,11 +883,11 @@ public class CriteriaResource extends AbstractWebResource {
                 entityRendHints = renderingHints.get(idx);
             }
             if (entityRendHints instanceof Map) {
-                resPropsWithContext.forEach(resPropWithContext -> {
-                    resPropWithContext.getKey().renderingHintsProvider.ifPresent(hintProvider -> {
-                        ((Map)entityRendHints).putAll(hintProvider.apply(entity, resPropWithContext.getValue()));
-                    });
-                });
+                resPropsWithContext.forEach(resPropWithContext ->
+                    resPropWithContext.getKey().renderingHintsProvider.ifPresent(hintProvider ->
+                        ((Map) entityRendHints).putAll(hintProvider.apply(entity, resPropWithContext.getValue()))
+                    )
+                );
             }
             return entity;
         });
@@ -909,38 +909,34 @@ public class CriteriaResource extends AbstractWebResource {
             final ICentreConfigSharingModel sharingModel)
     {
         final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resList = new ArrayList<>();
-        centre.getDynamicProperties().forEach(resProp -> {
-            resProp.dynamicColBuilderType.ifPresent(propDefinerClass -> {
-                final Optional<CentreContext<AbstractEntity<?>, ?>> optionalCentreContext = CentreResourceUtils.createCentreContext(
-                        true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
-                        webUiConfig,
-                        companionFinder,
-                        user,
-                        critGenerator,
-                        entityFactory,
-                        centreContextHolder,
-                        criteriaEntity,
-                        resProp.contextConfig,
-                        null, /* chosenProperty is not applicable in queryEnhancer context */
-                        device,
-                        eccCompanion,
-                        mmiCompanion,
-                        userCompanion,
-                        sharingModel
-                    );
-                resList.add(new Pair<>(resProp, optionalCentreContext));
-            });
-        });
+        centre.getDynamicProperties().forEach(resProp -> resProp.dynamicColBuilderType.ifPresent(_ -> {
+            final Optional<CentreContext<AbstractEntity<?>, ?>> optionalCentreContext = CentreResourceUtils.createCentreContext(
+                    true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
+                webUiConfig,
+                companionFinder,
+                user,
+                critGenerator,
+                entityFactory,
+                centreContextHolder,
+                criteriaEntity,
+                resProp.contextConfig,
+                null, /* chosenProperty is not applicable in queryEnhancer context */
+                device,
+                eccCompanion,
+                mmiCompanion,
+                userCompanion,
+                sharingModel
+            );
+            resList.add(new Pair<>(resProp, optionalCentreContext));
+        }));
         return resList;
     }
 
     private static Map<String, List<Map<String, Object>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext, final EntityCentre<AbstractEntity<?>> centre) {
         final Map<String, List<Map<String, Object>>> dynamicColumns = new LinkedHashMap<>();
-        resPropsWithContext.forEach(resPropWithContext -> {
-            centre.getDynamicColumnBuilderFor(resPropWithContext.getKey())
-                    .flatMap(dynColumnBuilder -> dynColumnBuilder.getColumnsConfig(resPropWithContext.getValue()))
-                    .ifPresent(config -> dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", config.build()));
-        });
+        resPropsWithContext.forEach(resPropWithContext -> centre.getDynamicColumnBuilderFor(resPropWithContext.getKey())
+            .flatMap(dynColumnBuilder -> dynColumnBuilder.getColumnsConfig(resPropWithContext.getValue()))
+            .ifPresent(config -> dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", config.build())));
         return dynamicColumns;
     }
 
@@ -986,30 +982,26 @@ public class CriteriaResource extends AbstractWebResource {
             final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
-        if (queryEnhancerConfig.isPresent()) {
-            return of(new Pair<>(
-                queryEnhancerConfig.get().getKey(),
-                CentreResourceUtils.createCentreContext(
-                    true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
-                    webUiConfig,
-                    companionFinder,
-                    user,
-                    critGenerator,
-                    entityFactory,
-                    centreContextHolder,
-                    criteriaEntity,
-                    queryEnhancerConfig.get().getValue(),
-                    null, /* chosenProperty is not applicable in queryEnhancer context */
-                    device,
-                    eccCompanion,
-                    mmiCompanion,
-                    userCompanion,
-                    sharingModel
-                )
-            ));
-        } else {
-            return empty();
-        }
+        return queryEnhancerConfig.map(iQueryEnhancerOptionalPair -> new Pair<>(
+            iQueryEnhancerOptionalPair.getKey(),
+            CentreResourceUtils.createCentreContext(
+                true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
+                webUiConfig,
+                companionFinder,
+                user,
+                critGenerator,
+                entityFactory,
+                centreContextHolder,
+                criteriaEntity,
+                iQueryEnhancerOptionalPair.getValue(),
+                null, /* chosenProperty is not applicable in queryEnhancer context */
+                device,
+                eccCompanion,
+                mmiCompanion,
+                userCompanion,
+                sharingModel
+            )
+        ));
     }
 
     /// Assigns values to the custom properties.
@@ -1022,7 +1014,7 @@ public class CriteriaResource extends AbstractWebResource {
     {
 
         final Optional<Stream<AbstractEntity<?>>> assignedEntitiesOp = customPropertiesAsignmentHandler
-                .map(handlerType -> centre.createAssignmentHandlerInstance(handlerType))
+                .map(centre::createAssignmentHandlerInstance)
                 .map(handler -> entities.map(entity -> {handler.assignValues(entity); return entity;}));
 
         final Stream<AbstractEntity<?>> assignedEntities = assignedEntitiesOp.orElse(entities);
@@ -1032,9 +1024,7 @@ public class CriteriaResource extends AbstractWebResource {
                 if (customProp.propDef.isPresent()) {
                     final PropDef<?> propDef = customProp.propDef.get();
                     final String propertyName = CalculatedProperty.generateNameFrom(propDef.title);
-                    if (propDef.value.isPresent()) {
-                        entity.set(propertyName, propDef.value.get());
-                    }
+                    propDef.value.ifPresent(o -> entity.set(propertyName, o));
                 }
             }
             return entity;
