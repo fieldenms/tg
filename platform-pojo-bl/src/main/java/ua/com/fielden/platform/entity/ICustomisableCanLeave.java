@@ -19,7 +19,7 @@ public interface ICustomisableCanLeave {
     /// Returns the set of buttons to be displayed in the confirmation dialog
     /// during the execution of the `canLeave` method.
     ///
-    CanLeaveOptions getCanLeaveOptions();
+    String getCanLeaveOptions();
 
     /// Indicates whether the master view for this entity is closing.
     ///

@@ -3,7 +3,6 @@ package ua.com.fielden.platform.sample.domain.compound.master.menu.actions;
 import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.entity.CanLeaveOptions;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
@@ -11,6 +10,7 @@ import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token;
 
+import static ua.com.fielden.platform.entity.CanLeaveOptions.YES_NO;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 /** 
@@ -45,7 +45,7 @@ public class TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItemDao exten
                         entity.setCanLeave(false);
                         entity.setCannotLeaveReason("Description should not contain desc. Would you like to close this master?");
                         entity.setCloseInstructions("Please remove desc from description.");
-                        entity.setCanLeaveOptions(CanLeaveOptions.Options.YES_NO.getCanLeaveOptions());
+                        entity.useCanLeaveOptions(YES_NO);
                     } else {
                         entity.setCanLeave(true);
                     }

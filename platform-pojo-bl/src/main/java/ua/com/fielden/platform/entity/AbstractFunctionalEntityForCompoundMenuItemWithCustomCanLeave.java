@@ -20,7 +20,7 @@ public class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<K ext
 
     @IsProperty
     @Title("Can Leave Options")
-    private CanLeaveOptions canLeaveOptions;
+    private String canLeaveOptions;
 
     @IsProperty
     @Title(value = "Is Closing?", desc = "Indicates whether this menu item is closing")
@@ -53,14 +53,22 @@ public class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<K ext
     }
 
     @Override
-    public CanLeaveOptions getCanLeaveOptions() {
+    public String getCanLeaveOptions() {
         return canLeaveOptions;
     }
 
     @Observable
-    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setCanLeaveOptions(final CanLeaveOptions canLeaveOptions) {
+    protected AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setCanLeaveOptions(final String canLeaveOptions) {
         this.canLeaveOptions = canLeaveOptions;
         return this;
+    }
+
+    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave useCanLeaveOptions(final CanLeaveOptions canLeaveOptions) {
+        return this.setCanLeaveOptions(canLeaveOptions.name());
+    }
+
+    public CanLeaveOptions canLeaveOptions() {
+        return CanLeaveOptions.valueOf(this.canLeaveOptions);
     }
 
     @Override
