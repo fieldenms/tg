@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity;
 
-/// A contract to be implemented by a functional entity.
+/// A contract to be implemented by an entity.
 ///
 /// This contract indicates that the `canLeave` method, although invoked on the
 /// client side, is executed on the server. The corresponding business logic
