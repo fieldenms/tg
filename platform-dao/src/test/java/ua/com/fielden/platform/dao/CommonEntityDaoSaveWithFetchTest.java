@@ -51,10 +51,10 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
     @Test
     public void saveWithFetch_for_a_persisted_entity_returns_a_refetched_saved_entity_as_right_if_fetch_model_is_present() {
         final ITgVehicle co$TgVehicle = co$(TgVehicle.class);
-        final var car1 = co$TgVehicle.findByKey("CAR1");
-        car1.setInitDate(date("2020-01-01"));
 
         {
+            final var car1 = co$TgVehicle.findByKey("CAR1");
+            car1.setInitDate(date("2020-01-01"));
             final var either = co$TgVehicle.save(car1, Optional.of(fetchKeyAndDescOnly(TgVehicle.class)));
             assertTrue(either.isRight());
             assertEquals(car1, either.asRight().value());
@@ -63,6 +63,8 @@ public class CommonEntityDaoSaveWithFetchTest extends AbstractDaoTestCase {
         }
 
         {
+            final var car1 = co$TgVehicle.findByKey("CAR1");
+            car1.setInitDate(date("2020-02-01"));
             final var either = co$TgVehicle.save(car1, Optional.of(fetch(TgVehicle.class).with("lastFuelUsage")));
             assertTrue(either.isRight());
             assertEquals(car1, either.asRight().value());
