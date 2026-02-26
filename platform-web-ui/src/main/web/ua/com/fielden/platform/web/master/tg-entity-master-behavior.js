@@ -11,6 +11,11 @@ import { queryElements } from '/resources/components/tg-element-selector-behavio
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
+export const LeaveReason = {
+    CLOSED: "CLOSED",
+    NAVIGATED: "NAVIGATED"
+}
+
 const CanLeaveOptions  = {
     YES_NO: [{name: "Yes", confirm: true}, {name: "No"}],
     YES_NO_CANCEL: [{name: "Yes", confirm: true}, {name: "No", confirm: true}, {name: "Cancel"}],
@@ -1509,13 +1514,13 @@ const TgEntityMasterBehaviorImpl = {
      * Method implementing .canLeave contract as disignated in classList.
      * It is used to identify whether master can be "left/closed" without any adverse effect on the data it represents (i.e. there was no unsaved changes).
      */
-    canLeave: async function () {
+    canLeave: async function (leaveReason = LeaveReason.CLOSED) {
         // check all the child nodes with canLeave contract if they can be left...
         const nodesWithCanLeave = queryElements(this, '.canLeave');
         if (nodesWithCanLeave.length > 0) {
             for (let index = 0; index < nodesWithCanLeave.length; index++) {
                 try {
-                    await nodesWithCanLeave[index].canLeave();
+                    await nodesWithCanLeave[index].canLeave(leaveReason);
                 } catch (e) {
                     throw e;
                 }
@@ -1533,14 +1538,14 @@ const TgEntityMasterBehaviorImpl = {
         }
 
         if (this._reflector().findTypeByName(this.entityType).isCustomisableCanLeave()) {
-            return this.customCanLeave();
+            return this.customCanLeave(leaveReason);
         }
 
         return true;
     },
 
-    customCanLeave: function () {
-        this._currBindingEntity["closing"] = true;
+    customCanLeave: function (leaveReason = LeaveReason.CLOSED) {
+        this._currBindingEntity["leaveReason"] = leaveReason;
         return this.remoteCanLeave().then(obj => {
             if (obj.xhr.status === 200 && obj.response) { // successful execution of the request with written response; timeout errors can lead to status 200 and e.detail.response === null; also 504 error is possible, but this will be handled in _processError
                 const deserialisedResult = this._serialiser().deserialise(obj.response);

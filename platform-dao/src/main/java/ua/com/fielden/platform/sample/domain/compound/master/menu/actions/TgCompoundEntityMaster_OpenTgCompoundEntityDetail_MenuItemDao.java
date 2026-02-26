@@ -10,7 +10,9 @@ import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.CanLeaveOptions.YES_NO;
+import static ua.com.fielden.platform.entity.LeaveReason.CLOSED;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 /** 
@@ -33,7 +35,7 @@ public class TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItemDao exten
     @SessionRequired
     public TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem save(final TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem entity) {
         final Result authorisationResult = authModel.authorise(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token.class);
-        if (entity.isClosing()) {
+        if (entity.leaveReason().isPresent()) {
             if (!authorisationResult.isSuccessful()) {
                 entity.setCanLeave(true);
             } else {
@@ -43,7 +45,7 @@ public class TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItemDao exten
                 optionalCompoundEntityDetails.ifPresent(details -> {
                     if (details.getDesc().contains("desc")) {
                         entity.setCanLeave(false);
-                        entity.setCannotLeaveReason("Description should not contain desc. Would you like to close this master?");
+                        entity.setCannotLeaveReason(format("Description should not contain desc. Would you like to %s this master?", entity.leaveReason().get().equals(CLOSED) ? "close" : "leave"));
                         entity.setCloseInstructions("Please remove desc from description.");
                         entity.useCanLeaveOptions(YES_NO);
                     } else {

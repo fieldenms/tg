@@ -4,6 +4,12 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
+import java.util.Optional;
+
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
 /// A base class for functional entities that are intended to be used on compound master as menu item that has custom `canLeave` implementation.
 ///
 /// @param <K> -- primary entity type for compound master
@@ -23,8 +29,8 @@ public class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<K ext
     private String canLeaveOptions;
 
     @IsProperty
-    @Title(value = "Is Closing?", desc = "Indicates whether this menu item is closing")
-    private boolean closing;
+    @Title(value = "Leave Reason")
+    private String leaveReason;
 
     @IsProperty
     @Title("Close Instructions")
@@ -41,24 +47,31 @@ public class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<K ext
         return this;
     }
 
-    @Override
-    public boolean isClosing() {
-        return closing;
+    private String getLeaveReason() {
+        return leaveReason;
     }
 
     @Observable
-    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setClosing(final boolean closing) {
-        this.closing = closing;
+    private AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setLeaveReason(final String leaveReason) {
+        this.leaveReason = leaveReason;
         return this;
     }
 
+    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave useLeaveReason(final LeaveReason leaveRason) {
+        return this.setLeaveReason(leaveRason.name());
+    }
+
     @Override
-    public String getCanLeaveOptions() {
+    public Optional<LeaveReason> leaveReason() {
+        return isEmpty(leaveReason) ? empty() : of(LeaveReason.valueOf(leaveReason));
+    }
+
+    private String getCanLeaveOptions() {
         return canLeaveOptions;
     }
 
     @Observable
-    protected AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setCanLeaveOptions(final String canLeaveOptions) {
+    private AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setCanLeaveOptions(final String canLeaveOptions) {
         this.canLeaveOptions = canLeaveOptions;
         return this;
     }
@@ -67,8 +80,9 @@ public class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<K ext
         return this.setCanLeaveOptions(canLeaveOptions.name());
     }
 
-    public CanLeaveOptions canLeaveOptions() {
-        return CanLeaveOptions.valueOf(this.canLeaveOptions);
+    @Override
+    public Optional<CanLeaveOptions> canLeaveOptions() {
+        return isEmpty(canLeaveOptions) ? empty() : of(CanLeaveOptions.valueOf(canLeaveOptions));
     }
 
     @Override

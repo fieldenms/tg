@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import java.util.Optional;
+
 /// A contract to be implemented by an entity.
 ///
 /// This contract indicates that the `canLeave` method, although invoked on the
@@ -19,11 +21,11 @@ public interface ICustomisableCanLeave {
     /// Returns the set of buttons to be displayed in the confirmation dialog
     /// during the execution of the `canLeave` method.
     ///
-    String getCanLeaveOptions();
+    Optional<CanLeaveOptions> canLeaveOptions();
 
     /// Indicates whether the master view for this entity is closing.
     ///
-    boolean isClosing();
+    Optional<LeaveReason> leaveReason();
 
     /// Returns the message displayed after the user rejects leaving the master view for this entity.
     /// The message explains what the user can do to close the master view without confirmation.

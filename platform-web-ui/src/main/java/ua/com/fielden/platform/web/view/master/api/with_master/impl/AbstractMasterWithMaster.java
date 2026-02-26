@@ -66,13 +66,13 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "   };\n" +
                         "}).bind(this);\n")
                 .replace("//@attached-callback",
-                          "this.canLeave = async function () {"
+                          "this.canLeave = async function (leaveReason) {"
                         + "    const embeddedMaster = this.$.loader.loadedElement;\n"
                         + "    if (embeddedMaster && embeddedMaster.classList.contains('canLeave')) {\n"
-                        + "        await embeddedMaster.canLeave();\n"
+                        + "        await embeddedMaster.canLeave(leaveReason);\n"
                         + "    }\n"
                         + "    if (this._reflector().findTypeByName(this.entityType).isCustomisableCanLeave()) {\n"
-                        + "        return this.customCanLeave();\n"
+                        + "        return this.customCanLeave(leaveReason);\n"
                         + "    }\n"
                         + "    return true;\n"
                         + "}.bind(this);\n"

@@ -100,9 +100,9 @@ Polymer({
         this._blockingPaneCounter = 0;
     },
 
-    canLeave: function () {
+    canLeave: function (leaveReason) {
         if (this._element !== null && typeof this._element.canLeave !== 'undefined') {
-            return this._element.canLeave();
+            return this._element.canLeave(leaveReason);
         }
         return Promise.resolve(true);
     },

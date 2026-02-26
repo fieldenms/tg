@@ -23,6 +23,7 @@ import { scrollContainerIfPointNearTheEdge, getKeyEventTarget, isInHierarchy, de
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 import '/resources/components/postal-lib.js';
+import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 const template = html`
     <style>
@@ -825,7 +826,7 @@ Polymer({
                 if (!currentSection) {
                     throw 'Compound master’s menu item section [' + this.sectionRoute + '] does not exist.';
                 }
-                currentSection.canLeave().then(obj => {
+                currentSection.canLeave(LeaveReason.NAVIGATED).then(obj => {
                     if (this.isMasterWithMasterAndNonPersisted(currentSection)) {
                         throw 'A new entity is being created. Please save or cancel your changes.'
                     }
