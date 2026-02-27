@@ -11,6 +11,7 @@ import { TgElementSelectorBehavior, queryElements } from '/resources/components/
 import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { openShareAction } from '/resources/reflection/tg-share-utils.js';
+import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 /**
  * A local insertion point manager for the entity centre to manage detached or maximized insertion points.
@@ -1376,7 +1377,7 @@ const TgEntityCentreBehaviorImpl = {
             if (index < 0 || index >= this.allViews.length) {
                 this._showToastWithMessage(`There is no view with ${index}`);
             } else {
-                this.allViews[this._selectedView].canLeave().then(obj => {
+                this.allViews[this._selectedView].canLeave(LeaveReason.NAVIGATED).then(obj => {
                     this.allViews[this._selectedView].leave();
                     this._previousView = this._selectedView;
                     this._selectedView = index;
@@ -1589,7 +1590,7 @@ const TgEntityCentreBehaviorImpl = {
      * This is due to the fact that most of these unsaved changes are actually saved (except the changes to the editor
      * for which tab-off wasn't actioned).
      */
-    canLeave: async function () {
+    canLeave: async function (leaveReason = LeaveReason.CLOSED) {
         //First of all check whether egi is edit mode. If it's true then don't levae this centre otherwise keep check whether
         //insertion points can be left.
         if (this.$.egi.isEditing()) {
@@ -1601,7 +1602,7 @@ const TgEntityCentreBehaviorImpl = {
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
             try {
-                await insertionPoints[insPoIndex].canLeave();
+                await insertionPoints[insPoIndex].canLeave(leaveReason);
             } catch (e) {
                 throw e;
             }
