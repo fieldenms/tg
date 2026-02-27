@@ -45,6 +45,7 @@ public abstract class EntityIocModule extends AbstractPlatformIocModule {
 
         install(DynamicPropertyAccessIocModule.options().fromProperties(properties));
         install(new DynamicPropertyAccessIocModule());
+        requestStaticInjection(AbstractEntity.class); // Inject AbstractEntity.entityTypeVerifier.
     }
 
 }
