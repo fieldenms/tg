@@ -10,6 +10,7 @@ import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/component
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 
 export const LeaveReason = {
     CLOSED: "CLOSED",
@@ -1564,7 +1565,21 @@ const TgEntityMasterBehaviorImpl = {
             } else { // other codes
                 return Promise.reject({msg: `Error happend during canLeave with status: ${obj.xhr.status}`});
             }
+        }).catch(e => {
+            if (e.request && e.error) {
+                processResponseError(e.request, e.error, this._reflector(), this._serialiser(), _ => { // _ result or message to be dismissed
+                        if (e.request && e.request.xhr && e.request.xhr.status === 404 && e.request.xhr.response) {
+                            const deserialisedResult = this._serialiser().deserialise(e.request.xhr.response);
+                            if (this._reflector().isError(deserialisedResult)) {
+                                // Override standard >=400 toast message `Service Error (404).` by custom one from server.
+                                this.toaster && this.toaster.openToastForErrorResult(deserialisedResult, true);
+                            }
+                        }
+                    }, this.toaster);
+            }
+            throw e;
         });
+        
     },
 
     //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////

@@ -835,9 +835,9 @@ Polymer({
                         currentSection._showBlockingPane();
                     }
                 }).catch(cannotLeaveReason => {
-                    const cannotLeaveMessage = cannotLeaveReason.msg || cannotLeaveReason;
+                    const cannotLeaveMessage = cannotLeaveReason.message || cannotLeaveReason.msg || cannotLeaveReason;
                     this.route = this.sectionRoute;
-                    this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage);
+                    this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage, !!cannotLeaveReason.message);
                 }).finally(() => {
                     this.fire('tg-master-menu-route-change-completed', this.route);
                 });
