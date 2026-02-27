@@ -122,8 +122,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                 newFreshCentre = discardOwnSaveAsConfig(user, actualSaveAsName);
             }
             
-            final var criteriaIndication = createCriteriaIndication(wasRun, newFreshCentre, miType, actualSaveAsName, user, companionFinder, device(), webUiConfig
-            );
+            final var criteriaIndication = createCriteriaIndication(wasRun, newFreshCentre, miType, actualSaveAsName, user, companionFinder, device(), webUiConfig);
             return createCriteriaDiscardEnvelope(newFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, criteriaIndication, device(), isInherited ? of(ofNullable(updateCentreDesc(user, miType, actualSaveAsName, device(), companionFinder))) : empty(), webUiConfig, sharingModel);
         }, restUtil);
     }

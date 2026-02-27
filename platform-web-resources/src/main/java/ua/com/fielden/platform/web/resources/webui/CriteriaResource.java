@@ -402,8 +402,7 @@ public class CriteriaResource extends AbstractWebResource {
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(
                 createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                 appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
-                createCriteriaIndication((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device, webUiConfig
-                )
+                createCriteriaIndication((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device, webUiConfig)
             );
             customObject.put(VALIDATION_COUNTER, modifiedPropertiesHolder.get(VALIDATION_COUNTER));
             return restUtil.rawListJsonRepresentation(appliedCriteriaEntity, customObject);
@@ -563,16 +562,14 @@ public class CriteriaResource extends AbstractWebResource {
                     final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
                     if (!validationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (validation failed).");
-                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig
-                        );
+                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig);
                         return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication)));
                     }
 
                     final Result authorisationResult = authoriseCriteriaEntity(freshCentreAppliedCriteriaEntity);
                     if (!authorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run failed (authorisation validation failed).");
-                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig
-                        );
+                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig);
                         return restUtil.resultJSONRepresentation(
                             authorisationResult.copyWith(List.of(
                                 freshCentreAppliedCriteriaEntity,
@@ -608,8 +605,7 @@ public class CriteriaResource extends AbstractWebResource {
                     // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
                     if (!generationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (generation failed).");
-                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig
-                        );
+                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig);
                         final Result result = generationResult.copyWith(List.of(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication))));
                         return restUtil.resultJSONRepresentation(result);
                     }
@@ -619,8 +615,7 @@ public class CriteriaResource extends AbstractWebResource {
                     commitCentreWithoutConflicts(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), updatedFreshCentre, null, webUiConfig, companionFinder);
                 }
 
-                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), webUiConfig,
-                                                                                             companionFinder);
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder);
                 final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device(), webUiConfig, sharingModel);
                 // Performs criteria validation on centre refresh / navigate.
                 // It is needed if the user changed token role association between run and refresh actions.

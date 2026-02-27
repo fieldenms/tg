@@ -127,12 +127,12 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
                 criteriaEntity = null;
                 enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(
-                        miType, saveAsName,
-                        updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder),
-                        companionFinder, critGenerator, 0L,
-                        user,
-                        device(),
-                        webUiConfig, sharingModel
+                    miType, saveAsName,
+                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder),
+                    companionFinder, critGenerator, 0L,
+                    user,
+                    device(),
+                    webUiConfig, sharingModel
                 );
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getType();
             } else {

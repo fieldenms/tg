@@ -485,8 +485,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final User user,
             final DeviceProfile device,
             final IWebUiConfig webUiConfig,
-            final ICentreConfigSharingModel sharingModel)
-    {
+            final ICentreConfigSharingModel sharingModel) {
         // generates validation prototype
         final M validationPrototype = (M) critGenerator.<T>generateCentreQueryCriteria(cdtmae);
 
@@ -521,13 +520,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // creates criteria validation prototype for concrete saveAsName
         validationPrototype.setCriteriaValidationPrototypeCreator(validationPrototypeSaveAsName ->
             createCriteriaValidationPrototype(
-                    miType,
-                    validationPrototypeSaveAsName,
-                    updateCentre(user, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, device, webUiConfig, companionFinder),
-                    companionFinder, critGenerator, -1L,
-                    user,
-                    device,
-                    webUiConfig, sharingModel
+                miType,
+                validationPrototypeSaveAsName,
+                updateCentre(user, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, device, webUiConfig, companionFinder),
+                companionFinder, critGenerator, -1L,
+                user,
+                device,
+                webUiConfig, sharingModel
             )
         );
         // creates custom object representing centre information for concrete criteriaEntity and saveAsName
@@ -571,8 +570,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             // that's why we need to carefully override only widths and grow factors of 'fresh' centre from 'previouslyRun' centre
             // all other unrelated to CentreColumnWidthConfigUpdater information should remain 'as is'
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig,
-                                                                                 companionFinder);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
             freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
             commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, webUiConfig, companionFinder);
         });
@@ -1206,11 +1204,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final DeviceProfile device,
         final Optional<String> saveAsName,
         final User user,
-        final ICompanionObjectFinder coFinder,
-        final Optional<Supplier<Boolean>> checkChanges)
-    {
-        return findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, coFinder)
-               .map(upstreamConfig -> updateInheritedFromShared(upstreamConfig, miType, device, saveAsName, user, coFinder, checkChanges));
+        final ICompanionObjectFinder companionFinder,
+        final Optional<Supplier<Boolean>> checkChanges
+    ) {
+        return findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, companionFinder)
+               .map(upstreamConfig -> updateInheritedFromShared(upstreamConfig, miType, device, saveAsName, user, companionFinder, checkChanges));
     }
 
     /// Updates FRESH / SAVED / PREVIOUSLY_RUN versions of configuration for `user` from upstream configuration.
@@ -1228,19 +1226,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /// @param checkChanges optional function to check whether there are local changes; if they are — not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) — force FRESH centre updating
     ///
     public static EntityCentreConfig updateInheritedFromShared(
-            final EntityCentreConfig upstreamConfig,
-            final Class<? extends MiWithConfigurationSupport<?>> miType,
-            final DeviceProfile device,
-            final Optional<String> saveAsName,
-            final User user,
-            final ICompanionObjectFinder coFinder,
-            final Optional<Supplier<Boolean>> checkChanges)
-    {
+        final EntityCentreConfig upstreamConfig,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final DeviceProfile device,
+        final Optional<String> saveAsName,
+        final User user,
+        final ICompanionObjectFinder companionFinder,
+        final Optional<Supplier<Boolean>> checkChanges
+    ) {
         final String upstreamTitle = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device);
         final Optional<String> changedTitle = !equalsEx(upstreamTitle, saveAsName.get()) ? of(upstreamTitle) : empty();
-        final EntityCentreConfigCo coEntityCentreConfig = coFinder.find(EntityCentreConfig.class);
+        final EntityCentreConfigCo coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
         final Function<String, Function<Supplier<Optional<Boolean>>, Consumer<Supplier<String>>>> overrideConfigBodyFor = name -> calcRunAutomaticallyOpt -> calcDesc ->
-            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), coFinder, FETCH_CONFIG_AND_INSTRUMENT.with("configBody").with("runAutomatically")) // contains 'title' / 'desc' inside fetch model
+            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("configBody").with("runAutomatically")) // contains 'title' / 'desc' inside fetch model
             .ifPresent(config -> {
                 final String desc = calcDesc.get();
                 if (desc != null) {
@@ -1250,7 +1248,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 changedTitle.ifPresent(ct -> config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device))); // update title of configuration from upstream if it has changed
                 coEntityCentreConfig.saveWithRetry(config.setConfigBody(upstreamConfig.getConfigBody()));
             });
-        final Function<String, Consumer<String>> overrideConfigTitleFor = name -> ct -> findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), coFinder, FETCH_CONFIG_AND_INSTRUMENT /*contains 'title' inside fetch model*/).ifPresent(config ->
+        final Function<String, Consumer<String>> overrideConfigTitleFor = name -> ct -> findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), companionFinder, FETCH_CONFIG_AND_INSTRUMENT /*contains 'title' inside fetch model*/).ifPresent(config ->
             coEntityCentreConfig.saveWithRetry(config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device)))
         );
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
@@ -1263,8 +1261,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             overrideConfigBodyFor.apply(FRESH_CENTRE_NAME)
                 // upstreamConfig exists; its FRESH counterpart too -- no need to provide webUiConfig (first 'null') for getting default runAutomatically values;
                 // also no need to provide selectionCrit (second 'null') for checking whether upstreamConfig is inherited - it can never be inherited transitively
-                .apply(() -> of(updateCentreRunAutomatically(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, coFinder, null, null)))
-                .accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, coFinder));
+                .apply(() -> of(updateCentreRunAutomatically(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, companionFinder, null, null)))
+                .accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, companionFinder));
         } else {
             // update FRESH surrogate configuration; only if upstream title has been changed
             changedTitle.ifPresent(ct -> overrideConfigTitleFor.apply(FRESH_CENTRE_NAME).accept(ct));
