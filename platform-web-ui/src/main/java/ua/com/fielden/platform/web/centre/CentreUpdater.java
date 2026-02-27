@@ -833,7 +833,9 @@ public class CentreUpdater {
     /**
      * Loads centre through the following chain: 'default centre' + 'differences' := 'centre'.
      *
+     * @param user
      * @param miType
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param updatedDiff -- updated differences
      * @param companionFinder
      *
@@ -858,6 +860,7 @@ public class CentreUpdater {
      * Please note that 'default' centre is specific to the user on current thread ({@link IUserProvider}). All injector-based default values will be user-specific
      * if they are defined as user-specific in domain logic.
      *
+     * @param gdtm
      * @param miType
      * @return
      */
@@ -868,7 +871,7 @@ public class CentreUpdater {
     /**
      * Returns {@code runAutomatically} parameter for the Centre DSL configuration defined by {@code miType}.
      * <p>
-     * Centres defined as {@code runAutomatically} not only runs automatically on loading; criteria for such centres will be cleared before auto-running.
+     * Centres defined as {@code runAutomatically} not only runs automatically on loading; criteria for such centres will be cleared before auto-running (see {@link CriteriaResource#put} for more details).
      * 
      * @param miType
      * @param webUiConfig
@@ -1246,6 +1249,7 @@ public class CentreUpdater {
      * Applies the differences from 'differences centre' on top of 'target centre'.
      *
      * @param targetCentre
+     * @param differencesCentre
      * @param root
      * @param companionFinder -- to process crit-only single entity-typed values
      * @return
