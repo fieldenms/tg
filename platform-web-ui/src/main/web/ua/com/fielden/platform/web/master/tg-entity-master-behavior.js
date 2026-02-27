@@ -1519,11 +1519,7 @@ const TgEntityMasterBehaviorImpl = {
         const nodesWithCanLeave = queryElements(this, '.canLeave');
         if (nodesWithCanLeave.length > 0) {
             for (let index = 0; index < nodesWithCanLeave.length; index++) {
-                try {
-                    await nodesWithCanLeave[index].canLeave(leaveReason);
-                } catch (e) {
-                    throw e;
-                }
+                await nodesWithCanLeave[index].canLeave(leaveReason);
             }
         }
 
@@ -1547,7 +1543,10 @@ const TgEntityMasterBehaviorImpl = {
     customCanLeave: function (leaveReason = LeaveReason.CLOSED) {
         this._currBindingEntity["leaveReason"] = leaveReason;
         return this.remoteCanLeave().then(obj => {
-            if (obj.xhr.status === 200 && obj.response) { // successful execution of the request with written response; timeout errors can lead to status 200 and e.detail.response === null; also 504 error is possible, but this will be handled in _processError
+            if (obj.xhr.status === 200 && obj.response) {
+                // Indicates successful execution of the request with a response received.
+                // Timeout errors may still result in status 200 with e.detail.response === null.
+                // A 504 error is also possible, but it is handled in the else clause.
                 const deserialisedResult = this._serialiser().deserialise(obj.response);
 
                 if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
@@ -1563,7 +1562,7 @@ const TgEntityMasterBehaviorImpl = {
                     }
                 }
             } else { // other codes
-                return Promise.reject({msg: `Error happend during save with status: ${obj.xhr.status}`});
+                return Promise.reject({msg: `Error happend during canLeave with status: ${obj.xhr.status}`});
             }
         });
     },

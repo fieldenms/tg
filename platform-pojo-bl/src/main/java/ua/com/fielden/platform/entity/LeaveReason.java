@@ -7,7 +7,7 @@ package ua.com.fielden.platform.entity;
 /// - Navigating to another menu item or view.
 /// - Closing the dialog or view that contains the entity master.
 ///
-/// Switching between entities of the same type is treated as closing the current entity master.
+/// Navigating between entities on the entity centre is treated as closing the current entity master.
 ///
 public enum LeaveReason {
     /// The entity master was closed. This includes switching between entities of the same type.

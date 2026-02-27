@@ -527,11 +527,7 @@ Polymer({
     _closeDialogsInTheList : async function (overlays) {
         for (let i = overlays.length - 1; i >= 0; i--) {
             if (!skipHistoryAction(overlays[i])) {
-                try {
-                    await this._closeDialog(overlays[i]);
-                } catch (e) {
-                    throw e;
-                }
+                await this._closeDialog(overlays[i]);
             }
         }
         return true;

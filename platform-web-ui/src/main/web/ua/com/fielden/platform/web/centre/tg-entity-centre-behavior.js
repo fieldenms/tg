@@ -1601,11 +1601,7 @@ const TgEntityCentreBehaviorImpl = {
         // Check whether all insertion points can be left.
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
-            try {
-                await insertionPoints[insPoIndex].canLeave(leaveReason);
-            } catch (e) {
-                throw e;
-            }
+            await insertionPoints[insPoIndex].canLeave(leaveReason);
         }
         return true;
     },

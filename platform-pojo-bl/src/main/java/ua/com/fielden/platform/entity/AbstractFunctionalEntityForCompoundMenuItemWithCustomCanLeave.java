@@ -29,7 +29,7 @@ public class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<K ext
     private String canLeaveOptions;
 
     @IsProperty
-    @Title(value = "Leave Reason")
+    @Title("Leave Reason")
     private String leaveReason;
 
     @IsProperty

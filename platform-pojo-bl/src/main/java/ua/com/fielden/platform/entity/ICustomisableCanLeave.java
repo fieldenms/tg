@@ -21,9 +21,14 @@ public interface ICustomisableCanLeave {
     /// Returns the set of buttons to be displayed in the confirmation dialog
     /// during the execution of the `canLeave` method.
     ///
+    /// @return An Optional containing the CanLeaveOptions if confirmation is required;
+    ///         otherwise, an empty Optional.
+    ///
     Optional<CanLeaveOptions> canLeaveOptions();
 
-    /// Indicates whether the master view for this entity is closing.
+    /// Returns the reason explaining why the master view for this entity is about to be exited.
+    ///
+    /// @return An Optional containing the leave reason if one exists; otherwise, an empty Optional.
     ///
     Optional<LeaveReason> leaveReason();
 
