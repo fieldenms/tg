@@ -235,7 +235,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
     /// Removes centre configurations from persistent storage.
     ///
     public static void removeCentres(final User user, final Class<?> menuItemType, final ICompanionObjectFinder companionFinder, final String ... names) {
-        final var coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
+        final var coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class, true);
         coEntityCentreConfig.delete(multiModelFor(user, menuItemType.getName(), names));
     }
     
