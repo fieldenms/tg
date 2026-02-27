@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.logging.log4j.LogManager;
@@ -13,10 +15,11 @@ import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
+import ua.com.fielden.platform.menu.exceptions.MenuInitialisationException;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
+import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
@@ -50,14 +53,18 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTPS;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -83,10 +90,19 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     private final String title;
     private final Optional<String> ideaUri;
+    private String panelColor = "";
+    private String watermark = "";
+    private String watermarkStyle = "";
     private WebUiBuilder webUiBuilder;
     private Injector injector;
 
     private final EventSourceDispatchingEmitter dispatchingEmitter;
+
+    private int minDesktopWidth = 980, minTabletWidth = 768;
+    private String locale = "en-AU";
+    private String dateFormat = "DD/MM/YYYY";
+    private String timeFormat = "h:mm A";
+    private String timeWithMillisFormat = "h:mm:ss.SSS A";
 
     protected MainMenuBuilder desktopMainMenuConfig;
     protected MainMenuBuilder mobileMainMenuConfig;
@@ -101,7 +117,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Workflows workflow;
     private final Map<String, String> checksums;
     private final boolean independentTimeZone;
-    private final MasterActionOptions masterActionOptions;
+    private final String masterActionOptions;
 
     /**
      * Holds the map between embedded entity centres' menu item types and [entity centre, entity master] pair.
@@ -129,7 +145,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.title = title;
         this.ideaUri = ideaUri.map(uri -> validateIdeaUri(uri).getInstanceOrElseThrow());
         this.independentTimeZone = independentTimeZone;
-        this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
+        this.masterActionOptions = masterActionOptions.orElse(ALL_OFF).name();
         this.webUiBuilder = new WebUiBuilder(this);
         this.dispatchingEmitter = new EventSourceDispatchingEmitter();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -207,6 +223,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public void initConfiguration() {
+        final EntityMaster<Menu> menuMaster = StandardMastersWebUiConfig.createMenuMaster(injector(), desktopMainMenuConfig, mobileMainMenuConfig);
         final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> genericEntityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
         final EntityMaster<ReferenceHierarchy> genericReferenceHierarchyMaster = ReferenceHierarchyWebUiConfig.createReferenceHierarchyMaster(injector());
@@ -231,7 +248,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(genericEntityDeleteActionMaster)
         .addMaster(genericEntityExportActionMaster)
         .addMaster(genericMenuSaveMaster)
-        .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig, mobileMainMenuConfig).master)
+        .addMaster(menuMaster)
         .addMaster(userMenuAssociatorWebUiConfig.master)
         .addMaster(userDefinableHelpMaster)
         .addMaster(persistentEntityInfoMaster)
@@ -270,7 +287,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genWebUiPreferences() {
-        return webUiBuilder.genWebUiPrefComponent();
+        return getText("ua/com/fielden/platform/web/app/config/tg-app-config.js");
     }
 
     @Override
@@ -285,9 +302,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genAppIndex() {
-        final String indexSource = webUiBuilder.getAppIndex(injector().getInstance(IDates.class))
-                .replace("@title", title)
-                .replace("@ideaUri", ideaUri.orElse(""));
+        final String indexSource = getText("ua/com/fielden/platform/web/index.html");
         if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {
@@ -400,7 +415,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public MasterActionOptions masterActionOptions() {
+    public String masterActionOptions() {
         return masterActionOptions;
     }
 
@@ -559,4 +574,131 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return successful(webAddress);
     }
 
+    @Override
+    public int minDesktopWidth() {
+        return minDesktopWidth;
+    }
+
+    @Override
+    public int minTabletWidth() {
+        return minTabletWidth;
+    }
+
+    @Override
+    public String locale() {
+        return locale;
+    }
+
+    @Override
+    public String dateFormat() {
+        return dateFormat;
+    }
+
+    @Override
+    public String timeFormat() {
+        return timeFormat;
+    }
+
+    @Override
+    public String timeWithMillisFormat() {
+        return timeWithMillisFormat;
+    }
+
+    @Override
+    public String title() {
+        return title;
+    }
+
+    @Override
+    public String ideaUri() {
+        return ideaUri.orElse("");
+    }
+
+    @Override
+    public String mainPanelColor() {
+        return panelColor;
+    }
+
+    @Override
+    public String watermark() {
+        return watermark;
+    }
+
+    @Override
+    public String watermarkStyle() {
+        return watermarkStyle;
+    }
+
+    @Override
+    public AbstractWebUiConfig setMinDesktopWidth(final int width) {
+        this.minDesktopWidth = width;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setMinTabletWidth(final int width) {
+        this.minTabletWidth = width;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setLocale(final String locale) {
+        this.locale = locale;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setTimeFormat(final String timeFormat) {
+        this.timeFormat = timeFormat;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setTimeWithMillisFormat(final String timeWithMillisFormat) {
+        this.timeWithMillisFormat = timeWithMillisFormat;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setDateFormat(final String dateFormat) {
+        this.dateFormat = dateFormat;
+        return this;
+    }
+
+    @Override
+    public AbstractWebUiConfig setMainPanelColor(final String panelColor) {
+        this.panelColor = panelColor;
+        return this;
+    }
+
+    public AbstractWebUiConfig setWatermark(final String watermark) {
+        this.watermark = watermark;
+        return this;
+    }
+
+    public AbstractWebUiConfig setWatermarkStyle(final String watermarkStyle) {
+        this.watermarkStyle = watermarkStyle;
+        return this;
+    }
+
+    @Override
+    public Set<String> siteAllowList() {
+        return TryWrapper.Try( () -> stream(injector().getInstance(Key.get(String.class, Names.named("externalSites.allowlist"))).trim().split("\\s*,\\s*"))
+                        // Exclude blank entries.
+                        .filter(StringUtils::isNotBlank)
+                        // Wildcard subdomains should expand to include the corresponding domains.
+                        // For example, `*.google.com` should expand to `*.google.com` and `google.com`.
+                        .flatMap(site -> site.startsWith("*.") ? Stream.of(site, site.substring(2)) : Stream.of(site))
+                        // Convert sites to JavaScript regular expressions.
+                        .map(site -> site.toLowerCase().replaceAll("[\"']", "").replace(".", "\\.").replace("*", ".*"))
+                        .collect(toSet()))
+                .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'siteAllowlist': %s".formatted(ex.getMessage())));
+    }
+
+    @Override
+    public int daysUntilSitePermissionExpires() {
+        String expiryDays = injector().getInstance(Key.get(String.class, Names.named("externalSites.expiresIn")));
+        return TryWrapper.Try( () -> isEmpty(expiryDays) ? DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS : Integer.parseInt(expiryDays) )
+                .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'daysUntilSitePermissionExpires': %s".formatted(ex.getMessage())));
+    }
 }

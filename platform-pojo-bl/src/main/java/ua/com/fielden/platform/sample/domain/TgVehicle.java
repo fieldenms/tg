@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.junit.Ignore;
 
+import ua.com.fielden.platform.audit.annotations.Audited;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -33,6 +34,7 @@ import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 @DescTitle("Description")
 @Ignore
 @CompanionObject(ITgVehicle.class)
+@Audited
 public class TgVehicle extends AbstractEntity<String> {
 
     @IsProperty

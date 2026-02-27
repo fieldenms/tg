@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.processors.appdomain;
 
-import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
+import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isAbstract;

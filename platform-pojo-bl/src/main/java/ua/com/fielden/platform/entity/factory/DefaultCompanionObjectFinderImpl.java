@@ -5,7 +5,7 @@ import com.google.inject.Injector;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.companion.ICanReadUninstrumented;
-import ua.com.fielden.platform.companion.IEntityCompanionGenerator;
+import ua.com.fielden.platform.companion.ICompanionGenerator;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -20,7 +20,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 /// There are two cases:
 /// 1. If an entity type is annotated with [CompanionObject], the finder uses a companion object type, specified by this annotation.
 /// 2. If an entity type is annotated with [CompanionIsGenerated], the finder generates a new type that represents the default companion object implementation.
-///    The companion type generation is delegated to [IEntityCompanionGenerator].
+///    The companion type generation is delegated to [ICompanionGenerator].
 ///
 /// If none of the above cases hold, the finder returns `null`.
 ///
@@ -33,12 +33,12 @@ final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
     public static final String ERR_UNINSTRUMENTED_NOT_SUPPORTED_BY_CO = "Cannot produce uninstrumented companion of type [%s].";
 
     private final Injector injector;
-    private final IEntityCompanionGenerator companionGenerator;
+    private final ICompanionGenerator companionGenerator;
 
     @Inject
     public DefaultCompanionObjectFinderImpl(
             final Injector injector,
-            final IEntityCompanionGenerator companionGenerator)
+            final ICompanionGenerator companionGenerator)
     {
         this.injector = injector;
         this.companionGenerator = companionGenerator;
@@ -71,8 +71,8 @@ final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
             try {
                 final T co = injector.getInstance(coType);
                 return decideUninstrumentation(uninstrumented, co);
-            } catch (final EntityCompanionException e) {
-                throw e;
+            } catch (final EntityCompanionException ex) {
+                throw ex;
             } catch (final Exception ex) {
                 LOGGER.warn(() -> ERR_CO_IS_MISSING.formatted(type.getName()), ex);
                 // If a companion could not be instantiated for whatever reason, it can be considered as non-existing.

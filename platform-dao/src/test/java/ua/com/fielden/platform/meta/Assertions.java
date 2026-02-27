@@ -192,6 +192,10 @@ interface Assertions {
         public SubPropertiesA subProperties(final PropertyMetadataUtils pmUtils) {
             return new SubPropertiesA(propertyMetadata, pmUtils.subProperties(propertyMetadata));
         }
+
+        public SubPropertiesA subProperties(final PropertyMetadataUtils pmUtils, final PropertyMetadataUtils.SubPropertyNaming naming) {
+            return new SubPropertiesA(propertyMetadata, pmUtils.subProperties(propertyMetadata, naming));
+        }
     }
 
     class SubPropertiesA {
