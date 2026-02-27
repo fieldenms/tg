@@ -19,7 +19,6 @@ import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.*;
@@ -32,7 +31,6 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.IWithValidation;
-import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -51,9 +49,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.*;
 import static ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.*;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -61,11 +57,9 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotatio
 import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
 import static ua.com.fielden.platform.reflection.Finder.isKeyOrKeyMember;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
-import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 /**
@@ -295,6 +289,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     @Inject
     private static DynamicPropertyAccess dynamicPropertyAccess;
 
+    @Inject
+    private static IEntityTypeVerifier entityTypeVerifier;
+
     /**
      * Holds meta-properties for entity properties.
      */
@@ -337,11 +334,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         actualEntityType = (Class<? extends AbstractEntity<?>>) stripIfNeeded(getClass());
 
         keyType = (Class<K>) EntityMetadata.keyTypeInfo(actualEntityType);
-
-        if(!(this instanceof ActivatableAbstractEntity) && getType().isAnnotationPresent(DeactivatableDependencies.class)) {
-            throw new EntityDefinitionException(format("Non-activatable entity [%s] cannot have deactivatable dependencies.", actualEntityType.getName()));
-        }
-
 
         logger = getLogger(this.getType());
 
@@ -589,6 +581,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     @Inject
     protected void setMetaPropertyFactory(final IMetaPropertyFactory metaPropertyFactory) {
+        entityTypeVerifier.verify((Class<? extends AbstractEntity<?>>) getClass());
         // mark the start of the initialisation phase as part of entity creation
         beginInitialising();
         // if meta-property factory has already been assigned it should not change
@@ -599,18 +592,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         this.metaPropertyFactory = of(metaPropertyFactory);
 
         final List<Field> keyMembers = Finder.getKeyMembers(getType());
-        final Set<Field> fieldsForProperties = fieldsForProperties();
+        final Set<Field> fieldsForProperties = fieldsForProperties((Class<? extends AbstractEntity<?>>) getClass());
         final boolean isEntityPersistent = isPersistent();
         final boolean shouldNotSkipKeyChangeValidation = !isAnnotationPresentForClass(SkipKeyChangeValidation.class, this.getClass());
         for (final Field field : fieldsForProperties) { // for each field that represents a property
             final String propName = field.getName();
 
-            if (STRICT_MODEL_VERIFICATION) {
-                // TODO this kind of validation should really be implemented as part of the compilation process
-                // ensure that there is an accessor -- with out it field is not a property
-                // throws exception if method does not exists
-                Reflector.obtainPropertyAccessor(getType(), propName); // computationally heavy
-            }
             // determine property type and adjacent virtues
             final Class<?> type = EntityMetadata.determinePropType(getType(), field);
             final boolean isKey = keyMembers.contains(field);
@@ -623,12 +610,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
                     final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
                     final Class<?> propertyAnnotationType = isPropertyAnnotation.value();
-
-                    // perform some early runtime validation whether property was defined correctly
-                    if (STRICT_MODEL_VERIFICATION) {
-                        // TODO this kind of validation should really be implemented as part of the compilation process
-                        earlyRuntimePropertyDefinitionValidation(propName, type, isCollectional, isPropertyAnnotation, propertyAnnotationType); // computationally heavy
-                    }
 
                     // if a setter is annotated, then try to instantiate the specified validator.
                     final var annotationsAndValidators = collectValidators(metaPropertyFactory, field, type, isCollectional, isEntityPersistent, shouldNotSkipKeyChangeValidation);
@@ -672,14 +653,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      *
      * @return
      */
-    private Set<Field> fieldsForProperties() {
-        final Class<? extends AbstractEntity<?>> thisType = (Class<? extends AbstractEntity<?>>) getClass();
-        final Set<Field> fields = Finder.streamRealProperties(thisType).collect(toCollection(LinkedHashSet::new));
+    static Set<Field> fieldsForProperties(final Class<? extends AbstractEntity<?>> entityType) {
+        final Set<Field> fields = Finder.streamRealProperties(entityType).collect(toCollection(LinkedHashSet::new));
         try {
-            ALWAYS_PRESENT_META_PROPERTIES.forEach(prop -> fields.add(Finder.getFieldByName(thisType, prop)));
+            ALWAYS_PRESENT_META_PROPERTIES.forEach(prop -> fields.add(Finder.getFieldByName(entityType, prop)));
         } catch (final Exception ex) {
             final String error = "Could not get field for one of [%s].".formatted(CollectionUtil.toString(ALWAYS_PRESENT_META_PROPERTIES, ", "));
-            logger.error(error, ex);
             throw new ReflectionException(error, ex);
         }
         return fields;
@@ -693,83 +672,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public static boolean isAlwaysMetaProperty(final String property) {
         return ALWAYS_PRESENT_META_PROPERTIES.contains(property);
-    }
-
-    /**
-     * Early runtime validation of property definitions. This kind of validations should be moved to complile time in due course.
-     *
-     * @param propName
-     * @param type
-     * @param isCollectional
-     * @param isPropertyAnnotation
-     * @param propertyAnnotationType
-     */
-    private void earlyRuntimePropertyDefinitionValidation(final String propName, final Class<?> type, final boolean isCollectional, final IsProperty isPropertyAnnotation, final Class<?> propertyAnnotationType) {
-        final boolean isNumeric = isNumeric(type);
-
-        if (!isNumeric &&
-            (isPropertyAnnotation.precision() != DEFAULT_PRECISION ||
-             isPropertyAnnotation.scale() != DEFAULT_SCALE ||
-             isPropertyAnnotation.trailingZeros() != DEFAULT_TRAILING_ZEROS)) {
-            final String error = format(INVALID_USE_OF_NUMERIC_PARAMS_MSG,  propName, getType().getName());
-            logger.error(error);
-            throw new EntityDefinitionException(error);
-
-        }
-
-        if (isNumeric &&
-            (isPropertyAnnotation.precision() != DEFAULT_PRECISION || isPropertyAnnotation.scale() != DEFAULT_SCALE) &&
-            (isPropertyAnnotation.precision() <= 0 || isPropertyAnnotation.scale() < 0)) {
-            final String error = format(INVALID_USE_FOR_PRECISION_AND_SCALE_MSG, propName, getType().getName());
-            logger.error(error);
-            throw new EntityDefinitionException(error);
-        }
-
-        if (isNumeric && isPropertyAnnotation.precision() != DEFAULT_PRECISION && isPropertyAnnotation.precision() <= isPropertyAnnotation.scale()) {
-                final String error = format(INVALID_VALUES_FOR_PRECISION_AND_SCALE_MSG, propName, getType().getName());
-                logger.error(error);
-                throw new EntityDefinitionException(error);
-
-        }
-
-        if (!isString(type) && !isHyperlink(type) && !RichText.class.isAssignableFrom(type) && !type.isArray() && isPropertyAnnotation.length() != DEFAULT_LENGTH) {
-            final String error = format(INVALID_USE_OF_PARAM_LENGTH_MSG, propName, getType().getName());
-            logger.error(error);
-            throw new EntityDefinitionException(error);
-        }
-
-        if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
-            final String error = format(COLLECTIONAL_PROP_MISSING_TYPE_MSG, propName, getType().getName());
-            logger.error(error);
-            throw new EntityDefinitionException(error);
-        }
-
-        final Class<? extends AbstractEntity<?>> entityType = getType();
-        if (isCollectional && isLinkPropertyRequiredButMissing(propName)) {
-            final String error = format(COLLECTIONAL_PROP_MISSING_LINK_MSG, propName, getType().getName());
-            logger.error(error);
-            throw new EntityDefinitionException(error);
-        }
-
-        // FIXME there are cases where entities inherit from an entity with implicitly-calculated one-2-one associations, which fail the association check
-        // Finder.isOne2One_association uses "equals" to validate the key of the one-2-one- entity matching the holding entity type.
-        // This needs to be considered and resolved.
-        // if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY))
-        //        && !Finder.isOne2One_association(entityType, propName)) {
-        //    final String error = format(INVALID_ONE2ONE_ASSOCIATION_MSG, propName, getType().getName());
-        //    logger.error(error);
-        //    throw new EntityDefinitionException(error);
-        //}
-    }
-
-    /**
-     * A predicate method to identify whether a collectional property requires, but is missing a corresponding <code>link property</code> information.
-     *
-     * @param propertyName
-     * @return
-     */
-    protected boolean isLinkPropertyRequiredButMissing(final String propertyName) {
-        return isPersistentEntityType(getType()) && !Finder.hasLinkProperty(getType(), propertyName);
     }
 
     /**

@@ -1,15 +1,11 @@
 package ua.com.fielden.platform.entity;
 
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
+
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
-
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 
 /**
  * A base class for functional entities that are intended to modify entity (master entity) collectional association properties. The master entity, whose collection modifies,
@@ -104,26 +100,9 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     public Set<ID_TYPE> getChosenIds() {
         return Collections.unmodifiableSet(chosenIds);
     }
-    
+
     public static boolean isCollectionOfIds(final String propertyName) {
         return "chosenIds".equals(propertyName) || "addedIds".equals(propertyName) || "removedIds".equals(propertyName);
     }
-    
-    /**
-     * Override to ignore link property requiredness for collectional properties 
-     * <code>chosenIds</code>, <code>addedIds</code>, <code>removedIds</code>.
-     *  
-     * @param entityType
-     * @param propertyName
-     * @return
-     */
-    @Override
-    protected boolean isLinkPropertyRequiredButMissing(final String propertyName) {
-        if (!isCollectionOfIds(propertyName)) {
-            return super.isLinkPropertyRequiredButMissing(propertyName);
-        } else {
-            return false;
-        }
-    }
-    
+
 }
