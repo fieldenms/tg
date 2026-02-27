@@ -39,8 +39,9 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.utils.DefaultEntityCentreProcessor.*;
 
-/// Tests for {@link EntityCentreProcessor}. These should serve as an example of how end-application tests can be
-/// implemented.
+/// Tests for {@link EntityCentreProcessor}.
+///
+/// These can serve as an example of how end-application tests can be implemented.
 ///
 @RunWith(H2OrPostgreSqlOrSqlServerContextSelectorForWebTests.class)
 public class EntityCentreProcessorTest extends AbstractDaoTestCase {
@@ -326,10 +327,20 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         assertEquals("Can not generate the instance based on current user [%s], choose another user for that.".formatted(getUser()), result.asLeft().value().getMessage());
     }
 
+    /// Initialise test data for config `uuid` (desktop device profile).
+    ///
+    /// @param createData runnable for custom data creation
+    /// @param enhanceCentreManager mutating function for centre manager to provide custom criteria and other configuration parameters
+    ///
     private void initTestData(final String uuid, final Runnable createData, final Consumer<ICentreDomainTreeManagerAndEnhancer> enhanceCentreManager) {
         initTestData(uuid, DESKTOP, createData, enhanceCentreManager);
     }
 
+    /// Initialise test data for config `uuid` and `device` profile.
+    ///
+    /// @param createData runnable for custom data creation
+    /// @param enhanceCentreManager mutating function for centre manager to provide custom criteria and other configuration parameters
+    ///
     private void initTestData(final String uuid, final DeviceProfile device, final Runnable createData, final Consumer<ICentreDomainTreeManagerAndEnhancer> enhanceCentreManager) {
         setupUser(system_users.UNIT_TEST_USER, "example.tg.test");
 
@@ -342,6 +353,10 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         initTestData(enhanceCentreManager, configSettings);
     }
 
+    /// Initialise test data for `configSettings`.
+    ///
+    /// @param enhanceCentreManager mutating function for centre manager to provide custom criteria and other configuration parameters
+    ///
     private void initTestData(Consumer<ICentreDomainTreeManagerAndEnhancer> enhanceCentreManager, ConfigSettings configSettings) {
         final IWebUiConfig webUiConfig = getInstance(IWebUiConfig.class);
         final ICompanionObjectFinder companionFinder = getInstance(ICompanionObjectFinder.class);
@@ -377,6 +392,9 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         }
     }
 
+    /// Get (or create) entity instance for `menuItemType`.
+    /// Use `null` for some non-existing type, that still exists in persistent storage for some reason.
+    ///
     private MainMenuItem getMenuItem(final Class<?> menuItemType) {
         if (menuItemType == null) {
             return getMenuItemForName(null);
@@ -384,6 +402,9 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         return getMenuItemForName(menuItemType.getName());
     }
 
+    /// Get (or create) entity instance for `menuItemTypeName`.
+    /// Use `null` for some non-existing type, that still exists in persistent storage for some reason.
+    ///
     private MainMenuItem getMenuItemForName(final String menuItemTypeName) {
         if (menuItemTypeName == null) {
             return getMenuItemForName(NON_EXISTING_MI_TYPE_NAME);
@@ -395,7 +416,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
 
     @Override
     protected void populateDomain() {
-        // Override to use standard IUniversalConstants instead of UniversalConstantsForTesting.
+        // Override to use standard IUniversalConstants implementation instead of UniversalConstantsForTesting.
     }
 
 }

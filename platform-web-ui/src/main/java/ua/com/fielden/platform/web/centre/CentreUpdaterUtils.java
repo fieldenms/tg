@@ -180,10 +180,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
         });
     }
 
-    /**
-     * Overrides existing {@link EntityCentreConfig} instance with new serialised diff.
-     * Otherwise, in case where there is no such instance in database, creates and saves new {@link EntityCentreConfig} instance with serialised diff inside.
-     */
+    /// Overrides existing [EntityCentreConfig] instance with new serialised diff.
+    /// Otherwise, in case where there is no such instance in database, creates and saves new [EntityCentreConfig] instance with serialised diff inside.
+    ///
     public static Map<String, Object> saveEntityCentreManager(
         final Map<String, Object> differences,
         final Class<?> menuItemType,
@@ -231,9 +230,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
         );
     }
     
-    /**
-     * Finds optional configuration for {@code model} with predefined fetch model, sufficient for most situations.
-     */
+    /// Finds optional configuration for `model` with predefined fetch model, sufficient for most situations.
+    ///
     private static Optional<EntityCentreConfig> findConfigOptByModel(final ICompoundCondition0<EntityCentreConfig> model, final EntityCentreConfigCo eccCompanion) {
         return eccCompanion.getEntityOptional(
             from(model.model())
@@ -244,16 +242,14 @@ public class CentreUpdaterUtils extends CentreUpdater {
         );
     }
     
-    /**
-     * Finds optional configuration for {@code uuid}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
-     */
+    /// Finds optional configuration for `uuid`, `miType`, `device` and `surrogateName` with predefined fetch model, sufficient for most situations.
+    ///
     public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final EntityCentreConfigCo eccCompanion) {
         return findConfigOptByModel(centreConfigQueryFor(uuid, miType, device, surrogateName), eccCompanion);
     }
     
-    /**
-     * Finds optional configuration for {@code uuid}, {@code user}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
-     */
+    /// Finds optional configuration for `uuid`, `user`, `miType`, `device` and `surrogateName` with predefined fetch model, sufficient for most situations.
+    ///
     public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final EntityCentreConfigCo eccCompanion) {
         return findConfigOptByModel(centreConfigQueryFor(uuid, miType, device, surrogateName).and().condition(centreConfigCondFor(user)), eccCompanion);
     }

@@ -68,7 +68,7 @@ public class EntityQueryCriteriaUtils {
         // Root property (aka "entity itself") is always authorised.
         return property.isEmpty()
             // Non-root property access is governed by *_CanRead_property_* tokens, where the `property` part is never empty.
-            || authorisePropertyReading(root, property, authorisationModel).orElseGet(Result::successful).isSuccessful();
+            || authorisePropertyIfGuarded(root, property, authorisationModel).orElseGet(Result::successful).isSuccessful();
     }
 
     /// Creates an Entity Centre query for a list of [QueryProperty] and other parameters.

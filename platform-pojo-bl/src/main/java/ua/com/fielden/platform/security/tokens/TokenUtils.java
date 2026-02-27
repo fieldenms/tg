@@ -68,7 +68,7 @@ public class TokenUtils {
                 // Root property (aka "entity itself") is always authorised.
                 if (!queryProperty.isEmptyWithoutMnemonics() && !"".equals(queryProperty.getPropertyName())) {
                     final var originalType = getOriginalType(stripIfNeeded(queryProperty.getEntityClass()));
-                    return authorisePropertyReading(originalType, queryProperty.getPropertyName(), authorisation);
+                    return authorisePropertyIfGuarded(originalType, queryProperty.getPropertyName(), authorisation);
                 }
                 return Optional.<Result>empty();
             })
@@ -78,7 +78,9 @@ public class TokenUtils {
             .orElseGet(Result::successful);
     }
 
-    public static Optional<Result> authorisePropertyReading(final Class<?> entityType, final String propertyName, final IAuthorisationModel authorisation) {
+    /// Finds authorisation annotation for entity property and performs authorisation, if present.
+    ///
+    public static Optional<Result> authorisePropertyIfGuarded(final Class<?> entityType, final String propertyName, final IAuthorisationModel authorisation) {
         return getPropertyAnnotationOptionally(Authorise.class, entityType, propertyName)
                .map(annot -> (Class<? extends ISecurityToken>) annot.value())
                .map(authorisation::authorise);

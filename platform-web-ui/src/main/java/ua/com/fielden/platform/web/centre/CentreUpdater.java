@@ -173,13 +173,17 @@ public class CentreUpdater {
             return ent.getKey().toString();
         }
     }, entity);
-    /**
-     * Function to get title of surrogate configuration from surrogate name, save-as name and device.
-     */
+
+    /// Function to get title of surrogate configuration from surrogate name, save-as name and device.
+    ///
     public static final Function<String, Function<Optional<String>, Function<DeviceProfile, String>>> NAME_OF = surrogateName -> saveAs -> device -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
+
+    /// Function to get query prefix for title of surrogate configuration from surrogate name and device.
+    ///
     public static final Function<String, Function<DeviceProfile, String>> PREFIX_OF = surrogateName -> device -> deviceSpecific(surrogateName, device) + "[%";
 
-    /** Protected default constructor to prevent instantiation. */
+    /// Protected default constructor to prevent instantiation.
+    ///
     protected CentreUpdater() {
     }
     
@@ -761,7 +765,7 @@ public class CentreUpdater {
     
     /**
      * Receives actual title from surrogate name persisted inside {@link EntityCentreConfig#getTitle()}.
-     * 
+     *
      * @param title
      * @param surrogateNamePrefix
      * @return
@@ -771,63 +775,77 @@ public class CentreUpdater {
         return surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]"));
     }
 
+    /// Creates composable centre configuration query for `device` and `surrogateName`.
+    ///
+    /// @param device        the device for which centre configurations are looked for
+    /// @param surrogateName surrogate name of the centre (fresh, previouslyRun etc.)
+    ///
     private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final DeviceProfile device, final String surrogateName) {
         return select(EntityCentreConfig.class)
             .where().prop("title").like().val(PREFIX_OF.apply(surrogateName).apply(device))
             .and().prop("title").notLike().val(PREFIX_OF.apply(surrogateName).apply(opposite(device)));
     }
 
+    /// Creates composable centre configuration query for `uuid`, `device` and `surrogateName`.
+    ///
+    /// @param device        the device for which centre configurations are looked for
+    /// @param surrogateName surrogate name of the centre (fresh, previouslyRun etc.)
+    ///
     private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final DeviceProfile device, final String surrogateName) {
         return centreConfigQueryFor(device, surrogateName)
             .and().condition(centreConfigCondFor(uuid));
     }
 
+    /// Creates composable centre configuration query for `uuid`, `miType`, `device` and `surrogateName`.
+    ///
+    /// @param device        the device for which centre configurations are looked for
+    /// @param surrogateName surrogate name of the centre (fresh, previouslyRun etc.)
+    ///
     static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
         return centreConfigQueryFor(uuid, device, surrogateName)
             .and().condition(centreConfigCondFor(miType));
     }
 
+    /// Creates composable centre configuration condition for `uuid`.
+    ///
     public static ConditionModel centreConfigCondFor(final String uuid) {
         return cond().prop("configUuid").eq().val(uuid).model();
     }
 
-    /**
-     * Creates a function that returns a query to find centre configurations persisted.
-     * <p>
-     * Looks only for named / link configurations, default configurations are avoided.
-     * 
-     * @param miType
-     * @param device -- the device for which centre configurations are looked for
-     * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
-     * @return
-     */
+    /// Creates a function that returns a query to find centre persisted configurations.
+    ///
+    /// Looks only for named / link configurations, default configurations are skipped.
+    ///
+    /// @param device -- the device for which centre configurations are looked for
+    /// @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
+    ///
     static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
         return centreConfigQueryFor(device, surrogateName)
-            .and().condition(centreConfigCondFor(miType)) ;
+            .and().condition(centreConfigCondFor(miType));
     }
 
+    /// Creates composable centre configuration condition for `miType`.
+    ///
     private static ConditionModel centreConfigCondFor(Class<? extends MiWithConfigurationSupport<?>> miType) {
         return cond().prop("menuItem.key").eq().val(miType.getName()).model();
     }
 
-    /**
-     * Creates a function that returns a query to find centre configurations persisted for <code>user</code>.
-     * <p>
-     * Looks only for named / link configurations, default configurations are avoided.
-     * 
-     * @param user
-     * @param miType
-     * @param device -- the device for which centre configurations are looked for
-     * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
-     * @return
-     */
+    /// Creates a function that returns a query to find persisted centre configurations for `user`.
+    ///
+    /// Looks only for named / link configurations, default configurations are skipped.
+    ///
+    /// @param device -- the device for which centre configurations are looked for
+    /// @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
+    ///
     static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
         return centreConfigQueryFor(miType, device, surrogateName)
             .and().condition(centreConfigCondFor(user));
     }
 
-    static ConditionModel centreConfigCondFor(final User user) {
-        return cond().prop("owner").eq().val(user).model();
+    /// Creates composable centre configuration condition for `owner`.
+    ///
+    static ConditionModel centreConfigCondFor(final User owner) {
+        return cond().prop("owner").eq().val(owner).model();
     }
     
     /**

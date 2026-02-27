@@ -11,6 +11,7 @@ import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -456,6 +457,8 @@ public class CriteriaResource extends AbstractWebResource {
         );
     }
 
+    /// Creates resource envelope of type [Representation] for discarded Entity Centre configuration.
+    ///
     static Representation createCriteriaDiscardEnvelope(
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
@@ -491,6 +494,8 @@ public class CriteriaResource extends AbstractWebResource {
         );
     }
 
+    /// Calculates [CriteriaIndication] for the Entity Centre configuration to be returned as part of resultant envelopes to the client.
+    ///
     static CriteriaIndication createCriteriaIndication(
             final String wasRun,
             final ICentreDomainTreeManagerAndEnhancer freshCentre,
@@ -515,10 +520,14 @@ public class CriteriaResource extends AbstractWebResource {
         return NONE;
     }
 
+    /// Calculates [CriteriaIndication] for the Entity Centre configuration by comparing "fresh" vs "saved" versions.
+    ///
     static CriteriaIndication createChangedCriteriaIndication(final ICentreDomainTreeManagerAndEnhancer freshCentre, final ICentreDomainTreeManagerAndEnhancer savedCentre) {
         return !savedCentre.getFirstTick().selectionCriteriaEquals(freshCentre.getFirstTick()) ? CHANGED : NONE;
     }
 
+    /// Authorises criteria entity on data reading for the whole centre and for individual guarded criteria with non-empty values.
+    ///
     public static Result authoriseCriteriaEntity(
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity,
         final IAuthorisationModel authorisationModel,
@@ -530,6 +539,8 @@ public class CriteriaResource extends AbstractWebResource {
                : entityAuthorisationResult;
     }
 
+    /// Validates Entity Centre criteria entity prior running, including crit-only single prototype validation and authorisation.
+    ///
     public static Result validateCriteriaBeforeRunning(
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity,
         final IAuthorisationModel authorisationModel,
@@ -547,6 +558,10 @@ public class CriteriaResource extends AbstractWebResource {
         return successful();
     }
 
+    /// Generates Entity Centre data for the cases, where [IGenerator] is specified.
+    /// Refresh / navigate / sort actions are not triggering re-generation, only run does.
+    /// Returns the [Result] of generation, which may be invalid, based on the business logic.
+    ///
     @SuppressWarnings("unchecked")
     public static Result generateDataIfNeeded(
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity,
@@ -557,15 +572,15 @@ public class CriteriaResource extends AbstractWebResource {
         final Map<String, Object> customObject
     ) {
         final EntityCentre<AbstractEntity<?>> centre = getEntityCentre(miType.getName(), webUiConfig);
-        // if the run() invocation warrants data generation (e.g. it has nothing to do with sorting)
-        // then for an entity centre configuration check if a generator was provided
+        // If the run() invocation warrants data generation (e.g. it has nothing to do with sorting),
+        // then check if a generator was provided for an entity centre DSL configuration.
         final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
         final boolean generationShouldOccur = isRunning && !isSorting && createdByConstraintShouldOccur;
         if (generationShouldOccur) {
-            // obtain the type for entities to be generated
+            // Obtain the type for entities to be generated.
             final Class<? extends AbstractEntity<?>> generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();
 
-            // create and execute a generator instance
+            // Create and execute a generator instance.
             final var generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
             final Map<String, Optional<?>> params = criteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
                     MetaProperty::getName,
@@ -593,7 +608,8 @@ public class CriteriaResource extends AbstractWebResource {
             userCompanion = companionFinder.find(User.class);
             miType = centre.getMenuItemType();
 
-            // obtain lock for current user and miType of the centre (disregard saveAsName as it is unlikely that self-concurrent running will occur for different configurations of the same centre)
+            // Obtain lock for current user and miType of the centre.
+            // Disregard saveAsName as it is unlikely that self-concurrent running will occur for different configurations of the same centre.
             final Lock lock = locks.computeIfAbsent(t2(user, miType), _ -> new ReentrantLock()); // create Lock if not yet present; atomic action
             final boolean lockAcquired = tryLocking(lock);
             if (!lockAcquired) {
@@ -634,7 +650,8 @@ public class CriteriaResource extends AbstractWebResource {
                         updatedFreshCentre = freshCentreAppliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
                     }
 
-                    // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
+                    // There is a need to validate criteria entity, particularly with the check for 'required' properties.
+                    // If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
                     final Result validationResult = validateCriteriaBeforeRunning(freshCentreAppliedCriteriaEntity, authorisationModel, securityTokenProvider);
                     if (!validationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run failed (validation failed).");
@@ -651,10 +668,13 @@ public class CriteriaResource extends AbstractWebResource {
                     freshCentreAppliedCriteriaEntity = null;
                 }
 
+                // Handle generation logic for Entity Centres with `IGenerator`.
+                /// Refresh / navigate / sort actions are not triggering re-generation, only run does.
                 final var generationResult = generateDataIfNeeded(freshCentreAppliedCriteriaEntity, miType, webUiConfig, isRunning, isSorting, customObject);
-                // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
-                // otherwise, proceed with the request handling further to actually query the data
-                // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
+                // If the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result.
+                // Otherwise, proceed with the request handling further to actually query the data.
+                // In most cases, the generated and queried data would be represented by the same entity.
+                // And, in that case, the final query will be enhanced with user-related filtering by `createdBy` property.
                 if (!generationResult.isSuccessful()) {
                     LOGGER.debug("CRITERIA_RESOURCE: run finished (generation failed).");
                     final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion);
@@ -683,6 +703,7 @@ public class CriteriaResource extends AbstractWebResource {
                     }
                 }
 
+                // Execute actual Entity Centre configuration run / refresh / navigate / sort logic.
                 final var resultList = executeEntityCentreConfiguration(
                     new ConfigSettings(saveAsName, user, device(), miType),
                     of(t2(updatedFreshCentre, previouslyRunCentre)),
@@ -701,8 +722,6 @@ public class CriteriaResource extends AbstractWebResource {
                     sharingModel
                 );
 
-                // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
-                // throw new IllegalStateException("Illegal state during criteria running.");
                 LOGGER.debug("CRITERIA_RESOURCE: run finished.");
                 return restUtil.rawListJsonRepresentation(resultList.toArray());
             } finally {

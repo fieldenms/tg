@@ -3,11 +3,8 @@ package ua.com.fielden.platform.test_config;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test.runners.AbstractDomainDrivenTestCaseRunner;
-import ua.com.fielden.platform.test.runners.H2DomainDrivenTestCaseRunner;
 import ua.com.fielden.platform.test.runners.H2DomainDrivenTestCaseRunner.H2TestContext;
-import ua.com.fielden.platform.test.runners.PostgresqlDomainDrivenTestCaseRunner;
 import ua.com.fielden.platform.test.runners.PostgresqlDomainDrivenTestCaseRunner.PostgresqlTestContext;
-import ua.com.fielden.platform.test.runners.SqlServerDomainDrivenTestCaseRunner;
 import ua.com.fielden.platform.test.runners.SqlServerDomainDrivenTestCaseRunner.SqlServerTestContext;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.test.server.DataPopulationConfigForWebTests;
@@ -15,7 +12,7 @@ import ua.com.fielden.platform.web.test.server.DataPopulationConfigForWebTests;
 import java.util.Optional;
 import java.util.Properties;
 
-/// A test runner that selects a test configuration [ITestContext] from [SqlServerDomainDrivenTestCaseRunner] or [PostgresqlDomainDrivenTestCaseRunner] for running unit test.
+/// A test runner that selects a test configuration [ITestContext] from [SqlServerTestContextForWebTests] or [PostgresqlTestContextForWebTests].
 /// The criteria for selecting the appropriate test runner is based on runtime settings.
 ///
 /// This test runner is capable for running tests with Web UI infrastructure such as [IWebUiConfig].
@@ -31,6 +28,8 @@ public class H2OrPostgreSqlOrSqlServerContextSelectorForWebTests extends H2OrPos
         super(klass, dbCreatorType, testConfig);
     }
 
+    /// [PostgresqlTestContext] with Web UI infrastructure capabilities.
+    ///
     private static class PostgresqlTestContextForWebTests extends PostgresqlTestContext {
         @Override
         public Properties mkDbProps(String dbUri) {
@@ -38,6 +37,8 @@ public class H2OrPostgreSqlOrSqlServerContextSelectorForWebTests extends H2OrPos
         }
     }
 
+    /// [SqlServerTestContext] with Web UI infrastructure capabilities.
+    ///
     private static class SqlServerTestContextForWebTests extends SqlServerTestContext {
         @Override
         public Properties mkDbProps(String dbUri) {
@@ -45,6 +46,8 @@ public class H2OrPostgreSqlOrSqlServerContextSelectorForWebTests extends H2OrPos
         }
     }
 
+    /// [H2TestContext] with Web UI infrastructure capabilities.
+    ///
     private static class H2TestContextForWebTests extends H2TestContext {
         public H2TestContextForWebTests(AbstractDomainDrivenTestCaseRunner runner) {
             super(runner);

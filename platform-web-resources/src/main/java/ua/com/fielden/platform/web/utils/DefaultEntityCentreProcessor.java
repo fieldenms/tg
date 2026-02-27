@@ -52,6 +52,8 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.RunActions.RUN;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
 
+/// Default [EntityCentreProcessor] implementation, that uses [IWebUiConfig] Entity Centres registry and persistent storage.
+///
 public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
     private static final String ERR_EXECUTION_FAILED_PREFIX = "Entity Centre configuration execution failed. ";
     public static final String ERR_CONFIG_UUID_IS_BLANK = ERR_EXECUTION_FAILED_PREFIX + "Config UUID [%s] is blank.";
@@ -134,6 +136,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
         );
 
         // If there is no such configuration, return invalid `Result`.
+        // This also covers situation with two or more such configurations, which should not be possible.
         if (freshConfigOpt.isEmpty()) {
             return left(failure(ERR_CONFIG_DOES_NOT_EXIST.formatted(configUuid)));
         }
@@ -171,6 +174,10 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
         return entityCentreResult(configUuid, empty());
     }
 
+    /// Executes Entity Centre configuration with `configUuid`.
+    ///
+    /// @param maybeCustomPageCapacity optional page capacity, which will override the page capacity of the configuration
+    ///
     private <T extends AbstractEntity<?>> Either<Result, List<T>> entityCentreResult(
         final String configUuid,
         final Optional<Integer> maybeCustomPageCapacity
