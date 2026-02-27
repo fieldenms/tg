@@ -367,10 +367,10 @@ public class CriteriaResource extends AbstractWebResource {
             updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder);
             // and update both with newly generated config uuid
             final String newConfigUuid = randomUUID().toString();
-            final EntityCentreConfigCo coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
-            coEntityCentreConfig.saveWithRetry(freshConfigOpt.get().setConfigUuid(newConfigUuid));
+            final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
+            co$EntityCentreConfig.saveWithRetry(freshConfigOpt.get().setConfigUuid(newConfigUuid));
             findConfigOpt(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
-                .ifPresent(savedConfig -> coEntityCentreConfig.saveWithRetry(savedConfig.setConfigUuid(newConfigUuid)));
+                .ifPresent(savedConfig -> co$EntityCentreConfig.saveWithRetry(savedConfig.setConfigUuid(newConfigUuid)));
             return t2(actualSaveAsName, of(newConfigUuid));
         } else {
             return t2(actualSaveAsName, of(freshConfigOpt.get().getConfigUuid()));

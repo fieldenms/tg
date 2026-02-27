@@ -177,8 +177,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
     /// Finds [EntityCentreConfig] instance to be sufficient for changing 'preferred' / 'title' / 'desc' / 'configUuid' properties.
     ///
     protected static EntityCentreConfig findConfig(final Class<?> miType, final User user, final String deviceSpecificDiffName, final ICompanionObjectFinder companionFinder) {
-        final EntityCentreConfigCo coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
-        return coEntityCentreConfig.getEntity(
+        final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
+        return co$EntityCentreConfig.getEntity(
             from(modelFor(user, miType.getName(), deviceSpecificDiffName)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency").with("runAutomatically").fetchModel()).model()
         );
     }
@@ -201,8 +201,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
     /// Finds optional configuration for `model` and `uuid` with predefined fetch model, sufficient for most situations.
     ///
     private static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final ICompanionObjectFinder companionFinder) {
-        final EntityCentreConfigCo coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
-        return coEntityCentreConfig.getEntityOptional(from(model
+        final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
+        return co$EntityCentreConfig.getEntityOptional(from(model
             .and().prop("configUuid").eq().val(uuid).model()
         ).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("owner.base").with("configBody").with("runAutomatically").fetchModel()).model());
     }

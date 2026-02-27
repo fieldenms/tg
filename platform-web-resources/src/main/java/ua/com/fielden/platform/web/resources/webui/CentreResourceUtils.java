@@ -595,8 +595,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
             commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null, webUiConfig, companionFinder);
             findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(empty()).apply(device), companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")).ifPresent(config -> {
-                final EntityCentreConfigCo coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
-                coEntityCentreConfig.saveWithRetry(config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName))); // copy runAutomatically from current configuration (saveAsName) into default configuration (empty())
+                final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
+                co$EntityCentreConfig.saveWithRetry(config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName))); // copy runAutomatically from current configuration (saveAsName) into default configuration (empty())
             });
             // when switching to default configuration we need to make it preferred
             validationPrototype.makePreferredConfig(empty()); // 'default' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
@@ -702,8 +702,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                             config.setDashboardRefreshFrequency(dashboardRefreshFrequency);
                             config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName)); // copy runAutomatically from currently loaded centre configuration being copied
                         }
-                        final EntityCentreConfigCo coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
-                        coEntityCentreConfig.saveWithRetry(config.setConfigUuid(newConfigUuid));
+                        final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
+                        co$EntityCentreConfig.saveWithRetry(config.setConfigUuid(newConfigUuid));
                     }); // update with newConfigUuid
             };
             createAndOverrideUuid.apply(newDesc).accept(FRESH_CENTRE_NAME);
@@ -1236,7 +1236,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     ) {
         final String upstreamTitle = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device);
         final Optional<String> changedTitle = !equalsEx(upstreamTitle, saveAsName.get()) ? of(upstreamTitle) : empty();
-        final EntityCentreConfigCo coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
+        final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
         final Function<String, Function<Supplier<Optional<Boolean>>, Consumer<Supplier<String>>>> overrideConfigBodyFor = name -> calcRunAutomaticallyOpt -> calcDesc ->
             findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("configBody").with("runAutomatically")) // contains 'title' / 'desc' inside fetch model
             .ifPresent(config -> {
@@ -1246,10 +1246,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 }
                 calcRunAutomaticallyOpt.get().ifPresent(runAutomatically -> config.setRunAutomatically(runAutomatically));
                 changedTitle.ifPresent(ct -> config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device))); // update title of configuration from upstream if it has changed
-                coEntityCentreConfig.saveWithRetry(config.setConfigBody(upstreamConfig.getConfigBody()));
+                co$EntityCentreConfig.saveWithRetry(config.setConfigBody(upstreamConfig.getConfigBody()));
             });
         final Function<String, Consumer<String>> overrideConfigTitleFor = name -> ct -> findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), companionFinder, FETCH_CONFIG_AND_INSTRUMENT /*contains 'title' inside fetch model*/).ifPresent(config ->
-            coEntityCentreConfig.saveWithRetry(config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device)))
+            co$EntityCentreConfig.saveWithRetry(config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device)))
         );
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
         // update SAVED surrogate configuration; always
