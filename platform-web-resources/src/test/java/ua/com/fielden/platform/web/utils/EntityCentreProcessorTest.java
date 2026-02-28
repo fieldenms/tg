@@ -360,13 +360,10 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     private void initTestData(Consumer<ICentreDomainTreeManagerAndEnhancer> enhanceCentreManager, ConfigSettings configSettings) {
         final IWebUiConfig webUiConfig = getInstance(IWebUiConfig.class);
         final ICompanionObjectFinder companionFinder = getInstance(ICompanionObjectFinder.class);
-        final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-        final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
-        final IUser userCompanion = companionFinder.find(User.class);
 
-        final var centreManager = updateCentre(configSettings.owner(), configSettings.miType(), FRESH_CENTRE_NAME, configSettings.saveAsName(), configSettings.device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        final var centreManager = updateCentre(configSettings.owner(), configSettings.miType(), FRESH_CENTRE_NAME, configSettings.saveAsName(), configSettings.device(), webUiConfig, companionFinder);
         enhanceCentreManager.accept(centreManager);
-        commitCentreWithoutConflicts(configSettings.owner(), configSettings.miType(), FRESH_CENTRE_NAME, configSettings.saveAsName(), configSettings.device(), centreManager, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        commitCentreWithoutConflicts(configSettings.owner(), configSettings.miType(), FRESH_CENTRE_NAME, configSettings.saveAsName(), configSettings.device(), centreManager, null /* newDesc */, webUiConfig, companionFinder);
     }
 
     /// Creates Entity Centre persisted configuration for concrete surrogate version of it.
