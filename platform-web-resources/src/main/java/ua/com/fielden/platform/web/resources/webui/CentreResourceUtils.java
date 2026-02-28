@@ -485,15 +485,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final ICompanionObjectFinder companionFinder,
         final ICriteriaGenerator critGenerator,
         final IWebUiConfig webUiConfig,
-        final EntityCentreConfigCo eccCompanion,
-        final MainMenuItemCo mmiCompanion,
-        final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel
     ) {
         // Load / update centre manager instance from persistence storage.
-        final var centreManager = updateCentre(configSettings.owner(), configSettings.miType(), surrogateName, configSettings.saveAsName(), configSettings.device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        final var centreManager = updateCentre(configSettings.owner(), configSettings.miType(), surrogateName, configSettings.saveAsName(), configSettings.device(), webUiConfig, companionFinder);
         // Construct criteria validation prototype.
-        final M validationPrototype = createCriteriaValidationPrototype(configSettings.miType(), configSettings.saveAsName(), centreManager, companionFinder, critGenerator, -1L, configSettings.owner(), configSettings.device(), webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+        final M validationPrototype = createCriteriaValidationPrototype(configSettings.miType(), configSettings.saveAsName(), centreManager, companionFinder, critGenerator, -1L, configSettings.owner(), configSettings.device(), webUiConfig, sharingModel);
         // Apply meta-state resetting.
         return resetMetaStateForCriteriaValidationPrototype(validationPrototype, getOriginalManagedType(validationPrototype.getType(), centreManager));
     }

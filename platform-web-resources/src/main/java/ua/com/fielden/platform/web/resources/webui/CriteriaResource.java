@@ -692,9 +692,6 @@ public class CriteriaResource extends AbstractWebResource {
                     critGenerator,
                     entityFactory,
                     centreContextHolder,
-                    eccCompanion,
-                    mmiCompanion,
-                    userCompanion,
                     sharingModel
                 );
 
@@ -726,9 +723,6 @@ public class CriteriaResource extends AbstractWebResource {
         final ICriteriaGenerator critGenerator,
         final EntityFactory entityFactory,
         final CentreContextHolder centreContextHolder,
-        final EntityCentreConfigCo eccCompanion,
-        final MainMenuItemCo mmiCompanion,
-        final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel
     ) {
         final EntityCentre<AbstractEntity<?>> centre = getEntityCentre(criteriaEntity.miType().getName(), webUiConfig);

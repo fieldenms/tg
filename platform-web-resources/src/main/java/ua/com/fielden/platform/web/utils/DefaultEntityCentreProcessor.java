@@ -199,12 +199,8 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
             // The only necessary setting is indication that centre should be run (i.e. not a page refresh / navigate).
             final Map<String, Object> customObject = mapOf(t2(RUN_ACTION_KEY, RUN.toString()));
 
-            final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
-            final IUser userCompanion = companionFinder.find(User.class);
-            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-
             // Create criteria entity for "fresh" surrogate configuration.
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> freshCriteriaEntity = createCriteriaValidationPrototype(FRESH_CENTRE_NAME, configSettings, companionFinder, critGenerator, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> freshCriteriaEntity = createCriteriaValidationPrototype(FRESH_CENTRE_NAME, configSettings, companionFinder, critGenerator, webUiConfig, sharingModel);
 
             // Validate the criteria entity. Stop execution if it is invalid.
             final Result validationResult = validateCriteriaBeforeRunning(freshCriteriaEntity, authorisationModel, securityTokenProvider);
@@ -236,9 +232,6 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
                 critGenerator,
                 entityFactory,
                 null,
-                eccCompanion,
-                mmiCompanion,
-                userCompanion,
                 sharingModel
             );
 
