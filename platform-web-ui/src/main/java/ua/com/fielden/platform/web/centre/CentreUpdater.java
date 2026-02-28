@@ -869,17 +869,8 @@ public class CentreUpdater {
         return cond().prop("owner").eq().val(owner).model();
     }
     
-    /**
-     * Loads centre through the following chain: 'default centre' + 'differences' := 'centre'.
-     *
-     * @param user
-     * @param miType
-     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
-     * @param updatedDiff -- updated differences
-     * @param companionFinder
-     *
-     * @return
-     */
+    /// Loads centre through the following chain: 'default centre' + 'differences' => 'centre'.
+    ///
     private static ICentreDomainTreeManagerAndEnhancer loadCentreFromDefaultAndDiff(
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Map<String, Object> updatedDiff,
@@ -890,32 +881,24 @@ public class CentreUpdater {
         return applyDifferences(defaultCentre, updatedDiff, getEntityType(miType), companionFinder);
     }
     
-    /**
-     * Creates user-specific (!) default centre manager from Centre DSL configuration.
-     * <p>
-     * IMPORTANT: this 'default centre' is used for constructing 'fresh centre', 'previouslyRun centre' and their 'diff centres', that is why it is very important to make it suitable for Web UI default values.
-     * All other centres will reuse such Web UI specific default values.
-     * <p>
-     * Please note that 'default' centre is specific to the user on current thread ({@link IUserProvider}). All injector-based default values will be user-specific
-     * if they are defined as user-specific in domain logic.
-     *
-     * @param gdtm
-     * @param miType
-     * @return
-     */
+    /// Creates user-specific (!) default centre manager from Centre DSL configuration.
+    ///
+    /// IMPORTANT: this 'default centre' is used for constructing 'fresh centre', 'previouslyRun centre' and their 'diff centres'.
+    /// That's why it is very important to make it suitable for Web UI default values.
+    /// All other centres will reuse such Web UI specific default values.
+    ///
+    /// Please note that 'default' centre is specific to the user on current thread ([IUserProvider]).
+    /// All injector-based default values will be user-specific if they are defined as user-specific in domain logic.
+    ///
     public static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
         return applyWebUIDefaultValues(createDefaultCentre(miType, webUiConfig), getEntityType(miType));
     }
     
-    /**
-     * Returns {@code runAutomatically} parameter for the Centre DSL configuration defined by {@code miType}.
-     * <p>
-     * Centres defined as {@code runAutomatically} not only runs automatically on loading; criteria for such centres will be cleared before auto-running (see {@link CriteriaResource#put} for more details).
-     * 
-     * @param miType
-     * @param webUiConfig
-     * @return
-     */
+    /// Returns `runAutomatically` parameter for the Centre DSL configuration defined by `miType`.
+    ///
+    /// Centres defined as `runAutomatically` not only runs automatically on loading.
+    /// Criteria for such centres will be cleared before auto-running (see `CriteriaResource#put` for more details).
+    ///
     public static boolean defaultRunAutomatically(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
         return ofNullable(webUiConfig.getCentres().get(miType)) // additional safety in case if for some reason there is no EntityCentre instance for miType
             .map(EntityCentre::isRunAutomatically)
@@ -1284,15 +1267,10 @@ public class CentreUpdater {
         }
     }
     
-    /**
-     * Applies the differences from 'differences centre' on top of 'target centre'.
-     *
-     * @param targetCentre
-     * @param differencesCentre
-     * @param root
-     * @param companionFinder -- to process crit-only single entity-typed values
-     * @return
-     */
+    /// Applies the differences from 'differences centre' on top of 'target centre'.
+    ///
+    /// @param companionFinder to process crit-only single entity-typed values
+    ///
     static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final Map<String, Object> differences, final Class<AbstractEntity<?>> root, final ICompanionObjectFinder companionFinder) {
         final Supplier<Class<?>> managedTypeSupplier = () -> targetCentre.getEnhancer().getManagedType(root);
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) differences.get(PROPERTIES);
@@ -1385,25 +1363,16 @@ public class CentreUpdater {
         return targetCentre;
     }
     
-    /**
-     * Takes property differences from <code>diff</code>. Creates empty property differences inside <code>diff</code> if they are empty. 
-     * 
-     * @param property
-     * @param diff
-     * @return
-     */
+    /// Takes property differences from `diff`. Creates empty property differences inside `diff` if they are empty.
+    ///
     static Map<String, Object> propDiff(final String property, final Map<String, Object> diff) {
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
         return diff(property, propertiesDiff);
     }
     
-    /**
-     * Takes property differences from <code>propertiesDiff</code> part of overall diff. Creates empty property differences inside <code>propertiesDiff</code> if they are empty.
-     * 
-     * @param property
-     * @param propertiesDiff
-     * @return
-     */
+    /// Takes property differences from `propertiesDiff` part of overall diff.
+    /// Creates empty property differences inside `propertiesDiff` if they are empty.
+    ///
     private static Map<String, Object> diff(final String property, final Map<String, Map<String, Object>> propertiesDiff) {
         final Map<String, Object> propertyDiff = propertiesDiff.get(property);
         if (propertyDiff == null) {
@@ -1414,11 +1383,8 @@ public class CentreUpdater {
         return propertyDiff;
     }
     
-    /**
-     * Creates empty diff.
-     * 
-     * @return
-     */
+    /// Creates empty diff.
+    ///
     public static Map<String, Object> createEmptyDifferences() {
         final Map<String, Object> diff = new LinkedHashMap<>();
         final Map<String, Map<String, Object>> propertiesDiff = new LinkedHashMap<>();
