@@ -81,6 +81,7 @@ import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPL
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.RunActions.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.CHANGED;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.NONE;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
@@ -123,12 +124,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /// The key for customObject's value containing the config share validation error.
     static final String SHARE_ERROR = "shareError";
 
+    /// The key for [RunActions].
+    public static final String RUN_ACTION_KEY = "@@action";
+
     /// Private default constructor to prevent instantiation.
     ///
     private CentreResourceUtils() {
     }
 
-    private enum RunActions {
+    public enum RunActions {
         RUN("run"),
         REFRESH("refresh"),
         NAVIGATE("navigate");
@@ -217,7 +221,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /// A predicate to determine whether `customObject` represents action `Run`.
     public static boolean isRunning(final Map<String, Object> customObject) {
-        return RunActions.RUN.toString().equals(customObject.get("@@action"));
+        return RUN.toString().equals(customObject.get(RUN_ACTION_KEY));
     }
 
     /// A predicate to determine whether `customObject` represents action with `retrieveAll` option.
@@ -227,7 +231,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /// A predicate to determine whether `customObject` represents action `Refresh`.
     public static boolean isRefreshing(final Map<String, Object> customObject) {
-        return RunActions.REFRESH.toString().equals(customObject.get("@@action"));
+        return REFRESH.toString().equals(customObject.get(RUN_ACTION_KEY));
     }
 
     /// Returns `true` if `Sorting` action is performed, otherwise `false`.
@@ -257,7 +261,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // For refresh / navigate action this instance was not changed from previous run / refresh / navigate action.
         // For run action this instance was already updated from FRESH surrogate centre and includes "fresh" pageCapacity for the purposes of running
         //  (the only way to make FRESH pageCapacity different from PREVIOUSLY_RUN is to change it using Customise Columns and press DISCARD on selection criteria).
-        final String action = (String) customObject.get("@@action");
+        final String action = (String) customObject.get(RUN_ACTION_KEY);
         final int pageNumber = isRunning(customObject) ? 0 : (Integer) customObject.get("@@pageNumber");
         final boolean retrieveAll = isRetrieveAll(customObject);
         if (isRunning(customObject)) {
@@ -283,7 +287,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 data = refreshedData.getKey();
                 resultantCustomObject.put("summary", refreshedData.getValue());
             }
-        } else if (RunActions.NAVIGATE.toString().equals(action)) {
+        } else if (NAVIGATE.toString().equals(action)) {
             final int pageCapacity = secondTick.getPageCapacity();
             try {
                 page = updatedPreviouslyRunCriteriaEntity.getPage(pageNumber, pageCapacity);
@@ -469,6 +473,26 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             cdtmae.getFirstTick().setNot(root, prop, mValues.get("not") != null ? (Boolean) mValues.get("not") : null);
             cdtmae.getFirstTick().setOrGroup(root, prop, mValues.get("orGroup") != null ? (Integer) mValues.get("orGroup") : null);
         }
+    }
+
+    /// Creates criteria validation prototype for `surrogateName` and [ConfigSettings].
+    ///
+    /// @param surrogateName surrogate name of the centre ([CentreUpdater#FRESH_CENTRE_NAME], [CentreUpdater#PREVIOUSLY_RUN_CENTRE_NAME] etc.);
+    ///
+    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaValidationPrototype(
+        final String surrogateName,
+        final ConfigSettings configSettings,
+        final ICompanionObjectFinder companionFinder,
+        final ICriteriaGenerator critGenerator,
+        final IWebUiConfig webUiConfig,
+        final ICentreConfigSharingModel sharingModel
+    ) {
+        // Load / update centre manager instance from persistence storage.
+        final var centreManager = updateCentre(configSettings.owner(), configSettings.miType(), surrogateName, configSettings.saveAsName(), configSettings.device(), webUiConfig, companionFinder);
+        // Construct criteria validation prototype.
+        final M validationPrototype = createCriteriaValidationPrototype(configSettings.miType(), configSettings.saveAsName(), centreManager, companionFinder, critGenerator, -1L, configSettings.owner(), configSettings.device(), webUiConfig, sharingModel);
+        // Apply meta-state resetting.
+        return resetMetaStateForCriteriaValidationPrototype(validationPrototype, getOriginalManagedType(validationPrototype.getType(), centreManager));
     }
 
     /// Creates the validation prototype for criteria entity of concrete `miType`.
