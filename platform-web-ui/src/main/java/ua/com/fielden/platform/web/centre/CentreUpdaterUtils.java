@@ -201,10 +201,10 @@ public class CentreUpdaterUtils extends CentreUpdater {
     /// Finds optional configuration for `model` and `uuid` with predefined fetch model, sufficient for most situations.
     ///
     private static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final ICompanionObjectFinder companionFinder) {
-        final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
-        return co$EntityCentreConfig.getEntityOptional(from(model
+        final EntityCentreConfigCo coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class, true);
+        return coEntityCentreConfig.getEntityOptional(from(model
             .and().prop("configUuid").eq().val(uuid).model()
-        ).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("owner.base").with("configBody").with("runAutomatically").fetchModel()).model());
+        ).with(fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").with("configUuid").with("owner.base").with("configBody").with("runAutomatically").fetchModel()).model());
     }
     
     /// Finds optional configuration for `uuid`, `miType`, `device` and `surrogateName` with predefined fetch model, sufficient for most situations.
