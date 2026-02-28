@@ -7,6 +7,8 @@ import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.Value2;
+import ua.com.fielden.platform.eql.stage2.queries.AbstractQuery2;
+import ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 import ua.com.fielden.platform.utils.ToString;
@@ -55,12 +57,15 @@ public record Yields2 (SortedMap<String, Yield2> yieldsMap, boolean allGenerated
     public SortedMap<String, Yield2> getYieldsMap() {
         return unmodifiableSortedMap(yieldsMap);
     }
-    
-    public TransformationResultFromStage2To3<Yields3> transform(final TransformationContextFromStage2To3 context) {
+
+    public TransformationResultFromStage2To3<Yields3> transform(
+            final TransformationContextFromStage2To3 context, final
+            AbstractQuery2 query)
+    {
         final List<Yield3> yieldsList = new ArrayList<>(); 
         TransformationContextFromStage2To3 currentContext = context;
         for (final Yield2 yield : yieldsMap.values()) {
-            final TransformationResultFromStage2To3<Yield3> yieldTr = yield.transform(currentContext);
+            final TransformationResultFromStage2To3<Yield3> yieldTr = yield.transform(currentContext, query);
             currentContext = yieldTr.updatedContext;
             yieldsList.add(yieldTr.item);
         }
