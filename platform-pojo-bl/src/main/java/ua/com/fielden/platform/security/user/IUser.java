@@ -3,6 +3,7 @@
  */
 package ua.com.fielden.platform.security.user;
 
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -20,7 +21,7 @@ import static ua.com.fielden.platform.security.user.User.*;
 
 /// Contract for DAO handling user instances.
 ///
-public interface IUser extends IEntityDao<User> {
+public interface IUser extends IEntityDao<User>, ISaveWithFetch<User> {
 
     IFetchProvider<User> FETCH_PROVIDER = EntityUtils.fetch(User.class)
             .with(KEY, EMAIL, ACTIVE, SSO_ONLY)

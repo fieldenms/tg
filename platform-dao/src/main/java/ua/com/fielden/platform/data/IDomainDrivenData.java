@@ -1,16 +1,21 @@
 package ua.com.fielden.platform.data;
 
+import jakarta.annotation.Nullable;
 import org.joda.time.DateTime;
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNodeTransformations;
 import ua.com.fielden.platform.security.user.*;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Optional;
 
 public interface IDomainDrivenData {
 
@@ -18,7 +23,51 @@ public interface IDomainDrivenData {
     public static final String BASE_SUFFIX = "_BASE";
     public static final String SUPER_SECRET_PASSWORD = "cooking with rocket fuel";
 
+    /// Saves the specified entity and returns a refetched instance.
+    ///
+    /// If the return value is not needed, it is strongly recommended to use [#saveNoFetch(AbstractEntity)],
+    /// as refetching is a costly operation.
+    ///
+    /// To specify a custom fetch model for refetching, use [#save(AbstractEntity, Optional)].
+    ///
     <T extends AbstractEntity<?>> T save(final T instance);
+
+    /// Calls _save-with-fetch_ on the companion of the specified entity.
+    ///
+    /// This method must be used only with those entities whose companion implements [ISaveWithFetch].
+    /// Otherwise, a runtime exception will be thrown.
+    ///
+    /// To specify an empty optional for `maybeFetch`, consider using [#noFetch()], or simply use [#saveNoFetch(AbstractEntity)] instead.
+    ///
+    <T extends AbstractEntity<?>> Either</*@Nullable*/ Long, T> save(T instance, Optional<fetch<T>> maybeFetch);
+
+    /// A convenient method that returns an empty optional typed with a fetch model parameterised with an entity type inferred from context.
+    /// It is intended to be used with [#save(AbstractEntity, Optional)].
+    ///
+    /// ```
+    /// WorkOrder wo = ...;
+    /// save(wo, noFetch());
+    /// ```
+    ///
+    /// Alternatively, [#saveNoFetch(AbstractEntity)] can be used to achieve the same result.
+    ///
+    static <T extends AbstractEntity<?>> Optional<fetch<T>> noFetch() {
+        return Optional.empty();
+    }
+
+    /// Saves the specified entity without refetching it.
+    ///
+    /// This method must be used only with those entities whose companion implements [ISaveWithFetch].
+    /// Otherwise, a runtime exception will be thrown.
+    ///
+    /// @see #save(AbstractEntity)
+    /// @see #save(AbstractEntity, Optional)
+    ///
+    /// @return the ID of the saved entity if it is persistent; otherwise `entity.id`, which may be null.
+    ///
+    default @Nullable Long saveNoFetch(final AbstractEntity<?> entity) {
+        return save(entity, noFetch()).asLeft().value();
+    }
 
     <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass);
 

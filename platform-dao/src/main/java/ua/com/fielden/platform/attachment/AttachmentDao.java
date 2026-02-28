@@ -18,6 +18,7 @@ import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_Can
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
 import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,6 +45,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
@@ -66,23 +69,40 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         return file.canRead() ? of(file) : empty();
     }
 
+    /// Overriden to specify a custom fetch model for refetching if the revision history is modified.
+    ///
+    @Override
+    public Attachment save(final Attachment attachment) {
+        attachment.isValid().ifFailure(Result::throwRuntime);
+
+        final boolean revisionHistoryModified = attachment.getPrevRevision() != null && attachment.getProperty(pn_PREV_REVISION).isDirty();
+
+        return revisionHistoryModified
+                ? save(attachment, of(getFetchProvider().fetchModel())).asRight().value()
+                : super.save(attachment);
+    }
+
     @Override
     @SessionRequired
     @Authorise(Attachment_CanSave_Token.class)
-    public Attachment save(final Attachment attachment) {
+    public Either<Long, Attachment> save(final Attachment attachment, final Optional<fetch<Attachment>> maybeFetch) {
         attachment.isValid().ifFailure(Result::throwRuntime);
 
         // check if prev. revision was specified
         // this would indicate that document revision process is at play...
         final boolean revisionHistoryModified = attachment.getPrevRevision() != null && attachment.getProperty(pn_PREV_REVISION).isDirty();
-        
-        final Attachment savedAttachment = super.save(attachment);
-        
+
         if (revisionHistoryModified) {
+            final var fetchModel = getFetchProvider().fetchModel();
+            final Attachment savedAttachment = super.save(attachment, of(fetchModel)).asRight().value();
+            final var attachmentId = savedAttachment.getId();
             updateAttachmentRevisionHistory(savedAttachment).ifFailure(Result::throwRuntime);
-            return findByEntityAndFetch(getFetchProvider().fetchModel(), savedAttachment);
-        } else {        
-            return savedAttachment;
+            return maybeFetch
+                    .<Either<Long, Attachment>> map(fetch -> right(findById(attachmentId, fetch)))
+                    .orElseGet(() -> left(attachmentId));
+        }
+        else {
+            return super.save(attachment, maybeFetch);
         }
     }
 
@@ -134,12 +154,10 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         return empty();
     }
 
-    /**
-     * Ensures correct revision history, including revision numbering and references.
-     * 
-     * @param savedAttachment
-     * @return
-     */
+    /// Ensures correct revision history, including revision numbering and references.
+    ///
+    /// This method may update `savedAttachment`.
+    ///
     private Result updateAttachmentRevisionHistory(final Attachment savedAttachment) {
         if (savedAttachment.isDirty()) {
             return failure("Attachment revision history can only be updated for persisted attachments.");
@@ -149,9 +167,9 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         // this means that prev. revision needs to have its last revision updated
         if (savedAttachment.getLastRevision() == null || equalsEx(savedAttachment, savedAttachment.getLastRevision())) {
             final Attachment prevRev = findByEntityAndFetch(getFetchProvider().fetchModel(), savedAttachment.getPrevRevision());
-            super.save(prevRev.setLastRevision(savedAttachment));
-            super.save(savedAttachment.setLastRevision(savedAttachment));
-            return Result.successful(savedAttachment);
+            super.save(prevRev.setLastRevision(savedAttachment), empty());
+            super.save(savedAttachment.setLastRevision(savedAttachment), empty());
+            return successful();
         } else { // otherwise, this is the case of joining two revision histories or the case of updating the history from the tail-end -- both are handled identically
             final Attachment lastRev = co(Attachment.class).findByEntityAndFetch(getFetchProvider().fetchModel(), savedAttachment.getLastRevision());
             return traverseAndUpdateHistory(lastRev, lastRev, /* sha1Checksums = */ setOf());
@@ -160,7 +178,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     
     private Result traverseAndUpdateHistory(final Attachment lastRev, final Attachment tracedRevision, final Set<String> sha1Checksums) {
         if (tracedRevision == null) {
-            return successful(tracedRevision);
+            return successful();
         } else {
             if (sha1Checksums.contains(tracedRevision.getSha1())) {
                 return failure(format(CanBeUsedAsPrevAttachmentRev.ERR_DUPLICATE_SHA1, tracedRevision.getSha1()));
@@ -178,8 +196,9 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
                     attachmentToUpdate.setRevNo(attachmentToUpdate.getPrevRevision().getRevNo() + 1);
                 }
                 attachmentToUpdate.beginLastRevisionUpdate().setLastRevision(lastRev).endLastRevisionUpdate();
-                
-                return successful(super.save(attachmentToUpdate));
+
+                super.save(attachmentToUpdate, empty());
+                return successful();
             } catch (final Result ex) {
                 return ex;
             } catch (final Exception ex) {
