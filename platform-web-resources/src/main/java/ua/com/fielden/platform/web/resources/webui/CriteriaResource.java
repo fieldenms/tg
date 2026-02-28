@@ -54,13 +54,13 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Optional.*;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -550,21 +550,25 @@ public class CriteriaResource extends AbstractWebResource {
         final boolean isSorting,
         final Map<String, Object> customObject
     ) {
-        final EntityCentre<AbstractEntity<?>> centre = getEntityCentre(miType.getName(), webUiConfig);
+        final var centre = getEntityCentre(miType.getName(), webUiConfig);
         // If the run() invocation warrants data generation (e.g. it has nothing to do with sorting),
         // then check if a generator was provided for an entity centre DSL configuration.
-        final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
-        final boolean generationShouldOccur = isRunning && !isSorting && createdByConstraintShouldOccur;
+        final var createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
+        final var generationShouldOccur = isRunning && !isSorting && createdByConstraintShouldOccur;
         if (generationShouldOccur) {
             // Obtain the type for entities to be generated.
-            final Class<? extends AbstractEntity<?>> generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();
+            final var generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();
 
             // Create and execute a generator instance.
             final var generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
             final Map<String, Optional<?>> params = criteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
-                    MetaProperty::getName,
-                    (final MetaProperty<?> mp) -> ofNullable(mp.getValue())));
-            params.putAll(criteriaEntity.getParameters().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> Optional.ofNullable(entry.getValue()))));
+                MetaProperty::getName,
+                mp -> ofNullable(mp.getValue())
+            ));
+            params.putAll(criteriaEntity.getParameters().entrySet().stream().collect(toMap(
+                Map.Entry::getKey,
+                entry -> ofNullable(entry.getValue()))
+            ));
             if (shouldForceRegeneration(customObject)) {
                 params.put(FORCE_REGENERATION_KEY, of(true));
             }
