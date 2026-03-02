@@ -1,20 +1,6 @@
 package ua.com.fielden.platform.dao;
 
-import static java.util.stream.Collectors.toMap;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityToOpenCompoundMaster;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -23,10 +9,18 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity_master.exceptions.CompoundMasterException;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 
 /**
  * This class should be extended by companion objects to various {@code Open<EntityName>MaserAction} entities that model an action for opening Compound Entity Masters.
@@ -74,7 +68,7 @@ import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctionalEntityToOpenCompoundMaster<?>> extends CommonEntityDao<T>{
     private static final String THIS = "this";
 
-    private final IEntityAggregatesOperations coAggregates;
+    protected final IEntityAggregatesOperations coAggregates;
     private final List<T3<String, Class<? extends AbstractEntity<?>>, BiFunction<IWhere0<? extends AbstractEntity<?>>, Object, ICompleted<? extends AbstractEntity<?>>>>> compoundMasterConfig = new ArrayList<>();
     private final List<T3<String, Class<? extends AbstractEntity<?>>, Map<String, Function<Object, Object>>>> parameters = new ArrayList<>();
     private final Map<String, Function<Object, Object>> additionalParameters = new HashMap<>();

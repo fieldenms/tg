@@ -37,18 +37,51 @@ const TgEntityMasterTemplateBehaviorImpl = {
             }
         };
 
-        self._tgOpenPersistentEntityInfoMasterAttrs = {
-            entityType: "ua.com.fielden.platform.entity.PersistentEntityInfo", 
-            currentState: 'EDIT', 
-            centreUuid: self.uuid
+        self._getInfoMasterUri = function (_currEntity) {
+            if (_currEntity && _currEntity.type().isAudited()) {
+                return '/master_ui/ua.com.fielden.platform.entity.OpenPersistentEntityInfoAction';
+            }
+            return '/master_ui/ua.com.fielden.platform.entity.PersistentEntityInfo';
+        }
+
+        self._getInfoMasterElementName = function (_currEntity) {
+            if (_currEntity && _currEntity.type().isAudited()) {
+                return 'tg-OpenPersistentEntityInfoAction-master';
+            }
+            return 'tg-PersistentEntityInfo-master'
+        }
+
+        self._getInfoMasterAttrs = function (_currEntity) {
+            if (_currEntity && _currEntity.type().isAudited()) {
+                return {
+                    entityType: "ua.com.fielden.platform.entity.OpenPersistentEntityInfoAction", 
+                    currentState: 'EDIT', 
+                    centreUuid: self.uuid,
+                    prefDim: {
+                        width: function() {
+                            return 1048
+                        },
+                        height: function() {
+                            return 610
+                        },
+                        widthUnit: 'px',
+                        heightUnit: 'px'
+                    }
+                };
+            }
+            return {
+                entityType: "ua.com.fielden.platform.entity.PersistentEntityInfo", 
+                currentState: 'EDIT', 
+                centreUuid: self.uuid,
+            }
         };
 
         self._currentEntityForPersistentEntityInfo = function() {
             return () => self._currEntity;
         };
 
-        self._isPersistentEntityWithAuditData = function(_currEntity) {
-            return _currEntity && _currEntity.type().isPersistentWithAuditData();
+        self._isPersistentEntityWithVersionData = function(_currEntity) {
+            return _currEntity && _currEntity.type().isPersistentWithVersionData();
         };
 
         self._isEntityPersisted = function(_currEntity) {
@@ -56,7 +89,9 @@ const TgEntityMasterTemplateBehaviorImpl = {
         };
 
         self._modifyAuditInfoFunctionalEntity = function (bindingEntity, master, action) {
-            master.fire('tg-dynamic-title-changed', bindingEntity["@@origin"]["entityTitle"]);
+            if (!master._hasEmbededView()) { //If the given master has no embedded view, it is considered a simple master (not a compound master)
+                master.fire('tg-dynamic-title-changed', bindingEntity["@@origin"]["entityTitle"]);
+            }
         }
     },
 

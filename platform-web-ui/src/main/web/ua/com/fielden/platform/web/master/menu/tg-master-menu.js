@@ -868,7 +868,7 @@ Polymer({
     },
 
     /**
-     * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
+     * Returns 'true' if the specified 'section' represents a master with master, that contains persistent non-persisted entity instance; 'false' otherwise.
      * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
      *
      * @param section
@@ -876,7 +876,7 @@ Polymer({
     isMasterWithMasterAndNonPersisted: function (section) {
         if (section && section._element && section._element.masterWithMaster && section._element.$.loader && section._element.$.loader.loadedElement) {
             const embeddedMaster = section._element.$.loader.loadedElement;
-            if (embeddedMaster._currBindingEntity && !embeddedMaster._currBindingEntity.isPersisted()) {
+            if (embeddedMaster._currBindingEntity && embeddedMaster._currBindingEntity.type().isPersistent() && !embeddedMaster._currBindingEntity.isPersisted()) {
                 return true;
             }
         }
