@@ -66,6 +66,7 @@ public interface ICustomisableCanLeave {
     /// This method must be implemented as an extra accessor for property `canLeaveOptions: String` that must store
     /// the [name][CanLeaveOptions#name()] of the enum instance.
     /// This extra effort is required because the platform does not support enums as property types at present.
+    /// It is recommended to implement this method using [CanLeaveOptions#of(String)].
     ///
     /// @return An optional containing the options if confirmation is required.
     ///         Otherwise, an empty optional.
@@ -85,6 +86,7 @@ public interface ICustomisableCanLeave {
     /// This method must be implemented as an extra accessor for property `leaveReason: String` that must store
     /// the [name][LeaveReason#name()] of the enum instance.
     /// This extra effort is required because the platform does not support enums as property types at present.
+    /// It is recommended to implement this method using [LeaveReason#of(String)].
     ///
     /// The underlying property is read-only from the application's perspective.
     /// The platform handles its assignment when a leave action is initiated.

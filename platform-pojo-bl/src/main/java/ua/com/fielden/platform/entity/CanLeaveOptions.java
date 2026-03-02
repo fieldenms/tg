@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity;
 
+import jakarta.annotation.Nullable;
+
+import java.util.Optional;
+
 /// Represents the buttons available in the confirmation dialog shown when the `canLeave` method of an entity master is invoked.
 ///
 public enum CanLeaveOptions {
@@ -22,4 +26,9 @@ public enum CanLeaveOptions {
     /// - `Cancel` — indicates that the user does not want to leave the entity master in order to review the changes.
     ///
     YES_NO_CANCEL;
+
+    public static Optional<CanLeaveOptions> of(final @Nullable String name) {
+        return name == null ? Optional.empty() : Optional.of(CanLeaveOptions.valueOf(name));
+    }
+
 }

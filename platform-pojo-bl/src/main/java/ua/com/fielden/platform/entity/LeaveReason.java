@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity;
 
+import jakarta.annotation.Nullable;
+
+import java.util.Optional;
+
 /// Represents the reasons why a user may leave the entity master view.
 ///
 /// A user may leave the entity master view for one of the following reasons:
@@ -16,4 +20,9 @@ public enum LeaveReason {
     /// The user navigated to a different menu item or view.
     ///
     NAVIGATED;
+
+    public static Optional<LeaveReason> of(final @Nullable String name) {
+        return name == null ? Optional.empty() : Optional.of(LeaveReason.valueOf(name));
+    }
+
 }

@@ -6,10 +6,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 import java.util.Optional;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-
 /// A base class for functional entities that are intended to be used on compound master as menu item that has custom `canLeave` implementation.
 ///
 /// @param <K> -- primary entity type for compound master
@@ -63,7 +59,7 @@ public abstract class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLe
 
     @Override
     public Optional<LeaveReason> leaveReason() {
-        return isEmpty(leaveReason) ? empty() : of(LeaveReason.valueOf(leaveReason));
+        return LeaveReason.of(leaveReason);
     }
 
     private String getCanLeaveOptions() {
@@ -82,7 +78,7 @@ public abstract class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLe
 
     @Override
     public Optional<CanLeaveOptions> canLeaveOptions() {
-        return isEmpty(canLeaveOptions) ? empty() : of(CanLeaveOptions.valueOf(canLeaveOptions));
+        return CanLeaveOptions.of(canLeaveOptions);
     }
 
     @Override
