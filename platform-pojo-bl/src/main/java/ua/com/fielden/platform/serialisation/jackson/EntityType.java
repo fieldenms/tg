@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.master.MasterInfo;
 
 import java.util.*;
@@ -81,6 +81,10 @@ public class EntityType extends AbstractEntity<String> {
     private Boolean _compoundMenuItem;
 
     @IsProperty
+    @Title(value = "Has Custom canLeave Implementation?", desc = "Indicates whether the associated entity type implements ICustomisableCanLeave interface")
+    private Boolean _isCustomisableCanLeave;
+
+    @IsProperty
     @Title(value = "Entity Master", desc = "Entity Master Data")
     private MasterInfo _entityMaster;
 
@@ -120,6 +124,16 @@ public class EntityType extends AbstractEntity<String> {
 
     public MasterInfo get_entityMaster() {
         return _entityMaster;
+    }
+
+    @Observable
+    public EntityType set_isCustomisableCanLeave(final Boolean _isCustomisableCanLeave) {
+        this._isCustomisableCanLeave = _isCustomisableCanLeave;
+        return this;
+    }
+
+    public Boolean get_isCustomisableCanLeave() {
+        return _isCustomisableCanLeave;
     }
 
     @Observable
