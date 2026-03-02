@@ -8,7 +8,7 @@ import java.util.Optional;
 
 /// A base class for functional entities that are intended to be used on compound master as menu item that has custom `canLeave` implementation.
 ///
-/// @param <K> -- primary entity type for compound master
+/// @param <K>  the main entity type for the compound master
 ///
 public abstract class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<K extends AbstractEntity<?>> extends AbstractFunctionalEntityForCompoundMenuItem<K> implements ICustomisableCanLeave {
 
