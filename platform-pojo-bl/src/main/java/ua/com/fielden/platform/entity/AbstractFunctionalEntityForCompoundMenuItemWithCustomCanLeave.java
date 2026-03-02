@@ -14,7 +14,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 ///
 /// @param <K> -- primary entity type for compound master
 ///
-public class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<K extends AbstractEntity<?>> extends AbstractFunctionalEntityForCompoundMenuItem<K> implements ICustomisableCanLeave {
+public abstract class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<K extends AbstractEntity<?>> extends AbstractFunctionalEntityForCompoundMenuItem<K> implements ICustomisableCanLeave {
 
     @IsProperty
     @Title("Can Leave")
@@ -52,12 +52,12 @@ public class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<K ext
     }
 
     @Observable
-    private AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setLeaveReason(final String leaveReason) {
+    protected AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setLeaveReason(final String leaveReason) {
         this.leaveReason = leaveReason;
         return this;
     }
 
-    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave useLeaveReason(final LeaveReason leaveRason) {
+    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setLeaveReason(final LeaveReason leaveRason) {
         return this.setLeaveReason(leaveRason.name());
     }
 
@@ -71,12 +71,12 @@ public class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<K ext
     }
 
     @Observable
-    private AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setCanLeaveOptions(final String canLeaveOptions) {
+    protected AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setCanLeaveOptions(final String canLeaveOptions) {
         this.canLeaveOptions = canLeaveOptions;
         return this;
     }
 
-    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave useCanLeaveOptions(final CanLeaveOptions canLeaveOptions) {
+    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setCanLeaveOptions(final CanLeaveOptions canLeaveOptions) {
         return this.setCanLeaveOptions(canLeaveOptions.name());
     }
 

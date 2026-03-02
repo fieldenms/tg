@@ -47,7 +47,7 @@ public class TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItemDao exten
                         entity.setCanLeave(false);
                         entity.setCannotLeaveReason(format("Description should not contain desc. Would you like to %s this master?", entity.leaveReason().get().equals(CLOSED) ? "close" : "leave"));
                         entity.setCloseInstructions("Please remove desc from description.");
-                        entity.useCanLeaveOptions(YES_NO);
+                        entity.setCanLeaveOptions(YES_NO);
                     } else {
                         entity.setCanLeave(true);
                     }
