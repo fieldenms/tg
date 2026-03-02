@@ -265,7 +265,7 @@ Polymer({
     },
 
     _searchMenu: function (event) {
-        const selectedElement = this.shadowRoot.querySelector(`[name=${this.$.pages.selected}]`);
+        const selectedElement = this.shadowRoot.querySelector(`[name='${this.$.pages.selected}']`);
         if (selectedElement && selectedElement.searchMenu) {
             this.persistActiveElement();
             selectedElement.searchMenu();
@@ -274,7 +274,7 @@ Polymer({
     },
     
     _openModuleMenu: function (event) {
-        const selectedElement = this.shadowRoot.querySelector(`[name=${this.$.pages.selected}]`);
+        const selectedElement = this.shadowRoot.querySelector(`[name='${this.$.pages.selected}']`);
         if (selectedElement && selectedElement.openModuleMenu) {
             this.persistActiveElement();
             selectedElement.openModuleMenu();
