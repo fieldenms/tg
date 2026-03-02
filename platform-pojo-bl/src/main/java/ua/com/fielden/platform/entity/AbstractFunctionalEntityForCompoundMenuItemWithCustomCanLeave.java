@@ -29,17 +29,17 @@ public abstract class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLe
     private String leaveReason;
 
     @IsProperty
-    @Title("Close Instructions")
-    private String closeInstructions;
+    @Title("Leave Instructions")
+    private String leaveInstructions;
 
     @Override
-    public String getCloseInstructions() {
-        return closeInstructions;
+    public String getLeaveInstructions() {
+        return leaveInstructions;
     }
 
     @Observable
-    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setCloseInstructions(final String closeInstructions) {
-        this.closeInstructions = closeInstructions;
+    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setLeaveInstructions(final String leaveInstructions) {
+        this.leaveInstructions = leaveInstructions;
         return this;
     }
 

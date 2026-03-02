@@ -30,7 +30,7 @@ public interface ICustomisableCanLeave {
            CANNOT_LEAVE_REASON = "cannotLeaveReason",
            CAN_LEAVE_OPTIONS = "canLeaveOptions",
            LEAVE_REASON = "leaveReason",
-           CLOSE_INSTRUCTIONS = "closeInstructions";
+           LEAVE_INSTRUCTIONS = "leaveInstructions";
 
     /// Indicates whether the leave action that initiated the saving of the entity can be performed.
     ///
@@ -39,7 +39,7 @@ public interface ICustomisableCanLeave {
     /// If this method returns false, it is required that these methods also return a value:
     /// * [#getCannotLeaveReason()]
     /// * [#canLeaveOptions()]
-    /// * [#getCloseInstructions()]
+    /// * [#getLeaveInstructions()]
     ///
     boolean isCanLeave();
 
@@ -99,14 +99,14 @@ public interface ICustomisableCanLeave {
     /// Returns a message to be displayed after the user rejects leaving in the confirmation dialog.
     /// This message should explain what the user can do to leave without confirmation.
     ///
-    /// This method must be defined as an accessor for property `closeInstructions: String`.
+    /// This method must be defined as an accessor for property `leaveInstructions: String`.
     ///
-    String getCloseInstructions();
+    String getLeaveInstructions();
 
-    /// A setter for property `closeInstructions: String`.
+    /// A setter for property `leaveInstructions: String`.
     ///
-    /// @see #getCloseInstructions()
+    /// @see #getLeaveInstructions()
     ///
-    ICustomisableCanLeave setCloseInstructions(String closeInstructions);
+    ICustomisableCanLeave setLeaveInstructions(String leaveInstructions);
 
 }
