@@ -265,6 +265,8 @@ Polymer({
     },
 
     _searchMenu: function (event) {
+        // Wrap the selected page title in quotes in the query selector,
+        // as it may contain whitespace or special characters.
         const selectedElement = this.shadowRoot.querySelector(`[name='${this.$.pages.selected}']`);
         if (selectedElement && selectedElement.searchMenu) {
             this.persistActiveElement();
@@ -274,6 +276,8 @@ Polymer({
     },
     
     _openModuleMenu: function (event) {
+        // Wrap the selected page title in quotes in the query selector,
+        // as it may contain whitespace or special characters.
         const selectedElement = this.shadowRoot.querySelector(`[name='${this.$.pages.selected}']`);
         if (selectedElement && selectedElement.openModuleMenu) {
             this.persistActiveElement();
