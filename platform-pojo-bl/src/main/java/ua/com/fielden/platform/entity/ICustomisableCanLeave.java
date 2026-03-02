@@ -25,6 +25,13 @@ import java.util.Optional;
 ///
 public interface ICustomisableCanLeave {
 
+    // Names of properties that should be present in the entity type implementing this interface.
+    String CAN_LEAVE = "canLeave",
+           CANNOT_LEAVE_REASON = "cannotLeaveReason",
+           CAN_LEAVE_OPTIONS = "canLeaveOptions",
+           LEAVE_REASON = "leaveReason",
+           CLOSE_INSTRUCTIONS = "closeInstructions";
+
     /// Indicates whether the leave action that initiated the saving of the entity can be performed.
     ///
     /// This method must be defined as an accessor for property `canLeave: boolean`.
