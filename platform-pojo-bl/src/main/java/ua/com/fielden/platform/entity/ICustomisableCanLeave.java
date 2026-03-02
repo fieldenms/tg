@@ -36,11 +36,23 @@ public interface ICustomisableCanLeave {
     ///
     boolean isCanLeave();
 
+    /// A setter for property `canLeave: boolean`.
+    ///
+    /// Application business logic should use this setter to specify whether the leave action can be performed.
+    ///
+    ICustomisableCanLeave setCanLeave(boolean canLeave);
+
     /// Returns the reason the leave action cannot be performed.
     ///
     /// This method must be defined as an accessor for property `cannotLeaveReason: String`.
     ///
     String getCannotLeaveReason();
+
+    /// A setter for property `cannotLeaveReason: String`.
+    ///
+    /// Application business logic should use this setter to specify the reason why the leave action cannot be performed.
+    ///
+    ICustomisableCanLeave setCannotLeaveReason(String cannotLeaveReason);
 
     /// Returns a configuration for a confirmation dialog that will displayed if the leave action cannot be performed.
     ///
@@ -52,6 +64,12 @@ public interface ICustomisableCanLeave {
     ///         Otherwise, an empty optional.
     ///
     Optional<CanLeaveOptions> canLeaveOptions();
+
+    /// An extra convenient setter for property `canLeaveOptions: String`.
+    ///
+    /// @see #canLeaveOptions()
+    ///
+    ICustomisableCanLeave setCanLeaveOptions(CanLeaveOptions canLeaveOptions);
 
     /// Returns the reason the leave action was initiated.
     /// This method should be used in application business logic to define custom leave behaviour.
@@ -75,4 +93,11 @@ public interface ICustomisableCanLeave {
     /// This method must be defined as an accessor for property `closeInstructions: String`.
     ///
     String getCloseInstructions();
+
+    /// A setter for property `closeInstructions: String`.
+    ///
+    /// @see #getCloseInstructions()
+    ///
+    ICustomisableCanLeave setCloseInstructions(String closeInstructions);
+
 }
