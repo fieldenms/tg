@@ -134,8 +134,6 @@ public final class EqlQueryTransformer {
     /// A "foreign query" is a query whose single explicit yield is an entity-typed property.
     /// This predicate identifies whether `resultQuery` represents a "foreign query".
     ///
-    /// An equivalent predicate is present in [EntityContainerFetcherImpl] as part of method [getModelResult][EntityContainerFetcherImpl#getModelResult(QueryProcessingModel)].
-    ///
     private static boolean isForeignIdOnlyQuery(final ResultQuery3 resultQuery) {
         final Yield3 yield;
         return isPersistentEntityType(resultQuery.resultType)
