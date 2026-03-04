@@ -5,11 +5,9 @@ import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.eql.dbschema.PropertyInliner;
-import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.meta.PropertyTypeMetadata;
+import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.*;
 import java.util.function.LongFunction;
@@ -77,7 +75,7 @@ public final class DomainMetadataModelGenerator {
         });
 
         // 2. Map each property from all properties in `entityTypes` to a `DomainTypeData` instance.
-        //    This covers union entities, primitive and component types.
+        //    This covers union entities and component types.
         final Stream<H> propHs = entityTypes.stream()
                 .map(domainMetadata::forEntity)
                 .map(EntityMetadata::properties)
@@ -91,7 +89,6 @@ public final class DomainMetadataModelGenerator {
                 .map(prop -> {
                     final Optional<Class<?>> optPropJavaType = switch (prop.type()) {
                         case PropertyTypeMetadata.Component it -> Optional.of(it.javaType());
-                        case PropertyTypeMetadata.Primitive it -> Optional.of(it.javaType());
                         // inherited from old code, not sure why entities with metadata are filtered
                         case PropertyTypeMetadata.Entity it when domainMetadata.forType(it.javaType()).isEmpty()
                                                                  || !entityTypes.contains(it.javaType())
@@ -115,7 +112,12 @@ public final class DomainMetadataModelGenerator {
                     }));
                 }).flatMap(Optional::stream);
 
-        return collectToImmutableMap(distinct(Stream.concat(entityHs, propHs), H::type),
+        final Stream<H> primHs = TypeRegistry.PRIMITIVE_PROPERTY_TYPES
+                .stream()
+                .map(type -> new H(type, id -> domainTypeData(type, null, id, type.getName(), type.getSimpleName(), false,
+                                                              null, type.getSimpleName(), 0, ImmutableList.of(), ImmutableList.of())));
+
+        return collectToImmutableMap(distinct(StreamUtils.concat(entityHs, propHs, primHs), H::type),
                                      longs(1),
                                      (h, i) -> h.type(),
                                      (h, i) -> h.f().apply(i));
