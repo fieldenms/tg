@@ -49,10 +49,10 @@ import static ua.com.fielden.platform.audit.AbstractAuditProp.AUDIT_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.PROPERTY;
 import static ua.com.fielden.platform.audit.AnnotationSpecs.*;
 import static ua.com.fielden.platform.audit.AuditUtils.*;
+import static ua.com.fielden.platform.audit.JavaPoet.typeNameEquals;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.requirePropertyAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.nonBlankPropertyTitle;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -252,6 +252,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                                                             pm.type().genericJavaType())
                             .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, auditedType, pm.name())))
                             .addAnnotation(mkMapToForAudit(auditedType, pm.name()))
+                            .addAnnotation(getPropertyAnnotationOptionally(PersistentType.class, auditedType, pm.name()))
                             .addAnnotation(javaPoet.getAnnotation(Final.class));
 
                     final var propTitle = nonBlankPropertyTitle(pm.name(), auditedType);
@@ -283,7 +284,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
     }
 
     private AnnotationSpec mkMapToForAudit(final Class<? extends AbstractEntity<?>> auditedType, final String propName) {
-        return AnnotationReflector.getPropertyAnnotationOptionally(MapTo.class, auditedType, propName)
+        return getPropertyAnnotationOptionally(MapTo.class, auditedType, propName)
                 .map(MapTo::value)
                 .filter(not(String::isEmpty))
                 .map(colName -> AnnotationSpec.builder(MapTo.class)
@@ -330,6 +331,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                                                             pm.type().genericJavaType())
                             .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, auditedType, pm.name())))
                             .addAnnotation(mkMapToForAudit(auditedType, pm.name()))
+                            .addAnnotation(getPropertyAnnotationOptionally(PersistentType.class, auditedType, pm.name()))
                             .addAnnotation(javaPoet.getAnnotation(Final.class));
 
                     final var propTitle = nonBlankPropertyTitle(pm.name(), auditedType);
@@ -730,9 +732,11 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                             : title;
                     final var propBuilder = propertyBuilder(prop.name(), prop.type());
                     propBuilder.addAnnotation(title(title, TEMPLATE_TITLE_DESC.formatted(origTitle)));
-                    if (prop.hasAnnotation(InactiveAuditProperty.class)) {
-                        propBuilder.addAnnotation(InactiveAuditProperty.class);
-                    }
+                    prop.annotations()
+                            .stream()
+                            .filter(as -> typeNameEquals(as.type, InactiveAuditProperty.class)
+                                          || typeNameEquals(as.type, PersistentType.class))
+                            .forEach(propBuilder::addAnnotation);
                     return propBuilder.build();
                 })
                 .sorted(comparing(PropertySpec::name))

@@ -1,4 +1,4 @@
-// Generation timestamp: 2026-01-16 10:46:36 EET
+// Generation timestamp: 2026-03-05 11:59:11 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
@@ -76,7 +75,6 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
       value = "Union Entity",
       desc = "[Union Entity] at the time of the audited event."
   )
-  @SkipEntityExistsValidation
   private UnionEntity a3t_union;
 
   public boolean isA3t_invalidate() {
