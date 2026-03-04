@@ -13,6 +13,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.ToString;
 
@@ -70,6 +71,9 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
             }
             else if (lastComponent.javaType() == RichText.class) {
                 return append(originalPath, lastComponent.getSubitems().get(RichText.SEARCH_TEXT));
+            }
+            else if (lastComponent.javaType() == Money.class) {
+                return append(originalPath, lastComponent.getSubitems().get("amount"));
             }
         }
         return originalPath;
