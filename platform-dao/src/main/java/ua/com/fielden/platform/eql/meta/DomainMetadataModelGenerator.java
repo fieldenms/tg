@@ -10,6 +10,7 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.*;
 import java.util.function.LongFunction;
@@ -115,7 +116,12 @@ public final class DomainMetadataModelGenerator {
                     }));
                 }).flatMap(Optional::stream);
 
-        return collectToImmutableMap(distinct(Stream.concat(entityHs, propHs), H::type),
+        final var extraHs = Stream.of(
+                new H(Currency.class, id -> domainTypeData(Currency.class, null, id, Currency.class.getName(), "Currency", false,
+                null, "Currency", 0, ImmutableList.of(), ImmutableList.of()))
+        );
+
+        return collectToImmutableMap(distinct(StreamUtils.concat(entityHs, propHs, extraHs), H::type),
                                      longs(1),
                                      (h, i) -> h.type(),
                                      (h, i) -> h.f().apply(i));
