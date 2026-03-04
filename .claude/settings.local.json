@@ -3,7 +3,8 @@
     "allow": [
       "Bash(ls:*)",
       "Bash(grep:*)",
-      "Bash(mvn clean:*)"
+      "Bash(mvn clean:*)",
+      "Bash(git:*)"
     ]
   }
 }
