@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.meta;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 
 /**
@@ -78,11 +80,11 @@ public sealed interface PropertyNature {
     final class Calculated implements Transient {
         private Calculated() {}
 
-        public static Data data(ExpressionModel expressionModel, boolean implicit, boolean forTotals) {
-            return new Data(expressionModel, implicit, forTotals);
+        public static Data data(final ExpressionModel model, final CalculatedPropertyCategory category) {
+            return new Data(new CalcPropInfo(model, category));
         }
 
-        public record Data(ExpressionModel expressionModel, boolean implicit, boolean forTotals) implements PropertyNature.Data<Calculated> {
+        public record Data(CalcPropInfo expression) implements PropertyNature.Data<Calculated> {
             @Override
             public Calculated nature() {
                 return CALCULATED;

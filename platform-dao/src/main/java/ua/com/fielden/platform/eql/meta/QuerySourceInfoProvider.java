@@ -360,18 +360,21 @@ public class QuerySourceInfoProvider {
                 case PropertyMetadata.Calculated cspm -> {
                     switch (cspm.type()) {
                         case PropertyTypeMetadata.Entity t ->
-                                subprops.put(cspm.name(), new QuerySourceItemForEntityType<>(cspm.name(), allQuerySourceInfos.get(t.javaType()),
-                                                                                             cspm.hibType(), false,
-                                                                                             toCalcPropInfo(cspm)));
+                                subprops.put(cspm.name(),
+                                             new QuerySourceItemForEntityType<>(cspm.name(),
+                                                                                allQuerySourceInfos.get(t.javaType()),
+                                                                                cspm.hibType(),
+                                                                                false,
+                                                                                toCalcPropInfo(cspm)));
                         case PropertyTypeMetadata.Component t ->
-                                subprops.put(cspm.name(), new QuerySourceItemForPrimType<>(cspm.name(), t.javaType(),
-                                                                                           cspm.hibType(), toCalcPropInfo(cspm)));
+                                subprops.put(cspm.name(),
+                                             new QuerySourceItemForPrimType<>(cspm.name(), t.javaType(), cspm.hibType(), toCalcPropInfo(cspm)));
                         case PropertyTypeMetadata.CompositeKey t ->
-                                subprops.put(cspm.name(), new QuerySourceItemForPrimType<>(cspm.name(), t.javaType(),
-                                                                                           cspm.hibType(), toCalcPropInfo(cspm)));
+                                subprops.put(cspm.name(),
+                                             new QuerySourceItemForPrimType<>(cspm.name(), t.javaType(), cspm.hibType(), toCalcPropInfo(cspm)));
                         case PropertyTypeMetadata.Primitive t ->
-                                subprops.put(cspm.name(), new QuerySourceItemForPrimType<>(cspm.name(), t.javaType(),
-                                                                                           cspm.hibType(), toCalcPropInfo(cspm)));
+                                subprops.put(cspm.name(),
+                                             new QuerySourceItemForPrimType<>(cspm.name(), t.javaType(), cspm.hibType(), toCalcPropInfo(cspm)));
                         default -> {}
                     }
                 }
@@ -434,7 +437,7 @@ public class QuerySourceInfoProvider {
     }
 
     private static CalcPropInfo toCalcPropInfo(final PropertyMetadata.Calculated pm) {
-        return new CalcPropInfo(pm.data().expressionModel(), pm.data().implicit(), pm.data().forTotals());
+        return pm.data().expression();
     }
 
 }

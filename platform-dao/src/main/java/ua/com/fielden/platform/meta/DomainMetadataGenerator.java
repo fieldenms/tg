@@ -43,7 +43,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
 import static ua.com.fielden.platform.audit.AuditUtils.isSynAuditEntityType;
-import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.IMPLICIT;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
@@ -374,12 +374,12 @@ final class DomainMetadataGenerator {
         }
         else if (DynamicEntityKey.class.equals(keyType)) {
             final var entityType = (Class<? extends AbstractEntity<DynamicEntityKey>>) entityBuilder.getJavaType();
-            return Optional.of(calculatedProp(KEY, COMPOSITE_KEY, H_STRING,
-                                              PropertyNature.Calculated.data(generateCompositeKeyEqlExpression(entityType), true, false))
+            return Optional.of(calculatedProp(KEY, COMPOSITE_KEY, H_STRING, PropertyNature.Calculated.data(generateCompositeKeyEqlExpression(entityType), IMPLICIT))
                                        // TODO: Why required?
                                        //       Most likely this indicates that a composite key (not just a member) would always have a value.
                                        //       Need to better understand how this information is used when transpiling from EQL to SQL.
-                                       .required(true).build());
+                                       .required(true)
+                                       .build());
         } else {
             final var keyColumn = new PropColumn("KEY_");
             final PropertyTypeMetadata propTypeMd = mkPropertyTypeOrThrow(keyType);
@@ -421,7 +421,7 @@ final class DomainMetadataGenerator {
                     yield Optional.of(plainProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY).build());
                 } else if (isEntityType(getKeyType(s.getJavaType()))) {
                     yield Optional.of(calculatedProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY,
-                                                     PropertyNature.Calculated.data(expr().prop(KEY).model(), true, false))
+                                                     PropertyNature.Calculated.data(expr().prop(KEY).model(), IMPLICIT))
                                               .build());
                 } else {
                     // Unconditionally include ID for other synthetic entities.
@@ -487,13 +487,10 @@ final class DomainMetadataGenerator {
         }
         // CALCULATED
         else if (atCalculated != null) {
-            final boolean aggregatedExpression = AGGREGATED_EXPRESSION == atCalculated.category();
-            final var data = PropertyNature.Calculated.data(
-                    extractExpressionModelForCalculatedProperty(enclosingEntityType, field, atCalculated), false, aggregatedExpression);
             final var propTypeMd = mkPropertyTypeOrThrow(field);
             builder = Optional.of(calculatedProp(field.getName(), propTypeMd,
                                                  hibTypeGenerator.generate(propTypeMd).use(field).get(),
-                                                 data));
+                                                 PropertyNature.Calculated.data(extractExpressionModelForCalculatedProperty(enclosingEntityType, field, atCalculated), atCalculated.category())));
         }
         // TRANSIENT
         else {
@@ -525,7 +522,7 @@ final class DomainMetadataGenerator {
         final PropertyTypeMetadata typeMetadata = mkPropertyTypeOrThrow(field);
         return Optional.of(calculatedProp(field.getName(), typeMetadata,
                                           hibTypeGenerator.generate(typeMetadata).use(field).get(),
-                                          PropertyNature.Calculated.data(expressionModel, true, false)));
+                                          PropertyNature.Calculated.data(expressionModel, IMPLICIT)));
     }
 
     public Optional<PropertyTypeMetadata> mkPropertyType(final Field field) {
@@ -691,13 +688,13 @@ final class DomainMetadataGenerator {
         final List<String> unionMembersNames = unionMembers.stream().map(Field::getName).toList();
         final List<PropertyMetadata> props = new ArrayList<>();
         props.add(calculatedProp(makeName.apply(KEY), mkPropertyTypeOrThrow(String.class), H_STRING,
-                                 PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, KEY, contextPropName), true, false))
+                                 PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, KEY, contextPropName), IMPLICIT))
                           .build());
         props.add(calculatedProp(makeName.apply(ID), mkPropertyTypeOrThrow(Long.class), H_ENTITY,
-                                 PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName), true, false))
+                                 PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName), IMPLICIT))
                           .build());
         props.add(calculatedProp(makeName.apply(DESC), mkPropertyTypeOrThrow(String.class), H_STRING,
-                                 PropertyNature.Calculated.data(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName), true, false))
+                                 PropertyNature.Calculated.data(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName), IMPLICIT))
                           .build());
 
         final Class<?> firstUnionEntityPropType = unionMembers.getFirst().getType(); // e.g., WagonSlot in TgBogieLocation
@@ -710,7 +707,8 @@ final class DomainMetadataGenerator {
             props.add(calculatedProp(makeName.apply(commonProp),
                                      typeMetadata,
                                      hibTypeGenerator.generate(typeMetadata).use(commonPropField).get(),
-                                     PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName), true, false))
+                                     PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName),
+                                                                    IMPLICIT))
                               .build());
         }
 
@@ -757,7 +755,7 @@ final class DomainMetadataGenerator {
     //:: Calculated property utilities ::
     //:::::::::::::::::::::::::::::::::::
 
-    private static ExpressionModel extractExpressionModelForCalculatedProperty(
+    private ExpressionModel extractExpressionModelForCalculatedProperty(
             final Class<? extends AbstractEntity<?>> entityType,
             final Field prop,
             final Calculated atCalculated)
