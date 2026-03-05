@@ -216,8 +216,11 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
             return new Builder<>(name, type, hibType, PropertyNature.PERSISTENT, data);
         }
 
-        public static Builder<PropertyNature.Calculated, PropertyNature.Calculated.Data> calculatedProp
-                (final String name, final PropertyTypeMetadata type, final @Nullable Object hibType, final PropertyNature.Calculated.Data data)
+        public static Builder<PropertyNature.Calculated, PropertyNature.Calculated.Data> calculatedProp(
+                final String name,
+                final PropertyTypeMetadata type,
+                final @Nullable Object hibType,
+                final PropertyNature.Calculated.Data data)
         {
             return new Builder<>(name, type, hibType, PropertyNature.CALCULATED, data);
         }
