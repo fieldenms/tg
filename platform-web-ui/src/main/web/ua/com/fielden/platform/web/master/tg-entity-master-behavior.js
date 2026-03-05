@@ -755,11 +755,11 @@ const TgEntityMasterBehaviorImpl = {
                     };
 
                     // newly created continuation action should be enhanced to be able to enable parent master view after action completion (when isActionInProgress becomes false)
-                    const oldIsActionInProgressChanged = action.isActionInProgressChanged.bind(action);
+                    const oldRestoreActionState = action.restoreActionState.bind(action);
                     const _self = this;
-                    action.isActionInProgressChanged = (function (newValue, oldValue) {
-                        oldIsActionInProgressChanged(newValue, oldValue);
-                        if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
+                    action.restoreActionState = (function () {
+                        oldRestoreActionState();
+                        if (!action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
                             const saveButton = self.$._saveAction;
                             if (saveButton) {
                                 saveButton.cancelContinuation();
