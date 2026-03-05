@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 import java.util.Date;
 
@@ -26,7 +27,7 @@ import java.util.Date;
 public class AuditedEntity extends AbstractPersistentEntity<String> {
 
     public enum Property implements IConvertableToPath {
-        date1, bool1, str2, str3, richText, union, invalidate;
+        date1, date2, bool1, str2, str3, richText, union, invalidate;
 
         @Override
         public String toPath() {
@@ -37,6 +38,11 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
     @IsProperty
     @MapTo
     private Date date1;
+
+    @IsProperty
+    @MapTo
+    @PersistentType(userType = IUtcDateTimeType.class)
+    private Date date2;
 
     @IsProperty
     @MapTo
@@ -134,6 +140,16 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
     @Observable
     public AuditedEntity setDate1(final Date date1) {
         this.date1 = date1;
+        return this;
+    }
+
+    public Date getDate2() {
+        return date2;
+    }
+
+    @Observable
+    public AuditedEntity setDate2(final Date date2) {
+        this.date2 = date2;
         return this;
     }
 

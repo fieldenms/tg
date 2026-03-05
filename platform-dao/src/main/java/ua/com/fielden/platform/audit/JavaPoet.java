@@ -102,4 +102,12 @@ final class JavaPoet {
         }
     }
 
+    public static boolean typeNameEquals(final TypeName typeName, final Class<?> klass) {
+        return switch (typeName) {
+            case ClassName it -> it.canonicalName().equals(klass.getCanonicalName());
+            case ParameterizedTypeName it -> typeNameEquals(it.rawType, klass);
+            default -> false;
+        };
+    }
+
 }

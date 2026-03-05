@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.junit.Test;
 import ua.com.fielden.platform.audit.annotations.DisableAuditing;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
@@ -13,6 +14,7 @@ import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -29,6 +31,7 @@ import static ua.com.fielden.platform.audit.AuditUtils.auditPropertyName;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.meta.PropertyNature.*;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.Finder.streamProperties;
 import static ua.com.fielden.platform.reflection.Reflector.newParameterizedType;
@@ -93,6 +96,7 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                         new Prop(AUDITED_ENTITY, AuditedEntity.class, PERSISTENT),
                         new Prop(auditPropertyName(KEY), String.class, PERSISTENT),
                         new Prop(auditPropertyName(AuditedEntity.Property.date1), Date.class, PERSISTENT),
+                        new Prop(auditPropertyName(AuditedEntity.Property.date2), Date.class, PERSISTENT),
                         new Prop(auditPropertyName(AuditedEntity.Property.bool1), boolean.class, PERSISTENT),
                         new Prop(auditPropertyName(AuditedEntity.Property.str2), String.class, PERSISTENT),
                         new Prop(auditPropertyName(AuditedEntity.Property.richText), RichText.class, PERSISTENT),
@@ -108,6 +112,9 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                 .toList();
 
         assertEquals(expectedProps, actualProps);
+
+        assertThat(getPropertyAnnotationOptionally(PersistentType.class, auditType, auditPropertyName(AuditedEntity.Property.date2.toString())))
+                .hasValueSatisfying(annot -> assertEquals(IUtcDateTimeType.class, annot.userType()));
     }
 
     /**
