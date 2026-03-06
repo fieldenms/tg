@@ -23,7 +23,9 @@ public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
                     groupBy().prop("vehicle"). //
                     yield().prop("vehicle").as("key"). //
                     yield().sumOf().prop("qty").as("qty"). //
-                    yield().sumOf().beginExpr().prop("qty").mult().prop("pricePerLitre").endExpr().as("cost"). //
+                    yield().sumOf().beginExpr().prop("qty").mult().prop("pricePerLitre").endExpr().as("cost.amount"). //
+                    // An example of how currency can and must be yielded in aggregation contexts.
+                    yield().maxOf().prop("pricePerLitre.currency").as("cost.currency").
                     modelAsEntity(TgAverageFuelUsage.class);
 
     @IsProperty
