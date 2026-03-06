@@ -23,7 +23,11 @@ public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
                     groupBy().prop("vehicle"). //
                     yield().prop("vehicle").as("key"). //
                     yield().sumOf().prop("qty").as("qty"). //
-                    yield().sumOf().beginExpr().prop("qty").mult().prop("pricePerLitre").endExpr().as("cost"). //
+                    yield().sumOf().beginExpr().prop("qty").mult().prop("pricePerLitre").endExpr().as("cost.amount"). //
+                    // An example of how currency can be yielded in aggregation contexts.
+                    // Although choosing the "maximum" currency makes little sense (string comparison),
+                    // this works well if all Money values within a group have the same currency.
+                    yield().maxOf().prop("pricePerLitre.currency").as("cost.currency").
                     modelAsEntity(TgAverageFuelUsage.class);
 
     @IsProperty
