@@ -1,19 +1,18 @@
 package ua.com.fielden.platform.persistence.types;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.CurrencyType;
+import org.hibernate.type.Type;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IMoneyType;
+
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Currency;
 import java.util.Map;
-
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.BigDecimalType;
-import org.hibernate.type.CurrencyType;
-import org.hibernate.type.Type;
-
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IMoneyType;
 
 /**
  * Class that helps Hibernate to map {@link Money} class into database. <br>
@@ -46,10 +45,10 @@ public class MoneyType extends AbstractCompositeUserType implements IMoneyType {
 
     @Override
     public Object instantiate(final Map<String, Object> arguments) {
-        if (allArgumentsAreNull(arguments)) {
+        final var amount = (BigDecimal) arguments.get("amount");
+        if (amount == null) {
             return null;
         }
-        final var amount = (BigDecimal) arguments.get("amount");
         final var currency = (Currency) arguments.get("currency");
         // Currency may be null for calculated properties, but should not be null for persistent properties.
         return currency == null ? new Money(amount) : new Money(amount, currency);
