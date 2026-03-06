@@ -1,9 +1,5 @@
 "use strict";
 
-var GlobalTextEncoder =
-    typeof TextEncoder !== "undefined"
-        ? TextEncoder
-        : require("@sinonjs/text-encoding").TextEncoder;
 var globalObject = require("@sinonjs/commons").global;
 var configureLogError = require("../configure-logger");
 var sinonEvent = require("../event");
@@ -11,10 +7,24 @@ var extend = require("just-extend");
 
 var supportsProgress = typeof ProgressEvent !== "undefined";
 var supportsCustomEvent = typeof CustomEvent !== "undefined";
-var supportsFormData = typeof FormData !== "undefined";
 var supportsArrayBuffer = typeof ArrayBuffer !== "undefined";
 var supportsBlob = require("./blob").isSupported;
 
+/** @returns {typeof Blob|undefined} Blob constructor for the current global scope */
+function getBlobConstructor() {
+    return supportsBlob ? globalObject.Blob : undefined;
+}
+
+/** @returns {typeof FormData|undefined} FormData constructor for the current global scope */
+function getFormDataConstructor() {
+    return globalObject.FormData;
+}
+
+/**
+ * Resolve the native XHR constructor available in a given global scope.
+ * @param {object} globalScope
+ * @returns {typeof XMLHttpRequest|function(): XMLHttpRequest|false}
+ */
 function getWorkingXHR(globalScope) {
     var supportsXHR = typeof globalScope.XMLHttpRequest !== "undefined";
     if (supportsXHR) {
@@ -57,6 +67,10 @@ var unsafeHeaders = {
     Via: true,
 };
 
+/**
+ * Minimal event target wrapper used for FakeXMLHttpRequest and its upload target.
+ * @class
+ */
 function EventTargetHandler() {
     var self = this;
     var events = [
@@ -69,6 +83,11 @@ function EventTargetHandler() {
         "loadend",
     ];
 
+    /**
+     * Relay DOM-style `on*` handlers through the EventTarget listener API.
+     * @param {string} eventName
+     * @returns {void}
+     */
     function addEventListener(eventName) {
         self.addEventListener(eventName, function (event) {
             var listener = self[`on${eventName}`];
@@ -84,12 +103,23 @@ function EventTargetHandler() {
 
 EventTargetHandler.prototype = sinonEvent.EventTarget;
 
+/**
+ * Trim HTTP whitespace bytes from a header value.
+ * @param {string} value
+ * @returns {string}
+ */
 function normalizeHeaderValue(value) {
     // Ref: https://fetch.spec.whatwg.org/#http-whitespace-bytes
     /*eslint no-control-regex: "off"*/
     return value.replace(/^[\x09\x0A\x0D\x20]+|[\x09\x0A\x0D\x20]+$/g, "");
 }
 
+/**
+ * Find a header name using case-insensitive matching.
+ * @param {object} headers
+ * @param {string} header
+ * @returns {string|null}
+ */
 function getHeader(headers, header) {
     var foundHeader = Object.keys(headers).filter(function (h) {
         return h.toLowerCase() === header.toLowerCase();
@@ -98,13 +128,26 @@ function getHeader(headers, header) {
     return foundHeader[0] || null;
 }
 
+/**
+ * Exclude Set-Cookie headers from the aggregated response header string.
+ * @param {string} header
+ * @returns {boolean}
+ */
 function excludeSetCookie2Header(header) {
     return !/^Set-Cookie2?$/i.test(header);
 }
 
+/**
+ * Ensure a mocked response body is compatible with the requested responseType.
+ * @param {unknown} body
+ * @param {string} responseType
+ * @returns {void}
+ * @throws {Error} If the body cannot be represented as the requested response type.
+ */
 function verifyResponseBodyType(body, responseType) {
     var error = null;
     var isString = typeof body === "string";
+    var BlobConstructor = getBlobConstructor();
 
     if (responseType === "arraybuffer") {
         if (!isString && !(body instanceof ArrayBuffer)) {
@@ -117,8 +160,8 @@ function verifyResponseBodyType(body, responseType) {
         if (
             !isString &&
             !(body instanceof ArrayBuffer) &&
-            supportsBlob &&
-            !(body instanceof Blob)
+            BlobConstructor &&
+            !(body instanceof BlobConstructor)
         ) {
             error = new Error(
                 `Attempted to respond to fake XMLHttpRequest with ${body}, which is not a string, ArrayBuffer, or Blob.`,
@@ -137,14 +180,75 @@ function verifyResponseBodyType(body, responseType) {
     }
 }
 
-function convertToArrayBuffer(body, encoding) {
+/**
+ * Encode a JavaScript string as a UTF-8 ArrayBuffer.
+ * @param {string} input
+ * @returns {ArrayBuffer}
+ */
+function stringToUtf8ArrayBuffer(input) {
+    /*eslint no-bitwise: "off"*/
+    var bytes = [];
+
+    for (var i = 0; i < input.length; i++) {
+        var codePoint = input.charCodeAt(i);
+
+        if (codePoint >= 0xd800 && codePoint <= 0xdbff) {
+            var nextCodePoint = input.charCodeAt(i + 1);
+
+            if (nextCodePoint >= 0xdc00 && nextCodePoint <= 0xdfff) {
+                codePoint =
+                    ((codePoint - 0xd800) << 10) +
+                    (nextCodePoint - 0xdc00) +
+                    0x10000;
+                i += 1;
+            } else {
+                codePoint = 0xfffd;
+            }
+        } else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
+            codePoint = 0xfffd;
+        }
+
+        if (codePoint <= 0x7f) {
+            bytes.push(codePoint);
+        } else if (codePoint <= 0x7ff) {
+            bytes.push(0xc0 | (codePoint >> 6), 0x80 | (codePoint & 0x3f));
+        } else if (codePoint <= 0xffff) {
+            bytes.push(
+                0xe0 | (codePoint >> 12),
+                0x80 | ((codePoint >> 6) & 0x3f),
+                0x80 | (codePoint & 0x3f),
+            );
+        } else {
+            bytes.push(
+                0xf0 | (codePoint >> 18),
+                0x80 | ((codePoint >> 12) & 0x3f),
+                0x80 | ((codePoint >> 6) & 0x3f),
+                0x80 | (codePoint & 0x3f),
+            );
+        }
+    }
+
+    return new Uint8Array(bytes).buffer;
+}
+
+/**
+ * Normalize string responses into an ArrayBuffer when required by responseType.
+ * @param {string|ArrayBuffer} body
+ * @returns {ArrayBuffer}
+ */
+function convertToArrayBuffer(body) {
     if (body instanceof ArrayBuffer) {
         return body;
     }
 
-    return new GlobalTextEncoder(encoding || "utf-8").encode(body).buffer;
+    return stringToUtf8ArrayBuffer(body);
 }
 
+/**
+ * Check whether a content type should be treated as XML.
+ * @param {string|null|undefined} contentType
+ * @returns {boolean}
+ */
 function isXmlContentType(contentType) {
     return (
         !contentType ||
@@ -152,6 +256,19 @@ function isXmlContentType(contentType) {
     );
 }
 
+/**
+ * @param {string} contentType
+ * @returns {boolean}
+ */
+function isHtmlContentType(contentType) {
+    return /text\/html/i.test(contentType || "");
+}
+
+/**
+ * Reset the response fields exposed on a fake XHR instance.
+ * @param {object} xhr
+ * @returns {void}
+ */
 function clearResponse(xhr) {
     if (xhr.responseType === "" || xhr.responseType === "text") {
         xhr.response = xhr.responseText = "";
@@ -161,6 +278,30 @@ function clearResponse(xhr) {
     xhr.responseXML = null;
 }
 
+/**
+ * @param {string} text
+ * @returns {Document|null}
+ */
+function parseHTML(text) {
+    if (text === "" || typeof DOMParser === "undefined") {
+        return null;
+    }
+
+    return new DOMParser().parseFromString(text, "text/html");
+}
+
+/**
+ * @typedef {object} FakeXMLHttpRequestApi
+ * @property {object} xhr Native XHR references captured from the provided global scope.
+ * @property {typeof FakeXMLHttpRequest} FakeXMLHttpRequest Fake XHR constructor bound to the provided global.
+ * @property {typeof useFakeXMLHttpRequest} useFakeXMLHttpRequest Installer for the fake XHR globals.
+ */
+
+/**
+ * Create the fake XHR API bound to a specific global object.
+ * @param {object} globalScope
+ * @returns {FakeXMLHttpRequestApi}
+ */
 function fakeXMLHttpRequestFor(globalScope) {
     var isReactNative =
         globalScope.navigator &&
@@ -184,6 +325,11 @@ function fakeXMLHttpRequestFor(globalScope) {
     // we lose some of the alignment with the spec.
     // To ensure as close a match as possible,
     // set responseType before calling open, send or respond;
+    /**
+     * Fake `XMLHttpRequest` implementation used by Sinon servers and stubs.
+     * @class
+     * @param {object} [config] Logger configuration forwarded to `configureLogError`.
+     */
     function FakeXMLHttpRequest(config) {
         EventTargetHandler.call(this);
         this.readyState = FakeXMLHttpRequest.UNSENT;
@@ -209,6 +355,12 @@ function fakeXMLHttpRequestFor(globalScope) {
         }
     }
 
+    /**
+     * Ensure the request is open and not already sending before mutating it.
+     * @param {FakeXMLHttpRequest} xhr
+     * @returns {void}
+     * @throws {Error} If the fake request is not in the OPENED state.
+     */
     function verifyState(xhr) {
         if (xhr.readyState !== FakeXMLHttpRequest.OPENED) {
             throw new Error("INVALID_STATE_ERR");
@@ -240,9 +392,41 @@ function fakeXMLHttpRequestFor(globalScope) {
     };
 
     FakeXMLHttpRequest.filters = [];
+    /**
+     * Register a predicate that decides whether a request should fall back to the native XHR.
+     * @param {function(...unknown): boolean} fn
+     * @returns {void}
+     */
     FakeXMLHttpRequest.addFilter = function addFilter(fn) {
         this.filters.push(fn);
     };
+
+    /**
+     * Replace fake request methods with the native XHR implementation for one request.
+     * @param {object} fakeXhr
+     * @param {object} xhrArgs
+     * @returns {void}
+     */
+    /**
+     * Keep writable request-side properties in sync before delegating send().
+     * @param {object} fakeXhr
+     * @param {XMLHttpRequest} xhr
+     */
+    function syncRequestProperties(fakeXhr, xhr) {
+        var properties = ["responseType"];
+        var isSynchronousRequest =
+            fakeXhr.async === false || xhr.async === false;
+
+        if (!isSynchronousRequest) {
+            properties.push("withCredentials", "timeout");
+        }
+
+        properties.forEach(function (property) {
+            if (xhr[property] !== fakeXhr[property]) {
+                xhr[property] = fakeXhr[property];
+            }
+        });
+    }
     FakeXMLHttpRequest.defake = function defake(fakeXhr, xhrArgs) {
         var xhr = new sinonXhr.workingXHR(); // eslint-disable-line new-cap
 
@@ -262,10 +446,7 @@ function fakeXMLHttpRequestFor(globalScope) {
         });
 
         fakeXhr.send = function () {
-            // Ref: https://xhr.spec.whatwg.org/#the-responsetype-attribute
-            if (xhr.responseType !== fakeXhr.responseType) {
-                xhr.responseType = fakeXhr.responseType;
-            }
+            syncRequestProperties(fakeXhr, xhr);
             return apply(xhr, "send", arguments);
         };
 
@@ -331,6 +512,12 @@ function fakeXMLHttpRequestFor(globalScope) {
     };
     FakeXMLHttpRequest.useFilters = false;
 
+    /**
+     * Ensure status and response headers are only set after `open`.
+     * @param {FakeXMLHttpRequest} xhr
+     * @returns {void}
+     * @throws {Error} If the request has not been opened.
+     */
     function verifyRequestOpened(xhr) {
         if (xhr.readyState !== FakeXMLHttpRequest.OPENED) {
             const errorMessage =
@@ -341,12 +528,24 @@ function fakeXMLHttpRequestFor(globalScope) {
         }
     }
 
+    /**
+     * Ensure a response body is not written after the request has completed.
+     * @param {FakeXMLHttpRequest} xhr
+     * @returns {void}
+     * @throws {Error} If the request is already done.
+     */
     function verifyRequestSent(xhr) {
         if (xhr.readyState === FakeXMLHttpRequest.DONE) {
             throw new Error("Request done");
         }
     }
 
+    /**
+     * Ensure headers are available before a response body is written asynchronously.
+     * @param {FakeXMLHttpRequest} xhr
+     * @returns {void}
+     * @throws {Error} If response headers have not been received yet.
+     */
     function verifyHeadersReceived(xhr) {
         if (
             xhr.async &&
@@ -356,7 +555,16 @@ function fakeXMLHttpRequestFor(globalScope) {
         }
     }
 
+    /**
+     * Convert a mocked response body to the representation requested by `responseType`.
+     * @param {string} responseType
+     * @param {string|null|undefined} contentType
+     * @param {string|ArrayBuffer|Blob} body
+     * @returns {string|ArrayBuffer|Blob|Document|object|null}
+     */
     function convertResponseBody(responseType, contentType, body) {
+        var BlobConstructor = getBlobConstructor();
+
         if (responseType === "" || responseType === "text") {
             return body;
         } else if (supportsArrayBuffer && responseType === "arraybuffer") {
@@ -368,8 +576,8 @@ function fakeXMLHttpRequestFor(globalScope) {
                 // Return parsing failure as null
                 return null;
             }
-        } else if (supportsBlob && responseType === "blob") {
-            if (body instanceof Blob) {
+        } else if (BlobConstructor && responseType === "blob") {
+            if (body instanceof BlobConstructor) {
                 return body;
             }
 
@@ -377,10 +585,16 @@ function fakeXMLHttpRequestFor(globalScope) {
             if (contentType) {
                 blobOptions.type = contentType;
             }
-            return new Blob([convertToArrayBuffer(body)], blobOptions);
+            return new BlobConstructor(
+                [convertToArrayBuffer(body)],
+                blobOptions,
+            );
         } else if (responseType === "document") {
             if (isXmlContentType(contentType)) {
                 return FakeXMLHttpRequest.parseXML(body);
+            }
+            if (isHtmlContentType(contentType)) {
+                return parseHTML(body);
             }
             return null;
         }
@@ -390,6 +604,8 @@ function fakeXMLHttpRequestFor(globalScope) {
     /**
      * Steps to follow when there is an error, according to:
      * https://xhr.spec.whatwg.org/#request-error-steps
+     * @param {FakeXMLHttpRequest} xhr
+     * @returns {void}
      */
     function requestErrorSteps(xhr) {
         clearResponse(xhr);
@@ -407,6 +623,11 @@ function fakeXMLHttpRequestFor(globalScope) {
         }
     }
 
+    /**
+     * Parse a response body as XML, returning null when parsing fails.
+     * @param {string} text
+     * @returns {Document|null}
+     */
     FakeXMLHttpRequest.parseXML = function parseXML(text) {
         // Treat empty string as parsing failure
         if (text !== "") {
@@ -501,6 +722,15 @@ function fakeXMLHttpRequestFor(globalScope) {
     extend(FakeXMLHttpRequest.prototype, sinonEvent.EventTarget, {
         async: true,
 
+        /**
+         * Initialize the fake request and transition it to OPENED.
+         * @param {string} method
+         * @param {string} url
+         * @param {boolean} [async]
+         * @param {string} [username]
+         * @param {string} [password]
+         * @returns {void}
+         */
         open: function open(method, url, async, username, password) {
             this.method = method;
             this.url = url;
@@ -524,6 +754,11 @@ function fakeXMLHttpRequestFor(globalScope) {
             this.readyStateChange(FakeXMLHttpRequest.OPENED);
         },
 
+        /**
+         * Update `readyState` and dispatch the matching XHR events.
+         * @param {number} state
+         * @returns {void}
+         */
         readyStateChange: function readyStateChange(state) {
             this.readyState = state;
 
@@ -587,6 +822,12 @@ function fakeXMLHttpRequestFor(globalScope) {
         },
 
         // Ref https://xhr.spec.whatwg.org/#the-setrequestheader()-method
+        /**
+         * Add or merge a request header unless it is forbidden by the XHR spec.
+         * @param {string} header
+         * @param {string} value
+         * @returns {void}
+         */
         setRequestHeader: function setRequestHeader(header, value) {
             if (typeof value !== "string") {
                 throw new TypeError(
@@ -605,10 +846,7 @@ function fakeXMLHttpRequestFor(globalScope) {
                 (getHeader(unsafeHeaders, header) !== null ||
                     /^(Sec-|Proxy-)/i.test(header))
             ) {
-                throw new Error(
-                    // eslint-disable-next-line quotes
-                    `Refused to set unsafe header "${header}"`,
-                );
+                return;
             }
 
             // eslint-disable-next-line no-param-reassign
@@ -622,6 +860,11 @@ function fakeXMLHttpRequestFor(globalScope) {
             }
         },
 
+        /**
+         * Set the HTTP status code used by `respond`.
+         * @param {number} status
+         * @returns {void}
+         */
         setStatus: function setStatus(status) {
             var sanitizedStatus = typeof status === "number" ? status : 200;
 
@@ -631,6 +874,11 @@ function fakeXMLHttpRequestFor(globalScope) {
         },
 
         // Helps testing
+        /**
+         * Store response headers and move the request to HEADERS_RECEIVED.
+         * @param {object} headers
+         * @returns {void}
+         */
         setResponseHeaders: function setResponseHeaders(headers) {
             verifyRequestOpened(this);
 
@@ -648,6 +896,11 @@ function fakeXMLHttpRequestFor(globalScope) {
         },
 
         // Currently treats ALL data as a DOMString (i.e. no Document)
+        /**
+         * Send the fake request and normalize default request headers.
+         * @param {string|ArrayBuffer|Blob|FormData|null|undefined} data
+         * @returns {void}
+         */
         send: function send(data) {
             verifyState(this);
 
@@ -656,11 +909,17 @@ function fakeXMLHttpRequestFor(globalScope) {
                     this.requestHeaders,
                     "Content-Type",
                 );
+                var FormDataConstructor = getFormDataConstructor();
                 if (this.requestHeaders[contentType]) {
                     var value = this.requestHeaders[contentType].split(";");
                     this.requestHeaders[contentType] =
                         `${value[0]};charset=utf-8`;
-                } else if (supportsFormData && !(data instanceof FormData)) {
+                } else if (
+                    !(
+                        FormDataConstructor &&
+                        data instanceof FormDataConstructor
+                    )
+                ) {
                     this.requestHeaders["Content-Type"] =
                         "text/plain;charset=utf-8";
                 }
@@ -879,6 +1138,10 @@ function fakeXMLHttpRequestFor(globalScope) {
     extend(FakeXMLHttpRequest, states);
     extend(FakeXMLHttpRequest.prototype, states);
 
+    /**
+     * Install FakeXMLHttpRequest into the provided global scope.
+     * @returns {typeof FakeXMLHttpRequest} The fake XMLHttpRequest constructor.
+     */
     function useFakeXMLHttpRequest() {
         FakeXMLHttpRequest.restore = function restore(keepOnCreate) {
             if (sinonXhr.supportsXHR) {
