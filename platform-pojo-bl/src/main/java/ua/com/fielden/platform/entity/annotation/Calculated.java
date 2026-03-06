@@ -31,6 +31,12 @@ import java.lang.annotation.Target;
 ///    @Calculated
 ///    Integer total;
 ///    static final ExpressionModel total_ = expr()...model();
+///
+///    @IsProperty
+///    @Calculated
+///    Money totalCost;
+///    static final ExpressionModel totalCost_ = expr()...model(),
+///                                 totalCost_currency_ = expr()...model();
 ///    ```
 ///
 /// Calculated properties with expressions defined in one of these ways are _non-contextual_.
