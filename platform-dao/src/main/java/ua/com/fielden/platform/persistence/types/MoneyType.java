@@ -49,7 +49,10 @@ public class MoneyType extends AbstractCompositeUserType implements IMoneyType {
         if (allArgumentsAreNull(arguments)) {
             return null;
         }
-        return new Money((BigDecimal) arguments.get("amount"), (Currency) arguments.get("currency"));
+        final var amount = (BigDecimal) arguments.get("amount");
+        final var currency = (Currency) arguments.get("currency");
+        // Currency may be null for calculated properties, but should not be null for persistent properties.
+        return currency == null ? new Money(amount) : new Money(amount, currency);
     }
 
     @Override
