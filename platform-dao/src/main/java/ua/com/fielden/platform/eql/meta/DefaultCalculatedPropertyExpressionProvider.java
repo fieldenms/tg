@@ -28,6 +28,7 @@ import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -54,7 +55,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
-import static ua.com.fielden.platform.reflection.Finder.*;
+import static ua.com.fielden.platform.reflection.Finder.getFieldByNameOptionally;
+import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
 import static ua.com.fielden.platform.utils.CollectionUtil.dropRight;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
@@ -154,40 +156,44 @@ public record DefaultCalculatedPropertyExpressionProvider(
                         yield Optional.empty();
                     }
 
-                    // TODO Support explicit definition of expressions for `currency` at the level of Money-typed properties.
-                    final var moneyModel = maybeExpression(entityType, componentTypedProperty)
-                            .orElseThrow(missingExpression(entityType, componentTypedProperty))
-                            .expressionModel();
-                    final var gen = new QueryModelToStage1Transformer(filter, userProvider.getUsername(), new QueryNowValue(dates), Map.of());
-                    final Expression1 expr1 = new EqlCompiler(gen).compile(moneyModel.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model();
-                    final var operands = tailPositionOperands(expr1).toList();
-                    if (operands.stream().anyMatch(o -> o instanceof SubQuery1)) {
-                        throw new EntityDefinitionException(format(
-                                ERR_CANNOT_INFER_FROM_SUB_QUERY,
-                                entityType.getSimpleName(), componentTypedProperty, "currency", componentTypedProperty, "currency"));
-                    }
-                    // Pick the first property that is either Money-typed or refers to Money.amount.
-                    // Since we do not support sub-queries here, this Prop1 should always belong to `entityType`.
-                    final var currencyModel = operands.stream()
-                            .mapMulti(typeFilter(Prop1.class))
-                            .map(prop1 -> {
-                                final var normPath = pathEndsWith(entityType, prop1.propPath(), Money.class, "amount")
-                                        ? substringBefore(prop1.propPath(), ".amount")
-                                        : prop1.propPath();
-                                final var pm = domainMetadata.forProperty(entityType, normPath);
-                                // Checking for Money is not enough, as a custom Hibernate type without `currency` may be used.
-                                return pm.type().javaType().equals(Money.class)
-                                       && pm.hibType() instanceof ICompositeUserTypeInstantiate it
-                                       && ArrayUtils.contains(it.getPropertyNames(), "currency")
-                                        ? expr().prop(normPath + ".currency").model()
-                                        : null;
-                            })
-                            .filter(Objects::nonNull)
-                            .findFirst()
-                            .orElseThrow(() -> new EntityDefinitionException(format(
-                                    ERR_CANNOT_INFER,
-                                    entityType.getSimpleName(), componentTypedProperty, "currency", componentTypedProperty, "currency")));
-                    yield Optional.of(new CalcPropInfo(currencyModel, EXPRESSION));
+                    // Perhaps there is a declared model for currency.
+                    yield maybeFromDeclaredExpressionField(entityType, "%s.%s".formatted(componentTypedProperty, subProperty))
+                            // Try to infer it from the Money-typed property's expression.
+                            .or(() -> {
+                                final var moneyModel = maybeExpression(entityType, componentTypedProperty)
+                                        .orElseThrow(missingExpression(entityType, componentTypedProperty))
+                                        .expressionModel();
+                                final var gen = new QueryModelToStage1Transformer(filter, userProvider.getUsername(), new QueryNowValue(dates), Map.of());
+                                final Expression1 expr1 = new EqlCompiler(gen).compile(moneyModel.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model();
+                                final var operands = tailPositionOperands(expr1).toList();
+                                if (operands.stream().anyMatch(o -> o instanceof SubQuery1)) {
+                                    throw new EntityDefinitionException(format(
+                                            ERR_CANNOT_INFER_FROM_SUB_QUERY,
+                                            entityType.getSimpleName(), componentTypedProperty, "currency", componentTypedProperty, "currency"));
+                                }
+                                // Pick the first property that is either Money-typed or refers to Money.amount.
+                                // Since we do not support sub-queries here, this Prop1 should always belong to `entityType`.
+                                final var currencyModel = operands.stream()
+                                        .mapMulti(typeFilter(Prop1.class))
+                                        .map(prop1 -> {
+                                            final var normPath = pathEndsWith(entityType, prop1.propPath(), Money.class, "amount")
+                                                    ? substringBefore(prop1.propPath(), ".amount")
+                                                    : prop1.propPath();
+                                            final var pm = domainMetadata.forProperty(entityType, normPath);
+                                            // Checking for Money is not enough, as a custom Hibernate type without `currency` may be used.
+                                            return pm.type().javaType().equals(Money.class)
+                                                   && pm.hibType() instanceof ICompositeUserTypeInstantiate it
+                                                   && ArrayUtils.contains(it.getPropertyNames(), "currency")
+                                                    ? expr().prop(normPath + ".currency").model()
+                                                    : null;
+                                        })
+                                        .filter(Objects::nonNull)
+                                        .findFirst()
+                                        .orElseThrow(() -> new EntityDefinitionException(format(
+                                                ERR_CANNOT_INFER,
+                                                entityType.getSimpleName(), componentTypedProperty, "currency", componentTypedProperty, "currency")));
+                                return Optional.of(new CalcPropInfo(currencyModel, EXPRESSION));
+                            });
                 }
                 default -> {
                     if (componentTypedPropertyMd.isCalculated()) {
@@ -290,19 +296,28 @@ public record DefaultCalculatedPropertyExpressionProvider(
         return maybeField(entityType, property)
                 .flatMap(field -> getAnnotationOptionally(field, Calculated.class))
                 .map(atCalculated -> {
-                    final ExpressionModel model;
                     try {
                         if (!atCalculated.value().equals(Calculated.EMPTY)) {
-                            model = createExpressionText2ModelConverter(entityType, atCalculated).convert().getModel();
+                            return new CalcPropInfo(createExpressionText2ModelConverter(entityType, atCalculated).convert().getModel(),
+                                                    atCalculated.category());
                         }
                         else {
-                            model = getStaticFieldValue(getFieldByName(entityType, property + "_"));
+                            return maybeFromDeclaredExpressionField(entityType, property).orElseThrow();
                         }
                     } catch (final Exception ex) {
                         throw new DomainMetadataGenerationException(ERR_COULD_NOT_DETERMINE_EXPRESSION.formatted(entityType.getSimpleName(), property), ex);
                     }
-                    return new CalcPropInfo(model, atCalculated.category());
                 });
+    }
+
+    private Optional<CalcPropInfo> maybeFromDeclaredExpressionField(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final String property)
+    {
+        final var staticFieldName = String.join("_", splitPropPath(property)) + "_";
+        return getFieldByNameOptionally(entityType, staticFieldName)
+                .<ExpressionModel>map(Finder::getStaticFieldValue)
+                .map(model -> new CalcPropInfo(model, EXPRESSION));
     }
 
     private static ExpressionText2ModelConverter createExpressionText2ModelConverter(
