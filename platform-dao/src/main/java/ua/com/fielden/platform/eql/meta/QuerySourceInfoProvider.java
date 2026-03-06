@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.meta;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -18,6 +17,7 @@ import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.meta.*;
+import ua.com.fielden.platform.meta.PropertyMetadataUtils.SubPropertyNaming;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -39,6 +39,7 @@ import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapValues;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.lastProperty;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
 /// An abstraction for EQL-specific metadata about query sources (i.e. entity types).
@@ -87,15 +88,18 @@ public class QuerySourceInfoProvider {
     private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder;
     private final IDomainMetadata domainMetadata;
     private final ISyntheticModelProvider synModelProvider;
+    private final ICalculatedPropertyExpressionProvider calculatedPropertyExpressionProvider;
 
     @Inject
     public QuerySourceInfoProvider(
             final IDomainMetadata domainMetadata,
             final IDomainMetadataUtils domainMetadataUtils,
-            final ISyntheticModelProvider synModelProvider)
+            final ISyntheticModelProvider synModelProvider,
+            final ICalculatedPropertyExpressionProvider calculatedPropertyExpressionProvider)
     {
         this.domainMetadata = domainMetadata;
         this.synModelProvider = synModelProvider;
+        this.calculatedPropertyExpressionProvider = calculatedPropertyExpressionProvider;
 
         // Declared query source infos are created for all entities.
         declaredQuerySourceInfoMap = domainMetadataUtils.registeredEntities()
@@ -290,24 +294,21 @@ public class QuerySourceInfoProvider {
             .<Optional<AbstractQuerySourceItem<?>>> map(pm -> {
                 final var name = pm.name();
                 final var hibType = pm.hibType();
-                final @Nullable var expr = pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null);
 
                 return switch (pm.type()) {
-                    case PropertyTypeMetadata.Entity et -> mkQuerySourceItemForEntityType(pm, et, allQuerySourceInfos);
+                    case PropertyTypeMetadata.Entity et -> mkQuerySourceItemForEntityType(entityType, pm, et, allQuerySourceInfos);
                     case PropertyTypeMetadata.Component ct -> {
                         final var propTpi = new QuerySourceItemForComponentType<>(name, ct.javaType(), hibType);
-                        for (final PropertyMetadata spm : pmUtils.subProperties(pm)) {
-                            propTpi.addSubitem(
-                                    new QuerySourceItemForPrimType<>(spm.name(), spm.type().javaType(),
-                                                                     spm.hibType(),
-                                                                     spm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null)));
+                        for (final var spm : pmUtils.subProperties(pm, SubPropertyNaming.PATH)) {
+                            final var calcPropInfo = maybeCalcPropInfo(entityType, spm).orElse(null);
+                            propTpi.addSubitem(new QuerySourceItemForPrimType<>(lastProperty(spm.name()), spm.type().javaType(), spm.hibType(), calcPropInfo));
                         }
                         yield Optional.of(propTpi);
                     }
                     case PropertyTypeMetadata.CompositeKey ckt ->
-                            Optional.of(new QuerySourceItemForPrimType<>(name, ckt.javaType(), hibType, expr));
+                            Optional.of(new QuerySourceItemForPrimType<>(name, ckt.javaType(), hibType, maybeCalcPropInfo(entityType, pm).orElse(null)));
                     case PropertyTypeMetadata.Primitive pt ->
-                            Optional.of(new QuerySourceItemForPrimType<>(name, pt.javaType(), hibType, expr));
+                            Optional.of(new QuerySourceItemForPrimType<>(name, pt.javaType(), hibType, maybeCalcPropInfo(entityType, pm).orElse(null)));
                     default -> Optional.empty();
                 };
             })
@@ -316,20 +317,21 @@ public class QuerySourceInfoProvider {
     }
 
     private Optional<AbstractQuerySourceItem<?>> mkQuerySourceItemForEntityType(
+            final Class<? extends AbstractEntity<?>> entityType,
             final PropertyMetadata pm,
             final PropertyTypeMetadata.Entity et,
             final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allQuerySourceInfos)
     {
         return domainMetadata.forEntityOpt(et.javaType())
                 .map(em -> switch (em) {
-                    case EntityMetadata.Union uem -> mkQuerySourceItemForUnionEntityType(pm, uem, allQuerySourceInfos);
+                    case EntityMetadata.Union uem -> mkQuerySourceItemForUnionTypedProperty(entityType, pm, uem, allQuerySourceInfos);
                     case EntityMetadata.Persistent pem ->
                         // TODO: The following commented out code may potentially be used for future improvements related to treating ID property as if it is an entity
                         //       while yielding ID property within an EntityAggregates result model.
                         // if (ID.equals(name))
                         //     querySourceInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(querySourceInfo.javaType()), hibType, required, expr));
                             new QuerySourceItemForEntityType<>(pm.name(), allQuerySourceInfos.get(pem.javaType()), pm.hibType(), pm.is(REQUIRED),
-                                                               pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null));
+                                                               maybeCalcPropInfo(entityType, pm).orElse(null));
                     default ->
                         // TODO: It is not clear why QuerySourceItemForPrimType is used in all other cases.
                         //       The original comment here was:
@@ -338,43 +340,46 @@ public class QuerySourceInfoProvider {
                         //       However, this case would also include properties of Synthetic Entity type, but such properties are recognised as transient (plain) and later ignored.
                         //       Properties of Value Entity type are not handled by this case.
                         //       This is because, domainMetadata.forEntityOpt(PropertyDescriptor.class) returns an empty result, and Union Entities are handled separately above.
-                            mkPrim(pm);
+                            mkPrim(entityType, pm);
                 })
                 // TODO: The empty case seems to handle only properties of type PropertyDescriptor, which is a Value Entity rather than a primitive property.
                 //       Need to investigate this further.
-                .or(() -> Optional.of(mkPrim(pm)));
+                .or(() -> Optional.of(mkPrim(entityType, pm)));
     }
     // where
-    private QuerySourceItemForPrimType<?> mkPrim(final PropertyMetadata pm) {
-        return new QuerySourceItemForPrimType<>(pm.name(), pm.type().javaType(), pm.hibType(),
-                                                pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null));
+    private QuerySourceItemForPrimType<?> mkPrim(final Class<? extends AbstractEntity<?>> enclosingType, final PropertyMetadata pm) {
+        return new QuerySourceItemForPrimType<>(pm.name(), pm.type().javaType(), pm.hibType(), maybeCalcPropInfo(enclosingType, pm).orElse(null));
     }
 
-    private AbstractQuerySourceItem<?> mkQuerySourceItemForUnionEntityType
-        (final PropertyMetadata pm, final EntityMetadata.Union em,
-         final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allQuerySourceInfos)
+    private AbstractQuerySourceItem<?> mkQuerySourceItemForUnionTypedProperty(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final PropertyMetadata pm,
+            final EntityMetadata.Union uem,
+            final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allQuerySourceInfos)
     {
         final SortedMap<String, AbstractQuerySourceItem<?>> subprops = new TreeMap<>();
-        for (final PropertyMetadata spm : domainMetadata.propertyMetadataUtils().subProperties(pm)) {
+        for (final var spm : domainMetadata.propertyMetadataUtils().subProperties(pm, SubPropertyNaming.PATH)) {
+            final var subName = lastProperty(spm.name());
             switch (spm) {
                 case PropertyMetadata.Calculated cspm -> {
+                    final var calcPropInfo = getCalcPropInfo(entityType, cspm);
                     switch (cspm.type()) {
                         case PropertyTypeMetadata.Entity t ->
-                                subprops.put(cspm.name(),
-                                             new QuerySourceItemForEntityType<>(cspm.name(),
+                                subprops.put(subName,
+                                             new QuerySourceItemForEntityType<>(subName,
                                                                                 allQuerySourceInfos.get(t.javaType()),
                                                                                 cspm.hibType(),
                                                                                 false,
-                                                                                toCalcPropInfo(cspm)));
+                                                                                calcPropInfo));
                         case PropertyTypeMetadata.Component t ->
-                                subprops.put(cspm.name(),
-                                             new QuerySourceItemForPrimType<>(cspm.name(), t.javaType(), cspm.hibType(), toCalcPropInfo(cspm)));
+                                subprops.put(subName,
+                                             new QuerySourceItemForPrimType<>(subName, t.javaType(), cspm.hibType(), calcPropInfo));
                         case PropertyTypeMetadata.CompositeKey t ->
-                                subprops.put(cspm.name(),
-                                             new QuerySourceItemForPrimType<>(cspm.name(), t.javaType(), cspm.hibType(), toCalcPropInfo(cspm)));
+                                subprops.put(subName,
+                                             new QuerySourceItemForPrimType<>(subName, t.javaType(), cspm.hibType(), calcPropInfo));
                         case PropertyTypeMetadata.Primitive t ->
-                                subprops.put(cspm.name(),
-                                             new QuerySourceItemForPrimType<>(cspm.name(), t.javaType(), cspm.hibType(), toCalcPropInfo(cspm)));
+                                subprops.put(subName,
+                                             new QuerySourceItemForPrimType<>(subName, t.javaType(), cspm.hibType(), calcPropInfo));
                         default -> {}
                     }
                 }
@@ -382,15 +387,14 @@ public class QuerySourceInfoProvider {
                     // non-calculated properties in a union entity should be the union members, which are always entity-typed
                     switch (spm.type()) {
                         case PropertyTypeMetadata.Entity subEt ->
-                                subprops.put(spm.name(), new QuerySourceItemForEntityType<>(spm.name(),
-                                                                                            allQuerySourceInfos.get(subEt.javaType()),
-                                                                                            spm.hibType(), false, null));
+                                subprops.put(subName,
+                                             new QuerySourceItemForEntityType<>(subName, allQuerySourceInfos.get(subEt.javaType()), spm.hibType(), false, null));
                         default -> {}
                     }
                 }
             }
         }
-        return new QuerySourceItemForUnionType<>(pm.name(), em.javaType(), pm.hibType(), subprops);
+        return new QuerySourceItemForUnionType<>(pm.name(), uem.javaType(), pm.hibType(), subprops);
     }
 
     private QuerySourceInfo<?> generateDeclaredQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
@@ -436,8 +440,22 @@ public class QuerySourceInfoProvider {
         }
     }
 
-    private static CalcPropInfo toCalcPropInfo(final PropertyMetadata.Calculated pm) {
-        return pm.data().expression();
+    private Optional<CalcPropInfo> maybeCalcPropInfo(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
+        return calculatedPropertyExpressionProvider.maybeExpression(entityType, property);
+    }
+
+    private Optional<CalcPropInfo> maybeCalcPropInfo(final Class<? extends AbstractEntity<?>> entityType, final PropertyMetadata property) {
+        return property.isCalculated() ? Optional.of(getCalcPropInfo(entityType, property.name())) : maybeCalcPropInfo(entityType, property.name());
+    }
+
+    private CalcPropInfo getCalcPropInfo(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
+        return maybeCalcPropInfo(entityType, property)
+                .orElseThrow(() -> new EqlMetadataGenerationException(format(
+                        "Missing expression for property [%s.%s].", entityType.getSimpleName(), property)));
+    }
+
+    private CalcPropInfo getCalcPropInfo(final Class<? extends AbstractEntity<?>> entityType, final PropertyMetadata property) {
+        return getCalcPropInfo(entityType, property.name());
     }
 
 }
