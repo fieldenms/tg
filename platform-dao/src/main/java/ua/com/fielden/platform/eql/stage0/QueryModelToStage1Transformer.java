@@ -59,7 +59,7 @@ public class QueryModelToStage1Transformer {
         return sourceId;
     }
 
-    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> ResultQuery1 generateAsResultQuery(final QueryModel<T> qm, final OrderingModel orderModel, final IRetrievalModel<T> fetchModel) {
+    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> ResultQuery1 generateAsResultQuery(final QueryModel<T> qm, final @Nullable OrderingModel orderModel, final @Nullable IRetrievalModel<T> fetchModel) {
         return new ResultQuery1(parseTokensIntoComponents(qm, orderModel), qm.getResultType(), fetchModel);
     }
 
