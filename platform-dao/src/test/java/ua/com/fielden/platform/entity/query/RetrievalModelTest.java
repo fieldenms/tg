@@ -348,23 +348,23 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
     @Test
     public void fetch_TgFuelUsage() {
         assertRetrievalModel(TgFuelUsage.class, ALL)
-                .containsExactly(ID, VERSION, "vehicle", "date", "qty", "pricePerLitre", "pricePerLitre.amount", "fuelType")
+                .containsExactly(ID, VERSION, "vehicle", "date", "qty", "pricePerLitre", "previousPricePerLitre", "fuelType")
                 .subModel("vehicle", a -> a.equalsModel(DEFAULT))
                 .subModel("fuelType", a -> a.equalsModel(DEFAULT));
         assertRetrievalModel(TgFuelUsage.class, DEFAULT)
-                .containsExactly(ID, VERSION, "vehicle", "date", "qty", "pricePerLitre", "pricePerLitre.amount", "fuelType")
+                .containsExactly(ID, VERSION, "vehicle", "date", "qty", "pricePerLitre", "previousPricePerLitre", "fuelType")
                 .subModel("vehicle", a -> a.equalsModel(DEFAULT))
                 .subModel("fuelType", a -> a.equalsModel(ID_ONLY));
         assertRetrievalModel(TgFuelUsage.class, KEY_AND_DESC)
                 .containsExactly(ID, VERSION, "vehicle", "date")
-                .proxiesExactly("qty", "pricePerLitre", "fuelType")
+                .proxiesExactly("qty", "pricePerLitre", "previousPricePerLitre", "fuelType")
                 .subModel("vehicle", a -> a.equalsModel(DEFAULT));
         assertRetrievalModel(TgFuelUsage.class, ID_AND_VERSION, f -> f.with("vehicle", "qty"))
                 .containsExactly(ID, VERSION, "vehicle", "qty")
-                .proxiesExactly("date", "pricePerLitre", "fuelType")
+                .proxiesExactly("date", "pricePerLitre", "previousPricePerLitre", "fuelType")
                 .subModel("vehicle", a -> a.equalsModel(DEFAULT));
         assertRetrievalModel(TgFuelUsage.class, DEFAULT, f -> f.without("vehicle", "qty"))
-                .containsExactly(ID, VERSION, "date", "pricePerLitre", "pricePerLitre.amount", "fuelType")
+                .containsExactly(ID, VERSION, "date", "pricePerLitre", "previousPricePerLitre", "fuelType")
                 .proxiesExactly("vehicle", "qty");
     }
 
@@ -390,13 +390,13 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
     @Test
     public void fetch_synthetic_one_to_one_entity() {
         assertRetrievalModel(TgAverageFuelUsage.class, ALL_INCL_CALC)
-                .containsExactly(ID, KEY, "qty", "cost", "cost.amount")
+                .containsExactly(ID, KEY, "qty", "cost")
                 .proxiesExactly();
         assertRetrievalModel(TgAverageFuelUsage.class, ALL)
-                .containsExactly(ID, KEY, "qty", "cost", "cost.amount")
+                .containsExactly(ID, KEY, "qty", "cost")
                 .proxiesExactly();
         assertRetrievalModel(TgAverageFuelUsage.class, DEFAULT)
-                .containsExactly(ID, KEY, "qty", "cost", "cost.amount")
+                .containsExactly(ID, KEY, "qty", "cost")
                 .proxiesExactly();
         assertRetrievalModel(TgAverageFuelUsage.class, KEY_AND_DESC)
                 .containsExactly(ID, KEY)
