@@ -1,5 +1,16 @@
 package ua.com.fielden.platform.types;
 
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.types.markers.*;
+
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.text.NumberFormat;
+import java.util.*;
+
 import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_EVEN;
 import static java.math.RoundingMode.HALF_UP;
@@ -7,44 +18,36 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Currency.getInstance;
 import static java.util.Locale.getDefault;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.MathContext;
-import java.math.RoundingMode;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Currency;
-import java.util.List;
-import java.util.Random;
-
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-
-/**
- * Immutable class representing amount of money of particular currency. Instances of this class could be compared only if their currencies match.
- * <p>
- * <p>
- * All monetary arithmetic operations are performed with 4 decimal places using using {@link RoundingMode#HALF_EVEN} rounding rule. The toString() method rounds up the amount to 2
- * decimal places purely for display only.
- * <p>
- * <p>
- * Supports tax operations. Property <code>amount</code> can represent either a tax inclusive or exclusive amount if used in non-tax sensitive situations. However, when used in a
- * tax-sensitive context then it should at all times represent a full amount (i.e. tax inclusive). Properties <code>exTaxAmount</code> and <code>taxAmount</code> correspond to
- * amount without tax (e.g. without GST) and the tax amount (e.g. GST value) respectively. If this class used in a non-tax sensitive context then properties
- * <code>exTaxAmount</code> and <code>taxAmount</code> are null. However, if class is used in tax-sensitive context, then it is assumed that :
- * <code>amount = (taxPercent/100)*exTaxAmount + exTaxAmount</code>.
- * <p>
- * <p>
- * There are several constructors that can be conveniently used for creation of tax and non-tax sensitive instances. The current rule implies that
- * <code>tax</tax> can always be expressed as integer values representing a percent value.
- * <p><p>
- * <b>IMPORTANT:</b><br/>
- *  1. Currently all monetary arithmetic operations produce tax sensitive instances if the instance operated on is tax sensitive.<br/>
- *  2. Methods equals() and compareTo() use only properties <code>amount</code> and <code>currency</code>.<br/>
- *
- * @author TG Team
- */
+/// An immutable representation of money in a particular currency.
+///
+/// All monetary arithmetic operations are performed with 4 decimal places using [RoundingMode#HALF_EVEN] rounding rule.
+/// Method [#toString] rounds up the amount to 2 decimal places for display purposes only.
+///
+/// Although this type declares several properties, the set of actual properties that will be available depends on the configured
+/// Hibernate type ([ISimpleMoneyType], [IMoneyType], [ISimplyMoneyWithTaxAmountType], [ISimplyMoneyWithTaxAndExTaxAmountType], [IMoneyWithTaxAmountType]).
+///
+/// ### Tax support
+/// Property `amount` can represent either a tax inclusive or exclusive amount if used in non-tax sensitive situations.
+/// However, when used in a tax-sensitive context, it should at all times represent a full amount (i.e. tax inclusive).
+/// Properties `exTaxAmount` and `taxAmount` correspond to amount without tax (e.g. without GST) and the tax amount (e.g. GST value) respectively.
+/// If money is used in a non-tax sensitive context, then `exTaxAmount` and `taxAmount` are null.
+/// However, if used in a tax-sensitive context, then it is assumed that `amount = (taxPercent/100)*exTaxAmount + exTaxAmount`.
+///
+/// There are several constructors that can be conveniently used for creation of tax and non-tax sensitive instances.
+///
+/// This representation assumes that `taxPercent` can always be expressed as an integer value.
+///
+/// ### Important details
+/// 1. All monetary arithmetic operations produce tax sensitive instances if the instance operated on is tax sensitive.
+/// 2. Methods [#equals] and [#hashCode] use only properties `amount` and `currency`, while [#compareTo(Money)] uses only `amount`.
+///
+/// ### Use in calculated properties
+/// [Money] can be used as a type of a calculated property.
+/// * The main expression will be associated with property [Money#amount].
+/// * If [Money#currency] is enabled, an extra expression can be specified for it.
+///
+/// For more details on calculated properties refer to [Calculated].
+///
 public class Money implements Comparable<Money> {
 
     private static final Random random = new Random();
