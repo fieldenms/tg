@@ -1,33 +1,20 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import org.junit.Ignore;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Ignore;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.entity.annotation.Readonly;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(String.class)
 @MapEntityTo
@@ -143,16 +130,19 @@ public class TeVehicle extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated
+    @PersistentType(userType = ISimpleMoneyType.class)
     private Money replacedByTwicePrice;
     protected static final ExpressionModel replacedByTwicePrice_ = expr().prop("replacedByTwice.price").model();
 
     @IsProperty
     @Calculated
+    @PersistentType(userType = ISimpleMoneyType.class)
     private Money priceDiffBetweenCurrentAndReplacedByTwice;
     protected static final ExpressionModel priceDiffBetweenCurrentAndReplacedByTwice_ = expr().prop("price").sub().prop("replacedByTwicePrice").model();
 
     @IsProperty
     @Calculated
+    @PersistentType(userType = ISimpleMoneyType.class)
     private TeVehicle theSameVehicle; //contains transitive dependency on another ET-calc-prop's subprops (i.e. "replacedByTwice.price")
     protected static final ExpressionModel theSameVehicle_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("id").
             and().prop("priceDiffBetweenCurrentAndReplacedByTwice").eq().extProp("priceDiffBetweenCurrentAndReplacedByTwice").model()).model();
@@ -290,17 +280,20 @@ public class TeVehicle extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated
+    @PersistentType(userType = ISimpleMoneyType.class)
     private Money repPrice;
     protected static final ExpressionModel repPrice_ = expr().prop("replacedBy.price").model();
 
     @IsProperty
     @Calculated
+    @PersistentType(userType = ISimpleMoneyType.class)
     private Money repPurchasePrice;
     protected static final ExpressionModel repPurchasePrice_ = expr().prop("replacedBy.purchasePrice").model();
 
     @IsProperty
     @Readonly
     @Calculated
+    @PersistentType(userType = ISimpleMoneyType.class)
     @Title(value = "Title", desc = "Desc")
     private Money avgRepPrice;
     protected static final ExpressionModel avgRepPrice_ = expr().expr(expr().prop("repPrice").add().prop("repPurchasePrice").model()).div().val(2).model();
