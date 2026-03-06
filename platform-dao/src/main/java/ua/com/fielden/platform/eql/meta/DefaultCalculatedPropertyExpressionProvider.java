@@ -8,9 +8,22 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
+import ua.com.fielden.platform.eql.antlr.EqlCompiler;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
+import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.operands.Expression1;
+import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
+import ua.com.fielden.platform.eql.stage1.operands.Prop1;
+import ua.com.fielden.platform.eql.stage1.operands.functions.CaseWhen1;
+import ua.com.fielden.platform.eql.stage1.operands.functions.Concat1;
+import ua.com.fielden.platform.eql.stage1.operands.functions.SingleOperandFunction1;
+import ua.com.fielden.platform.eql.stage1.operands.functions.TwoOperandsFunction1;
+import ua.com.fielden.platform.eql.stage1.queries.SubQuery1;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -19,14 +32,20 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.ArrayUtils;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.IMPLICIT;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
@@ -36,7 +55,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.*;
+import static ua.com.fielden.platform.utils.CollectionUtil.dropRight;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 record DefaultCalculatedPropertyExpressionProvider(
         IUserProvider userProvider,
@@ -48,7 +69,12 @@ record DefaultCalculatedPropertyExpressionProvider(
 
     static final String
             ERR_COULD_NOT_DETERMINE_EXPRESSION = "Could not determine expression for calculated property [%s.%s].",
-            ERR_COULD_NOT_LOAD_TYPE = "Could not load type [%s].";
+            ERR_COULD_NOT_LOAD_TYPE = "Could not load type [%s].",
+            ERR_CANNOT_INFER_FROM_SUB_QUERY = "Expression for calculated property [%s.%s.%s] cannot be inferred when a sub-query is used. Please define [" + ExpressionModel.class.getSimpleName() + " %s_%s_].",
+            ERR_CANNOT_INFER = "Expression for calculated property [%s.%s.%s] cannot be inferred. Please define [" + ExpressionModel.class.getSimpleName() + " %s_%s_].",
+            ERR_EXPRESSION_NOT_DEFINED = "Expression is not defined for property [%s.%s].",
+            ERR_UNSUPPORTED_CALCULATED_PROPERTY = "Unsupported calculated property: [%s.%s.%s].",
+            ERR_UNSUPPORTED_TYPE_FOR_CALCULATED_PROPERTY = "Invalid calculated property [%s.%s]. Type [%s] is unsupported for calculated properties.";
 
     @Inject DefaultCalculatedPropertyExpressionProvider {}
 
@@ -66,10 +92,7 @@ record DefaultCalculatedPropertyExpressionProvider(
                             .orElseThrow(missingExpression(entityType, property)));
         }
         else if (propPath.size() == 2 && fstPropMd.type().isComponent()) {
-            return domainMetadata.forProperty(entityType, property)
-                    .asCalculated()
-                    .map(_ -> maybePropertyInComponent(entityType, propPath.getFirst(), propPath.get(1))
-                            .orElseThrow(missingExpression(entityType, property)));
+            return maybePropertyInComponent(entityType, propPath.getFirst(), propPath.get(1));
         }
         else if (propPath.size() == 1) {
             return fstPropMd
@@ -79,7 +102,7 @@ record DefaultCalculatedPropertyExpressionProvider(
                             .orElseThrow(missingExpression(entityType, property)));
         }
         else {
-            throw new InvalidArgumentException(format("Expression is not defined for property [%s.%s].", entityType.getSimpleName(), property));
+            throw new InvalidArgumentException(format(ERR_EXPRESSION_NOT_DEFINED, entityType.getSimpleName(), property));
         }
     }
 
@@ -107,6 +130,9 @@ record DefaultCalculatedPropertyExpressionProvider(
         }
     }
 
+    /// Returns an expression for a sub-property of a component-typed property if it is calculated.
+    /// This method may accept properties of any nature.
+    ///
     private Optional<CalcPropInfo> maybePropertyInComponent(
             final Class<? extends AbstractEntity<?>> entityType,
             final String componentTypedProperty,
@@ -115,20 +141,116 @@ record DefaultCalculatedPropertyExpressionProvider(
         final var componentTypedPropertyMd = domainMetadata.forProperty(entityType, componentTypedProperty);
         final var componentType = componentTypedPropertyMd.type().javaType();
         if (componentType.equals(Money.class)) {
-            // For `amount` use the Money-typed property's expression.
             return switch (subProperty) {
-                case "amount" -> maybeExpression(entityType, componentTypedProperty);
-                // TODO Should attain the currency of the first Money-typed property used in tail position in the expression for `amount`.
-                // TODO Support explicit definition of expressions for `currency` at the level of Money-typed properties.
-                case "currency" -> Optional.of(new CalcPropInfo(expr().val(null).model(), EXPRESSION));
-                default -> throw new EntityDefinitionException(format("Unsupported property: [%s.%s].", Money.class.getSimpleName(), subProperty));
+                // If the Money-typed property is calculated, then so is `amount`.
+                // For `amount` use the Money-typed property's expression.
+                case "amount" -> componentTypedPropertyMd
+                        .asCalculated()
+                        .map(_ -> maybeExpression(entityType, componentTypedProperty)
+                                  .orElseThrow(missingExpression(entityType, componentTypedProperty)));
+                // If the Money-typed property is calculated, then so is `currency`.
+                case "currency" -> {
+                    if (!componentTypedPropertyMd.isCalculated()) {
+                        yield Optional.empty();
+                    }
+
+                    // TODO Support explicit definition of expressions for `currency` at the level of Money-typed properties.
+                    final var moneyModel = maybeExpression(entityType, componentTypedProperty)
+                            .orElseThrow(missingExpression(entityType, componentTypedProperty))
+                            .expressionModel();
+                    final var gen = new QueryModelToStage1Transformer(filter, userProvider.getUsername(), new QueryNowValue(dates), Map.of());
+                    final Expression1 expr1 = new EqlCompiler(gen).compile(moneyModel.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model();
+                    final var operands = tailPositionOperands(expr1).toList();
+                    if (operands.stream().anyMatch(o -> o instanceof SubQuery1)) {
+                        throw new EntityDefinitionException(format(
+                                ERR_CANNOT_INFER_FROM_SUB_QUERY,
+                                entityType.getSimpleName(), componentTypedProperty, "currency", componentTypedProperty, "currency"));
+                    }
+                    // Pick the first property that is either Money-typed or refers to Money.amount.
+                    // Since we do not support sub-queries here, this Prop1 should always belong to `entityType`.
+                    final var currencyModel = operands.stream()
+                            .mapMulti(typeFilter(Prop1.class))
+                            .map(prop1 -> {
+                                final var normPath = pathEndsWith(entityType, prop1.propPath(), Money.class, "amount")
+                                        ? substringBefore(prop1.propPath(), ".amount")
+                                        : prop1.propPath();
+                                final var pm = domainMetadata.forProperty(entityType, normPath);
+                                // Checking for Money is not enough, as a custom Hibernate type without `currency` may be used.
+                                return pm.type().javaType().equals(Money.class)
+                                       && pm.hibType() instanceof ICompositeUserTypeInstantiate it
+                                       && ArrayUtils.contains(it.getPropertyNames(), "currency")
+                                        ? expr().prop(normPath + ".currency").model()
+                                        : null;
+                            })
+                            .filter(Objects::nonNull)
+                            .findFirst()
+                            .orElseThrow(() -> new EntityDefinitionException(format(
+                                    ERR_CANNOT_INFER,
+                                    entityType.getSimpleName(), componentTypedProperty, "currency", componentTypedProperty, "currency")));
+                    yield Optional.of(new CalcPropInfo(currencyModel, EXPRESSION));
+                }
+                default -> {
+                    if (componentTypedPropertyMd.isCalculated()) {
+                        throw new EntityDefinitionException(format(
+                                ERR_UNSUPPORTED_CALCULATED_PROPERTY,
+                                entityType.getSimpleName(), componentTypedProperty, subProperty));
+                    }
+                    yield Optional.empty();
+                }
             };
         }
-        else {
+        else if (componentTypedPropertyMd.isCalculated()) {
             throw new EntityDefinitionException(format(
-                    "Invalid calculated property [%s.%s]. Type [%s] is unsupported for calculated properties.",
+                    ERR_UNSUPPORTED_TYPE_FOR_CALCULATED_PROPERTY,
                     entityType.getSimpleName(), componentTypedProperty, componentType.getSimpleName()));
         }
+        else {
+            return Optional.empty();
+        }
+    }
+
+    private boolean pathEndsWith(
+            final Class<? extends AbstractEntity<?>> root,
+            final String path,
+            final Class<?> lastPropSource,
+            final String lastProp)
+    {
+        if (root.equals(lastPropSource) && path.equals(lastProp)) {
+            return true;
+        }
+
+        final var pathList = splitPropPath(path);
+        return pathList.size() > 1
+               && pathList.getLast().equals(lastProp)
+               && domainMetadata.forProperty(root, String.join(".", dropRight(pathList, 1))).type().javaType().equals(lastPropSource);
+    }
+
+    /// Given an arbitrary operand, returns a stream of operands that appear in tail position.
+    /// A more suitable term would be "expression" rather than "operand", but "expression" in this context could be confused
+    /// with a specific type of operand -- [Expression1].
+    ///
+    /// For an operand to be in tail position, it must directly contribute to the resulting value.
+    ///
+    /// ### Why sub-queries are unsupported
+    ///
+    /// For [SubQuery1], this method acts as identity, because its analysis and further transformation requires significant complexity.
+    /// * It would require an analysis of the yields, which get enhanced in Stage 2, but we are operating on Stage 1 AST,
+    ///   and switching to Stage 2 is rather complex.
+    /// * It would require the yields to be transformed so that only [Money#currency] is yielded, but all other parts
+    ///   of the sub-query to be preserved, such as where conditions.
+    /// * The transformed sub-query would have to be converted from its AST form into "syntax", using the EQL Fluent API.
+    ///
+    private Stream<ISingleOperand1<?>> tailPositionOperands(final ISingleOperand1<?> operand) {
+        return switch (operand) {
+            // Although Expression1 itself already is in tail position, let's expand it into operands to avoid additional processing later.
+            case Expression1 it -> it.streamOperands().flatMap(this::tailPositionOperands);
+            case Concat1 it -> it.operands().stream().flatMap(this::tailPositionOperands);
+            case CaseWhen1 it -> Stream.concat(it.whenThenPairs().stream().map(T2::_2), it.maybeElseOperand().stream())
+                    .flatMap(this::tailPositionOperands);
+            case SingleOperandFunction1<?> it -> tailPositionOperands(it.operand);
+            case TwoOperandsFunction1<?> it -> Stream.of(it.operand1, it.operand2).flatMap(this::tailPositionOperands);
+            default -> Stream.of(operand);
+        };
     }
 
     private Optional<CalcPropInfo> maybeImplicit(
