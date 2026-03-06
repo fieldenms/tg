@@ -936,13 +936,7 @@ public class EntityUtils {
      * </ul>
      */
     public static String[] splitPropPathToArray(final CharSequence path) {
-        if (path.isEmpty()) {
-            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
-        }
-
-        if (path.charAt(0) == '.' || path.charAt(path.length() - 1) == '.') {
-            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
-        }
+        validatePropertyPath(path);
 
         final var components = Reflector.DOT_SPLITTER_PATTERN.split(path);
         for (final var component : components) {
@@ -972,6 +966,29 @@ public class EntityUtils {
      */
     public static List<String> laxSplitPropPath(final CharSequence path) {
         return unmodifiableListOf(laxSplitPropPathToArray(path));
+    }
+
+    public static String lastProperty(final CharSequence path) {
+        validatePropertyPath(path);
+
+        final var pathStr = path.toString();
+        final var idx = pathStr.lastIndexOf('.');
+        if (idx == -1) {
+            return pathStr;
+        }
+        else {
+            return pathStr.substring(idx + 1);
+        }
+    }
+
+    private static void validatePropertyPath(final CharSequence path) {
+        if (path.isEmpty()) {
+            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+        }
+
+        if (path.charAt(0) == '.' || path.charAt(path.length() - 1) == '.') {
+            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+        }
     }
 
     /**

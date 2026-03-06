@@ -191,7 +191,7 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
          */
         public static Builder<?, ?> toBuilder(final PropertyMetadata propertyMetadata) {
             return switch (propertyMetadata) {
-                case PropertyMetadata.Calculated it -> calculatedProp(it.name(), it.type(), it.hibType(), it.data());
+                case PropertyMetadata.Calculated it -> calculatedProp(it.name(), it.type(), it.hibType());
                 case PropertyMetadata.CritOnly   it -> critOnlyProp(it.name(), it.type(), it.hibType());
                 case PropertyMetadata.Persistent it -> persistentProp(it.name(), it.type(), it.hibType(), it.data());
                 case PropertyMetadata.Plain      it -> plainProp(it.name(), it.type(), it.hibType());
@@ -219,10 +219,9 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
         public static Builder<PropertyNature.Calculated, PropertyNature.Calculated.Data> calculatedProp(
                 final String name,
                 final PropertyTypeMetadata type,
-                final @Nullable Object hibType,
-                final PropertyNature.Calculated.Data data)
+                final @Nullable Object hibType)
         {
-            return new Builder<>(name, type, hibType, PropertyNature.CALCULATED, data);
+            return new Builder<>(name, type, hibType, PropertyNature.CALCULATED, PropertyNature.Calculated.NO_DATA);
         }
 
         public PropertyMetadata build() {
