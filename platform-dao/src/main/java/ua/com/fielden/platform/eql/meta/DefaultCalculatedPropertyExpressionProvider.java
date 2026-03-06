@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.lang.reflect.Field;
@@ -25,6 +27,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.IMPLICIT;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
@@ -55,15 +58,21 @@ record DefaultCalculatedPropertyExpressionProvider(
             final CharSequence property)
     {
         final var propPath = splitPropPath(property);
-        final var fstPropMd = domainMetadata.forProperty(entityType, propPath.getFirst());
-        if (propPath.size() == 2 && isUnionEntityType(fstPropMd.type().javaType())) {
+        final var mdFstProp = domainMetadata.forProperty(entityType, propPath.getFirst());
+        if (propPath.size() == 2 && isUnionEntityType(mdFstProp.type().javaType())) {
             return domainMetadata.forProperty(entityType, property)
                     .asCalculated()
-                    .map(_ -> maybePropertyInUnion((Class<? extends AbstractUnionEntity>) fstPropMd.type().javaType(), propPath.getFirst(), propPath.get(1))
+                    .map(_ -> maybePropertyInUnion((Class<? extends AbstractUnionEntity>) mdFstProp.type().javaType(), propPath.getFirst(), propPath.get(1))
+                            .orElseThrow(missingExpression(entityType, property)));
+        }
+        else if (propPath.size() == 2 && mdFstProp.type().isComponent()) {
+            return domainMetadata.forProperty(entityType, property)
+                    .asCalculated()
+                    .map(_ -> maybePropertyInComponent(entityType, propPath.getFirst(), propPath.get(1))
                             .orElseThrow(missingExpression(entityType, property)));
         }
         else if (propPath.size() == 1) {
-            return fstPropMd
+            return mdFstProp
                     .asCalculated()
                     .map(_ -> maybeFromDeclaration(entityType, property.toString())
                             .or(() -> maybeImplicit(entityType, property.toString()))
@@ -95,6 +104,30 @@ record DefaultCalculatedPropertyExpressionProvider(
         }
         else {
             return Optional.empty();
+        }
+    }
+
+    private Optional<CalcPropInfo> maybePropertyInComponent(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final String componentTypedProperty,
+            final String subProperty)
+    {
+        final var mdComponentTypedProperty = domainMetadata.forProperty(entityType, componentTypedProperty);
+        final var componentType = mdComponentTypedProperty.type().javaType();
+        if (componentType.equals(Money.class)) {
+            // For `amount` use the Money-typed property's expression.
+            return switch (subProperty) {
+                case "amount" -> maybeExpression(entityType, componentTypedProperty);
+                // TODO Should attain the currency of the first Money-typed property used in tail position in the expression for `amount`.
+                // TODO Support explicit definition of expressions for `currency` at the level of Money-typed properties.
+                case "currency" -> Optional.of(new CalcPropInfo(expr().val(null).model(), EXPRESSION));
+                default -> throw new EntityDefinitionException(format("Unsupported property: [%s.%s].", Money.class.getSimpleName(), subProperty));
+            };
+        }
+        else {
+            throw new EntityDefinitionException(format(
+                    "Invalid calculated property [%s.%s]. Type [%s] is unsupported for calculated properties.",
+                    entityType.getSimpleName(), componentTypedProperty, componentType.getSimpleName()));
         }
     }
 
