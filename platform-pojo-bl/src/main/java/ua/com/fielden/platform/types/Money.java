@@ -1,20 +1,25 @@
 package ua.com.fielden.platform.types;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.types.markers.*;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.Currency;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.IntStream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_EVEN;
 import static java.math.RoundingMode.HALF_UP;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Currency.getInstance;
 import static java.util.Locale.getDefault;
 
@@ -52,14 +57,10 @@ public class Money implements Comparable<Money> {
 
     private static final Random random = new Random();
 
-    /**
-     * This is a convenient unit element for addition.
-     */
+    /// This is a convenient unit element for addition.
     public static final Money zero = new Money("0.00");
 
-    /**
-     * This is a convenient unit element for multiplication.
-     */
+    /// This is a convenient unit element for multiplication.
     public static final Money ONE = new Money("1.00");
 
     @IsProperty(precision = 18, scale = 2)
@@ -82,14 +83,11 @@ public class Money implements Comparable<Money> {
     @MapTo
     private final Currency currency;
 
-    /**
-     * Creates an instance not requiring tax data, where null values are assigned to properties <code>exTaxAmount</code> and <code>taxAmount</code>. Constructor parameters should
-     * not be null.
-     *
-     * @param amount
-     *            -- monetary amount, which could be either tax inclusive or exclusive -- this depends on the usage context.
-     * @param currency
-     */
+    /// Creates an instance without tax data.
+    /// Null values are assigned to tax-related properties.
+    ///
+    /// @param amount  monetary amount, which could be either tax inclusive or exclusive, depending on the usage context.
+    ///
     public Money(final BigDecimal amount, final Currency currency) {
         this.amount = checkParameters(amount, currency);
         exTaxAmount = null;
@@ -98,84 +96,74 @@ public class Money implements Comparable<Money> {
         this.currency = currency;
     }
 
-    /**
-     * Creates an instance requiring tax data based on tax percent. Constructor parameters should not be null.
-     *
-     * @param amount
-     *            -- monetary amount tax inclusive
-     * @param taxPercent
-     *            -- tax percent used for calculation of the tax amount and ex-tax amount
-     * @param currency
-     */
+    /// Creates an instance without tax data.
+    /// Null values are assigned to tax-related properties.
+    ///
+    /// @param amount  monetary amount, which could be either tax inclusive or exclusive, depending on the usage context.
+    ///
+    public Money(final String amount, final Currency currency) {
+        this(new BigDecimal(amount), currency);
+    }
+
+    /// Creates an instance with tax data.
+    ///
+    /// @param amount      monetary amount tax inclusive.
+    /// @param taxPercent  tax percent used for calculation of the tax amount and ex-tax amount.
+    ///
     public Money(final BigDecimal amount, final int taxPercent, final Currency currency) {
         this.amount = checkParameters(amount, taxPercent, currency);
         this.taxPercent = taxPercent;
         final BigDecimal taxFrac = new BigDecimal(taxPercent / 100d, new MathContext(4));
         exTaxAmount = new BigDecimal(1d, new MathContext(50)).divide(taxFrac.add(BigDecimal.ONE), new MathContext(50, HALF_EVEN)).multiply(this.amount).setScale(4, HALF_EVEN);
         taxAmount = amount.subtract(exTaxAmount).setScale(4, HALF_EVEN);
-
         this.currency = currency;
     }
 
-    /**
-     * Convenience constructor accepting amount as string.
-     *
-     * @param amount
-     * @param taxPercent
-     * @param currency
-     */
+    /// Creates an instance with tax data.
+    ///
+    /// @param amount      monetary amount tax inclusive.
+    /// @param taxPercent  tax percent used for calculation of the tax amount and ex-tax amount.
+    ///
     public Money(final String amount, final int taxPercent, final Currency currency) {
         this(new BigDecimal(amount), taxPercent, currency);
     }
 
-    /**
-     * Creates an instance requiring tax data based on tax amount. Constructor parameters should not be null.
-     *
-     * @param amount
-     *            -- monetary amount tax inclusive
-     * @param taxAmount
-     *            -- tax amount, which is a tax portion of the provided amount; used for calculation of tax percent and ex-tax amount
-     * @param currency
-     */
+    /// Creates an instance with tax data.
+    ///
+    /// @param amount     monetary amount tax inclusive.
+    /// @param taxAmount  tax amount, which is a tax portion of the provided amount; used for calculation of tax percent and ex-tax amount.
+    ///
     public Money(final BigDecimal amount, final BigDecimal taxAmount, final Currency currency) {
         this.amount = checkParameters(amount, taxAmount, currency);
         this.taxAmount = taxAmount.setScale(4, HALF_EVEN);
         this.taxPercent = taxAmount.multiply(BigDecimal.valueOf(100.0000d)).divide(this.amount.subtract(taxAmount), HALF_UP).setScale(0, HALF_EVEN).intValue();
         exTaxAmount = getAmount().subtract(taxAmount).setScale(4, HALF_EVEN);
-
         this.currency = currency;
     }
 
-    /**
-     * This is a convenience constructor, which utilises a default locale to derive the currency. Creates an instance not requiring tax data, where null values are assigned to
-     * properties <code>exTaxAmount</code> and <code>taxAmount</code>.
-     *
-     * @param amount
-     */
+    /// Creates an instance using the default currency.
+    /// Null values are assigned to tax-related properties.
+    ///
+    /// @param amount  monetary amount, which could be either tax inclusive or exclusive, depending on the usage context.
+    ///
     public Money(final BigDecimal amount) {
         this(amount, getInstance(getDefault()));
     }
 
-    /**
-     * This is a convenience constructor that accepts string representation of the amount. Creates an instance not requiring tax data, where null values are assigned to properties
-     * <code>exTaxAmount</code> and <code>taxAmount</code>.
-     *
-     * @param amount
-     */
-    public Money(final String amount, final Currency currency) {
-        this(new BigDecimal(amount), currency);
+    /// Creates an instance using the default currency.
+    /// Null values are assigned to tax-related properties.
+    ///
+    /// @param amount  monetary amount, which could be either tax inclusive or exclusive, depending on the usage context.
+    ///
+    public Money(final String amount) {
+        this(new BigDecimal(amount));
     }
 
-    /**
-     * This is a convenience constructor that accepts string representation of the amount and utilises a default locale to derive the currency. Creates an instance not requiring
-     * tax data, where null values are assigned to properties <code>exTaxAmount</code> and <code>taxAmount</code>.
-     *
-     * @param amount
-     */
-    public Money(final String amount) {
-        this(new BigDecimal(amount), Currency.getInstance(getDefault()));
-    }
-    
+    /// Creates an instance using the default currency.
+    /// Null values are assigned to tax-related properties.
+    ///
+    /// @param amount  monetary amount, which could be either tax inclusive or exclusive, depending on the usage context.
+    ///
     public static Money of(final String amount) {
         return new Money(amount);
     }
@@ -188,119 +176,83 @@ public class Money implements Comparable<Money> {
         return amount;
     }
 
-    /**
-     * If currencies match adds two amounts and returns result as new instance. Otherwise throws {@link IllegalArgumentException}
-     *
-     * @param monetaryAmount
-     */
-    public Money plus(final Money monetaryAmount) {
-        checkCurrencies(monetaryAmount);
-
-        final BigDecimal newAmount = getAmount().add(monetaryAmount.getAmount());
+    /// Adds two amounts, reusing the tax percent and currency of this instance.
+    ///
+    public Money plus(final Money money) {
+        final BigDecimal newAmount = getAmount().add(money.getAmount());
         return getTaxPercent() != null ? new Money(newAmount, getTaxPercent(), getCurrency()) : new Money(newAmount, getCurrency());
     }
 
-    /**
-     * If currencies match subtracts passed amount from this amount and returns result as new instance. Otherwise throws {@link IllegalArgumentException}
-     *
-     * @param monetaryAmount
-     */
-    public Money minus(final Money monetaryAmount) {
-        checkCurrencies(monetaryAmount);
-
-        final BigDecimal newAmount = getAmount().subtract(monetaryAmount.getAmount());
+    /// Subtracts `money` from this amount, reusing the tax percent and currency of this instance.
+    ///
+    public Money minus(final Money money) {
+        final BigDecimal newAmount = getAmount().subtract(money.getAmount());
         return getTaxPercent() != null ? new Money(newAmount, getTaxPercent(), getCurrency()) : new Money(newAmount, getCurrency());
     }
 
-    /**
-     * Multiplies current amount by passed value, rounds the result using {@link RoundingMode#HALF_EVEN} rule with 2 digits after comma and returns result as new instance.
-     *
-     * @param value
-     */
+    /// Multiplies this amount by `value`, reusing the tax percent and currency of this instance.
+    /// Rounds the result using [RoundingMode#HALF_EVEN] rule with 2 digits after comma.
+    ///
     public Money multiply(final BigDecimal value) {
         final BigDecimal newAmount = getAmount().multiply(value);
         return getTaxPercent() != null ? new Money(newAmount, getTaxPercent(), getCurrency()) : new Money(newAmount, getCurrency());
     }
 
-    /**
-     * This is a convenience method based on {@link #multiply(BigDecimal)}.
-     *
-     * @param value
-     */
+    /// Multiplies this amount by `value`, reusing the tax percent and currency of this instance.
+    /// Rounds the result using [RoundingMode#HALF_EVEN] rule with 2 digits after comma.
+    ///
     public Money multiply(final int value) {
         return multiply(new BigDecimal(value));
     }
 
-    /**
-     * Divides current amount by passed value with rounding rule {@link RoundingMode#HALF_EVEN} and returns result as new instance.
-     *
-     * @param value
-     */
+    /// Divides this amount by `value`, reusing the tax percent and currency of this instance.
+    /// Rounds the result using [RoundingMode#HALF_EVEN] rule with 2 digits after comma.
+    ///
     public Money divide(final BigDecimal value) {
         final BigDecimal newAmount = getAmount().divide(value, HALF_EVEN);
         return getTaxPercent() != null ? new Money(newAmount, getTaxPercent(), getCurrency()) : new Money(newAmount, getCurrency());
     }
 
-    /**
-     * This is a convenience method based on {@link #divide(BigDecimal)}.
-     *
-     * @param value
-     */
+    /// Divides this amount by `value`, reusing the tax percent and currency of this instance.
+    /// Rounds the result using [RoundingMode#HALF_EVEN] rule with 2 digits after comma.
+    ///
     public Money divide(final int value) {
         return divide(new BigDecimal(value));
     }
 
-    /**
-     * Splits current amount into certain parts and returns them as list. Throws an exception if passed parameter is less than 1.
-     *
-     * @param value
-     */
+    /// Splits this amount into a number of even parts, all of which inherit the tax percent and currency of this instance.
+    ///
+    /// @param value  the number of parts to split into; must be greater or equal to 1.
+    ///
     public List<Money> split(final int value) {
         if (value <= 0) {
             throw new IllegalArgumentException("Could only proportionally divide by values greater than zero");
         }
         if (value == 1) {
-            // there is nothing to divide by... so returning this instance -- it is safe due to immutability
-            return Arrays.asList(this); // returns immutable List instance
+            return ImmutableList.of(this);
         } else {
-            // dividing into more than one part
-            final List<Money> parts = new ArrayList<>();
-            // defining index of happy man who may receive larger part
+            final var newAmount = getAmount().divide(new BigDecimal(value), HALF_EVEN);
+            final var evenMoneyPart = (getTaxPercent() != null ? new Money(newAmount, getTaxPercent(), getCurrency()) : new Money(newAmount, getCurrency()));
+
+            // Index of the happy man who may receive the larger part.
             final int luckyIndex = random.nextInt(value);
-            // calculating amount of money for each
-            final BigDecimal newAmount = getAmount().divide(new BigDecimal(value), HALF_EVEN);
-            final Money newMonetaryAmount = (getTaxPercent() != null ? new Money(newAmount, getTaxPercent(), getCurrency()) : new Money(newAmount, getCurrency()));
-            for (int index = 0; index < value; index++) {
-                if (index != luckyIndex) {
-                    parts.add(newMonetaryAmount);
-                } else {
-                    final BigDecimal luckyAmount = getAmount().subtract(new BigDecimal(value - 1).multiply(newAmount));
-                    final Money luckyMonetaryAmount = (getTaxPercent() != null ? new Money(luckyAmount, getTaxPercent(), getCurrency()) : new Money(luckyAmount, getCurrency()));
-                    parts.add(luckyMonetaryAmount);
-                }
-            }
-            return unmodifiableList(parts);
+            final var luckyAmount = getAmount().subtract(new BigDecimal(value - 1).multiply(newAmount));
+            final var luckyMoneyPart = getTaxPercent() != null ? new Money(luckyAmount, getTaxPercent(), getCurrency()) : new Money(luckyAmount, getCurrency());
+
+            return IntStream.range(0, value)
+                    .mapToObj(i -> i == luckyIndex ? luckyMoneyPart : evenMoneyPart)
+                    .collect(toImmutableList());
         }
     }
 
-    /**
-     * Returns true if and only if currency and amount matches.
-     */
+    /// Returns true if and only if currency and amount match.
+    ///
     @Override
     public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof Money)) {
-            return false;
-        }
-
-        final Money monetaryAmount = (Money) o;
-
-        if (!currency.equals(monetaryAmount.currency)) {
-            return false;
-        }
-        return amount.compareTo(monetaryAmount.amount) == 0;
+        return this == o
+                || o instanceof Money that
+                && currency.equals(that.currency)
+                && amount.compareTo(that.amount) == 0;
     }
 
     @Override
@@ -320,37 +272,23 @@ public class Money implements Comparable<Money> {
         return currencyInstance.format(getAmount());
     }
 
-    /**
-     * If currencies match compares their amounts, otherwise throws {@link IllegalArgumentException}
-     */
+    /// Compares the amounts.
+    ///
     @Override
     public int compareTo(final Money monetaryAmount) {
-        checkCurrencies(monetaryAmount);
-
         return getAmount().compareTo(monetaryAmount.getAmount());
     }
 
-    /**
-     * Throws {@link IllegalArgumentException} if currencies doesn't match
-     *
-     * @param monetaryAmount
-     */
-    private void checkCurrencies(final Money monetaryAmount) {
-        // FIXME at this stage the platform is not ready to be so serious about currency missmatch
-        //	if (!getCurrency().equals(monetaryAmount.getCurrency())) {
-        //	    throw new IllegalArgumentException("Can only operate on monetary amounts of the same currency");
-        //	}
-    }
+    // TODO At this stage the platform is not ready to be so serious about currency missmatch.
+    // private void checkCurrencies(final Money monetaryAmount) {
+    //     if (!getCurrency().equals(monetaryAmount.getCurrency())) {
+    //         throw new IllegalArgumentException("Can only operate on monetary amounts of the same currency");
+    //     }
+    // }
 
-    /**
-     * Throws {@link IllegalArgumentException} if any of parameters is null
-     *
-     * @param value
-     * @param currency
-     */
     private BigDecimal checkParameters(final BigDecimal amount, final Currency currency) {
         if (currency == null) {
-            throw new IllegalArgumentException("Currency should not be null");
+            throw new InvalidArgumentException("Currency must not be null");
         }
 
         if (amount != null) {
@@ -360,31 +298,24 @@ public class Money implements Comparable<Money> {
         }
     }
 
-    /**
-     * In addition to {@link #checkParameters(BigDecimal, Currency)} validates the <code>taxPersent</code>, which should be between 1 and 100 inclusive.
-     *
-     * @param amount
-     * @param taxPercent
-     * @param currency
-     */
     private BigDecimal checkParameters(final BigDecimal amount, final int taxPercent, final Currency currency) {
         if (taxPercent < 1 || taxPercent > 100) {
-            throw new IllegalArgumentException(format("Tax percentage [%s] should not be outside of period [1,100].", taxPercent));
+            throw new InvalidArgumentException(format("Tax percentage [%s] must be within [1, 100].", taxPercent));
         }
         return checkParameters(amount, currency);
     }
 
     private BigDecimal checkParameters(final BigDecimal amount, final BigDecimal taxAmount, final Currency currency) {
         if (taxAmount == null) {
-            throw new IllegalArgumentException("Tax amount should not be null");
+            throw new IllegalArgumentException("Tax amount must not be null");
         }
         if (taxAmount.doubleValue() < 0) {
-            throw new IllegalArgumentException("Tax amount should not be negative");
+            throw new IllegalArgumentException("Tax amount must not be negative");
         }
 
         final BigDecimal updatedAmount = checkParameters(amount, currency);
         if (updatedAmount.compareTo(taxAmount) < 0) {
-            throw new IllegalArgumentException("Amount should not be less than its tax amount");
+            throw new IllegalArgumentException("Amount must not be less than its tax amount");
         }
 
         return updatedAmount;
@@ -402,37 +333,32 @@ public class Money implements Comparable<Money> {
         return taxPercent;
     }
 
-    /**
-     * Less than.
-     */
+    /// Less than.
+    ///
     public boolean lt(final Money amount) {
         return compareTo(amount) < 0;
     }
 
-    /**
-     * Less than or equal.
-     */
+    /// Less than or equal.
+    ///
     public boolean le(final Money amount) {
         return compareTo(amount) <= 0;
     }
 
-    /**
-     * Equal.
-     */
+    /// Equal.
+    ///
     public boolean eq(final Money amount) {
         return compareTo(amount) == 0;
     }
 
-    /**
-     * Greater than.
-     */
+    /// Greater than.
+    ///
     public boolean gt(final Money amount) {
         return compareTo(amount) > 0;
     }
 
-    /**
-     * Greater than or equal.
-     */
+    /// Greater than or equal.
+    ///
     public boolean ge(final Money amount) {
         return compareTo(amount) >= 0;
     }
