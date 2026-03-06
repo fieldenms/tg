@@ -1,20 +1,14 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(ITgVehicleFuelUsage.class)

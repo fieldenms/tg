@@ -1,23 +1,16 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IMoneyType;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Readonly;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.types.Money;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(TeVehicle.class)
 @CompanionObject(ITeAverageFuelUsage.class)
@@ -40,7 +33,7 @@ public class TeAverageFuelUsage extends AbstractEntity<TeVehicle> {
     private BigDecimal qty;
     
     @IsProperty
-    @MapTo
+    @PersistentType(userType = IMoneyType.class)
     @Title(value = "Title", desc = "Desc")
     private Money cost;
 
