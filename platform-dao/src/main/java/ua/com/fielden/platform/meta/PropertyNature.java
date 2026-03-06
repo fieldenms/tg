@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.meta;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.eql.meta.CalcPropInfo;
+import ua.com.fielden.platform.eql.meta.ICalculatedPropertyExpressionProvider;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 
 /**
@@ -76,15 +74,18 @@ public sealed interface PropertyNature {
     /**
      * Calculated nature is attributed to properties that are transient and have an associated expression that is used
      * to calculate the property's value on demand.
+     * <p>
+     * No data is associated with properties of this nature.
+     * {@link ICalculatedPropertyExpressionProvider} provides access to expressions of calculated properties.
      */
     final class Calculated implements Transient {
         private Calculated() {}
 
-        public static Data data(final ExpressionModel model, final CalculatedPropertyCategory category) {
-            return new Data(new CalcPropInfo(model, category));
-        }
+        public static final Calculated.Data NO_DATA = new Calculated.Data();
 
-        public record Data(CalcPropInfo expression) implements PropertyNature.Data<Calculated> {
+        public static final class Data implements PropertyNature.Data<Calculated> {
+            private Data() {}
+
             @Override
             public Calculated nature() {
                 return CALCULATED;

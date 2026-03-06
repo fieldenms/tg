@@ -171,11 +171,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
         return zip(stream(componentHibType.getPropertyNames()), stream(componentHibType.getPropertyTypes()), (subPropName, subHibType) -> {
             final var subProp = componentTypeMetadata.propertyOpt(subPropName)
                     .orElseThrow(() -> new DomainMetadataGenerationException(ERR_MISSING_PROPERTY.formatted(subPropName, componentTypeMetadata, componentHibType)));
-            return calculatedProp(naming.apply(prop.name(), subPropName),
-                                  subProp.type(),
-                                  subHibType,
-                                  prop.data())
-                    .build();
+            return calculatedProp(naming.apply(prop.name(), subPropName), subProp.type(), subHibType).build();
         }).toList();
     }
 
