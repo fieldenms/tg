@@ -12,7 +12,10 @@ public interface ICalculatedPropertyExpressionProvider {
 
     /// Returns the expression for the specified property if it is calculated.
     ///
-    /// @param property  Either a simple property name or a path to a sub-property of a union-typed property.
+    /// Parameter `property` can be one of:
+    /// * A simple property name.
+    /// * A path to a sub-property of a union-typed property (e.g., `location.workshop`).
+    /// * A path to a sub-property of a component-typed property (e.g., `price.amount`).
     ///
     Optional<CalcPropInfo> maybeExpression(Class<? extends AbstractEntity<?>> entityType, CharSequence property);
 
