@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.calculatedProp;
@@ -67,29 +68,23 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
             final EntityMetadata.Union em,
             final SubPropertyNaming naming)
     {
-        return ImmutableList.<PropertyMetadata>builder()
-                .addAll(generator.generateUnionImplicitCalcSubprops(em.javaType(), pm.name(), EntityMetadataBuilder.toBuilder(em), naming))
-                .addAll(domainMetadata.entityMetadataUtils().unionMembers(em).stream()
-                                .map(member -> combineUnionMember(pm, member, naming))
-                                .iterator())
-                .build();
-    }
-    // where
-    private PropertyMetadata combineUnionMember(
-            final PropertyMetadata parent,
-            final PropertyMetadata member,
-            final SubPropertyNaming naming)
-    {
-        // union members must be persistent
-        return member.asPersistent().map(persistentMember -> {
-            final var columnName = parent.asPersistent()
-                    .map(p -> generator.propColumnNameForUnion(p.data().column().name, persistentMember.data().column().name))
-                    .orElseGet(() -> persistentMember.data().column().name);
-            return persistentProp(naming.apply(parent.name(), member.name()), member.type(), member.hibType(),
-                                  PropertyNature.Persistent.data(generator.propColumn(columnName)))
-                    .with(UNION_MEMBER, true)
-                    .build();
-        }).orElse(member);
+        return em.properties()
+                .stream()
+                .map(subPm -> switch (subPm) {
+                    case PropertyMetadata.Persistent persistentMember -> {
+                        final var columnName = pm.asPersistent()
+                                .map(p -> generator.propColumnNameForUnion(p.data().column().name, persistentMember.data().column().name))
+                                .orElseGet(() -> persistentMember.data().column().name);
+                        yield persistentProp(naming.apply(pm.name(), subPm.name()), subPm.type(), subPm.hibType(),
+                                             PropertyNature.Persistent.data(generator.propColumn(columnName)))
+                                .with(UNION_MEMBER, true)
+                                .build();
+                    }
+                    default -> PropertyMetadataImpl.Builder.toBuilder(subPm)
+                            .name(naming.apply(pm.name(), subPm.name()))
+                            .build();
+                })
+                .collect(toImmutableList());
     }
 
     private List<PropertyMetadata> subPropertiesForComponent(

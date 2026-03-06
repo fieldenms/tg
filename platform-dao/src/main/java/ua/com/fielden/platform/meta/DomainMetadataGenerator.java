@@ -19,7 +19,6 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.eql.retrieval.EntityContainerEnhancer;
 import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
-import ua.com.fielden.platform.meta.PropertyMetadataUtils.SubPropertyNaming;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -30,7 +29,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -299,7 +297,7 @@ final class DomainMetadataGenerator {
         return switch (entityBuilder) {
             case EntityMetadataBuilder.Union u -> {
                 yield ImmutableList.<PropertyMetadata>builder()
-                        .addAll(generateUnionImplicitCalcSubprops(u.getJavaType(), entityBuilder, SubPropertyNaming.SIMPLE))
+                        .addAll(generateUnionImplicitCalcSubprops(u.getJavaType()))
                         // union members
                         .addAll(unionProperties(u.getJavaType()).stream()
                                         .map(field -> mkProp(field, u)).flatMap(Optional::stream)
@@ -655,26 +653,17 @@ final class DomainMetadataGenerator {
                                   : m.yield().val(null).as(f.getName()));
     }
 
-    List<PropertyMetadata> generateUnionImplicitCalcSubprops(
-            final Class<? extends AbstractUnionEntity> unionType,
-            @Nullable final String contextPropName,
-            final EntityMetadataBuilder<?, ?> entityBuilder,
-            final SubPropertyNaming naming)
-    {
+    private List<PropertyMetadata> generateUnionImplicitCalcSubprops(final Class<? extends AbstractUnionEntity> unionType) {
         final List<Field> unionMembers = unionProperties(unionType);
         if (unionMembers.isEmpty()) {
             throw new EntityDefinitionException(ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS.formatted(unionType.getTypeName()));
         }
 
-        final Function<String, String> makeName = contextPropName == null
-                ? Function.identity()
-                : subPropName -> naming.apply(contextPropName, subPropName);
-
         final List<String> unionMembersNames = unionMembers.stream().map(Field::getName).toList();
         final List<PropertyMetadata> props = new ArrayList<>();
-        props.add(calculatedProp(makeName.apply(KEY), mkPropertyTypeOrThrow(String.class), H_STRING).build());
-        props.add(calculatedProp(makeName.apply(ID), mkPropertyTypeOrThrow(Long.class), H_ENTITY).build());
-        props.add(calculatedProp(makeName.apply(DESC), mkPropertyTypeOrThrow(String.class), H_STRING).build());
+        props.add(calculatedProp(KEY, mkPropertyTypeOrThrow(String.class), H_STRING).build());
+        props.add(calculatedProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY).build());
+        props.add(calculatedProp(DESC, mkPropertyTypeOrThrow(String.class), H_STRING).build());
 
         final Class<?> firstUnionEntityPropType = unionMembers.getFirst().getType(); // e.g., WagonSlot in TgBogieLocation
         for (final String commonProp : commonProperties(unionType).stream().filter(n -> !DESC.equals(n) && !KEY.equals(n)).toList()) {
@@ -683,18 +672,10 @@ final class DomainMetadataGenerator {
             }
             final Field commonPropField = findFieldByName(firstUnionEntityPropType, commonProp);
             final PropertyTypeMetadata typeMetadata = mkPropertyTypeOrThrow(commonPropField);
-            props.add(calculatedProp(makeName.apply(commonProp), typeMetadata, hibTypeGenerator.generate(typeMetadata).use(commonPropField).get()).build());
+            props.add(calculatedProp(commonProp, typeMetadata, hibTypeGenerator.generate(typeMetadata).use(commonPropField).get()).build());
         }
 
         return unmodifiableList(props);
-    }
-
-    private List<PropertyMetadata> generateUnionImplicitCalcSubprops(
-            final Class<? extends AbstractUnionEntity> unionType,
-            final EntityMetadataBuilder<?, ?> entityBuilder,
-            final SubPropertyNaming naming)
-    {
-        return generateUnionImplicitCalcSubprops(unionType, null, entityBuilder, naming);
     }
 
     //:::::::::::::::::::::::::::::::::::
