@@ -754,7 +754,7 @@ const TgEntityMasterBehaviorImpl = {
                         entityType: continuationType.fullClassName(), currentState: 'EDIT', centreUuid: self.uuid
                     };
 
-                    // newly created continuation action should be enhanced to be able to enable parent master view after action completion (when isActionInProgress becomes false)
+                    // newly created continuation action should be enhanced to be able to enable parent master view after action completion (when restoreActionState is invoked)
                     const oldRestoreActionState = action.restoreActionState.bind(action);
                     const _self = this;
                     action.restoreActionState = (function () {
