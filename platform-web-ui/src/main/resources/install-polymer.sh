@@ -1,5 +1,6 @@
 rm -f package-lock.json
 npm install --no-bin-links
+rm -f node_modules/.package-lock.json
 node remove-symlinks.js node_modules
 cp -r lib node_modules/
 rollup --config
