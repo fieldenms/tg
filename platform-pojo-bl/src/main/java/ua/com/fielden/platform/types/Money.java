@@ -55,6 +55,13 @@ import static java.util.Locale.getDefault;
 ///
 public class Money implements Comparable<Money> {
 
+    public static final String
+            AMOUNT = "amount",
+            EX_TAX_AMOUNT = "exTaxAmount",
+            TAX_AMOUNT = "taxAmount",
+            TAX_PERCENT = "taxPercent",
+            CURRENCY = "currency";
+
     private static final Random random = new Random();
 
     /// This is a convenient unit element for addition.

@@ -25,6 +25,7 @@ import java.util.Set;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.types.Money.AMOUNT;
 import static ua.com.fielden.platform.utils.CollectionUtil.append;
 import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -73,7 +74,7 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
                 return append(originalPath, lastComponent.getSubitems().get(RichText.SEARCH_TEXT));
             }
             else if (lastComponent.javaType() == Money.class) {
-                return append(originalPath, lastComponent.getSubitems().get("amount"));
+                return append(originalPath, lastComponent.getSubitems().get(AMOUNT));
             }
         }
         return originalPath;

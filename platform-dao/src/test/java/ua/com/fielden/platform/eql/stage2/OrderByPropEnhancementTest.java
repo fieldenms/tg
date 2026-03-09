@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.order
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.sample.domain.UnionEntityDetails.Property.serial;
 import static ua.com.fielden.platform.sample.domain.UnionEntityDetails.Property.union;
+import static ua.com.fielden.platform.types.Money.AMOUNT;
 
 public class OrderByPropEnhancementTest extends EqlStage2TestCase {
 
@@ -71,7 +72,7 @@ public class OrderByPropEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(VEHICLE).model(), orderBy().prop("purchasePrice").desc().model());
         
         final Source2BasedOnPersistentType source = source(1, VEHICLE);
-        final Prop2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", "amount"));
+        final Prop2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", AMOUNT));
         
         assertEquals(orderBys(orderDesc(prop)), actQry.orderings);
     }
@@ -81,7 +82,7 @@ public class OrderByPropEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(VEHICLE).model(), orderBy().prop("purchasePrice.amount").desc().model());
         
         final Source2BasedOnPersistentType source = source(1, VEHICLE);
-        final Prop2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", "amount"));
+        final Prop2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", AMOUNT));
         
         assertEquals(orderBys(orderDesc(prop)), actQry.orderings);
     }

@@ -14,6 +14,9 @@ import java.sql.SQLException;
 import java.util.Currency;
 import java.util.Map;
 
+import static ua.com.fielden.platform.types.Money.AMOUNT;
+import static ua.com.fielden.platform.types.Money.CURRENCY;
+
 /**
  * Class that helps Hibernate to map {@link Money} class into database. <br>
  * Note : copied from auction.persistence.MonetaryAmountCompositeUserType class <br>
@@ -45,11 +48,11 @@ public class MoneyType extends AbstractCompositeUserType implements IMoneyType {
 
     @Override
     public Object instantiate(final Map<String, Object> arguments) {
-        final var amount = (BigDecimal) arguments.get("amount");
+        final var amount = (BigDecimal) arguments.get(AMOUNT);
         if (amount == null) {
             return null;
         }
-        final var currency = (Currency) arguments.get("currency");
+        final var currency = (Currency) arguments.get(CURRENCY);
         // Currency may be null for calculated properties, but should not be null for persistent properties.
         return currency == null ? new Money(amount) : new Money(amount, currency);
     }
@@ -70,7 +73,7 @@ public class MoneyType extends AbstractCompositeUserType implements IMoneyType {
 
     @Override
     public String[] getPropertyNames() {
-        return new String[] { "amount", "currency" };
+        return new String[] { AMOUNT, CURRENCY };
     }
 
     @Override

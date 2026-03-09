@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.persistence.types;
 
-import static java.util.Currency.getInstance;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.Type;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAmountType;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -9,12 +13,9 @@ import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.BigDecimalType;
-import org.hibernate.type.Type;
-
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAmountType;
+import static java.util.Currency.getInstance;
+import static ua.com.fielden.platform.types.Money.AMOUNT;
+import static ua.com.fielden.platform.types.Money.TAX_AMOUNT;
 
 /**
  * Hibernate type for storing a simplified tax sensitive instances of type {@link Money} not requiring currency to be persisted. This type expects that {@link Money} is mapped into
@@ -49,7 +50,7 @@ public class SimplyMoneyWithTaxAmountType extends AbstractCompositeUserType impl
         if (allArgumentsAreNull(arguments)) {
             return null;
         }
-        return new Money((BigDecimal) arguments.get("amount"), (BigDecimal) arguments.get("taxAmount"), getInstance(Locale.getDefault()));
+        return new Money((BigDecimal) arguments.get(AMOUNT), (BigDecimal) arguments.get(TAX_AMOUNT), getInstance(Locale.getDefault()));
     }
 
     @Override
@@ -66,7 +67,7 @@ public class SimplyMoneyWithTaxAmountType extends AbstractCompositeUserType impl
 
     @Override
     public String[] getPropertyNames() {
-        return new String[] { "amount", "taxAmount" };
+        return new String[] { AMOUNT, TAX_AMOUNT };
     }
 
     @Override

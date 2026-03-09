@@ -39,6 +39,7 @@ import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorresp
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.types.Money.AMOUNT;
 import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
@@ -165,14 +166,14 @@ public class ColumnDefinitionExtractor {
 
                                            // properties of type Money need special handling as the precision and scale for Money.amount can be overridden
                                            final int sPrecision;
-                                           if (Money.class.isAssignableFrom(sType) && "amount".equals(sField.getName()) && precision != IsProperty.DEFAULT_PRECISION) {
+                                           if (Money.class.isAssignableFrom(sType) && AMOUNT.equals(sField.getName()) && precision != IsProperty.DEFAULT_PRECISION) {
                                                sPrecision = precision;
                                            } else {
                                                sPrecision = sIsProperty.precision();
                                            }
 
                                            final int sScale;
-                                           if (Money.class.isAssignableFrom(sType) && "amount".equals(sField.getName()) && scale != IsProperty.DEFAULT_SCALE) {
+                                           if (Money.class.isAssignableFrom(sType) && AMOUNT.equals(sField.getName()) && scale != IsProperty.DEFAULT_SCALE) {
                                                sScale = scale;
                                            } else {
                                                sScale = sIsProperty.scale();
