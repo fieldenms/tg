@@ -28,7 +28,7 @@ public final class ExpandUnionTypedPropYield1 {
             if (prop2.getPath().getLast() instanceof QuerySourceItemForUnionType<?> item) {
                 final var yields = item.getProps().values().stream()
                         .filter(subItem -> isEntityType(subItem.javaType()) && !subItem.hasExpression())
-                        .map(subItem -> new Yield1(new Prop1("%s.%s".formatted(prop1.propPath(), subItem.name), false),
+                        .map(subItem -> new Yield1(new Prop1("%s.%s".formatted(prop1.propPath(), subItem.name), prop1.external()),
                                                    "%s.%s".formatted(yield.alias(), subItem.name),
                                                    false));
                 return Optional.of(yields);
