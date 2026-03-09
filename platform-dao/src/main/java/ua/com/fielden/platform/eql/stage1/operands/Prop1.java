@@ -47,16 +47,9 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
     /// An alternative to [#transform(TransformationContextFromStage1To2)] that does not apply [AppendIdToUnionTypedProp1].
     ///
     public Prop2 transformBase(final TransformationContextFromStage1To2 context) {
-        return context.sourcesForNestedQueries.stream()
-                .skip(external ? 1 : 0)
-                .map(item -> resolveProp(item, this))
-                .flatMap(Optional::stream)
-                .map(resolution -> {
-                    final var shouldBeTreatedAsId = propPath.endsWith("." + ID) && isEntityType(resolution.lastPart().javaType());
-                    return new Prop2(resolution.source, enhancePath(resolution.getPath()), shouldBeTreatedAsId);
-                })
-                .findFirst()
-                .orElseThrow(() -> new EqlStage1ProcessingException(ERR_CANNOT_RESOLVE_PROPERTY.formatted(propPath)));
+        final var resolution = resolveProp(this, context);
+        final var shouldBeTreatedAsId = propPath.endsWith("." + ID) && isEntityType(resolution.lastPart().javaType());
+        return new Prop2(resolution.source, enhancePath(resolution.getPath()), shouldBeTreatedAsId);
     }
 
     /**
@@ -99,7 +92,16 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
         return asIsResolution.isSuccessful() ? new PropResolution(source, asIsResolution.getResolved()) : null;
     }
 
-    private static Optional<PropResolution> resolveProp(final List<ISource2<? extends ISource3>> sources, final Prop1 prop) {
+    public static PropResolution resolveProp(final Prop1 prop, final TransformationContextFromStage1To2 context) {
+        return context.sourcesForNestedQueries.stream()
+                .skip(prop.external ? 1 : 0)
+                .map(item -> maybeResolveProp(prop, item))
+                .flatMap(Optional::stream)
+                .findFirst()
+                .orElseThrow(() -> new EqlStage1ProcessingException(ERR_CANNOT_RESOLVE_PROPERTY.formatted(prop.propPath)));
+    }
+
+    private static Optional<PropResolution> maybeResolveProp(final Prop1 prop, final List<ISource2<? extends ISource3>> sources) {
         final List<PropResolution> result = sources.stream()
                 .map(source -> resolvePropAgainstSource(source, prop))
                 .filter(Objects::nonNull)
