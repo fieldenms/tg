@@ -142,9 +142,20 @@ template.setAttribute('strip-whitespace', '');
                 subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
             }).bind(this));
             this._setCurrentLayout(layout);
+            filterLayout.bind(this)();
             this.fire('layout-finished', this);
         }
     };
+    const filterLayout = function () {
+        [...this.shadowRoot.children].forEach(childElement => {
+            if (this.flter && !this.filter(childElement)) {
+                childElement.setAttribute("hidden", '');
+            } else {
+                childElement.removeAttribute("hidden");
+            }
+        });
+    }
+
     const resetSubheaderComponents = function () {
         this._subheaders.forEach(function (subheader) {
             subheader.removeAllRelatedComponents();
@@ -335,6 +346,13 @@ template.setAttribute('strip-whitespace', '');
             context: {
                 type: Object
             },
+            // Function that takes an HTMLElement and checks whether it should be visible.
+            // Returns true if the element should be visible, otherwise false.
+            filter: {
+                type: Function,
+                value: null,
+                observer: "_filterChanged"
+            },
             _subheaders: {
                 type: Array
             },
@@ -441,6 +459,9 @@ template.setAttribute('strip-whitespace', '');
                 const propPath = changeRecord.path.substr(changeRecord.path.indexOf(".") + 1);
                 forEachPropValue(this._htmlElements, element => element.notifyPath(propPath, changeRecord.value));
             }
+        },
+        _filterChanged: function (newFilter, oldFilter) {
+            filterLayout.bind(this)();
         }
     });
 })();

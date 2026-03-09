@@ -369,7 +369,19 @@ const TgAbstractCriterionBehaviorImpl = {
         this._orNull = this.orNull;
         this._not = this.not;
         this._orGroup = this.orGroup;
-     },
+    },
+
+    _hasNoValue: function() {
+        const editors = [...this._dom().querySelectorAll("slot")].map(editorSlot => editorSlot.assignedNodes()[0]).filter(editor => !!editor && editor.convertFromString);
+        return !editors.some(editor => {
+            const val = editor.convertFromString(editor._editingValue);
+            if (Array.isArray(val)) {
+                return val.length > 0;
+            } else {
+                return val !== null && val !== '' && val !== true;
+            }
+        });
+    },
 
     /**
      * Returns 'true' if criterion has no meta values assigned, 'false' otherwise. Should be overridden to provide functionality in specific descendants.
