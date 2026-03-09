@@ -57,6 +57,8 @@ import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpre
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByNameOptionally;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
+import static ua.com.fielden.platform.types.Money.AMOUNT;
+import static ua.com.fielden.platform.types.Money.CURRENCY;
 import static ua.com.fielden.platform.utils.CollectionUtil.dropRight;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
@@ -146,12 +148,12 @@ record DefaultCalculatedPropertyExpressionProvider(
             return switch (subProperty) {
                 // If the Money-typed property is calculated, then so is `amount`.
                 // For `amount` use the Money-typed property's expression.
-                case "amount" -> componentTypedPropertyMd
+                case AMOUNT -> componentTypedPropertyMd
                         .asCalculated()
                         .map(_ -> maybeExpression(entityType, componentTypedProperty)
                                   .orElseThrow(missingExpression(entityType, componentTypedProperty)));
                 // If the Money-typed property is calculated, then so is `currency`.
-                case "currency" -> {
+                case CURRENCY -> {
                     if (!componentTypedPropertyMd.isCalculated()) {
                         yield Optional.empty();
                     }
@@ -169,29 +171,29 @@ record DefaultCalculatedPropertyExpressionProvider(
                                 if (operands.stream().anyMatch(o -> o instanceof SubQuery1)) {
                                     throw new EntityDefinitionException(format(
                                             ERR_CANNOT_INFER_FROM_SUB_QUERY,
-                                            entityType.getSimpleName(), componentTypedProperty, "currency", componentTypedProperty, "currency"));
+                                            entityType.getSimpleName(), componentTypedProperty, CURRENCY, componentTypedProperty, CURRENCY));
                                 }
                                 // Pick the first property that is either Money-typed or refers to Money.amount.
                                 // Since we do not support sub-queries here, this Prop1 should always belong to `entityType`.
                                 final var currencyModel = operands.stream()
                                         .mapMulti(typeFilter(Prop1.class))
                                         .map(prop1 -> {
-                                            final var normPath = pathEndsWith(entityType, prop1.propPath(), Money.class, "amount")
-                                                    ? substringBefore(prop1.propPath(), ".amount")
+                                            final var normPath = pathEndsWith(entityType, prop1.propPath(), Money.class, AMOUNT)
+                                                    ? substringBefore(prop1.propPath(), "." + AMOUNT)
                                                     : prop1.propPath();
                                             final var pm = domainMetadata.forProperty(entityType, normPath);
                                             // Checking for Money is not enough, as a custom Hibernate type without `currency` may be used.
                                             return pm.type().javaType().equals(Money.class)
                                                    && pm.hibType() instanceof ICompositeUserTypeInstantiate it
-                                                   && ArrayUtils.contains(it.getPropertyNames(), "currency")
-                                                    ? expr().prop(normPath + ".currency").model()
+                                                   && ArrayUtils.contains(it.getPropertyNames(), CURRENCY)
+                                                    ? expr().prop(normPath + "." + CURRENCY).model()
                                                     : null;
                                         })
                                         .filter(Objects::nonNull)
                                         .findFirst()
                                         .orElseThrow(() -> new EntityDefinitionException(format(
                                                 ERR_CANNOT_INFER,
-                                                entityType.getSimpleName(), componentTypedProperty, "currency", componentTypedProperty, "currency")));
+                                                entityType.getSimpleName(), componentTypedProperty, CURRENCY, componentTypedProperty, CURRENCY)));
                                 return Optional.of(new CalcPropInfo(currencyModel, EXPRESSION));
                             });
                 }
