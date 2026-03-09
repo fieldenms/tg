@@ -40,13 +40,11 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
 
     @Override
     public Prop2 transform(final TransformationContextFromStage1To2 context) {
-        final var prop2 = transformBase(context);
-        return AppendIdToUnionTypedProp1.INSTANCE.apply(this, prop2, context).orElse(prop2);
+        final var thisTr = AppendIdToUnionTypedProp1.INSTANCE.apply(this, context).orElse(this);
+        return thisTr.transform_(context);
     }
 
-    /// An alternative to [#transform(TransformationContextFromStage1To2)] that does not apply [AppendIdToUnionTypedProp1].
-    ///
-    public Prop2 transformBase(final TransformationContextFromStage1To2 context) {
+    private Prop2 transform_(final TransformationContextFromStage1To2 context) {
         final var resolution = resolveProp(this, context);
         final var shouldBeTreatedAsId = propPath.endsWith("." + ID) && isEntityType(resolution.lastPart().javaType());
         return new Prop2(resolution.source, enhancePath(resolution.getPath()), shouldBeTreatedAsId);
