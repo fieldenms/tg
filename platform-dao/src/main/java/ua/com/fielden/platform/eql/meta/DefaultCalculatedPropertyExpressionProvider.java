@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
-import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
@@ -34,7 +33,6 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.ArrayUtils;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.lang.reflect.Field;
@@ -184,8 +182,7 @@ record DefaultCalculatedPropertyExpressionProvider(
                                             final var pm = domainMetadata.forProperty(entityType, normPath);
                                             // Checking for Money is not enough, as a custom Hibernate type without `currency` may be used.
                                             return pm.type().javaType().equals(Money.class)
-                                                   && pm.hibType() instanceof ICompositeUserTypeInstantiate it
-                                                   && ArrayUtils.contains(it.getPropertyNames(), CURRENCY)
+                                                   && domainMetadata.propertyMetadataUtils().hasSubProperty(pm, CURRENCY)
                                                     ? expr().prop(normPath + "." + CURRENCY).model()
                                                     : null;
                                         })
