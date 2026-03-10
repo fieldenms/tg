@@ -1035,6 +1035,7 @@ const TgEntityCentreBehaviorImpl = {
                     slf._actionInProgress = false;
                 }, function (error) {
                     slf._actionInProgress = false;
+                    throw error;
                 }
             );
         }.bind(self);
@@ -1113,6 +1114,7 @@ const TgEntityCentreBehaviorImpl = {
                     self._actionInProgress = false;
                 }, function (error) {
                     self._actionInProgress = false;
+                    throw error;
                 });
         }).bind(self);
 
