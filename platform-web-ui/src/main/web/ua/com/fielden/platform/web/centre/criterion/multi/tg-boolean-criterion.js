@@ -40,14 +40,6 @@ Polymer({
         this.orGroupOpened = true;
     },
 
-    _hasNoValue: function() {
-        const everyEditorEquals = (editors, val) => {
-            return editors.every(editor => editor.convertFromString(editor._editingValue) === val);
-        };
-        const editors = [...this._dom().querySelectorAll("slot")].map(editorSlot => editorSlot.assignedNodes()[0]).filter(editor => !!editor);
-        return everyEditorEquals(editors, true) || everyEditorEquals(editors, false);
-    },
-
     _dom: function () {
         return this.$.dom;
     }

@@ -191,6 +191,13 @@ const TgAbstractCriterionBehaviorImpl = {
     },
 
     /**
+     * Returns a value indicating whether this criterion is empty and has no meta values (mnemonics).
+     */
+    isEmptyAndWithoutMetaValues: function () {
+        return this._hasNoValue() && this._hasNoMetaValues(this.orNull, this.not, this.orGroup, this.exclusive, this.exclusive2, this.datePrefix, this.dateMnemonic, this.andBefore);
+    },
+
+    /**
      * Creates dynamically the 'dom-bind' template, which hold the dialog with all meta value editors.
      *
      * Uses the method '_createMetaValueEditors' (which can be overridden in descendants) to insert specific meta-value editors inside the dialog.
@@ -371,16 +378,39 @@ const TgAbstractCriterionBehaviorImpl = {
         this._orGroup = this.orGroup;
     },
 
+    /**
+     * Extracts editors from the criterion and evaluates their values.
+     * Returns `true` if the criterion has no effective value; otherwise returns `false`.
+     *
+     * For a single boolean editor, its checked state is treated as an empty value.
+     * If a boolean criterion has two editors, its value is treated as empty
+     * when both editors are either checked or unchecked.
+     *
+     * @returns {boolean} Indicates whether this criterion has no value.
+     */
     _hasNoValue: function() {
-        const editors = [...this._dom().querySelectorAll("slot")].map(editorSlot => editorSlot.assignedNodes()[0]).filter(editor => !!editor && editor.convertFromString);
-        return !editors.some(editor => {
-            const val = editor.convertFromString(editor._editingValue);
-            if (Array.isArray(val)) {
-                return val.length > 0;
-            } else {
-                return val !== null && val !== '' && val !== true;
+        const everyEditorEquals = (editorValues, val) => {
+            return editorValues.every(editorValue => editorValue === val);
+        };
+        const editorValues = [...this._dom().querySelectorAll("slot")]
+                        .map(editorSlot => editorSlot.assignedNodes()[0])
+                        .filter(editor => !!editor && editor.convertFromString)
+                        .map(editor => editor.convertFromString(editor._editingValue));
+        if (editorValues.length === 1) {// Single-editor criterion
+            const val = editorValues[0];
+            if (Array.isArray(val)) {// Single multi-valued entity editor
+                return val.length === 0;
+            } else {// Single entity, string, number or boolean editor
+                return val === null || val === '' || val === true;
             }
-        });
+        } else if (editorValues.lenght > 1) { // Range-type or multi-valued criterion
+            if (typeof editorValues[0] === 'boolean') { // Multi-valued boolean criterion
+                return everyEditorEquals(editorValues, true) || everyEditorEquals(editorValues, false)
+            } else { // Range type criterion (e.g., number)
+                return everyEditorEquals(editorValues, null);
+            }
+        }
+        return true; // Criterion has no editors, which is most likely an erroneous situation.
     },
 
     /**
