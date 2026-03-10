@@ -403,7 +403,7 @@ const TgAbstractCriterionBehaviorImpl = {
             } else {// Single entity, string, number or boolean editor
                 return val === null || val === '' || val === true;
             }
-        } else if (editorValues.lenght > 1) { // Range-type or multi-valued criterion
+        } else if (editorValues.length > 1) { // Range-type or multi-valued criterion
             if (typeof editorValues[0] === 'boolean') { // Multi-valued boolean criterion
                 return everyEditorEquals(editorValues, true) || everyEditorEquals(editorValues, false)
             } else { // Range type criterion (e.g., number)

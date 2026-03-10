@@ -4,6 +4,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+import '/resources/polymer/@polymer/iron-icons/image-icons.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
@@ -19,6 +20,13 @@ import '/resources/images/tg-document-related-icons.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 import { getKeyEventTarget } from '/resources/reflection/tg-polymer-utils.js';
+
+function filterSelectionCriteria (container) {
+    return [...container.querySelectorAll("slot")]
+            .map(criterion => criterion.assignedNodes()[0])
+            .filter(criterion => !!criterion)
+            .some(criterion => !criterion.isEmptyAndWithoutMetaValues());
+}
 
 const template = html`
     <style>
@@ -65,10 +73,11 @@ const template = html`
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Edit' long-desc='Edit title, description and dashboard settings...' icon='tg-document-related-icons:square-edit-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_3_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.3.attrs]]' pre-action='[[topLevelActions.3.preAction]]' post-action-success='[[topLevelActions.3.postActionSuccess]]' post-action-error='[[topLevelActions.3.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Delete configuration' long-desc='Delete current configuration' icon='tg-document-related-icons:delete-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigDeleteAction' element-name='tg-CentreConfigDeleteAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigDeleteAction-master_4_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.4.attrs]]' pre-action='[[topLevelActions.4.preAction]]' post-action-success='[[topLevelActions.4.postActionSuccess]]' post-action-error='[[topLevelActions.4.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Configure' long-desc='Configure running automatically...' icon='icons:settings' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigConfigureAction' element-name='tg-CentreConfigConfigureAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigConfigureAction-master_5_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.5.attrs]]' pre-action='[[topLevelActions.5.preAction]]' post-action-success='[[topLevelActions.5.postActionSuccess]]' post-action-error='[[topLevelActions.5.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' hidden="[[embedded]]" disabled='[[_configureButtonDisabled]]' style='[[_computeButtonStyle(_configureButtonDisabled)]]'></tg-ui-action>
+        <paper-icon-button id="filterAction" slot="standart-action" toggles icon="image:filter" tooltip-text="Toggle empty rows" on-active-changed="_setSelectionCriteriaFilter"></paper-icon-button>
         <paper-icon-button id="helpAction" slot="standart-action" style="color:#727272" icon="icons:help-outline" on-tg-long-tap="_longHelpTapHandler" on-tg-short-tap="_shortHelpTapHandler" tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link."></paper-icon-button>
     </tg-responsive-toolbar>
-    <tg-scrollable-component class="relative">
-        <slot name="custom-selection-criteria"></slot>
+    <tg-scrollable-component id="scrollable_container" class="relative">
+        <slot id="custom_selection_criteria" name="custom-selection-criteria"></slot>
     </tg-scrollable-component>
     <div class="selection-criteria-buttons layout horizontal justified wrap">
         <div class="layout horizontal button-group">
@@ -175,5 +184,14 @@ Polymer({
      */
     _computeButtonStyle: function (_buttonDisabled) {
         return _buttonDisabled ? 'cursor:initial' : '';
+    },
+
+    _setSelectionCriteriaFilter: function(e) {
+        const selectionCrit = this.$.custom_selection_criteria.assignedNodes({flatten: true})[0];
+        const critLayout = selectionCrit && selectionCrit.shadowRoot && selectionCrit.shadowRoot.querySelector('tg-flex-layout');
+        if (critLayout) {
+            critLayout.filter = e.detail.value ? filterSelectionCriteria : null;
+            this.$.scrollable_container.notifyResize();
+        }
     }
 });

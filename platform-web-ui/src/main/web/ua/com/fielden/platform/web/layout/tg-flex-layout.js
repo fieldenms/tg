@@ -148,7 +148,7 @@ template.setAttribute('strip-whitespace', '');
     };
     const filterLayout = function () {
         [...this.shadowRoot.children].forEach(childElement => {
-            if (this.flter && !this.filter(childElement)) {
+            if (this.filter && !this.filter(childElement)) {
                 childElement.setAttribute("hidden", '');
             } else {
                 childElement.removeAttribute("hidden");
