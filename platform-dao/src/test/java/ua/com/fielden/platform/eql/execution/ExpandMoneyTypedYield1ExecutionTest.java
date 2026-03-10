@@ -142,6 +142,48 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
         assertEquals(FUEL_USAGE_CAR_1_pricePerLitre.multiply(FUEL_USAGE_CAR_1_qty).getAmount(), fuelUsage.getPricePerLitre().getAmount());
     }
 
+    @Test
+    public void yield_money_typed_prop_with_amount_and_currency_into_a_money_typed_prop_with_amount() {
+        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
+        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgVehicle.class, "price").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT);
+
+        final var query = select(TgFuelUsage.class)
+                .where().prop("vehicle.key").eq().val(CAR_1)
+                .yield().prop("vehicle.id").as(ID)
+                .yield().prop("vehicle.key").as(KEY)
+                .yield().prop("pricePerLitre").as("price")
+                .modelAsEntity(TgVehicle.class);
+
+        final var vehicle = co(TgVehicle.class).getEntity(from(query).model());
+        assertNotNull(vehicle.getPrice());
+        assertEquals(FUEL_USAGE_CAR_1_pricePerLitre.getAmount(), vehicle.getPrice().getAmount());
+    }
+
+    @Test
+    public void yield_money_typed_prop_with_amount_into_a_money_typed_prop_with_amount_and_currency() {
+        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
+        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgVehicle.class, "price").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT);
+
+        final var query = select(TgVehicle.class)
+                .where().prop(KEY).eq().val(CAR_1)
+                .yield().model(select(TgVehicle.class).where().prop(ID).eq().extProp(ID).model()).as("vehicle")
+                .yield().now().as("date")
+                .yield().prop("price").as("pricePerLitre")
+                .modelAsEntity(TgFuelUsage.class);
+
+        final var fuelUsage = co(TgFuelUsage.class).getEntity(from(query).model());
+        assertNotNull(fuelUsage.getPricePerLitre());
+        assertEquals(CAR_1_price.getAmount(), fuelUsage.getPricePerLitre().getAmount());
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;

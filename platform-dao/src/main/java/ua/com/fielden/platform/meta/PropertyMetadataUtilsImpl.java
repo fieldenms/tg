@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.meta.PropertyMetadataImpl.Calculated;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
+import ua.com.fielden.platform.utils.ArrayUtils;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -49,6 +50,25 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
             case PropertyTypeMetadata.Component ct -> subPropertiesForComponent(pm, ct, naming);
             case PropertyTypeMetadata.Entity et -> subPropertiesForEntity(pm, et, naming);
             default -> ImmutableList.of();
+        };
+    }
+
+    @Override
+    public boolean hasSubProperty(final PropertyMetadata pm, final CharSequence subName) {
+        return switch (pm.type()) {
+            case PropertyTypeMetadata.Component _ -> {
+                if (pm.hibType() == null) {
+                    throw new DomainMetadataGenerationException(ERR_MISSING_HIBERNATE_TYPE.formatted(pm));
+                }
+                final var componentHibType = (ICompositeUserTypeInstantiate) pm.hibType();
+                yield ArrayUtils.contains(componentHibType.getPropertyNames(), subName);
+            }
+            case PropertyTypeMetadata.Entity et ->
+                    domainMetadata.forEntity(et.javaType())
+                            .asUnion()
+                            .filter(em -> em.hasProperty(subName.toString()))
+                            .isPresent();
+            default -> false;
         };
     }
 

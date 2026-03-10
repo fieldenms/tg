@@ -126,4 +126,45 @@ public class ExpandMoneyTypedYield1Test extends EqlStage2TestCase {
         assertEquals(qry(query2), qry(query1));
     }
 
+    @Test
+    public void yield_money_typed_prop_with_amount_and_currency_into_a_money_typed_prop_with_amount() {
+        assertThat(((ICompositeUserTypeInstantiate) metadata().forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
+        assertThat(((ICompositeUserTypeInstantiate) metadata().forProperty(TgVehicle.class, "price").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT);
+
+        final var query1 = select(TgFuelUsage.class)
+                .yield().prop("pricePerLitre").as("price")
+                .modelAsEntity(TgVehicle.class);
+
+        final var query2 = select(TgFuelUsage.class)
+                .yield().prop("pricePerLitre.amount").as("price.amount")
+                .modelAsEntity(TgVehicle.class);
+
+        assertEquals(qry(query2), qry(query1));
+    }
+
+    @Test
+    public void yield_money_typed_prop_with_amount_into_a_money_typed_prop_with_amount_and_currency() {
+        assertThat(((ICompositeUserTypeInstantiate) metadata().forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
+        assertThat(((ICompositeUserTypeInstantiate) metadata().forProperty(TgVehicle.class, "price").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT);
+
+        final var query1 = select(TgVehicle.class)
+                .yield().prop("price").as("pricePerLitre")
+                .modelAsEntity(TgFuelUsage.class);
+
+        final var query2 = select(TgVehicle.class)
+                .yield().prop("price.amount").as("pricePerLitre.amount")
+                .modelAsEntity(TgFuelUsage.class);
+
+        assertEquals(qry(query2), qry(query1));
+    }
+
+
 }
