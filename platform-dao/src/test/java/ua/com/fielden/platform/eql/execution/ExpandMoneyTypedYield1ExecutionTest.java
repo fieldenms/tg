@@ -11,7 +11,9 @@ import ua.com.fielden.platform.types.Money;
 import java.math.BigDecimal;
 import java.util.Currency;
 
+import static graphql.Assert.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -26,6 +28,7 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
     private static final String CAR_1 = "CAR1";
     private static final Money CAR_1_price = new Money("200");
     private static final Money FUEL_USAGE_CAR_1_pricePerLitre = new Money("1.25", Currency.getInstance("EUR"));
+    private static final BigDecimal FUEL_USAGE_CAR_1_qty = new BigDecimal("5");
 
     private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);
 
@@ -105,6 +108,40 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
                 .isEqualTo(FUEL_USAGE_CAR_1_pricePerLitre);
     }
 
+    @Test
+    public void alias_of_a_yield_of_expr_into_a_Money_typed_property_is_transformed_into_an_alias_for_amount_01() {
+        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgVehicle.class, "price").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT);
+
+        final var query = select(TgFuelUsage.class)
+                .where().prop("vehicle.key").eq().val(CAR_1)
+                .yield().prop("vehicle.id").as("id")
+                .yield().beginExpr().prop("pricePerLitre").mult().prop("qty").endExpr().as("price")
+                .modelAsEntity(TgVehicle.class);
+
+        final var vehicle = co(TgVehicle.class).getEntity(from(query).model());
+        assertNotNull(vehicle.getPrice());
+        assertEquals(FUEL_USAGE_CAR_1_pricePerLitre.multiply(FUEL_USAGE_CAR_1_qty).getAmount(), vehicle.getPrice().getAmount());
+    }
+
+    @Test
+    public void alias_of_a_yield_of_expr_into_a_Money_typed_property_is_transformed_into_an_alias_for_amount_02() {
+        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
+
+        final var query = select(TgFuelUsage.class)
+                .where().prop("vehicle.key").eq().val(CAR_1)
+                .yield().prop("id").as("id")
+                .yield().beginExpr().prop("pricePerLitre").mult().prop("qty").endExpr().as("pricePerLitre")
+                .modelAsEntity(TgFuelUsage.class);
+
+        final var fuelUsage = co(TgFuelUsage.class).getEntity(from(query).model());
+        assertNotNull(fuelUsage.getPricePerLitre());
+        assertEquals(FUEL_USAGE_CAR_1_pricePerLitre.multiply(FUEL_USAGE_CAR_1_qty).getAmount(), fuelUsage.getPricePerLitre().getAmount());
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
@@ -136,7 +173,7 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
                                       .setActive(true));
 
         final var fuelUsage = save(new_composite(TgFuelUsage.class, car1, date("2006-02-09 00:00:00"))
-                     .setQty(new BigDecimal("47.5"))
+                     .setQty(FUEL_USAGE_CAR_1_qty)
                      .setPricePerLitre(FUEL_USAGE_CAR_1_pricePerLitre)
                      .setFuelType(petrolFuelType));
 

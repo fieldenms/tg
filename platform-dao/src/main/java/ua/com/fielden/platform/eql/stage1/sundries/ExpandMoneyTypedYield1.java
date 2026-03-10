@@ -9,6 +9,8 @@ import ua.com.fielden.platform.types.Money;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static ua.com.fielden.platform.types.Money.AMOUNT;
+
 /// A transformation on individual yields [Yield1] whose destination is a [Money]-typed property.
 ///
 /// * If the yielded expression is a property whose type is [Money], the yield is transformed into a set of yields,
@@ -18,6 +20,13 @@ import java.util.stream.Stream;
 ///   =>
 ///   yield().prop("price.amount").as("price.amount")
 ///   yield().prop("price.currency").as("price.currency")
+///   ```
+///
+/// * If the yielded expression is NOT a property, the yield is transformed into an equivalent yield but with the
+///   destination of [Money#AMOUNT].
+///   ```
+///   yield().X.as("price")
+///   yield().X.as("price.amount")
 ///   ```
 ///
 public final class ExpandMoneyTypedYield1 {
@@ -34,13 +43,12 @@ public final class ExpandMoneyTypedYield1 {
             final TransformationContextFromStage1To2 context,
             final AbstractQuery1 query)
     {
-        if (yield.operand() instanceof Prop1 prop
-            && query.resultType != null
-            && yield.hasAlias()
-            && context.domainMetadata.forPropertyOpt(query.resultType, yield.alias())
-                    .filter(pm -> pm.type().javaType().equals(Money.class))
-                    .isPresent())
-        {
+        final var isMoneyTypedYield = query.resultType != null
+                                      && yield.hasAlias()
+                                      && context.domainMetadata.forPropertyOpt(query.resultType, yield.alias())
+                                              .filter(pm -> pm.type().javaType().equals(Money.class))
+                                              .isPresent();
+        if (isMoneyTypedYield && yield.operand() instanceof Prop1 prop) {
             final var resolution = Prop1.resolveProp(prop, context);
             if (resolution.getPath().getLast() instanceof QuerySourceItemForComponentType<?> item && item.javaType().equals(Money.class)) {
                 final var yields = item.getSubitems().values()
@@ -53,6 +61,9 @@ public final class ExpandMoneyTypedYield1 {
             else {
                 return Optional.empty();
             }
+        }
+        else if (isMoneyTypedYield) {
+            return Optional.of(Stream.of(new Yield1(yield.operand(), yield.alias() + "." + AMOUNT, yield.hasNonnullableHint())));
         }
         else {
             return Optional.empty();

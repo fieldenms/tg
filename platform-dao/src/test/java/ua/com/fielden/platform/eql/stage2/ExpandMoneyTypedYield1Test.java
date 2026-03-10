@@ -88,4 +88,42 @@ public class ExpandMoneyTypedYield1Test extends EqlStage2TestCase {
         assertEquals(qry(query2), qry(query1));
     }
 
+    @Test
+    public void alias_of_a_yield_of_expr_into_a_Money_typed_property_is_transformed_into_an_alias_for_amount_01() {
+        assertThat(((ICompositeUserTypeInstantiate) metadata().forProperty(TgVehicle.class, "price").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT);
+
+        final var query1 = select(TgFuelUsage.class)
+                .yield().prop("vehicle.id").as("id")
+                .yield().beginExpr().prop("pricePerLitre").mult().prop("qty").endExpr().as("price")
+                .modelAsEntity(TgVehicle.class);
+
+        final var query2 = select(TgFuelUsage.class)
+                .yield().prop("vehicle.id").as("id")
+                .yield().beginExpr().prop("pricePerLitre").mult().prop("qty").endExpr().as("price.amount")
+                .modelAsEntity(TgVehicle.class);
+
+        assertEquals(qry(query2), qry(query1));
+    }
+
+    @Test
+    public void alias_of_a_yield_of_expr_into_a_Money_typed_property_is_transformed_into_an_alias_for_amount_02() {
+        assertThat(((ICompositeUserTypeInstantiate) metadata().forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
+
+        final var query1 = select(TgFuelUsage.class)
+                .yield().prop("id").as("id")
+                .yield().beginExpr().prop("pricePerLitre").mult().prop("qty").endExpr().as("pricePerLitre")
+                .modelAsEntity(TgFuelUsage.class);
+
+        final var query2 = select(TgFuelUsage.class)
+                .yield().prop("id").as("id")
+                .yield().beginExpr().prop("pricePerLitre").mult().prop("qty").endExpr().as("pricePerLitre.amount")
+                .modelAsEntity(TgFuelUsage.class);
+
+        assertEquals(qry(query2), qry(query1));
+    }
+
 }
