@@ -982,13 +982,17 @@ can be lifted. Will not go across
 function liftTarget(range) {
     let parent = range.parent;
     let content = parent.content.cutByIndex(range.startIndex, range.endIndex);
-    for (let depth = range.depth;; --depth) {
+    for (let depth = range.depth, contentBefore = 0, contentAfter = 0;; --depth) {
         let node = range.$from.node(depth);
-        let index = range.$from.index(depth), endIndex = range.$to.indexAfter(depth);
+        let index = range.$from.index(depth) + contentBefore, endIndex = range.$to.indexAfter(depth) - contentAfter;
         if (depth < range.depth && node.canReplace(index, endIndex, content))
             return depth;
         if (depth == 0 || node.type.spec.isolating || !canCut(node, index, endIndex))
             break;
+        if (index)
+            contentBefore = 1;
+        if (endIndex < node.childCount)
+            contentAfter = 1;
     }
     return null;
 }
@@ -1609,7 +1613,7 @@ function replaceRange(tr, from, to, slice) {
     let $from = tr.doc.resolve(from), $to = tr.doc.resolve(to);
     if (fitsTrivially($from, $to, slice))
         return tr.step(new ReplaceStep(from, to, slice));
-    let targetDepths = coveredDepths($from, tr.doc.resolve(to));
+    let targetDepths = coveredDepths($from, $to);
     // Can't replace the whole document, so remove 0 if it's present
     if (targetDepths[targetDepths.length - 1] == 0)
         targetDepths.pop();
@@ -1910,6 +1914,27 @@ class Transform {
     */
     get docChanged() {
         return this.steps.length > 0;
+    }
+    /**
+    Return a single range, in post-transform document positions,
+    that covers all content changed by this transform. Returns null
+    if no replacements are made. Note that this will ignore changes
+    that add/remove marks without replacing the underlying content.
+    */
+    changedRange() {
+        let from = 1e9, to = -1e9;
+        for (let i = 0; i < this.mapping.maps.length; i++) {
+            let map = this.mapping.maps[i];
+            if (i) {
+                from = map.map(from, 1);
+                to = map.map(to, -1);
+            }
+            map.forEach((_f, _t, fromB, toB) => {
+                from = Math.min(from, fromB);
+                to = Math.max(to, toB);
+            });
+        }
+        return from == 1e9 ? null : { from, to };
     }
     /**
     @internal
