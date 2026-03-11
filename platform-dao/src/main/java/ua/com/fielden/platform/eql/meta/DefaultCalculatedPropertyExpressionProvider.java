@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -45,6 +46,7 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.IMPLICIT;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
@@ -77,6 +79,8 @@ record DefaultCalculatedPropertyExpressionProvider(
             ERR_EXPRESSION_NOT_DEFINED = "Expression is not defined for property [%s.%s].",
             ERR_UNSUPPORTED_CALCULATED_PROPERTY = "Unsupported calculated property: [%s.%s.%s].",
             ERR_UNSUPPORTED_TYPE_FOR_CALCULATED_PROPERTY = "Invalid calculated property [%s.%s]. Type [%s] is unsupported for calculated properties.";
+
+    private static final Logger LOGGER = getLogger();
 
     @Inject DefaultCalculatedPropertyExpressionProvider {}
 
@@ -191,6 +195,8 @@ record DefaultCalculatedPropertyExpressionProvider(
                                         .orElseThrow(() -> new EntityDefinitionException(format(
                                                 ERR_CANNOT_INFER,
                                                 entityType.getSimpleName(), componentTypedProperty, CURRENCY, componentTypedProperty, CURRENCY)));
+                                LOGGER.debug(() -> format("Inferred expression for [%s.%s.%s]: %s",
+                                                          entityType.getSimpleName(), componentTypedProperty, subProperty, currencyModel));
                                 return Optional.of(new CalcPropInfo(currencyModel, EXPRESSION));
                             });
                 }
