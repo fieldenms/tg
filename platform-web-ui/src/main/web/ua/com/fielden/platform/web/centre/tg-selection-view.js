@@ -22,10 +22,10 @@ import '/resources/egi/tg-responsive-toolbar.js';
 import { getKeyEventTarget } from '/resources/reflection/tg-polymer-utils.js';
 
 function filterSelectionCriteria (container) {
-    return [...container.querySelectorAll("slot")]
+    const criterions = [...container.querySelectorAll("slot")]
             .map(criterion => criterion.assignedNodes()[0])
-            .filter(criterion => !!criterion)
-            .some(criterion => !criterion.isEmptyAndWithoutMetaValues());
+            .filter(criterion => !!criterion);
+    return criterions.length === 0 || criterions.some(criterion => !criterion.isEmptyAndWithoutMetaValues());
 }
 
 const template = html`

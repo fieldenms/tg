@@ -16,7 +16,7 @@ const template = html`
         :host(.debug), :host(.debug) *, :host(.debug) ::slotted(*) {
             border: 1px dashed red !important;
         }
-        .hidden-with-subheader {
+        .hidden-with-subheader, .hidden-with-filter {
             display: none !important;
         }
     </style>
@@ -147,11 +147,14 @@ template.setAttribute('strip-whitespace', '');
         }
     };
     const filterLayout = function () {
-        [...this.shadowRoot.children].forEach(childElement => {
-            if (this.filter && !this.filter(childElement)) {
-                childElement.setAttribute("hidden", '');
+        [...this.shadowRoot.children].reverse().forEach(childElement => {
+            if (childElement.tagName === 'TG-SUBHEADER') {
+                const isVisible = childElement.relativeElements
+                            .filter(relativeElement => relativeElement.parentElement === null)
+                            .every(relativeElement => relativeElement.classList.contains("hidden-with-filter"));
+                this.toggleClass("hidden-with-filter", isVisible, childElement);
             } else {
-                childElement.removeAttribute("hidden");
+                this.toggleClass("hidden-with-filter", this.filter && !this.filter(childElement), childElement);
             }
         });
     }
