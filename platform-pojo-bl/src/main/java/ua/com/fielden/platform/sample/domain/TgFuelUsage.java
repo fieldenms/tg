@@ -73,6 +73,15 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
                     .model();
 
     @IsProperty
+    @Readonly
+    @Calculated
+    @PersistentType(userType = IMoneyType.class)
+    @Title(value = "Half Price per Litre")
+    private Money halfPricePerLitre;
+    // halfPricePerLitre.currency should be inferred.
+    protected static final ExpressionModel halfPricePerLitre_ = expr().prop("pricePerLitre").div().val(2).model();
+
+    @IsProperty
     @Required
     @MapTo
     @Title(value = "Fuel type", desc = "Fuel type")
@@ -135,4 +144,15 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     public Money getPricePerLitre() {
         return pricePerLitre;
     }
+
+    @Observable
+    protected TgFuelUsage setHalfPricePerLitre(final Money halfPricePerLitre) {
+        this.halfPricePerLitre = halfPricePerLitre;
+        return this;
+    }
+
+    public Money getHalfPricePerLitre() {
+        return halfPricePerLitre;
+    }
+
 }

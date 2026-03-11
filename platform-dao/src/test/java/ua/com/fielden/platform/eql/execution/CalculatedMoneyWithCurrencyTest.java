@@ -55,6 +55,34 @@ public class CalculatedMoneyWithCurrencyTest extends AbstractDaoTestCase {
                 .forEach(win -> assertEquals(win.getFirst().getPricePerLitre(), win.get(1).getPreviousPricePerLitre()));
     }
 
+    @Test
+    public void TgFuelUsage_halfPricePerLitre() {
+        final var car1 = EntityUtils.<TgVehicle>fetchEntityForPropOf("vehicle", co(TgFuelUsage.class), CAR_1).orElseThrow();
+        final var petrol = EntityUtils.<TgFuelType>fetchEntityForPropOf("fuelType", co(TgFuelUsage.class), P).orElseThrow();
+
+        save(new_composite(TgFuelUsage.class, car1, date("2019-02-09 00:00:00"))
+                     .setPricePerLitre(new Money("28", Currency.getInstance("UAH")))
+                     .setQty(new BigDecimal("35"))
+                     .setFuelType(petrol));
+        save(new_composite(TgFuelUsage.class, car1, date("2024-09-01 00:00:00"))
+                     .setPricePerLitre(new Money("2", Currency.getInstance("EUR")))
+                     .setQty(new BigDecimal("40"))
+                     .setFuelType(petrol));
+
+        final var entities = co(TgFuelUsage.class).getAllEntities(
+                from(select(TgFuelUsage.class).where()
+                             .prop("vehicle.key").eq().val(CAR_1)
+                             .orderBy().prop("date").asc()
+                             .model())
+                        .with(fetchKeyAndDescOnly(TgFuelUsage.class).with("pricePerLitre", "halfPricePerLitre"))
+                        .model());
+        assertThat(entities)
+                .allSatisfy(entity -> {
+                    assertEquals(entity.getPricePerLitre().divide(2).getAmount(), entity.getHalfPricePerLitre().getAmount());
+                    assertEquals(entity.getPricePerLitre().getCurrency(), entity.getHalfPricePerLitre().getCurrency());
+                });
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
