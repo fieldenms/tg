@@ -80,7 +80,7 @@ record DefaultCalculatedPropertyExpressionProvider(
             ERR_UNSUPPORTED_CALCULATED_PROPERTY = "Unsupported calculated property: [%s.%s.%s].",
             ERR_UNSUPPORTED_TYPE_FOR_CALCULATED_PROPERTY = "Invalid calculated property [%s.%s]. Type [%s] is unsupported for calculated properties.";
 
-    private static final Logger LOGGER = getLogger();
+    private static final Logger LOGGER = getLogger(ICalculatedPropertyExpressionProvider.class);
 
     @Inject DefaultCalculatedPropertyExpressionProvider {}
 
