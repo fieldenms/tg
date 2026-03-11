@@ -60,6 +60,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.Money.AMOUNT;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
@@ -1511,7 +1512,7 @@ public class EntityUtils {
             else {
                 // Let's explicitly expand money types property path with its single subproperty "amount".
                 // This will facilitate the usage of the keyPaths(..) method within KeyPropertyExtractor logic, which in its turn requires explicit "amount" to be specified.
-                final var enhancedPathToSubprop = propType.equals(Money.class) ? pathToSubprop + ".amount" : pathToSubprop;
+                final var enhancedPathToSubprop = propType.equals(Money.class) ? pathToSubprop + "." + AMOUNT : pathToSubprop;
                 result.add(enhancedPathToSubprop);
             }
         }
