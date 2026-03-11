@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.resources.webui;
+package ua.com.fielden.platform.web.utils;
 
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
