@@ -942,7 +942,7 @@ public class EntityUtils {
         final var components = Reflector.DOT_SPLITTER_PATTERN.split(path);
         for (final var component : components) {
             if (component.isEmpty()) {
-                throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+                throw new InvalidArgumentException("Invalid property path: [%s]".formatted(path));
             }
         }
         return components;
