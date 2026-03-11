@@ -3,12 +3,16 @@ package ua.com.fielden.platform.sample.domain;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyType;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Map;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -18,7 +22,12 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 @MapEntityTo
 @CompanionObject(ITgFuelUsage.class)
 public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
+
+    public static final Map<String, String> LOCATION_TO_CURRENCY = Map.of(
+            "Australia", "AUD",
+            "Ukraine", "UAH",
+            "Iceland", "ISK"
+    );
 
     @IsProperty
     @MapTo
@@ -33,6 +42,12 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     private Date date;
 
     @IsProperty
+    @MapTo
+    @AfterChange(GenericTgFuelUsagePricePerLitreCurrencyHandler.class)
+    @Title("Location")
+    private String location;
+
+    @IsProperty
     @Required
     @MapTo
     @Title(value = "Fuel Qty", desc = "Fuel Qty")
@@ -41,6 +56,9 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     @IsProperty(precision = 18, scale = 4)
     @MapTo
     @PersistentType(userType = IMoneyType.class)
+    @BeforeChange(@Handler(GenericTgFuelUsagePricePerLitreCurrencyHandler.class))
+    @AfterChange(GenericTgFuelUsagePricePerLitreCurrencyHandler.class)
+    @Title(value = "Price per Litre", desc = "Price per litre (currency determined by Location, if present, otherwise by locale).")
     private Money pricePerLitre;
 
     @IsProperty
@@ -153,6 +171,16 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
 
     public Money getHalfPricePerLitre() {
         return halfPricePerLitre;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    @Observable
+    public TgFuelUsage setLocation(final String location) {
+        this.location = location;
+        return this;
     }
 
 }
