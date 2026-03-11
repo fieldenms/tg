@@ -22,10 +22,15 @@ import java.lang.annotation.Target;
 ///
 /// 2. In a separate static field using EQL.
 ///    The static field's name must be equal to the property name with `_` appended.
-///    For some component-typed properties, extra expressions can be specified for specific components.
-///    The name of a static field for an extra expression must be formed by joining property names with `_` and appending `_` at the end
-///    (e.g., `price_currency_` for `price.currency`).
-///    Each component types should document whether it supports this functionality.
+///
+///    For component-typed properties, expressions are defined for individual components.
+///
+///    In some cases, the expression for a component can be inferred automatically and does not need to be declared explicitly.
+///    However, if the expression is declared explicitly, then the name of the corresponding static field must be formed
+///    by joining the property names with `_` and appending a trailing `_`.
+///    For example, `price_currency_` corresponds to `price.currency`.
+///
+///    Each component type should document whether it supports this mechanism.
 ///    ```
 ///    @IsProperty
 ///    @Calculated

@@ -48,9 +48,57 @@ import static java.util.Locale.getDefault;
 ///
 /// ### Use in calculated properties
 /// [Money] can be used as a type of a calculated property.
+///
 /// * The main expression will be associated with property [Money#amount].
+///
 /// * If [Money#currency] is enabled, an extra expression can be specified for it.
 ///
+///   This expression can also be inferred.
+///   The inference rule is this: the first `Money`-typed property that occurs in _tail position_.
+///   For convenience, this rule considers `x.amount` to be `Money`-typed if `x` has type `Money`.
+///
+///   To be in tail position, an operand must be _a part of the resulting value_ (optionally subject to conditional expressions).
+///
+///   ```
+///   // In tail position: prop("price")
+///   expr().prop("price").model()
+///
+///   // In tail position: prop("price"), val(5)
+///   expr().prop("price").mult().val(5).model()
+///
+///   // In tail position: prop("price")
+///   expr().sumOf().prop("price").model()
+///
+///   // In tail position: prop("price"), prop("prevPrice"), val(2), prop("purchasePrice"), val(1)
+///   expr()
+///   .caseWhen().prop("key")...
+///     .then().prop("price)
+///   .when()...
+///     .then().prop("prevPrice").div().val(2)
+///   .otherwise()
+///     .prop("purchasePrice").add().val(1)
+///   .model()
+///
+///   // In tail position: prop("prevPrice"), prop("price")
+///   expr().ifNull().prop("prevPrice").then().prop("price").model()
+///   ```
+///
+///   Inference does not apply in the following cases:
+///
+///   * The `Money` expression does not contain a matching property in tail position.
+///
+///     ```java
+///     expr().val(50).model()
+///     ```
+///
+///   * A sub-query in tail position.
+///
+///     ```java
+///     expr()
+///     .select(...) ... modelAsPrimitive()
+///     .model()
+///     ```
+/// ---
 /// For more details on calculated properties refer to [Calculated].
 ///
 public class Money implements Comparable<Money> {
