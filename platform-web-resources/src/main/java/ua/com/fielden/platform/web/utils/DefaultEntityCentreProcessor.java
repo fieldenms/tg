@@ -58,6 +58,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
     public static final String ERR_CONFIG_MENU_ITEM_TYPE_CANT_BE_FOUND = ERR_EXECUTION_FAILED_PREFIX + "[%s] config's menu item type [%s] can not be found.";
     public static final String ERR_LINK_CONFIG_IS_NOT_AVAILABLE_FOR_RUNNING = ERR_EXECUTION_FAILED_PREFIX + "[%s] link config ([%s]) is not available for API running.";
     public static final String ERR_DEFAULT_CONFIG_WITH_UUID_SHOULD_NOT_EXIST = ERR_EXECUTION_FAILED_PREFIX + "[%s] configuration with blank name [%s] shouldn't exist (default configuration should never have UUID).";
+    public static final String ERR_CONFIG_COULD_NOT_BE_EXECUTED = "Entity Centre configuration with [%s] UUID could not be executed.";
 
     private static final Function<String, Function<DeviceProfile, String>> TITLE_PREFIX_INCL_DEFAULT =
         surrogateName -> device -> PREFIX_OF.apply(surrogateName).apply(device).replace("[%", "%");
@@ -236,7 +237,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
             resultList.forEach(entity -> list.add((T) entity));
             return right(list);
         } catch (final Exception exception) {
-            return left(failure(new EntityCentreExecutionException("Configuration with [%s] UUID could not be executed.".formatted(configUuid), exception)));
+            return left(failure(new EntityCentreExecutionException(ERR_CONFIG_COULD_NOT_BE_EXECUTED.formatted(configUuid), exception)));
         } finally {
             // Return original user back to user provider.
             userProvider.setUser(currentUser);
@@ -247,6 +248,16 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
     public Either<Result, Boolean> resultExists(final String configUuid) {
         return entityCentreResult(configUuid, of(1))
             .map(result -> !result.isEmpty());
+    }
+
+    @Override
+    public Either<Result, ConfigSettings> validate(String configUuid) {
+        try {
+            // Find out the settings for configuration. Stop if the settings can not be determined or inapplicable.
+            return determineConfigurationSettings(configUuid, companionFinder);
+        } catch (final Exception exception) {
+            return left(failure(new EntityCentreExecutionException(ERR_CONFIG_COULD_NOT_BE_EXECUTED.formatted(configUuid), exception)));
+        }
     }
 
 }
