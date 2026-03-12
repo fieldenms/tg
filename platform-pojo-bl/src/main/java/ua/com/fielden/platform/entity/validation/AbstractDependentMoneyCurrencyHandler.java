@@ -24,10 +24,12 @@ import static ua.com.fielden.platform.error.Result.successful;
 /// ```
 /// class PurchaseOrder {
 ///     @IsProperty
+///     @Dependent("cost")
 ///     @AfterChange(GenericPurchaseOrderCostCurrencyHandler.class)
 ///     String location;
 ///
 ///     @IsProperty
+///     @Dependent("cost")
 ///     @AfterChange(GenericPurchaseOrderCostCurrencyHandler.class)
 ///     boolean international;
 ///
@@ -65,6 +67,9 @@ import static ua.com.fielden.platform.error.Result.successful;
 /// It is possible to subclass `GenericPurchaseOrderCostCurrencyHandler` to specialise it for a particular property,
 /// either as a definer or a validator.
 /// The subclass must then specify the property type for type parameter `<T>`.
+///
+/// In addition to declaring definers and validators, it is necessary to annotate properties that determine the currency
+/// with `@Dependent(x)`, where `x` is the dependent [Money]-typed property.
 ///
 /// @param <E>  type of the entity that contains the property associated with this handler
 /// @param <T>  type of the property associated with this handler.
@@ -133,16 +138,12 @@ public abstract class AbstractDependentMoneyCurrencyHandler<E extends AbstractEn
         if (!entity.isInitialising()) {
             final var mpDependentMoney = entity.<Money>getProperty(dependentMoneyProp);
             final var money = !mpDependentMoney.isValid() ? mpDependentMoney.getLastInvalidValue() : mpDependentMoney.getValue();
-
             if (money != null) {
-                final var result = mpDependentMoney.revalidate(false);
-                if (result.isSuccessful()) {
-                    final var newMoney = switch (currencyFrom(entity)) {
-                        case Left _ -> money;
-                        case Right(var currency) -> new Money(money.getAmount(), currency);
-                    };
-                    mpDependentMoney.setValue(newMoney);
-                }
+                final var newMoney = switch (currencyFrom(entity)) {
+                    case Left _ -> money;
+                    case Right(var currency) -> new Money(money.getAmount(), currency);
+                };
+                mpDependentMoney.setValue(newMoney);
             }
         }
     }

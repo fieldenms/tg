@@ -45,6 +45,7 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     @MapTo
     @AfterChange(GenericTgFuelUsagePricePerLitreCurrencyHandler.class)
+    @Dependent("pricePerLitre")
     @Title("Location")
     private String location;
 
