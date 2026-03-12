@@ -9,7 +9,7 @@ import ua.com.fielden.platform.meta.Assertions.SubPropertiesA;
 import ua.com.fielden.platform.meta.PropertyMetadataUtils.SubPropertyNaming;
 import ua.com.fielden.platform.meta.test_entities.Entity_VariousMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappingsProvider;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
@@ -25,7 +25,7 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 public class PropertyMetadataUtilsTest {
 
     private static final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
-    private static final IDomainMetadata domainMetadata = new DomainMetadataBuilder(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), List.of(), dbVersionProvider).build();
+    private static final IDomainMetadata domainMetadata = new DomainMetadataBuilder(new PlatformHibernateTypeMappingsProvider(dbVersionProvider).get(), List.of(), dbVersionProvider).build();
     private static final PropertyMetadataUtils pmUtils = domainMetadata.propertyMetadataUtils();
 
     @Test

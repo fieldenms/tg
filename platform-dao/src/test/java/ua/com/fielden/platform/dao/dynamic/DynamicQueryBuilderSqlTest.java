@@ -25,10 +25,9 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
 import ua.com.fielden.platform.eql.meta.EqlTables;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.DomainMetadataUtils;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappingsProvider;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.ISecurityToken;
@@ -100,7 +99,7 @@ public class DynamicQueryBuilderSqlTest extends AbstractDaoTestCase {
 
         final var dbVersionProvider = constantDbVersion(DbVersion.H2);
         final var domainMetadata = new DomainMetadataBuilder(
-                new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), domainTypes, dbVersionProvider)
+                new PlatformHibernateTypeMappingsProvider(dbVersionProvider).get(), domainTypes, dbVersionProvider)
                 .build();
         final var domainMetadataUtils = new DomainMetadataUtils(appDomain, domainMetadata);
         try {

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.persistence.types;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.ImplementedBy;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
@@ -24,12 +25,12 @@ import java.util.Optional;
  * <p>
  * Applications can customise platform mappings like so:
  * {@snippet :
- * builder(PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS)
+ * builder(PlatformHibernateTypeMappingsProvider.PLATFORM_HIBERNATE_TYPE_MAPPINGS)
  *      .put(Money.class, MoneyWithTaxAmountUserType.class)
  *      .build();
- * }
+ *}
  *
- * @see PlatformHibernateTypeMappings
+ * @see PlatformHibernateTypeMappingsProvider
  */
 public interface HibernateTypeMappings {
 
@@ -55,6 +56,11 @@ public interface HibernateTypeMappings {
 
     static HibernateTypeMappingsBuilder builder(HibernateTypeMappings mappings) {
         return new HibernateTypeMappingsBuilder(mappings);
+    }
+
+    @ImplementedBy(PlatformHibernateTypeMappingsProvider.class)
+    interface Provider {
+        HibernateTypeMappings get();
     }
 
 }
