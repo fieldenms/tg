@@ -117,7 +117,11 @@ public abstract class AbstractDependentMoneyCurrencyHandler<E extends AbstractEn
         if (!entity.isInitialising() && value != null) {
             switch (currencyFrom(entity)) {
                 case Left _ -> {}
-                case Right(var currency) -> property.setValue(new Money(value.getAmount(), currency));
+                case Right(var currency) -> {
+                    // This method acts as a self-reassigning definer, therefore enforcement must be avoided to prevent non-termination.
+                    final var enforce = false;
+                    property.setValue(new Money(value.getAmount(), currency), enforce);
+                }
             }
         }
     }
