@@ -34,7 +34,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
-import static ua.com.fielden.platform.web.utils.DefaultEntityCentreProcessor.*;
+import static ua.com.fielden.platform.web.utils.EntityCentreProcessor.*;
 
 /// Tests for {@link EntityCentreProcessor}.
 ///

@@ -80,6 +80,7 @@ import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPL
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.RunActions.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.CHANGED;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.NONE;
@@ -91,10 +92,7 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
 ///
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
     private static final Logger logger = LogManager.getLogger(CentreResourceUtils.class);
-    public static final String CONFIG_DOES_NOT_EXIST = "Configuration does not exist.";
-    private static final String SAVE_MSG = "Please save and try again.";
     public static final String SAVE_OWN_COPY_MSG = "Only sharing of your own configurations is supported. Please save as your copy and try again.";
-    private static final String DUPLICATE_SAVE_MSG = "Please duplicate, save and try again.";
 
     /// The key for customObject's value containing save-as name.
     public static final String SAVE_AS_NAME = "saveAsName";

@@ -52,13 +52,6 @@ import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
 /// Default [EntityCentreProcessor] implementation, that uses [IWebUiConfig] Entity Centres registry and persistent storage.
 ///
 public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
-    private static final String ERR_EXECUTION_FAILED_PREFIX = "Entity Centre configuration execution failed. ";
-    public static final String ERR_CONFIG_UUID_IS_BLANK = ERR_EXECUTION_FAILED_PREFIX + "Config UUID [%s] is blank.";
-    public static final String ERR_CONFIG_DOES_NOT_EXIST = ERR_EXECUTION_FAILED_PREFIX + "Config with [%s] UUID does not exist.";
-    public static final String ERR_CONFIG_MENU_ITEM_TYPE_CANT_BE_FOUND = ERR_EXECUTION_FAILED_PREFIX + "[%s] config's menu item type [%s] can not be found.";
-    public static final String ERR_LINK_CONFIG_IS_NOT_AVAILABLE_FOR_RUNNING = ERR_EXECUTION_FAILED_PREFIX + "[%s] link config ([%s]) is not available for API running.";
-    public static final String ERR_DEFAULT_CONFIG_WITH_UUID_SHOULD_NOT_EXIST = ERR_EXECUTION_FAILED_PREFIX + "[%s] configuration with blank name [%s] shouldn't exist (default configuration should never have UUID).";
-    public static final String ERR_CONFIG_COULD_NOT_BE_EXECUTED = "Entity Centre configuration with [%s] UUID could not be executed.";
 
     private static final Function<String, Function<DeviceProfile, String>> TITLE_PREFIX_INCL_DEFAULT =
         surrogateName -> device -> PREFIX_OF.apply(surrogateName).apply(device).replace("[%", "%");

@@ -27,6 +27,13 @@ import java.util.function.Function;
 /// - cover operations for embedded Entity Centres with some master context (see [IQueryEnhancer]).
 ///
 public interface EntityCentreProcessor {
+    String ERR_EXECUTION_FAILED_PREFIX = "Entity Centre configuration execution failed. ";
+    String ERR_DEFAULT_CONFIG_WITH_UUID_SHOULD_NOT_EXIST = ERR_EXECUTION_FAILED_PREFIX + "[%s] configuration with blank name [%s] shouldn't exist (default configuration should never have UUID).";
+    String ERR_LINK_CONFIG_IS_NOT_AVAILABLE_FOR_RUNNING = ERR_EXECUTION_FAILED_PREFIX + "[%s] link config ([%s]) is not available for API running.";
+    String ERR_CONFIG_MENU_ITEM_TYPE_CANT_BE_FOUND = ERR_EXECUTION_FAILED_PREFIX + "[%s] config's menu item type [%s] can not be found.";
+    String ERR_CONFIG_DOES_NOT_EXIST = ERR_EXECUTION_FAILED_PREFIX + "Config with [%s] UUID does not exist.";
+    String ERR_CONFIG_UUID_IS_BLANK = ERR_EXECUTION_FAILED_PREFIX + "Config UUID [%s] is blank.";
+    String ERR_CONFIG_COULD_NOT_BE_EXECUTED = "Entity Centre configuration with [%s] UUID could not be executed.";
 
     /// Executes named Entity Centre configuration, defined by UUID, similarly as the owner may have run it through Web UI.
     /// Takes into account all unsaved changes in that configuration.
