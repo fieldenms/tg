@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
@@ -172,12 +173,17 @@ public class CentreUpdater {
             return ent.getKey().toString();
         }
     }, entity);
-    /**
-     * Function to get title of surrogate configuration from surrogate name, save-as name and device.
-     */
+
+    /// Function to get title of surrogate configuration from surrogate name, save-as name and device.
+    ///
     public static final Function<String, Function<Optional<String>, Function<DeviceProfile, String>>> NAME_OF = surrogateName -> saveAs -> device -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
-    
-    /** Protected default constructor to prevent instantiation. */
+
+    /// Function to get query prefix for title of surrogate configuration from surrogate name and device.
+    ///
+    public static final Function<String, Function<DeviceProfile, String>> PREFIX_OF = surrogateName -> device -> deviceSpecific(surrogateName, device) + "[%";
+
+    /// Protected default constructor to prevent instantiation.
+    ///
     protected CentreUpdater() {
     }
     
@@ -780,7 +786,7 @@ public class CentreUpdater {
     
     /**
      * Receives actual title from surrogate name persisted inside {@link EntityCentreConfig#getTitle()}.
-     * 
+     *
      * @param title
      * @param surrogateNamePrefix
      * @return
@@ -789,51 +795,82 @@ public class CentreUpdater {
         final String surrogateWithSuffix = title.replaceFirst(surrogateNamePrefix, "");
         return surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]"));
     }
-    
-    /**
-     * Creates a function that returns a query to find centre configurations persisted.
-     * <p>
-     * Looks only for named / link configurations, default configurations are avoided.
-     * 
-     * @param miType
-     * @param device -- the device for which centre configurations are looked for
-     * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
-     * @return
-     */
-    static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
-        return select(EntityCentreConfig.class).where()
-            .prop("title").like().val(deviceSpecific(surrogateName, device) + "[%")
-            .and().prop("title").notLike().val(deviceSpecific(surrogateName, opposite(device)) + "[%")
-            .and().prop("menuItem.key").eq().val(miType.getName());
+
+    /// Creates composable centre configuration query for `device` and `surrogateName`.
+    ///
+    /// @param device        the device for which centre configurations are looked for
+    /// @param surrogateName surrogate name of the centre (fresh, previouslyRun etc.)
+    ///
+    private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final DeviceProfile device, final String surrogateName) {
+        return select(EntityCentreConfig.class)
+            .where().prop("title").like().val(PREFIX_OF.apply(surrogateName).apply(device))
+            .and().prop("title").notLike().val(PREFIX_OF.apply(surrogateName).apply(opposite(device)));
     }
-    
-    /**
-     * Creates a function that returns a query to find centre configurations persisted for <code>user</code>.
-     * <p>
-     * Looks only for named / link configurations, default configurations are avoided.
-     * 
-     * @param user
-     * @param miType
-     * @param device -- the device for which centre configurations are looked for
-     * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
-     * @return
-     */
+
+    /// Creates composable centre configuration query for `uuid`, `device` and `surrogateName`.
+    ///
+    /// @param device        the device for which centre configurations are looked for
+    /// @param surrogateName surrogate name of the centre (fresh, previouslyRun etc.)
+    ///
+    private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final DeviceProfile device, final String surrogateName) {
+        return centreConfigQueryFor(device, surrogateName)
+            .and().condition(centreConfigCondFor(uuid));
+    }
+
+    /// Creates composable centre configuration query for `uuid`, `miType`, `device` and `surrogateName`.
+    ///
+    /// @param device        the device for which centre configurations are looked for
+    /// @param surrogateName surrogate name of the centre (fresh, previouslyRun etc.)
+    ///
+    static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+        return centreConfigQueryFor(uuid, device, surrogateName)
+            .and().condition(centreConfigCondFor(miType));
+    }
+
+    /// Creates composable centre configuration condition for `uuid`.
+    ///
+    public static ConditionModel centreConfigCondFor(final String uuid) {
+        return cond().prop("configUuid").eq().val(uuid).model();
+    }
+
+    /// Creates a function that returns a query to find centre persisted configurations.
+    ///
+    /// Looks only for named / link configurations, default configurations are skipped.
+    ///
+    /// @param device -- the device for which centre configurations are looked for
+    /// @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
+    ///
+    static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+        return centreConfigQueryFor(device, surrogateName)
+            .and().condition(centreConfigCondFor(miType));
+    }
+
+    /// Creates composable centre configuration condition for `miType`.
+    ///
+    private static ConditionModel centreConfigCondFor(Class<? extends MiWithConfigurationSupport<?>> miType) {
+        return cond().prop("menuItem.key").eq().val(miType.getName()).model();
+    }
+
+    /// Creates a function that returns a query to find persisted centre configurations for `user`.
+    ///
+    /// Looks only for named / link configurations, default configurations are skipped.
+    ///
+    /// @param device -- the device for which centre configurations are looked for
+    /// @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
+    ///
     static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
         return centreConfigQueryFor(miType, device, surrogateName)
-            .and().prop("owner").eq().val(user);
+            .and().condition(centreConfigCondFor(user));
+    }
+
+    /// Creates composable centre configuration condition for `owner`.
+    ///
+    static ConditionModel centreConfigCondFor(final User owner) {
+        return cond().prop("owner").eq().val(owner).model();
     }
     
-    /**
-     * Loads centre through the following chain: 'default centre' + 'differences' := 'centre'.
-     *
-     * @param user
-     * @param miType
-     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
-     * @param updatedDiff -- updated differences
-     * @param companionFinder
-     *
-     * @return
-     */
+    /// Loads centre through the following chain: 'default centre' + 'differences' => 'centre'.
+    ///
     private static ICentreDomainTreeManagerAndEnhancer loadCentreFromDefaultAndDiff(
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Map<String, Object> updatedDiff,
@@ -844,32 +881,24 @@ public class CentreUpdater {
         return applyDifferences(defaultCentre, updatedDiff, getEntityType(miType), companionFinder);
     }
     
-    /**
-     * Creates user-specific (!) default centre manager from Centre DSL configuration.
-     * <p>
-     * IMPORTANT: this 'default centre' is used for constructing 'fresh centre', 'previouslyRun centre' and their 'diff centres', that is why it is very important to make it suitable for Web UI default values.
-     * All other centres will reuse such Web UI specific default values.
-     * <p>
-     * Please note that 'default' centre is specific to the user on current thread ({@link IUserProvider}). All injector-based default values will be user-specific
-     * if they are defined as user-specific in domain logic.
-     *
-     * @param gdtm
-     * @param miType
-     * @return
-     */
+    /// Creates user-specific (!) default centre manager from Centre DSL configuration.
+    ///
+    /// IMPORTANT: this 'default centre' is used for constructing 'fresh centre', 'previouslyRun centre' and their 'diff centres'.
+    /// That's why it is very important to make it suitable for Web UI default values.
+    /// All other centres will reuse such Web UI specific default values.
+    ///
+    /// Please note that 'default' centre is specific to the user on current thread ([IUserProvider]).
+    /// All injector-based default values will be user-specific if they are defined as user-specific in domain logic.
+    ///
     public static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
         return applyWebUIDefaultValues(createDefaultCentre(miType, webUiConfig), getEntityType(miType));
     }
     
-    /**
-     * Returns {@code runAutomatically} parameter for the Centre DSL configuration defined by {@code miType}.
-     * <p>
-     * Centres defined as {@code runAutomatically} not only runs automatically on loading; criteria for such centres will be cleared before auto-running (see {@link CriteriaResource#put} for more details).
-     * 
-     * @param miType
-     * @param webUiConfig
-     * @return
-     */
+    /// Returns `runAutomatically` parameter for the Centre DSL configuration defined by `miType`.
+    ///
+    /// Centres defined as `runAutomatically` not only runs automatically on loading.
+    /// Criteria for such centres will be cleared before auto-running (see `CriteriaResource#put` for more details).
+    ///
     public static boolean defaultRunAutomatically(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
         return ofNullable(webUiConfig.getCentres().get(miType)) // additional safety in case if for some reason there is no EntityCentre instance for miType
             .map(EntityCentre::isRunAutomatically)
@@ -1238,15 +1267,10 @@ public class CentreUpdater {
         }
     }
     
-    /**
-     * Applies the differences from 'differences centre' on top of 'target centre'.
-     *
-     * @param targetCentre
-     * @param differencesCentre
-     * @param root
-     * @param companionFinder -- to process crit-only single entity-typed values
-     * @return
-     */
+    /// Applies the differences from 'differences centre' on top of 'target centre'.
+    ///
+    /// @param companionFinder to process crit-only single entity-typed values
+    ///
     static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final Map<String, Object> differences, final Class<AbstractEntity<?>> root, final ICompanionObjectFinder companionFinder) {
         final Supplier<Class<?>> managedTypeSupplier = () -> targetCentre.getEnhancer().getManagedType(root);
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) differences.get(PROPERTIES);
@@ -1339,25 +1363,16 @@ public class CentreUpdater {
         return targetCentre;
     }
     
-    /**
-     * Takes property differences from <code>diff</code>. Creates empty property differences inside <code>diff</code> if they are empty. 
-     * 
-     * @param property
-     * @param diff
-     * @return
-     */
+    /// Takes property differences from `diff`. Creates empty property differences inside `diff` if they are empty.
+    ///
     static Map<String, Object> propDiff(final String property, final Map<String, Object> diff) {
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
         return diff(property, propertiesDiff);
     }
     
-    /**
-     * Takes property differences from <code>propertiesDiff</code> part of overall diff. Creates empty property differences inside <code>propertiesDiff</code> if they are empty.
-     * 
-     * @param property
-     * @param propertiesDiff
-     * @return
-     */
+    /// Takes property differences from `propertiesDiff` part of overall diff.
+    /// Creates empty property differences inside `propertiesDiff` if they are empty.
+    ///
     private static Map<String, Object> diff(final String property, final Map<String, Map<String, Object>> propertiesDiff) {
         final Map<String, Object> propertyDiff = propertiesDiff.get(property);
         if (propertyDiff == null) {
@@ -1368,11 +1383,8 @@ public class CentreUpdater {
         return propertyDiff;
     }
     
-    /**
-     * Creates empty diff.
-     * 
-     * @return
-     */
+    /// Creates empty diff.
+    ///
     public static Map<String, Object> createEmptyDifferences() {
         final Map<String, Object> diff = new LinkedHashMap<>();
         final Map<String, Map<String, Object>> propertiesDiff = new LinkedHashMap<>();
