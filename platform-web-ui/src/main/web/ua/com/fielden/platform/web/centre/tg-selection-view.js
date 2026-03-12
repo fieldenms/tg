@@ -23,11 +23,8 @@ import '/resources/images/tg-icons.js';
 
 const FILTERING_SELECTION_CRIT = "filtering_selection_crit";
 
-function filterSelectionCriteria (container) {
-    return [...container.querySelectorAll("slot")]
-            .map(criterion => criterion.assignedNodes()[0])
-            .filter(criterion => !!criterion)
-            .some(criterion => !criterion.isEmptyAndWithoutMetaValues());
+function filterSelectionCriteria (criterion) {
+    return !criterion.isEmptyAndWithoutMetaValues();
 }
 
 const template = html`

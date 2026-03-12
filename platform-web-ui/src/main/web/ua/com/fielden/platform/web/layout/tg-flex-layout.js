@@ -147,18 +147,37 @@ template.setAttribute('strip-whitespace', '');
         }
     };
     const filterLayout = function () {
-        [...this.shadowRoot.children].reverse().forEach(childElement => {
-            if (childElement.tagName === 'TG-SUBHEADER') {
-                const isVisible = childElement.relativeElements
-                            .filter(relativeElement => relativeElement.parentElement === null)
-                            .every(relativeElement => relativeElement.classList.contains("hidden-with-filter"));
-                this.toggleClass("hidden-with-filter", isVisible, childElement);
-            } else {
-                this.toggleClass("hidden-with-filter", this.filter && !this.filter(childElement), childElement);
-            }
-        });
+        filterElement.bind(this)(this.shadowRoot);
     }
+    const filterElement = function (element) {
+        if (element.hasAttribute && element.hasAttribute("filterable")) {
+            this.toggleClass("hidden-with-filter", this.filter && !this.filter(element), element);
+        } else {
+            const children = [...element.children].flatMap(child => child.tagName === 'SLOT' ? [...child.assignedNodes()] : [child]);
+            children.forEach(child => filterElement.bind(this)(child));
+            const filterableChildren = children.filter(child => child.hasAttribute("filterable") || child.hasAttribute("has-filterable-children"));
+            if (filterableChildren.length > 0) {
+                element.setAttribute && element.setAttribute("has-filterable-children", "");
+            } else {
+                element.removeAttribute && element.removeAttribute("has-filterable-children");
+            }
+            element.classList && this.toggleClass("hidden-with-filter", filterableChildren.length > 0 && filterableChildren.every(child => child.classList.contains("hidden-with-filter")), element);
 
+            // Process subheaders
+            children.filter(child => child.tagName === 'TG-SUBHEADER').forEach(subheader => {
+                const filterableElements = subheader.relativeElements
+                        .flatMap(relativeElement => relativeElement.tagName === 'SLOT' ? [...relativeElement.assignedNodes()] : [relativeElement])
+                        .filter(relativeElement => relativeElement.hasAttribute("filterable") || relativeElement.hasAttribute("has-filterable-children"));
+                const isHidden = filterableElements.length > 0 && filterableElements.every(filterableElement => filterableElement.classList.contains("hidden-with-filter"));
+                this.toggleClass("hidden-with-filter", isHidden, subheader);
+                subheader.relativeElements.forEach(relativeElement => {
+                    if (filterableElements.indexOf(relativeElement) < 0) {
+                        this.toggleClass("hidden-with-filter", isHidden, relativeElement);
+                    }
+                });
+            });
+        }
+    }
     const resetSubheaderComponents = function () {
         this._subheaders.forEach(function (subheader) {
             subheader.removeAllRelatedComponents();
