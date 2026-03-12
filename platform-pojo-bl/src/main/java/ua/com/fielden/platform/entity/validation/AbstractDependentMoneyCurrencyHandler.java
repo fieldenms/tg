@@ -60,7 +60,7 @@ import static ua.com.fielden.platform.error.Result.successful;
 /// Class `GenericPurchaseOrderCostCurrencyHandler` can be used as both a validator and a definer, hence generic.
 /// * As a definer it is applicable to both the [Money]-typed property and the properties that determine the currency.
 ///   * For the dependent [Money]-typed property, it simply replaces the currency with the result of [#currencyFrom] if it returns [Right].
-///   * For other properties, it revalidates the dependent [Money]-typed property and adjusts its currency based on the result of [#currencyFrom].
+///   * For other properties, it adjusts the currency of the dependent [Money]-typed property based on the result of [#currencyFrom].
 /// * As a validator it is applicable only to the [Money]-typed property.
 ///   If [#currencyFrom] returns a left value, validation fails with that value as the message; otherwise, validation succeeds.
 ///
