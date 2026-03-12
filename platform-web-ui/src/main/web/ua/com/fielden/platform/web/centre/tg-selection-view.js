@@ -18,14 +18,16 @@ import '/resources/actions/tg-ui-action.js';
 import '/resources/images/tg-document-related-icons.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import '/resources/egi/tg-responsive-toolbar.js';
-import { getKeyEventTarget } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, localStorageKeyForCentre } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/images/tg-icons.js';
 
+const FILTERING_SELECTION_CRIT = "filtering_selection_crit";
+
 function filterSelectionCriteria (container) {
-    const criterions = [...container.querySelectorAll("slot")]
+    return [...container.querySelectorAll("slot")]
             .map(criterion => criterion.assignedNodes()[0])
-            .filter(criterion => !!criterion);
-    return criterions.length === 0 || criterions.some(criterion => !criterion.isEmptyAndWithoutMetaValues());
+            .filter(criterion => !!criterion)
+            .some(criterion => !criterion.isEmptyAndWithoutMetaValues());
 }
 
 const template = html`
@@ -73,7 +75,7 @@ const template = html`
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Edit' long-desc='Edit title, description and dashboard settings...' icon='tg-document-related-icons:square-edit-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_3_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.3.attrs]]' pre-action='[[topLevelActions.3.preAction]]' post-action-success='[[topLevelActions.3.postActionSuccess]]' post-action-error='[[topLevelActions.3.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Delete configuration' long-desc='Delete current configuration' icon='tg-document-related-icons:delete-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigDeleteAction' element-name='tg-CentreConfigDeleteAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigDeleteAction-master_4_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.4.attrs]]' pre-action='[[topLevelActions.4.preAction]]' post-action-success='[[topLevelActions.4.postActionSuccess]]' post-action-error='[[topLevelActions.4.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Configure' long-desc='Configure running automatically...' icon='icons:settings' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigConfigureAction' element-name='tg-CentreConfigConfigureAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigConfigureAction-master_5_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.5.attrs]]' pre-action='[[topLevelActions.5.preAction]]' post-action-success='[[topLevelActions.5.postActionSuccess]]' post-action-error='[[topLevelActions.5.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' hidden="[[embedded]]" disabled='[[_configureButtonDisabled]]' style='[[_computeButtonStyle(_configureButtonDisabled)]]'></tg-ui-action>
-        <paper-icon-button id="filterAction" slot="standart-action" toggles active="{{_filteringSelectionCriteria}}" icon="[[_getFilterButtonIcon(_filteringSelectionCriteria)]]" tooltip-text="Toggle empty rows" on-active-changed="_setSelectionCriteriaFilter"></paper-icon-button>
+        <paper-icon-button id="filterAction" slot="standart-action" toggles active="{{_filteringSelectionCriteria}}" icon="[[_getFilterButtonIcon(_filteringSelectionCriteria)]]" tooltip-text="Toggle empty rows"></paper-icon-button>
         <paper-icon-button id="helpAction" slot="standart-action" style="color:#727272" icon="icons:help-outline" on-tg-long-tap="_longHelpTapHandler" on-tg-short-tap="_shortHelpTapHandler" tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link."></paper-icon-button>
     </tg-responsive-toolbar>
     <tg-scrollable-component id="scrollable_container" class="relative">
@@ -128,7 +130,13 @@ Polymer({
         initiateAutoRun: Function,
         _resetAutocompleterState: Function,
         _longHelpTapHandler: Function,
-        _shortHelpTapHandler: Function
+        _shortHelpTapHandler: Function,
+
+        _filteringSelectionCriteria: {
+            type:Boolean,
+            value: false,
+            observer: "_selectionCritFilteringChanged"
+        }
     },
 
     created: function () {
@@ -144,6 +152,15 @@ Polymer({
         }.bind(this));
         this._ownKeyBindings = {};
         this._ownKeyBindings[customShortcuts.join(" ") + (customShortcuts.length > 0 ? " " : "") + "ctrl+s ctrl+e ctrl+r f5"] = '_shortcutPressed';
+        
+        const selectionCrit = this._getSelectionCrit();
+        if (selectionCrit) {
+            selectionCrit.addEventListener("_criteria-loaded-changed", (e) => {
+                if(e.detail.value) {
+                    this._filteringSelectionCriteria = localStorage.getItem(localStorageKeyForCentre(selectionCrit.miType, FILTERING_SELECTION_CRIT)) !== null;
+                }
+            });
+        }
     },
 
     attached: function () {
@@ -186,13 +203,22 @@ Polymer({
         return _buttonDisabled ? 'cursor:initial' : '';
     },
 
-    _setSelectionCriteriaFilter: function(e) {
-        const selectionCrit = this.$.custom_selection_criteria.assignedNodes({flatten: true})[0];
+    _selectionCritFilteringChanged: function(isFiltering) {
+        const selectionCrit = this._getSelectionCrit();
         const critLayout = selectionCrit && selectionCrit.shadowRoot && selectionCrit.shadowRoot.querySelector('tg-flex-layout');
         if (critLayout) {
-            critLayout.filter = e.detail.value ? filterSelectionCriteria : null;
+            critLayout.filter = isFiltering ? filterSelectionCriteria : null;
             this.$.scrollable_container.notifyResize();
+            if (isFiltering) {
+                localStorage.setItem(localStorageKeyForCentre(selectionCrit.miType, FILTERING_SELECTION_CRIT), 'true');
+            } else {
+                localStorage.removeItem(localStorageKeyForCentre(selectionCrit.miType, FILTERING_SELECTION_CRIT));
+            }
         }
+    },
+
+    _getSelectionCrit: function () {
+        return this.$.custom_selection_criteria.assignedNodes({flatten: true})[0];
     },
     
     _getFilterButtonIcon: function (_filteringSelectionCriteria) {
