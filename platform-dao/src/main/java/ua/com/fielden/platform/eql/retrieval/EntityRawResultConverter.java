@@ -71,7 +71,7 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
         return new ValueContainer(valueTree.hibCompositeType(), converted);
     }
 
-    private Object convertValue(final Object rawValue, final IUserTypeInstantiate userType) {
+    private Object convertValue(final Object rawValue, final IUserTypeInstantiate<?> userType) {
         return userType == null ? rawValue : userType.instantiate(rawValue, entityFactory);
     }
 }

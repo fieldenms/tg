@@ -70,11 +70,11 @@ public class EntityResultTreeBuilderTest extends AbstractEqlShortcutTest {
         return new QueryResultLeaf(position, name, new HibernateScalar(column, hibType), null);
     }
     
-    private static QueryResultLeaf qrl(final int position, final String name, final String column, final IUserTypeInstantiate hibUserType) {
+    private static QueryResultLeaf qrl(final int position, final String name, final String column, final IUserTypeInstantiate<?> hibUserType) {
         return new QueryResultLeaf(position, name, new HibernateScalar(column, null), hibUserType);
     }
     
-    private static QueryResultLeaf qrl(final int position, final String name, final String column, final Type hibType, final IUserTypeInstantiate hibUserType) {
+    private static QueryResultLeaf qrl(final int position, final String name, final String column, final Type hibType, final IUserTypeInstantiate<?> hibUserType) {
         return new QueryResultLeaf(position, name, new HibernateScalar(column, hibType), hibUserType);
     }
 }

@@ -205,8 +205,8 @@ public final class EntityResultTreeBuilder {
         }
     }
 
-    private static IUserTypeInstantiate getHibTypeAsUserType(final Object hibType) {
-        return hibType instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibType : null;
+    private static IUserTypeInstantiate<?> getHibTypeAsUserType(final Object hibType) {
+        return hibType instanceof IUserTypeInstantiate<?> it ? it : null;
     }
 
     private static Type getHibTypeAsType(final Object hibType) {
