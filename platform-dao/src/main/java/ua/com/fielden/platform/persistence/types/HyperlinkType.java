@@ -16,12 +16,6 @@ import java.sql.Types;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.persistence.types.exceptions.UserTypeException.invalidPersistedRepresentation;
 
-/**
- * This is a user type to assist Hibernated in mapping properties of type {@link Hyperlink}.
- *  
- * @author TG Team
- *
- */
 public class HyperlinkType implements UserType, IHyperlinkType {
 
     public static final HyperlinkType INSTANCE = new HyperlinkType();

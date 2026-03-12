@@ -17,12 +17,6 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.persistence.types.exceptions.UserTypeException.invalidPersistedRepresentation;
 
-/**
- * This is a user type to assist Hibernated in mapping properties of type {@link Colour}.
- *  
- * @author TG Team
- *
- */
 public class ColourType implements UserType, IColourType {
 
     public static final ColourType INSTANCE = new ColourType();

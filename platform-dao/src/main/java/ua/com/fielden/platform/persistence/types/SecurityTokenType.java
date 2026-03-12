@@ -19,9 +19,6 @@ import java.sql.Types;
 import static ua.com.fielden.platform.persistence.types.exceptions.UserTypeException.invalidJavaRepresentation;
 import static ua.com.fielden.platform.persistence.types.exceptions.UserTypeException.invalidPersistedRepresentation;
 
-/// Class that helps Hibernate to map [ISecurityToken] class into database.
-///
-@Singleton
 public class SecurityTokenType implements UserType, ISecurityTokenType {
 
     public static final SecurityTokenType INSTANCE = new SecurityTokenType();

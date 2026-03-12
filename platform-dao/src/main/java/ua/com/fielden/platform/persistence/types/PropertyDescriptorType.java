@@ -17,11 +17,6 @@ import java.util.Optional;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.persistence.types.exceptions.UserTypeException.invalidPersistedRepresentation;
 
-/**
- * Class that helps Hibernate to map {@link PropertyDescriptor} class into the database.
- *
- * @author TG Team
- */
 public class PropertyDescriptorType implements UserType, IPropertyDescriptorType {
 
     private static final Logger LOGGER = getLogger(PropertyDescriptorType.class);

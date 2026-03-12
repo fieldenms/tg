@@ -1,19 +1,16 @@
 package ua.com.fielden.platform.entity.query;
 
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 
-/**
- * Interface for enabling hibernate-free instantiation of instances of hibernate mapped user types.
- * 
- * @author TG Team
- * 
- */
+/// A contract for Hibernate types representing scalar values that supports their instantiation from a persisted value.
+///
 public interface IUserTypeInstantiate {
-    /**
-     * Should provide object instantiation based on the passed argument.
-     * 
-     * @param arguments
-     * @return
-     */
-    Object instantiate(Object argument, EntityFactory factory);
+
+    /// Creates an instance from its persisted representation `argument`.
+    ///
+    /// @param factory  an entity factory provided for those cases where an entity needs to be created.
+    ///
+    Object instantiate(@Nullable Object argument, EntityFactory factory);
+
 }
