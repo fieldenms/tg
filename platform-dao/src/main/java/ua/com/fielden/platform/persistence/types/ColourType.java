@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.persistence.types;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.usertype.UserType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.persistence.types.exceptions.UserTypeException;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.markers.IColourType;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -9,13 +13,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.usertype.UserType;
-
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.persistence.types.exceptions.UserTypeException;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.markers.IColourType;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.persistence.types.exceptions.UserTypeException.invalidPersistedRepresentation;
 
 /**
  * This is a user type to assist Hibernated in mapping properties of type {@link Colour}.
@@ -40,40 +40,42 @@ public class ColourType implements UserType, IColourType {
 	}
 
 	@Override
-	public Object instantiate(final Object argument, final EntityFactory factory) {
-        if (argument == null) {
-            return null;
-        }
-
-        try {
-            return new Colour((String) argument);
-        } catch (final Exception e) {
-            throw new UserTypeException(format("Could not instantiate instance of [%s] with value [%s] due to: %s.", Colour.class.getName(), argument, e.getMessage()), e);
-        }
-	}
+    public Colour instantiate(final Object argument, final EntityFactory factory) {
+        return switch (argument) {
+            case String s -> {
+                try {
+                    yield new Colour(s);
+                } catch (final Exception ex) {
+                    throw new UserTypeException("Colour could not be instantiated from [%s].".formatted(s), ex);
+                }
+            }
+            case null -> null;
+            default -> throw invalidPersistedRepresentation("Colour", argument);
+        };
+    }
 
 	@Override
 	public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor session, final Object owner) throws SQLException {
 		final String name = resultSet.getString(names[0]);
-		Object result = null;
-		if (!resultSet.wasNull()) {
-			try {
-				result = new Colour(name);
-			} catch (final Exception e) {
-				throw new UserTypeException(format("Colour for value [%s] could not be instantiated.", name), e);
-			}
-		}
-		return result;
-	}
+        if (resultSet.wasNull()) {
+            return null;
+        }
+        try {
+            return new Colour(name);
+        } catch (final Exception ex) {
+            throw new UserTypeException(format("Colour could not be instantiated from [%s].", name), ex);
+        }
+    }
 
 	@Override
-	public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index, final SharedSessionContractImplementor session) throws SQLException {
-		if (value == null || isEmpty(((Colour) value).hashlessUppercasedColourValue)) {
-			preparedStatement.setNull(index, Types.VARCHAR);
-		} else {
-			preparedStatement.setString(index, value.toString());
-		}
-	}
+    public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index, final SharedSessionContractImplementor session) throws SQLException {
+        switch (value) {
+            case Colour colour when isEmpty(colour.hashlessUppercasedColourValue) ->
+                    preparedStatement.setNull(index, Types.VARCHAR);
+            case null -> preparedStatement.setNull(index, Types.VARCHAR);
+            default -> preparedStatement.setString(index, value.toString());
+        }
+    }
 
 	@Override
 	public Object assemble(final Serializable cached, final Object owner) {
