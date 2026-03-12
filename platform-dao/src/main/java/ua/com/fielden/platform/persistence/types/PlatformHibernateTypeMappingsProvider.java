@@ -9,15 +9,9 @@ import ua.com.fielden.platform.types.markers.*;
 
 import java.util.Date;
 
-/**
- * Mappings of primitive and component types to Hibernate user types.
- * <p>
- * {@link Provider} should be bound in a Guice module: {@code bind(HibernateTypeMappings.class).toProvider(PlatformHibernateTypeMappings.Provider.class)},
- * which will enable access to a {@link HibernateTypeMappings} instance via an injector.
- * <p>
- * This information used to be provided by {@code HibernateUserTypesModule} and {@code HibernateSetup} at the level of applications.
- */
-public class PlatformHibernateTypeMappingsProvider implements HibernateTypeMappings.Provider {
+/// Standard Hibernate type mappings for TG-based applications.
+///
+public final class PlatformHibernateTypeMappingsProvider implements HibernateTypeMappings.Provider {
 
     private final IDbVersionProvider dbVersionProvider;
 
@@ -31,6 +25,7 @@ public class PlatformHibernateTypeMappingsProvider implements HibernateTypeMappi
         final var richTextType = RichTextType.getInstance(dbVersionProvider.dbVersion());
 
         return HibernateTypeMappings.builder()
+                // Map property types to Hibernate types.
                 .put(boolean.class, YesNoType.INSTANCE)
                 .put(Date.class, DateTimeType.INSTANCE)
                 .put(PropertyDescriptor.class, PropertyDescriptorType.INSTANCE)
@@ -39,13 +34,13 @@ public class PlatformHibernateTypeMappingsProvider implements HibernateTypeMappi
                 .put(Hyperlink.class, HyperlinkType.INSTANCE)
                 .put(RichText.class, richTextType)
 
+                // Map Hibernate type interfaces to their implementations.
                 .put(ISecurityTokenType.class, SecurityTokenType.INSTANCE)
                 .put(IPropertyDescriptorType.class, PropertyDescriptorType.INSTANCE)
                 .put(IColourType.class, ColourType.INSTANCE)
                 .put(IHyperlinkType.class, HyperlinkType.INSTANCE)
                 .put(IUtcDateTimeType.class, UtcDateTimeType.INSTANCE)
                 .put(IRichTextType.class, richTextType)
-                
                 .put(IMoneyType.class, MoneyType.INSTANCE)
                 .put(ISimpleMoneyType.class, SimpleMoneyType.INSTANCE)
                 .put(ISimplyMoneyWithTaxAndExTaxAmountType.class, SimplyMoneyWithTaxAndExTaxAmountType.INSTANCE)
