@@ -33,7 +33,7 @@ public @interface AfterChange {
      *
      * @return
      */
-    Class<? extends IAfterChangeEventHandler<?>> value();
+    Class<? extends IAfterChangeEventHandler> value();
 
     /**
      * Should be used for specifying non-ordinary parameters of the handler. All listed classes should be suitable for instantiation with an injector.

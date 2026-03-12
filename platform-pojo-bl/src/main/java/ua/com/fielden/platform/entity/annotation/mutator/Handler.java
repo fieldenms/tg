@@ -26,7 +26,7 @@ public @interface Handler {
      *
      * @return
      */
-    Class<? extends IBeforeChangeEventHandler<?>> value();
+    Class<? extends IBeforeChangeEventHandler> value();
 
     /**
      * Should be used for specifying non-ordinary parameters of the handler. All listed classes should be suitable for instantiation with an injector.
