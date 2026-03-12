@@ -3,7 +3,9 @@ package ua.com.fielden.platform.entity;
 import com.google.inject.Injector;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.validation.AbstractDependentMoneyCurrencyHandler;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.sample.domain.GenericTgFuelUsagePricePerLitreCurrencyHandler;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
@@ -13,6 +15,8 @@ import java.util.Currency;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.sample.domain.GenericTgFuelUsagePricePerLitreCurrencyHandler.ERR_CANNOT_DETERMINE_FROM_LOCATION;
 
+/// A test case that covers [GenericTgFuelUsagePricePerLitreCurrencyHandler] which is based on [AbstractDependentMoneyCurrencyHandler].
+///
 public class TgFuelUsagePricePerLitreCurrencyTest {
 
     private final Injector injector = new ApplicationInjectorFactory()
@@ -86,6 +90,17 @@ public class TgFuelUsagePricePerLitreCurrencyTest {
         assertFalse(entity.getProperty("pricePerLitre").isValid());
         assertEquals(ERR_CANNOT_DETERMINE_FROM_LOCATION.formatted("Denmark"),
                      entity.getProperty("pricePerLitre").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void assigned_pricePerLitre_can_be_reset_to_null() {
+        final var entity = factory.newEntity(TgFuelUsage.class);
+        entity.setLocation("Australia");
+        entity.setPricePerLitre(new Money("10"));
+        assertEquals(new Money("10", Currency.getInstance("AUD")), entity.getPricePerLitre());
+
+        entity.setPricePerLitre(null);
+        assertTrue(entity.getProperty("pricePerLitre").isValid());
     }
 
 }

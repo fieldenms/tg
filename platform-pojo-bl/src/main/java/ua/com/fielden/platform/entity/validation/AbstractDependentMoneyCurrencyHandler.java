@@ -114,7 +114,7 @@ public abstract class AbstractDependentMoneyCurrencyHandler<E extends AbstractEn
     private void defineDependent(final MetaProperty<Money> property, final Money value) {
         final E entity = property.getEntity();
 
-        if (!entity.isInitialising()) {
+        if (!entity.isInitialising() && value != null) {
             switch (currencyFrom(entity)) {
                 case Left _ -> {}
                 case Right(var currency) -> property.setValue(new Money(value.getAmount(), currency));
