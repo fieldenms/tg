@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.sample.domain.validators.TgFuelUsagePricePerLitreValidator;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyType;
 
@@ -56,7 +57,8 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     @IsProperty(precision = 18, scale = 4)
     @MapTo
     @PersistentType(userType = IMoneyType.class)
-    @BeforeChange(@Handler(GenericTgFuelUsagePricePerLitreCurrencyHandler.class))
+    @BeforeChange({@Handler(GenericTgFuelUsagePricePerLitreCurrencyHandler.class),
+                   @Handler(TgFuelUsagePricePerLitreValidator.class)})
     @AfterChange(GenericTgFuelUsagePricePerLitreCurrencyHandler.class)
     @Title(value = "Price per Litre", desc = "Price per litre (currency determined by Location, if present, otherwise by locale).")
     private Money pricePerLitre;
@@ -104,6 +106,24 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Fuel type", desc = "Fuel type")
     private TgFuelType fuelType;
+
+    /// Controls validation of [#pricePerLitre].
+    /// This property does not affect currency of [#pricePerLitre], but simply lists it in [Dependent].
+    /// It facilitates testing of effects of revalidation and the mechanism of [Dependent] on context-dependent [Money]-typed properties.
+    ///
+    @IsProperty
+    @Dependent("pricePerLitre")
+    private String pricePerLitreValidation;
+
+    public String getPricePerLitreValidation() {
+        return pricePerLitreValidation;
+    }
+
+    @Observable
+    public TgFuelUsage setPricePerLitreValidation(final String pricePerLitreValidation) {
+        this.pricePerLitreValidation = pricePerLitreValidation;
+        return this;
+    }
 
     @Observable
     protected TgFuelUsage setPreviousPricePerLitre(final Money previousPricePerLitre) {

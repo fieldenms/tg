@@ -14,6 +14,7 @@ import java.util.Currency;
 
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.sample.domain.GenericTgFuelUsagePricePerLitreCurrencyHandler.ERR_CANNOT_DETERMINE_FROM_LOCATION;
+import static ua.com.fielden.platform.sample.domain.validators.TgFuelUsagePricePerLitreValidator.ERR_CONTROLLING_PROPERTY;
 
 /// A test case that covers [GenericTgFuelUsagePricePerLitreCurrencyHandler] which is based on [AbstractDependentMoneyCurrencyHandler].
 ///
@@ -101,6 +102,38 @@ public class TgFuelUsagePricePerLitreCurrencyTest {
 
         entity.setPricePerLitre(null);
         assertTrue(entity.getProperty("pricePerLitre").isValid());
+    }
+
+    @Test
+    public void currency_of_pricePerLitre_is_correctly_determined_when_pricePerLitre_is_revalidated_due_to_Dependent() {
+        final var entity = factory.newEntity(TgFuelUsage.class);
+        entity.setLocation("Australia");
+        entity.setPricePerLitreValidation("invalid");
+        entity.setPricePerLitre(new Money("10", Currency.getInstance("EUR")));
+        assertFalse(entity.getProperty("pricePerLitre").isValid());
+        assertEquals(ERR_CONTROLLING_PROPERTY, entity.getProperty("pricePerLitre").getFirstFailure().getMessage());
+
+        entity.setPricePerLitreValidation("valid-1");
+        assertTrue(entity.getProperty("pricePerLitre").isValid());
+        assertEquals(new Money("10", Currency.getInstance("AUD")), entity.getPricePerLitre());
+
+        entity.setPricePerLitreValidation("valid-2");
+        assertTrue(entity.getProperty("pricePerLitre").isValid());
+        assertEquals(new Money("10", Currency.getInstance("AUD")), entity.getPricePerLitre());
+
+        // Change location while pricePerLitre is invalid.
+        entity.setPricePerLitreValidation("invalid");
+        assertFalse(entity.getProperty("pricePerLitre").isValid());
+        assertEquals(ERR_CONTROLLING_PROPERTY, entity.getProperty("pricePerLitre").getFirstFailure().getMessage());
+        assertEquals(new Money("10", Currency.getInstance("AUD")), entity.getPricePerLitre());
+        entity.setLocation("Ukraine");
+        assertFalse(entity.getProperty("pricePerLitre").isValid());
+        assertEquals(ERR_CONTROLLING_PROPERTY, entity.getProperty("pricePerLitre").getFirstFailure().getMessage());
+        assertEquals(new Money("10", Currency.getInstance("AUD")), entity.getPricePerLitre());
+        // Make pricePerLitre valid, currency should be determined from the new location.
+        entity.setPricePerLitreValidation("valid-1");
+        assertTrue(entity.getProperty("pricePerLitre").isValid());
+        assertEquals(new Money("10", Currency.getInstance("UAH")), entity.getPricePerLitre());
     }
 
 }
