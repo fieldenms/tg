@@ -5,12 +5,14 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 /// A contract for Hibernate types representing scalar values that supports their instantiation from a persisted value.
 ///
-public interface IUserTypeInstantiate {
+/// @param <T>  the type of values instantiated by the implementaiton of this contract
+///
+public interface IUserTypeInstantiate<T> {
 
     /// Creates an instance from its persisted representation `argument`.
     ///
     /// @param factory  an entity factory provided for those cases where an entity needs to be created.
     ///
-    Object instantiate(@Nullable Object argument, EntityFactory factory);
+    T instantiate(@Nullable Object argument, EntityFactory factory);
 
 }
