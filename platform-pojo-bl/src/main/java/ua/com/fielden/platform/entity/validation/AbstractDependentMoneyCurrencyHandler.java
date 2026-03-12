@@ -47,7 +47,7 @@ import static ua.com.fielden.platform.error.Result.successful;
 ///         super("cost");
 ///     }
 ///
-///     protected Either<String, Currency> tryCurrency(PurchaseOrder po) { ... }
+///     protected Either<String, Currency> currencyFrom(PurchaseOrder po) { ... }
 /// }
 /// ```
 ///
