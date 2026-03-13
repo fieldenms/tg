@@ -583,21 +583,9 @@ public class EntityUtilsTest {
     }
 
     @Test
-    public void key_paths_works_for_composite_key_without_further_nesting_and_with_parent_context_path() {
-        assertEquals(listOf("mr.vehicle.key", "mr.readingDate"),
-                keyPaths(TgMeterReading.class, "mr"));
-    }
-
-    @Test
     public void key_paths_works_for_composite_key_with_one_level_nesting() {
         assertEquals(listOf("parent.key", "name"),
                 keyPaths(TgOrgUnit2.class));
-    }
-
-    @Test
-    public void key_paths_works_for_composite_key_with_one_level_nesting_and_with_parent_context_path() {
-        assertEquals(listOf("parent.parent.parent.key", "parent.parent.name"),
-                keyPaths(TgOrgUnit2.class, "parent.parent"));
     }
 
     @Test

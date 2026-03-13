@@ -1471,28 +1471,16 @@ public class EntityUtils {
         });
     }
 
-    /**
-     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.
-     *
-     * @param parentContextPath -- path to key property within EQL query context.
-     * @param entityType -- entity type containing key property.
-     * @return
-     */
-    public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final String parentContextPath) {
-        if (isEmpty(parentContextPath)) {
-            throw new IllegalArgumentException("Parent context path is required.");
-        }
-
-        return keyPaths(entityType, Optional.of(parentContextPath));
-    }
-
-    /**
-     * Gets a list of all property paths representing a value of an entity key.
-     * For composite entities, props are listed in the order of key member declarations, taking into account cases of multilevel nesting.
-     *
-     * @param entityType -- entity type containing key property.
-     * @return
-     */
+    /// Returns a list of property paths that make up the key of `entityType`.
+    /// * For entity-typed simple keys (one-2-one), calls this method on the key type and prepends `key.` to all elements.
+    /// * For other simple keys, returns `[key]`.
+    /// * For composite keys, traverses all key members recursively.
+    ///
+    /// @deprecated This method does not support multi-component types as key members.
+    ///             Specifically, if [Money] is used as a key member, only `amount` will be included.
+    ///             At present, no alternative public API is provided.
+    ///
+    @Deprecated
     public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType) {
         return keyPaths(entityType, Optional.empty());
     }
@@ -1504,7 +1492,7 @@ public class EntityUtils {
             final String pathToSubprop = parentContextPath.map(path -> path + PROPERTY_SPLITTER + keyMember.getName()).orElse(keyMember.getName());
             final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(entityType, keyMember.getName());
             if (isPersistentEntityType(propType)) {
-                result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) propType, pathToSubprop));
+                result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) propType, Optional.of(pathToSubprop)));
             }
             else if (isUnionEntityType(propType)) {
                 result.add(pathToSubprop + "." + KEY);
