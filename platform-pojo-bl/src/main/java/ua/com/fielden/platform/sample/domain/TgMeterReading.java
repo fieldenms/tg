@@ -1,19 +1,10 @@
 package ua.com.fielden.platform.sample.domain;
 
-import java.util.Date;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
+
+import java.util.Date;
 
 @KeyTitle("Meter Reading")
 @KeyType(DynamicEntityKey.class)
@@ -67,37 +58,42 @@ public class TgMeterReading extends AbstractEntity<DynamicEntityKey> {
         return workOrder;
     }
 
+    public TgFuelUsage getFuelUsage() {
+        return fuelUsage;
+    }
+
     /////////////////////////////////////////////
     //////////////// SETTERS ////////////////////
     /////////////////////////////////////////////
 
     @Observable
-    public void setVehicle(final TgVehicle vehicle) {
+    public TgMeterReading setVehicle(final TgVehicle vehicle) {
         this.vehicle = vehicle;
+        return this;
     }
 
     @Observable
-    public void setReadingDate(final Date readingDate) {
+    public TgMeterReading setReadingDate(final Date readingDate) {
         this.readingDate = readingDate;
+        return this;
     }
 
     @Observable
-    public void setReading(final Integer reading) {
+    public TgMeterReading setReading(final Integer reading) {
         this.reading = reading;
+        return this;
     }
 
     @Observable
-    public void setWorkOrder(final TgWorkOrder workOrder) {
+    public TgMeterReading setWorkOrder(final TgWorkOrder workOrder) {
         this.workOrder = workOrder;
-    }
-
-    public TgFuelUsage getFuelUsage() {
-        return fuelUsage;
+        return this;
     }
 
     @Observable
-    public void setFuelUsage(final TgFuelUsage fuelUsage) {
+    public TgMeterReading setFuelUsage(final TgFuelUsage fuelUsage) {
         this.fuelUsage = fuelUsage;
+        return this;
     }
 
 }

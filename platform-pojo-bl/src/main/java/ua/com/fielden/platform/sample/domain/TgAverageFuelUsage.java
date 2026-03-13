@@ -1,19 +1,15 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IMoneyType;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.types.Money;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(TgVehicle.class)
 @CompanionObject(ITgAverageFuelUsage.class)
@@ -27,7 +23,11 @@ public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
                     groupBy().prop("vehicle"). //
                     yield().prop("vehicle").as("key"). //
                     yield().sumOf().prop("qty").as("qty"). //
-                    yield().sumOf().beginExpr().prop("qty").mult().prop("pricePerLitre").endExpr().as("cost"). //
+                    yield().sumOf().beginExpr().prop("qty").mult().prop("pricePerLitre").endExpr().as("cost.amount"). //
+                    // An example of how currency can be yielded in aggregation contexts.
+                    // Although choosing the "maximum" currency makes little sense (string comparison),
+                    // this works well if all Money values within a group have the same currency.
+                    yield().maxOf().prop("pricePerLitre.currency").as("cost.currency").
                     modelAsEntity(TgAverageFuelUsage.class);
 
     @IsProperty
@@ -36,6 +36,7 @@ public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
 
     @IsProperty
     @Title("Total cost over the period")
+    @PersistentType(userType = IMoneyType.class)
     private Money cost;
     
     @IsProperty

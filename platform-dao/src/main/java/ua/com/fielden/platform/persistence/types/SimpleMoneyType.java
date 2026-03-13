@@ -15,6 +15,8 @@ import org.hibernate.type.Type;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
+import static ua.com.fielden.platform.types.Money.AMOUNT;
+
 /**
  * Class that helps Hibernate to map {@link Money} class into database without the currency portion, which basically requires only one column for mapping properties of type Money.
  * 
@@ -46,7 +48,7 @@ public class SimpleMoneyType extends AbstractCompositeUserType implements ISimpl
         if (allArgumentsAreNull(arguments)) {
             return null;
         }
-        return new Money((BigDecimal) arguments.get("amount"), Currency.getInstance(Locale.getDefault()));
+        return new Money((BigDecimal) arguments.get(AMOUNT), Currency.getInstance(Locale.getDefault()));
     }
 
     @Override
@@ -61,7 +63,7 @@ public class SimpleMoneyType extends AbstractCompositeUserType implements ISimpl
 
     @Override
     public String[] getPropertyNames() {
-        return new String[] { "amount" };
+        return new String[] { AMOUNT };
     }
 
     @Override

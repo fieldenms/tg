@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -708,24 +709,28 @@ public class Finder {
         }
     }
 
-    /**
-     * Returns field value for the {@code valueToRetrievefrom} object.
-     *
-     * @param field
-     * @param valueToRetrieveFrom
-     * @return
-     */
-    public static Object getFieldValue(final Field field, final Object valueToRetrieveFrom) {
+    /// Returns the value of `field` in `object`.
+    ///
+    /// @param object  the object to read the value from.
+    ///                If `null`, the field must be static (prefer [#getStaticFieldValue]).
+    ///
+    public static <T> T getFieldValue(final Field field, final @Nullable Object object) {
         final boolean isAccessible = field.isAccessible();
         field.setAccessible(true);
-        final Object value;
+        final T value;
         try {
-            value = field.get(valueToRetrieveFrom);
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-            throw new ReflectionException(format("Could not access field [%s] in type [%s].", field.getName(), valueToRetrieveFrom.getClass().getSimpleName()), e);
+            value = (T) field.get(object);
+        } catch (final IllegalArgumentException | IllegalAccessException e) {
+            throw new ReflectionException(format("Could not access field [%s].", field), e);
         }
         field.setAccessible(isAccessible);
         return value;
+    }
+
+    /// Returns the value of the specified static field.
+    ///
+    public static <T> T getStaticFieldValue(final Field field) {
+        return getFieldValue(field, null);
     }
 
     /**

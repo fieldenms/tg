@@ -9,6 +9,7 @@ import org.joda.time.DateTime;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -59,6 +60,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.Money.AMOUNT;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
@@ -936,18 +938,12 @@ public class EntityUtils {
      * </ul>
      */
     public static String[] splitPropPathToArray(final CharSequence path) {
-        if (path.isEmpty()) {
-            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
-        }
-
-        if (path.charAt(0) == '.' || path.charAt(path.length() - 1) == '.') {
-            throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
-        }
+        validatePropertyPath(path);
 
         final var components = Reflector.DOT_SPLITTER_PATTERN.split(path);
         for (final var component : components) {
             if (component.isEmpty()) {
-                throw new IllegalArgumentException("Invalid property path: [%s]".formatted(path));
+                throw new InvalidArgumentException("Invalid property path: [%s]".formatted(path));
             }
         }
         return components;
@@ -972,6 +968,25 @@ public class EntityUtils {
      */
     public static List<String> laxSplitPropPath(final CharSequence path) {
         return unmodifiableListOf(laxSplitPropPathToArray(path));
+    }
+
+    public static String lastProperty(final CharSequence path) {
+        validatePropertyPath(path);
+
+        final var pathStr = path.toString();
+        final var idx = pathStr.lastIndexOf('.');
+        if (idx == -1) {
+            return pathStr;
+        }
+        else {
+            return pathStr.substring(idx + 1);
+        }
+    }
+
+    private static void validatePropertyPath(final CharSequence path) {
+        if (path.isEmpty() || path.charAt(0) == '.' || path.charAt(path.length() - 1) == '.') {
+            throw new InvalidArgumentException("Invalid property path: [%s]".formatted(path));
+        }
     }
 
     /**
@@ -1456,28 +1471,16 @@ public class EntityUtils {
         });
     }
 
-    /**
-     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.
-     *
-     * @param parentContextPath -- path to key property within EQL query context.
-     * @param entityType -- entity type containing key property.
-     * @return
-     */
-    public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final String parentContextPath) {
-        if (isEmpty(parentContextPath)) {
-            throw new IllegalArgumentException("Parent context path is required.");
-        }
-
-        return keyPaths(entityType, Optional.of(parentContextPath));
-    }
-
-    /**
-     * Gets a list of all property paths representing a value of an entity key.
-     * For composite entities, props are listed in the order of key member declarations, taking into account cases of multilevel nesting.
-     *
-     * @param entityType -- entity type containing key property.
-     * @return
-     */
+    /// Returns a list of property paths that make up the key of `entityType`.
+    /// * For entity-typed simple keys (one-2-one), calls this method on the key type and prepends `key.` to all elements.
+    /// * For other simple keys, returns `[key]`.
+    /// * For composite keys, traverses all key members recursively.
+    ///
+    /// @deprecated This method does not support multi-component types as key members.
+    ///             Specifically, if [Money] is used as a key member, only `amount` will be included.
+    ///             At present, no alternative public API is provided.
+    ///
+    @Deprecated
     public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType) {
         return keyPaths(entityType, Optional.empty());
     }
@@ -1489,7 +1492,7 @@ public class EntityUtils {
             final String pathToSubprop = parentContextPath.map(path -> path + PROPERTY_SPLITTER + keyMember.getName()).orElse(keyMember.getName());
             final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(entityType, keyMember.getName());
             if (isPersistentEntityType(propType)) {
-                result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) propType, pathToSubprop));
+                result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) propType, Optional.of(pathToSubprop)));
             }
             else if (isUnionEntityType(propType)) {
                 result.add(pathToSubprop + "." + KEY);
@@ -1497,7 +1500,7 @@ public class EntityUtils {
             else {
                 // Let's explicitly expand money types property path with its single subproperty "amount".
                 // This will facilitate the usage of the keyPaths(..) method within KeyPropertyExtractor logic, which in its turn requires explicit "amount" to be specified.
-                final var enhancedPathToSubprop = propType.equals(Money.class) ? pathToSubprop + ".amount" : pathToSubprop;
+                final var enhancedPathToSubprop = propType.equals(Money.class) ? pathToSubprop + "." + AMOUNT : pathToSubprop;
                 result.add(enhancedPathToSubprop);
             }
         }
