@@ -170,6 +170,9 @@ template.setAttribute('strip-whitespace', '');
                         .filter(relativeElement => relativeElement.hasAttribute("filterable") || relativeElement.hasAttribute("has-filterable-children"));
                 const isHidden = filterableElements.length > 0 && filterableElements.every(filterableElement => filterableElement.classList.contains("hidden-with-filter"));
                 this.toggleClass("hidden-with-filter", isHidden, subheader);
+                if (!isHidden && this.filter) {
+                    subheader.open();
+                }
                 subheader.relativeElements.forEach(relativeElement => {
                     if (filterableElements.indexOf(relativeElement) < 0) {
                         this.toggleClass("hidden-with-filter", isHidden, relativeElement);
