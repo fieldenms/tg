@@ -33,11 +33,20 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
     private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);
 
     @Test
-    public void money_typed_prop_yield_is_transformed_into_yields_for_all_components_01() {
+    public void test_entities_have_expected_Hibernate_types() {
         assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgVehicle.class, "price").hibType())
                            .getPropertyNames())
                 .containsExactlyInAnyOrder(AMOUNT);
+        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
+        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgMeterReading.class, "fuelUsage.pricePerLitre").hibType())
+                           .getPropertyNames())
+                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
+    }
 
+    @Test
+    public void money_typed_prop_yield_is_transformed_into_yields_for_all_components_01() {
         final var query = select(TgVehicle.class)
                 .where().prop(KEY).eq().val(CAR_1)
                 .yield().prop(ID).as(ID)
@@ -53,10 +62,6 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void money_typed_prop_yield_is_transformed_into_yields_for_all_components_02() {
-        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
-                           .getPropertyNames())
-                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
-
         final var query = select(TgFuelUsage.class)
                 .where().prop("vehicle.key").eq().val(CAR_1)
                 .yield().prop(ID).as(ID)
@@ -72,10 +77,6 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void money_typed_prop_path_yield_is_transformed_into_yields_for_all_components_01() {
-        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgVehicle.class, "price").hibType())
-                           .getPropertyNames())
-                .containsExactlyInAnyOrder(AMOUNT);
-
         final var query = select(TgFuelUsage.class)
                 .where().prop("vehicle.key").eq().val(CAR_1)
                 .yield().prop("vehicle.id").as(ID)
@@ -91,10 +92,6 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void money_typed_prop_path_yield_is_transformed_into_yields_for_all_components_02() {
-        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
-                           .getPropertyNames())
-                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
-
         final var query = select(TgMeterReading.class)
                 .where().prop("vehicle.key").eq().val(CAR_1)
                 .yield().prop("fuelUsage.id").as(ID)
@@ -110,10 +107,6 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void alias_of_a_yield_of_expr_into_a_Money_typed_property_is_transformed_into_an_alias_for_amount_01() {
-        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgVehicle.class, "price").hibType())
-                           .getPropertyNames())
-                .containsExactlyInAnyOrder(AMOUNT);
-
         final var query = select(TgFuelUsage.class)
                 .where().prop("vehicle.key").eq().val(CAR_1)
                 .yield().prop("vehicle.id").as("id")
@@ -127,10 +120,6 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void alias_of_a_yield_of_expr_into_a_Money_typed_property_is_transformed_into_an_alias_for_amount_02() {
-        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
-                           .getPropertyNames())
-                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
-
         final var query = select(TgFuelUsage.class)
                 .where().prop("vehicle.key").eq().val(CAR_1)
                 .yield().prop("id").as("id")
@@ -144,13 +133,6 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void yield_money_typed_prop_with_amount_and_currency_into_a_money_typed_prop_with_amount() {
-        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
-                           .getPropertyNames())
-                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
-        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgVehicle.class, "price").hibType())
-                           .getPropertyNames())
-                .containsExactlyInAnyOrder(AMOUNT);
-
         final var query = select(TgFuelUsage.class)
                 .where().prop("vehicle.key").eq().val(CAR_1)
                 .yield().prop("vehicle.id").as(ID)
