@@ -11,6 +11,7 @@ import ua.com.fielden.platform.eql.meta.query.*;
 import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
 import ua.com.fielden.platform.eql.meta.utils.TopologicalSortException;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
@@ -89,17 +90,20 @@ public class QuerySourceInfoProvider {
     private final IDomainMetadata domainMetadata;
     private final ISyntheticModelProvider synModelProvider;
     private final ICalculatedPropertyExpressionProvider calculatedPropertyExpressionProvider;
+    private final MoneyComponentInference moneyComponentInference;
 
     @Inject
     public QuerySourceInfoProvider(
             final IDomainMetadata domainMetadata,
             final IDomainMetadataUtils domainMetadataUtils,
             final ISyntheticModelProvider synModelProvider,
-            final ICalculatedPropertyExpressionProvider calculatedPropertyExpressionProvider)
+            final ICalculatedPropertyExpressionProvider calculatedPropertyExpressionProvider,
+            final MoneyComponentInference moneyComponentInference)
     {
         this.domainMetadata = domainMetadata;
         this.synModelProvider = synModelProvider;
         this.calculatedPropertyExpressionProvider = calculatedPropertyExpressionProvider;
+        this.moneyComponentInference = moneyComponentInference;
 
         // Declared query source infos are created for all entities.
         declaredQuerySourceInfoMap = domainMetadataUtils.registeredEntities()
@@ -163,7 +167,7 @@ public class QuerySourceInfoProvider {
 
         entityTypesDependentCalcPropsOrder = modelledQuerySourceInfoMap.values().stream()
                 .collect(toConcurrentMap(querySourceInfo -> querySourceInfo.javaType().getName(),
-                                         querySourceInfo -> DependentCalcPropsOrder.orderDependentCalcProps(this, domainMetadata, QUERY_MODEL_TO_STAGE_1_TRANSFORMER, querySourceInfo)));
+                                         querySourceInfo -> DependentCalcPropsOrder.orderDependentCalcProps(this, domainMetadata, QUERY_MODEL_TO_STAGE_1_TRANSFORMER, moneyComponentInference, querySourceInfo)));
     }
 
     /// Produces a query source info for the specified entity type backed by the specified models.
@@ -256,7 +260,7 @@ public class QuerySourceInfoProvider {
     /// Only properties that are present in SE yields are preserved.
     ///
     private <T extends AbstractEntity<?>> QuerySourceInfo<?> generateModelledQuerySourceInfoForSyntheticType(final Class<? extends AbstractEntity<?>> entityType, final List<SourceQuery1> queries) {
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(this, domainMetadata);
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(this, domainMetadata, QUERY_MODEL_TO_STAGE_1_TRANSFORMER, moneyComponentInference);
         final List<SourceQuery2> transformedQueries = queries.stream().map(m -> m.transform(context)).collect(toList());
         return produceQuerySourceInfoForEntityType(transformedQueries, entityType, true /*isComprehensive*/);
     }

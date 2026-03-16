@@ -1,18 +1,13 @@
 package ua.com.fielden.platform.eql.stage1.sundries;
 
-import ua.com.fielden.platform.entity.query.NoDataFilter;
 import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
 import ua.com.fielden.platform.eql.antlr.EqlCompiler;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
-import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.DefaultDates;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -89,9 +84,7 @@ public final class ExpandMoneyTypedYield1 {
             case CURRENCY -> {
                 final var currencyModel = moneyCurrencyInference.infer(yield.operand(), CURRENCY, moneyCurrencyInference.predicateIsMoneyWithComponent(context, CURRENCY))
                         .orElseThrow(err -> new EqlStage1ProcessingException(format(ERR_COULD_NOT_INFER, componentAlias, componentAlias, yield.alias(), err)));
-                // TODO Inject QueryModelToStage1Transformer.
-                final var gen = new QueryModelToStage1Transformer(new NoDataFilter(), Optional.empty(), new QueryNowValue(new DefaultDates(false, 1, 1, 1)), Map.of());
-                final var expr1 = new EqlCompiler(gen).compile(currencyModel.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model();
+                final var expr1 = new EqlCompiler(context.stage1Transformer).compile(currencyModel.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model();
                 yield Optional.of(new Yield1(expr1, componentAlias, yield.hasNonnullableHint()));
             }
             default -> throw new EqlStage1ProcessingException(format(ERR_UNSUPPORTED_COMPONENT, Money.class.getSimpleName(), componentName));

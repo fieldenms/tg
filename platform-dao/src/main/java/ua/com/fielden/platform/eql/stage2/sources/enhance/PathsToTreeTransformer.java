@@ -6,6 +6,7 @@ import ua.com.fielden.platform.eql.antlr.EqlCompiler;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
@@ -25,15 +26,18 @@ public class PathsToTreeTransformer {
 
     private final QuerySourceInfoProvider querySourceInfoProvider;
     private final IDomainMetadata domainMetadata;
+    private final MoneyComponentInference moneyComponentInference;
     private final QueryModelToStage1Transformer gen;
 
     public PathsToTreeTransformer(
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IDomainMetadata domainMetadata,
-            final QueryModelToStage1Transformer gen)
+            final QueryModelToStage1Transformer gen,
+            final MoneyComponentInference moneyComponentInference)
     {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.domainMetadata = domainMetadata;
+        this.moneyComponentInference = moneyComponentInference;
         this.gen = gen;
     }
 
@@ -127,7 +131,7 @@ public class PathsToTreeTransformer {
                                 calcChunk.data().expression.expressionModel().getTokenSource(),
                                 EqlCompilationResult.StandaloneExpression.class)
                         .model();
-                final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider, domainMetadata).cloneWithAdded(sourceForCalcPropResolution);
+                final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider, domainMetadata, gen, moneyComponentInference).cloneWithAdded(sourceForCalcPropResolution);
                 final Expression2 exp2 = exp1.transform(prc);
                 final Set<Prop2> expProps = exp2.collectProps();
                 // separate into external and internal
