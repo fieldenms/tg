@@ -132,7 +132,13 @@ public class Money implements Comparable<Money> {
     @IsProperty
     @MapTo
     private final Integer taxPercent;
-    
+
+    /// The currency of the monetary amount.
+    ///
+    /// If enabled, must not be null.
+    /// This requirement also applies to calculated properties and properties populated by synthetic models.
+    /// In those cases, the calculated/yielded currency must not be null.
+    ///
     @IsProperty
     @MapTo
     private final Currency currency;
