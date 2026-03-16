@@ -148,7 +148,7 @@ template.setAttribute('strip-whitespace', '');
     };
     const filterLayout = function () {
         filterElement.bind(this)(this.shadowRoot);
-    }
+    };
     const filterElement = function (element) {
         if (element.hasAttribute && element.hasAttribute("filterable")) {
             this.toggleClass("hidden-with-filter", this.filter && !this.filter(element), element);
@@ -180,7 +180,7 @@ template.setAttribute('strip-whitespace', '');
                 });
             });
         }
-    }
+    };
     const resetSubheaderComponents = function () {
         this._subheaders.forEach(function (subheader) {
             subheader.removeAllRelatedComponents();
@@ -371,8 +371,8 @@ template.setAttribute('strip-whitespace', '');
             context: {
                 type: Object
             },
-            // Function that takes an HTMLElement and checks whether it should be visible.
-            // Returns true if the element should be visible, otherwise false.
+            // Checks whether an element with `filterable` attribute should be visible.
+            // Returns true if the element should be visible; otherwise false.
             filter: {
                 type: Function,
                 value: null,

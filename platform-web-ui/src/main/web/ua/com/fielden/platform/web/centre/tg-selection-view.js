@@ -134,7 +134,7 @@ Polymer({
         _shortHelpTapHandler: Function,
 
         _filteringSelectionCriteria: {
-            type:Boolean,
+            type: Boolean,
             value: false,
             observer: "_selectionCritFilteringChanged"
         }

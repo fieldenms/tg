@@ -400,17 +400,17 @@ const TgAbstractCriterionBehaviorImpl = {
             const val = editorValues[0];
             if (Array.isArray(val)) {// Single multi-valued entity editor
                 return val.length === 0;
-            } else {// Single entity, string, number or boolean editor
+            } else {// Single entity, string, number, date or boolean editor
                 return val === null || val === '' || val === true;
             }
         } else if (editorValues.length > 1) { // Range-type or multi-valued criterion
             if (typeof editorValues[0] === 'boolean') { // Multi-valued boolean criterion
-                return everyEditorEquals(editorValues, true) || everyEditorEquals(editorValues, false)
-            } else { // Range type criterion (e.g., number)
+                return everyEditorEquals(editorValues, true) || everyEditorEquals(editorValues, false);
+            } else { // Range type criterion (number, date)
                 return everyEditorEquals(editorValues, null);
             }
         }
-        return true; // Criterion has no editors, which is most likely an erroneous situation.
+        return true; // Criterion has no editors, which is most likely an erroneous situation
     },
 
     /**
