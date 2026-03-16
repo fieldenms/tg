@@ -14,6 +14,7 @@ import java.util.Currency;
 import static graphql.Assert.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -146,24 +147,19 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void yield_money_typed_prop_with_amount_into_a_money_typed_prop_with_amount_and_currency() {
-        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgFuelUsage.class, "pricePerLitre").hibType())
-                           .getPropertyNames())
-                .containsExactlyInAnyOrder(AMOUNT, CURRENCY);
-        assertThat(((ICompositeUserTypeInstantiate) domainMetadata.forProperty(TgVehicle.class, "price").hibType())
-                           .getPropertyNames())
-                .containsExactlyInAnyOrder(AMOUNT);
-
-        final var query = select(TgVehicle.class)
-                .where().prop(KEY).eq().val(CAR_1)
-                .yield().model(select(TgVehicle.class).where().prop(ID).eq().extProp(ID).model()).as("vehicle")
-                .yield().now().as("date")
-                .yield().prop("price").as("pricePerLitre")
+    public void yield_money_and_currency_explicitly() {
+        final var query = select(TgFuelUsage.class)
+                .yield().prop("id").as(ID)
+                .yield().prop("key").as(KEY)
+                .yield().prop("pricePerLitre").as("pricePerLitre")
+                .yield().val("JPY").as("pricePerLitre.currency")
                 .modelAsEntity(TgFuelUsage.class);
 
-        final var fuelUsage = co(TgFuelUsage.class).getEntity(from(query).model());
-        assertNotNull(fuelUsage.getPricePerLitre());
-        assertEquals(CAR_1_price.getAmount(), fuelUsage.getPricePerLitre().getAmount());
+        final var vehicle = co(TgFuelUsage.class).getEntity(from(query).model());
+        assertNotNull(vehicle.getPricePerLitre());
+        assertEquals(FUEL_USAGE_CAR_1_pricePerLitre.getAmount(), vehicle.getPricePerLitre().getAmount());
+        assertNotEquals(Currency.getInstance("JPY"), FUEL_USAGE_CAR_1_pricePerLitre.getCurrency());
+        assertEquals(Currency.getInstance("JPY"), vehicle.getPricePerLitre().getCurrency());
     }
 
     @Override
