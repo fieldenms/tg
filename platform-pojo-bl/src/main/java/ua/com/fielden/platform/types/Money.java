@@ -55,7 +55,6 @@ import static java.util.Locale.getDefault;
 ///
 ///   This expression can also be inferred.
 ///   The inference rule is this: the first `Money`-typed property that occurs in _tail position_.
-///   For convenience, this rule considers `x.amount` to be `Money`-typed if `x` has type `Money`.
 ///
 ///   To be in tail position, an operand must be _a part of the resulting value_ (optionally subject to conditional expressions).
 ///

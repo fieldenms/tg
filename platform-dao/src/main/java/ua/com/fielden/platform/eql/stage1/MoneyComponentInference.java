@@ -22,9 +22,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.types.Money.AMOUNT;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.utils.CollectionUtil.dropRight;
 import static ua.com.fielden.platform.utils.EntityUtils.splitPropPath;
@@ -86,10 +84,7 @@ public class MoneyComponentInference {
             final CharSequence componentName)
     {
         return prop1 -> {
-            final var normPath = pathEndsWith(entityType, prop1.propPath(), Money.class, AMOUNT)
-                    ? substringBefore(prop1.propPath(), "." + AMOUNT)
-                    : prop1.propPath();
-            final var pm = domainMetadata.forProperty(entityType, normPath);
+            final var pm = domainMetadata.forProperty(entityType, prop1.propPath());
             return pm.type().javaType().equals(Money.class)
                    && domainMetadata.propertyMetadataUtils().hasSubProperty(pm, componentName);
         };
