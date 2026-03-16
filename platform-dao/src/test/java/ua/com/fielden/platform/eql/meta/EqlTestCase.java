@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
 import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -81,7 +82,8 @@ public abstract class EqlTestCase {
                 injector.getInstance(IUserProvider.class),
                 dates,
                 filter,
-                DOMAIN_METADATA);
+                DOMAIN_METADATA,
+                new MoneyComponentInference(DOMAIN_METADATA));
         QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(
                 DOMAIN_METADATA,
                 domainMetadataUtils,

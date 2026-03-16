@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.sundries;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
@@ -43,7 +44,8 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.
     private static Stream<Yield2> transform(final Stream<Yield1> yields, final TransformationContextFromStage1To2 context, final AbstractQuery1 query) {
         return yields
                 .flatMap(y -> ExpandUnionTypedPropYield1.INSTANCE.apply(y, context).orElseGet(() -> Stream.of(y)))
-                .flatMap(y -> ExpandMoneyTypedYield1.INSTANCE.apply(y, context, query).orElseGet(() -> Stream.of(y)))
+                // TODO Inject MoneyComponentInference.
+                .flatMap(y -> ExpandMoneyTypedYield1.INSTANCE.apply(y, context, new MoneyComponentInference(context.domainMetadata), query).orElseGet(() -> Stream.of(y)))
                 .map(y -> y.transform(context));
     }
 
