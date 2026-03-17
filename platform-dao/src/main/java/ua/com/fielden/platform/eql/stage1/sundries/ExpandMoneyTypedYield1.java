@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.sundries;
 
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
 import ua.com.fielden.platform.eql.antlr.EqlCompiler;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.types.Money.AMOUNT;
 import static ua.com.fielden.platform.types.Money.CURRENCY;
 
@@ -42,6 +44,8 @@ public final class ExpandMoneyTypedYield1 {
     private static final String
             ERR_UNSUPPORTED_COMPONENT = "Yield inference is unsupported for [%s.%s].",
             ERR_COULD_NOT_INFER = "[%s] must be yielded into explicitly. [%s] could not be inferred from yield [%s]: %s";
+
+    private static final Logger LOGGER = getLogger();
 
     private ExpandMoneyTypedYield1() {}
 
@@ -84,6 +88,8 @@ public final class ExpandMoneyTypedYield1 {
             case CURRENCY -> {
                 final var currencyModel = moneyCurrencyInference.infer(yield.operand(), CURRENCY, moneyCurrencyInference.predicateIsMoneyWithComponent(context, CURRENCY))
                         .orElseThrow(err -> new EqlStage1ProcessingException(format(ERR_COULD_NOT_INFER, componentAlias, componentAlias, yield.alias(), err)));
+                LOGGER.debug(() -> format("Inferred yield for [%s] in a query with result type [%s].\nInferred expression: %s",
+                                          componentAlias, query.resultType, currencyModel));
                 final var expr1 = new EqlCompiler(context.stage1Transformer).compile(currencyModel.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model();
                 yield Optional.of(new Yield1(expr1, componentAlias, yield.hasNonnullableHint()));
             }
