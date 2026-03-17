@@ -27,6 +27,7 @@ import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.IPropertyPersistentTypeVerification;
 import ua.com.fielden.platform.persistence.types.SecurityTokenType;
 
 import java.util.Properties;
@@ -76,6 +77,7 @@ public abstract class TransactionalIocModule extends EntityIocModule {
         requestStaticInjection(SynAuditModelInitService.class);
         requestStaticInjection(SynModelInitService.class);
         requestStaticInjection(KeyConditionBuilder.class);
+        requestStaticInjection(IPropertyPersistentTypeVerification.Service.class);
     }
 
     @Provides
