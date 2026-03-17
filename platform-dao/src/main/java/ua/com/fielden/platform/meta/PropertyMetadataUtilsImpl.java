@@ -115,7 +115,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
             final TypeMetadata.Component componentTypeMetadata,
             final SubPropertyNaming naming)
     {
-        final var componentHibType = (ICompositeUserTypeInstantiate) hibType;
+        final var componentHibType = (ICompositeUserTypeInstantiate<?>) hibType;
 
         return zip(stream(componentHibType.getPropertyNames()), stream(componentHibType.getPropertyTypes()), (subPropName, subHibType) -> {
             final var subProp = componentTypeMetadata.propertyOpt(subPropName)
@@ -134,7 +134,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
         if (prop.hibType() == null) {
             throw new DomainMetadataGenerationException(ERR_MISSING_HIBERNATE_TYPE.formatted(prop));
         }
-        final var componentHibType = (ICompositeUserTypeInstantiate) prop.hibType();
+        final var componentHibType = (ICompositeUserTypeInstantiate<?>) prop.hibType();
 
         final String[] subPropNames = componentHibType.getPropertyNames();
         final Class<?> componentJavaType = componentTypeMetadata.javaType();
@@ -166,7 +166,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
         if (prop.hibType() == null) {
             throw new DomainMetadataGenerationException(ERR_MISSING_HIBERNATE_TYPE.formatted(prop));
         }
-        final var componentHibType = (ICompositeUserTypeInstantiate) prop.hibType();
+        final var componentHibType = (ICompositeUserTypeInstantiate<?>) prop.hibType();
 
         return zip(stream(componentHibType.getPropertyNames()), stream(componentHibType.getPropertyTypes()), (subPropName, subHibType) -> {
             final var subProp = componentTypeMetadata.propertyOpt(subPropName)
