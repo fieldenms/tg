@@ -2,8 +2,8 @@ import { TgAppConfig } from '/app/tg-app-config.js';
 
 const _appConfig = new TgAppConfig();
 
-function _getCurrencySymbol () {
-    return _appConfig.currencySymbol || '$';
+function _getCurrencySymbol (currency) {
+    return (currency && window.TG_APP.currencyMap[currency]) || _appConfig.currencySymbol || '$';
 }
 
 // A space used to separate a currency symbol from a numeric part when representing monetary value as strings.
@@ -72,7 +72,7 @@ export function formatDecimal (value, locale, scale, trailingZeros) {
 export function formatMoney (value, locale, scale, trailingZeros) {
     if (value !== null) {
         const strValue = formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros);
-        return (value.amount < 0 ? `-${_getCurrencySymbol()}` : `${_getCurrencySymbol()}`) + CURRENCY_SYMBOL_SPACE + strValue;
+        return (value.amount < 0 ? `-${_getCurrencySymbol(value.currency)}` : `${_getCurrencySymbol(value.currency)}`) + CURRENCY_SYMBOL_SPACE + strValue;
     }
     return '';
 }

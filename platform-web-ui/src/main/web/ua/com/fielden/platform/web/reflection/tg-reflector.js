@@ -1197,7 +1197,7 @@ const _equalsEx = function (value1, value2) {
     } else if (Array.isArray(value1)) {
         return _arraysEqualsEx(value1, value2);
     } else if (value1 !== null && _isMoney(value1)) {
-        return value2 !== null && _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2));
+        return value2 !== null && _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2)) && _equalsEx(value1.currency, value2.currency);
     } else if (value1 !== null && _isColour(value1)) {
         return value2 !== null && _isColour(value2) && _equalsEx(_colourVal(value1), _colourVal(value2));
     } else if (value1 !== null && _isHyperlink(value1)) {
