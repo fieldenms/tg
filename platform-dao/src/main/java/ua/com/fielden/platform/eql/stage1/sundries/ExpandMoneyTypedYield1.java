@@ -4,7 +4,6 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
 import ua.com.fielden.platform.eql.antlr.EqlCompiler;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1;
 import ua.com.fielden.platform.types.Money;
@@ -55,7 +54,6 @@ public final class ExpandMoneyTypedYield1 {
     public Optional<Stream<Yield1>> apply(
             final Yield1 yield,
             final TransformationContextFromStage1To2 context,
-            final MoneyComponentInference moneyComponentInference,
             final AbstractQuery1 query)
     {
         if (query.resultType == null || !yield.hasAlias()) {
@@ -66,14 +64,13 @@ public final class ExpandMoneyTypedYield1 {
                 .filter(pm -> pm.type().javaType().equals(Money.class))
                 .map(mdResultProp -> context.domainMetadata.propertyMetadataUtils().subProperties(mdResultProp)
                                      .stream()
-                                     .map(subProp -> expandComponent(yield, context, moneyComponentInference, query, subProp.name()))
+                                     .map(subProp -> expandComponent(yield, context, query, subProp.name()))
                                      .flatMap(Optional::stream));
     }
 
     private Optional<Yield1> expandComponent(
             final Yield1 yield,
             final TransformationContextFromStage1To2 context,
-            final MoneyComponentInference moneyCurrencyInference,
             final AbstractQuery1 query,
             final String componentName)
     {
@@ -86,7 +83,7 @@ public final class ExpandMoneyTypedYield1 {
         return switch (componentName) {
             case AMOUNT -> Optional.of(new Yield1(yield.operand(), yield.alias() + "." + AMOUNT, yield.hasNonnullableHint()));
             case CURRENCY -> {
-                final var currencyModel = moneyCurrencyInference.infer(yield.operand(), CURRENCY, moneyCurrencyInference.predicateIsMoneyWithComponent(context, CURRENCY))
+                final var currencyModel = context.moneyComponentInference.infer(yield.operand(), CURRENCY, context.moneyComponentInference.predicateIsMoneyWithComponent(context, CURRENCY))
                         .orElseThrow(err -> new EqlStage1ProcessingException(format(ERR_COULD_NOT_INFER, componentAlias, componentAlias, yield.alias(), err)));
                 LOGGER.debug(() -> format("Inferred yield for [%s] in a query with result type [%s].\nInferred expression: %s",
                                           componentAlias, query.resultType, currencyModel));
