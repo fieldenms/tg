@@ -62,6 +62,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgReVehicleWithHighPrice.class);
         add(TeNamedValuesVector.class);
         add(TeProductPrice.class);
+        add(TeProductPriceWithCurrency.class);
         add(TeVehicle.class);
         add(TgVehicleFinDetails.class);
         add(TgVehicleTechDetails.class);

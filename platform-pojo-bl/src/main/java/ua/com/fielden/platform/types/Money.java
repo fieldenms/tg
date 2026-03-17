@@ -55,7 +55,6 @@ import static java.util.Locale.getDefault;
 ///
 ///   This expression can also be inferred.
 ///   The inference rule is this: the first `Money`-typed property that occurs in _tail position_.
-///   For convenience, this rule considers `x.amount` to be `Money`-typed if `x` has type `Money`.
 ///
 ///   To be in tail position, an operand must be _a part of the resulting value_ (optionally subject to conditional expressions).
 ///
@@ -133,7 +132,13 @@ public class Money implements Comparable<Money> {
     @IsProperty
     @MapTo
     private final Integer taxPercent;
-    
+
+    /// The currency of the monetary amount.
+    ///
+    /// If enabled, must not be null.
+    /// This requirement also applies to calculated properties and properties populated by synthetic models.
+    /// In those cases, the calculated/yielded currency must not be null.
+    ///
     @IsProperty
     @MapTo
     private final Currency currency;

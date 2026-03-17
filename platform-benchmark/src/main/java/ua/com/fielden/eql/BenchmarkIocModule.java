@@ -9,6 +9,8 @@ import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.BasicWebServerIocModule;
+import ua.com.fielden.platform.persistence.types.IPropertyPersistentTypeVerification;
+import ua.com.fielden.platform.persistence.types.NoPropertyPersistentTypeVerification;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -50,6 +52,7 @@ class BenchmarkIocModule extends BasicWebServerIocModule  {
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(2); // five minutes
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
+        bind(IPropertyPersistentTypeVerification.class).to(NoPropertyPersistentTypeVerification.class);
     }
 
     @Provides

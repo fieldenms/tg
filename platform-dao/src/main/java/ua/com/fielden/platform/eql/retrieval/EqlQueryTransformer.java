@@ -12,6 +12,7 @@ import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
@@ -64,6 +65,7 @@ public final class EqlQueryTransformer {
     private final EqlTables eqlTables;
     private final QuerySourceInfoProvider querySourceInfoProvider;
     private final IDomainMetadata domainMetadata;
+    private final MoneyComponentInference moneyComponentInference;
     private final IDbVersionProvider dbVersionProvider;
 
     // TODO: Make private once dependent EQL tests are refactored and use IoC.
@@ -74,6 +76,7 @@ public final class EqlQueryTransformer {
             final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IDomainMetadata domainMetadata,
+            final MoneyComponentInference moneyComponentInference,
             final IDbVersionProvider dbVersionProvider)
     {
         this.filter = filter;
@@ -81,6 +84,7 @@ public final class EqlQueryTransformer {
         this.eqlTables = eqlTables;
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.domainMetadata = domainMetadata;
+        this.moneyComponentInference = moneyComponentInference;
         this.dbVersionProvider = dbVersionProvider;
     }
 
@@ -109,10 +113,10 @@ public final class EqlQueryTransformer {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 
-        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider, domainMetadata);
+        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider, domainMetadata, gen, moneyComponentInference);
         final ResultQuery2 query2 = query1.transform(context1);
 
-        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, domainMetadata, gen);
+        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, domainMetadata, gen, moneyComponentInference);
         final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), eqlTables, dbVersionProvider.dbVersion());
         return query2.transform(context2);
     }

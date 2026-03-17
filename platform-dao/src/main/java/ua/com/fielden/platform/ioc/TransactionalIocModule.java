@@ -10,6 +10,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import ua.com.fielden.platform.audit.SynAuditModelInitService;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.companion.helper.KeyConditionBuilder;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -26,6 +27,7 @@ import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.IPropertyPersistentTypeVerification;
 import ua.com.fielden.platform.persistence.types.SecurityTokenType;
 
 import java.util.Properties;
@@ -74,6 +76,8 @@ public abstract class TransactionalIocModule extends EntityIocModule {
         // Start the services for generating and assigning the EQL models to the generated synthetic entities.
         requestStaticInjection(SynAuditModelInitService.class);
         requestStaticInjection(SynModelInitService.class);
+        requestStaticInjection(KeyConditionBuilder.class);
+        requestStaticInjection(IPropertyPersistentTypeVerification.Service.class);
     }
 
     @Provides
