@@ -43,7 +43,6 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.
     private static Stream<Yield2> transform(final Stream<Yield1> yields, final TransformationContextFromStage1To2 context, final AbstractQuery1 query) {
         return yields
                 .flatMap(y -> ExpandUnionTypedPropYield1.INSTANCE.apply(y, context).orElseGet(() -> Stream.of(y)))
-                // TODO Inject MoneyComponentInference.
                 .flatMap(y -> ExpandMoneyTypedYield1.INSTANCE.apply(y, context, query).orElseGet(() -> Stream.of(y)))
                 .map(y -> y.transform(context));
     }
