@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.file_reports;
 
+import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.joda.time.DateTime;
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
@@ -39,6 +41,9 @@ public class WorkbookExporter {
     private static final String DEFAULT_SHEET_TITLE = "Exported data";
     private static final int SXSSF_WINDOW_SIZE = 1000;
     private static final int MAX_COUNT_OF_HYPERLINKS_IN_EXCEL = 65_530;
+
+    @Inject
+    private static IApplicationSettings appSettings;
 
     private WorkbookExporter() {}
 
@@ -249,9 +254,6 @@ public class WorkbookExporter {
         final CellStyle decimalCellStyle = wb.createCellStyle();
         decimalCellStyle.setDataFormat((short) 4); // refer BuiltinFormats
 
-        final CellStyle moneyCellStyle = wb.createCellStyle();
-        moneyCellStyle.setDataFormat((short) 8); // refer BuiltinFormats
-
         // let's make cell style to handle borders
         final CellStyle dataCellStyle = wb.createCellStyle();
         dataCellStyle.setBorderRight(BorderStyle.HAIR);
@@ -263,7 +265,7 @@ public class WorkbookExporter {
         // zip entities with corresponding stream of hyperlinks, while taking care of situations where not links are provided
         final Stream<T2<M, Map<String, String>>> entitiesMaybeWithHyperlinks = StreamUtils.zip(sheetData.getEntities(), StreamUtils.supplyIfEmpty(propertiesToHyperlinks, Collections::emptyMap), T2::t2);
         // and now let's export each entity with hyperlinks, if provided
-        entitiesMaybeWithHyperlinks.forEach(entityMaybeWithHyperlinks -> addRow(rowIndex, entityMaybeWithHyperlinks, sheetData, wb, maybeEntityMasterUrlProvider, countHyperlinks, sheet, helper, cacheShortCollectionalProps, dateCellStyle, integerCellStyle, decimalCellStyle, moneyCellStyle, dataCellStyle));
+        entitiesMaybeWithHyperlinks.forEach(entityMaybeWithHyperlinks -> addRow(rowIndex, entityMaybeWithHyperlinks, sheetData, wb, maybeEntityMasterUrlProvider, countHyperlinks, sheet, helper, cacheShortCollectionalProps, dateCellStyle, integerCellStyle, decimalCellStyle, dataCellStyle));
 
         // adjusting columns widths
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
@@ -287,9 +289,10 @@ public class WorkbookExporter {
             final CellStyle dateCellStyle,
             final CellStyle integerCellStyle,
             final CellStyle decimalCellStyle,
-            final CellStyle moneyCellStyle,
-            final CellStyle dataCellStyle) {
+            final CellStyle dataCellStyle)
+    {
         final Row row = sheet.createRow(index.incrementAndGet()); // new row starting with 1
+        final var dataFormat = wb.createDataFormat();
 
         final M entity = entityMaybeWithHyperlinks._1;
         final var propsWithHyperlinks = entityMaybeWithHyperlinks._2.isEmpty() ? determinePropsForHyperlinks(entity, sheetData, maybeEntityMasterUrlProvider) : entityMaybeWithHyperlinks._2;
@@ -337,7 +340,11 @@ public class WorkbookExporter {
             }
             else if (value instanceof Money moneyValue) {
                 cell.setCellValue(moneyValue.getAmount().doubleValue());
-                cell.setCellStyle(moneyCellStyle);
+                final var cellStyle = wb.createCellStyle();
+                final var symbol = appSettings.currencySymbolMap().getOrDefault(moneyValue.getCurrency().getCurrencyCode(),
+                                                                                moneyValue.getCurrency().getSymbol());
+                cellStyle.setDataFormat(dataFormat.getFormat("\"%1$s\"#,##0.00;[Red](\"%1$s\"#,##0.00)".formatted(symbol)));
+                cell.setCellStyle(cellStyle);
             }
             else if (value instanceof Boolean booleanValue) {
                 cell.setCellValue(booleanValue);
