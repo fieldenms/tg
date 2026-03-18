@@ -1,20 +1,18 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
+import org.apache.logging.log4j.Logger;
+import org.restlet.Component;
+import org.restlet.data.Parameter;
+import org.restlet.data.Protocol;
+import org.restlet.util.Series;
+import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.logging.log4j.Logger;
-import org.restlet.Component;
-import org.restlet.Server;
-import org.restlet.data.Parameter;
-import org.restlet.data.Protocol;
-
-import org.restlet.util.Series;
-import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.utils.MiscUtilities.readProperties;
 
 /**
  * Web UI Testing Server launching class for full web server with platform Web UI web application and domain-driven persistent storage.
@@ -59,9 +57,8 @@ public class Start {
         // Default application-PostreSql.properties and application-SqlServer.properties do not have any of the properties already assigned from system properties databaseUri, databaseUser and databasePasswd.
         // However, if some alternative application.properties is provided, which contains those properties, the values from the file will get used.
         final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application-%s.properties".formatted(propsFileSuffix);
-        try (final FileInputStream in = new FileInputStream(configFileName)) {
-            props.load(in);
-        }
+
+        props.putAll(readProperties(configFileName));
 
         LOGGER.info("Starting...");
         final Component component = new TgTestApplicationConfiguration(props);

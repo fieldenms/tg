@@ -32,7 +32,6 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.DbUtils;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
-import java.io.FileInputStream;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -40,6 +39,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.types.RichText.fromHtml;
+import static ua.com.fielden.platform.utils.MiscUtilities.readProperties;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
@@ -98,11 +98,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         // Default application-PostreSql.properties and application-SqlServer.properties do not have any of the properties already assigned from system properties databaseUri, databaseUser and databasePasswd.
         // However, if some alternative application.properties is provided, which contains those properties, the values from the file will get used.
         final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application-%s.properties".formatted(propsFileSuffix);
-        try (final FileInputStream in = new FileInputStream(configFileName)) {
-            props.load(in);
-        }
-        
-        
+        props.putAll(readProperties(configFileName));
+
         LOGGER.info("Obtaining Hibernate dialect...");
         final Class<?> dialectType = Class.forName(props.getProperty("hibernate.dialect"));
         final Dialect dialect = (Dialect) dialectType.getDeclaredConstructor().newInstance();
