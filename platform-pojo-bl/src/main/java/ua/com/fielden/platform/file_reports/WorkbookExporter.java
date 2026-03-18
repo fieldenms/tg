@@ -22,7 +22,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.zip.Deflater;
 
@@ -244,9 +246,11 @@ public class WorkbookExporter {
         // freezing first row
         sheet.createFreezePane(0, 1);
 
+        final var dataFormat = wb.createDataFormat();
+
         // define cell styles for different data types
         final CellStyle dateCellStyle = wb.createCellStyle();
-        dateCellStyle.setDataFormat(wb.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
+        dateCellStyle.setDataFormat(dataFormat.getFormat("dd/mm/yyyy hh:mm"));
 
         final CellStyle integerCellStyle = wb.createCellStyle();
         integerCellStyle.setDataFormat((short) 3); // refer BuiltinFormats
@@ -258,6 +262,16 @@ public class WorkbookExporter {
         final CellStyle dataCellStyle = wb.createCellStyle();
         dataCellStyle.setBorderRight(BorderStyle.HAIR);
 
+        // Currency style to be used depends on an actual Money value, hence cannot be determined ahead of time.
+        // Caching is used to avoid creating too many styles, as exceeding a certain limit will cause a runtime error.
+        final Map<String, CellStyle> currencyStyleCache = new ConcurrentHashMap<>();
+        final Function<String, CellStyle> getCurrencyStyle = code -> currencyStyleCache.computeIfAbsent(code, _ -> {
+            final var symbol = appSettings.currencySymbolMap().getOrDefault(code, Currency.getInstance(code).getSymbol());
+            final var cellStyle = wb.createCellStyle();
+            cellStyle.setDataFormat(dataFormat.getFormat("\"%1$s\"#,##0.00;[Red](\"%1$s\"#,##0.00)".formatted(symbol)));
+            return cellStyle;
+        });
+
         final var rowIndex = new AtomicInteger(0);
         final var countHyperlinks = new AtomicInteger(0);
         final var helper = wb.getCreationHelper();
@@ -265,7 +279,20 @@ public class WorkbookExporter {
         // zip entities with corresponding stream of hyperlinks, while taking care of situations where not links are provided
         final Stream<T2<M, Map<String, String>>> entitiesMaybeWithHyperlinks = StreamUtils.zip(sheetData.getEntities(), StreamUtils.supplyIfEmpty(propertiesToHyperlinks, Collections::emptyMap), T2::t2);
         // and now let's export each entity with hyperlinks, if provided
-        entitiesMaybeWithHyperlinks.forEach(entityMaybeWithHyperlinks -> addRow(rowIndex, entityMaybeWithHyperlinks, sheetData, wb, maybeEntityMasterUrlProvider, countHyperlinks, sheet, helper, cacheShortCollectionalProps, dateCellStyle, integerCellStyle, decimalCellStyle, dataCellStyle));
+        entitiesMaybeWithHyperlinks.forEach(entityMaybeWithHyperlinks -> addRow(rowIndex,
+                                                                                entityMaybeWithHyperlinks,
+                                                                                sheetData,
+                                                                                wb,
+                                                                                maybeEntityMasterUrlProvider,
+                                                                                countHyperlinks,
+                                                                                sheet,
+                                                                                helper,
+                                                                                cacheShortCollectionalProps,
+                                                                                dateCellStyle,
+                                                                                integerCellStyle,
+                                                                                decimalCellStyle,
+                                                                                dataCellStyle,
+                                                                                getCurrencyStyle));
 
         // adjusting columns widths
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
@@ -289,10 +316,10 @@ public class WorkbookExporter {
             final CellStyle dateCellStyle,
             final CellStyle integerCellStyle,
             final CellStyle decimalCellStyle,
-            final CellStyle dataCellStyle)
+            final CellStyle dataCellStyle,
+            final Function<String, CellStyle> getCurrencyStyle)
     {
         final Row row = sheet.createRow(index.incrementAndGet()); // new row starting with 1
-        final var dataFormat = wb.createDataFormat();
 
         final M entity = entityMaybeWithHyperlinks._1;
         final var propsWithHyperlinks = entityMaybeWithHyperlinks._2.isEmpty() ? determinePropsForHyperlinks(entity, sheetData, maybeEntityMasterUrlProvider) : entityMaybeWithHyperlinks._2;
@@ -340,11 +367,7 @@ public class WorkbookExporter {
             }
             else if (value instanceof Money moneyValue) {
                 cell.setCellValue(moneyValue.getAmount().doubleValue());
-                final var cellStyle = wb.createCellStyle();
-                final var symbol = appSettings.currencySymbolMap().getOrDefault(moneyValue.getCurrency().getCurrencyCode(),
-                                                                                moneyValue.getCurrency().getSymbol());
-                cellStyle.setDataFormat(dataFormat.getFormat("\"%1$s\"#,##0.00;[Red](\"%1$s\"#,##0.00)".formatted(symbol)));
-                cell.setCellStyle(cellStyle);
+                cell.setCellStyle(getCurrencyStyle.apply(moneyValue.getCurrency().getCurrencyCode()));
             }
             else if (value instanceof Boolean booleanValue) {
                 cell.setCellValue(booleanValue);
