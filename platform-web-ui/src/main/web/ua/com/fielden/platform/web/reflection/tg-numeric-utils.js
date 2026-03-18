@@ -3,7 +3,7 @@ import { TgAppConfig } from '/app/tg-app-config.js';
 const _appConfig = new TgAppConfig();
 
 function _getCurrencySymbol (currency) {
-    return (currency && window.TG_APP.currencyMap[currency]) || _appConfig.currencySymbol || '$';
+    return (currency && window.TG_APP.currencySymbolMap[currency]) || _appConfig.currencySymbol || '$';
 }
 
 // A space used to separate a currency symbol from a numeric part when representing monetary value as strings.
