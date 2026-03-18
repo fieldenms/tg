@@ -71,13 +71,11 @@ export class TgMoneyEditor extends TgNumericEditor {
         
         // TODO currency and tax are ignored at this stage, but their support should most likely be implemented at some
         //      there is a need to have a better more general understanding of the role for currency and tax at the platfrom level
-        const amount = (+strValue);
-        const fullEntity = this.reflector().tg_getFullEntity(this.entity); 
-        return {'amount': amount, 'currency': fullEntity.get(this.propertyName) && fullEntity.get(this.propertyName).currency};
-    }
-
-    _entityChanged(newValue, oldValue) {
+        const fullEntity = this.reflector().tg_getFullEntity(this.entity);
+        const metaProperty = fullEntity.prop(this.propertyName);
+        const lastValue = this.reflector().isError(metaProperty.validationResult()) ? metaProperty.lastInvalidValue() : fullEntity.get(this.propertyName);
         
+        return {'amount': (+strValue), 'currency': lastValue && lastValue.currency};
     }
 
     _formatText (_editingValue, entity) {
