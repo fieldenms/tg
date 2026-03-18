@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.model;
 
-import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
+import org.antlr.v4.runtime.Token;
+
+import java.util.List;
 
 /**
  * Represents a computational model for condition, which can be used together with entity query API.
@@ -10,7 +12,7 @@ import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
  */
 public class ConditionModel extends AbstractModel {
 
-    public ConditionModel(final ListTokenSource tokens) {
+    public ConditionModel(final List<? extends Token> tokens) {
         super(tokens);
     }
 }
