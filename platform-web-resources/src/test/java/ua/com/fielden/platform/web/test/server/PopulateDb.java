@@ -30,32 +30,29 @@ import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.DbUtils;
+import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 import java.math.BigDecimal;
 import java.util.*;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.collectingAndThen;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.types.RichText.fromHtml;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T2.toMap;
+import static ua.com.fielden.platform.utils.MiscUtilities.propertiesUnionLeft;
 import static ua.com.fielden.platform.utils.MiscUtilities.readProperties;
 
-/**
- * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
- *
- * It contains the <code>main</code> method and can be executed whenever the target database needs to be (re-)set.
- * <p>
- *
- * <b>IMPORTANT: </b><i>One should be careful not to run this code against the deployment or production databases, which would lead to the loss of all data.</i>
- *
- * <p>
- *
- * @author TG Team
- *
- */
+/// The `main` method of this class creates the development database and populates data for the test application.
+///
+/// **IMPORTANT:** One should be careful not to run this code against the deployment or production databases, which would lead to the loss of all data.
+///
 public class PopulateDb extends DomainDrivenDataPopulation {
-    private static final Logger LOGGER = getLogger(PopulateDb.class);
+
+    private static final Logger LOGGER = getLogger();
 
     private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
 
@@ -64,48 +61,52 @@ public class PopulateDb extends DomainDrivenDataPopulation {
     }
 
     public static void main(final String[] args) throws Exception {
-        LOGGER.info("Initialising...");
-        final var props = new Properties();
-        final String propsFileSuffix; // is used to load either application-PostreSql.properties or application-SqlServer.properties
-        // Three system properties are required: databaseUri, databaseUser and databasePasswd.
-        final var databseUri = System.getProperty("databaseUri");
-        if (isEmpty(databseUri)) {
-            throw new ApplicationConfigurationException("Property 'databaseUri' is required.");
-        } else {
-            final String jdbcUri;
-            if (databseUri.contains("5432")) {
-                propsFileSuffix = "PostgreSql";
-                jdbcUri = "jdbc:postgresql:" + databseUri; 
-            } else {
-                propsFileSuffix = "SqlServer";
-                jdbcUri = "jdbc:sqlserver:" + databseUri; 
- 
+
+        final String configFilePath;
+        if (args.length >= 1) {
+            configFilePath = args[0];
+        }
+        else {
+            final var databaseUri = System.getProperty("databaseUri");
+            if (isEmpty(databaseUri)) {
+                throw new ApplicationConfigurationException("System property [databaseUri] is required.");
             }
-            props.put("hibernate.connection.url", jdbcUri);
+            else {
+                configFilePath = databaseUri.contains("5432")
+                        ? "src/main/resources/application-PostgreSql.properties"
+                        : "src/main/resources/application-SqlServer.properties";
+            }
         }
-        final var dbUser = System.getProperty("databaseUser");
-        if (isEmpty(dbUser)) {
-            throw new ApplicationConfigurationException("Property 'databaseUser' is required.");
-        } else {
-            props.put("hibernate.connection.username", dbUser);
+
+        LOGGER.info("Application properties file: %s".formatted(configFilePath));
+
+        final var requiredPropertyNames = List.of("databaseUri", "databaseUser", "databasePasswd", "port", "hibernate.dialect");
+
+        // Properties from the file take precedence over System properties.
+        final var properties = propertiesUnionLeft(readProperties(configFilePath),
+                                                   requiredPropertyNames.stream()
+                                                           .map(prop -> Optional.ofNullable(System.getProperty(prop)).map(v -> t2(prop, v)))
+                                                           .flatMap(Optional::stream)
+                                                           .collect(collectingAndThen(toMap(), MiscUtilities::mkProperties)));
+
+        final var missingPropertyNames = requiredPropertyNames.stream().filter(prop -> !properties.containsKey(prop)).toList();
+        if (!missingPropertyNames.isEmpty()) {
+            throw new ApplicationConfigurationException("Required application properties are missing: %s".formatted(String.join(", ", missingPropertyNames)));
         }
-        final var dbPasswd = System.getProperty("databasePasswd");
-        if (isEmpty(dbPasswd)) {
-            throw new ApplicationConfigurationException("Property 'databasePasswd' is required.");
-        } else {
-            props.put("hibernate.connection.password", dbPasswd);
-        }
-        // Default application-PostreSql.properties and application-SqlServer.properties do not have any of the properties already assigned from system properties databaseUri, databaseUser and databasePasswd.
-        // However, if some alternative application.properties is provided, which contains those properties, the values from the file will get used.
-        final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application-%s.properties".formatted(propsFileSuffix);
-        props.putAll(readProperties(configFileName));
+
+        properties.put("hibernate.connection.url",
+                       Optional.of(properties.getProperty("databaseUri"))
+                               .map(uri -> uri.contains("5432") ? "jdbc:postgresql:" + uri : "jdbc:sqlserver:" + uri)
+                               .orElseThrow());
+        properties.put("hibernate.connection.username", properties.get("databaseUser"));
+        properties.put("hibernate.connection.password", properties.get("databasePasswd"));
 
         LOGGER.info("Obtaining Hibernate dialect...");
-        final Class<?> dialectType = Class.forName(props.getProperty("hibernate.dialect"));
-        final Dialect dialect = (Dialect) dialectType.getDeclaredConstructor().newInstance();
+        final Class<?> dialectType = Class.forName(properties.getProperty("hibernate.dialect"));
+        final var dialect = (Dialect) dialectType.getDeclaredConstructor().newInstance();
         LOGGER.info(format("Running with dialect %s...", dialect));
-        final DataPopulationConfig config = new DataPopulationConfig(props);
-        LOGGER.info("Generating DDL and running it against the target DB...");
+        final var config = new DataPopulationConfig(properties);
+        LOGGER.info("Generating DDL and executing it against the DB...");
 
         // use TG DDL generation or
         // Hibernate DDL generation final List<String> createDdl = DbUtils.generateSchemaByHibernate()
@@ -115,7 +116,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                                                                           DbUtils.prependDropDdlForSqlServer(createDdl);
         DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
 
-        final PopulateDb popDb = new PopulateDb(config, props);
+        final var popDb = new PopulateDb(config, properties);
         popDb.populateDomain();
     }
 
