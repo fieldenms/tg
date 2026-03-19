@@ -45,6 +45,21 @@ export function formatInteger (value, locale) {
     return '';
 }
 
+// Formats number `value` using fixed-point notation.
+// If the value is null, returns an empty string.
+//
+// @param scale - the number of digits to appear after the decimal point;
+//                should be within [0, 20];
+//                if this argument is omitted, a default scale will be used.
+//
+export function formatFixedPoint (value, scale) {
+    if (value !== null) {
+        const definedScale = typeof scale === 'undefined' || scale === null || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale */ ? DEFAULT_SCALE : scale;
+        return value.toFixed(definedScale);
+    }
+    return '';
+}
+
 // Formats number with floating point to string based on locale.
 // If the value is null then returns empty string.
 //
