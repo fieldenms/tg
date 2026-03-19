@@ -395,8 +395,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 setLeased(false).
                 setReplacedBy(car2));
 
-        save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
-        save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));
+        var prod1 = save(new_(TeProductPriceWithCurrency.class)
+                                 .setProduct("Radio GT1")
+                                 .setPrice(new Money("25", Currency.getInstance("UAH"))));
+        var prod2 = save(new_(TeProductPriceWithCurrency.class)
+                                 .setProduct("Controller S3")
+                                 .setPrice(new Money("5", Currency.getInstance("AUD")))
+                                 .setOther(prod1));
     }
 
     /**
