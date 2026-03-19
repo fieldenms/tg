@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(mvn clean:*)",
+      "Bash(git:*)",
+      "Bash(ls platform-web-ui/src/main/resources/polymer/wrappy/ 2>/dev/null; echo \"exit: $?\")",
+      "Bash(ls platform-web-ui/src/main/resources/polymer/inflight/ 2>/dev/null; echo \"exit: $?\")",
+      "Bash(ls platform-web-ui/src/main/resources/polymer/.package-lock.json 2>/dev/null; echo \"exit: $?\")",
+      "Bash(ls -d platform-web-ui/src/main/resources/polymer/nise/ 2>/dev/null; echo \"exit: $?\")",
+      "Bash(ls -d platform-web-ui/src/main/resources/polymer/just-extend/ 2>/dev/null; echo \"exit: $?\")"
+    ]
+  }
+}
