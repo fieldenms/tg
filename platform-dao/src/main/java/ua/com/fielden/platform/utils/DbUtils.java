@@ -154,6 +154,8 @@ public class DbUtils {
         final List<String> ddlWithDrop = new ArrayList<>();
 
         // Drop all foreign keys in all tables.
+        // Strictly speaking this is required only for the situation where FKs exist (e.g., in PopulateDb, but not in tests).
+        // However, the cost of this query is negligible in situations where FKs do not exist.
         ddlWithDrop.add(
                 """
                 WHILE(EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY'))
