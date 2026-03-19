@@ -19,7 +19,7 @@ public final class ExprToken extends AbstractParameterisedEqlToken {
 
     @Override
     public String parametersText() {
-        return " %s ".formatted(getInstance().format(model.getTokenSource()));
+        return " %s ".formatted(getInstance().format(model.tokens()));
     }
 
     @Override

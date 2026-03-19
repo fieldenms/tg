@@ -1,6 +1,5 @@
 import { PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import '/resources/components/postal-lib.js';
 import moment from '/resources/polymer/lib/moment-lib.js';
 
 if (window.TG_APP && window.TG_APP.timeZone) {

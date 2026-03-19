@@ -16,6 +16,30 @@ if (typeof require === "function" && typeof module === "object") {
 }
 
 /**
+ * @typedef {"nextAsync" | "manual" | "interval"} TickMode
+ */
+
+/**
+ * @typedef {object} NextAsyncTickMode
+ * @property {"nextAsync"} mode
+ */
+
+/**
+ * @typedef {object} ManualTickMode
+ * @property {"manual"} mode
+ */
+
+/**
+ * @typedef {object} IntervalTickMode
+ * @property {"interval"} mode
+ * @property {number} [delta]
+ */
+
+/**
+ * @typedef {IntervalTickMode | NextAsyncTickMode | ManualTickMode} TimerTickMode
+ */
+
+/**
  * @typedef {object} IdleDeadline
  * @property {boolean} didTimeout - whether or not the callback was called before reaching the optional timeout
  * @property {function():number} timeRemaining - a floating-point value providing an estimate of the number of milliseconds remaining in the current idle period
@@ -23,7 +47,6 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * Queues a function to be called during a browser's idle periods
- *
  * @callback RequestIdleCallback
  * @param {function(IdleDeadline)} callback
  * @param {{timeout: number}} options - an options object
@@ -101,12 +124,12 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {{methodName:string, original:any}[] | undefined} timersModuleMethods
  * @property {{methodName:string, original:any}[] | undefined} timersPromisesModuleMethods
  * @property {Map<function(): void, AbortSignal>} abortListenerMap
+ * @property {function(TimerTickMode): void} setTickMode
  */
 /* eslint-enable jsdoc/require-property-description */
 
 /**
  * Configuration object for the `install` method.
- *
  * @typedef {object} Config
  * @property {number|Date} [now] a number (in milliseconds) or a Date object (default epoch)
  * @property {string[]} [toFake] names of the methods that should be faked.
@@ -120,7 +143,6 @@ if (typeof require === "function" && typeof module === "object") {
 /* eslint-disable jsdoc/require-property-description */
 /**
  * The internal structure to describe a scheduled fake timer
- *
  * @typedef {object} Timer
  * @property {Function} func
  * @property {*[]} args
@@ -134,7 +156,6 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * A Node timer
- *
  * @typedef {object} NodeImmediate
  * @property {function(): boolean} hasRef
  * @property {function(): NodeImmediate} ref
@@ -146,7 +167,6 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * Mocks available features in the specified global namespace.
- *
  * @param {*} _global Namespace to mock (e.g. `window`)
  * @returns {FakeTimers}
  */
@@ -211,7 +231,12 @@ function withGlobal(_global) {
     }
 
     const NativeDate = _global.Date;
-    const NativeIntl = _global.Intl;
+    const NativeIntl = isPresent.Intl
+        ? Object.defineProperties(
+              Object.create(null),
+              Object.getOwnPropertyDescriptors(_global.Intl),
+          )
+        : undefined;
     let uniqueTimerId = idCounterStart;
 
     if (NativeDate === undefined) {
@@ -276,7 +301,6 @@ function withGlobal(_global) {
      * Parse strings like "01:10:00" (meaning 1 hour, 10 minutes, 0 seconds) into
      * number of milliseconds. This is used to support human-readable strings passed
      * to clock.tick()
-     *
      * @param {string} str
      * @returns {number}
      */
@@ -312,7 +336,6 @@ function withGlobal(_global) {
 
     /**
      * Get the decimal part of the millisecond value as nanoseconds
-     *
      * @param {number} msFloat the number of milliseconds
      * @returns {number} an integer number of nanoseconds in the range [0,1e6)
      *
@@ -329,7 +352,6 @@ function withGlobal(_global) {
 
     /**
      * Used to grok the `now` parameter to createClock.
-     *
      * @param {Date|number} epoch the system time
      * @returns {number}
      */
@@ -483,7 +505,6 @@ function withGlobal(_global) {
         /**
          * A normal Class constructor cannot be called without `new`, but Date can, so we need
          * to wrap it in a Proxy in order to ensure this functionality of Date is kept intact
-         *
          * @type {ClockDate}
          */
         const ClockDateProxy = new Proxy(ClockDate, {
@@ -510,7 +531,6 @@ function withGlobal(_global) {
      * Most of the properties are the original native ones,
      * but we need to take control of those that have a
      * dependency on the current clock.
-     *
      * @returns {object} the partly fake Intl implementation
      */
     function createIntl() {
@@ -683,7 +703,6 @@ function withGlobal(_global) {
     /* eslint consistent-return: "off" */
     /**
      * Timer comparitor
-     *
      * @param {Timer} a
      * @param {Timer} b
      * @returns {number}
@@ -815,7 +834,6 @@ function withGlobal(_global) {
 
     /**
      * Gets clear handler name for a given timer type
-     *
      * @param {string} ttype
      */
     function getClearHandler(ttype) {
@@ -827,7 +845,6 @@ function withGlobal(_global) {
 
     /**
      * Gets schedule handler name for a given timer type
-     *
      * @param {string} ttype
      */
     function getScheduleHandler(ttype) {
@@ -878,9 +895,17 @@ function withGlobal(_global) {
                     ? nativeHandler(timerId)
                     : undefined;
             }
+
+            // Include the stacktrace, excluding the 'error' line
+            const stackTrace = new Error().stack
+                .split("\n")
+                .slice(1)
+                .join("\n");
+
             warnOnce(
                 `FakeTimers: ${handlerName} was invoked to clear a native timer instead of one created by this library.` +
-                    "\nTo automatically clean-up native timers, use `shouldClearNativeTimers`.",
+                    "\nTo automatically clean-up native timers, use `shouldClearNativeTimers`." +
+                    `\n${stackTrace}`,
             );
         }
 
@@ -905,10 +930,9 @@ function withGlobal(_global) {
 
     /**
      * @param {Clock} clock
-     * @param {Config} config
      * @returns {Timer[]}
      */
-    function uninstall(clock, config) {
+    function uninstall(clock) {
         let method, i, l;
         const installedHrTime = "_hrtime";
         const installedNextTick = "_nextTick";
@@ -966,9 +990,7 @@ function withGlobal(_global) {
             }
         }
 
-        if (config.shouldAdvanceTime === true) {
-            _global.clearInterval(clock.attachedInterval);
-        }
+        clock.setTickMode("manual");
 
         // Prevent multiple executions which will completely remove these props
         clock.methods = [];
@@ -1120,10 +1142,12 @@ function withGlobal(_global) {
     }
 
     if (isPresent.Intl) {
-        timers.Intl = _global.Intl;
+        timers.Intl = NativeIntl;
     }
 
     const originalSetTimeout = _global.setImmediate || _global.setTimeout;
+    const originalClearInterval = _global.clearInterval;
+    const originalSetInterval = _global.setInterval;
 
     /**
      * @param {Date|number} [start] the system time - non-integer values are floored
@@ -1142,6 +1166,7 @@ function withGlobal(_global) {
             now: start,
             Date: createDate(),
             loopLimit: loopLimit,
+            tickMode: { mode: "manual", counter: 0, delta: undefined },
         };
 
         clock.Date.clock = clock;
@@ -1183,13 +1208,11 @@ function withGlobal(_global) {
 
         /**
          * A high resolution timestamp in milliseconds.
-         *
          * @typedef {number} DOMHighResTimeStamp
          */
 
         /**
          * performance.now()
-         *
          * @returns {DOMHighResTimeStamp}
          */
         function fakePerformanceNow() {
@@ -1208,6 +1231,74 @@ function withGlobal(_global) {
         if (isPresent.Intl) {
             clock.Intl = createIntl();
             clock.Intl.clock = clock;
+        }
+
+        /**
+         * @param {TimerTickMode} tickModeConfig - The new configuration for how the clock should tick.
+         */
+        clock.setTickMode = function (tickModeConfig) {
+            const { mode: newMode, delta: newDelta } = tickModeConfig;
+            const { mode: oldMode, delta: oldDelta } = clock.tickMode;
+            if (newMode === oldMode && newDelta === oldDelta) {
+                return;
+            }
+
+            if (oldMode === "interval") {
+                originalClearInterval(clock.attachedInterval);
+            }
+
+            clock.tickMode = {
+                counter: clock.tickMode.counter + 1,
+                mode: newMode,
+                delta: newDelta,
+            };
+
+            if (newMode === "nextAsync") {
+                advanceUntilModeChanges();
+            } else if (newMode === "interval") {
+                createIntervalTick(clock, newDelta || 20);
+            }
+        };
+
+        async function advanceUntilModeChanges() {
+            async function newMacrotask() {
+                // MessageChannel ensures that setTimeout is not throttled to 4ms.
+                // https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#reasons_for_delays_longer_than_specified
+                // https://stackblitz.com/edit/stackblitz-starters-qtlpcc
+                const channel = new MessageChannel();
+                await new Promise((resolve) => {
+                    channel.port1.onmessage = () => {
+                        resolve();
+                        channel.port1.close();
+                    };
+                    channel.port2.postMessage(undefined);
+                });
+                channel.port1.close();
+                channel.port2.close();
+                // setTimeout ensures microtask queue is emptied
+                await new Promise((resolve) => {
+                    originalSetTimeout(resolve);
+                });
+            }
+
+            const { counter } = clock.tickMode;
+            while (clock.tickMode.counter === counter) {
+                await newMacrotask();
+                if (clock.tickMode.counter !== counter) {
+                    return;
+                }
+                clock.next();
+            }
+        }
+
+        function pauseAutoTickUntilFinished(promise) {
+            if (clock.tickMode.mode !== "nextAsync") {
+                return promise;
+            }
+            clock.setTickMode({ mode: "manual" });
+            return promise.finally(() => {
+                clock.setTickMode({ mode: "nextAsync" });
+            });
         }
 
         clock.requestIdleCallback = function requestIdleCallback(
@@ -1508,15 +1599,17 @@ function withGlobal(_global) {
              * @returns {Promise}
              */
             clock.tickAsync = function tickAsync(tickValue) {
-                return new _global.Promise(function (resolve, reject) {
-                    originalSetTimeout(function () {
-                        try {
-                            doTick(tickValue, true, resolve, reject);
-                        } catch (e) {
-                            reject(e);
-                        }
-                    });
-                });
+                return pauseAutoTickUntilFinished(
+                    new _global.Promise(function (resolve, reject) {
+                        originalSetTimeout(function () {
+                            try {
+                                doTick(tickValue, true, resolve, reject);
+                            } catch (e) {
+                                reject(e);
+                            }
+                        });
+                    }),
+                );
             };
         }
 
@@ -1540,37 +1633,39 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.nextAsync = function nextAsync() {
-                return new _global.Promise(function (resolve, reject) {
-                    originalSetTimeout(function () {
-                        try {
-                            const timer = firstTimer(clock);
-                            if (!timer) {
-                                resolve(clock.now);
-                                return;
-                            }
-
-                            let err;
-                            clock.duringTick = true;
-                            clock.now = timer.callAt;
+                return pauseAutoTickUntilFinished(
+                    new _global.Promise(function (resolve, reject) {
+                        originalSetTimeout(function () {
                             try {
-                                callTimer(clock, timer);
-                            } catch (e) {
-                                err = e;
-                            }
-                            clock.duringTick = false;
-
-                            originalSetTimeout(function () {
-                                if (err) {
-                                    reject(err);
-                                } else {
+                                const timer = firstTimer(clock);
+                                if (!timer) {
                                     resolve(clock.now);
+                                    return;
                                 }
-                            });
-                        } catch (e) {
-                            reject(e);
-                        }
-                    });
-                });
+
+                                let err;
+                                clock.duringTick = true;
+                                clock.now = timer.callAt;
+                                try {
+                                    callTimer(clock, timer);
+                                } catch (e) {
+                                    err = e;
+                                }
+                                clock.duringTick = false;
+
+                                originalSetTimeout(function () {
+                                    if (err) {
+                                        reject(err);
+                                    } else {
+                                        resolve(clock.now);
+                                    }
+                                });
+                            } catch (e) {
+                                reject(e);
+                            }
+                        });
+                    }),
+                );
             };
         }
 
@@ -1603,51 +1698,55 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.runAllAsync = function runAllAsync() {
-                return new _global.Promise(function (resolve, reject) {
-                    let i = 0;
-                    /**
-                     *
-                     */
-                    function doRun() {
-                        originalSetTimeout(function () {
-                            try {
-                                runJobs(clock);
+                return pauseAutoTickUntilFinished(
+                    new _global.Promise(function (resolve, reject) {
+                        let i = 0;
+                        /**
+                         *
+                         */
+                        function doRun() {
+                            originalSetTimeout(function () {
+                                try {
+                                    runJobs(clock);
 
-                                let numTimers;
-                                if (i < clock.loopLimit) {
-                                    if (!clock.timers) {
-                                        resetIsNearInfiniteLimit();
-                                        resolve(clock.now);
+                                    let numTimers;
+                                    if (i < clock.loopLimit) {
+                                        if (!clock.timers) {
+                                            resetIsNearInfiniteLimit();
+                                            resolve(clock.now);
+                                            return;
+                                        }
+
+                                        numTimers = Object.keys(
+                                            clock.timers,
+                                        ).length;
+                                        if (numTimers === 0) {
+                                            resetIsNearInfiniteLimit();
+                                            resolve(clock.now);
+                                            return;
+                                        }
+
+                                        clock.next();
+
+                                        i++;
+
+                                        doRun();
+                                        checkIsNearInfiniteLimit(clock, i);
                                         return;
                                     }
 
-                                    numTimers = Object.keys(
-                                        clock.timers,
-                                    ).length;
-                                    if (numTimers === 0) {
-                                        resetIsNearInfiniteLimit();
-                                        resolve(clock.now);
-                                        return;
-                                    }
-
-                                    clock.next();
-
-                                    i++;
-
-                                    doRun();
-                                    checkIsNearInfiniteLimit(clock, i);
-                                    return;
+                                    const excessJob = firstTimer(clock);
+                                    reject(
+                                        getInfiniteLoopError(clock, excessJob),
+                                    );
+                                } catch (e) {
+                                    reject(e);
                                 }
-
-                                const excessJob = firstTimer(clock);
-                                reject(getInfiniteLoopError(clock, excessJob));
-                            } catch (e) {
-                                reject(e);
-                            }
-                        });
-                    }
-                    doRun();
-                });
+                            });
+                        }
+                        doRun();
+                    }),
+                );
             };
         }
 
@@ -1663,21 +1762,25 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.runToLastAsync = function runToLastAsync() {
-                return new _global.Promise(function (resolve, reject) {
-                    originalSetTimeout(function () {
-                        try {
-                            const timer = lastTimer(clock);
-                            if (!timer) {
-                                runJobs(clock);
-                                resolve(clock.now);
-                            }
+                return pauseAutoTickUntilFinished(
+                    new _global.Promise(function (resolve, reject) {
+                        originalSetTimeout(function () {
+                            try {
+                                const timer = lastTimer(clock);
+                                if (!timer) {
+                                    runJobs(clock);
+                                    resolve(clock.now);
+                                }
 
-                            resolve(clock.tickAsync(timer.callAt - clock.now));
-                        } catch (e) {
-                            reject(e);
-                        }
-                    });
-                });
+                                resolve(
+                                    clock.tickAsync(timer.callAt - clock.now),
+                                );
+                            } catch (e) {
+                                reject(e);
+                            }
+                        });
+                    }),
+                );
             };
         }
 
@@ -1741,6 +1844,12 @@ function withGlobal(_global) {
         return clock;
     }
 
+    function createIntervalTick(clock, delta) {
+        const intervalTick = doIntervalTick.bind(null, clock, delta);
+        const intervalId = originalSetInterval(intervalTick, delta);
+        clock.attachedInterval = intervalId;
+    }
+
     /* eslint-disable complexity */
 
     /**
@@ -1801,7 +1910,7 @@ function withGlobal(_global) {
         clock.shouldClearNativeTimers = config.shouldClearNativeTimers;
 
         clock.uninstall = function () {
-            return uninstall(clock, config);
+            return uninstall(clock);
         };
 
         clock.abortListenerMap = new Map();
@@ -1813,16 +1922,10 @@ function withGlobal(_global) {
         }
 
         if (config.shouldAdvanceTime === true) {
-            const intervalTick = doIntervalTick.bind(
-                null,
-                clock,
-                config.advanceTimeDelta,
-            );
-            const intervalId = _global.setInterval(
-                intervalTick,
-                config.advanceTimeDelta,
-            );
-            clock.attachedInterval = intervalId;
+            clock.setTickMode({
+                mode: "interval",
+                delta: config.advanceTimeDelta,
+            });
         }
 
         if (clock.methods.includes("performance")) {
@@ -1848,6 +1951,9 @@ function withGlobal(_global) {
                     new FakePerformanceEntry(name, "mark", 0, 0);
                 clock.performance.measure = (name) =>
                     new FakePerformanceEntry(name, "measure", 0, 100);
+                // `timeOrigin` should return the time of when the Window session started
+                // (or the Worker was installed)
+                clock.performance.timeOrigin = getEpoch(config.now);
             } else if ((config.toFake || []).includes("performance")) {
                 return handleMissingTimer("performance");
             }
