@@ -340,6 +340,14 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY5</p>")).setDesc("rich text desc 5"));
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY6").setRichTextProp(fromHtml("hello world")).setDesc("rich text desc 6")); // deliberate value without paragraph tags to induce Toast UI transformation; used to test SAVE disablement
 
+        var prod1 = save(new_(TeProductPriceWithCurrency.class)
+                                 .setProduct("Radio GT1")
+                                 .setPrice(new Money("25", Currency.getInstance("UAH"))));
+        save(new_(TeProductPriceWithCurrency.class)
+                     .setProduct("Controller S3")
+                     .setPrice(new Money("5", Currency.getInstance("AUD")))
+                     .setOther(prod1));
+
         try {
             final ISecurityTokenProvider provider = config.getInstance(ISecurityTokenProvider.class); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
@@ -394,14 +402,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 setActive(true).
                 setLeased(false).
                 setReplacedBy(car2));
-
-        var prod1 = save(new_(TeProductPriceWithCurrency.class)
-                                 .setProduct("Radio GT1")
-                                 .setPrice(new Money("25", Currency.getInstance("UAH"))));
-        var prod2 = save(new_(TeProductPriceWithCurrency.class)
-                                 .setProduct("Controller S3")
-                                 .setPrice(new Money("5", Currency.getInstance("AUD")))
-                                 .setOther(prod1));
     }
 
     /**
