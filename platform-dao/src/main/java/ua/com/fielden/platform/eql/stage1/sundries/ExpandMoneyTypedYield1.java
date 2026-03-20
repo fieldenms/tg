@@ -87,7 +87,7 @@ public final class ExpandMoneyTypedYield1 {
                         .orElseThrow(err -> new EqlStage1ProcessingException(format(ERR_COULD_NOT_INFER, componentAlias, componentAlias, yield.alias(), err)));
                 LOGGER.debug(() -> format("Inferred yield for [%s] in a query with result type [%s].\nInferred expression: %s",
                                           componentAlias, query.resultType, currencyModel));
-                final var expr1 = new EqlCompiler(context.stage1Transformer).compile(currencyModel.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model();
+                final var expr1 = new EqlCompiler(context.stage1Transformer).compile(currencyModel.tokens(), EqlCompilationResult.StandaloneExpression.class).model();
                 yield Optional.of(new Yield1(expr1, componentAlias, yield.hasNonnullableHint()));
             }
             default -> throw new EqlStage1ProcessingException(format(ERR_UNSUPPORTED_COMPONENT, Money.class.getSimpleName(), componentName));

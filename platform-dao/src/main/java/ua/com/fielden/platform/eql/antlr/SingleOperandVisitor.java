@@ -109,7 +109,7 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitSingleOperand_Expr(final SingleOperand_ExprContext ctx) {
         final ExprToken token = (ExprToken) ctx.token;
-        return new EqlCompiler(transformer).compile(token.model.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model();
+        return new EqlCompiler(transformer).compile(token.model.tokens(), EqlCompilationResult.StandaloneExpression.class).model();
     }
 
     @Override

@@ -74,8 +74,10 @@ public final class DomainMetadataModelGenerator {
                     }));
         });
 
-        // 2. Map each property from all properties in `entityTypes` to a `DomainTypeData` instance.
-        //    This covers union entities and component types.
+        // 2. Map each property type into a `DomainTypeData` instance.
+        //    This covers union entities and component types, all of which are reachable only through their use as property types.
+        //    This process assumes that each component type is used only in one representation (i.e., no two properties
+        //    use different representations of the same component type).
         final Stream<H> propHs = entityTypes.stream()
                 .map(domainMetadata::forEntity)
                 .map(EntityMetadata::properties)
@@ -97,7 +99,7 @@ public final class DomainMetadataModelGenerator {
                     };
                     return optPropJavaType.map(propJavaType -> new H(propJavaType, id -> {
                         final int propsCount = prop.asPersistent().flatMap(propertyInliner::inline)
-                                // ignore single-component composite types; not sure why, but this has been in the old code
+                                // Single-component types are treated as primitive (as if they had 0 sub-properties).
                                 .filter(props_ -> !prop.type().isComponent() || props_.size() > 1)
                                 .map(Collection::size)
                                 .orElse(0);
@@ -174,7 +176,7 @@ public final class DomainMetadataModelGenerator {
                 if (pm.isPersistent()) {
                     final var ppm = pm.asPersistent().orElseThrow();
                     final var optSubProps = propertyInliner.inline(ppm)
-                            // ignore single-component composite types, they are treated as primitive types
+                            // Single-component types are treated as primitive (as if they had 0 sub-properties).
                             .filter(props -> !ppm.type().isComponent() || props.size() > 1);
                     if (optSubProps.isPresent()) {
                         int subItemPosition = 0;

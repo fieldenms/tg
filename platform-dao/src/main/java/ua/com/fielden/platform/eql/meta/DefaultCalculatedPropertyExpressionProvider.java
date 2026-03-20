@@ -157,7 +157,7 @@ record DefaultCalculatedPropertyExpressionProvider(
                                         .orElseThrow(missingExpression(entityType, componentTypedProperty))
                                         .expressionModel();
                                 final var gen = new QueryModelToStage1Transformer(filter, userProvider.getUsername(), new QueryNowValue(dates), Map.of());
-                                final Expression1 expr1 = new EqlCompiler(gen).compile(moneyModel.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model();
+                                final Expression1 expr1 = new EqlCompiler(gen).compile(moneyModel.tokens(), EqlCompilationResult.StandaloneExpression.class).model();
                                 // This predicate is created from `entityType` because we can be sure that the calculated property
                                 // expression has only such prop() in tail position that belong to `entityType`.
                                 // This holds as long as inference is not performed on sub-queries.

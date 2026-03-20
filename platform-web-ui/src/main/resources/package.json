@@ -68,16 +68,22 @@
     "@polymer/test-fixture": "4.0.2",
     "async": "3.2.6",
     "chai": "5.1.2",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "mocha": "10.8.2",
-    "sinon": "19.0.2",
+    "serialize-javascript": "7.0.3",
+    "glob": "13.0.6",
+    "sinon": "21.0.2",
     "sinon-chai": "4.0.0",
     "wct-browser-legacy": "1.0.2"
   },
   "overrides": {
     "@toast-ui/editor": {
-      "dompurify": "^3.2.4",
+      "dompurify": "^3.3.2",
       "@types/trusted-types": "../_EXCLUDED_"
+    },
+    "mocha": {
+      "serialize-javascript": "$serialize-javascript",
+      "glob": "$glob"
     },
     "wct-browser-legacy": {
       "@polymer/sinonjs": "../_EXCLUDED_",
