@@ -128,7 +128,7 @@ public class PathsToTreeTransformer {
         for (final PropChunk calcChunk : getFirstCalcChunks(incomingTails)) {
             if (!processedCalcData.containsKey(calcChunk.name())) { // consider only calc props that have not yet been processed on the previous iteration(s)
                 final Expression1 exp1 = new EqlCompiler(gen).compile(
-                                calcChunk.data().expression.expressionModel().getTokenSource(),
+                                calcChunk.data().expression.expressionModel().tokens(),
                                 EqlCompilationResult.StandaloneExpression.class)
                         .model();
                 final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider, domainMetadata, gen, moneyComponentInference).cloneWithAdded(sourceForCalcPropResolution);
