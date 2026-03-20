@@ -1486,7 +1486,7 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], 
             if (entityValue.get(keyName)) {
                 titles.push({
                     title: entityType.prop(keyName).title(),
-                    value: this.reflector().tg_toString(entityValue.get(keyName), entityType, keyName)
+                    value: this.reflector().tg_toString(entityValue.get(keyName), entityType, keyName, {display: true})
                 });
             }
         });

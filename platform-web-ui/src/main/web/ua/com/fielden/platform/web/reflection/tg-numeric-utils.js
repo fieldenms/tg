@@ -86,8 +86,27 @@ export function formatDecimal (value, locale, scale, trailingZeros) {
 //
 export function formatMoney (value, locale, scale, trailingZeros) {
     if (value !== null) {
-        const strValue = formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros);
-        return (value.amount < 0 ? `-${_getCurrencySymbol(value.currency)}` : `${_getCurrencySymbol(value.currency)}`) + CURRENCY_SYMBOL_SPACE + strValue;
+        return _prependCurrency(value, formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros));
     }
     return '';
+}
+
+// Formats money `value` using fixed-point notation.
+// If the value is null, returns an empty string.
+//
+// @param scale - the number of digits to appear after the decimal point;
+//                should be within [0, 20];
+//                if this argument is omitted, a default scale will be used.
+//
+export function formatMoneyFixedPoint (value, scale) {
+    if (value !== null) {
+        return _prependCurrency(value, formatFixedPoint(Math.abs(value.amount), scale))
+    }
+    return '';
+}
+
+// Adds the currency symbol and sign prefix to the already formatted `toValue`.
+//
+function _prependCurrency(moneyValue, toValue) {
+    return (moneyValue.amount < 0 ? `-${_getCurrencySymbol(moneyValue.currency)}` : `${_getCurrencySymbol(moneyValue.currency)}`) + CURRENCY_SYMBOL_SPACE + toValue;
 }

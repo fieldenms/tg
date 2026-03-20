@@ -3,7 +3,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
-import { formatInteger, formatDecimal, formatMoney, formatFixedPoint, DEFAULT_SCALE } from '/resources/reflection/tg-numeric-utils.js';
+import { formatInteger, formatDecimal, formatMoney, formatFixedPoint, formatMoneyFixedPoint, DEFAULT_SCALE } from '/resources/reflection/tg-numeric-utils.js';
 
 /**
  * If the precion for entity type property wasn't defined then the default one should be used.
@@ -1456,7 +1456,7 @@ const _toStringForKeys = function (keyNamesAndValues, entityType, separator, map
             // Special case: the format of Money.amount must strictly match its persisted representation.
             // To achieve that, use the fixed-point representation with the property's scale.
             if (converted !== null && prop.type() === "Money") {
-                return formatFixedPoint(converted.amount, prop.scale());
+                return formatMoneyFixedPoint(converted, prop.scale());
             }
             // Special case: the format of BigDecimal must strictly match its persisted representation.
             // To achieve that, use the fixed-point representation with the property's scale.
