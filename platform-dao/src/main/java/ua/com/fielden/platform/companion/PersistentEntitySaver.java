@@ -43,6 +43,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Lazy;
@@ -79,6 +80,7 @@ import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrD
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -100,7 +102,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     public static final String ERR_NULL_OR_NON_PERSISTENT_ENTITY = "Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.";
     public static final String ERR_UNINSTRUMENTED_ENTITY = "Uninstrumented entity of type [%s] cannot be saved.";
     public static final String ERR_PROXIED_VERSION = "Entity of type [%s] with unfetched [version] cannot be saved. Use at least fetchOnly (ID_AND_VERSION) when fetching entities intended for saving.";
-    public static final String ERR_INSUFFICIENT_FETCH = "Fetch model with category [%s] for entity type [%s] does not include [version] and is insufficient for saving. Use at least ID_AND_VERSION.";
 
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;
@@ -206,8 +207,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             throw new EntityCompanionException(ERR_UNINSTRUMENTED_ENTITY.formatted(entityType.getName()));
         } else if (entity.isPersisted() && entity.proxiedPropertyNames().contains(AbstractEntity.VERSION)) {
             throw new EntityCompanionException(ERR_PROXIED_VERSION.formatted(entityType.getName()));
-        } else if (maybeFetch.filter(PersistentEntitySaver::doesNotIncludeVersion).isPresent()) {
-            throw new EntityCompanionException(ERR_INSUFFICIENT_FETCH.formatted(maybeFetch.get().getFetchCategory(), entityType.getName()));
         } else if (!entity.isDirty()) {
             final Result isValid = validateEntity(entity);
             if (isValid.isSuccessful()) {
@@ -254,7 +253,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return propName;
         }).collect(toSet());
 
-        final T2<Long, T> savedEntityAndId;
+        final T3<Long, Long, T> savedResult;
         // let's try to save entity
         try {
             // firstly validate the entity
@@ -266,15 +265,17 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                savedEntityAndId = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
+                savedResult = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
             } else { // so, this is a modified entity
-                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
+                savedResult = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
 
-        final T savedEntity = savedEntityAndId._2;
+        final Long savedId = savedResult._1;
+        final Long savedVersion = savedResult._2;
+        final T savedEntity = savedResult._3;
 
         // This call never throws any exceptions.
         //
@@ -282,10 +283,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         //       This may be confusing if "after-save" logic expects an entity instantiated in the usual way (via EntityFactory).
         processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
-        // Auditing
-        lazyAuditor.get().audit(savedEntityAndId._1, savedEntity.getVersion(), transactionGuid.get(), dirtyPropNames);
+        // Auditing: version is obtained directly from Hibernate (via savedResult), not from the refetched entity whose fetch model may not include version.
+        lazyAuditor.get().audit(savedId, savedVersion, transactionGuid.get(), dirtyPropNames);
 
-        return savedEntityAndId;
+        return t2(savedId, savedEntity);
     }
 
     /// Performs the auditing function if auditing is enabled and the entity type is audited.
@@ -298,19 +299,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         void audit(final Long auditEntityId, final Long auditEntityVersion, final String transactionGuid, Collection<String> dirtyProperties);
 
-    }
-
-    /// Returns `true` if the given fetch model will not include `version` — either because the category is too narrow and `version` was not explicitly added,
-    /// or because `version` was explicitly excluded.
-    ///
-    static boolean doesNotIncludeVersion(final fetch<?> f) {
-        if (f.getExcludedProps().contains(AbstractEntity.VERSION)) {
-            return true;
-        }
-        if (f.getFetchCategory().ordinal() <= fetch.FetchCategory.ID_AND_VERSION.ordinal()) {
-            return false; // version is implicitly included by the category
-        }
-        return !f.getIncludedProps().contains(AbstractEntity.VERSION);
     }
 
     private static <E extends AbstractEntity<?>> Auditor<E> makeAuditor(
@@ -393,7 +381,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param entityMetadata  entity domain metadata
      * @param session  the current database session
      */
-    private T2<Long, T> saveModifiedEntity(
+    private T3<Long, Long, T> saveModifiedEntity(
             final T entity,
             final boolean skipRefetching,
             final Optional<fetch<T>> maybeFetch,
@@ -477,9 +465,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
 
         // update entity
+        final Long savedVersion;
         try {
             session.update(persistedEntity);
             session.flush();
+            savedVersion = persistedEntity.getVersion();
         } catch (final OptimisticLockException ex) {
             // optimistic locking exception may occur during concurrent saving
             // let's present a more user-friendly message and log the error
@@ -496,7 +486,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             }
         }
 
-        return t2(persistedEntity.getId(),
+        return t3(persistedEntity.getId(), savedVersion,
                   entityFetchOption.map(fetch -> findById.find(persistedEntity.getId(), fetch, fillModel.get())).orElse(persistedEntity));
     }
 
@@ -578,7 +568,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param fillModel  will be applied only in the presence of a fetch model
      * @param session  the current database session
      */
-    private T2<Long, T> saveNewEntity(
+    private T3<Long, Long, T> saveNewEntity(
             final T entity,
             final boolean skipRefetching,
             final Optional<fetch<T>> maybeFetch,
@@ -607,18 +597,20 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // In the case of one-2-one association, the value of ID is derived from its key's ID and does not need to be generated.
         final boolean isOne2OneAssociation = AbstractEntity.class.isAssignableFrom(entity.getKeyType());
         final Long newEntityId = isOne2OneAssociation ? ((AbstractEntity<?>) entity.getKey()).getId() : nextIdValue(ID_SEQUENCE_NAME, session);
+        final Long savedVersion;
         try {
             final var entityToSave = isOne2OneAssociation ? entity : entity.set(ID, newEntityId);
             session.save(entityToSave);
             session.flush(); // force saving to DB
+            savedVersion = entityToSave.getVersion();
             session.clear();
         } finally {
             // Reset the value of ID to null for the passed-in entity to avoid any possible confusion stemming from the fact that `entity` became persisted.
             // This is relevant for all entities, including one-2-one associations.
             entity.set(ID, null);
         }
-        
-        return t2(newEntityId,
+
+        return t3(newEntityId, savedVersion,
                   entityFetchOption.map(fetch -> findById.find(newEntityId, fetch, fillModel.get())).orElse(entity));
     }
 

@@ -6,13 +6,11 @@ import ua.com.fielden.platform.sample.domain.TrivialPersistentEntity;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.companion.PersistentEntitySaver.ERR_PROXIED_VERSION;
-import static ua.com.fielden.platform.companion.PersistentEntitySaver.doesNotIncludeVersion;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 
 public class PersistentEntitySaverTest extends AbstractDaoTestCase {
 
@@ -153,36 +151,6 @@ public class PersistentEntitySaverTest extends AbstractDaoTestCase {
         final var entity = co$(TrivialPersistentEntity.class).findByKeyAndFetch(fetchOnly(TrivialPersistentEntity.class), "T1");
         final var saved = save(entity);
         assertNotNull(saved);
-    }
-
-    @Test
-    public void doesNotIncludeVersion_returns_true_for_ID_ONLY_fetch() {
-        assertThat(doesNotIncludeVersion(fetchIdOnly(TrivialPersistentEntity.class))).isTrue();
-    }
-
-    @Test
-    public void doesNotIncludeVersion_returns_true_for_NONE_fetch() {
-        assertThat(doesNotIncludeVersion(fetchNone(TrivialPersistentEntity.class))).isTrue();
-    }
-
-    @Test
-    public void doesNotIncludeVersion_returns_false_for_ID_ONLY_with_explicit_version() {
-        assertThat(doesNotIncludeVersion(fetchIdOnly(TrivialPersistentEntity.class).with(VERSION))).isFalse();
-    }
-
-    @Test
-    public void doesNotIncludeVersion_returns_false_for_ID_AND_VERSION_fetch() {
-        assertThat(doesNotIncludeVersion(fetchOnly(TrivialPersistentEntity.class))).isFalse();
-    }
-
-    @Test
-    public void doesNotIncludeVersion_returns_false_for_DEFAULT_fetch() {
-        assertThat(doesNotIncludeVersion(fetch(TrivialPersistentEntity.class))).isFalse();
-    }
-
-    @Test
-    public void doesNotIncludeVersion_returns_true_for_DEFAULT_fetch_with_version_excluded() {
-        assertThat(doesNotIncludeVersion(fetch(TrivialPersistentEntity.class).without(VERSION))).isTrue();
     }
 
 }
