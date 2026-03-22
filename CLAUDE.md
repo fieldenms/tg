@@ -168,6 +168,8 @@ All domain entities extend `AbstractEntity` and use annotations for configuratio
     - **Initialising phase**: Entity being loaded from database
     - **Mutation phase**: User or business logic setting property values
   - Cannot reject values (runs after successful validation)
+  - **Important:** When a definer sets a value on the same or another property via its setter, the setter call goes through `ObservableMutatorInterceptor` and triggers the full validation chain for that property.
+    Definer-initiated mutations are therefore **not** silent — they undergo the same validation as any other property mutation.
 
 **Validation Result Types:**
 - **Failure**: Rejects the value, property remains unchanged
