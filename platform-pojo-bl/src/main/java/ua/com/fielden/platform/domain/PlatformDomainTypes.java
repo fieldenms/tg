@@ -22,13 +22,6 @@ import ua.com.fielden.platform.security.user.locator.UserLocator;
 import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenMain_MenuItem;
 import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenUserAndRoleAssociation_MenuItem;
 import ua.com.fielden.platform.security.user.ui_actions.OpenUserMasterAction;
-import ua.com.fielden.platform.ui.config.*;
-import ua.com.fielden.platform.web.centre.*;
-
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 import ua.com.fielden.platform.share.ShareAction;
 import ua.com.fielden.platform.tiny.TinyHyperlink;
 import ua.com.fielden.platform.ui.config.*;
