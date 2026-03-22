@@ -42,7 +42,6 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -67,20 +66,18 @@ import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.creat
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.model.IFillModel.emptyFillModel;
 import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
-import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableReference;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
-import static ua.com.fielden.platform.types.either.Either.left;
-import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
@@ -100,6 +97,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     public static final String ERR_NOW_CONSTANT_MISSING_VALUE = "The now() constant has not been assigned!";
     public static final String ERR_NO_VALUE_FOR_AUTO_ASSIGNABLE_PROP = "Property %s@%s is marked as assignable before save, but no value could be determined.";
     public static final String ERR_NO_CURRENT_USER = "The current user is not defined.";
+    public static final String ERR_NULL_OR_NON_PERSISTENT_ENTITY = "Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.";
+    public static final String ERR_UNINSTRUMENTED_ENTITY = "Uninstrumented entity of type [%s] cannot be saved.";
+    public static final String ERR_PROXIED_VERSION = "Entity of type [%s] with unfetched [version] cannot be saved. Use at least fetchOnly (ID_AND_VERSION) when fetching entities intended for saving.";
 
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;
@@ -200,9 +200,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
     public T2<Long, T> coreSave(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch) {
         if (entity == null || !entity.isPersistent()) {
-            throw new EntityCompanionException(format("Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.", entityType.getName()));
+            throw new EntityCompanionException(ERR_NULL_OR_NON_PERSISTENT_ENTITY.formatted(entityType.getName()));
         } else if (!entity.isInstrumented()) {
-            throw new EntityCompanionException(format("Uninstrumented entity of type [%s] cannot be saved.", entityType.getName()));
+            throw new EntityCompanionException(ERR_UNINSTRUMENTED_ENTITY.formatted(entityType.getName()));
+        } else if (entity.isPersisted() && entity.proxiedPropertyNames().contains(AbstractEntity.VERSION)) {
+            throw new EntityCompanionException(ERR_PROXIED_VERSION.formatted(entityType.getName()));
         } else if (!entity.isDirty()) {
             final Result isValid = validateEntity(entity);
             if (isValid.isSuccessful()) {
