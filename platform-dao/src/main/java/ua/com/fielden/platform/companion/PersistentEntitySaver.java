@@ -100,6 +100,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     public static final String ERR_NULL_OR_NON_PERSISTENT_ENTITY = "Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.";
     public static final String ERR_UNINSTRUMENTED_ENTITY = "Uninstrumented entity of type [%s] cannot be saved.";
     public static final String ERR_PROXIED_VERSION = "Entity of type [%s] with unfetched [version] cannot be saved. Use at least fetchOnly (ID_AND_VERSION) when fetching entities intended for saving.";
+    public static final String ERR_INSUFFICIENT_FETCH = "Fetch model with category [%s] for entity type [%s] does not include [version] and is insufficient for saving. Use at least ID_AND_VERSION.";
 
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;
@@ -205,6 +206,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             throw new EntityCompanionException(ERR_UNINSTRUMENTED_ENTITY.formatted(entityType.getName()));
         } else if (entity.isPersisted() && entity.proxiedPropertyNames().contains(AbstractEntity.VERSION)) {
             throw new EntityCompanionException(ERR_PROXIED_VERSION.formatted(entityType.getName()));
+        } else if (maybeFetch.filter(PersistentEntitySaver::doesNotIncludeVersion).isPresent()) {
+            throw new EntityCompanionException(ERR_INSUFFICIENT_FETCH.formatted(maybeFetch.get().getFetchCategory(), entityType.getName()));
         } else if (!entity.isDirty()) {
             final Result isValid = validateEntity(entity);
             if (isValid.isSuccessful()) {
@@ -295,6 +298,19 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         void audit(final Long auditEntityId, final Long auditEntityVersion, final String transactionGuid, Collection<String> dirtyProperties);
 
+    }
+
+    /// Returns `true` if the given fetch model will not include `version` — either because the category is too narrow and `version` was not explicitly added,
+    /// or because `version` was explicitly excluded.
+    ///
+    static boolean doesNotIncludeVersion(final fetch<?> f) {
+        if (f.getExcludedProps().contains(AbstractEntity.VERSION)) {
+            return true;
+        }
+        if (f.getFetchCategory().ordinal() <= fetch.FetchCategory.ID_AND_VERSION.ordinal()) {
+            return false; // version is implicitly included by the category
+        }
+        return !f.getIncludedProps().contains(AbstractEntity.VERSION);
     }
 
     private static <E extends AbstractEntity<?>> Auditor<E> makeAuditor(
