@@ -1,16 +1,23 @@
 package ua.com.fielden.platform.companion;
 
 import org.junit.Test;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.sample.domain.TrivialPersistentEntity;
+import ua.com.fielden.platform.sample.domain.TrivialPersistentEntityDao;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.companion.PersistentEntitySaver.ERR_PROXIED_VERSION;
+import static ua.com.fielden.platform.entity.proxy.ProxyPropertyInterceptor.ERR_UNFETCHED_PROPERTY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 
 public class PersistentEntitySaverTest extends AbstractDaoTestCase {
 
@@ -145,12 +152,33 @@ public class PersistentEntitySaverTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void saving_a_persisted_entity_fetched_with_ID_AND_VERSION_succeeds() {
+    public void saving_a_persisted_entity_fetched_with_ID_ONLY_is_not_supported() {
         save(new_(TrivialPersistentEntity.class, "T1"));
-        // Fetch with ID_AND_VERSION — version is included.
-        final var entity = co$(TrivialPersistentEntity.class).findByKeyAndFetch(fetchOnly(TrivialPersistentEntity.class), "T1");
-        final var saved = save(entity);
+        // Fetch with ID_ONLY — version excluded.
+        final var entity = co$(TrivialPersistentEntity.class).findByKeyAndFetch(fetchIdOnly(TrivialPersistentEntity.class), "T1");
+        try {
+            save(entity);
+            fail();
+        } catch (final EntityCompanionException ex) {
+            assertEquals(ERR_PROXIED_VERSION.formatted(TrivialPersistentEntity.class.getName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void save_with_fetch_ID_ONLY_succeeds() {
+        save(new_(TrivialPersistentEntity.class, "T1"));
+        // Fetch with ID_ONLY — version excluded.
+        final TrivialPersistentEntityDao co = co$(TrivialPersistentEntity.class);
+        final var entity = co.findByKeyAndFetch(fetch(TrivialPersistentEntity.class), "T1");
+        entity.setKey("T2");
+        final var saved = co.save(entity, Optional.of(fetchIdOnly(TrivialPersistentEntity.class))).asRight().value();
         assertNotNull(saved);
+        try {
+            saved.getVersion();
+            fail();
+        } catch (final StrictProxyException ex) {
+            assertEquals(ERR_UNFETCHED_PROPERTY.formatted("getVersion", "version", TrivialPersistentEntity.class.getName()), ex.getMessage());
+        }
     }
 
 }
