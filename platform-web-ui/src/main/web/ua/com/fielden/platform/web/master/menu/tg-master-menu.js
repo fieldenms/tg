@@ -868,7 +868,7 @@ Polymer({
     },
 
     /**
-     * Returns 'true' if the specified 'section' represents a master with master, that contains persistent non-persisted entity instance; 'false' otherwise.
+     * Returns 'true' if the specified 'section' represents a master with master, that contains persistent, but non-persisted entity instance; 'false' otherwise.
      * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
      *
      * @param section

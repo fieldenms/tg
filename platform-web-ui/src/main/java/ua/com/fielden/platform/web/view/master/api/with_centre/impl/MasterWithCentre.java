@@ -22,7 +22,7 @@ public class MasterWithCentre<T extends AbstractEntity<?>> extends AbstractMaste
             final Optional<JsCode> customCodeOnAttach,
             final Optional<JsCode> customImports)
     {
-        super(entityType, saveOnActivate, customCode, customCodeOnAttach,customImports);
+        super(entityType, saveOnActivate, customCode, customCodeOnAttach, customImports);
         embeddedCentre = entityCentre;
     }
 

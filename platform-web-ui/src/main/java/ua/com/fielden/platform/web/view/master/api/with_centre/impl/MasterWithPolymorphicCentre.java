@@ -21,7 +21,7 @@ public class MasterWithPolymorphicCentre<T extends AbstractEntity<?>> extends Ab
                     uuid: this.uuid,
                     enforcePostSaveRefresh: _currBindingEntity.shouldEnforcePostSaveRefresh,
                     eventSourceClass: _currBindingEntity.eventSourceClass
-                };""";
+                }""";
     }
 
     @Override
