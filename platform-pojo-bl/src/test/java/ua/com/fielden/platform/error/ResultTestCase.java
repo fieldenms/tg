@@ -260,38 +260,38 @@ public class ResultTestCase {
     @Test
     public void successful_result_does_not_capture_a_stack_trace() {
         final var result = successful();
-        assertThat(result.getStackTrace()).isEmpty();;
+        assertThat(result.getStackTrace()).isEmpty();
 
         final var resultWithValue = successful(123);
-        assertThat(resultWithValue.getStackTrace()).isEmpty();;
+        assertThat(resultWithValue.getStackTrace()).isEmpty();
     }
 
     @Test
     public void warning_does_not_capture_a_stack_trace() {
         final var warning = warning("Prolonged sitting is likely to cause back pain.");
-        assertThat(warning.getStackTrace()).isEmpty();;
+        assertThat(warning.getStackTrace()).isEmpty();
         final var warningWithValue = warning(123, "Prolonged sitting is likely to cause back pain.");
-        assertThat(warningWithValue.getStackTrace()).isEmpty();;
+        assertThat(warningWithValue.getStackTrace()).isEmpty();
         final var warningEx = warningEx("Get up from the chair!", "Prolonged sitting is likely to cause back pain.");
-        assertThat(warningEx.getStackTrace()).isEmpty();;
+        assertThat(warningEx.getStackTrace()).isEmpty();
         final var warningExWithValue = warningEx(123, "Get up from the chair!", "Prolonged sitting is likely to cause back pain.");
-        assertThat(warningExWithValue.getStackTrace()).isEmpty();;
+        assertThat(warningExWithValue.getStackTrace()).isEmpty();
         final var warningf = warningf("Get up from %s", "the chair");
-        assertThat(warningf.getStackTrace()).isEmpty();;
+        assertThat(warningf.getStackTrace()).isEmpty();
     }
 
     @Test
     public void informative_does_not_capture_a_stack_trace() {
         final var info = informative("Java is 30 years old.");
-        assertThat(info.getStackTrace()).isEmpty();;
+        assertThat(info.getStackTrace()).isEmpty();
         final var infoWithValue = informative(30, "Java is 30 years old.");
-        assertThat(infoWithValue.getStackTrace()).isEmpty();;
+        assertThat(infoWithValue.getStackTrace()).isEmpty();
         final var infoEx = informativeEx("Java is 30.", "The Java programming language is 30 years old.");
-        assertThat(infoEx.getStackTrace()).isEmpty();;
+        assertThat(infoEx.getStackTrace()).isEmpty();
         final var infoExWithValue = informativeEx(30, "Java is 30.", "The Java programming language is 30 years old.");
-        assertThat(infoExWithValue.getStackTrace()).isEmpty();;
+        assertThat(infoExWithValue.getStackTrace()).isEmpty();
         final var infof = informativef("Java is %s years old.", 30);
-        assertThat(infof.getStackTrace()).isEmpty();;
+        assertThat(infof.getStackTrace()).isEmpty();
     }
 
     @Test

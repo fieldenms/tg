@@ -42,7 +42,7 @@ public class Result extends RuntimeException {
     protected final String message;
     protected final Object instance;
 
-    ///////////////////////////////////////////// Successful /////////////////////////////////////////////
+    //:::::::::::::::::::::::: Successful ::::::::::::::::::::::::
 
     /// Returns an empty successful result.
     ///
@@ -56,7 +56,7 @@ public class Result extends RuntimeException {
         return new Result(instance, SUCCESSFUL, null, false);
     }
 
-    ///////////////////////////////////////////// Informative /////////////////////////////////////////////
+    //:::::::::::::::::::::::: Informative ::::::::::::::::::::::::
 
     public static Informative informative(final String message) {
         return informative(null, message);
@@ -68,7 +68,7 @@ public class Result extends RuntimeException {
         return informative(format(fmt, args));
     }
 
-    /// Creates an informative result with an additional extended messsage.
+    /// Creates an informative result with an additional extended message.
     ///
     /// @param shortMessage a concise message, which may contain HTML.
     /// @param extendedMessage a more detailed message, which may span multiple lines and contain HTML.
@@ -88,7 +88,7 @@ public class Result extends RuntimeException {
         return new Informative(instance, message);
     }
 
-    /// Creates an informative result with an additional extended messsage.
+    /// Creates an informative result with an additional extended message.
     ///
     /// When using this method, consider whether `instance` really needs to be captured.
     /// In most cases, `instance` is never accessed when informative results are processed, only the message is.
@@ -103,7 +103,7 @@ public class Result extends RuntimeException {
         return informative(instance, shortMessage + EXT_SEPARATOR + extendedMessage);
     }
 
-    ///////////////////////////////////////////// Warning /////////////////////////////////////////////
+    //:::::::::::::::::::::::: Warning ::::::::::::::::::::::::
 
     public static Warning warning(final String message) {
         return warning(null, message);
@@ -115,7 +115,7 @@ public class Result extends RuntimeException {
         return warning(format(fmt, args));
     }
 
-    /// Creates a warning with an additional extended messsage.
+    /// Creates a warning with an additional extended message.
     ///
     /// @param shortMessage a concise message, which may contain HTML.
     /// @param extendedMessage a more detailed message, which may span multiple lines and contain HTML.
@@ -135,7 +135,7 @@ public class Result extends RuntimeException {
         return new Warning(instance, message);
     }
 
-    /// Creates a warning with an additional extended messsage.
+    /// Creates a warning with an additional extended message.
     ///
     /// When using this method, consider whether `instance` really needs to be captured.
     /// In most cases, `instance` is never accessed when warnings are processed, only the message is.
@@ -150,7 +150,7 @@ public class Result extends RuntimeException {
         return warning(instance, shortMessage + EXT_SEPARATOR + extendedMessage);
     }
 
-    ///////////////////////////////////////////// Failure /////////////////////////////////////////////
+    //:::::::::::::::::::::::: Failure ::::::::::::::::::::::::
 
     /// Creates a failure with message `reason`.
     /// Should be used when neither an object in error nor the cause are important.
@@ -166,7 +166,7 @@ public class Result extends RuntimeException {
         return failure(format(fmt, args));
     }
 
-    /// Creates a warning with an additional extended messsage.
+    /// Creates a failure with an additional extended message.
     /// Should be used when neither an object in error nor the cause are important.
     ///
     /// @param shortReason a concise message, which may contain HTML.
@@ -222,7 +222,7 @@ public class Result extends RuntimeException {
         return failure(instance, new Exception(reason));
     }
 
-    /// Creates a failure with an additional extended messsage.
+    /// Creates a failure with an additional extended message.
     /// Should be used when the cause is missing or is not important.
     ///
     /// When using this method, consider whether `instance` really needs to be captured.
@@ -253,7 +253,7 @@ public class Result extends RuntimeException {
         return new Result(instance, exception.getMessage(), exception, true);
     }
 
-    ///////////////////////////////////////////// Constructors /////////////////////////////////////////////
+    //:::::::::::::::::::::::: Constructors ::::::::::::::::::::::::
 
     /// @deprecated Use [#successful(Object)].
     ///
@@ -303,6 +303,7 @@ public class Result extends RuntimeException {
     }
 
     /// Calls the primary constructor using the message in `exception` as the result's message.
+    ///
     ///
     protected Result(final Object instance, final Exception exception, final boolean writableStackTrace) {
         this(instance, exception == null ? null : exception.getMessage(), exception, writableStackTrace);

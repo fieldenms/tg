@@ -6,8 +6,6 @@ package ua.com.fielden.platform.error;
 ///
 public class Informative extends Result {
 
-    private static final long serialVersionUID = 1L;
-
     /// Mainly used for serialisation.
     ///
     protected Informative() {
