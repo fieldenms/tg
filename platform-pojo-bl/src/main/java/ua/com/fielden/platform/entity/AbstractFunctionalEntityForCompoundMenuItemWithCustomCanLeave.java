@@ -53,8 +53,8 @@ public abstract class AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLe
         return this;
     }
 
-    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setLeaveReason(final LeaveReason leaveRason) {
-        return this.setLeaveReason(leaveRason.name());
+    public AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave setLeaveReason(final LeaveReason leaveReason) {
+        return this.setLeaveReason(leaveReason.name());
     }
 
     @Override

@@ -1564,7 +1564,7 @@ const TgEntityMasterBehaviorImpl = {
                     }
                 }
             } else { // other codes
-                return Promise.reject({msg: `Error happend during canLeave with status: ${obj.xhr.status}`});
+                return Promise.reject({msg: `An error occurred during canLeave with the following status: ${obj.xhr.status}`});
             }
         }).catch(e => {
             if (e.request && e.error) {
