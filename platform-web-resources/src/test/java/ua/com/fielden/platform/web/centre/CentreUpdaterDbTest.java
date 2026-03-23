@@ -1,28 +1,18 @@
 package ua.com.fielden.platform.web.centre;
 
-import static ua.com.fielden.platform.web.centre.CentreUpdater.ID_PREFIX;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VALUE;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterTestMixin.ROOT;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterTestMixin.expectedDiffWithValue;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterTestMixin.testDiffCreationAndApplication;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockFoundMoreThanOneEntity;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMoreThanOneMockString;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createNotFoundMockString;
+import org.junit.Test;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.web.resources.test.AbstractWebResourceWithDaoTestCase;
 
 import java.lang.reflect.Field;
 
-import org.junit.Test;
-
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChild;
-import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentCompositeChild;
-import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
-import ua.com.fielden.platform.sample.domain.TgUnion;
-import ua.com.fielden.platform.sample.domain.TgUnionType1;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.ID_PREFIX;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VALUE;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterTestMixin.*;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
 
 /**
  * Unit tests for {@link CentreUpdater} API methods, particularly for
@@ -35,7 +25,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
  * @author TG Team
  *
  */
-public class CentreUpdaterDbTest extends AbstractDaoTestCase {
+public class CentreUpdaterDbTest extends AbstractWebResourceWithDaoTestCase {
     
     private static ICompanionObjectFinder companionFinder() {
         Field field;

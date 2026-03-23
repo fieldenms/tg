@@ -1126,6 +1126,7 @@ const TgEntityMasterBehaviorImpl = {
         return true;
     },
 
+    // FIXME: Rename to _hasEmbeddedView, which affects both Java and JS code.
     _hasEmbededView: function () {
         return false;
     },

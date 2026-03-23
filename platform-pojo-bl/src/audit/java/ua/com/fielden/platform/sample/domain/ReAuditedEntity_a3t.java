@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-09-01 15:36:07 EEST
+// Generation timestamp: 2026-03-05 12:46:16 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -20,11 +20,13 @@ import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 @AuditFor(AuditedEntity.class)
 @EntityTitle("Audited Entity Audit")
@@ -74,6 +76,16 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   )
   @IsProperty
   private Date a3t_date1;
+
+  @Title(
+      value = "Date 2",
+      desc = "[Date 2] at the time of the audited event."
+  )
+  @PersistentType(
+      userType = IUtcDateTimeType.class
+  )
+  @IsProperty
+  private Date a3t_date2;
 
   @Title(
       value = "Invalidate",
@@ -167,6 +179,16 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   @Observable
   public ReAuditedEntity_a3t setA3t_date1(final Date a3t_date1) {
     this.a3t_date1 = a3t_date1;
+    return this;
+  }
+
+  public Date getA3t_date2() {
+    return this.a3t_date2;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_date2(final Date a3t_date2) {
+    this.a3t_date2 = a3t_date2;
     return this;
   }
 

@@ -84,7 +84,7 @@ public class QueryModelToStage1Transformer {
     }
 
     private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final @Nullable OrderingModel orderModel) {
-        final EqlCompilationResult.Select result = new EqlCompiler(this).compile(qryModel.getTokenSource(), EqlCompilationResult.Select.class);
+        final EqlCompilationResult.Select result = new EqlCompiler(this).compile(qryModel.tokens(), EqlCompilationResult.Select.class);
 
         if (orderModel != null && !result.orderBys().isEmpty()) {
             throw new OrderingModelConflictException("Ordering model cannot be specified both as standalone and as part of a query.");
@@ -111,7 +111,7 @@ public class QueryModelToStage1Transformer {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), null, username.orElse(null));
             if (filteringCondition != null) {
                 // LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
-                return new EqlCompiler(this).compile(filteringCondition.getTokenSource(), EqlCompilationResult.StandaloneCondition.class).model();
+                return new EqlCompiler(this).compile(filteringCondition.tokens(), EqlCompilationResult.StandaloneCondition.class).model();
             }
         }
 
@@ -119,7 +119,7 @@ public class QueryModelToStage1Transformer {
     }
 
     private OrderBys1 produceOrderBys(final OrderingModel orderModel) {
-        final EqlCompilationResult.StandaloneOrderBy result = new EqlCompiler(this).compile(orderModel.getTokenSource(), EqlCompilationResult.StandaloneOrderBy.class);
+        final EqlCompilationResult.StandaloneOrderBy result = new EqlCompiler(this).compile(orderModel.tokens(), EqlCompilationResult.StandaloneOrderBy.class);
         return result.model();
     }
 

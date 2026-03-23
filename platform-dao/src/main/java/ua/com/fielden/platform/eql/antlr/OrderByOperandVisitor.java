@@ -35,7 +35,7 @@ final class OrderByOperandVisitor extends AbstractEqlVisitor<Stream<OrderBy1>> {
     @Override
     public Stream<OrderBy1> visitOrderByOperand_OrderingModel(final EQLParser.OrderByOperand_OrderingModelContext ctx) {
         final OrderToken orderToken = (OrderToken) ctx.token;
-        final OrderBys1 innerModel = new EqlCompiler(transformer).compile(orderToken.model.getTokenSource(),
+        final OrderBys1 innerModel = new EqlCompiler(transformer).compile(orderToken.model.tokens(),
                                                                           EqlCompilationResult.StandaloneOrderBy.class)
                 .model();
         return innerModel.models().stream();
