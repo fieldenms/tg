@@ -284,9 +284,10 @@ public class Result extends RuntimeException {
     }
 
     /// Mainly used for serialisation.
+    /// Stack trace capture is disabled because a stack trace at the deserialisation site is not meaningful.
     ///
     protected Result() {
-        this(null, null, null, true);
+        this(null, null, null, false);
     }
 
     /// The primary constructor that provides the most control.
