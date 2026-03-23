@@ -49,7 +49,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             ERR_INVALID_UNION_VALUE = "Invalid union value specified for property [%s]. Could not access the union's active property. Please ensure that the union value is instrumented.",
             ERR_NO_SUPPORT_FOR_COLLECTIONAL_PROPS = "Collectional properties cannot be shared with tiny hyperlinks.",
             ERR_URLS_FOR_PERSISTED_ONLY = "URLs can be created only for persisted instances of [%s].",
-            ERR_UNSUPPORTED_PROP_TYPE_FOR_SHARING = "Unsupported property type for tiny hyperlink sharing: %s";
+            ERR_UNSUPPORTED_PROP_TYPE_FOR_SHARING = "Unsupported property type for tiny hyperlink sharing: %s.";
 
     private final ISerialiser serialiser;
     private final String appUri;
