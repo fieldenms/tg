@@ -34,7 +34,6 @@ import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyAssignmentE
 import java.util.Map;
 import java.util.Objects;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
@@ -140,9 +139,9 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             final ICentreConfigSharingModel sharingModel)
     {
         final PropertyDeserialisationErrorHandler propDeserialisationErrorHandler = (entity, property, inputValueSupplier, error) -> {
-            LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during deserialisation: %s",
-                                     tinyHyperlink.getHash(),
-                                     PropertyDeserialisationErrorHandler.makeMessage(entity, property, inputValueSupplier)),
+            LOGGER.warn(() -> "[tiny/%s] Suppressed the following error during deserialisation: %s".formatted(
+                              tinyHyperlink.getHash(),
+                              PropertyDeserialisationErrorHandler.makeMessage(entity, property, inputValueSupplier)),
                         error);
             // Ignore non-existing properties.
             // Assign a warning if property deserialisation fails.
@@ -152,9 +151,9 @@ public class TinyHyperlinkResource extends AbstractWebResource {
         };
 
         final PropertyAssignmentErrorHandler propApplicationErrorHandler = (entity, property, value, error) -> {
-            LOGGER.warn(() -> format("[tiny/%s] Suppressed the following error during property application: %s",
-                                     tinyHyperlink.getHash(),
-                                     PropertyAssignmentErrorHandler.makeMessage(entity, property, value)),
+            LOGGER.warn(() -> "[tiny/%s] Suppressed the following error during property application: %s".formatted(
+                              tinyHyperlink.getHash(),
+                              PropertyAssignmentErrorHandler.makeMessage(entity, property, value)),
                         error);
             // Ignore non-existing properties.
             // Assign a warning if property application fails.
