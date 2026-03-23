@@ -11,11 +11,13 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
+import ua.com.fielden.platform.web.interfaces.IAuditMenuItemInitialiser;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerIocModule;
 import ua.com.fielden.platform.web.uri.EntityMasterUrlProvider;
+import ua.com.fielden.platform.web.utils.AuditMenuItemInitialiser;
 import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
@@ -46,24 +48,27 @@ public interface IBasicWebApplicationServerModule {
     default void bindWebAppResources(final IWebUiConfig webApp) {
         bindType(IDeviceProvider.class).to(ThreadLocalDeviceProvider.class);
 
-        /////////////////////////////// application specific ////////////////////////////
-        // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
+        //:::::::::::::::::: application specific ::::::::::::::::::
+        // Bind IWebApp instance with defined masters / centres and other DSL-defined configuration.
         bindType(IWebUiConfig.class).toInstance(webApp);
         bindType(IMenuRetriever.class).toInstance(webApp);
 
-        // bind Entity Master URI creator
+        // Bind Entity Master URI creator.
         bindType(IEntityMasterUrlProvider.class).to(EntityMasterUrlProvider.class);
 
         bindType(IWebResourceLoader.class).to(WebResourceLoader.class);
 
-        // dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure
+        // Dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure.
         bindType(ISerialisationTypeEncoder.class).to(SerialisationTypeEncoder.class);
 
-        // dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure
+        // Dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure.
         bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class);
 
+        // Required to load entity centre data into Audit Menu Item entity.
+        bindType(IAuditMenuItemInitialiser.class).to(AuditMenuItemInitialiser.class);
+
         // bind companion object implementations that are dependent on ICriteriaEntityRestorer
-        PlatformDomainTypes.typesDependentOnWebUI.stream().forEach(type -> bindCo(type, (co, t) -> bindType(co).to(t)));
+        PlatformDomainTypes.typesDependentOnWebUI.forEach(type -> bindCo(type, (co, t) -> bindType(co).to(t)));
 
         // bind SingleActionSelector to its singleton
         bindType(SingleActionSelector.class).toInstance(INSTANCE);
@@ -78,7 +83,7 @@ public interface IBasicWebApplicationServerModule {
     default void initWebAppWithoutCaching(final Injector injector) {
         final AbstractWebUiConfig webApp = (AbstractWebUiConfig) injector.getInstance(IWebUiConfig.class);
         webApp.setInjector(injector);
-        // initialise IWebApp with its masters / centres
+        // Initialise IWebApp with its masters / centres.
         webApp.initConfiguration();
     }
 
@@ -96,7 +101,7 @@ public interface IBasicWebApplicationServerModule {
         final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
 
         if (deployment == webUiConfig.workflow() || vulcanizing == webUiConfig.workflow()) {
-            // let's preload heavy Entity Centre configurations in deployment mode and during vulcanisation to trigger caching of DomainTreeEnhancers to avoid heavy computations later
+            // Preload heavy Entity Centre configurations in deployment mode and during vulcanisation to trigger caching of DomainTreeEnhancers to avoid heavy computations later.
             webUiConfig.createDefaultConfigurationsForAllCentres();
         }
     }
