@@ -115,6 +115,8 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
 
         assertThat(getPropertyAnnotationOptionally(PersistentType.class, auditType, auditPropertyName(AuditedEntity.Property.date2.toString())))
                 .hasValueSatisfying(annot -> assertEquals(IUtcDateTimeType.class, annot.userType()));
+        assertThat(getPropertyAnnotationOptionally(PersistentType.class, synAuditType, auditPropertyName(AuditedEntity.Property.date2.toString())))
+                .hasValueSatisfying(annot -> assertEquals(IUtcDateTimeType.class, annot.userType()));
     }
 
     /**
