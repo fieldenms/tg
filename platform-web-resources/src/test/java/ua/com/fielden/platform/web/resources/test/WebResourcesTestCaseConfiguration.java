@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources.test;
 
 import com.google.inject.Injector;
 import com.google.inject.binder.AnnotatedBindingBuilder;
+import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.IModuleWithInjector;
@@ -11,6 +12,9 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
 
 import java.util.Properties;
+
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 
 public final class WebResourcesTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
 
@@ -41,6 +45,8 @@ public final class WebResourcesTestCaseConfiguration implements IDomainDrivenTes
         props.setProperty("domain.package", "ua.com.fielden.platform");
         props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
         props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
+        props.setProperty(AUDIT_PATH, "../platform-pojo-bl/target/classes");
+        props.setProperty(AUDIT_MODE, AuditingMode.ENABLED.name());
         props.setProperty("attachments.location", "src/test/resources/attachments");
         props.setProperty("attachments.allowlist",
                           "text/plain,application/pdf,application/zip,application/x-zip-compressed,application/gzip," +
