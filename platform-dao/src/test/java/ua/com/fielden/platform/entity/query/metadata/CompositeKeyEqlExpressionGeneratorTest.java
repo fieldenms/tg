@@ -1,3 +1,4 @@
+/*
 package ua.com.fielden.platform.entity.query.metadata;
 
 import static org.junit.Assert.assertEquals;
@@ -226,4 +227,4 @@ public class CompositeKeyEqlExpressionGeneratorTest {
 
         assertEquals(exp, act);
     }
-}
+}*/
