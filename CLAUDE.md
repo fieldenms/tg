@@ -1229,32 +1229,27 @@ The project uses JUnit 4 for testing with extensive test coverage:
 
 #### Testing Best Practices
 
-**Prefer AssertJ over JUnit Assertions:**
-- Always use AssertJ's fluent assertions (`assertThat()`) instead of traditional JUnit assertions (`assertTrue()`, `assertEquals()`, etc.)
-- AssertJ provides better readability, more descriptive failure messages, and a more intuitive API
-- Exception testing: Use AssertJ's `assertThatThrownBy()` for exception testing instead of try-catch blocks or JUnit's `@Test(expected=...)`
-- Descriptive test names: Use method names that clearly state the expected behavior
+**Assertions:**
+- Both JUnit assertions (`assertEquals`, `assertTrue`, etc.) and AssertJ fluent assertions (`assertThat()`) are acceptable.
+- Prefer AssertJ where it provides clear advantages:
+  - Exception testing: Use `assertThatThrownBy()` instead of try-catch blocks or `@Test(expected=...)`.
+  - Collection assertions: `assertThat(list).containsExactly(...)` is more expressive than manual size + element checks.
+  - Descriptive failure messages: AssertJ's `.as("context")` is cleaner than JUnit's message parameter when custom messages are needed.
+- Descriptive test names: Use method names that clearly state the expected behavior.
 
 **Examples:**
 ```java
-// Prefer this (AssertJ):
-assertThat(result).isTrue();
-assertThat(entity.getProperty()).isEqualTo(expectedValue);
-assertThat(list).hasSize(3).containsExactly("a", "b", "c");
+// AssertJ is preferred for exception testing:
 assertThatThrownBy(() -> method.call())
     .isInstanceOf(InvalidArgumentException.class)
     .hasMessageContaining("must be a simple property name");
 
-// Instead of this (JUnit):
-assertTrue(result);
+// AssertJ is preferred for collection assertions:
+assertThat(list).hasSize(3).containsExactly("a", "b", "c");
+
+// JUnit assertions are fine for straightforward checks:
 assertEquals(expectedValue, entity.getProperty());
-assertEquals(3, list.size());
-try {
-    method.call();
-    fail("Should have thrown InvalidArgumentException");
-} catch (InvalidArgumentException ex) {
-    assertTrue(ex.getMessage().contains("must be a simple property name"));
-}
+assertTrue(result);
 ```
 
 #### Important: Indirect Testing Pattern in TG Applications
