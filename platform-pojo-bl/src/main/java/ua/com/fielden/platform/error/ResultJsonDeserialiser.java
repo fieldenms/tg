@@ -1,15 +1,10 @@
-package ua.com.fielden.platform.serialisation.jackson.deserialisers;
+package ua.com.fielden.platform.error;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import org.apache.poi.ss.formula.functions.T;
-import ua.com.fielden.platform.error.Informative;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
 
@@ -33,10 +28,10 @@ public class ResultJsonDeserialiser extends StdDeserializer<Result> {
     }
 
     @Override
-    public Result deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public Result deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException {
         final JsonNode node = jp.readValueAsTree();
 
-        final Class<T> resultType = (Class<T>) ClassesRetriever.findClass(node.get("@resultType").asText());
+        final Class<? extends Result> resultType = (Class<? extends Result>) ClassesRetriever.findClass(node.get("@resultType").asText());
 
         final String message = node.get(Result.MESSAGE).isNull() ? null : node.get(Result.MESSAGE).asText();
         final Object instance;
@@ -57,13 +52,14 @@ public class ResultJsonDeserialiser extends StdDeserializer<Result> {
 
         // instantiate the result; warning type checking is required only when instance and message are not null
         if (ex != null) {
-            return PropertyConflict.class.equals(resultType) ? new PropertyConflict(instance, ex.getMessage()) : new Result(instance, ex);
+            // Capturing a stack trace during deserialisation is not meaningful, hence disable it.
+            return PropertyConflict.class.equals(resultType) ? new PropertyConflict(instance, ex.getMessage()) : new Result(instance, ex, false);
         } else if (Warning.class.equals(resultType)) {
             return new Warning(instance, message);
         } else if (Informative.class.equals(resultType)){
             return new Informative(instance, message);
         } else {
-            return new Result(instance, message);
+            return new Result(instance, message, null, false);
         }
     }
 }
