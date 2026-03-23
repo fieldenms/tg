@@ -893,7 +893,8 @@ Polymer({
 
     /** Used by the master, which incorporates this menu to check if it can be closed. */
     canLeave: function (leaveReason = LeaveReason.CLOSED) {
-        return this._section(this.route) && this._section(this.route).canLeave(leaveReason);
+        const section = this._section(this.route);
+        return section ? section.canLeave(leaveReason) : Promise.resolve(true);
     },
 
     _sectionRouteChanged: function (newRoute, oldRoute) {
