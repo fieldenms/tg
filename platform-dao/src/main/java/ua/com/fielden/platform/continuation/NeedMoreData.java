@@ -13,6 +13,9 @@ import ua.com.fielden.platform.error.Result;
 ///
 /// [NeedMoreData] does not capture a stack trace.
 ///
+/// Note: [#copyWith] is not overridden, so copies are plain [Result] instances, losing the [NeedMoreData] identity.
+/// The continuation state is preserved in the [NeedMoreDataException] held as the cause.
+///
 public class NeedMoreData extends Result {
 
     public <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreData(final String customMessage, final Class<T> dataType, final String dataKey) {

@@ -10,6 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.error.Result.*;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.CalcPropertyWarning;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
+import ua.com.fielden.platform.web.utils.PropertyConflict;
+
 public class ResultTestCase {
 
     @Test
@@ -315,6 +319,54 @@ public class ResultTestCase {
         assertThat(info.getStackTrace()).isEmpty();
         final var infoCopy = info.copyWith(40);
         assertThat(infoCopy.getStackTrace()).isEmpty();
+    }
+
+    @Test
+    public void copyWith_preserves_the_result_type_for_Informative_and_Warning() {
+        final var warning = warning("Caution advised.");
+        final var warningCopy = warning.copyWith(42);
+        assertThat(warningCopy).isInstanceOf(Warning.class);
+
+        final var info = informative("For your information.");
+        final var infoCopy = info.copyWith(42);
+        assertThat(infoCopy).isInstanceOf(Informative.class);
+
+        final var failure = failure("Something went wrong.");
+        final var failureCopy = failure.copyWith(42);
+        assertThat(failureCopy).isNotInstanceOf(Warning.class);
+        assertThat(failureCopy).isNotInstanceOf(Informative.class);
+
+        final var success = successful();
+        final var successCopy = success.copyWith(42);
+        assertThat(successCopy).isNotInstanceOf(Warning.class);
+        assertThat(successCopy).isNotInstanceOf(Informative.class);
+    }
+
+    @Test
+    public void copyWith_for_PropertyConflict_does_not_preserve_the_result_type() {
+        final var conflict = new PropertyConflict("entity", "stale value");
+        assertThat(conflict).isInstanceOf(PropertyConflict.class);
+        final var copy = conflict.copyWith("another entity");
+        assertThat(copy).isNotInstanceOf(PropertyConflict.class);
+        assertThat(copy.isSuccessful()).isFalse();
+    }
+
+    @Test
+    public void copyWith_for_IncorrectCalcPropertyException_does_not_preserve_the_result_type() {
+        final var calcError = new IncorrectCalcPropertyException("bad calc");
+        assertThat(calcError).isInstanceOf(IncorrectCalcPropertyException.class);
+        final var copy = calcError.copyWith("another");
+        assertThat(copy).isNotInstanceOf(IncorrectCalcPropertyException.class);
+        assertThat(copy.isSuccessful()).isFalse();
+    }
+
+    @Test
+    public void copyWith_for_CalcPropertyWarning_preserves_Warning_but_not_the_exact_subtype() {
+        final var calcWarning = new CalcPropertyWarning("minor issue");
+        assertThat(calcWarning).isInstanceOf(CalcPropertyWarning.class);
+        final var copy = calcWarning.copyWith("another");
+        assertThat(copy).isInstanceOf(Warning.class);
+        assertThat(copy).isNotInstanceOf(CalcPropertyWarning.class);
     }
 
 }
