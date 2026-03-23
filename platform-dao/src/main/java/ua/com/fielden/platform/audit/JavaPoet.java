@@ -102,6 +102,10 @@ final class JavaPoet {
         }
     }
 
+    /// Returns `true` if `typeName` refers to the same type as `klass`.
+    /// For parameterised types, only the raw type is compared (type arguments are ignored).
+    /// For unsupported [TypeName] subtypes (arrays, wildcards, type variables), `false` is returned.
+    ///
     public static boolean typeNameEquals(final TypeName typeName, final Class<?> klass) {
         return switch (typeName) {
             case ClassName it -> it.canonicalName().equals(klass.getCanonicalName());

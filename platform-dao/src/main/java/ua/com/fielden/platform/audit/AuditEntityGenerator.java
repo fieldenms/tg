@@ -310,7 +310,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         final var a3tBuilder = new AuditEntitySpecBuilder(auditEntityClassName, auditedType, 1);
 
         // Property for the reference to the audited entity.
-        // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
+        // By virtue of its name, this property's accessor and setter implement abstract methods in the base type.
         final var auditedEntityTitle = getEntityTitle(auditedType);
         final var auditedEntityProp = propertyBuilder(AUDITED_ENTITY, auditedType)
                 .addAnnotation(compositeKeyMember(AUDITED_ENTITY_KEY_MEMBER_ORDER))

@@ -41,7 +41,7 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
 
     @IsProperty
     @MapTo
-    @PersistentType(userType = IUtcDateTimeType.class)
+    @PersistentType(userType = IUtcDateTimeType.class) // Uses @PersistentType to test its propagation to audit-entity properties.
     private Date date2;
 
     @IsProperty
