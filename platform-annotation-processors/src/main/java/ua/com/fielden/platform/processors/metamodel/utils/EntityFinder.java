@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
+import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Accessor;
@@ -125,7 +126,7 @@ public class EntityFinder extends ElementFinder {
                     final boolean isKey = KEY.contentEquals(prop.getSimpleName());
                     final var propType = isKey ? determineKeyType(propOwner).orElse(null) : prop.getType();
                     final var otherPropType = isKey ? determineKeyType(otherPropsOwner).orElse(null) : otherProp.getType();
-                    return propType != null && otherPropType != null && propType.equals(otherPropType);
+                    return propType != null && otherPropType != null && types.isSameType(propType, otherPropType);
                 });
     }
 
@@ -549,8 +550,9 @@ public class EntityFinder extends ElementFinder {
      */
     public boolean isEntityThatNeedsMetaModel(final TypeElement element) {
         return isEntityType(element.asType()) &&
-               hasAnyPresentAnnotation(element, ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION) ||
-               (!isAbstract(element) && (isUnionEntityType(element.asType()) || isSyntheticEntityType(newEntityElement(element))));
+               !hasAnnotation(element, WithoutMetaModel.class) &&
+               (hasAnyPresentAnnotation(element, ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION) ||
+                (!isAbstract(element) && (isUnionEntityType(element.asType()) || isSyntheticEntityType(newEntityElement(element)))));
     }
 
     public boolean isEntityThatNeedsMetaModel(final EntityElement element) {

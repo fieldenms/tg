@@ -808,6 +808,21 @@ public class EntityUtilsTest {
         assertFalse(isActivatablePersistentEntityType(null));
     }
 
+    @Test
+    public void isOneToOne_returns_false_for_entity_with_simple_key() {
+        assertFalse(isOneToOne(TgVehicle.class));
+    }
+
+    @Test
+    public void isOneToOne_returns_false_for_null_entity_type() {
+        assertFalse(isOneToOne(null));
+    }
+
+    @Test
+    public void isOneToOne_returns_true_for_entity_with_entity_key() {
+        assertTrue(isOneToOne(TgVehicleFinDetails.class));
+    }
+
     /**
      * A helper factory method for generating a new type based on {@code baseType} with the {@code maxNestedLevels} of nesting (i.e., a new type gets generated based on the previously generated type sequentially).  
      *

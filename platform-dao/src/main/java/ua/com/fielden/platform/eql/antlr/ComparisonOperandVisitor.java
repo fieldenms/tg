@@ -100,14 +100,14 @@ final class ComparisonOperandVisitor extends AbstractEqlVisitor<ComparisonOperan
                 any = true;
                 final EqlCompiler compiler  = new EqlCompiler(transformer);
                 operands = tok.models.stream()
-                        .map(m -> compiler.compile(m.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model())
+                        .map(m -> compiler.compile(m.tokens(), EqlCompilationResult.StandaloneExpression.class).model())
                         .toList();
             }
             case AllOfExpressionsToken tok -> {
                 any = false;
                 final EqlCompiler compiler  = new EqlCompiler(transformer);
                 operands = tok.models.stream()
-                        .map(m -> compiler.compile(m.getTokenSource(), EqlCompilationResult.StandaloneExpression.class).model())
+                        .map(m -> compiler.compile(m.tokens(), EqlCompilationResult.StandaloneExpression.class).model())
                         .toList();
             }
             default -> throw new EqlSyntaxException("Unexpected token: %s".formatted(token.getText()));

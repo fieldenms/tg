@@ -4,7 +4,6 @@ var valueToString = require("@sinonjs/commons").valueToString;
 var className = require("@sinonjs/commons").className;
 var typeOf = require("@sinonjs/commons").typeOf;
 var arrayProto = require("@sinonjs/commons").prototypes.array;
-var objectProto = require("@sinonjs/commons").prototypes.object;
 var mapForEach = require("@sinonjs/commons").prototypes.map.forEach;
 
 var getClass = require("./get-class");
@@ -25,22 +24,51 @@ var every = arrayProto.every;
 var push = arrayProto.push;
 
 var getTime = Date.prototype.getTime;
-var hasOwnProperty = objectProto.hasOwnProperty;
 var indexOf = arrayProto.indexOf;
-var keys = Object.keys;
 var getOwnPropertySymbols = Object.getOwnPropertySymbols;
+
+/**
+ * We explicitly want to get props on proto chain
+ *
+ * Objects such as URL in the browser do not have any
+ * enumerable keys of its own. All meaningful props
+ * to compare are enumerable getters further up the chain
+ * @param {object} object
+ * @returns {Array<string>} the list of enumerable keys
+ */
+function allEnumerableKeysInProtoChain(object) {
+    const keys = [];
+
+    // eslint-disable-next-line
+    for (const key in object) {
+        keys.push(key);
+    }
+    return keys;
+}
+
+/**
+ * Checks whether all expected enumerable string keys are present.
+ *
+ * @param {Array<string>} keys
+ * @param {Array<string>} expectedKeys
+ * @returns {boolean} `true` when all expected keys are present
+ */
+function hasAllEnumerableStringKeys(keys, expectedKeys) {
+    return every(expectedKeys, function (key) {
+        return indexOf(keys, key) !== -1;
+    });
+}
 
 /**
  * Deep equal comparison. Two values are "deep equal" when:
  *
- *   - They are equal, according to samsam.identical
- *   - They are both date objects representing the same time
- *   - They are both arrays containing elements that are all deepEqual
- *   - They are objects with the same set of properties, and each property
- *     in ``actual`` is deepEqual to the corresponding property in ``expectation``
+ * - They are equal, according to samsam.identical
+ * - They are both date objects representing the same time
+ * - They are both arrays containing elements that are all deepEqual
+ * - They are objects with the same set of properties, and each property
+ * in ``actual`` is deepEqual to the corresponding property in ``expectation``
  *
  * Supports cyclic objects.
- *
  * @alias module:samsam.deepEqual
  * @param {*} actual The object to examine
  * @param {*} expectation The object actual is expected to be equal to
@@ -129,14 +157,14 @@ function deepEqualCyclic(actual, expectation, match) {
 
         var actualClass = getClass(actualObj);
         var expectationClass = getClass(expectationObj);
-        var actualKeys = keys(actualObj);
-        var expectationKeys = keys(expectationObj);
+        var actualKeys = allEnumerableKeysInProtoChain(actualObj);
+        var expectationKeys = allEnumerableKeysInProtoChain(expectationObj);
         var actualName = className(actualObj);
         var expectationName = className(expectationObj);
         var expectationSymbols =
             typeOf(getOwnPropertySymbols) === "function"
                 ? getOwnPropertySymbols(expectationObj)
-                : /* istanbul ignore next: cannot collect coverage for engine that doesn't support Symbol */
+                : /* c8 ignore next: cannot collect coverage for engine that doesn't support Symbol */
                   [];
         var expectationKeysAndSymbols = concat(
             expectationKeys,
@@ -152,6 +180,8 @@ function deepEqualCyclic(actual, expectation, match) {
                 actualType !== expectationType ||
                 actualClass !== expectationClass ||
                 actualKeys.length !== expectationKeys.length ||
+                !hasAllEnumerableStringKeys(actualKeys, expectationKeys) ||
+                !hasAllEnumerableStringKeys(expectationKeys, actualKeys) ||
                 (actualName &&
                     expectationName &&
                     actualName !== expectationName)
@@ -195,14 +225,14 @@ function deepEqualCyclic(actual, expectation, match) {
         // see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
         // But, they don't work well with the implementation concerning iterables below,
         // so we will detect them and use jQuery's own equality function
-        /* istanbul ignore next -- this can only be tested in the `test-headless` script */
+        /* c8 ignore start: this can only be tested in the `test-headless` script */
         if (
-            actualObj.constructor &&
-            actualObj.constructor.name === "jQuery" &&
+            typeof actualObj.jquery === "string" &&
             typeof actualObj.is === "function"
         ) {
             return actualObj.is(expectationObj);
         }
+        /* c8 ignore stop */
 
         var isActualNonArrayIterable =
             isIterable(actualObj) &&
@@ -230,10 +260,6 @@ function deepEqualCyclic(actual, expectation, match) {
         }
 
         return every(expectationKeysAndSymbols, function (key) {
-            if (!hasOwnProperty(actualObj, key)) {
-                return false;
-            }
-
             var actualValue = actualObj[key];
             var expectationValue = expectationObj[key];
             var actualObject = isObject(actualValue);

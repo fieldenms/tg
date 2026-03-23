@@ -760,7 +760,7 @@ public class EntityResourceUtils {
             return extractLongValueFrom(reflectedValue);
         } else if (Class.class.isAssignableFrom(propertyType)) {
             try {
-                return forName((String) reflectedValue); // full class names for already registered server-side Class'es are supported
+                return ClassesRetriever.findClass((String) reflectedValue); // full class names for already registered server-side Class'es are supported
             } catch (final Exception ex) {
                 throw new EntityResourceUtilsException(format("Conversion to [%s@%s] from reflected value [%s] of type [%s] failed.", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()), ex);
             }

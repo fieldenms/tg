@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.eql.meta;
 
 import com.google.common.collect.ImmutableMap;
+import jakarta.annotation.Nullable;
+import ua.com.fielden.platform.domain.metadata.DomainType;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 
 import java.util.LinkedHashMap;
@@ -12,6 +14,10 @@ import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.utils.StreamUtils.collectToImmutableMap;
 import static ua.com.fielden.platform.utils.StreamUtils.integers;
 
+/// An intermediate representation of [DomainType] used during generation.
+///
+/// @see DomainMetadataModelGenerator
+///
 record DomainTypeData(
         Class<?> type,
         Class<?> superType,
@@ -19,7 +25,7 @@ record DomainTypeData(
         String key,
         String desc,
         boolean isEntity,
-        String dbTable,
+        @Nullable String dbTable,
         String entityTypeDesc,
         int propsCount,
         Map<String, Integer> keyMembersIndices,

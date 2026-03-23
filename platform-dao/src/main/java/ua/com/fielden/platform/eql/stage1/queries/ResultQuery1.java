@@ -176,7 +176,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     private static EnhancedYields finaliseYields(final Yields2 originalYields, final EnhancedYields enhancedYields) {
         // TODO: Need to enhance this implementation if a more generic support for write-only components/properties is to be developed.
         //       At this stage only RichText.searchText is handled by removing it from yields, if it was added implicitly.
-        //       RichText.searchText shod not be removed if it is yielded explicitly.
+        //       RichText.searchText should not be removed if it is yielded explicitly.
         //       This is an optimisation in line with the write-only nature of searchText to avoid its retrieval from a database.
         //       Please also refer to HibernateMappingsGenerator where searchText is mapped to be read as NULL when retrieval happens using Hibernate.
         //

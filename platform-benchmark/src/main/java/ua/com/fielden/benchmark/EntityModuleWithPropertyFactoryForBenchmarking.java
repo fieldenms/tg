@@ -2,6 +2,7 @@ package ua.com.fielden.benchmark;
 
 import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.companion.EntityCompanionGenerationIocModule;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.ioc.EntityIocModule;
 import ua.com.fielden.platform.utils.IDates;
@@ -44,6 +45,7 @@ public class EntityModuleWithPropertyFactoryForBenchmarking extends EntityIocMod
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
         bind(IDates.class).to(DatesForBenchmarking.class);
         bind(IUniversalConstants.class).to(UniversalConstantsForBenchmarking.class);
+        install(new EntityCompanionGenerationIocModule());
     }
 
 }
