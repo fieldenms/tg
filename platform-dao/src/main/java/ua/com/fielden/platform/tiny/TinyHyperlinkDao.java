@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
@@ -78,7 +78,7 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             validateRequiredProperties(tinyHyperlink).ifFailure(Result::throwRuntime);
             final var hash = hash(tinyHyperlink);
             // An instrumented instance is required for `save`.
-            final var existingTinyHyperlink = co$(TinyHyperlink.class).findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(HASH), hash);
+            final var existingTinyHyperlink = co$(TinyHyperlink.class).findByKeyAndFetch(fetchOnly(TinyHyperlink.class).with(HASH), hash);
             if (existingTinyHyperlink != null) {
                 return super.save(existingTinyHyperlink, maybeFetch);
             }
