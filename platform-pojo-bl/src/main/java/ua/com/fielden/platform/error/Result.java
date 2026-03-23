@@ -204,7 +204,7 @@ public class Result extends RuntimeException {
         return failure(null, exception);
     }
 
-    /// Creates a failure that will contain `instance` and have message `message`.
+    /// Creates a failure that will contain `instance` and have message `reason`.
     /// Should be used when the cause is missing or is not important.
     ///
     /// When using this method, consider whether `instance` really needs to be captured.
@@ -352,7 +352,7 @@ public class Result extends RuntimeException {
     }
 
     /// If this result is not a failure, returns the contained value.
-    /// Otherwise, throws this result.
+    /// Otherwise, throws an exception associated with this result.
     ///
     /// This method is analogous to [Optional#orElseThrow(Supplier)].
     ///
@@ -363,7 +363,7 @@ public class Result extends RuntimeException {
 
     /// Returns a copy of this result, replacing the contained value by `anotherInstance`.
     ///
-    /// Subclasses that override the behaviour of capturing a stack trace should also override this method.
+    /// Subclasses that override the behaviour of capturing a stack trace should consider overriding this method.
     ///
     public Result copyWith(final Object anotherInstance) {
         return new Result(anotherInstance, message, ex, !isSuccessful());
