@@ -29,7 +29,7 @@ public class TinyHyperlinkTest extends AbstractDaoTestCase {
 
     @Test
     public void saving_a_new_tiny_hyperlink_with_same_target_as_already_saved_returns_the_existing_record() {
-        final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
+        final TinyHyperlinkCo coTinyHyperlink = co$(TinyHyperlink.class);
         final var target = new Hyperlink("https://fielden.com.au");
         final var tiny1 = coTinyHyperlink.saveWithTarget(target);
         final var tiny2 = coTinyHyperlink.saveWithTarget(target);
@@ -38,7 +38,7 @@ public class TinyHyperlinkTest extends AbstractDaoTestCase {
 
     @Test
     public void saving_a_new_tiny_hyperlink_with_same_shared_entity_as_already_saved_returns_the_existing_record() {
-        final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
+        final TinyHyperlinkCo coTinyHyperlink = co$(TinyHyperlink.class);
         final var tiny1 = coTinyHyperlink.save(
                 User.class,
                 Map.of(),
@@ -54,7 +54,7 @@ public class TinyHyperlinkTest extends AbstractDaoTestCase {
 
     @Test
     public void toURL_converts_a_tiny_hyperlink_into_a_URL_using_a_specific_format() {
-        final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
+        final TinyHyperlinkCo coTinyHyperlink = co$(TinyHyperlink.class);
 
         final var tiny1 = coTinyHyperlink.saveWithTarget(new Hyperlink("https://fielden.com.au"));
         assertEquals("%s/#/tiny/%s".formatted(appUri, tiny1.getHash()),
@@ -71,7 +71,7 @@ public class TinyHyperlinkTest extends AbstractDaoTestCase {
 
     @Test
     public void calling_hash_on_a_persisted_tiny_hyperlink_returns_the_assigned_hash() {
-        final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
+        final TinyHyperlinkCo coTinyHyperlink = co$(TinyHyperlink.class);
 
         final var tiny1 = coTinyHyperlink.saveWithTarget(new Hyperlink("https://fielden.com.au"));
         assertEquals(tiny1.getHash(), coTinyHyperlink.hash(tiny1));
@@ -86,7 +86,7 @@ public class TinyHyperlinkTest extends AbstractDaoTestCase {
 
     @Test
     public void calling_hash_on_a_new_tiny_hyperlink_computes_the_hash() {
-        final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
+        final TinyHyperlinkCo coTinyHyperlink = co$(TinyHyperlink.class);
 
         final var tiny1 = new_(TinyHyperlink.class).setTarget(new Hyperlink("https://fielden.com.au"));
         assertNull(tiny1.getHash());
@@ -102,7 +102,7 @@ public class TinyHyperlinkTest extends AbstractDaoTestCase {
 
     @Test
     public void property_with_binary_type_cannot_be_specified_as_modified() {
-        final TinyHyperlinkCo coTinyHyperlink = co(TinyHyperlink.class);
+        final TinyHyperlinkCo coTinyHyperlink = co$(TinyHyperlink.class);
 
         assertThatThrownBy(() -> coTinyHyperlink.save(TgPersistentEntityWithProperties.class,
                                                       Map.of("bytes", "hello".getBytes()),
