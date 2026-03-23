@@ -138,9 +138,9 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(AttachmentsUploadAction.class, AttachmentsUploadActionProducer.class, masterConfig, injector);
     }
 
-    /// Creates an entity master configuration for [PersistentEntityInfo].
+    /// Creates a simple entity master configuration for [PersistentEntityInfo].
     ///
-    public static EntityMaster<PersistentEntityInfo> createPersistentEntityInfoMaster(final Injector injector) {
+    public static EntityMaster<PersistentEntityInfo> createPersistentEntityInfoSimpleMaster(final Injector injector) {
         final String desktopLayout = cell(cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN)).repeat(3),layout().withStyle("padding", MARGIN_PIX).end()).toString();
         final String mobileLayout = cell(cell().repeat(6),layout().withStyle("padding", MARGIN_PIX).end()).toString();
 
@@ -166,7 +166,7 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(PersistentEntityInfo.class, PersistentEntityInfoProducer.class, masterConfig, injector);
     }
 
-    /// Creates a compound entity master configuration for {@link PersistentEntityInfo}.
+    /// Creates a compound entity master configuration for [PersistentEntityInfo].
     ///
     public static EntityMaster<OpenPersistentEntityInfoAction> createPersistentEntityInfoCompoundMaster(final Injector injector, final IWebUiBuilder builder, final EntityMaster<PersistentEntityInfo> mainMaster) {
 
@@ -180,9 +180,9 @@ public class StandardMastersWebUiConfig {
                     .withView(mainMaster)
                 .also()
                 .addMenuItem(AuditCompoundMenuItem.class)
-                    .icon("icons:view-module")
+                    .icon("icons:history")
                     .shortDesc(AUDIT)
-                    .longDesc("Audit data for persistent entity info")
+                    .longDesc("History of changes.")
                     .withPolymorphicCenter()
                 .done();
     }

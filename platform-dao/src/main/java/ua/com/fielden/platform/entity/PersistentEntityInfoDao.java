@@ -25,15 +25,15 @@ public class PersistentEntityInfoDao extends CommonEntityDao<PersistentEntityInf
             final var entityFetch = fetchKeyAndDescOnly(entityCo.getEntityType()).with(VERSION, CREATED_BY, CREATED_DATE, LAST_UPDATED_BY, LAST_UPDATED_DATE);
             final var refetchedEntity = entityCo.findById(entity.getId(), entityFetch);
             info.setEntityId(refetchedEntity.getId())
-                    .setEntityType(entityCo.getEntityType().getName())
-                    .setEntityVersion(refetchedEntity.getVersion())
-                    .setCreatedBy(refetchedEntity.getCreatedBy())
-                    .setCreatedDate(refetchedEntity.getCreatedDate())
-                    .setLastUpdatedBy(refetchedEntity.getLastUpdatedBy())
-                    .setLastUpdatedDate(refetchedEntity.getLastUpdatedDate())
-                    .setEntityTitle(isEmpty(refetchedEntity.getDesc())
-                                            ? refetchedEntity.getKey().toString()
-                                            : "%s: %s".formatted(refetchedEntity.getKey(), refetchedEntity.getDesc()));
+                .setEntityType(entityCo.getEntityType().getName())
+                .setEntityVersion(refetchedEntity.getVersion())
+                .setCreatedBy(refetchedEntity.getCreatedBy())
+                .setCreatedDate(refetchedEntity.getCreatedDate())
+                .setLastUpdatedBy(refetchedEntity.getLastUpdatedBy())
+                .setLastUpdatedDate(refetchedEntity.getLastUpdatedDate())
+                .setEntityTitle(isEmpty(refetchedEntity.getDesc())
+                                ? refetchedEntity.getKey().toString()
+                                : "%s: %s".formatted(refetchedEntity.getKey(), refetchedEntity.getDesc()));
             return info;
         }
         else {

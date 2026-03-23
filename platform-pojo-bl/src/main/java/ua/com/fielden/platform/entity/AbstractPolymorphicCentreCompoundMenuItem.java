@@ -6,15 +6,13 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 
-import static java.lang.String.format;
-
 /// Functional entity for an entity master with an entity centre that can be changed by server side logic.
 ///
 @EntityTitle("Compound Menu Item for Polymorphic Entity Centre")
 public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends AbstractEntity<?>> extends AbstractFunctionalEntityForCompoundMenuItem<T> {
 
     @IsProperty
-    @Title(value = "Menu Item Type", desc = "Entity Centre Menu Item Type")
+    @Title(value = "Menu Item Type", desc = "Entity centre menu item type.")
     private String menuItemType;
 
     @IsProperty
@@ -26,11 +24,11 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
     private String elementName;
 
     @IsProperty
-    @Title(value = "Should Force Post Save Refresh?", desc="Indicates whether the centre should be refreshed after a successful save of the entity master")
+    @Title(value = "Should force post-save refresh?", desc="Indicates whether the centre should be refreshed after a successful save of the entity master.")
     private boolean shouldEnforcePostSaveRefresh;
 
     @IsProperty
-    @Title(value = "Event Source Class", desc = "Event Source Class Name")
+    @Title(value = "Event Source Class", desc = "Event source class name.")
     private String eventSourceClass;
 
     public String getEventSourceClass() {
@@ -85,8 +83,9 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
 
     public AbstractPolymorphicCentreCompoundMenuItem<T> setMenuItemTypeForCentre(final Class<? extends MiWithConfigurationSupport<?>> menuItemTypeAsClass) {
         setMenuItemType(menuItemTypeAsClass.getName());
-        setImportUri(format("/centre_ui/%s", menuItemTypeAsClass.getName()));
-        setElementName(format("tg-%s-centre", menuItemTypeAsClass.getSimpleName()));
+        setImportUri("/centre_ui/%s".formatted(menuItemTypeAsClass.getName()));
+        setElementName("tg-%s-centre".formatted(menuItemTypeAsClass.getSimpleName()));
         return this;
     }
+
 }

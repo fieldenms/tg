@@ -9,7 +9,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public interface PersistentEntityInfoCo extends IEntityDao<PersistentEntityInfo> {
 
     /// Initialises `info` from `entity`.
-    /// If the type of `entity` does not satisfy [EntityUtils#isPersistentWithVersionData(Class)], an {@link InvalidStateException} will be thrown.
+    ///
+    /// Exception [InvalidStateException] is thrown if the type of `entity` does not satisfy [EntityUtils#isPersistentWithVersionData(Class)].
     ///
     /// @param entity  source of metadata
     /// @param info  instance to initialise

@@ -4,17 +4,17 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.web.interfaces.IAuditMenuItemInitializer;
+import ua.com.fielden.platform.web.interfaces.IAuditMenuItemInitialiser;
 
 /// DAO implementation for the {@link AuditCompoundMenuItemCo} companion object.
 ///
 @EntityType(AuditCompoundMenuItem.class)
 public class AuditCompoundMenuItemDao extends CommonEntityDao<AuditCompoundMenuItem> implements AuditCompoundMenuItemCo {
 
-    private final IAuditMenuItemInitializer menuItemInitializer;
+    private final IAuditMenuItemInitialiser menuItemInitializer;
 
     @Inject
-    AuditCompoundMenuItemDao(final IAuditMenuItemInitializer menuItemInitializer) {
+    AuditCompoundMenuItemDao(final IAuditMenuItemInitialiser menuItemInitializer) {
         this.menuItemInitializer = menuItemInitializer;
     }
 

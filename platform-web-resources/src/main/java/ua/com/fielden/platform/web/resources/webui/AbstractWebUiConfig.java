@@ -237,7 +237,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final UserMenuVisibilityAssociatorWebUiConfig userMenuAssociatorWebUiConfig = new UserMenuVisibilityAssociatorWebUiConfig(injector);
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
         final EntityMaster<UserDefinableHelp> userDefinableHelpMaster = StandardMastersWebUiConfig.createUserDefinableHelpMaster(injector());
-        final EntityMaster<PersistentEntityInfo> persistentEntityInfoMaster = StandardMastersWebUiConfig.createPersistentEntityInfoMaster(injector());
+        final EntityMaster<PersistentEntityInfo> persistentEntityInfoMaster = StandardMastersWebUiConfig.createPersistentEntityInfoSimpleMaster(injector());
         final EntityMaster<OpenPersistentEntityInfoAction> persistentEntityInfoCompoundMaster = StandardMastersWebUiConfig.createPersistentEntityInfoCompoundMaster(injector(), webUiBuilder, persistentEntityInfoMaster);
         final var shareEntityActionWebUiConfig = ShareActionWebUiConfig.register(injector());
 
@@ -274,7 +274,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(shareEntityActionWebUiConfig.master)
         ;
 
-        //Register embedded entity centres for audited entity types
+        // Register embedded entity centres for audited entity types.
         final var appDomainProvider = injector.getInstance(IApplicationDomainProvider.class);
         final var auditCentreFactory = injector.getInstance(IAuditWebUiConfigFactory.class);
         appDomainProvider.entityTypes().stream().filter(AuditUtils::isAudited).forEach(entityType -> {

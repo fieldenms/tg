@@ -5,10 +5,12 @@ import ua.com.fielden.platform.entity.AuditCompoundMenuItem;
 
 /// A contract for initialising the audit menu item with embedded centre data, required to load the centre on the client side.
 ///
-public interface IAuditMenuItemInitializer {
+public interface IAuditMenuItemInitialiser {
 
     /// Initialises `menuItem` with entity centre data and returns it.
     ///
     /// @param auditedType the type of the audited entity used to determine which audit-entity centre should initialise `menuItem`
+    ///
     AuditCompoundMenuItem init(final Class<? extends AbstractEntity<?>> auditedType, AuditCompoundMenuItem menuItem);
+
 }
