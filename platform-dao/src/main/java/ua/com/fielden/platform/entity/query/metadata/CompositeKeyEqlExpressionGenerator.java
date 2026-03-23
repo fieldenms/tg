@@ -1,40 +1,123 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.TypeInfo.ENTITY;
-import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.TypeInfo.NON_STRING;
-import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.TypeInfo.STRING;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
-import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-
-import java.lang.reflect.Field;
-import java.util.*;
-
+import jakarta.inject.Inject;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Optional;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.utils.StreamUtils;
 
-/**
- * Functions to generate EQL expression models for composite keys.
- *
- * @author TG Team
- *
- */
+import java.util.List;
+
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator;
+import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
+
+/// Generates EQL expressions for composite keys.
+///
 public class CompositeKeyEqlExpressionGenerator {
-    public static final String EMPTY_STRING = "";
 
-    /** Private default constructor to prevent instantiation. */
-    private CompositeKeyEqlExpressionGenerator() {
+    static final String EMPTY_STRING = "";
+    static final String ERR_NO_COMPOSITE_KEY = "Entity type [%s] does not have a composite key.";
+
+    // TODO Reduce visibility once EQL tests use IoC.
+    @Inject
+    public CompositeKeyEqlExpressionGenerator(final IDomainMetadata domainMetadata) {
+        this.domainMetadata = domainMetadata;
+    }
+
+    private final IDomainMetadata domainMetadata;
+
+    public ExpressionModel getKeyExpression(final Class<? extends AbstractEntity<?>> entityType) {
+        final var keyMembers = domainMetadata.entityMetadataUtils().compositeKeyMembers(domainMetadata.forEntity(entityType));
+        if (keyMembers.isEmpty()) {
+            throw new InvalidArgumentException(ERR_NO_COMPOSITE_KEY.formatted(entityType.getSimpleName()));
+        }
+        return makeKeyExpression(entityType, keyMembers);
+    }
+
+    private ExpressionModel makeKeyExpression(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final List<PropertyMetadata> keyMembers)
+    {
+        if (keyMembers.stream().noneMatch(km1 -> isOptional(entityType, km1.name()))) {
+            return makeConcatWithoutOptional(entityType, keyMembers);
+        }
+        else {
+            final var expr = makeConcatWithOptional(entityType, keyMembers);
+            // If all are null, make the expression null.
+            if (keyMembers.stream().allMatch(km1 -> isOptional(entityType, km1.name()))) {
+                final var condAllNull = keyMembers.stream()
+                        .map(km -> cond().prop(km.name()).isNull().model())
+                        .reduce((cond1, cond2) -> cond().condition(cond1).and().condition(cond2).model())
+                        // There must be at least one key member.
+                        .orElseThrow();
+                return expr().caseWhen().condition(condAllNull).then().val(null).otherwise().expr(expr).end().model();
+            }
+            else {
+                return expr;
+            }
+        }
+    }
+
+    private boolean isOptional(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
+        return isPropertyAnnotationPresent(Optional.class, entityType, property.toString());
+    }
+
+    private ExpressionModel makeConcatWithoutOptional(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final List<PropertyMetadata> keyMembers)
+    {
+        final var separator = getKeyMemberSeparator((Class) entityType);
+
+        return foldLeft(keyMembers.subList(1, keyMembers.size()).stream(),
+                        expr().concat().expr(processKeyMember(entityType, keyMembers.getFirst())),
+                        (acc, km) -> acc.with().val(separator).with().expr(processKeyMember(entityType, km)))
+                .end().model();
+    }
+
+    private ExpressionModel makeConcatWithOptional(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final List<PropertyMetadata> keyMembers)
+    {
+        final var separator = getKeyMemberSeparator((Class) entityType);
+
+        return StreamUtils.enumerate(keyMembers.stream(), (km, i) -> {
+            // This condition is true iff at least one of the key members preceding `km` is not null.
+            // Start with a false condition to avoid a separator before the 1st key member and also when all preceding ones are null.
+            final var condPrefix = foldLeft(keyMembers.subList(0, i),
+                                            cond().val(1).eq().val(2).model(),
+                                            (acc, prevKm) -> cond().condition(acc).or().prop(prevKm.name()).isNotNull().model());
+
+            // Insert a separator only if the current key member is not null and `condPrefix` is true.
+            final var sepExpr = expr().caseWhen().condition(condPrefix).then().val(separator).otherwise().val(EMPTY_STRING).end().model();
+            return expr().caseWhen().prop(km.name()).isNotNull()
+                    .then().concat().expr(sepExpr).with().expr(processKeyMember(entityType, km)).end()
+                    .otherwise().val(EMPTY_STRING)
+                    .end().model();
+        }).reduce((expr1, expr2) -> expr().concat().expr(expr1).with().expr(expr2).end().model()).orElseThrow();
+    }
+
+    private ExpressionModel processKeyMember(final Class<? extends AbstractEntity<?>> entityType, final PropertyMetadata property) {
+        return processKeyMember(entityType, property.name());
+    }
+
+    private ExpressionModel processKeyMember(final Class<? extends AbstractEntity<?>> entityType, final String property) {
+        final var pm = domainMetadata.forProperty(entityType, property);
+        if (pm.type().isEntity() && !pm.type().javaType().equals(PropertyDescriptor.class)) {
+            return processKeyMember(entityType, property + "." + KEY);
+        }
+        else {
+            // Concat with an empty string to implicitly coerce the value into a string.
+            return expr().concat().val(EMPTY_STRING).with().prop(property).end().model();
+        }
     }
 
     /**
@@ -44,151 +127,7 @@ public class CompositeKeyEqlExpressionGenerator {
      * @return
      */
     public static ExpressionModel generateCompositeKeyEqlExpression(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
-        final List<KeyMemberInfo> keyMembersInfo = getKeyMembers(entityType).stream().map(keyMemberInfo -> getKeyMemberInfo(entityType, keyMemberInfo)).collect(toList()); 
-        return generateCompositeKeyEqlExpression(getKeyMemberSeparator(entityType), keyMembersInfo);
+        throw new UnsupportedOperationException();
     }
 
-    protected static ExpressionModel generateCompositeKeyEqlExpression(final String keyMemberSeparator, final List<KeyMemberInfo> keyMembers) {
-        final boolean hasAtLeastOneNotOptionalMember = keyMembers.stream().anyMatch(km -> !km.optional);
-
-        if (keyMembers.size() == 1) {
-            return generateExpressionForCompositeKeyWithSingleMember(keyMembers.get(0));
-        } else if (hasAtLeastOneNotOptionalMember) {
-            return generateExpressionForCompositeKeyWithAtLeastOneNotOptionalMember(keyMemberSeparator, keyMembers);
-        } else {
-            return generateExpressionForCompositeKeyWithOnlyOptionalMembers(keyMemberSeparator, keyMembers);
-        }
-    }
-    
-    private static ExpressionModel generateExpressionForCompositeKeyWithSingleMember(final KeyMemberInfo keyMember) {
-        final ExpressionModel resultExpression = keyMember.typeInfo == NON_STRING
-                                                 ? expr().concat().prop(keyMember.name).with().val(EMPTY_STRING).end().model()
-                                                 : adoptPropName(keyMember.name, keyMember.typeInfo);
-        return !keyMember.optional ? resultExpression : expr().caseWhen().prop(keyMember.name).isNotNull().then().expr(resultExpression).end().model();
-    }
-
-    private static ExpressionModel generateExpressionForCompositeKeyWithOnlyOptionalMembers(final String keyMemberSeparator, final List<KeyMemberInfo> keyMembers) {
-        return keyMembers.stream().reduce((ExpressionModel) null, (a, b) -> concatenateOptionalExpressionWithOptionalKeyMember(a, b, keyMemberSeparator), (xs, ys) -> xs);
-    }
-
-    private static ExpressionModel generateExpressionForCompositeKeyWithAtLeastOneNotOptionalMember(final String keyMemberSeparator, final List<KeyMemberInfo> keyMembers) {
-        return concatenate(getCompositeKeyExpressionsSequenceForConcatenation(keyMemberSeparator, keyMembers));
-    }
-
-    
-    private static ExpressionModel concatenateOptionalExpressionWithOptionalKeyMember(final ExpressionModel firstExpr, final KeyMemberInfo second, final String separator) {
-        final ExpressionModel secondExpr = adoptPropName(second.name, second.typeInfo);
-
-        if (firstExpr == null) {
-            return secondExpr;
-        } else {
-            return expr().caseWhen().condition(cond().expr(firstExpr).isNotNull().and().expr(secondExpr).isNotNull().model()).then().expr(concatenate(listOf(firstExpr, expr().val(separator).model(), secondExpr))). // 
-                    when().condition(cond().expr(firstExpr).isNotNull().and().expr(secondExpr).isNull().model()).then().expr(firstExpr). //
-                    when().expr(secondExpr).isNotNull().then().expr(secondExpr). //
-                    otherwise().val(null).end().model();
-        }
-    }
-
-    private static KeyMemberInfo getKeyMemberInfo(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final Field keyMemberField) {
-        final boolean optional = getPropertyAnnotation(Optional.class, entityType, keyMemberField.getName()) != null;
-        final TypeInfo typeInfo = String.class.equals(keyMemberField.getType())
-                                  ? STRING
-                                  : (!PropertyDescriptor.class.equals(keyMemberField.getType()) && isEntityType(keyMemberField.getType()) ? ENTITY : NON_STRING);
-        return new KeyMemberInfo(keyMemberField.getName(), typeInfo, optional);
-    }
-
-    private static ExpressionModel concatenate(final List<ExpressionModel> expressions) {
-        final Iterator<ExpressionModel> kmIter = expressions.iterator();
-        final ExpressionModel firstMemberExpr = kmIter.next();
-
-        IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> concatInProgress = expr().concat().expr(firstMemberExpr);
-
-        while (kmIter.hasNext()) {
-            final ExpressionModel nextKeyMember = kmIter.next();
-            concatInProgress = concatInProgress.with().expr(nextKeyMember);
-        }
-
-        return concatInProgress.end().model();
-    }
-
-    private static List<ExpressionModel> getCompositeKeyExpressionsSequenceForConcatenation(final String keyMemberSeparator, final List<KeyMemberInfo> keyMembers) {
-        boolean foundFirstNotOptional = false;
-        final List<ExpressionModel> result = new ArrayList<>();
-        for (KeyMemberInfo keyMemberInfo : keyMembers) {
-            if (keyMemberInfo.optional) { // if the key member is optional
-                result.add(foundFirstNotOptional 
-                           ? concatenateDelimiterWithOptionalKeyMember(keyMemberInfo.name, keyMemberInfo.typeInfo, keyMemberSeparator)
-                           : concatenateOptionalKeyMemberWithDelimiter(keyMemberInfo.name, keyMemberInfo.typeInfo, keyMemberSeparator));
-            } else { // otherwise, the key member is not optional 
-                if (foundFirstNotOptional) {
-                    // because the first non-empty key member is already added, we need to introduce a key member separator
-                    result.add(expr().val(keyMemberSeparator).model());
-                } else {
-                    foundFirstNotOptional = true; // this will happen only once
-                }
-                result.add(adoptPropName(keyMemberInfo.name, keyMemberInfo.typeInfo));
-            }
-        }
-
-        return result;
-    }
-
-    private static ExpressionModel adoptPropName(final String keyMemberName, final TypeInfo keyMemberType) {
-        return expr().prop(keyMemberType == ENTITY ? keyMemberName + "." + KEY : keyMemberName).model();
-    }
-
-    private static ExpressionModel concatenateDelimiterWithOptionalKeyMember(final String keyMemberName, final TypeInfo keyMemberType, final String separator) {
-        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().val(separator).with().expr(adoptPropName(keyMemberName, keyMemberType)).end() //
-                .otherwise().val(EMPTY_STRING).end().model();
-    }
-
-    private static ExpressionModel concatenateOptionalKeyMemberWithDelimiter(final String keyMemberName, final TypeInfo keyMemberType, final String separator) {
-        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().expr(adoptPropName(keyMemberName, keyMemberType)).with().val(separator).end() //
-                .otherwise().val(EMPTY_STRING).end().model();
-    }
-
-    /**
-     * An inner helper data structure.
-     */
-    public static class KeyMemberInfo {
-        public final String name;
-        public final TypeInfo typeInfo;
-        public final boolean optional;
-
-        public KeyMemberInfo(final String name, final TypeInfo typeInfo, final boolean optional) {
-            this.name = name;
-            this.typeInfo = typeInfo;
-            this.optional = optional;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((name == null) ? 0 : name.hashCode());
-            result = prime * result + (optional ? 1231 : 1237);
-            result = prime * result + ((typeInfo == null) ? 0 : typeInfo.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-
-            if (!(obj instanceof KeyMemberInfo)) {
-                return false;
-            }
-
-            final KeyMemberInfo other = (KeyMemberInfo) obj;
-            return Objects.equals(other.name, name) && Objects.equals(other.typeInfo, typeInfo) && optional == other.optional;
-        }
-    }
-
-    public static enum TypeInfo {
-        ENTITY,
-        STRING,
-        NON_STRING
-    }
 }

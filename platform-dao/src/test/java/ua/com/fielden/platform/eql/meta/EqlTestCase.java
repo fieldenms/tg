@@ -6,6 +6,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
+import ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator;
 import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
@@ -84,7 +85,8 @@ public abstract class EqlTestCase {
                 dates,
                 filter,
                 DOMAIN_METADATA,
-                new MoneyComponentInference(DOMAIN_METADATA));
+                new MoneyComponentInference(DOMAIN_METADATA),
+                new CompositeKeyEqlExpressionGenerator(DOMAIN_METADATA));
         MONEY_COMPONENT_INFERENCE = new MoneyComponentInference(DOMAIN_METADATA);
         QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(
                 DOMAIN_METADATA,
