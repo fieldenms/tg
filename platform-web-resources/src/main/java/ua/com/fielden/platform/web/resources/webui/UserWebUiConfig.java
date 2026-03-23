@@ -1,22 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.util.Optional.empty;
-import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
-import static ua.com.fielden.platform.security.user.User.EMAIL;
-import static ua.com.fielden.platform.security.user.User.SSO_ONLY;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
-import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
-
-import java.util.Optional;
-
 import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
@@ -26,8 +10,6 @@ import ua.com.fielden.platform.security.user.ReUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.security.user.UserRolesUpdater;
-import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
 import ua.com.fielden.platform.security.user.locator.UserLocator;
 import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenMain_MenuItem;
 import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenUserAndRoleAssociation_MenuItem;
@@ -36,7 +18,6 @@ import ua.com.fielden.platform.security.user.ui_actions.producers.OpenUserMaster
 import ua.com.fielden.platform.security.user.value_matchers.UserMasterBaseUserMatcher;
 import ua.com.fielden.platform.ui.menu.sample.MiUser;
 import ua.com.fielden.platform.ui.menu.sample.MiUserMaster_UserAndRoleAssociation;
-import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
@@ -57,79 +38,68 @@ import ua.com.fielden.platform.web.view.master.api.compound.Compound;
 import ua.com.fielden.platform.web.view.master.api.compound.impl.CompoundMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-/**
- * {@link User} Web UI configuration.
- *
- * @author TG Team
- *
- */
+import java.util.Optional;
+
+import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
+import static ua.com.fielden.platform.security.user.ReUser.USER_ROLES;
+import static ua.com.fielden.platform.security.user.User.*;
+import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER_ROLE;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.RunAutomaticallyOptions.ALLOW_CUSTOMISED;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
+import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
+
+/// [User] Web UI configuration.
+///
 public class UserWebUiConfig {
 
     public static final String USER_TITLE = "User";
 
-    public final EntityMaster<UserRolesUpdater> rolesUpdater;
     public final EntityCentre<ReUser> centre;
     public final EntityMaster<User> master;
 
     public static UserWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
-        final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector, builder, false);
+        final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector, builder);
         UserAndRoleAssociationWebUiConfig.register(injector, builder);
         return userWebUiConfig;
     }
 
-    public static UserWebUiConfig registerWithCompoundMaster(final Injector injector, final IWebUiBuilder builder) {
-        final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector, builder, true);
-        UserAndRoleAssociationWebUiConfig.register(injector, builder);
-        return userWebUiConfig;
+    private UserWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
+        centre = createCentre(injector, builder, mkLocator(builder, injector, UserLocator.class, "user"));
+        master = createMain(injector);
+
+        CompoundMasterBuilder.<User, OpenUserMasterAction>create(injector, builder)
+                .forEntity(OpenUserMasterAction.class)
+                .withProducer(OpenUserMasterActionProducer.class)
+                .addMenuItem(UserMaster_OpenMain_MenuItem.class)
+                    .icon("icons:picture-in-picture")
+                    .shortDesc(OpenUserMasterAction.MAIN)
+                    .longDesc("Application User" + " main")
+                    .withView(master)
+                .also()
+                .addMenuItem(UserMaster_OpenUserAndRoleAssociation_MenuItem.class)
+                    .icon("av:recent-actors")
+                    .shortDesc(OpenUserMasterAction.ROLES)
+                    .longDesc("Application User" + " " + OpenUserMasterAction.ROLES)
+                    .withView(createUserAndRoleAssociationCentre(injector))
+                .done();
     }
 
-    private UserWebUiConfig(final Injector injector, final IWebUiBuilder builder, final boolean withCompoundMaster) {
-        centre = createCentre(injector, builder, mkLocator(builder, injector, UserLocator.class, "user"), withCompoundMaster);
-        master = createMaster(injector);
-        rolesUpdater = createRolesUpdater(injector);
+    /// Creates entity centre for [User].
+    ///
+    private EntityCentre<ReUser> createCentre(final Injector injector, final IWebUiBuilder builder, final EntityActionConfig locator) {
+        final var dims = mkDim(960, 500, Unit.PX);
+        final var editUserAction = Compound.openEdit(OpenUserMasterAction.class, USER_TITLE, "Edit " + USER_TITLE, dims);
+        final var newUserAction = Compound.openNew(OpenUserMasterAction.class, "add-circle-outline", USER_TITLE, "Add " + USER_TITLE, dims);
+        builder.registerOpenMasterAction(User.class, editUserAction);
 
-        if (withCompoundMaster) {
-            CompoundMasterBuilder.<User, OpenUserMasterAction>create(injector, builder)
-                    .forEntity(OpenUserMasterAction.class)
-                    .withProducer(OpenUserMasterActionProducer.class)
-                    .addMenuItem(UserMaster_OpenMain_MenuItem.class)
-                        .icon("icons:picture-in-picture")
-                        .shortDesc(OpenUserMasterAction.MAIN)
-                        .longDesc("Application User" + " main")
-                        .withView(master)
-                    .also()
-                    .addMenuItem(UserMaster_OpenUserAndRoleAssociation_MenuItem.class)
-                        .icon("av:recent-actors")
-                        .shortDesc(OpenUserMasterAction.ROLES)
-                        .longDesc("Application User" + " " + OpenUserMasterAction.ROLES)
-                        .withView(createUserAndRoleAssociationCentre(injector))
-                    .done();
-        }
-    }
-
-    /**
-     * Creates entity centre for {@link User}.
-     *
-     * @return
-     */
-    private EntityCentre<ReUser> createCentre(final Injector injector, final IWebUiBuilder builder, final EntityActionConfig locator, final boolean withCompoundMaster) {
-        final EntityActionConfig editUserAction;
-        final EntityActionConfig newUserAction;
-        // different edit and new actions are needed depending on whether compound or simpler master is in use
-        if (withCompoundMaster) {
-            final PrefDim dims = mkDim(960, 640, Unit.PX);
-            editUserAction = Compound.openEdit(OpenUserMasterAction.class, USER_TITLE, "Edit " + USER_TITLE, dims);
-            newUserAction = Compound.openNew(OpenUserMasterAction.class, "add-circle-outline", USER_TITLE, "Add " + USER_TITLE, dims);
-            builder.registerOpenMasterAction(User.class, editUserAction);
-        } else {
-            newUserAction = UserActions.NEW_ACTION.mkAction();
-            editUserAction = UserActions.EDIT_ACTION.mkAction();
-            builder.registerOpenMasterAction(User.class, editUserAction);
-        }
-
-        final String layout = LayoutComposer.mkVarGridForCentre(2, 2, 2, 1);
-        final EntityCentre<ReUser> userCentre = new EntityCentre<>(MiUser.class,
-                EntityCentreBuilder.centreFor(ReUser.class)
+        final var layout = LayoutComposer.mkVarGridForCentre(2, 2, 2, 1);
+        return new EntityCentre<>(MiUser.class, EntityCentreBuilder.centreFor(ReUser.class)
                 .addFrontAction(newUserAction).also()
                 .addFrontAction(locator)
                 .addTopAction(newUserAction).also()
@@ -138,97 +108,77 @@ public class UserWebUiConfig {
                 .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction()).also()
                 .addTopAction(StandardActions.EXPORT_ACTION.mkAction(ReUser.class))
                 .addCrit("this").asMulti().autocompleter(User.class).also()
-                .addCrit("basedOnUser").asMulti().autocompleter(User.class).also()
+                .addCrit(BASED_ON_USER).asMulti().autocompleter(User.class).also()
                 .addCrit(ACTIVE).asMulti().bool().also()
-                .addCrit("base").asMulti().bool().also()
+                .addCrit(BASE).asMulti().bool().also()
                 .addCrit(EMAIL).asMulti().text().also()
                 .addCrit(SSO_ONLY).asMulti().bool().also()
-                .addCrit("userRoles").asMulti().autocompleter(UserRole.class)
+                .addCrit(USER_ROLES).asMulti().autocompleter(UserRole.class)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .addProp("this")
                     .order(1).asc()
                     .width(200)
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching users.")
                 .also()
-                .addProp("basedOnUser").width(200).also()
-                .addProp("base").width(80).also()
+                .addProp(BASED_ON_USER).width(200).also()
+                .addProp(BASE).width(80).also()
                 .addProp(EMAIL).minWidth(150).also()
                 .addProp(ACTIVE).width(50).also()
                 .addProp(SSO_ONLY).width(50).also()
-                .addProp("roles").minWidth(70).withAction(UserActions.MANAGE_ROLES_SECONDARY_ACTION.mkAction())
-                .addPrimaryAction(editUserAction).also()
-                .addSecondaryAction(UserActions.MANAGE_ROLES_SECONDARY_ACTION.mkAction())
+                .addProp(ACTIVE_ROLES).minWidth(70)
+                    .withActionSupplier(builder.getOpenMasterAction(User.class)).also()
+                .addProp(INACTIVE_ROLES).minWidth(70)
+                    .withActionSupplier(builder.getOpenMasterAction(User.class))
+                .addPrimaryAction(editUserAction)
                 .build(), injector);
-        return userCentre;
     }
 
-    /**
-     * Creates entity master for {@link User}.
-     *
-     * @return
-     */
-    private EntityMaster<User> createMaster(final Injector injector) {
-        final String layout = LayoutComposer.mkVarGridForMasterFitWidth(2, 2, 2, 1);
+    /// Creates entity master for [User].
+    ///
+    private EntityMaster<User> createMain(final Injector injector) {
+        final String layout = LayoutComposer.mkVarGridForMasterFitWidth(2, 2, 2, 1, 1);
 
         final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
                 .forEntity(User.class)
-                .addProp("key").asSinglelineText().also()
-                .addProp("basedOnUser").asAutocompleter().withMatcher(UserMasterBaseUserMatcher.class).also()
+                .addProp(KEY).asSinglelineText().also()
+                .addProp(BASED_ON_USER).asAutocompleter().withMatcher(UserMasterBaseUserMatcher.class).also()
                 .addProp(ACTIVE).asCheckbox().also()
-                .addProp("base").asCheckbox().also()
+                .addProp(BASE).asCheckbox().also()
                 .addProp(EMAIL).asSinglelineText().also()
                 .addProp(SSO_ONLY).asCheckbox().also()
-                .addProp("roles").asCollectionalRepresentor().withAction(UserActions.MANAGE_ROLES_MASTER_PROP_ACTION.mkAction()).also()
+                .addProp(ACTIVE_ROLES).asCollectionalRepresentor().also()
+                .addProp(INACTIVE_ROLES).asCollectionalRepresentor().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes if any and refresh.")
                 .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
-                .withDimensions(mkDim(580, 390))
+                .withDimensions(mkDim(580, 500))
                 .done();
         return new EntityMaster<>(User.class, masterConfigForUser, injector);
     }
 
-    /**
-     * Creates entity master for {@link UserRolesUpdater}.
-     *
-     * @return
-     */
-    private static EntityMaster<UserRolesUpdater> createRolesUpdater(final Injector injector) {
-        final IMaster<UserRolesUpdater> masterConfig = new SimpleMasterBuilder<UserRolesUpdater>()
-                .forEntity(UserRolesUpdater.class)
-                .addProp("roles").asCollectionalEditor().also()
-                .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes, if any, and close the dialog.")
-                .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
-                .setActionBarLayoutFor(Device.DESKTOP, empty(), mkActionLayoutForMaster())
-                .setLayoutFor(Device.DESKTOP, empty(), "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']] ]")
-                .withDimensions(mkDim(30, 75, Unit.PRC))
-                .done();
-        return new EntityMaster<>(UserRolesUpdater.class, UserRolesUpdaterProducer.class, masterConfig, injector);
-    }
-    
     private EntityCentre<UserAndRoleAssociation> createUserAndRoleAssociationCentre(final Injector injector) {
-        final Class<UserAndRoleAssociation> root = UserAndRoleAssociation.class;
-        final String layout = LayoutComposer.mkVarGridForCentre(1);
+        final String layout = LayoutComposer.mkVarGridForCentre(1, 1);
 
         final EntityActionConfig standardEditAction = StandardActions.EDIT_ACTION.mkAction(UserAndRoleAssociation.class);
         final EntityActionConfig standardNewAction = StandardActions.NEW_WITH_MASTER_ACTION.mkAction(UserAndRoleAssociation.class);
-        final EntityActionConfig standardDeleteAction = StandardActions.DELETE_ACTION.mkAction(UserAndRoleAssociation.class);
         final EntityActionConfig standardExportAction = StandardActions.EXPORT_EMBEDDED_CENTRE_ACTION.mkAction(UserAndRoleAssociation.class);
         final EntityActionConfig standardSortAction = CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
 
-        final EntityCentreConfig<UserAndRoleAssociation> ecc = EntityCentreBuilder.centreFor(root)
-                .runAutomatically()
+        final EntityCentreConfig<UserAndRoleAssociation> ecc = EntityCentreBuilder.centreFor(UserAndRoleAssociation.class)
+                .runAutomatically(ALLOW_CUSTOMISED)
                 .addTopAction(standardNewAction).also()
-                .addTopAction(standardDeleteAction).also()
                 .addTopAction(standardSortAction).also()
                 .addTopAction(standardExportAction)
-                .addCrit("userRole").asMulti().autocompleter(UserRole.class)
+                .addCrit(USER_ROLE).asMulti().autocompleter(UserRole.class).also()
+                .addCrit(ACTIVE).asMulti().bool()
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
-                .addProp("userRole").order(1).asc().width(80)
+                .addProp(USER_ROLE).order(1).asc().width(80)
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching Roles.").also()
-                .addProp("userRole.desc").minWidth(80)
+                .addProp(USER_ROLE + ".desc").minWidth(80).also()
+                .addProp(ACTIVE).width(80)
                 .addPrimaryAction(standardEditAction)
                 .setQueryEnhancer(UserMaster_UserAndRoleAssociationCentre_QueryEnhancer.class, context().withMasterEntity().build())
                 .build();
@@ -242,7 +192,6 @@ public class UserWebUiConfig {
             return enhanceEmbededCentreQuery(where, createConditionProperty("user"), context.get().getMasterEntity().getKey());
         }
     }
-    
 
     private static enum UserActions {
 
@@ -289,34 +238,9 @@ public class UserWebUiConfig {
                         .build();
             }
 
-        },
-
-        MANAGE_ROLES_SECONDARY_ACTION {
-            @Override
-            public EntityActionConfig mkAction() {
-                return action(UserRolesUpdater.class)
-                        .withContext(context().withCurrentEntity().build())
-                        .icon("av:recent-actors")
-                        .shortDesc("Add/Remove Roles")
-                        .longDesc("Add/remove user roles.")
-                        .build();
-            }
-
-        },
-
-        MANAGE_ROLES_MASTER_PROP_ACTION {
-            @Override
-            public EntityActionConfig mkAction() {
-                return action(UserRolesUpdater.class)
-                        .withContext(context().withMasterEntity().build())
-                        .icon("av:recent-actors")
-                        .shortDesc("Add/Remove Roles")
-                        .longDesc("Add/remove user roles.")
-                        .build();
-            }
-
         };
 
         public abstract EntityActionConfig mkAction();
     }
+
 }

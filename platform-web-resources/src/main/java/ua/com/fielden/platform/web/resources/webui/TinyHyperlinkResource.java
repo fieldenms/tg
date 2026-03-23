@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
@@ -24,8 +23,6 @@ import ua.com.fielden.platform.serialisation.jackson.PropertyDeserialisationErro
 import ua.com.fielden.platform.tiny.TinyHyperlink;
 import ua.com.fielden.platform.tiny.TinyHyperlinkCo;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
@@ -187,9 +184,6 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                                              critGenerator,
                                              0,
                                              deviceProfile,
-                                             companionFinder.find(EntityCentreConfig.class),
-                                             companionFinder.find(MainMenuItem.class),
-                                             companionFinder.find(User.class),
                                              sharingModel);
         return t2(savingInfoHolder, entity);
     }

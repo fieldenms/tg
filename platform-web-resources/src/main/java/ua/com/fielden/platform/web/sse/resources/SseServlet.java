@@ -46,7 +46,6 @@ import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTH
 /// TG-based applications should use factory method [#addSseServlet] to create and add an SSE servlet to [ServletContextHandler].
 ///
 public final class SseServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
 
     private static final String NO_SSE_UID = "no SSE UID";
     private static final Logger LOGGER = getLogger(SseServlet.class);

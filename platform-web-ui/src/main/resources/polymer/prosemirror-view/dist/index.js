@@ -367,17 +367,20 @@ function findOffsetInNode(node, coords) {
 }
 function findOffsetInText(node, coords) {
     let len = node.nodeValue.length;
-    let range = document.createRange();
+    let range = document.createRange(), result;
     for (let i = 0; i < len; i++) {
         range.setEnd(node, i + 1);
         range.setStart(node, i);
         let rect = singleRect(range, 1);
         if (rect.top == rect.bottom)
             continue;
-        if (inRect(coords, rect))
-            return { node, offset: i + (coords.left >= (rect.left + rect.right) / 2 ? 1 : 0) };
+        if (inRect(coords, rect)) {
+            result = { node, offset: i + (coords.left >= (rect.left + rect.right) / 2 ? 1 : 0) };
+            break;
+        }
     }
-    return { node, offset: 0 };
+    range.detach();
+    return result || { node, offset: 0 };
 }
 function inRect(coords, rect) {
     return coords.left >= rect.left - 1 && coords.left <= rect.right + 1 &&
@@ -1072,7 +1075,7 @@ class ViewDesc {
         // (one where the focus is before the anchor), but not all
         // browsers support it yet.
         let domSelExtended = false;
-        if ((domSel.extend || anchor == head) && !brKludge) {
+        if ((domSel.extend || anchor == head) && !(brKludge && gecko)) {
             domSel.collapse(anchorDOM.node, anchorDOM.offset);
             try {
                 if (anchor != head)
@@ -1373,15 +1376,15 @@ class NodeViewDesc extends ViewDesc {
         let updater = new ViewTreeUpdater(this, localComposition && localComposition.node, view);
         iterDeco(this.node, this.innerDeco, (widget, i, insideNode) => {
             if (widget.spec.marks)
-                updater.syncToMarks(widget.spec.marks, inline, view);
+                updater.syncToMarks(widget.spec.marks, inline, view, i);
             else if (widget.type.side >= 0 && !insideNode)
-                updater.syncToMarks(i == this.node.childCount ? Mark.none : this.node.child(i).marks, inline, view);
+                updater.syncToMarks(i == this.node.childCount ? Mark.none : this.node.child(i).marks, inline, view, i);
             // If the next node is a desc matching this widget, reuse it,
             // otherwise insert the widget as a new view desc.
             updater.placeWidget(widget, view, off);
         }, (child, outerDeco, innerDeco, i) => {
             // Make sure the wrapping mark descs match the node's marks.
-            updater.syncToMarks(child.marks, inline, view);
+            updater.syncToMarks(child.marks, inline, view, i);
             // Try several strategies for drawing this node
             let compIndex;
             if (updater.findNodeMatch(child, outerDeco, innerDeco, i)) ;
@@ -1397,7 +1400,7 @@ class NodeViewDesc extends ViewDesc {
             off += child.nodeSize;
         });
         // Drop all remaining descs after the current position.
-        updater.syncToMarks([], inline, view);
+        updater.syncToMarks([], inline, view, 0);
         if (this.node.isTextblock)
             updater.addTextblockHacks();
         updater.destroyRest();
@@ -1484,17 +1487,18 @@ class NodeViewDesc extends ViewDesc {
     }
     // Mark this node as being the selected node.
     selectNode() {
-        if (this.nodeDOM.nodeType == 1)
+        if (this.nodeDOM.nodeType == 1) {
             this.nodeDOM.classList.add("ProseMirror-selectednode");
-        if (this.contentDOM || !this.node.type.spec.draggable)
-            this.dom.draggable = true;
+            if (this.contentDOM || !this.node.type.spec.draggable)
+                this.nodeDOM.draggable = true;
+        }
     }
     // Remove selected node marking from this node.
     deselectNode() {
         if (this.nodeDOM.nodeType == 1) {
             this.nodeDOM.classList.remove("ProseMirror-selectednode");
             if (this.contentDOM || !this.node.type.spec.draggable)
-                this.dom.removeAttribute("draggable");
+                this.nodeDOM.removeAttribute("draggable");
         }
     }
     get domAtom() { return this.node.isAtom; }
@@ -1786,7 +1790,7 @@ class ViewTreeUpdater {
     }
     // Sync the current stack of mark descs with the given array of
     // marks, reusing existing mark descs when possible.
-    syncToMarks(marks, inline, view) {
+    syncToMarks(marks, inline, view, parentIndex) {
         let keep = 0, depth = this.stack.length >> 1;
         let maxKeep = Math.min(depth, marks.length);
         while (keep < maxKeep &&
@@ -1802,8 +1806,10 @@ class ViewTreeUpdater {
         }
         while (depth < marks.length) {
             this.stack.push(this.top, this.index + 1);
-            let found = -1;
-            for (let i = this.index; i < Math.min(this.index + 3, this.top.children.length); i++) {
+            let found = -1, scanTo = this.top.children.length;
+            if (parentIndex < this.preMatch.index)
+                scanTo = Math.min(this.index + 3, scanTo);
+            for (let i = this.index; i < scanTo; i++) {
                 let next = this.top.children[i];
                 if (next.matchesMark(marks[depth]) && !this.isLocked(next.dom)) {
                     found = i;
@@ -1999,9 +2005,7 @@ class ViewTreeUpdater {
 }
 // Iterate from the end of the fragment and array of descs to find
 // directly matching ones, in order to avoid overeagerly reusing those
-// for other nodes. Returns the fragment index of the first node that
-// is part of the sequence of matched nodes at the end of the
-// fragment.
+// for other nodes.
 function preMatch(frag, parentDesc) {
     let curDesc = parentDesc, descI = curDesc.children.length;
     let fI = frag.childCount, matched = new Map, matches = [];
@@ -2024,7 +2028,6 @@ function preMatch(frag, parentDesc) {
                 break outer;
             }
             else {
-                // FIXME
                 descI = curDesc.parent.children.indexOf(curDesc);
                 curDesc = curDesc.parent;
             }
@@ -2333,17 +2336,14 @@ function removeClassOnSelectionChange(view) {
     });
 }
 function selectCursorWrapper(view) {
-    let domSel = view.domSelection(), range = document.createRange();
+    let domSel = view.domSelection();
     if (!domSel)
         return;
     let node = view.cursorWrapper.dom, img = node.nodeName == "IMG";
     if (img)
-        range.setStart(node.parentNode, domIndex(node) + 1);
+        domSel.collapse(node.parentNode, domIndex(node) + 1);
     else
-        range.setStart(node, 0);
-    range.collapse(true);
-    domSel.removeAllRanges();
-    domSel.addRange(range);
+        domSel.collapse(node, 0);
     // Kludge to kill 'control selection' in IE11 when selecting an
     // invisible cursor wrapper, since that would result in those weird
     // resize handles and a selection that considers the absolutely
@@ -2821,11 +2821,14 @@ function parseFromClipboard(view, text, html, plainText, $context) {
     let dom, slice;
     if (!html && !text)
         return null;
-    let asText = text && (plainText || inCode || !html);
+    let asText = !!text && (plainText || inCode || !html);
     if (asText) {
         view.someProp("transformPastedText", f => { text = f(text, inCode || plainText, view); });
-        if (inCode)
-            return text ? new Slice(Fragment.from(view.state.schema.text(text.replace(/\r\n?/g, "\n"))), 0, 0) : Slice.empty;
+        if (inCode) {
+            slice = new Slice(Fragment.from(view.state.schema.text(text.replace(/\r\n?/g, "\n"))), 0, 0);
+            view.someProp("transformPasted", f => { slice = f(slice, view, true); });
+            return slice;
+        }
         let parsed = view.someProp("clipboardTextParser", f => f(text, $context, plainText, view));
         if (parsed) {
             slice = parsed;
@@ -2883,7 +2886,7 @@ function parseFromClipboard(view, text, html, plainText, $context) {
             slice = closeSlice(slice, openStart, openEnd);
         }
     }
-    view.someProp("transformPasted", f => { slice = f(slice, view); });
+    view.someProp("transformPasted", f => { slice = f(slice, view, asText); });
     return slice;
 }
 const inlineParents = /^(a|abbr|acronym|b|cite|code|del|em|i|ins|kbd|label|output|q|ruby|s|samp|span|strong|sub|sup|time|u|tt|var)$/i;
@@ -3071,6 +3074,7 @@ class InputState {
         this.compositionNodes = [];
         this.compositionEndedAt = -2e8;
         this.compositionID = 1;
+        this.badSafariComposition = false;
         // Set to a composition ID when there are pending changes at compositionend
         this.compositionPendingChanges = 0;
         this.domChangeCount = 0;
@@ -3346,7 +3350,7 @@ class MouseDown {
         }
         const target = flushed ? null : event.target;
         const targetDesc = target ? view.docView.nearestDesc(target, true) : null;
-        this.target = targetDesc && targetDesc.dom.nodeType == 1 ? targetDesc.dom : null;
+        this.target = targetDesc && targetDesc.nodeDOM.nodeType == 1 ? targetDesc.nodeDOM : null;
         let { selection } = view.state;
         if (event.button == 0 &&
             targetNode.type.spec.draggable && targetNode.type.spec.selectable !== false ||
@@ -3470,7 +3474,8 @@ editHandlers.compositionstart = editHandlers.compositionupdate = view => {
         let { state } = view, $pos = state.selection.$to;
         if (state.selection instanceof TextSelection &&
             (state.storedMarks ||
-                (!$pos.textOffset && $pos.parentOffset && $pos.nodeBefore.marks.some(m => m.type.spec.inclusive === false)))) {
+                (!$pos.textOffset && $pos.parentOffset && $pos.nodeBefore.marks.some(m => m.type.spec.inclusive === false)) ||
+                chrome && windows && selectionBeforeUneditable(view))) { // Issue #1500
             // Need to wrap the cursor in mark nodes different from the ones in the DOM context
             view.markCursor = view.state.storedMarks || $pos.marks();
             endComposition(view, true);
@@ -3504,13 +3509,22 @@ editHandlers.compositionstart = editHandlers.compositionupdate = view => {
     }
     scheduleComposeEnd(view, timeoutComposition);
 };
+function selectionBeforeUneditable(view) {
+    let { focusNode, focusOffset } = view.domSelectionRange();
+    if (!focusNode || focusNode.nodeType != 1 || focusOffset >= focusNode.childNodes.length)
+        return false;
+    let next = focusNode.childNodes[focusOffset];
+    return next.nodeType == 1 && next.contentEditable == "false";
+}
 editHandlers.compositionend = (view, event) => {
     if (view.composing) {
         view.input.composing = false;
         view.input.compositionEndedAt = event.timeStamp;
         view.input.compositionPendingChanges = view.domObserver.pendingRecords().length ? view.input.compositionID : 0;
         view.input.compositionNode = null;
-        if (view.input.compositionPendingChanges)
+        if (view.input.badSafariComposition)
+            view.domObserver.forceFlush();
+        else if (view.input.compositionPendingChanges)
             Promise.resolve().then(() => view.domObserver.flush());
         view.input.compositionID++;
         scheduleComposeEnd(view, 20);
@@ -3731,10 +3745,15 @@ handlers.dragend = view => {
     }, 50);
 };
 editHandlers.dragover = editHandlers.dragenter = (_, e) => e.preventDefault();
-editHandlers.drop = (view, _event) => {
-    let event = _event;
-    let dragging = view.dragging;
-    view.dragging = null;
+editHandlers.drop = (view, event) => {
+    try {
+        handleDrop(view, event, view.dragging);
+    }
+    finally {
+        view.dragging = null;
+    }
+};
+function handleDrop(view, event, dragging) {
     if (!event.dataTransfer)
         return;
     let eventPos = view.posAtCoords(eventCoords(event));
@@ -3743,7 +3762,7 @@ editHandlers.drop = (view, _event) => {
     let $mouse = view.state.doc.resolve(eventPos.pos);
     let slice = dragging && dragging.slice;
     if (slice) {
-        view.someProp("transformPasted", f => { slice = f(slice, view); });
+        view.someProp("transformPasted", f => { slice = f(slice, view, false); });
     }
     else {
         slice = parseFromClipboard(view, getText(event.dataTransfer), brokenClipboardAPI ? null : event.dataTransfer.getData("text/html"), false, $mouse);
@@ -3788,7 +3807,7 @@ editHandlers.drop = (view, _event) => {
     }
     view.focus();
     view.dispatch(tr.setMeta("uiEvent", "drop"));
-};
+}
 handlers.focus = view => {
     view.input.lastFocus = Date.now();
     if (!view.focused) {
@@ -4568,15 +4587,24 @@ class DOMObserver {
             new window.MutationObserver(mutations => {
                 for (let i = 0; i < mutations.length; i++)
                     this.queue.push(mutations[i]);
-                // IE11 will sometimes (on backspacing out a single character
-                // text node after a BR node) call the observer callback
-                // before actually updating the DOM, which will cause
-                // ProseMirror to miss the change (see #930)
                 if (ie && ie_version <= 11 && mutations.some(m => m.type == "childList" && m.removedNodes.length ||
-                    m.type == "characterData" && m.oldValue.length > m.target.nodeValue.length))
+                    m.type == "characterData" && m.oldValue.length > m.target.nodeValue.length)) {
+                    // IE11 will sometimes (on backspacing out a single character
+                    // text node after a BR node) call the observer callback
+                    // before actually updating the DOM, which will cause
+                    // ProseMirror to miss the change (see #930)
                     this.flushSoon();
-                else
+                }
+                else if (safari && view.composing && mutations.some(m => m.type == "childList" && m.target.nodeName == "TR")) {
+                    // Safari does weird stuff when finishing a composition in a
+                    // table cell, which tends to involve inserting inappropriate
+                    // nodes in the table row.
+                    view.input.badSafariComposition = true;
+                    this.flushSoon();
+                }
+                else {
                     this.flush();
+                }
             });
         if (useCharData) {
             this.onCharData = e => {
@@ -4696,7 +4724,17 @@ class DOMObserver {
                 }
             }
         }
-        if (gecko && added.length) {
+        if (added.some(n => n.nodeName == "BR") && (view.input.lastKeyCode == 8 || view.input.lastKeyCode == 46)) {
+            // Browsers sometimes insert a bogus break node if you
+            // backspace out the last bit of text before an inline-flex node (#1552)
+            for (let node of added)
+                if (node.nodeName == "BR" && node.parentNode) {
+                    let after = node.nextSibling;
+                    if (after && after.nodeType == 1 && after.contentEditable == "false")
+                        node.parentNode.removeChild(node);
+                }
+        }
+        else if (gecko && added.length) {
             let brs = added.filter(n => n.nodeName == "BR");
             if (brs.length == 2) {
                 let [a, b] = brs;
@@ -4731,6 +4769,10 @@ class DOMObserver {
             if (from > -1) {
                 view.docView.markDirty(from, to);
                 checkCSS(view);
+            }
+            if (view.input.badSafariComposition) {
+                view.input.badSafariComposition = false;
+                fixUpBadSafariComposition(view, added);
             }
             this.handleDOMChange(from, to, typeOver, added);
             if (view.docView && view.docView.dirty)
@@ -4854,6 +4896,37 @@ function blockParent(view, node) {
             return p;
     }
     return null;
+}
+// Kludge for a Safari bug where, on ending a composition in an
+// otherwise empty table cell, it randomly moves the composed text
+// into the table row around that cell, greatly confusing everything
+// (#188).
+function fixUpBadSafariComposition(view, addedNodes) {
+    var _a;
+    let { focusNode, focusOffset } = view.domSelectionRange();
+    for (let node of addedNodes) {
+        if (((_a = node.parentNode) === null || _a === void 0 ? void 0 : _a.nodeName) == "TR") {
+            let nextCell = node.nextSibling;
+            while (nextCell && (nextCell.nodeName != "TD" && nextCell.nodeName != "TH"))
+                nextCell = nextCell.nextSibling;
+            if (nextCell) {
+                let parent = nextCell;
+                for (;;) {
+                    let first = parent.firstChild;
+                    if (!first || first.nodeType != 1 || first.contentEditable == "false" ||
+                        /^(BR|IMG)$/.test(first.nodeName))
+                        break;
+                    parent = first;
+                }
+                parent.insertBefore(node, parent.firstChild);
+                if (focusNode == node)
+                    view.domSelection().collapse(node, focusOffset);
+            }
+            else {
+                node.parentNode.removeChild(node);
+            }
+        }
+    }
 }
 
 // Note that all referencing and parsing is done with the
@@ -5028,16 +5101,13 @@ function readDOMChange(view, from, to, typeOver, addedNodes) {
     let $to = parse.doc.resolveNoCache(change.endB - parse.from);
     let $fromA = doc.resolve(change.start);
     let inlineChange = $from.sameParent($to) && $from.parent.inlineContent && $fromA.end() >= change.endA;
-    let nextSel;
     // If this looks like the effect of pressing Enter (or was recorded
     // as being an iOS enter press), just dispatch an Enter key instead.
     if (((ios && view.input.lastIOSEnter > Date.now() - 225 &&
         (!inlineChange || addedNodes.some(n => n.nodeName == "DIV" || n.nodeName == "P"))) ||
         (!inlineChange && $from.pos < parse.doc.content.size &&
             (!$from.sameParent($to) || !$from.parent.inlineContent) &&
-            !/\S/.test(parse.doc.textBetween($from.pos, $to.pos, "", "")) &&
-            (nextSel = Selection.findFrom(parse.doc.resolve($from.pos + 1), 1, true)) &&
-            nextSel.head > $from.pos)) &&
+            $from.pos < $to.pos && !/\S/.test(parse.doc.textBetween($from.pos, $to.pos, "", "")))) &&
         view.someProp("handleKeyDown", f => f(view, keyEvent(13, "Enter")))) {
         view.input.lastIOSEnter = 0;
         return;
@@ -5122,6 +5192,9 @@ function readDOMChange(view, from, to, typeOver, addedNodes) {
             let deflt = () => mkTr(view.state.tr.insertText(text, chFrom, chTo));
             if (!view.someProp("handleTextInput", f => f(view, chFrom, chTo, text, deflt)))
                 view.dispatch(deflt());
+        }
+        else {
+            view.dispatch(mkTr());
         }
     }
     else {
@@ -5418,7 +5491,7 @@ class EditorView {
                     this.docView.destroy();
                     this.docView = docViewDesc(state.doc, outerDeco, innerDeco, this.dom, this);
                 }
-                if (chromeKludge && !this.trackWrites)
+                if (chromeKludge && (!this.trackWrites || !this.dom.contains(this.trackWrites)))
                     forceSelUpdate = true;
             }
             // Work around for an issue where an update arriving right between

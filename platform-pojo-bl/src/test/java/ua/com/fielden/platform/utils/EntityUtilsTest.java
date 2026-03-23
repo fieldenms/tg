@@ -159,12 +159,15 @@ public class EntityUtilsTest {
     @Test
     public void collectional_properties_are_correctly_identifiable() {
         final List<Field> collectionalProperties = getCollectionalProperties(User.class);
-        assertEquals(1, collectionalProperties.size());
+        assertEquals(2, collectionalProperties.size());
 
-        final Field userRolesField = collectionalProperties.get(0);
-        assertEquals("Incorrect field name", "roles", userRolesField.getName());
-        assertEquals("Incorrect collectional entity class", UserAndRoleAssociation.class, AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).value());
-        assertEquals("Incorrect collectional entity link property", "user", AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).linkProperty());
+        final Field fActiveRoles = collectionalProperties.get(0);
+        assertEquals("Incorrect field name", "activeRoles", fActiveRoles.getName());
+        assertEquals("Incorrect collectional entity class", SynUserAndRoleAssociationActive.class, AnnotationReflector.getAnnotation(fActiveRoles, IsProperty.class).value());
+
+        final Field fInactiveRoles = collectionalProperties.get(1);
+        assertEquals("Incorrect field name", "inactiveRoles", fInactiveRoles.getName());
+        assertEquals("Incorrect collectional entity class", SynUserAndRoleAssociationInactive.class, AnnotationReflector.getAnnotation(fInactiveRoles, IsProperty.class).value());
     }
 
     @Test
@@ -674,6 +677,8 @@ public class EntityUtilsTest {
                 ReUser.class,
                 UserRole.class,
                 UserAndRoleAssociation.class,
+                SynUserAndRoleAssociationActive.class,
+                SynUserAndRoleAssociationInactive.class,
                 SecurityRoleAssociation.class,
                 UserDefinableHelp.class);
     }
@@ -801,6 +806,21 @@ public class EntityUtilsTest {
     @Test
     public void isActivatablePersistentEntityType_returns_false_for_null_input() {
         assertFalse(isActivatablePersistentEntityType(null));
+    }
+
+    @Test
+    public void isOneToOne_returns_false_for_entity_with_simple_key() {
+        assertFalse(isOneToOne(TgVehicle.class));
+    }
+
+    @Test
+    public void isOneToOne_returns_false_for_null_entity_type() {
+        assertFalse(isOneToOne(null));
+    }
+
+    @Test
+    public void isOneToOne_returns_true_for_entity_with_entity_key() {
+        assertTrue(isOneToOne(TgVehicleFinDetails.class));
     }
 
     /**

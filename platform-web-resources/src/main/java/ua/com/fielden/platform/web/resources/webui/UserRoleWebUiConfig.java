@@ -5,8 +5,11 @@ import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.security.user.CopyUserRoleAction;
+import ua.com.fielden.platform.security.user.CopyUserRoleActionProducer;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRoleProducer;
+import ua.com.fielden.platform.tiny.PlatformActionIdentifiers;
 import ua.com.fielden.platform.ui.menu.sample.MiUserRole;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
@@ -16,6 +19,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
@@ -28,6 +32,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.security.user.CopyUserRoleAction.*;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
@@ -38,23 +43,24 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActio
 
 /// [UserRole] Web UI configuration.
 ///
-/// @author TG Team
 public class UserRoleWebUiConfig {
 
     public final EntityCentre<UserRole> centre;
     public final EntityMaster<UserRole> master;
 
     public static UserRoleWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
-        return new UserRoleWebUiConfig(injector);
+        return new UserRoleWebUiConfig(injector, builder);
     }
 
-    private UserRoleWebUiConfig(final Injector injector) {
+    private UserRoleWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
         centre = createCentre(injector);
+        // TODO Masters should be consistently and uniformly registered.
+        //      Currently, `master` is expected to be registered by applications,
+        //      but `copyUserRoleActionMaster` is registered here, at the platform.
         master = createMaster(injector);
+        builder.register(copyUserRoleActionMaster(injector));
     }
 
-    /// Creates entity centre for [UserRole].
-    ///
     private static EntityCentre<UserRole> createCentre(final Injector injector) {
         final String fmr = "'flex', 'margin-right: 20px', 'width: 200px'";
         final String fmrLast = "'flex', 'width: 200px'";
@@ -69,7 +75,8 @@ public class UserRoleWebUiConfig {
                 .addTopAction(UserRoleActions.NEW_ACTION.mkAction()).also()
                 .addTopAction(UserRoleActions.DELETE_ACTION.mkAction()).also()
                 .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction()).also()
-                .addTopAction(StandardActions.EXPORT_ACTION.mkAction(UserRole.class))
+                .addTopAction(StandardActions.EXPORT_ACTION.mkAction(UserRole.class)).also()
+                .addTopAction(UserRoleActions.COPY_ACTION.mkAction())
                 .addCrit("this").asMulti().autocompleter(UserRole.class).also()
                 .addCrit(ActivatableAbstractEntity.ACTIVE).asMulti().bool().also()
                 .addCrit("desc").asMulti().text()
@@ -84,8 +91,6 @@ public class UserRoleWebUiConfig {
                 .build(), injector, null);
     }
 
-    /// Creates entity master for [UserRole].
-    ///
     private static EntityMaster<UserRole> createMaster(final Injector injector) {
         final int MARGIN = 20;
         final String MARGIN_PIX = MARGIN + "px";
@@ -118,6 +123,36 @@ public class UserRoleWebUiConfig {
                 UserRoleProducer.class,
                 masterConfigForUserRole,
                 injector);
+    }
+
+    private static EntityMaster<CopyUserRoleAction> copyUserRoleActionMaster(final Injector injector) {
+        final int MARGIN = 20;
+        final String MARGIN_PIX = MARGIN + "px";
+        final FlexLayoutConfig CELL_LAYOUT = layout().flex().end();
+        final FlexLayoutConfig FLEXIBLE_ROW = layout().flexAuto().end();
+        final FlexLayoutConfig FLEXIBLE_LAYOUT_WITH_PADDING = layout()
+                .withStyle("height", "100%")
+                .withStyle("box-sizing", "border-box")
+                .withStyle("min-height", "fit-content")
+                .withStyle("padding", MARGIN_PIX).end();
+
+        final String layout = cell(
+                cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN)).
+                        cell(cell(CELL_LAYOUT), FLEXIBLE_ROW),
+                FLEXIBLE_LAYOUT_WITH_PADDING).toString();
+
+        final var master = new SimpleMasterBuilder<CopyUserRoleAction>()
+                .forEntity(CopyUserRoleAction.class)
+                .addProp(ROLE_TITLE).asSinglelineText().also()
+                .addProp(ROLE_ACTIVE).asCheckbox().also()
+                .addProp(ROLE_DESC).asMultilineText().also()
+                .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
+                .addAction(MasterActions.SAVE).shortDesc("Create").longDesc("Create %s".formatted(UserRole.ENTITY_TITLE))
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster())
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+                .withDimensions(mkDim(480, 320))
+                .done();
+        return new EntityMaster<>(CopyUserRoleAction.class, CopyUserRoleActionProducer.class, master, injector);
     }
 
     private enum UserRoleActions {
@@ -164,7 +199,25 @@ public class UserRoleWebUiConfig {
                         .shortcut("alt+d")
                         .build();
             }
+        },
 
+        COPY_ACTION {
+            @Override
+            public EntityActionConfig mkAction() {
+                return action(CopyUserRoleAction.class)
+                        .withTinyHyperlink(PlatformActionIdentifiers.PLATFORM_COPY_USER_ROLE)
+                        .withContext(context().withSelectedEntities().build())
+                        .postActionSuccess(() -> new JsCode(
+                            """
+                            if (self.$.egi) {
+                                self.$.egi.clearPageSelection();
+                            }
+                            """))
+                        .icon("icons:content-copy")
+                        .shortDesc("Add new User Role from selected roles")
+                        .longDesc("Create a new User Role with all security tokens of selected roles.")
+                        .build();
+            }
         };
 
         public abstract EntityActionConfig mkAction();

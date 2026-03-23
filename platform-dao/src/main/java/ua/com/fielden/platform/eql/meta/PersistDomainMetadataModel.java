@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
 import com.google.common.collect.Iterators;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
@@ -20,31 +19,29 @@ import java.util.Set;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
-/**
- * Performs instant persistence of the Domain Metadata Model entities, generated for an application domain.
- *
- * @author TG Team
- *
- */
+/// Performs instant persistence of the Domain Metadata Model entities, generated for an application domain.
+///
 // TODO make this class injectable and replace static with instance methods (a breaking change)
 public class PersistDomainMetadataModel {
+
     final static String CRITERION = "[selection criterion]";
     final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_(_ID, KEY_, DESC_, DBTABLE_, ENTITYTYPEDESC_, ENTITY_, PROPSCOUNT_, _VERSION) VALUES(?, ?, ?, ?, ?, ?, ?, ?);";
     final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_(_ID, NAME_, TITLE_, DESC_, HOLDER__DOMAINTYPE, HOLDER__DOMAINPROPERTY, DOMAINTYPE_, KEYINDEX_, REQUIRED_, DBCOLUMN_, POSITION_, _VERSION) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     final static String EXISTING_DATA_DELETE_STMT = "DELETE FROM DOMAINPROPERTY_; DELETE FROM DOMAINTYPE_;";
 
-    private static final Logger LOGGER = LogManager.getLogger(PersistDomainMetadataModel.class);
+    private static final Logger LOGGER = getLogger();
 
-    /**
-     * Synchronises persistent model of Domain Explorer entities with an actual application domain.
-     *
-     * @param entityTypes - domain entities to be included into metadata model entities data.
-     */
+    /// Generates and persists data for the Domain Explorer.
+    ///
+    /// @param entityTypes entity types to generate data for (typically, a list of all registered entity types).
+    ///
     public static void persist(
             final List<Class<? extends AbstractEntity<?>>> entityTypes,
             final IDomainMetadata domainMetadata,
-            final TransactionalExecution trEx) {
+            final TransactionalExecution trEx)
+    {
         LOGGER.info("Starting to save the domain metadata...");
         try {
             LOGGER.info("Removing old domain metadata records...");

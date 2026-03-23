@@ -634,7 +634,6 @@ class Transaction extends Transform {
         else {
             if (to == null)
                 to = from;
-            to = to == null ? from : to;
             if (!text)
                 return this.deleteRange(from, to);
             let marks = this.storedMarks;
@@ -643,7 +642,7 @@ class Transaction extends Transform {
                 marks = to == from ? $from.marks() : $from.marksAcross(this.doc.resolve(to));
             }
             this.replaceRangeWith(from, to, schema.text(text, marks));
-            if (!this.selection.empty)
+            if (!this.selection.empty && this.selection.to == from + text.length)
                 this.setSelection(Selection.near(this.selection.$to));
             return this;
         }
@@ -839,7 +838,7 @@ class EditorState {
         return newInstance;
     }
     /**
-    Start a [transaction](https://prosemirror.net/docs/ref/#state.Transaction) from this state.
+    Accessor that constructs and returns a new [transaction](https://prosemirror.net/docs/ref/#state.Transaction) from this state.
     */
     get tr() { return new Transaction(this); }
     /**

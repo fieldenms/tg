@@ -3,7 +3,6 @@ package ua.com.fielden.platform.reflection;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import jakarta.annotation.Nullable;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -212,8 +211,7 @@ public class ActivatableEntityRetrospectionHelper {
         else if (propValue != null && isUnionEntityType(propValue.getType())) {
             final var unionValue = (AbstractUnionEntity) propValue;
             final var unionType = unionValue.getType();
-            final var unionCo = (IEntityDao<AbstractUnionEntity>) coFinder.find(unionType);
-            final var activePropName = instrument(unionValue, unionCo).activePropertyName();
+            final var activePropName = unionValue.activePropertyName();
             return isActivatableProperty(unionType, activePropName)
                     && !isSpecialActivatableToBeSkipped(unionType, activePropName);
         }

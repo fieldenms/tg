@@ -107,17 +107,20 @@ The `tg-release.sh` script automates the entire release process following Git Fl
 
 ### Module Structure
 
-The platform consists of several key modules:
+The platform targets **Java 25** and consists of several key modules:
 
 1. **platform-annotations** - Core annotations for entity definition
-2. **platform-annotation-processors** - Compile-time annotation processing
-3. **platform-pojo-bl** - Business logic layer with domain model foundation
-4. **platform-dao** - Data access layer with EQL and Hibernate integration
-5. **platform-web-resources** - REST API layer with web resources
-6. **platform-web-ui** - Web UI framework with Entity Centre and Master patterns
-7. **platform-db-evolution** - Database migration and evolution tools
-8. **platform-eql-grammar** - ANTLR-based EQL parser and compiler
-9. **platform-benchmark** - Performance benchmarking tools
+2. **platform-annotation-processors** - Compile-time annotation processing and metamodel generation
+3. **platform-annotation-processors-test** - Tests for annotation processors
+4. **platform-pojo-bl** - Business logic layer with domain model foundation
+5. **platform-dao** - Data access layer with EQL, Hibernate, and GraphQL Web API
+6. **platform-web-resources** - REST API layer with web resources
+7. **platform-web-ui** - Web UI framework with Entity Centre and Master patterns
+8. **platform-db-evolution** - Database migration and evolution tools
+9. **platform-eql-grammar** - ANTLR-based EQL parser and compiler
+10. **platform-benchmark** - Performance benchmarking tools
+
+Comprehensive LaTeX documentation is available in `platform-doc/` (developer's guide, architecture overview, security model).
 
 ### Core Architectural Patterns
 
@@ -128,8 +131,8 @@ All domain entities extend `AbstractEntity` and use annotations for configuratio
 - `@IsProperty` - Declares entity properties
 - `@MapTo` - ORM mapping configuration for persistent entity properties.
 - `@CompanionObject` - Links to companion object for CRUD operations
-- `@Calculated` - Computed properties
-- `@Observable` - Change tracking
+- `@Calculated` - Computed properties (see [Calculated Properties](#calculated-properties) below)
+- `@Observable` - Change tracking (required on all property setters)
 
 **Additional Property Annotations (from real-world usage):**
 - `@Dependent(prop1, prop2, ...)` - Declares property dependencies for UI refreshing
@@ -165,6 +168,8 @@ All domain entities extend `AbstractEntity` and use annotations for configuratio
     - **Initialising phase**: Entity being loaded from database
     - **Mutation phase**: User or business logic setting property values
   - Cannot reject values (runs after successful validation)
+  - **Important:** When a definer sets a value on the same or another property via its setter, the setter call goes through `ObservableMutatorInterceptor` and triggers the full validation chain for that property.
+    Definer-initiated mutations are therefore **not** silent — they undergo the same validation as any other property mutation.
 
 **Validation Result Types:**
 - **Failure**: Rejects the value, property remains unchanged
@@ -193,7 +198,7 @@ Other common ancestors for domain entities are:
 - `ActivatableAbstractEntity` -- introduces property `active` for modelling activatable entities;
    activatable entities are used where their values should remain persisted and referenced, but should not be used when creating new data.
 - `AbstractFunctionalEntityWithCentreContext` -- a base class for action entities (used to be called functional entities), which represent an action;
-  generally specking action entities are not persistent (do not get saved into a database);
+  generally speaking action entities are not persistent (do not get saved into a database);
   Method `save` for their companion objects "executes" the action, where an instance of an action entity is passed with all the relevant properties populated.
 
 Entity types that are annotated with `@MapEntityTo` represent persistent entities.
@@ -204,54 +209,166 @@ Union entities model situations where a property can reference different entity 
 They extend `AbstractUnionEntity` and provide type-safe polymorphic references.
 
 **Key Characteristics:**
-- Only one union property can have a value at any time (union constraint)
-- All properties must be entity types (no primitive/ordinary types allowed)
-- Each property must be of a unique entity type (no duplicates)
-- The active property determines the union's `id`, `key`, and `desc`
-- Union entities have `@KeyType(String.class)` by default
+- Only one union property can have a value at any time (the union constraint — attempting to set a second property throws an exception).
+- All properties must be entity types (no primitive/ordinary types allowed).
+- Each property must be of a unique entity type (no duplicates).
+- The active property determines the union's `id`, `key`, and `desc`.
+- Union entities have `@KeyType(String.class)` by default.
+- Union entities are synthetic (not directly persisted) — EQL expands union properties into individual member columns.
 
-**Implementation Example:**
+**Interface Contract Pattern:**
+Union members typically implement a common interface that defines shared behaviour.
+The union entity then provides delegation methods that cast `activeEntity()` to that interface.
+
 ```java
-@CompanionObject(RotableLocationCo.class)
-public class RotableLocation extends AbstractUnionEntity {
-    
-    @IsProperty
-    @MapTo
-    private Equipment equipment;
-    
-    @IsProperty
-    @MapTo
-    private BulkStoreBin bulkStoreBin;
-    
-    // Standard setters/getters with @Observable
+/// A contract for maintenance-related properties common to all members of MaintenanceCapable.
+public interface IMaintainable<M extends IMaintainable<M>> {
+    Workshop getWorkshop();
+    Ownership getOwnership();
+}
+
+@DomainEntity
+@CompanionObject(MaintenanceCapableCo.class)
+public class MaintenanceCapable extends AbstractUnionEntity {
+
+    @IsProperty @MapTo
+    private Equipment equipment;       // implements IMaintainable
+
+    @IsProperty @MapTo
+    private Building building;         // implements IMaintainable
+
+    @IsProperty @MapTo
+    @SkipActivatableTracking           // allows Tool to be deactivated while WorkOrder remains active
+    private Tool tool;                 // implements IMaintainable
+
+    @IsProperty @MapTo
+    private Vehicle vehicle;           // implements IMaintainable
+
+    @IsProperty @MapTo
+    @SkipActivatableTracking           // allows Rotable to be deactivated while WorkOrder remains active
+    private Rotable rotable;           // implements IMaintainable
+
+    // Standard setters/getters with @Observable ...
+
+    /// Delegates to the active member's IMaintainable contract.
+    public Workshop workshop() {
+        if (activeEntity() instanceof final IMaintainable<?> m) {
+            return m.getWorkshop();
+        }
+        throw new IllegalStateException("All union members must implement IMaintainable.");
+    }
+
+    public Ownership ownership() {
+        if (activeEntity() instanceof final IMaintainable<?> m) {
+            return m.getOwnership();
+        }
+        throw new IllegalStateException("All union members must implement IMaintainable.");
+    }
 }
 ```
 
-**Usage Patterns:**
+**Instantiation — Always Use Companion `new_()`:**
+Union entities must be created through the companion object, never via `new`.
+
 ```java
-// Setting a union property
-RotableLocation location = new RotableLocation();
-location.setEquipment(someEquipment); // Only one can be set
-// location.setBulkStoreBin(bin); // Would throw exception - union already has value
+// Create a MaintenanceCapable for a specific Equipment
+final var asset = co$(MaintenanceCapable.class).new_().setEquipment(equipment);
 
-// Getting the active entity
-AbstractEntity<?> activeEntity = location.activeEntity();
-
-// Using setUnionProperty helper
-location.setUnionProperty(someEquipment); // Automatically finds matching property
+// setUnionProperty() automatically finds the matching property by type
+final var asset = co$(MaintenanceCapable.class).new_().setUnionProperty(equipment);
 ```
 
-**Common Use Cases:**
-- **Location references** - Entity can be in different location types (e.g., Equipment slot or Storage bin)
-- **Origin tracking** - Tracking where something came from (different source types)
-- **Line items** - Purchase order lines of different types (service, repair, freight, etc.)
-- **Approval chains** - Different approver types in workflow
+**Key Methods on `AbstractUnionEntity`:**
+- `activeEntity()` — returns the non-null union member value.
+- `setUnionProperty(entity)` — automatically assigns to the correct property by entity type.
+- `isActivePropertyUnionMemberOf(OtherUnion.class)` — checks whether the active member type also exists as a member in another union entity.
 
-**Important Notes:**
-- Union properties often use `@SkipEntityExistsValidation` for performance
-- The `activeEntity()` method returns the non-null union property value
-- `setUnionProperty()` helper method automatically assigns to the correct property by type
-- Union entities are useful for avoiding multiple nullable foreign keys
+**Cross-Union Conversion Pattern:**
+When multiple union entities share some member types, companion default methods provide safe conversion.
+
+```java
+public interface MeterCapableCo extends IEntityDao<MeterCapable> {
+
+    /// Converts a MaintenanceCapable to MeterCapable if the active member is meter-capable.
+    default Optional<MeterCapable> asMeterCapable(final MaintenanceCapable maintenanceCapable) {
+        return maintenanceCapable.isActivePropertyUnionMemberOf(MeterCapable.class)
+                ? of(new_().setUnionProperty(maintenanceCapable.activeEntity()))
+                : empty();
+    }
+}
+```
+
+**Union Entities in Validators and Definers:**
+Validators use `switch` on `activeEntity()` for type-specific validation per member.
+Definers use `isActivePropertyUnionMemberOf()` for capability testing and cross-union conversion.
+
+```java
+// Validator — type-specific validation via switch
+switch (asset.activeEntity()) {
+    case final Rotable it   -> validateRotable(it);
+    case final Equipment it -> validateEquipment(it);
+    case final Vehicle it   -> validateVehicle(it);
+    case final Tool it      -> validateTool(it);
+    case final Building it  -> validateBuilding(it);
+}
+
+// Definer — capability testing and cross-union conversion
+if (asset.isActivePropertyUnionMemberOf(MeterCapable.class)) {
+    coMeterCapable.asMeterCapable(asset).ifPresent(meterCapable -> {
+        // use meterCapable for meter-related logic
+    });
+}
+```
+
+**Union Entities in Producers:**
+Producers create union entities based on the master entity context, then lock editability.
+
+```java
+@Override
+protected PmXref provideDefaultValuesForStandardNew(final PmXref entity, final EntityNewAction masterEntity) {
+    if (ofMasterEntity().keyOfMasterEntityInstanceOf(Equipment.class)) {
+        final var equipment = refetch(ofMasterEntity().keyOfMasterEntity(Equipment.class));
+        entity.setAsset(co$(MaintenanceCapable.class).new_().setEquipment(equipment));
+        entity.getProperty(PmXref_.asset()).setEditable(false);
+    }
+    return entity;
+}
+```
+
+**`@SkipActivatableTracking` on Union Members:**
+By default, setting an activatable entity as a union member increments its reference count.
+Use `@SkipActivatableTracking` when the union member should be allowed to become inactive while entities referencing the union remain active (e.g., a Tool can be deactivated while its WorkOrder stays active).
+
+**Common Properties:**
+Properties that exist on *all* union members are called *common properties*.
+The platform detects these automatically via `AbstractUnionEntity.commonProperties(unionType)` (intersection of real properties across all member types).
+
+Common properties are significant because they can be accessed transparently through the union entity using dot-notation — in EQL queries, fetch models, and Entity Centre configurations — without knowing which member is active.
+The platform automatically expands such access to each union member behind the scenes.
+
+For example, if all members of `MaintenanceCapable` have an `ownership` property, it can be used as a path through the union:
+
+```java
+// In Entity Centre configuration — dot-notation through the union's common property
+.addCrit(WorkOrder_.asset().ownership()).asMulti().autocompleter(Ownership.class)
+.addProp(WorkOrder_.asset().ownership()).minWidth(96)
+
+// In EQL — querying through common properties
+select(WorkOrder.class).where().prop(WorkOrder_.asset().ownership()).eq().val(someOwnership).model()
+```
+
+The platform handles common properties specially in several places:
+- **Fetch models** (`FetchProvider`): when a common property is included, it is automatically expanded to `member.commonProp` for each union member.
+- **Entity retrieval** (`EntityRetrievalModel`): common properties are not proxied on the union entity itself; instead, access is resolved through the active member.
+- **Serialisation** (`EntitySerialiser`): common properties are included in type metadata sent to the client for UI rendering.
+
+Note: the interface delegation methods like `workshop()` and `ownership()` on the union entity itself (shown earlier) are a complementary pattern for *programmatic* access in business logic.
+Common properties as described here enable *declarative* access through dot-notation paths in EQL and UI configurations.
+
+**Common Use Cases:**
+- **Capability grouping** — grouping entity types that share a capability (e.g., all assets that can have maintenance work orders, or all assets that can have meter readings).
+- **Polymorphic references** — a single property (e.g., `asset` on WorkOrder) that can reference different entity types without multiple nullable foreign keys.
+- **Capability subsetting** — narrower union entities (MeterCapable) as subsets of broader ones (MaintenanceCapable), with conversion methods between them.
 
 #### Entity Producer Pattern (`IEntityProducer`)
 
@@ -287,24 +404,763 @@ public class RotableEoProducer extends DefaultEntityProducerWithContext<RotableE
 ```
 
 #### Companion Object Pattern
-Every entity has a companion object (Co class) that provides:
-- Type-safe CRUD operations
-- Query execution
-- Business logic encapsulation
-- Transaction management
 
-Example: Entity `Vehicle` has companion interface `VehicleCo` and DAO implementation `VehicleDao`
+Every entity has a companion object (Co class) that provides type-safe CRUD operations, query execution, business logic encapsulation, and transaction management.
+
+**Naming Convention:** Entity `Vehicle` → interface `VehicleCo` → implementation `VehicleDao`
+
+**Two Companion Access Methods:**
+
+| Method | Returns | Instrumented | Use Case |
+|--------|---------|--------------|----------|
+| `co(Type.class)` | `IEntityReader<T>` | No | Read-only queries, exports, lookups |
+| `co$(Type.class)` | `IEntityDao<T>` | Yes | Full CRUD — create, update, save, delete |
+
+The critical difference is **entity instrumentation**: `co$()` returns entities with full change tracking, validation (@BeforeChange/@AfterChange), and meta-property support.
+`co()` returns lightweight, uninstrumented entities suitable for read-only use.
+
+**IEntityReader API** (available via both `co()` and `co$()`):
+```java
+IEntityReader<Vehicle> reader = co(Vehicle.class);
+
+reader.findById(123L);                                  // Find by ID
+reader.findByKey("VEH-001");                            // Find by business key
+reader.findByKeyAndFetch(fetch(Vehicle.class), "VEH-001"); // Find with fetch model
+reader.entityExists(entity);                            // Check existence
+reader.entityWithKeyExists("VEH-001");                  // Check key existence
+reader.count(queryModel);                               // Count matching entities
+
+// Query multiple entities
+reader.getAllEntities(from(query).with(fetchModel).model());
+reader.getPage(from(query).model(), 0, 25);             // Paginated results
+
+// Stream entities (must be used with try-with-resources)
+try (Stream<Vehicle> stream = reader.stream(from(query).model())) {
+    stream.forEach(v -> process(v));
+}
+```
+
+**IEntityDao API** (additional methods via `co$()`):
+```java
+IEntityDao<Vehicle> dao = co$(Vehicle.class);
+
+dao.save(entity);                                       // Save (insert or update)
+dao.delete(entity);                                     // Delete single entity
+dao.batchDelete(Collection<Long> ids);                  // Delete by IDs
+dao.new_();                                             // Create new entity instance
+```
+
+**Usage in DAO implementations:**
+```java
+// Within a DAO class, co() and co$() are instance methods:
+@Override
+@SessionRequired
+@Authorise(Vehicle_CanSave_Token.class)
+public Vehicle save(Vehicle entity) {
+    // Read-only lookup (uninstrumented, no overhead)
+    final Station station = co(Station.class).findByKey("MAIN");
+
+    // Fetch for modification (instrumented, supports save)
+    final VehicleType type = co$(VehicleType.class).findById(entity.getType().getId());
+
+    return super.save(entity);
+}
+```
 
 #### Entity Query Language (EQL)
-Type-safe query language with ANTLR grammar:
+
+Type-safe fluent query language with ANTLR grammar:
 - Located in `platform-eql-grammar/src/main/antlr4/EQL.g4`
 - Multi-stage compilation (EqlStage0-3) for optimization
-- Supports complex queries with joins, aggregations, and calculations
+- Entry points and utilities in `EntityQueryUtils` (static import)
 
-#### Entity Centre and Master Patterns
-Web UI is built around two main patterns:
-- **Entity Centre**: Grid/listing component for data presentation
-- **Entity Master**: Form-based entity editing with validation
+**Static Imports:**
+```java
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static metamodels.MetaModels.*;  // Generated metamodel references
+```
+
+**Metamodel References:**
+Always prefer type-safe metamodel references over string literals for property access.
+Metamodel classes are generated at compile time by `MetaModelProcessor` and provide `Entity_.property()` accessors:
+```java
+// Prefer metamodel references:
+.prop(Vehicle_.model())                              // Type-safe, refactor-friendly
+.prop(PmXref_.asset().equipment().avgReading())      // Deep property chains
+
+// Avoid string literals:
+.prop("model")                                       // Fragile, no compile-time checking
+.prop("asset.equipment.avgReading")                  // Error-prone
+```
+
+**Query Construction Phases:**
+
+1. **SELECT** — entry point:
+   ```java
+   select(Vehicle.class)                    // From entity type
+   select(select(...).model())              // From subquery
+   select()                                 // For standalone aggregates
+   ```
+
+2. **JOIN** — optional joins:
+   ```java
+   select(Vehicle.class)
+       .join(Employee.class).as("e").on().prop("owner").eq().prop("e.id")
+       .leftJoin(Department.class).on().prop("dept").eq().prop("id")
+   ```
+
+3. **WHERE** — filter conditions:
+   ```java
+   .where()
+       .prop("status").eq().val("ACTIVE")
+       .and().prop("age").gt().val(18)
+       .or().begin()
+           .prop("type").eq().val("A")
+           .or().prop("type").eq().val("B")
+       .end()
+   ```
+
+4. **GROUP BY / YIELD** — for aggregations:
+   ```java
+   select(FuelUsage.class)
+       .groupBy().prop("vehicle.station")
+       .yield().prop("vehicle.station").as("station")
+       .yield().sumOf().prop("qty").as("totalQty")
+       .modelAsAggregate()
+   ```
+
+5. **ORDER BY** — sorting:
+   ```java
+   .orderBy().prop("name").asc()
+   ```
+
+6. **MODEL** — terminates the query:
+   ```java
+   .model()                                 // EntityResultQueryModel<T>
+   .modelAsAggregate()                      // AggregatedResultQueryModel
+   .modelAsEntity(OtherEntity.class)        // Cast to different entity type
+   ```
+
+**Condition Operators:**
+- Comparison: `.eq()`, `.ne()`, `.gt()`, `.lt()`, `.ge()`, `.le()`
+- Nullability: `.isNull()`, `.isNotNull()`
+- String: `.like()`, `.notLike()`, `.iLike()`, `.notILike()`
+- Sets: `.in().values(...)`, `.in().model(subquery)`, `.notIn().values(...)`
+- Existence: `.exists(subquery)`, `.notExists(subquery)`
+- Quantified: `.eq().any(subquery)`, `.eq().all(subquery)`
+- Multi-prop: `.anyOfProps("p1", "p2").isNotNull()`, `.allOfProps("p1", "p2").eq().val(...)`
+
+**Operand Types:**
+- `.val(value)` — literal value (null causes condition to fail)
+- `.iVal(value)` — ignore-if-null (skips the condition when value is null)
+- `.param("name")` — named parameter (null causes condition to fail)
+- `.iParam("name")` — ignore-if-null named parameter
+- `.prop("name")` — property reference
+- `.extProp("name")` — property from outer/master query
+- `.now()` — current timestamp
+- `.model(subquery)` — subquery result
+- `.expr(expressionModel)` — pre-built expression
+
+**Logical Grouping:**
+```java
+.where()
+    .begin()                                // Opens parenthesis
+        .prop("a").eq().val(1)
+        .or().prop("b").eq().val(2)
+    .end()                                  // Closes parenthesis
+    .and().prop("c").eq().val(3)
+```
+Up to 3 nesting levels are supported (depth-tracked interfaces prevent deeper nesting).
+
+**Functions:**
+- Date: `.yearOf()`, `.monthOf()`, `.dayOf()`, `.hourOf()`, `.minuteOf()`, `.secondOf()`, `.dateOf()`, `.dayOfWeekOf()`
+- String: `.upperCase()`, `.lowerCase()`, `.concat().prop("a").with().val(" ").with().prop("b").end()`
+- Numeric: `.round().to(2)`, `.absOf()`
+- Null: `.ifNull().prop("x").then().val(defaultVal)`
+- Date arithmetic: `.addTimeIntervalOf().val(30).days().to().prop("startDate")`
+- Date diff: `.prop("end").count().days().between().prop("start")`
+
+**Aggregate Functions (in yield):**
+```java
+.yield().countAll().as("total")
+.yield().countOf().prop("id").as("count")
+.yield().sumOf().prop("amount").as("sum")
+.yield().avgOf().prop("salary").as("avg")
+.yield().maxOf().prop("price").as("max")
+.yield().minOf().prop("price").as("min")
+```
+
+**CASE WHEN:**
+```java
+.caseWhen()
+    .prop("status").eq().val("ACTIVE").then().val(1)
+    .when().prop("status").eq().val("PENDING").then().val(2)
+    .otherwise().val(0)
+    .end()                                  // Auto-detect type
+    // Or: .endAsInt(), .endAsStr(50), .endAsDecimal(10, 2), .endAsBool()
+```
+
+**Arithmetic in Expressions:**
+```java
+.prop("price").add().val(10)
+.prop("amount").sub().prop("discount")
+.prop("qty").mult().prop("unitPrice")
+.prop("total").div().val(2)
+.prop("value").mod().val(3)
+// With parentheses:
+.beginExpr().prop("a").add().prop("b").endExpr().mult().prop("c")
+```
+
+**Complete Query Example:**
+```java
+final EntityResultQueryModel<PmXref> query = select(PmXref.class).where()
+    .prop(PmXref_.asset()).eq().val(savedPmXref.getAsset()).and()
+    .prop(PmXref_.pmRoutine().pmRoutineType().key()).eq().val(TIME_BASED).and()
+    .prop(PmXref_.pmRoutine().pmRelationship()).eq().val(savedPmXref.getPmRoutine().getPmRelationship()).and()
+    .prop(PmXref_.pmRoutine().relatedPriority()).gt().val(savedPmXref.getPmRoutine().getRelatedPriority())
+    .model();
+
+final OrderingModel orderBy = orderBy().prop(PmXref_.pmRoutine().relatedPriority()).desc().model();
+
+// Execute with fetch model and ordering
+try (final Stream<PmXref> results = stream(from(query).with(PmXrefCo.FETCH_MODEL).with(orderBy).model())) {
+    results.forEach(pmXref -> { /* process */ });
+}
+```
+
+**Subquery Example:**
+```java
+select(Vehicle.class)
+    .where().exists(
+        select(FuelUsage.class)
+            .where().prop(FuelUsage_.vehicle()).eq().extProp("id")
+            .model()
+    )
+    .model()
+```
+
+#### Fetch Model Patterns
+
+Fetch models control which entity properties are loaded from the database, enabling efficient entity graph retrieval and preventing N+1 query problems.
+The core class is `fetch<T>` — all instances are **immutable** (builder methods return new instances).
+
+**FetchCategory Hierarchy (most to least comprehensive):**
+
+| Category | Includes |
+|----------|----------|
+| `ALL_INCL_CALC` | ALL + all calculated properties |
+| `ALL` | DEFAULT + entity-typed properties as DEFAULT |
+| `DEFAULT` | KEY_AND_DESC + all retrievable properties + entity-typed properties as ID_ONLY |
+| `KEY_AND_DESC` | ID_AND_VERSION + key + desc (composite key members as DEFAULT) |
+| `ID_AND_VERSION` | ID_ONLY + version + refCount/active for activatables + "last updated" properties |
+| `ID_ONLY` | Just the id property (creates proxy objects for other properties) |
+| `NONE` | Nothing |
+
+**Factory Methods** (from `EntityQueryUtils`):
+```java
+fetch(Vehicle.class)                        // DEFAULT
+fetchAll(Vehicle.class)                     // ALL
+fetchAllInclCalc(Vehicle.class)             // ALL_INCL_CALC
+fetchOnly(Vehicle.class)                    // ID_AND_VERSION
+fetchKeyAndDescOnly(Vehicle.class)          // KEY_AND_DESC
+fetchIdOnly(Vehicle.class)                  // ID_ONLY
+fetchNone(Vehicle.class)                    // NONE
+
+// Instrumented variants (entities support lazy-loading and mutation tracking):
+fetchAndInstrument(Vehicle.class)           // DEFAULT + instrumented
+fetchAllAndInstrument(Vehicle.class)        // ALL + instrumented
+fetchOnlyAndInstrument(Vehicle.class)       // ID_AND_VERSION + instrumented
+fetchKeyAndDescOnlyAndInstrument(Vehicle.class) // KEY_AND_DESC + instrumented
+```
+
+**`IFetchProvider` — the Preferred Pattern:**
+
+In practice, fetch models are defined as `IFetchProvider<T>` static fields in companion interfaces using metamodel references.
+`IFetchProvider` supports dot-notation via metamodel paths (unlike raw `fetch<T>` which requires nested fetch models).
+Convert to `fetch<T>` via `.fetchModel()` when needed for query execution.
+
+```java
+// In companion interface (e.g., PmXrefCo.java):
+static final IFetchProvider<PmXref> FETCH_PROVIDER = EntityUtils.fetch(PmXref.class).with(
+        PmXref_.pmRoutine().pmRelationship().tolerance(), // Deep property chains via metamodel
+        PmXref_.pmRoutine().relatedPriority(),
+        PmXref_.pmRoutine().pmRoutineType(),
+        PmXref_.asset().equipment().avgReading(),
+        PmXref_.lastActualCompletedWorkOrder().repairFinish(),
+        PmXref_.active(),
+        PmXref_.lastForecastedDate());
+
+static final fetch<PmXref> FETCH_MODEL = FETCH_PROVIDER.fetchModel();
+```
+
+```java
+// In DAO — override createFetchProvider():
+@Override
+protected IFetchProvider<PmXref> createFetchProvider() {
+    return FETCH_PROVIDER;
+}
+
+// Use in queries:
+from(query).with(PmXrefCo.FETCH_MODEL).with(orderBy).model()
+```
+
+**Raw `fetch<T>` Customisation** (when needed directly):
+```java
+// Add specific properties
+fetch(Vehicle.class).with("model").with("vin", "registrationNumber")
+
+// Exclude properties
+fetchAll(Vehicle.class).without("largeBlob")
+
+// Nested fetch for entity-typed properties
+fetch(Vehicle.class)
+    .with("model", fetchOnly(VehicleModel.class)
+        .with("key")
+        .with("make", fetchOnly(VehicleMake.class).with("key")))
+```
+
+**Important:** Raw `fetch<T>` does **not** support dot-notation like `"model.make"` — use nested fetch models or `IFetchProvider` with metamodel paths instead.
+
+**Instrumentation Precedence:**
+Fetch model instrumentation has higher precedence than `QueryExecutionModel` lightweightness.
+If QEM is lightweight but fetch model is instrumented, entities **are** instrumented.
+
+**Integration with QueryExecutionModel:**
+```java
+from(query)
+    .with(PmXrefCo.FETCH_MODEL)            // Fetch strategy (from companion)
+    .with(orderBy().prop(PmXref_.pmRoutine().relatedPriority()).desc().model()) // Ordering
+    .with("paramName", paramValue)          // Named parameters
+    .lightweight()                          // Optional: no instrumentation (unless fetch overrides)
+    .model()                                // QueryExecutionModel
+```
+
+#### Web UI Configuration
+
+Web UI is built around three main component types configured via fluent DSL builders.
+All components must be registered with `IWebUiBuilder` (accessed via `configApp()` in `IWebUiConfig`).
+
+**Application Configuration Entry Point:**
+```java
+public class AppWebUiConfig extends AbstractWebUiConfig {
+    @Override
+    public void initConfiguration() {
+        final IWebUiBuilder builder = configApp();
+        VehicleWebUiConfig.register(injector, builder);  // Register entity UI configs
+        // ... more registrations
+
+        configDesktopMainMenu()
+            .addModule("Fleet").description("Fleet Management").icon("menu:fleet")
+                .bgColor("#00D4AA").captionBgColor("#00AA88")
+                .menu()
+                    .addMenuItem("Vehicles").centre(vehicleCentre).done()
+                    .addMenuItem("Drivers").centre(driverCentre).done()
+                .done()
+            .done()
+            .setLayoutFor(Device.DESKTOP, null, "[[], [], []]");
+    }
+}
+```
+
+##### Entity Centre
+
+Grid/listing component for data presentation, configured via `EntityCentreBuilder`:
+
+```java
+final var standardNewAction = StandardActions.NEW_ACTION.mkAction(PmTask.class);
+final var standardDeleteAction = StandardActions.DELETE_ACTION.mkAction(PmTask.class);
+final var standardEditAction = StandardActions.EDIT_ACTION.mkAction(PmTask.class);
+
+final EntityCentreConfig<PmTask> ecc = EntityCentreBuilder.centreFor(PmTask.class)
+    // Front and top toolbar actions
+    .addFrontAction(standardNewAction)
+    .addTopAction(standardNewAction).also()
+    .addTopAction(standardDeleteAction).also()
+    .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction()).also()
+    .addTopAction(StandardActions.EXPORT_ACTION.mkAction(PmTask.class))
+    // Selection criteria (using metamodel references)
+    .addCrit(PmTask_.pmRoutine()).asMulti().autocompleter(PmRoutine.class).also()
+    .addCrit(PmTask_.task()).asMulti().autocompleter(Task.class).also()
+    .addCrit(PmTask_.active()).asMulti().bool()
+    // Criteria layout
+    .setLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkVarGridForCentre(2, 1))
+    .withScrollingConfig(standardStandaloneScrollingConfig(0))
+    // Result set properties (using metamodel references)
+    .addProp(PmTask_.pmRoutine()).order(1).asc().minWidth(80)
+        .withSummary("total_count_", "COUNT(SELF)",
+            format("Count:Total number of matching %ss.", PmTask.ENTITY_TITLE))
+        .withAction(standardEditAction).also()
+    .addProp(PmTask_.task()).order(2).asc().minWidth(80).also()
+    .addProp(PmTask_.task().desc()).minWidth(160).also()
+    .addProp(PmTask_.active()).width(50)
+    // Primary action (row click)
+    .addPrimaryAction(standardEditAction)
+    .build();
+
+final EntityCentre<PmTask> centre = new EntityCentre<>(MiPmTask.class, ecc, injector);
+builder.register(centre);
+```
+
+**Criterion Types:**
+- `.asMulti().autocompleter(EntityType.class)` — multi-value entity picker
+- `.asMulti().text()` — text wildcard search
+- `.asMulti().bool()` — boolean multi-selector
+- `.asSingle().autocompleter(EntityType.class)` — single entity picker (requires `@CritOnly(SINGLE)`)
+- `.asSingle().text()`, `.integer()`, `.decimal()`, `.date()`, `.dateTime()`
+- `.asRange().integer()`, `.decimal()`, `.date()`, `.dateTime()`, `.time()`
+
+**Result Property Options:**
+- `.order(n).asc()` / `.desc()` — default sort order
+- `.width(px)` / `.minWidth(px)` — fixed or flexible width
+- `.withSummary(alias, eqlExpr, titleAndDesc)` — footer aggregate (e.g., `"COUNT(SELF)"`, `"SUM(amount)"`)
+- `.withAction(actionConfig)` — action on the property column
+- `.withWordWrap()` — enable text wrapping
+
+**Centre Options:**
+- `.runAutomatically()` — execute query on load
+- `.hideCheckboxes()` — hide row selection
+- `.hideToolbar()` — hide toolbar
+- `.setPageCapacity(n)` — rows per page (default 30)
+- `.retrieveAll()` — load all matching records
+- `.enforcePostSaveRefresh()` — refresh after entity save
+- `.hasEventSource(EventSourceClass.class)` — SSE-based refresh
+
+##### Entity Master
+
+Form-based entity editing, configured via `SimpleMasterBuilder`:
+
+```java
+final String layout = LayoutComposer.mkVarGridForMasterFitWidth(2, 1, 2, 1);
+final IMaster<PmTask> masterConfig = new SimpleMasterBuilder<PmTask>()
+    .forEntity(PmTask.class)
+    // Property editors (using metamodel references)
+    .addProp(PmTask_.pmRoutine()).asAutocompleter().also()
+    .addProp(PmTask_.task()).asAutocompleter().also()
+    .addProp(PmTask_.assetClass()).asAutocompleter()
+        .withMatcher(PmTaskAssetClassMatcher.class).also()  // Custom value matcher
+    .addProp(PmTask_.assetMake()).asAutocompleter().also()
+    .addProp(PmTask_.active()).asCheckbox()
+    // Standard actions
+    .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
+    .addAction(MasterActions.SAVE)
+    // Layouts
+    .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkActionLayoutForMaster())
+    .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+    .setLayoutFor(Device.TABLET, Optional.empty(), layout)
+    .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
+    .withDimensions(mkDim(SIMPLE_ONE_COLUMN_MASTER_DIM_WIDTH, 540, Unit.PX))
+    .done();
+
+final EntityMaster<PmTask> master = new EntityMaster<>(
+    PmTask.class, PmTaskProducer.class, masterConfig, injector);
+builder.register(master);
+```
+
+**Property Editor Types:**
+- `.asSinglelineText()` — text input
+- `.asMultilineText()` — textarea
+- `.asRichText()` — rich text editor
+- `.asAutocompleter()` / `.asAutocompleter(EntityType.class)` — entity picker
+- `.asDateTimePicker()` / `.asDatePicker()` / `.asTimePicker()` — date/time
+- `.asDecimal()` / `.asSpinner()` (or `.asInteger()`) / `.asMoney()` — numeric
+- `.asCheckbox()` — boolean
+- `.asColour()` — colour picker
+- `.asHyperlink()` — hyperlink
+- `.asCollectionalRepresentor()` — read-only collection display
+- `.asCollectionalEditor()` — editable collection
+- `.asFile()` — file upload
+
+**Standard Master Actions:**
+- `MasterActions.SAVE` — save entity (shortcut: ctrl+s / meta+s)
+- `MasterActions.REFRESH` — cancel/reload (shortcut: ctrl+x / meta+x)
+- `MasterActions.VALIDATE`, `MasterActions.EDIT`, `MasterActions.VIEW`, `MasterActions.DELETE`, `MasterActions.NEW`
+
+##### Compound Master
+
+Multi-tab master combining multiple views (masters and centres) in a tabbed layout:
+
+```java
+final EntityMaster<OpenVehicleMasterAction> compoundMaster =
+    CompoundMasterBuilder.<Vehicle, OpenVehicleMasterAction>create(injector, builder)
+        .forEntity(OpenVehicleMasterAction.class)
+        .withProducer(OpenVehicleMasterActionProducer.class)
+        .addMenuItem(VehicleMaster_OpenMain_MenuItem.class)
+            .icon("icons:picture-in-picture")
+            .shortDesc("Main")
+            .longDesc("Vehicle details")
+            .withView(mainMaster)                       // Embed a master
+        .also()
+        .addMenuItem(VehicleMaster_OpenFuelUsages_MenuItem.class)
+            .icon("icons:view-module")
+            .shortDesc("Fuel Usages")
+            .longDesc("Fuel usage records")
+            .withView(fuelUsageCentre)                  // Embed a centre
+        .andDefaultItemNumber(0)                        // Default tab (0-based)
+        .done();
+builder.register(compoundMaster);
+```
+
+Compound masters require:
+- A functional entity extending `AbstractFunctionalEntityWithCentreContext<T>`
+- Menu item classes extending `AbstractFunctionalEntityForCompoundMenuItem<T>`
+- A producer class for the functional entity
+
+##### Action Configuration
+
+**Standard Action Helpers** (preferred for common operations):
+
+Use `StandardActions` and `CentreConfigActions` for pre-built action configurations, and `Compound` helpers for compound master open/edit actions:
+```java
+// StandardActions — pre-built centre actions
+StandardActions.NEW_ACTION.mkAction(PmTask.class)
+StandardActions.DELETE_ACTION.mkAction(PmTask.class)
+StandardActions.EXPORT_ACTION.mkAction(PmTask.class)
+StandardActions.EDIT_ACTION.mkAction(PmTask.class)
+CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction()
+
+// Compound helpers — for compound master open/edit/new actions
+final PrefDim dims = mkDim(1280, 640, Unit.PX);
+Compound.openEdit(OpenVehicleMasterAction.class, Vehicle.ENTITY_TITLE, "Edit Vehicle", dims)
+Compound.openNew(OpenVehicleMasterAction.class, "add-circle-outline", Vehicle.ENTITY_TITLE, "Add new Vehicle", dims)
+```
+
+**Custom Actions** (when standard helpers are insufficient):
+```java
+final EntityActionConfig customAction = action(CopyWorkOrderAction.class)
+    .withContext(context().withSelectedEntities().build())
+    .icon("ports-menu-actions:wa-copy")
+    .shortDesc("Copy Work Order")
+    .longDesc("Create copy of Work Order for selected Vehicles")
+    .prefDimForView(mkDim(960, 600, Unit.PX))
+    .withNoParentCentreRefresh()                        // Don't refresh parent centre
+    .build();
+```
+
+**Context Options** (what data the action receives):
+- `.withCurrentEntity()` — selected entity
+- `.withSelectedEntities()` — multiple selected entities
+- `.withSelectionCrit()` — current filter criteria
+- `.withMasterEntity()` — master entity (for embedded centres)
+- `.withComputation((entity, context) -> value)` — custom computation
+
+##### Query Enhancer Pattern
+
+For embedded centres that need to filter by the master entity:
+
+```java
+private static class VehicleMaster_FuelUsageCentre_QueryEnhancer implements IQueryEnhancer<FuelUsage> {
+    @Override
+    public ICompleted<FuelUsage> enhanceQuery(
+            final IWhere0<FuelUsage> where,
+            final Optional<CentreContext<FuelUsage, ?>> context) {
+        return enhanceEmbededCentreQuery(where,
+            createConditionProperty(FuelUsage_.vehicle()),  // Metamodel reference
+            context.get().getMasterEntity().getKey());
+    }
+}
+```
+
+#### Calculated Properties
+
+Calculated properties are read-only, database-computed fields defined with `@Calculated`.
+They use a companion `protected static final ExpressionModel` field named `propertyName_` that defines the computation using EQL's `expr()` API.
+
+**Simple property dereferencing:**
+```java
+@IsProperty
+@Readonly
+@Calculated
+@Title(value = "Asset Class", desc = "The class of this asset.")
+private AssetClass assetClass;
+protected static final ExpressionModel assetClass_ = expr().prop(Vehicle_.vehicleClass().assetClass()).model();
+```
+
+**Subquery — find current value from a timeline entity:**
+```java
+@IsProperty
+@Readonly
+@Calculated
+@Title(value = "Location", desc = "The current Location of the Vehicle.")
+private Location location;
+protected static final ExpressionModel location_ = expr().model(
+    select(LocationTimeline.class).where()
+        .prop(LocationTimeline_.capable().vehicle()).eq().extProp(Vehicle_.id()).and()
+        .prop(LocationTimeline_.periodStart()).le().now().and()
+        .begin()
+            .prop(LocationTimeline_.periodFinish()).gt().now().or()
+            .prop(LocationTimeline_.periodFinish()).isNull()
+        .end()
+        .yield().prop(LocationTimeline_.location()).modelAsEntity(Location.class)).model();
+```
+
+**CASE WHEN — boolean conditional:**
+```java
+@IsProperty
+@Readonly
+@Calculated
+@Title(value = "GPS present?", desc = "Indicates whether GPS coordinates are present.")
+private boolean gpsPresent;
+protected static final ExpressionModel gpsPresent_ = expr()
+    .caseWhen().begin()
+        .prop(Equipment_.gisInfo().longitude()).isNotNull().and()
+        .prop(Equipment_.gisInfo().latitude()).isNotNull()
+    .end()
+    .then().val(true)
+    .otherwise().val(false).end()
+    .model();
+```
+
+**Financial aggregation:**
+```java
+@IsProperty
+@Readonly
+@Calculated
+@Title("Total Estimate")
+private Money totalEstimate = Money.zero;
+protected static final ExpressionModel totalEstimate_ = expr().ifNull().expr(
+    expr().
+        ifNull().prop(WorkOrderCost_.labourEstimate()).then().val(0).add().
+        ifNull().prop(WorkOrderCost_.consumablesEstimate()).then().val(0).add().
+        ifNull().prop(WorkOrderCost_.dcConsumablesEstimate()).then().val(0).add().
+        ifNull().prop(WorkOrderCost_.dcServiceEstimate()).then().val(0).model()
+    ).then().val(0).model();
+```
+
+**Inline expression string** (simpler alternative for trivial cases):
+```java
+@IsProperty
+@Calculated("price.amount + purchasePrice.amount")
+@Title("Calc0")
+private BigDecimal calc0;
+```
+
+#### MetaProperty System
+
+Every instrumented entity property has a `MetaProperty<T>` object providing runtime metadata, validation state, and change tracking.
+Access via `entity.getProperty(Entity_.propName())` (preferred) or `entity.getProperty("propName")`.
+
+**Validation and Domain Results** (commonly used in definers):
+```java
+// In a definer (IAfterChangeEventHandler):
+final MetaProperty<Date> mpFromDate = entity.getProperty(Delegation_.fromDate());
+mpFromDate.setDomainValidationResult(result);          // Set informative/warning/failure
+if (!result.isSuccessful()) {
+    mpFromDate.setLastInvalidValue(entity.getFromDate());
+}
+```
+
+**Change Tracking** (commonly used in DAOs before save):
+```java
+// Check which properties were modified before save
+final boolean wasActiveDirty = entity.getProperty(Person_.active()).isDirty();
+final boolean wasAuthoriserDirty = entity.getProperty(Person_.authoriser()).isDirty();
+// ... use this to conditionally trigger side effects
+```
+
+**Original Value Access:**
+```java
+final WorkOrder originalWa = timesheet.<WorkOrder>getProperty(Timesheet_.workOrder()).getOriginalValue();
+```
+
+**Editability Control** (commonly used in producers):
+```java
+// In a producer (provideDefaultValuesForStandardNew):
+entityOut.setPmRoutine(refetch(ofMasterEntity().keyOfMasterEntity(PmRoutine.class)));
+entityOut.getProperty(PmXref_.pmRoutine()).setEditable(false);
+```
+
+**Validation Checking** (in producers):
+```java
+entityOut.getProperty("attachedTo").validationResult().ifFailure(Result::throwRuntime);
+entityOut.getProperty("attachedTo").setEditable(false);
+```
+
+**Initialising vs Mutation Phase** (in definers):
+```java
+// Definers run both when loading from DB and when user sets values
+public void handle(final MetaProperty<Location> property, final Location major) {
+    final Location location = property.getEntity();
+    if (!location.isInitialising()) {
+        // Only recalculate during user/business logic mutation, not DB load
+        location.setPath(computePath(major));
+        location.setLevel(major.getLevel() + 1);
+    }
+}
+```
+
+**Key MetaProperty Methods:**
+
+| Method | Purpose |
+|--------|---------|
+| `isDirty()` | Property was modified since last save |
+| `isValid()` | Current value passed validation |
+| `validationResult()` | Get validation result (Success/Warning/Failure) |
+| `setDomainValidationResult(result)` | Set validation result from definer/DAO |
+| `isEditable()` / `setEditable(boolean)` | Control property editability |
+| `getValue()` / `getOriginalValue()` / `getPrevValue()` | Value tracking |
+| `isChangedFromOriginal()` | Changed since entity retrieval |
+| `getValueChangeCount()` | Number of times value was set |
+
+#### MetaModel Annotation Processor
+
+The `MetaModelProcessor` generates type-safe metamodel classes at compile time for every domain entity.
+These are used throughout the codebase for refactor-safe property references in EQL queries, fetch models, centre/master configurations, and meta-property access.
+
+**Generated output** (in `target/generated-sources/`):
+- `metamodels/MetaModels.java` — master class with static fields for all entity metamodels
+- `{package}/meta/{Entity}MetaModel.java` — individual entity metamodel
+- `{package}/meta/{Entity}MetaModelAliased.java` — aliased variant for use in self-joins
+
+**Usage:**
+```java
+import static metamodels.MetaModels.*;  // Static import all metamodel fields
+
+// Property references in EQL:
+.prop(Vehicle_.model())                              // Simple property
+.prop(PmXref_.asset().equipment().avgReading())      // Deep property chain
+
+// In fetch providers:
+EntityUtils.fetch(PmXref.class).with(PmXref_.pmRoutine().relatedPriority())
+
+// In centre/master configurations:
+.addCrit(PmTask_.pmRoutine()).asMulti().autocompleter(PmRoutine.class)
+.addProp(PmTask_.task().desc()).minWidth(160)
+
+// Aliased metamodels for self-joins:
+private static final VehicleRegistrationMetaModelAliased VR1 = new VehicleRegistrationMetaModelAliased("VR1");
+select(VehicleRegistration.class).as(VR1.alias).where()
+    .prop(VR1.vehicle()).eq().extProp(Vehicle_.id())
+```
+
+#### GraphQL Web API
+
+The platform includes a GraphQL API (`GraphQLService` in `platform-dao`) that auto-generates schemas from domain entities.
+
+**Key characteristics:**
+- Read-only — supports GraphQL `query` operations only (no mutations/subscriptions)
+- Query fields are uncapitalized entity type names (e.g., `tgVehicleModel`)
+- Supports arguments: `eq` (equals), `like` (pattern matching), `order`, `pageNumber`, `pageCapacity`
+- Field-level authorization via security tokens (`FieldVisibility`)
+- Max query depth configurable via `web.api.maxQueryDepth` (default: 15)
+- Security token: `GraphiQL_CanExecute_Token`
+
+#### Server-Sent Events (SSE)
+
+Real-time event infrastructure for pushing notifications to Entity Centres.
+
+**Key components:**
+- `IEventSource` — contract for event sources; implement `connect(emitter)` and `disconnect()`
+- `AbstractEventSource<T, OK>` — base class subscribing to RxJava observables; implement `eventToData(T event)`
+- `EventSourceDispatchingEmitter` — broadcasts events to multiple registered client emitters
+- `SseServlet` — separate Jetty server (default port 8092), configurable via `sse.*` properties
+
+**Integration with Entity Centres:**
+```java
+EntityCentreBuilder.centreFor(WorkOrder.class)
+    .hasEventSource(WorkOrderEventSource.class)     // Register SSE event source
+    .withCountdownRefreshPrompt(5)                  // Auto-refresh with 5s countdown
+    // ...
+```
 
 ### Key Classes and Interfaces
 
@@ -578,12 +1434,14 @@ Templates use format strings to generate consistent token names:
 
 ## Development Tips
 
-1. When modifying entities, ensure companion objects are updated
-2. Use annotation processors for compile-time validation
-3. Test with multiple database engines for compatibility
-4. Follow the established patterns for consistency
-5. Leverage the meta-property system for runtime validation
-6. Use Entity Centre configuration DSL for UI setup
+1. **Always use metamodel references** (`Entity_.property()`) instead of string literals for property access in EQL, fetch models, and UI configurations
+2. **Define `FETCH_PROVIDER` in companion interfaces** using `IFetchProvider` with metamodel paths; override `createFetchProvider()` in DAOs
+3. **Use `co()` for read-only and `co$()` for mutations** — choosing the wrong one causes subtle bugs
+4. **Check `isInitialising()` in definers** to distinguish between DB load and user mutation phases
+5. **Use `isDirty()` before triggering side effects** in DAO `save()` methods to avoid unnecessary cascading updates
+6. **Use `try-with-resources` with `stream()`** — entity streams hold database resources that must be closed
+7. **Test with PostgreSQL and SQL Server** — both are primary database targets; test with both for compatibility
+8. **Use `StandardActions` and `Compound` helpers** for common centre/master actions instead of building custom actions
 
 ## Delete Operations Design Patterns
 

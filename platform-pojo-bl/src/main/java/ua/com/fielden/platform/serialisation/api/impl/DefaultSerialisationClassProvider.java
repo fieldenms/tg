@@ -7,7 +7,6 @@ import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchAction;
-import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.jackson.entities.*;
 
@@ -34,7 +33,6 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.addAll(typesForSerialisationTesting());
         types.addAll(applicationDomain.entityTypes()); // app-specific ApplicationDomain holds all types, potentially with TG platform ones ...
         types.addAll(PlatformDomainTypes.types); // ... but if not we ensure here that TG platform types will be present
-        types.add(UserAndRoleAssociationBatchAction.class);
         types.add(UserMenuInvisibilityAssociationBatchAction.class);
         types.add(PropertyDescriptor.class);
         this.types = ImmutableList.copyOf(types);

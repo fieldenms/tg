@@ -9,6 +9,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.security.user.UserRole.DESC_TITLE;
+import static ua.com.fielden.platform.security.user.UserRole.KEY_TITLE;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 /**
  * Represents a concept of a user role. Multiple users may have the same role. At this stage user role has only key and description.
@@ -19,20 +22,24 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
  * 
  */
 @KeyType(String.class)
-@KeyTitle("Role Title")
-@DescTitle("Description")
+@KeyTitle(KEY_TITLE)
+@DescTitle(DESC_TITLE)
 @DescRequired
 @MapEntityTo("USER_ROLE")
 @CompanionObject(UserRoleCo.class)
-@DeactivatableDependencies({SecurityRoleAssociation.class})
+@DeactivatableDependencies({SecurityRoleAssociation.class, UserAndRoleAssociation.class})
 public class UserRole extends ActivatableAbstractEntity<String> {
+
     private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(UserRole.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
+    public static final String KEY_TITLE = "Role Title";
+    public static final String DESC_TITLE = "Description";
+
     @IsProperty(value = SecurityRoleAssociation.class, linkProperty = SecurityRoleAssociation.ROLE)
     @Title(value = "Tokens", desc = "A list of associations between this role and various security tokens.")
-    private final Set<SecurityRoleAssociation> tokens = new HashSet<SecurityRoleAssociation>();
+    private final Set<SecurityRoleAssociation> tokens = new HashSet<>();
 
     protected  UserRole() {}
     

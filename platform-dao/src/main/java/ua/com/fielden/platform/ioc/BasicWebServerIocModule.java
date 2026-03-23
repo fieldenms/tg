@@ -1,8 +1,14 @@
 package ua.com.fielden.platform.ioc;
 
+import com.google.inject.Provides;
 import com.google.inject.Stage;
 import com.google.inject.name.Names;
+import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.audit.AbstractAuditEntity;
+import ua.com.fielden.platform.audit.AbstractAuditProp;
+import ua.com.fielden.platform.audit.AuditingMode;
+import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -31,19 +37,29 @@ import ua.com.fielden.platform.web_api.IWebApi;
 import java.util.List;
 import java.util.Properties;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.audit.AuditUtils.getAuditTypeVersion;
+import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
 
 /// Basic IoC module for server web applications, which should be extended by an application-specific IoC module.
+///
 /// This IoC provides all the necessary bindings for:
 ///
 /// - Applications settings (refer [IApplicationSettings]);
 /// - Serialisation mechanism;
 /// - Essential DAO interfaces [IUser], [IAuthorisationModel], and more;
 /// - Provides application main menu configuration related DAO bindings.
+/// - Binding of audit-entity types (subtypes of [AbstractAuditEntity] and [AbstractAuditProp]).
 ///
-/// Instantiation of singletons occurs in accordance with [Guice Eager Singletons](https://github.com/google/guice/wiki/Scopes#eager-singletons),
+/// A special audit-entity generation mode is supported, which ignores audit-entity types that were missing at the time of application launch.
+/// This mode enables the primordial generation of audit-entity types.
+///
+/// Instantiation of singletons occurs in accordance with <a href="https://github.com/google/guice/wiki/Scopes#eager-singletons">Guice Eager Singletons</a>,
 /// where values of [Workflows] are mapped to [Stage].
 ///
 public class BasicWebServerIocModule extends CompanionIocModule {
@@ -114,6 +130,12 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("dates.weekStart")).to(Integer.parseInt(props.getProperty("dates.weekStart", "1"))); // 1 - Monday
         bindConstant().annotatedWith(Names.named("dates.finYearStartDay")).to(Integer.parseInt(props.getProperty("dates.finYearStartDay", "1"))); // 1 - the first day of the month
         bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.parseInt(props.getProperty("dates.finYearStartMonth", "7"))); // 7 - July, the 1st of July is the start of Fin Year in Australia
+
+        // Auditing
+        bindConstant().annotatedWith(Names.named(AUDIT_PATH)).to(props.getProperty(AUDIT_PATH, ""));
+        bindConstant().annotatedWith(Names.named(AUDIT_MODE)).to(props.getProperty(AUDIT_MODE, ""));
+
+        // Dates
         bindConstant().annotatedWith(Names.named("dates.dateFormat")).to(props.getProperty("dates.dateFormat", IDates.DEFAULT_DATE_FORMAT));
         bindConstant().annotatedWith(Names.named("dates.timeFormat")).to(props.getProperty("dates.timeFormat", IDates.DEFAULT_TIME_FORMAT));
         bindConstant().annotatedWith(Names.named("dates.timeFormatWithMillis")).to(props.getProperty("dates.timeFormatWithMillis", IDates.DEFAULT_TIME_FORMAT_WITH_MILLIS));
@@ -122,7 +144,6 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("dates.timeFormatWithMillis.web")).to(props.getProperty("dates.timeFormatWithMillis.web", IDates.DEFAULT_TIME_FORMAT_WEB_WITH_MILLIS));
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class);
-        bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
         requireBinding(ISecurityTokenProvider.class);
         // serialisation related binding
         requireBinding(ISerialisationClassProvider.class);
@@ -148,6 +169,52 @@ public class BasicWebServerIocModule extends CompanionIocModule {
 
     public Properties getProps() {
         return props;
+    }
+
+    /// A provider used by Guice to instantiate [IApplicationDomainProvider].
+    /// This replaces a direct binding such as `bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider)`
+    /// in order to support different domain providers depending on whether generic auditing is enabled.
+    /// 
+    @Provides
+    @Singleton
+    IApplicationDomainProvider provideApplicationDomain(
+            final IAuditTypeFinder auditTypeFinder,
+            final AuditingMode auditingMode)
+    {
+        final var newEntityTypes = applicationDomainProvider.entityTypes().stream()
+                .<Class<? extends AbstractEntity<?>>> mapMulti((type, sink) -> {
+                    sink.accept(type);
+                    // For audited types, register their audit types, which must exist, unless we are running in the audit generation mode.
+                    if (isAudited(type)) {
+                        switch (auditingMode) {
+                            case GENERATION -> {
+                                final var navigator = auditTypeFinder.navigate(type);
+                                navigator.allAuditEntityTypes().forEach(a3tType -> {
+                                    sink.accept(a3tType);
+                                    navigator.findAuditPropType(getAuditTypeVersion(a3tType)).ifPresent(sink);
+                                });
+                                navigator.findSynAuditEntityType().ifPresent(synAuditType -> {
+                                    sink.accept(synAuditType);
+                                    navigator.findSynAuditPropType().ifPresent(sink);
+                                });
+                            }
+                            case ENABLED -> {
+                                final var navigator = auditTypeFinder.navigate(type);
+                                navigator.allAuditEntityTypes().forEach(a3tType -> {
+                                    sink.accept(a3tType);
+                                    sink.accept(navigator.auditPropType(getAuditTypeVersion(a3tType)));
+                                });
+                                final var synAuditType = navigator.synAuditEntityType();
+                                sink.accept(synAuditType);
+                                sink.accept(navigator.synAuditPropType());
+                            }
+                            case DISABLED -> {}
+                        }
+                    }
+                })
+                .collect(toImmutableList());
+
+        return () -> newEntityTypes;
     }
 
 }

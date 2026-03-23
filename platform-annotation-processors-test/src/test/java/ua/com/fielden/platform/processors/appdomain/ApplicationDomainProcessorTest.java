@@ -5,19 +5,19 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 import org.junit.Test;
+import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
 import ua.com.fielden.platform.processors.appdomain.annotation.RegisterEntity;
-import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
-import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.CompilationTestUtils;
 import ua.com.fielden.platform.processors.test_utils.GeneratorProcessor;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
+import ua.com.fielden.platform.processors.test_utils.Compilation;
 
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
@@ -34,11 +34,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.APP_DOMAIN_EXTENSION_OPT_DESC;
 import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.APP_DOMAIN_PKG_OPT_DESC;
-import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
-import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
 import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
+import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
 
 /**
  * A test suite related to {@link ApplicationDomainProcessor}.
@@ -306,7 +306,7 @@ public class ApplicationDomainProcessorTest {
                     .compile());
 
             // 2. ApplicationDomain is regenerated, new entity `Second` is registered.
-            
+
             final JavaFile entity2 = JavaFile.builder("test",
                     TypeSpec.classBuilder("Second").addModifiers(PUBLIC)
                         .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
@@ -465,7 +465,7 @@ public class ApplicationDomainProcessorTest {
 
             final Processor processorV2 = ProcessorListener.of(new ApplicationDomainProcessor())
                     .setRoundListener(new RoundListener() {
-                        
+
                         @BeforeRound(1)
                         public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",

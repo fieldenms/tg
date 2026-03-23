@@ -1,24 +1,7 @@
 package ua.com.fielden.platform.security.user;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-
-import java.util.Collections;
-import java.util.Set;
-import java.util.TreeSet;
-
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.Dependent;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -36,12 +19,17 @@ import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 import ua.com.fielden.platform.utils.Pair;
 
-/**
- * Represents the system-wide concept of a user. So, this is a system user, which should be used by system security as well as for implementing any specific customer personnel
- * requirements.
- *
- * @author TG Team
- */
+import java.util.Set;
+import java.util.TreeSet;
+
+import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.error.Result.failuref;
+import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+
+/// Represents a concept of a system user, used for authentication and authorisation of users, be that a human or another information system.
+///
 @KeyTitle("Application User")
 @KeyType(String.class)
 @MapEntityTo
@@ -51,10 +39,14 @@ public class User extends ActivatableAbstractEntity<String> {
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
-    public static final String ROLES = "roles";
+    public static final String ACTIVE_ROLES = "activeRoles";
+    public static final String INACTIVE_ROLES = "inactiveRoles";
     public static final String BASED_ON_USER = "basedOnUser";
+    public static final String BASE = "base";
+    public static final String BASED_ON_USER__BASE = "basedOnUser.base";
     public static final String EMAIL = "email";
     public static final String SSO_ONLY = "ssoOnly";
+
     public static final String USER_NAME_REGEX = "^(?!.*" + UserSecret.SECRET_RESET_UUID_SEPERATOR + ").*$"; // match anything, but SECRET_RESET_UUID_SEPERATOR by using negative lookahead assertion
 
     /**
@@ -91,9 +83,13 @@ public class User extends ActivatableAbstractEntity<String> {
     @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = USER_NAME_REGEX)}))
     private String key;
     
-    @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
-    @Title(value = "Roles", desc = "The associated with this user roles.")
-    private final Set<UserAndRoleAssociation> roles = new TreeSet<>();
+    @IsProperty(SynUserAndRoleAssociationActive.class)
+    @Title(value = "Active Roles", desc = "")
+    private final Set<SynUserAndRoleAssociationActive> activeRoles = new TreeSet<>();
+
+    @IsProperty(SynUserAndRoleAssociationInactive.class)
+    @Title(value = "Inactive Roles", desc = "")
+    private final Set<SynUserAndRoleAssociationInactive> inactiveRoles = new TreeSet<>();
 
     @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")
@@ -171,7 +167,7 @@ public class User extends ActivatableAbstractEntity<String> {
     @Override
     public User setKey(final String value) {
         if (isPersisted() && (system_users.SU.matches(getKey()) && !system_users.SU.matches(value))) {
-            throw Result.failure(format("User %s is an application built-in account and cannot be renamed.", getKey()));
+            throw failuref("User %s is an application built-in account and cannot be renamed.", getKey());
         }
 
         this.key = value;
@@ -183,24 +179,32 @@ public class User extends ActivatableAbstractEntity<String> {
         return this;
     }
 
-    public Set<UserAndRoleAssociation> getRoles() {
-        return Collections.unmodifiableSet(roles);
-    }
-
     @Observable
-    public User setRoles(final Set<UserAndRoleAssociation> roles) {
-        this.roles.clear();
-        this.roles.addAll(roles);
+    protected User setInactiveRoles(final Set<SynUserAndRoleAssociationInactive> inactiveRoles) {
+        this.inactiveRoles.clear();
+        this.inactiveRoles.addAll(inactiveRoles);
         return this;
     }
 
-    /**
-     * A convenient method for extracting {@link UserRole} instances from a set of {@link UserAndRoleAssociation}.
-     *
-     * @return
-     */
-    public Set<UserRole> roles() {
-        return this.roles.stream().map(UserAndRoleAssociation::getUserRole).collect(toSet());
+    public Set<SynUserAndRoleAssociationInactive> getInactiveRoles() {
+        return unmodifiableSet(inactiveRoles);
+    }
+
+    @Observable
+    protected User setActiveRoles(final Set<SynUserAndRoleAssociationActive> activeRoles) {
+        this.activeRoles.clear();
+        this.activeRoles.addAll(activeRoles);
+        return this;
+    }
+
+    public Set<SynUserAndRoleAssociationActive> getActiveRoles() {
+        return unmodifiableSet(activeRoles);
+    }
+
+    /// A convenient method for extracting active [UserRole] instances from a set of active [UserAndRoleAssociation]s.
+    ///
+    public Set<UserRole> activeRoles() {
+        return this.activeRoles.stream().map(UserAndRoleAssociation::getUserRole).collect(toSet());
     }
 
     public boolean isBase() {
@@ -236,8 +240,7 @@ public class User extends ActivatableAbstractEntity<String> {
     @Override
     public boolean equals(final Object obj) {
         // if "this" and "that" users are persisted and not dirty then an id-based comparison should be used
-        if (obj instanceof User && this.isPersisted() && (!this.isInstrumented() || !this.isDirty())) {
-            final User that = (User) obj;
+        if (obj instanceof User that && this.isPersisted() && (!this.isInstrumented() || !this.isDirty())) {
             if (that.isPersisted() && (!that.isInstrumented() || !that.isDirty())) {
                 return this.getId().equals(that.getId());
             }

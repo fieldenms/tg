@@ -760,7 +760,7 @@ const template = html`
     <tg-responsive-toolbar class="custom-responsive-toolbar editor-toolbar" disabled$="[[disabled]]" hidden$="[[isReadonly]]">
         <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:format-bold" tooltip-text="Bold, Ctrl+B, &#x2318;+B" on-down="_stopMouseEvent" on-tap="_applyBold"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:format-italic" tooltip-text="Italic, Ctrl+I, &#x2318;+I" on-down="_stopMouseEvent" on-tap="_applyItalic"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:strikethrough-s" tooltip-text="Strikethrough, Ctrl+S, &#x2318;+S" on-down="_stopMouseEvent" on-tap="_applyStrikethough"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:strikethrough-s" tooltip-text="Strikethrough" on-down="_stopMouseEvent" on-tap="_applyStrikethrough"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:format-color-text" tooltip-text="Font colour" on-down="_applyFakeSelect" on-tap="_changeTextColor"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:insert-link" tooltip-text="Insert link" on-down="_applyFakeSelect" on-tap="_toggleLink"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-list-bulleted" tooltip-text="Bulletpoints, Ctrl+U, &#x2318;+U" on-down="_stopMouseEvent" on-tap="_createBulletList"></iron-icon>
@@ -936,7 +936,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         // Initiate key binding and key event target.
         this.addOwnKeyBinding('ctrl+b meta+b', '_applyBold');
         this.addOwnKeyBinding('ctrl+i meta+i', '_applyItalic');
-        this.addOwnKeyBinding('ctrl+s meta+s', '_applyStrikethough');
         this.addOwnKeyBinding('ctrl+x meta+x', '_cut');
         this.addOwnKeyBinding('ctrl+z meta+z', '_undo');
         this.addOwnKeyBinding('ctrl+y meta+y', '_redo');
@@ -1100,12 +1099,9 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    _applyStrikethough(event) {
+    _applyStrikethrough(event) {
         this._editor.exec('strike');
-        const selection = this._getSelection();
-        if (selection && selection[0] !== selection[1]) {
-            tearDownEvent(event.detail && event.detail.keyboardEvent);
-        }
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     _changeTextColor(e) {
