@@ -1674,6 +1674,7 @@ const TgEntityMasterBehaviorImpl = {
         if (this.$ && this.$.masterDom && this.$.masterDom.confirm) {
             return this.$.masterDom.confirm(message, buttons, options);
         }
+        return Promise.reject({msg: 'Confirmation dialog is not available.'});
     },
 };
 
