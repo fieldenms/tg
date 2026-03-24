@@ -7,13 +7,6 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import java.util.Optional;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
-
-import java.util.Optional;
-
-import static java.lang.String.format;
 
 /// An entity master that represents a single Entity Centre.
 ///
