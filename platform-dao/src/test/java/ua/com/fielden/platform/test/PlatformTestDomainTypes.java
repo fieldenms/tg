@@ -5,6 +5,7 @@ import ua.com.fielden.platform.companion.PersistentEntityWithAllKindsOfPropertie
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.activatable.test_entities.*;
+import ua.com.fielden.platform.entity.query.metadata.test_entities.*;
 import ua.com.fielden.platform.entity.query.test_entities.EntityToFill;
 import ua.com.fielden.platform.entity.validation.exists.test_entities.*;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequiredness;
@@ -166,6 +167,17 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TestExists_Member4.class);
         add(TestExists_ActivatableUnionOwner.class);
         add(TestExists_UnionOwner.class);
+        add(CompositeKeyEqlExpression_Entity1.class);
+        add(CompositeKeyEqlExpression_Entity2.class);
+        add(CompositeKeyEqlExpression_Entity3.class);
+        add(CompositeKeyEqlExpression_Entity4.class);
+        add(CompositeKeyEqlExpression_Entity5.class);
+        add(CompositeKeyEqlExpression_Entity6.class);
+        add(CompositeKeyEqlExpression_Entity7.class);
+        add(CompositeKeyEqlExpression_Entity8.class);
+        add(CompositeKeyEqlExpression_Entity9.class);
+        add(CompositeKeyEqlExpression_Entity10.class);
+        add(CompositeKeyEqlExpression_Entity11.class);
     }
 
     @Override

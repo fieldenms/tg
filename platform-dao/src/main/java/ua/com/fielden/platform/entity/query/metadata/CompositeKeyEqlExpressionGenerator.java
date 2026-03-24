@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.query.metadata;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -170,16 +169,6 @@ public class CompositeKeyEqlExpressionGenerator {
             // Concat with an empty string to implicitly coerce the value into a string.
             return expr().concat().val(EMPTY_STRING).with().prop(property).end().model();
         }
-    }
-
-    /**
-     * A function that generates {@code ExpressionModel} for the composite key of the {@code entityType} specified.
-     *
-     * @param entityType
-     * @return
-     */
-    public static ExpressionModel generateCompositeKeyEqlExpression(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
-        throw new UnsupportedOperationException();
     }
 
 }
