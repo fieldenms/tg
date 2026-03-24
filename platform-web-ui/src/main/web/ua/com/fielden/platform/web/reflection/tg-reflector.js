@@ -1456,7 +1456,7 @@ const _toStringForKeys = function (keyNamesAndValues, entityType, separator, map
             // Special case: the format of Money.amount must strictly match its persisted representation.
             // To achieve that, use the fixed-point representation with the property's scale.
             if (converted !== null && prop.type() === "Money") {
-                return formatMoneyFixedPoint(converted, prop.scale());
+                return formatMoneyFixedPoint(converted, prop.scale(), { space: " " });
             }
             // Special case: the format of BigDecimal must strictly match its persisted representation.
             // To achieve that, use the fixed-point representation with the property's scale.

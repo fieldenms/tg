@@ -97,16 +97,19 @@ export function formatMoney (value, locale, scale, trailingZeros) {
 // @param scale - the number of digits to appear after the decimal point;
 //                should be within [0, 20];
 //                if this argument is omitted, a default scale will be used.
+// @param opts.separator - an optional string that will separate the currency symbol from the amount;
+//                         if absent, the default separator will be used.
 //
-export function formatMoneyFixedPoint (value, scale) {
+export function formatMoneyFixedPoint (value, scale, opts) {
     if (value !== null) {
-        return _prependCurrency(value, formatFixedPoint(Math.abs(value.amount), scale))
+        return _prependCurrency(value, formatFixedPoint(Math.abs(value.amount), scale), opts)
     }
     return '';
 }
 
 // Adds the currency symbol and sign prefix to the already formatted `toValue`.
 //
-function _prependCurrency(moneyValue, toValue) {
-    return (moneyValue.amount < 0 ? `-${_getCurrencySymbol(moneyValue.currency)}` : `${_getCurrencySymbol(moneyValue.currency)}`) + CURRENCY_SYMBOL_SPACE + toValue;
+function _prependCurrency(moneyValue, toValue, opts) {
+    const separator = (opts && opts.separator) || CURRENCY_SYMBOL_SPACE;
+    return (moneyValue.amount < 0 ? `-${_getCurrencySymbol(moneyValue.currency)}` : `${_getCurrencySymbol(moneyValue.currency)}`) + separator + toValue;
 }

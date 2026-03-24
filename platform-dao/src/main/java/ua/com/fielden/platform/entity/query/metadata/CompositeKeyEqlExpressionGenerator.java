@@ -30,7 +30,7 @@ public class CompositeKeyEqlExpressionGenerator {
 
     static final String EMPTY_STRING = "";
     static final String ERR_NO_COMPOSITE_KEY = "Entity type [%s] does not have a composite key.";
-    static final String CURRENCY_SYMBOL_SPACE = "\u200A";
+    static final String CURRENCY_SYMBOL_AND_AMOUNT_SEPARATOR = " ";
 
     // TODO Reduce visibility once EQL tests use IoC.
     @Inject
@@ -161,7 +161,7 @@ public class CompositeKeyEqlExpressionGenerator {
             return expr()
                     .concat().expr(signExpr)
                     .with().expr(symbolExpr)
-                    .with().val(CURRENCY_SYMBOL_SPACE)
+                    .with().val(CURRENCY_SYMBOL_AND_AMOUNT_SEPARATOR)
                     .with().prop(property + "." + AMOUNT)
                     .end()
                     .model();
