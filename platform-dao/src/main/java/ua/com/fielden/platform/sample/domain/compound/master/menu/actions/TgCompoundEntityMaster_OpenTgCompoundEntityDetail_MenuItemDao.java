@@ -42,7 +42,7 @@ public class TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItemDao exten
                 final EntityResultQueryModel<TgCompoundEntityDetail> query = select(TgCompoundEntityDetail.class)
                         .where().prop("key").eq().val(entity.getKey()).model();
                 final var optionalCompoundEntityDetails = co(TgCompoundEntityDetail.class).getEntityOptional(from(query).with(fetchKeyAndDescOnly(TgCompoundEntityDetail.class)).model());
-                optionalCompoundEntityDetails.ifPresent(details -> {
+                optionalCompoundEntityDetails.ifPresentOrElse(details -> {
                     if (details.getDesc().contains("desc")) {
                         entity.setCanLeave(false);
                         entity.setCannotLeaveReason(format("Description should not contain desc. Would you like to %s this master?", entity.leaveReason().get().equals(CLOSED) ? "close" : "leave"));
@@ -51,7 +51,7 @@ public class TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItemDao exten
                     } else {
                         entity.setCanLeave(true);
                     }
-                });
+                }, () -> entity.setCanLeave(true));
             }
         } else if (!authorisationResult.isSuccessful()) {
             throw authorisationResult;
