@@ -689,7 +689,7 @@ Polymer({
         if (this._element && typeof this._element.canLeave === 'function') {
             return this._element.canLeave(leaveReason);
         }
-        return Promise.reject({msg: "The embedded element was not loaded."});
+        return Promise.resolve(true);
     },
 
     /**
