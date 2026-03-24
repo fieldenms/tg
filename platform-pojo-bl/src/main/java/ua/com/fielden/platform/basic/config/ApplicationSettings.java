@@ -29,8 +29,9 @@ public class ApplicationSettings implements IApplicationSettings {
     private final String currencySymbol;
     private final Map<String, String> currencySymbolMap;
 
+    // TODO Reduce visibility once EQL tests use IoC.
     @Inject
-    protected ApplicationSettings(
+    public ApplicationSettings(
             final @Named("app.name") String appName,
             final @Named("reports.path") String pathToStorage,
             final @Named("domain.path") String classPath,

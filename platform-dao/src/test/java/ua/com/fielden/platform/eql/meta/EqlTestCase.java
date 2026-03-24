@@ -4,6 +4,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import ua.com.fielden.platform.basic.config.ApplicationSettings;
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
 import ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator;
@@ -80,13 +82,27 @@ public abstract class EqlTestCase {
                                                     dbVersionProvider)
                 .build();
         final var domainMetadataUtils = new DomainMetadataUtils(new PlatformTestDomainTypes(), DOMAIN_METADATA);
+        final var appSettings = new ApplicationSettings(
+                "TG Test",
+                "",
+                "../platform-pojo-bl/target/classes",
+                "ua.com.fielden.platform",
+                "../platform-pojo-bl/target/classes",
+                "ua.com.fielden.platform.security.tokens",
+                "development",
+                AuthMode.RSO.name(),
+                "non-existing-server",
+                "platform@fielden.com.au",
+                "$",
+                Map.of()
+        );
         final var calculatedPropertyExpressionProvider = new DefaultCalculatedPropertyExpressionProvider(
                 injector.getInstance(IUserProvider.class),
                 dates,
                 filter,
                 DOMAIN_METADATA,
                 new MoneyComponentInference(DOMAIN_METADATA),
-                new CompositeKeyEqlExpressionGenerator(DOMAIN_METADATA));
+                new CompositeKeyEqlExpressionGenerator(DOMAIN_METADATA, appSettings));
         MONEY_COMPONENT_INFERENCE = new MoneyComponentInference(DOMAIN_METADATA);
         QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(
                 DOMAIN_METADATA,
