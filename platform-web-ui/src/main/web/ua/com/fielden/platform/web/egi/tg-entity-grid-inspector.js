@@ -1247,7 +1247,9 @@ Polymer({
      */
     adjustColumnAvailability: function(availableColumns) {
         this.allColumns.forEach(col => {
-                col.isHidden = !availableColumns.includes(col.property);
+                // Checks whether a column with the given property exists in availableColumns.
+                // Dynamic columns are skipped because their availability cannot yet be controlled via the Authorization model. 
+                col.isHidden = !col.collectionalProperty && !availableColumns.includes(col.property);
         });
         this._updateColumns(this.fixedColumns.concat(this.columns));
     },
@@ -1264,7 +1266,7 @@ Polymer({
             }
         });
         const dynamicColumns = this.allColumns.filter(column => column.collectionalProperty);
-        resultantColumns.push(...dynamicColumns)
+        resultantColumns.push(...dynamicColumns);
         this._updateColumns(resultantColumns);
     },
 
