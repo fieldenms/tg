@@ -470,7 +470,7 @@ public interface EntityQueryProgressiveInterfaces {
         /// yield().concatOf().prop("name").orderBy().prop("name").asc().separator().val(", ")
         /// ```
         ///
-        ISingleOperand<IYieldOperandConcatOfSeparator<T, ET>, ET> concatOf();
+        ISingleOperand<IYieldOperandConcatOfNext<T, ET>, ET> concatOf();
 
         T countAll();
 
@@ -481,18 +481,36 @@ public interface EntityQueryProgressiveInterfaces {
         IFunctionLastArgument<T, ET> avgOfDistinct();
     }
 
+    interface IYieldOperandConcatOfNext<T, ET extends AbstractEntity<?>>
+        extends IYieldOperandConcatOfOrderBy<T, ET>,
+                IYieldOperandConcatOfSeparator<T, ET>
+    {}
+
     interface IYieldOperandConcatOfSeparator<T, ET extends AbstractEntity<?>> {
         IYieldOperandConcatOfSeparatorOperand<T, ET> separator();
-
-        /// Specifies an intra-aggregate ORDER BY for `concatOf`.
-        /// Multiple `orderBy` calls can be chained for multi-column ordering.
-        ///
-        ISingleOperand<IYieldOperandConcatOfOrderDirection<T, ET>, ET> orderBy();
     }
 
-    interface IYieldOperandConcatOfOrderDirection<T, ET extends AbstractEntity<?>> {
-        IYieldOperandConcatOfSeparator<T, ET> asc();
-        IYieldOperandConcatOfSeparator<T, ET> desc();
+    interface IYieldOperandConcatOfOrderBy<T, ET extends AbstractEntity<?>> {
+        /// Specifies an intra-aggregate ORDER BY for `concatOf`.
+        ///
+        IYieldOperandConcatOfOrderByOperand<T, ET> orderBy();
+    }
+
+    interface IYieldOperandConcatOfOrderByOperand<T, ET extends AbstractEntity<?>>
+        extends ISingleOperand<IYieldOperandConcatOfOrderByOperandOrder<T, ET>, ET>
+
+    {
+        IYieldOperandConcatOfOrderByOperandOrder<T, ET> order(OrderingModel model);
+    }
+
+    interface IYieldOperandConcatOfOrderByOperandOrSeparator<T, ET extends AbstractEntity<?>>
+        extends IYieldOperandConcatOfOrderByOperand<T, ET>,
+                IYieldOperandConcatOfSeparator<T, ET>
+    {}
+
+    interface IYieldOperandConcatOfOrderByOperandOrder<T, ET extends AbstractEntity<?>>  {
+        IYieldOperandConcatOfOrderByOperandOrSeparator<T, ET> asc();
+        IYieldOperandConcatOfOrderByOperandOrSeparator<T, ET> desc();
     }
 
     interface IYieldOperandConcatOfSeparatorOperand<T, ET extends AbstractEntity<?>> {

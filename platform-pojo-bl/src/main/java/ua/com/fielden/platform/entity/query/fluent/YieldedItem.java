@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.*;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperand;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldOperand;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldOperandConcatOfNext;
 
 abstract class YieldedItem<T, ET extends AbstractEntity<?>> //
         extends SingleOperand<T, ET> //
@@ -37,38 +40,14 @@ abstract class YieldedItem<T, ET extends AbstractEntity<?>> //
     }
 
     @Override
-    public ISingleOperand<IYieldOperandConcatOfSeparator<T, ET>, ET> concatOf() {
+    public ISingleOperand<IYieldOperandConcatOfNext<T, ET>, ET> concatOf() {
         return new SingleOperand<>(builder.concatOf()) {
             @Override
-            protected IYieldOperandConcatOfSeparator<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
-                return createConcatOfSeparator(builder);
-            }
-        };
-    }
-
-    private IYieldOperandConcatOfSeparator<T, ET> createConcatOfSeparator(final EqlSentenceBuilder builder) {
-        return new IYieldOperandConcatOfSeparator<>() {
-            @Override
-            public IYieldOperandConcatOfSeparatorOperand<T, ET> separator() {
-                return new YieldOperandConcatOfSeparatorOperand<T, ET>(builder.separator()) {
+            protected IYieldOperandConcatOfNext<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
+                return new YieldOperandConcatOfNext<>(builder) {
                     @Override
-                    protected T nextForYieldOperandConcatOfSeparator(final EqlSentenceBuilder builder) {
+                    protected T nextForYieldOperandConcatOfNext(final EqlSentenceBuilder builder) {
                         return YieldedItem.this.nextForSingleOperand(builder);
-                    }
-                };
-            }
-
-            @Override
-            public ISingleOperand<IYieldOperandConcatOfOrderDirection<T, ET>, ET> orderBy() {
-                return new SingleOperand<>(builder.orderBy()) {
-                    @Override
-                    protected IYieldOperandConcatOfOrderDirection<T, ET> nextForSingleOperand(final EqlSentenceBuilder bldr) {
-                        return new YieldOperandConcatOfOrderDirection<T, ET>(bldr) {
-                            @Override
-                            protected IYieldOperandConcatOfSeparator<T, ET> nextForConcatOfOrderDirection(final EqlSentenceBuilder b) {
-                                return createConcatOfSeparator(b);
-                            }
-                        };
                     }
                 };
             }
