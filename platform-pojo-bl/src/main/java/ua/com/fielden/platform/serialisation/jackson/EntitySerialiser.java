@@ -27,6 +27,7 @@ import static java.lang.reflect.Modifier.isAbstract;
 import static java.lang.reflect.Modifier.isInterface;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.shortCollectionKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -89,21 +90,30 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         final EntityType entityTypeInfo = newPlainEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
         entityTypeInfo.setKey(type.getName());
 
-        // let's inform the client of the type's persistence nature
+        // Inform the client of the type's persistence nature.
         if (isPersistentEntityType(type)) {
             entityTypeInfo.set_persistent(true);
         }
 
-        // let's inform the client of the type's persistence nature with audit data
-        if (isPersistentWithAuditData(type)) {
-            entityTypeInfo.set_persistentWithAudit(true);
+        // Inform the client of the type's persistent nature with version data.
+        if (isPersistentWithVersionData(type)) {
+            entityTypeInfo.set_persistentWithVersion(true);
+        }
+
+        // Inform the client of the type's audited nature.
+        if (isAudited(type)) {
+            entityTypeInfo.set_audited(true);
         }
 
         if (isContinuationData(type)) {
             entityTypeInfo.set_continuation(true);
         }
 
-        // let's inform the client of whether value descriptions should be displayed in editors of this type
+        if (ICustomisableCanLeave.class.isAssignableFrom(type)) {
+            entityTypeInfo.set_isCustomisableCanLeave(true);
+        }
+
+        // Inform the client of whether value descriptions should be displayed in editors of this type.
         final boolean shouldDisplayDescription = AnnotationReflector.isAnnotationPresentForClass(DisplayDescription.class, type);
         if (!isDisplayDescDefault(shouldDisplayDescription)) {
             entityTypeInfo.set_displayDesc(shouldDisplayDescription);
@@ -149,7 +159,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             entityTypeInfo.set_entityDesc(entityTitleAndDesc.getValue());
         }
 
-        // extend type information with common union properties to facilitate client-side common props meta-information recognition (e.g. property type, @DateOnly, @UpperCase etc.)
+        // Extend type information with common union properties to facilitate client-side common props meta-information recognition (e.g. property type, @DateOnly, @UpperCase etc.)
         final List<CachedProperty> propertiesWithCommonUnionProps = new ArrayList<>();
         propertiesWithCommonUnionProps.addAll(properties);
         if (isUnionEntityType(type)) {
@@ -162,7 +172,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         if (!propertiesWithCommonUnionProps.isEmpty()) {
             final Map<String, EntityTypeProp> props = new LinkedHashMap<>();
             for (final CachedProperty prop : propertiesWithCommonUnionProps) {
-                // non-composite keys should be persisted by identifying their actual type
+                // Non-composite keys should be persisted by identifying their actual type.
                 final String name = prop.field().getName();
                 final EntityTypeProp entityTypeProp = newPlainEntity(EntityTypeProp.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
 
@@ -336,4 +346,5 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     public static JacksonContext getContext() {
         return contextThreadLocal.get();
     }
+
 }

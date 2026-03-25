@@ -9,6 +9,18 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
+
+export const LeaveReason = {
+    CLOSED: "CLOSED",
+    NAVIGATED: "NAVIGATED"
+}
+
+const CanLeaveOptions  = {
+    YES_NO: [{name: "Yes", confirm: true}, {name: "No"}],
+    YES_NO_CANCEL: [{name: "Yes", confirm: true}, {name: "No", confirm: true}, {name: "Cancel"}],
+}
 
 /**
  * Returns enabled invalid input if there is one.
@@ -898,6 +910,22 @@ const TgEntityMasterBehaviorImpl = {
             return this._savingPromise;
         }).bind(self);
 
+        self._createCanLeavePromise = () => {
+            const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+            return this._runCanLeave(this._reset(holder));
+        };
+
+        self.remoteCanLeave = () => {
+
+            return new Promise((resolve, reject) => {
+                this.debounce('invoke-canLeave', function () {
+                    // cancel the 'invoke-saving' debouncer if there is any active one:
+                    this.cancelDebouncer('invoke-canLeave');
+                    return resolve(this._createCanLeavePromise());
+                }, 50);
+            });
+        };
+
         /**
          * In case where main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
          * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
@@ -1098,6 +1126,7 @@ const TgEntityMasterBehaviorImpl = {
         return true;
     },
 
+    // FIXME: Rename to _hasEmbeddedView, which affects both Java and JS code.
     _hasEmbededView: function () {
         return false;
     },
@@ -1415,6 +1444,13 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     /**
+     * The core-ajax component for custom canLeave logic.
+     */
+    _canLeaveAjax: function () {
+        throw "_canLeaveAjax: not implemented";
+    },
+
+    /**
      * The function for binding property title -- entity.type().prop(property).title(). The argument 'entity' will be changed in future. Polymer will listen to that change.
      * The function for binding property desc -- entity.type().prop(property).desc(). The argument 'entity' will be changed in future. Polymer will listen to that change.
      */
@@ -1469,34 +1505,82 @@ const TgEntityMasterBehaviorImpl = {
         return this._ajaxSaver().generateRequest().completes;
     },
 
+    _runCanLeave: function (modifiedPropertiesHolder) {
+        const idNumber = modifiedPropertiesHolder.id;
+        const originallyProducedEntity = this._reflector()._validateOriginallyProducedEntity(this._originallyProducedEntity, idNumber);
+        this._canLeaveAjax().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(originallyProducedEntity, modifiedPropertiesHolder)));
+        return this._canLeaveAjax().generateRequest().completes;
+    },
+
     /**
      * Method implementing .canLeave contract as disignated in classList.
      * It is used to identify whether master can be "left/closed" without any adverse effect on the data it represents (i.e. there was no unsaved changes).
      */
-    canLeave: function () {
+    canLeave: async function (leaveReason = LeaveReason.CLOSED) {
         // check all the child nodes with canLeave contract if they can be left...
         const nodesWithCanLeave = queryElements(this, '.canLeave');
         if (nodesWithCanLeave.length > 0) {
             for (let index = 0; index < nodesWithCanLeave.length; index++) {
-                const reason = nodesWithCanLeave[index].canLeave();
-                if (reason) {
-                    return reason;
-                }
+                await nodesWithCanLeave[index].canLeave(leaveReason);
             }
         }
 
         if (this._currBindingEntity && this.classList.contains('canLeave')) {
-            // The master should remain open in case where there are some modifications and the entity is persisted.
-            // Refer to _bindingEntityModified property of tg-entity-binder-behavior for more information.
+            // The master should prevent navigation away if there are unsaved modifications 
+            // and the entity has already been persisted.
+            // Refer to the _bindingEntityModified property of tg-entity-binder-behavior for more information.
             if (((this._editedPropsExist || this._bindingEntityModified) && this._currBindingEntity.isPersisted()) ||
                 (this._currBindingEntity.type().isPersistent() && !this._currBindingEntity.isPersisted())) {
-                return {
-                    isNew: undefined, // this could be not persistent entity (new) or persistent persisted entity (not new)
-                    msg: "Please save or cancel your changes."
-                };
+                    throw {msg: "Please save or cancel changes."};
             }
         }
-        return undefined;
+
+        if (this._reflector().findTypeByName(this.entityType).isCustomisableCanLeave()) {
+            return this.customCanLeave(leaveReason);
+        }
+
+        return true;
+    },
+
+    customCanLeave: function (leaveReason = LeaveReason.CLOSED) {
+        this._currBindingEntity["leaveReason"] = leaveReason;
+        return this.remoteCanLeave().then(obj => {
+            if (obj.xhr.status === 200 && obj.response) {
+                // Indicates successful execution of the request with a response received.
+                // Timeout errors may still result in status 200 with e.detail.response === null.
+                // A 504 error is also possible, but it is handled in the else clause.
+                const deserialisedResult = this._serialiser().deserialise(obj.response);
+
+                if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
+                    return Promise.reject({msg: resultMessages(deserialisedResult).short});
+                } else {
+                    const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
+                    if (savedEntity.canLeave) {
+                        return Promise.resolve(true);
+                    } else {
+                        return this.confirm(savedEntity.cannotLeaveReason, CanLeaveOptions[savedEntity.canLeaveOptions]).catch(e => {
+                            throw {msg: savedEntity.leaveInstructions, imperative: true};
+                        });
+                    }
+                }
+            } else { // other codes
+                return Promise.reject({msg: `An error occurred during canLeave with the following status: ${obj.xhr.status}`});
+            }
+        }).catch(e => {
+            if (e.request && e.error) {
+                processResponseError(e.request, e.error, this._reflector(), this._serialiser(), _ => { // _ result or message to be dismissed
+                        if (e.request && e.request.xhr && e.request.xhr.status === 404 && e.request.xhr.response) {
+                            const deserialisedResult = this._serialiser().deserialise(e.request.xhr.response);
+                            if (this._reflector().isError(deserialisedResult)) {
+                                // Override standard >=400 toast message `Service Error (404).` by custom one from server.
+                                this.toaster && this.toaster.openToastForErrorResult(deserialisedResult, true);
+                            }
+                        }
+                    }, this.toaster);
+            }
+            throw e;
+        });
+        
     },
 
     //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
@@ -1590,6 +1674,7 @@ const TgEntityMasterBehaviorImpl = {
         if (this.$ && this.$.masterDom && this.$.masterDom.confirm) {
             return this.$.masterDom.confirm(message, buttons, options);
         }
+        return Promise.reject({msg: 'Confirmation dialog is not available.'});
     },
 };
 
