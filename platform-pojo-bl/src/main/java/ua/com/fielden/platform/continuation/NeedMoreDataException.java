@@ -12,6 +12,9 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripI
 /// The exception type that is used as part of the continuation handling implementation.
 /// Its main purpose is to capture the data needed to continue the computation it was thrown from.
 ///
+/// Note: [#copyWith] is not overridden, so copies are plain [Result] instances, losing the [NeedMoreDataException] identity
+/// and all continuation state ([#continuationType], [#maybeContinuation], [#continuationProperty]).
+///
 public class NeedMoreDataException extends Result {
     public static final String MSG_STANDARD = "Continuation for [%s] entity and property [%s].";
     public static final String CONTINUATION_TYPE_STR = "continuationTypeStr";
@@ -37,7 +40,7 @@ public class NeedMoreDataException extends Result {
         final Optional<T> maybeContinuation,
         final String continuationProperty)
     {
-        super(maybeContinuation.orElse(null), customMessage);
+        super(maybeContinuation.orElse(null), customMessage, null, false);
         this.maybeContinuation = maybeContinuation;
         this.continuationType = (Class<T>) stripIfNeeded(continuationType);
         this.continuationTypeStr = this.continuationType.getName();

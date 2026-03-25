@@ -1139,6 +1139,7 @@ export const TgEntityBinderBehavior = {
             'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)
             'chosenIds', 'addedIds', 'removedIds', 'sortingVals', // collectional modification actions
             'visibleMenuItems', 'invisibleMenuItems', // menu visibility action (MenuSaveAction)
+            'leaveReason', //related to customisable canLeave
             'skipUi' // specialised property to control functional entity master appearance
         ].indexOf(propertyName) !== -1;
     },
