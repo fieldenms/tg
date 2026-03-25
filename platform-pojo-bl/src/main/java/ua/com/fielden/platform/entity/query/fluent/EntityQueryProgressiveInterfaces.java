@@ -478,6 +478,15 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IYieldOperandConcatOfSeparator<T, ET extends AbstractEntity<?>> {
         IYieldOperandConcatOfSeparatorOperand<T, ET> separator();
+
+        /// Specifies an intra-aggregate ORDER BY for `concatOf`.
+        /// Multiple `orderBy` calls can be chained for multi-column ordering.
+        ISingleOperand<IYieldOperandConcatOfOrderDirection<T, ET>, ET> orderBy();
+    }
+
+    interface IYieldOperandConcatOfOrderDirection<T, ET extends AbstractEntity<?>> {
+        IYieldOperandConcatOfSeparator<T, ET> asc();
+        IYieldOperandConcatOfSeparator<T, ET> desc();
     }
 
     interface IYieldOperandConcatOfSeparatorOperand<T, ET extends AbstractEntity<?>> {

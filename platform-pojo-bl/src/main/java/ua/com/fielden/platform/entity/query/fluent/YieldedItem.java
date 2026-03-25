@@ -41,13 +41,32 @@ abstract class YieldedItem<T, ET extends AbstractEntity<?>> //
         return new SingleOperand<>(builder.concatOf()) {
             @Override
             protected IYieldOperandConcatOfSeparator<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
-                return new IYieldOperandConcatOfSeparator<T, ET>() {
+                return createConcatOfSeparator(builder);
+            }
+        };
+    }
+
+    private IYieldOperandConcatOfSeparator<T, ET> createConcatOfSeparator(final EqlSentenceBuilder builder) {
+        return new IYieldOperandConcatOfSeparator<>() {
+            @Override
+            public IYieldOperandConcatOfSeparatorOperand<T, ET> separator() {
+                return new YieldOperandConcatOfSeparatorOperand<T, ET>(builder.separator()) {
                     @Override
-                    public IYieldOperandConcatOfSeparatorOperand<T, ET> separator() {
-                        return new YieldOperandConcatOfSeparatorOperand<T, ET>(builder.separator()) {
+                    protected T nextForYieldOperandConcatOfSeparator(final EqlSentenceBuilder builder) {
+                        return YieldedItem.this.nextForSingleOperand(builder);
+                    }
+                };
+            }
+
+            @Override
+            public ISingleOperand<IYieldOperandConcatOfOrderDirection<T, ET>, ET> orderBy() {
+                return new SingleOperand<>(builder.orderBy()) {
+                    @Override
+                    protected IYieldOperandConcatOfOrderDirection<T, ET> nextForSingleOperand(final EqlSentenceBuilder bldr) {
+                        return new YieldOperandConcatOfOrderDirection<T, ET>(bldr) {
                             @Override
-                            protected T nextForYieldOperandConcatOfSeparator(final EqlSentenceBuilder builder) {
-                                return YieldedItem.this.nextForSingleOperand(builder);
+                            protected IYieldOperandConcatOfSeparator<T, ET> nextForConcatOfOrderDirection(final EqlSentenceBuilder b) {
+                                return createConcatOfSeparator(b);
                             }
                         };
                     }

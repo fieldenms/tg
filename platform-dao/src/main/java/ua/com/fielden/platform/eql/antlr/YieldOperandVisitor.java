@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.antlr;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlValidationException;
-import ua.com.fielden.platform.eql.antlr.exceptions.EqlCompilationException;
 import ua.com.fielden.platform.eql.antlr.tokens.ParamToken;
 import ua.com.fielden.platform.eql.antlr.tokens.ValToken;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
@@ -93,7 +92,19 @@ final class YieldOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ext
             }
             default -> unexpectedToken(ctx.separator.token);
         };
-        return new ConcatOf1(expr, separator);
+        final List<ConcatOfOrderItem1> orderItems;
+        if (ctx.orderOperands != null && !ctx.orderOperands.isEmpty()) {
+            final var singleOperandVisitor = new SingleOperandVisitor(transformer);
+            orderItems = StreamUtils.zip(ctx.orderOperands, ctx.orderDirections,
+                    (operandCtx, dirCtx) -> {
+                        final var operand = operandCtx.accept(singleOperandVisitor);
+                        final boolean isDesc = dirCtx.token.getType() == EQLLexer.DESC;
+                        return new ConcatOfOrderItem1(operand, isDesc);
+                    }).toList();
+        } else {
+            orderItems = List.of();
+        }
+        return new ConcatOf1(expr, separator, orderItems);
     }
 
 }

@@ -278,13 +278,13 @@ public final class CanonicalEqlGrammar {
             or(sumOfDistinct).or(countOfDistinct).or(avgOfDistinct).
 
         derive(YieldOperandConcatOf).
-            to(concatOf, label("expr", SingleOperand), separator, label("separator", YieldOperandConcatOfSeparator)).
+            to(concatOf, label("expr", SingleOperand),
+               repeat(orderBy, listLabel("orderOperands", SingleOperand), listLabel("orderDirections", Order)),
+               separator, label("separator", YieldOperandConcatOfSeparator)).
 
         derive(YieldOperandConcatOfSeparator).
             to(val.with(CS)).
             or(param.with(CS)).or(param.with(ENUM)).
-            // to(altLabel("YieldOperandConcatOfSeparator_Val", Val)).
-            // or(altLabel("YieldOperandConcatOfSeparator_Param", Param)).
 
         derive(YieldAlias).
             to(as.with(CS)).or(as.with(ENUM)).

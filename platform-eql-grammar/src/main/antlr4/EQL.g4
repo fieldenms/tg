@@ -197,7 +197,7 @@ yieldOperand :
     | BEGINYIELDEXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* ENDYIELDEXPR # YieldOperandExpr
     | COUNTALL # YieldOperand_CountAll
     | funcName=yieldOperandFunctionName argument=singleOperand # YieldOperandFunction
-    | CONCATOF expr=singleOperand SEPARATOR separator=yieldOperandConcatOfSeparator # YieldOperandConcatOf
+    | CONCATOF expr=singleOperand (ORDERBY orderOperands+=singleOperand orderDirections+=order)* SEPARATOR separator=yieldOperandConcatOfSeparator # YieldOperandConcatOf
 ;
 
 yieldOperandFunctionName :
