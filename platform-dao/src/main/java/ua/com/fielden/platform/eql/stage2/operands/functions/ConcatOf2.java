@@ -1,15 +1,18 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.ConcatOf3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.ConcatOfOrderItem3;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toSet;
 
 public class ConcatOf2 extends TwoOperandsFunction2<ConcatOf3> {
 
@@ -29,6 +32,20 @@ public class ConcatOf2 extends TwoOperandsFunction2<ConcatOf3> {
             final ISingleOperand2<? extends ISingleOperand3> operand2)
     {
         this(operand1, operand2, List.of());
+    }
+
+    @Override
+    public Set<Prop2> collectProps() {
+        return Stream.concat(super.collectProps().stream(),
+                             orderItems.stream().map(ConcatOfOrderItem2::collectProps).flatMap(Collection::stream))
+                .collect(toSet());
+    }
+
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return Stream.concat(super.collectEntityTypes().stream(),
+                             orderItems.stream().map(ConcatOfOrderItem2::collectEntityTypes).flatMap(Collection::stream))
+                .collect(toSet());
     }
 
     @Override

@@ -470,10 +470,6 @@ public interface EntityQueryProgressiveInterfaces {
         /// yield().concatOf().prop("name").orderBy().prop("name").asc().separator().val(", ")
         /// ```
         ///
-        /// **Current limitation:** `orderBy` can only reference properties that participate in the `concatOf` expression.
-        /// Ordering by an unrelated source property is not yet supported due to EQL property resolution constraints
-        /// (not a SQL limitation — `STRING_AGG`'s `ORDER BY` can reference any source column).
-        ///
         ISingleOperand<IYieldOperandConcatOfSeparator<T, ET>, ET> concatOf();
 
         T countAll();
@@ -490,9 +486,6 @@ public interface EntityQueryProgressiveInterfaces {
 
         /// Specifies an intra-aggregate ORDER BY for `concatOf`.
         /// Multiple `orderBy` calls can be chained for multi-column ordering.
-        ///
-        /// The ordering operand must reference a property that participates in the `concatOf` expression.
-        /// See [concatOf][IYieldOperand#concatOf()] for details on this limitation.
         ///
         ISingleOperand<IYieldOperandConcatOfOrderDirection<T, ET>, ET> orderBy();
     }
