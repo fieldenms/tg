@@ -59,6 +59,7 @@ LaTeX documentation in `platform-doc/`.
 
 - Entity hierarchy, annotations, validators/definers, union entities, producers, companions, MetaProperty, calculated properties, metamodels: @platform-doc/claude/entity-model.md
 - EQL query construction, operators, functions, fetch models, QueryExecutionModel: @platform-doc/claude/eql-reference.md
+- EQL internal design — how to add new functions, operators, and language features: @platform-doc/claude/eql-design.md
 - Entity Centre, Entity Master, Compound Master, actions, query enhancers, SSE: @platform-doc/claude/web-ui.md
 - Testing patterns, assertions, indirect testing, security tokens, authorization: @platform-doc/claude/testing-and-security.md
 
