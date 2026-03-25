@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.sundries;
 
 import com.google.common.collect.ImmutableSet;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
@@ -10,8 +11,10 @@ import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Set;
 
-public record OrderBy1 (ISingleOperand1<? extends ISingleOperand2<?>> operand,
-                        String yieldName,
+/// [#operand] and [#yieldName] are mutually exclusive: exactly one of them will be not null.
+///
+public record OrderBy1 (@Nullable ISingleOperand1<? extends ISingleOperand2<?>> operand,
+                        @Nullable String yieldName,
                         boolean isDesc)
     implements ToString.IFormattable
 {
