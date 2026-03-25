@@ -69,7 +69,7 @@ public class DependentCalcPropsOrder {
             }
 
             final Expression1 exp1 = new EqlCompiler(gen).compile(
-                            calcPropChunk.data().expression.expressionModel().getTokenSource(),
+                            calcPropChunk.data().expression.expressionModel().tokens(),
                             EqlCompilationResult.StandaloneExpression.class)
                     .model();
             final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(

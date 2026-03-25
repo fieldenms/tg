@@ -33,7 +33,7 @@ import java.util.function.Function;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
+import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
 
 /// This is a base class for all test cases in TG-based applications.
 ///
