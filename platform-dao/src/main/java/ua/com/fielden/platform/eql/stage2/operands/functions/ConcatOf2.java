@@ -11,10 +11,7 @@ import ua.com.fielden.platform.eql.stage3.operands.functions.ConcatOf3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
@@ -42,18 +39,14 @@ public class ConcatOf2 extends TwoOperandsFunction2<ConcatOf3> {
     @Override
     public Set<Prop2> collectProps() {
         return Stream.concat(super.collectProps().stream(),
-                             Stream.of())
-                             // TODO
-                             // orderItems.stream().map(OrderBy2::collectProps).flatMap(Collection::stream))
+                             orderItems.stream().map(OrderBy2::collectProps).flatMap(Collection::stream))
                 .collect(toSet());
     }
 
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return Stream.concat(super.collectEntityTypes().stream(),
-                             Stream.of())
-                             // TODO
-                             // orderItems.stream().map(OrderBy2::collectEntityTypes).flatMap(Collection::stream))
+                             orderItems.stream().map(OrderBy2::collectEntityTypes).flatMap(Collection::stream))
                 .collect(toSet());
     }
 

@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.eql.stage1.sundries;
 
+import com.google.common.collect.ImmutableSet;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sundries.OrderBy2;
 import ua.com.fielden.platform.utils.ToString;
+
+import java.util.Set;
 
 public record OrderBy1 (ISingleOperand1<? extends ISingleOperand2<?>> operand,
                         String yieldName,
@@ -22,6 +26,10 @@ public record OrderBy1 (ISingleOperand1<? extends ISingleOperand2<?>> operand,
 
     public OrderBy2 transform(final TransformationContextFromStage1To2 context) {
         return operand != null ? new OrderBy2(operand.transform(context), isDesc) : new OrderBy2(yieldName, isDesc);
+    }
+
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return operand == null ? ImmutableSet.of() : operand.collectEntityTypes();
     }
 
     @Override

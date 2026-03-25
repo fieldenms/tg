@@ -1,17 +1,22 @@
 package ua.com.fielden.platform.eql.stage2.sundries;
 
+import com.google.common.collect.ImmutableSet;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 import ua.com.fielden.platform.utils.ToString;
 
+import java.util.Set;
+
 public record OrderBy2 (ISingleOperand2<? extends ISingleOperand3> operand,
                         String yieldName,
                         boolean isDesc)
-    implements ToString.IFormattable
+        implements ToString.IFormattable
 {
 
     public OrderBy2(final ISingleOperand2<? extends ISingleOperand3> operand, final boolean isDesc) {
@@ -29,6 +34,14 @@ public record OrderBy2 (ISingleOperand2<? extends ISingleOperand3> operand,
         } else {
             return new TransformationResultFromStage2To3<>(new OrderBy3(yields.yieldsMap().get(yieldName), isDesc), context);
         }
+    }
+
+    public Set<Prop2> collectProps() {
+        return operand == null ? ImmutableSet.of() : operand.collectProps();
+    }
+
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return operand == null ? ImmutableSet.of() : operand.collectEntityTypes();
     }
 
     @Override

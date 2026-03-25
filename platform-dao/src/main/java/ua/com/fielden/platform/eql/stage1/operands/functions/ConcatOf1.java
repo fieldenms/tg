@@ -50,7 +50,7 @@ public class ConcatOf1 extends TwoOperandsFunction1<ConcatOf2> {
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final var result = new HashSet<>(super.collectEntityTypes());
         for (final var item : orderItems) {
-            result.addAll(item.operand().collectEntityTypes());
+            result.addAll(item.collectEntityTypes());
         }
         return result;
     }
