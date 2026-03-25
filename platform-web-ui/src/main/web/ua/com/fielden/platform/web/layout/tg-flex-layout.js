@@ -16,7 +16,7 @@ const template = html`
         :host(.debug), :host(.debug) *, :host(.debug) ::slotted(*) {
             border: 1px dashed red !important;
         }
-        .hidden-with-subheader {
+        .hidden-with-subheader, .hidden-with-filter {
             display: none !important;
         }
     </style>
@@ -142,7 +142,43 @@ template.setAttribute('strip-whitespace', '');
                 subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
             }).bind(this));
             this._setCurrentLayout(layout);
+            filterLayout.bind(this)();
             this.fire('layout-finished', this);
+        }
+    };
+    const filterLayout = function () {
+        filterElement.bind(this)(this.shadowRoot);
+    };
+    const filterElement = function (element) {
+        if (element.hasAttribute && element.hasAttribute("filterable")) {
+            this.toggleClass("hidden-with-filter", this.filter && !this.filter(element), element);
+        } else {
+            const children = [...element.children].flatMap(child => child.tagName === 'SLOT' ? [...child.assignedNodes()] : [child]);
+            children.forEach(child => filterElement.bind(this)(child));
+            const filterableChildren = children.filter(child => child.hasAttribute("filterable") || child.hasAttribute("has-filterable-children"));
+            if (filterableChildren.length > 0) {
+                element.setAttribute && element.setAttribute("has-filterable-children", "");
+            } else {
+                element.removeAttribute && element.removeAttribute("has-filterable-children");
+            }
+            element.classList && this.toggleClass("hidden-with-filter", filterableChildren.length > 0 && filterableChildren.every(child => child.classList.contains("hidden-with-filter")), element);
+
+            // Process subheaders
+            children.filter(child => child.tagName === 'TG-SUBHEADER').forEach(subheader => {
+                const filterableElements = subheader.relativeElements
+                        .flatMap(relativeElement => relativeElement.tagName === 'SLOT' ? [...relativeElement.assignedNodes()] : [relativeElement])
+                        .filter(relativeElement => relativeElement.hasAttribute("filterable") || relativeElement.hasAttribute("has-filterable-children"));
+                const isHidden = filterableElements.length > 0 && filterableElements.every(filterableElement => filterableElement.classList.contains("hidden-with-filter"));
+                this.toggleClass("hidden-with-filter", isHidden, subheader);
+                if (!isHidden && this.filter) {
+                    subheader.open();
+                }
+                subheader.relativeElements.forEach(relativeElement => {
+                    if (filterableElements.indexOf(relativeElement) < 0) {
+                        this.toggleClass("hidden-with-filter", isHidden, relativeElement);
+                    }
+                });
+            });
         }
     };
     const resetSubheaderComponents = function () {
@@ -335,6 +371,13 @@ template.setAttribute('strip-whitespace', '');
             context: {
                 type: Object
             },
+            // Checks whether an element with `filterable` attribute should be visible.
+            // Returns true if the element should be visible; otherwise false.
+            filter: {
+                type: Function,
+                value: null,
+                observer: "_filterChanged"
+            },
             _subheaders: {
                 type: Array
             },
@@ -441,6 +484,9 @@ template.setAttribute('strip-whitespace', '');
                 const propPath = changeRecord.path.substr(changeRecord.path.indexOf(".") + 1);
                 forEachPropValue(this._htmlElements, element => element.notifyPath(propPath, changeRecord.value));
             }
+        },
+        _filterChanged: function (newFilter, oldFilter) {
+            filterLayout.bind(this)();
         }
     });
 })();
