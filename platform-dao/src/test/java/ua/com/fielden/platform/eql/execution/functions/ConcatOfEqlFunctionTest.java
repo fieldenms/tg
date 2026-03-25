@@ -114,6 +114,25 @@ public class ConcatOfEqlFunctionTest extends AbstractEqlExecutionTestCase {
                 .isEqualTo("John Conway, Alan Turing");
     }
 
+    @Test
+    public void concatOf_with_orderBy_prop_which_is_not_referenced_elsewhere() {
+        final var qry1 = select(
+                select().yield().val("Alice").as("name").yield().val(1).as("rank").modelAsAggregate(),
+                select().yield().val("Bob").as("name").yield().val(2).as("rank").modelAsAggregate())
+                .yield().concatOf().prop("name").orderBy().prop("rank").asc().separator().val(", ").as(RESULT)
+                .modelAsAggregate();
+        assertThat(retrieveResult(qry1))
+                .isEqualTo("Alice, Bob");
+
+        final var qry2 = select(
+                select().yield().val("Alice").as("name").yield().val(1).as("rank").modelAsAggregate(),
+                select().yield().val("Bob").as("name").yield().val(2).as("rank").modelAsAggregate())
+                .yield().concatOf().prop("name").orderBy().prop("rank").desc().separator().val(", ").as(RESULT)
+                .modelAsAggregate();
+        assertThat(retrieveResult(qry2))
+                .isEqualTo("Bob, Alice");
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
