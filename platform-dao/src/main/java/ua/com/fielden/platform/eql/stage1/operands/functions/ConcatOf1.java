@@ -4,9 +4,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.Value1;
+import ua.com.fielden.platform.eql.stage1.sundries.OrderBy1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.ConcatOf2;
-import ua.com.fielden.platform.eql.stage2.operands.functions.ConcatOfOrderItem2;
+import ua.com.fielden.platform.eql.stage2.sundries.OrderBy2;
 
 import java.util.HashSet;
 import java.util.List;
@@ -17,12 +18,12 @@ import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException
 
 public class ConcatOf1 extends TwoOperandsFunction1<ConcatOf2> {
 
-    public final List<ConcatOfOrderItem1> orderItems;
+    public final List<OrderBy1> orderItems;
 
     public ConcatOf1(
             final ISingleOperand1<? extends ISingleOperand2<?>> expr,
             final Value1 separator,
-            final List<ConcatOfOrderItem1> orderItems)
+            final List<OrderBy1> orderItems)
     {
         super(expr, separator);
         requireNotNullArgument(separator, "separator");
@@ -39,7 +40,7 @@ public class ConcatOf1 extends TwoOperandsFunction1<ConcatOf2> {
 
     @Override
     public ConcatOf2 transform(final TransformationContextFromStage1To2 context) {
-        final List<ConcatOfOrderItem2> orderItems2 = orderItems.stream()
+        final List<OrderBy2> orderItems2 = orderItems.stream()
                 .map(item -> item.transform(context))
                 .toList();
         return new ConcatOf2(operand1.transform(context), operand2.transform(context), orderItems2);

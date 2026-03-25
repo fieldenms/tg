@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.antlr;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.query.exceptions.EqlValidationException;
 import ua.com.fielden.platform.eql.antlr.tokens.ParamToken;
 import ua.com.fielden.platform.eql.antlr.tokens.ValToken;
@@ -9,12 +10,14 @@ import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.Value1;
 import ua.com.fielden.platform.eql.stage1.operands.functions.*;
+import ua.com.fielden.platform.eql.stage1.sundries.OrderBy1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.List;
 import java.util.function.Function;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
 import static ua.com.fielden.platform.eql.antlr.SingleOperandVisitor.toArithmeticalOperator;
@@ -92,17 +95,16 @@ final class YieldOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ext
             }
             default -> unexpectedToken(ctx.separator.token);
         };
-        final List<ConcatOfOrderItem1> orderItems;
-        if (ctx.orderOperands != null && !ctx.orderOperands.isEmpty()) {
-            final var singleOperandVisitor = new SingleOperandVisitor(transformer);
-            orderItems = StreamUtils.zip(ctx.orderOperands, ctx.orderDirections,
-                    (operandCtx, dirCtx) -> {
-                        final var operand = operandCtx.accept(singleOperandVisitor);
-                        final boolean isDesc = dirCtx.token.getType() == EQLLexer.DESC;
-                        return new ConcatOfOrderItem1(operand, isDesc);
-                    }).toList();
-        } else {
-            orderItems = List.of();
+        final List<OrderBy1> orderItems;
+        if (ctx.yieldOperandConcatOfOrderBy() == null) {
+            orderItems = ImmutableList.of();
+        }
+        else {
+            final var visitor = new OrderByOperandVisitor(transformer);
+            orderItems = ctx.yieldOperandConcatOfOrderBy().operands
+                    .stream()
+                    .flatMap(o -> o.accept(visitor))
+                    .collect(toImmutableList());
         }
         return new ConcatOf1(expr, separator, orderItems);
     }

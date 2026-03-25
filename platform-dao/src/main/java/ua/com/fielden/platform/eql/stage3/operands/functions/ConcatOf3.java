@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.List;
@@ -13,13 +14,13 @@ import static java.util.stream.Collectors.joining;
 
 public class ConcatOf3 extends TwoOperandsFunction3 {
 
-    public final List<ConcatOfOrderItem3> orderItems;
+    public final List<OrderBy3> orderItems;
 
     public ConcatOf3(
             final ISingleOperand3 operand1,
             final ISingleOperand3 operand2,
             final PropType type,
-            final List<ConcatOfOrderItem3> orderItems)
+            final List<OrderBy3> orderItems)
     {
         super(operand1, operand2, type);
         this.orderItems = List.copyOf(orderItems);
