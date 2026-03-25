@@ -905,6 +905,11 @@ Compound masters require:
 - Menu item classes extending `AbstractFunctionalEntityForCompoundMenuItem<T>`
 - A producer class for the functional entity
 
+**Key Fetch Provider for Menu Items:**
+Menu item entities receive their key from the compound master's root entity (e.g., `OpenVehicleMasterAction`), not by fetching it independently.
+If a menu item DAO needs access to a key property (e.g., a calculated property), the fetch provider on the **root entity's companion** (e.g., `OpenVehicleMasterActionCo.FETCH_PROVIDER`) must include that property.
+Adding a fetch provider to the menu item's own companion will not affect how the key is loaded.
+
 ##### Action Configuration
 
 **Standard Action Helpers** (preferred for common operations):
