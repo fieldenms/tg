@@ -23,6 +23,7 @@ import { scrollContainerIfPointNearTheEdge, getKeyEventTarget, isInHierarchy, de
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 import '/resources/components/postal-lib.js';
+import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 const template = html`
     <style>
@@ -825,20 +826,27 @@ Polymer({
                 if (!currentSection) {
                     throw 'Compound master’s menu item section [' + this.sectionRoute + '] does not exist.';
                 }
-                const cannotLeaveReason = currentSection.canLeave();
-                const cannotLeaveMessage = cannotLeaveReason ? cannotLeaveReason.msg : (this.isMasterWithMasterAndNonPersisted(currentSection) ? 'A new entity is being created. Please save or cancel your changes.' : undefined);
-                if (cannotLeaveMessage) {
-                    this.route = this.sectionRoute;
-                    this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage);
-                } else {
+                currentSection.canLeave(LeaveReason.NAVIGATED).then(obj => {
+                    if (this.isMasterWithMasterAndNonPersisted(currentSection)) {
+                        throw 'A new entity is being created. Please save or cancel your changes.'
+                    }
                     this.sectionRoute = newRoute;
                     if (currentSection.activated) {
                         currentSection._showBlockingPane();
                     }
-                }
+                }).catch(cannotLeaveReason => {
+                    const cannotLeaveMessage = cannotLeaveReason.message || cannotLeaveReason.msg || cannotLeaveReason;
+                    this.route = this.sectionRoute;
+                    this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage, !!cannotLeaveReason.message);
+                }).finally(() => {
+                    this.fire('tg-master-menu-route-change-completed', this.route);
+                });
             } else {
                 this.sectionRoute = newRoute;
+                this.fire('tg-master-menu-route-change-completed', this.route);
             }
+        } else {
+            this.fire('tg-master-menu-route-change-completed', this.route);
         }
     },
     
@@ -884,8 +892,9 @@ Polymer({
     },
 
     /** Used by the master, which incorporates this menu to check if it can be closed. */
-    canLeave: function () {
-        return this._section(this.route) && this._section(this.route).canLeave();
+    canLeave: function (leaveReason = LeaveReason.CLOSED) {
+        const section = this._section(this.route);
+        return section ? section.canLeave(leaveReason) : Promise.resolve(true);
     },
 
     _sectionRouteChanged: function (newRoute, oldRoute) {

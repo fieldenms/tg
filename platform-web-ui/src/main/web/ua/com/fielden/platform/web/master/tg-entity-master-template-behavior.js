@@ -216,6 +216,13 @@ const TgEntityMasterTemplateBehaviorImpl = {
     },
 
     /**
+     * The core-ajax component for custom canLeave logic.
+     */
+    _canLeaveAjax: function () {
+        return this._masterDom()._canLeaveAjax();
+    },
+
+    /**
      * The validator component.
      */
     _validator: function () {
