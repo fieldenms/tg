@@ -6,32 +6,34 @@ import { containsRestrictedTags } from '/resources/reflection/tg-polymer-utils.j
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 
 /**
- * Throw or reject with this type of error if you don't want to report this error to the user but want to report it to the server.
+ * Base error class for all TG application errors.
+ * Extends the native Error class with automatic stack trace trimming and error name assignment.
  */
-export class UnreportableError extends Error {
+class GenericTgError extends Error {
     constructor(...params) {
-        super(params);
+        super(...params);
 
         if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, UnreportableError);
+            Error.captureStackTrace(this, this.constructor); // Always trims the actual subclass.
         }
         this.name = this.constructor.name;
     }
 }
 
 /**
+ * Throw or reject with this type of error if you want to report this error both to the user and to the server.
+ */
+export class UnexpectedCustomError extends GenericTgError {}
+
+/**
+ * Throw or reject with this type of error if you don't want to report this error to the user but want to report it to the server.
+ */
+export class UnreportableError extends GenericTgError {}
+
+/**
  * Throw or reject with this type of error if you don't want to report this error neither to the user nor to the server.
  */
-export class ExpectedError extends Error {
-    constructor(...params) {
-        super(params);
-
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, ExpectedError);
-        }
-        this.name = this.constructor.name;
-    }
-}
+export class ExpectedError extends GenericTgError {}
 
 /**
  * Augments a non-empty state restoration logic for caught errors with 'restoreStateFunction', that is applicable for the current context.

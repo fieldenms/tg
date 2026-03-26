@@ -12,6 +12,7 @@ import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { openShareAction } from '/resources/reflection/tg-share-utils.js';
 import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
+import { UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 
 /**
  * A local insertion point manager for the entity centre to manage detached or maximized insertion points.
@@ -1386,6 +1387,9 @@ const TgEntityCentreBehaviorImpl = {
                         this._preferredViewUpdaterAction._run();
                     }
                 }).catch(e => {
+                    if (e instanceof UnexpectedCustomError) {
+                        throw e;
+                    }
                     e.msg && this._showToastWithMessage(e.msg);
                 });
             }   

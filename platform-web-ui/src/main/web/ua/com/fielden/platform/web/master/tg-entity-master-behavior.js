@@ -8,7 +8,7 @@ import { createEntityActionThenCallback } from '/resources/master/actions/tg-ent
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
-import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
+import { enhanceStateRestoration, UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 
@@ -1552,7 +1552,7 @@ const TgEntityMasterBehaviorImpl = {
                 const deserialisedResult = this._serialiser().deserialise(obj.response);
 
                 if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
-                    return Promise.reject({msg: resultMessages(deserialisedResult).short});
+                    return Promise.reject(new UnexpectedCustomError(resultMessages(deserialisedResult).short));
                 } else {
                     const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
                     if (savedEntity.canLeave) {
@@ -1564,7 +1564,7 @@ const TgEntityMasterBehaviorImpl = {
                     }
                 }
             } else { // other codes
-                return Promise.reject({msg: `An error occurred during canLeave with the following status: ${obj.xhr.status}`});
+                return Promise.reject(new UnexpectedCustomError(`An error occurred during canLeave with the following status: ${obj.xhr.status}`));
             }
         }).catch(e => {
             if (e.request && e.error) {
