@@ -60,6 +60,8 @@ Existing methods (`orderBy()`, `asc()`, `desc()`, `val()`, `param()`, `prop()`, 
 
 **Support `OrderingModel`** — when a function accepts ordering, support both inline (`prop().asc()`) and pre-built `OrderingModel` via an `order(OrderingModel)` method.
 This allows reuse of ordering definitions across queries.
+**Important:** `order(OrderingModel)` must return the **post-direction** step (e.g., `IYieldOperandConcatOfOrderByOperandOrSeparator`), not the direction step (`IYieldOperandConcatOfOrderByOperandOrder`), because the `OrderingModel` already contains sort direction.
+Requiring `asc()`/`desc()` after `order(OrderingModel)` would be redundant and semantically incorrect.
 
 **`YieldedItem`** — wire the top-level entry point (e.g., `concatOf()`) by creating the initial `SingleOperand` that transitions into the function's chain.
 

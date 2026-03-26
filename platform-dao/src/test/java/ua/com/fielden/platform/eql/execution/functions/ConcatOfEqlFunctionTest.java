@@ -7,6 +7,7 @@ import ua.com.fielden.platform.sample.domain.TgPersonName;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class ConcatOfEqlFunctionTest extends AbstractEqlExecutionTestCase {
@@ -131,6 +132,26 @@ public class ConcatOfEqlFunctionTest extends AbstractEqlExecutionTestCase {
                 .modelAsAggregate();
         assertThat(retrieveResult(qry2))
                 .isEqualTo("Bob, Alice");
+    }
+
+    @Test
+    public void concatOf_with_orderBy_using_OrderingModel() {
+        final var orderByModel = orderBy().prop("key").asc().model();
+        final var qry = select(TgPersonName.class)
+                .yield().concatOf().prop("key").orderBy().order(orderByModel).separator().val(", ").as(RESULT)
+                .modelAsAggregate();
+        assertThat(retrieveResult(qry))
+                .isEqualTo("Alan Turing, John Conway");
+    }
+
+    @Test
+    public void concatOf_with_orderBy_using_OrderingModel_desc() {
+        final var orderByModel = orderBy().prop("key").desc().model();
+        final var qry = select(TgPersonName.class)
+                .yield().concatOf().prop("key").orderBy().order(orderByModel).separator().val(", ").as(RESULT)
+                .modelAsAggregate();
+        assertThat(retrieveResult(qry))
+                .isEqualTo("John Conway, Alan Turing");
     }
 
     @Override

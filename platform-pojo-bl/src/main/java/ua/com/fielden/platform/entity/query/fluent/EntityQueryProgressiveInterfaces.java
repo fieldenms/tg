@@ -500,7 +500,9 @@ public interface EntityQueryProgressiveInterfaces {
         extends ISingleOperand<IYieldOperandConcatOfOrderByOperandOrder<T, ET>, ET>
 
     {
-        IYieldOperandConcatOfOrderByOperandOrder<T, ET> order(OrderingModel model);
+        /// Includes a pre-built [OrderingModel] (which already contains sort direction).
+        /// Transitions directly to the separator/next-orderBy step, skipping `asc()`/`desc()`.
+        IYieldOperandConcatOfOrderByOperandOrSeparator<T, ET> order(OrderingModel model);
     }
 
     interface IYieldOperandConcatOfOrderByOperandOrSeparator<T, ET extends AbstractEntity<?>>

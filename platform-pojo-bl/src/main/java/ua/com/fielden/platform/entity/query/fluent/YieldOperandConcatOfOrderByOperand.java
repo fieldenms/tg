@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldOperandConcatOfOrderByOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldOperandConcatOfOrderByOperandOrder;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldOperandConcatOfOrderByOperandOrSeparator;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
 abstract class YieldOperandConcatOfOrderByOperand<T, ET extends AbstractEntity<?>>
@@ -27,10 +28,10 @@ abstract class YieldOperandConcatOfOrderByOperand<T, ET extends AbstractEntity<?
     }
 
     @Override
-    public IYieldOperandConcatOfOrderByOperandOrder<T, ET> order(final OrderingModel model) {
-        return new YieldOperandConcatOfOrderByOperandOrder<>(builder.order(model)) {
+    public IYieldOperandConcatOfOrderByOperandOrSeparator<T, ET> order(final OrderingModel model) {
+        return new YieldOperandConcatOfOrderByOperandOrSeparator<>(builder.order(model)) {
             @Override
-            protected T nextForYieldOperandConcatOfOrderByOperandOrder(final EqlSentenceBuilder builder) {
+            protected T nextForYieldOperandConcatOfOrderByOperandOrSeparator(final EqlSentenceBuilder builder) {
                 return YieldOperandConcatOfOrderByOperand.this.nextForYieldOperandConcatOfOrderByOperand(builder);
             }
         };
