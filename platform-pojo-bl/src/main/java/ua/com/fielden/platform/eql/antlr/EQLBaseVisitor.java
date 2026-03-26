@@ -466,6 +466,27 @@ public class EQLBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements EQ
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitYieldOperandConcatOfOrderBy(EQLParser.YieldOperandConcatOfOrderByContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitYieldOperandConcatOfOrderByOperand_Single(EQLParser.YieldOperandConcatOfOrderByOperand_SingleContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitYieldOperandConcatOfOrderByOperand_OrderingModel(EQLParser.YieldOperandConcatOfOrderByOperand_OrderingModelContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitYieldAlias(EQLParser.YieldAliasContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

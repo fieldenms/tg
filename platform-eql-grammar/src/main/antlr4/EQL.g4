@@ -1,4 +1,4 @@
-// This grammar was generated. Timestamp: 2026-01-09T19:39:10.088033808+02:00[Europe/Kyiv]
+// This grammar was generated. Timestamp: 2026-03-25T18:30:46.978376070+02:00[Europe/Kyiv]
 
 grammar EQL;
 
@@ -197,7 +197,7 @@ yieldOperand :
     | BEGINYIELDEXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* ENDYIELDEXPR # YieldOperandExpr
     | COUNTALL # YieldOperand_CountAll
     | funcName=yieldOperandFunctionName argument=singleOperand # YieldOperandFunction
-    | CONCATOF expr=singleOperand SEPARATOR separator=yieldOperandConcatOfSeparator # YieldOperandConcatOf
+    | CONCATOF expr=singleOperand yieldOperandConcatOfOrderBy? SEPARATOR separator=yieldOperandConcatOfSeparator # YieldOperandConcatOf
 ;
 
 yieldOperandFunctionName :
@@ -214,6 +214,15 @@ yieldOperandFunctionName :
 yieldOperandConcatOfSeparator :
       token=VAL
     | token=PARAM
+;
+
+yieldOperandConcatOfOrderBy :
+      ORDERBY operands+=yieldOperandConcatOfOrderByOperand+
+;
+
+yieldOperandConcatOfOrderByOperand :
+      singleOperand order # YieldOperandConcatOfOrderByOperand_Single
+    | token=ORDER # YieldOperandConcatOfOrderByOperand_OrderingModel
 ;
 
 yieldAlias :

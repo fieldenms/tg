@@ -438,6 +438,26 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitYieldOperandConcatOfSeparator(EQLParser.YieldOperandConcatOfSeparatorContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link EQLParser#yieldOperandConcatOfOrderBy}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitYieldOperandConcatOfOrderBy(EQLParser.YieldOperandConcatOfOrderByContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code YieldOperandConcatOfOrderByOperand_Single}
+	 * labeled alternative in {@link EQLParser#yieldOperandConcatOfOrderByOperand}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitYieldOperandConcatOfOrderByOperand_Single(EQLParser.YieldOperandConcatOfOrderByOperand_SingleContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code YieldOperandConcatOfOrderByOperand_OrderingModel}
+	 * labeled alternative in {@link EQLParser#yieldOperandConcatOfOrderByOperand}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitYieldOperandConcatOfOrderByOperand_OrderingModel(EQLParser.YieldOperandConcatOfOrderByOperand_OrderingModelContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link EQLParser#yieldAlias}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

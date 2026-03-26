@@ -127,7 +127,6 @@ public class QueryModelToStage1Transformer {
         return paramValues.get(paramName);
     }
 
-
     public boolean hasParam(final String paramName) {
         return paramValues.containsKey(paramName);
     }

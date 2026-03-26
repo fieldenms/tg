@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.*;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperand;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldOperand;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldOperandConcatOfNext;
 
 abstract class YieldedItem<T, ET extends AbstractEntity<?>> //
         extends SingleOperand<T, ET> //
@@ -37,19 +40,14 @@ abstract class YieldedItem<T, ET extends AbstractEntity<?>> //
     }
 
     @Override
-    public ISingleOperand<IYieldOperandConcatOfSeparator<T, ET>, ET> concatOf() {
+    public ISingleOperand<IYieldOperandConcatOfNext<T, ET>, ET> concatOf() {
         return new SingleOperand<>(builder.concatOf()) {
             @Override
-            protected IYieldOperandConcatOfSeparator<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
-                return new IYieldOperandConcatOfSeparator<T, ET>() {
+            protected IYieldOperandConcatOfNext<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
+                return new YieldOperandConcatOfNext<>(builder) {
                     @Override
-                    public IYieldOperandConcatOfSeparatorOperand<T, ET> separator() {
-                        return new YieldOperandConcatOfSeparatorOperand<T, ET>(builder.separator()) {
-                            @Override
-                            protected T nextForYieldOperandConcatOfSeparator(final EqlSentenceBuilder builder) {
-                                return YieldedItem.this.nextForSingleOperand(builder);
-                            }
-                        };
+                    protected T nextForYieldOperandConcatOfNext(final EqlSentenceBuilder builder) {
+                        return YieldedItem.this.nextForSingleOperand(builder);
                     }
                 };
             }
