@@ -8,6 +8,8 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sundries.OrderBy2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+
+import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
 import ua.com.fielden.platform.eql.stage3.operands.functions.ConcatOf3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
@@ -29,7 +31,7 @@ public class ConcatOf2 extends TwoOperandsFunction2<ConcatOf3> {
             final ISingleOperand2<? extends ISingleOperand3> operand2,
             final List<OrderBy2> orderItems)
     {
-        super(operand1, operand2, operand1.type());
+        super(operand1, operand2, STRING_PROP_TYPE);
         this.orderItems = ImmutableList.copyOf(orderItems);
     }
 

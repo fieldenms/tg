@@ -3,7 +3,9 @@ package ua.com.fielden.platform.eql.execution.functions;
 import org.junit.Test;
 import ua.com.fielden.platform.eql.execution.AbstractEqlExecutionTestCase;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
+import ua.com.fielden.platform.types.Money;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -153,6 +155,55 @@ public class ConcatOfEqlFunctionTest extends AbstractEqlExecutionTestCase {
         assertThat(retrieveResult(qry))
                 .isEqualTo("John Conway, Alan Turing");
     }
+
+    @Test
+    public void concatOf_of_Integer_expression() {
+        final var qry = select(
+                select().yield().val(1).as("num").modelAsAggregate(),
+                select().yield().val(2).as("num").modelAsAggregate())
+                .yield().concatOf().prop("num").orderBy().prop("num").asc().separator().val(", ").as(RESULT)
+                .modelAsAggregate();
+        assertThat(retrieveResult(qry))
+                .isInstanceOf(String.class)
+                .isEqualTo("1, 2");
+    }
+
+    @Test
+    public void concatOf_of_Decimal_expression() {
+        final var qry = select(
+                select().yield().val(new BigDecimal("1.50")).as("amount").modelAsAggregate(),
+                select().yield().val(new BigDecimal("2.75")).as("amount").modelAsAggregate())
+                .yield().concatOf().prop("amount").orderBy().prop("amount").asc().separator().val("; ").as(RESULT)
+                .modelAsAggregate();
+        assertThat(retrieveResult(qry))
+                .isInstanceOf(String.class)
+                .isIn("1.50; 2.75", "1.5; 2.75");
+    }
+
+    @Test
+    public void concatOf_of_Money_expression() {
+        final var qry = select(
+                select().yield().val(new Money("1.50")).as("cost").modelAsAggregate(),
+                select().yield().val(new Money("2.75")).as("cost").modelAsAggregate())
+                .yield().concatOf().prop("cost").orderBy().prop("cost").desc().separator().val("; ").as(RESULT)
+                .modelAsAggregate();
+        assertThat(retrieveResult(qry))
+                .isInstanceOf(String.class)
+                .isEqualTo("2.7500; 1.5000");
+    }
+
+    @Test
+    public void concatOf_of_Date_expression() {
+        final var qry = select(
+                select().yield().val(date("2026-03-26 10:00:00")).as("date").modelAsAggregate(),
+                select().yield().val(date("2026-03-26 11:15:00")).as("date").modelAsAggregate())
+                .yield().concatOf().prop("date").orderBy().prop("date").desc().separator().val("; ").as(RESULT)
+                .modelAsAggregate();
+        assertThat(retrieveResult(qry))
+                .isInstanceOf(String.class)
+                .isEqualTo("26/03/2026 11:15; 26/03/2026 10:00");
+    }
+
 
     @Override
     protected void populateDomain() {

@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.operandToSqlAsString;
 
 public class ConcatOf3 extends TwoOperandsFunction3 {
 
@@ -33,7 +34,7 @@ public class ConcatOf3 extends TwoOperandsFunction3 {
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        final String exprSql = operand1.sql(metadata, dbVersion);
+        final String exprSql = operandToSqlAsString(metadata, dbVersion, operand1);
         final String sepSql = operand2.sql(metadata, dbVersion);
 
         if (orderItems.isEmpty()) {
