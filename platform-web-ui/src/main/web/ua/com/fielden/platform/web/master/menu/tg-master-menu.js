@@ -836,12 +836,13 @@ Polymer({
                         currentSection._showBlockingPane();
                     }
                 }).catch(cannotLeaveReason => {
+                    this.route = this.sectionRoute;
                     if (cannotLeaveReason instanceof UnexpectedCustomError) {
                         throw cannotLeaveReason;
+                    } else {
+                        const cannotLeaveMessage = cannotLeaveReason.message || cannotLeaveReason.msg || cannotLeaveReason;
+                        this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage, !!cannotLeaveReason.message);
                     }
-                    const cannotLeaveMessage = cannotLeaveReason.message || cannotLeaveReason.msg || cannotLeaveReason;
-                    this.route = this.sectionRoute;
-                    this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage, !!cannotLeaveReason.message);
                 }).finally(() => {
                     this.fire('tg-master-menu-route-change-completed', this.route);
                 });
