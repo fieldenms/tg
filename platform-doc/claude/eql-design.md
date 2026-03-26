@@ -5,17 +5,31 @@ Based on the implementation of `concatOf` with intra-aggregate `ORDER BY` suppor
 
 ## Multi-Stage Compilation Pipeline
 
-EQL compiles through 4 stages. Each stage has its own operand/function classes:
+EQL compiles through 4 stages.
+Each stage has a corresponding package `ua.com.fielden.platform.eql.stage$N`, with classes suffixed by stage number (e.g., `Prop1`, `ConcatOf2`, `ResultQuery3`).
 
-| Stage | Location | Purpose |
-|-------|----------|---------|
-| Stage 0 | `platform-dao/.../eql/stage0/` | Token stream from fluent API → ANTLR parse tree → Stage 1 |
-| Stage 1 | `platform-dao/.../eql/stage1/` | Unresolved operands. Parameter values substituted. |
-| Stage 2 | `platform-dao/.../eql/stage2/` | Property types resolved. Entity sources enhanced. |
-| Stage 3 | `platform-dao/.../eql/stage3/` | SQL generation. Database-specific output. |
+| Stage | Purpose |
+|-------|---------|
+| Stage 0 (parsing) | Fluent API token sequence → ANTLR parse tree → stage 1 AST. Entry point: `EqlCompiler`. |
+| Stage 1 (property resolution) | Properties resolved to their sources, including dot-notation. |
+| Stage 2 (enhancement) | Dot-expression processing (builds implicit joins, substitutes calculated property expressions). Literal values replaced with SQL parameters (prevents SQL injection). Union query optimisation with ordering. |
+| Stage 3 (SQL generation) | Database-specific SQL output. Also gathers metadata for entity instantiation from query results. |
 
 Each function must have a class at stages 1, 2, and 3 (e.g., `ConcatOf1`, `ConcatOf2`, `ConcatOf3`).
 Transformation flows: `Stage1.transform(context) → Stage2`, `Stage2.transform(context) → Stage3`.
+
+**Full pipeline orchestration** (`EqlQueryTransformer.transform_()`):
+```
+QueryModelToStage1Transformer  →  ResultQuery1
+    ResultQuery1.transform(ctx1)  →  ResultQuery2
+        PathsToTreeTransformer.transformFinally(query2.collectProps())  →  property tree
+        ResultQuery2.transform(ctx2)  →  ResultQuery3
+            ResultQuery3.sql(metadata, dbVersion)  →  SQL string
+```
+
+Note that `collectProps()` is called on the **entire** `ResultQuery2` before the stage 2→3 transformation.
+The collected properties are fed through `PathsToTreeTransformer.transformFinally()` to build the property resolution tree used during transformation.
+This is why overriding `collectProps()` in custom stage 2 classes is critical — properties not in this set are invisible to the resolver.
 
 ## Adding a New EQL Function — Checklist
 
@@ -29,8 +43,11 @@ The grammar has a two-step generation pipeline:
 **Canonical grammar is the source of truth** (`platform-eql-grammar/src/main/java/fielden/platform/eql/CanonicalEqlGrammar.java`):
 - Add new terminals to `EqlTerminal` enum (alphabetical order).
 - Add new variables to `EqlVariable` enum if needed.
-- Add `derive()` rule for the new production.
-- Add `annotate()` call if the variable should be inlined.
+- `derive(Variable).to(...)` — defines a production rule.
+- `specialize(Variable).into(Alt1, Alt2)` — defines alternative productions (generates ANTLR alternative labels, producing distinct `*Context` classes for each alternative in the visitor).
+- `annotate(Variable, inline())` — marks a variable as inlined (no separate parser rule).
+- `opt(Variable)` — optional, `repeat(...)` — zero or more, `repeat1(...)` — one or more.
+- `label("name", Variable)` — named field, `listLabel("name", Variable)` — named list field.
 
 **`EQL.g4`** (`platform-eql-grammar/src/main/antlr4/EQL.g4`) is auto-generated.
 Do not edit it manually — run `GrammarActions generate antlr4` to regenerate from the canonical grammar.
@@ -57,6 +74,9 @@ This regenerates `EQLParser.java`, `EQLLexer.java`, `EQLBaseVisitor.java`, `EQLV
 
 **`EqlSentenceBuilder`** — add token-emitting methods if new tokens are needed (e.g., `concatOf()`, `separator()`).
 Existing methods (`orderBy()`, `asc()`, `desc()`, `val()`, `param()`, `prop()`, `order()`) can be reused.
+There are two kinds of tokens:
+- **Simple tokens** — fluent API methods with no parameters (e.g., `concatOf()`, `asc()`). No special handling needed.
+- **Parameterised tokens** — methods that carry data (e.g., `val(value)`, `prop(name)`, `param(name)`). Each requires a custom token class extending `AbstractParameterisedEqlToken` in `ua.com.fielden.platform.eql.antlr.tokens`.
 
 **Support `OrderingModel`** — when a function accepts ordering, support both inline (`prop().asc()`) and pre-built `OrderingModel` via an `order(OrderingModel)` method.
 This allows reuse of ordering definitions across queries.
@@ -199,6 +219,14 @@ public int hashCode() {
     return result;
 }
 ```
+
+### Key Entry Points
+
+- `EqlQueryTransformer` — top-level orchestrator; transforms `QueryProcessingModel` → SQL. Start here to understand the full pipeline.
+- `EqlCompiler` — stage 0 entry point; takes ANTLR parse tree and produces stage 1 AST.
+- `AbstractEqlVisitor` and subclasses — ANTLR visitors that build stage 1 nodes from parse tree contexts.
+- `EntityQueryProgressiveInterfaces` — all fluent API interfaces.
+- `CanonicalEqlGrammar` — grammar source of truth.
 
 ### Install Dependencies Before Running Tests
 
