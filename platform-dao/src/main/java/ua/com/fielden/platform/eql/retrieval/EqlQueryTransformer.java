@@ -38,7 +38,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 /// The transformation of EQL into SQL happens in 4 stages:
 ///
 /// 1. **Stage 0: parsing**.
-///    A [sequence of EQL tokens][ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource] is transformed into a [stage 1 AST][ResultQuery1].
+///    A sequence of EQL tokens is transformed into a [stage 1 AST][ResultQuery1].
 ///    See [ua.com.fielden.platform.eql.antlr.EqlCompiler].
 /// 2. **Stage 1: property resolution**.
 ///    Properties are resolved to their respective sources.
@@ -133,8 +133,6 @@ public final class EqlQueryTransformer {
 
     /// A "foreign query" is a query whose single explicit yield is an entity-typed property.
     /// This predicate identifies whether `resultQuery` represents a "foreign query".
-    ///
-    /// An equivalent predicate is present in [EntityContainerFetcherImpl] as part of method [getModelResult][EntityContainerFetcherImpl#getModelResult(QueryProcessingModel)].
     ///
     private static boolean isForeignIdOnlyQuery(final ResultQuery3 resultQuery) {
         final Yield3 yield;

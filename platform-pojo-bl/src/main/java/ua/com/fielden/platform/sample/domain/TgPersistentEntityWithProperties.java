@@ -135,6 +135,10 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
     private Integer requiredValidatedProp;
 
     @IsProperty
+    @MapTo
+    private byte[] bytes;
+
+    @IsProperty
     @Readonly
     @Calculated
     @Title(value = "Number of Attachments", desc = "Desc")
@@ -692,6 +696,16 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
 
     public Integer getRequiredValidatedProp() {
         return requiredValidatedProp;
+    }
+
+    public byte[] getBytes() {
+        return bytes;
+    }
+
+    @Observable
+    public TgPersistentEntityWithProperties setBytes(final byte[] bytes) {
+        this.bytes = bytes;
+        return this;
     }
 
     @Observable

@@ -1,27 +1,6 @@
 package ua.com.fielden.platform.utils;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.ofNullable;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
-
-import java.io.ByteArrayOutputStream;
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Optional;
-
+import com.google.common.collect.Iterators;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -34,11 +13,18 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaExport.Action;
 import org.hibernate.tool.schema.TargetType;
-
-import com.google.common.collect.Iterators;
-
 import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.ddl.MetadataProvider;
+
+import java.io.*;
+import java.sql.*;
+import java.util.*;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
 
 
 /**
@@ -166,13 +152,31 @@ public class DbUtils {
      */
     public static List<String> prependDropDdlForSqlServer(final List<String> ddl) {
         final List<String> ddlWithDrop = new ArrayList<>();
+
+        // Drop all foreign keys in all tables.
+        // Strictly speaking this is required only for the situation where FKs exist (e.g., in PopulateDb, but not in tests).
+        // However, the cost of this query is negligible in situations where FKs do not exist.
+        // Line continuations (\) ensure this text block produces a single line,
+        // which is required to survive save/load via Files.write/readLines.
+        ddlWithDrop.add(
+                """
+                WHILE(EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY')) \
+                BEGIN \
+                    DECLARE @sql_alterTable_fk NVARCHAR(4000) \
+                    SELECT  TOP 1 @sql_alterTable_fk = ('ALTER TABLE ' + TABLE_SCHEMA + '.[' + TABLE_NAME + '] DROP CONSTRAINT [' + CONSTRAINT_NAME + ']') \
+                    FROM    INFORMATION_SCHEMA.TABLE_CONSTRAINTS \
+                    WHERE   CONSTRAINT_TYPE = 'FOREIGN KEY' \
+                    EXEC (@sql_alterTable_fk) \
+                END;
+                """);
+
         // drop all tables from the target database
         ddlWithDrop.add("EXEC sp_MSforeachtable @command1 = \"DROP TABLE ?\";");
-        
+
         // create sequence for ID generation
         ddlWithDrop.add(format("IF EXISTS(SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'%s') AND type = 'SO') DROP SEQUENCE %s;", ID_SEQUENCE_NAME, ID_SEQUENCE_NAME));
         ddlWithDrop.add(format("CREATE SEQUENCE %s START WITH 0 INCREMENT BY 1 MINVALUE 0 CACHE 3;", ID_SEQUENCE_NAME));
-        
+
         // now add the passed in DDL
         ddlWithDrop.addAll(ddl);
         return ddlWithDrop;

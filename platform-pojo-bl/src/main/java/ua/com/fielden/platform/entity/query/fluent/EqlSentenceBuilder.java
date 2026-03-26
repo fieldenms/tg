@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlValidationException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
-import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 
 import java.util.*;
 
@@ -527,6 +526,14 @@ final class EqlSentenceBuilder {
         return _add(token(AVGOF));
     }
 
+    public EqlSentenceBuilder concatOf() {
+        return _add(token(CONCATOF));
+    }
+
+    public EqlSentenceBuilder separator() {
+        return _add(token(SEPARATOR));
+    }
+
     public EqlSentenceBuilder sumOfDistinct() {
         return _add(token(SUMOFDISTINCT));
     }
@@ -737,10 +744,6 @@ final class EqlSentenceBuilder {
 
     public List<? extends Token> getTokens() {
         return unmodifiableList(tokens);
-    }
-
-    public ListTokenSource getTokenSource() {
-        return new ListTokenSource(unmodifiableList(tokens));
     }
 
     public Class<? extends AbstractEntity<?>> getMainSourceType() {
