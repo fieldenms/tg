@@ -156,21 +156,23 @@ public class DbUtils {
         // Drop all foreign keys in all tables.
         // Strictly speaking this is required only for the situation where FKs exist (e.g., in PopulateDb, but not in tests).
         // However, the cost of this query is negligible in situations where FKs do not exist.
+        // Line continuations (\) ensure this text block produces a single line,
+        // which is required to survive save/load via Files.write/readLines.
         ddlWithDrop.add(
                 """
-                WHILE(EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY'))
-                BEGIN
-                    DECLARE @sql_alterTable_fk NVARCHAR(4000)
-                    SELECT  TOP 1 @sql_alterTable_fk = ('ALTER TABLE ' + TABLE_SCHEMA + '.[' + TABLE_NAME + '] DROP CONSTRAINT [' + CONSTRAINT_NAME + ']')
-                    FROM    INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-                    WHERE   CONSTRAINT_TYPE = 'FOREIGN KEY'
-                    EXEC (@sql_alterTable_fk)
-                END
+                WHILE(EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY')) \
+                BEGIN \
+                    DECLARE @sql_alterTable_fk NVARCHAR(4000) \
+                    SELECT  TOP 1 @sql_alterTable_fk = ('ALTER TABLE ' + TABLE_SCHEMA + '.[' + TABLE_NAME + '] DROP CONSTRAINT [' + CONSTRAINT_NAME + ']') \
+                    FROM    INFORMATION_SCHEMA.TABLE_CONSTRAINTS \
+                    WHERE   CONSTRAINT_TYPE = 'FOREIGN KEY' \
+                    EXEC (@sql_alterTable_fk) \
+                END;
                 """);
 
         // drop all tables from the target database
         ddlWithDrop.add("EXEC sp_MSforeachtable @command1 = \"DROP TABLE ?\";");
-        
+
         // create sequence for ID generation
         ddlWithDrop.add(format("IF EXISTS(SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'%s') AND type = 'SO') DROP SEQUENCE %s;", ID_SEQUENCE_NAME, ID_SEQUENCE_NAME));
         ddlWithDrop.add(format("CREATE SEQUENCE %s START WITH 0 INCREMENT BY 1 MINVALUE 0 CACHE 3;", ID_SEQUENCE_NAME));

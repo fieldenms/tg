@@ -220,7 +220,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             // refresh REQUIRED validation result if REQUIRED validation annotation pair exists
             final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler != null && requiredHandler.size() == 1) {
-                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), new Result(getEntity(), "Requiredness updated by successful result."));
+                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), successful());
             }
             // process all registered validators (that have its own annotations)
             return processValidators(newValue, applicableValidationAnnotations);
@@ -280,7 +280,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         if (assigned) {
             return validate(getLastAttemptedValue(), validationAnnotations, ignoreRequiredness);
         }
-        return Result.successful(this);
+        return successful(this);
     }
 
     /**
@@ -318,7 +318,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                 }
             }
         }
-        return new Result(this, "Validated successfully.");
+        return successful();
     }
 
     /**
@@ -904,7 +904,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                 // in this case we only need to rely on the last attempted value -- if it null then there was no attempt to assign any boolean value
                 if ((((getValue() == null || isBoolean(type)) && getLastAttemptedValue() == null)) ||
                     findValidationResult(ValidationAnnotation.REQUIRED).map(Result::isSuccessful).orElse(true)) {
-                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
+                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), successful());
                 } else { // otherwise, it is necessary to enforce reassignment of the last attempted value to trigger revalidation
                     setEnforceMutator(true);
                     try {

@@ -38,7 +38,7 @@ const template = html`
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
     <div id="loadingPanel" class="fit layout horizontal">
-        <div style="margin: auto;" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
+        <div style="margin: auto; padding: 20px; text-align: center;" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
     </div>
     <div id="dialogLoader" class="flex layout horizontal">
         <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
@@ -100,12 +100,11 @@ Polymer({
         this._blockingPaneCounter = 0;
     },
 
-    canLeave: function () {
+    canLeave: function (leaveReason) {
         if (this._element !== null && typeof this._element.canLeave !== 'undefined') {
-            return this._element.canLeave();
+            return this._element.canLeave(leaveReason);
         }
-
-        return undefined;
+        return Promise.resolve(true);
     },
 
     _getElement: function (customAction) {

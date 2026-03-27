@@ -31,6 +31,7 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js';
 import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
+import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
@@ -505,17 +506,20 @@ Polymer({
         return this._selectedPage;
     },
 
-    canLeave: function () {
-        var items = this.shadowRoot.querySelectorAll("tg-menu-item-view");
-        var changedViews = [];
-        var canLeaveResult, itemIndex;
-        for (itemIndex = 0; itemIndex < items.length; itemIndex++) {
-            canLeaveResult = items[itemIndex].canLeave();
-            if (canLeaveResult) {
+    canLeave: async function (leaveReason = LeaveReason.CLOSED) {
+        const items = this.shadowRoot.querySelectorAll("tg-menu-item-view");
+        const changedViews = [];
+        for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+            try {
+                await items[itemIndex].canLeave(leaveReason);
+            } catch (e) {
                 changedViews.push(items[itemIndex].submoduleId);
             }
         }
-        return changedViews.length > 0 ? changedViews : undefined;
+        if (changedViews.length > 0) {
+            throw changedViews;
+        }
+        return true;
     },
 
     searchMenu: function (event) {

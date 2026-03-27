@@ -683,10 +683,11 @@ const TgSelectionCriteriaBehaviorImpl = {
      */
     canLeave: function () {
         if (this._criteriaLoaded === false) {
-            return {
+            return Promise.reject({
                 msg: CRITERIA_NOT_LOADED_MSG
-            };
+            });
         }
+        return Promise.resolve(true);
     },
 
     //Performs custom tasks before leaving this selection criteria.

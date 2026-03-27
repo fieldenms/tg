@@ -82,7 +82,7 @@ public abstract class AbstractQuery2 implements ToString.IFormattable {
         final var joinRootTr = maybeJoinRoot.map(joinRoot -> joinRoot.transform(context))
                 .orElseGet(() -> new TransformationResultFromStage2To3<>(null, context));
         final TransformationResultFromStage2To3<Conditions3> whereConditionsTr = whereConditions.transform(joinRootTr.updatedContext);
-        final TransformationResultFromStage2To3<Yields3> yieldsTr = yields.transform(whereConditionsTr.updatedContext);
+        final TransformationResultFromStage2To3<Yields3> yieldsTr = yields.transform(whereConditionsTr.updatedContext, this);
         final TransformationResultFromStage2To3<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
         final TransformationResultFromStage2To3<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
 

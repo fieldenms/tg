@@ -11,6 +11,7 @@ import { TgElementSelectorBehavior, queryElements } from '/resources/components/
 import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { openShareAction } from '/resources/reflection/tg-share-utils.js';
+import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 /**
  * A local insertion point manager for the entity centre to manage detached or maximized insertion points.
@@ -1378,10 +1379,7 @@ const TgEntityCentreBehaviorImpl = {
             if (index < 0 || index >= this.allViews.length) {
                 this._showToastWithMessage(`There is no view with ${index}`);
             } else {
-                const canNotLeave = this.allViews[this._selectedView].canLeave();
-                if (canNotLeave) {
-                    this._showToastWithMessage(canNotLeave.msg);
-                } else {
+                this.allViews[this._selectedView].canLeave(LeaveReason.NAVIGATED).then(obj => {
                     this.allViews[this._selectedView].leave();
                     this._previousView = this._selectedView;
                     this._selectedView = index;
@@ -1389,7 +1387,9 @@ const TgEntityCentreBehaviorImpl = {
                         this.preferredView = this._selectedView;
                         this._preferredViewUpdaterAction._run();
                     }
-                }
+                }).catch(e => {
+                    e.msg && this._showToastWithMessage(e.msg);
+                });
             }   
         }, 100);
     },
@@ -1592,22 +1592,20 @@ const TgEntityCentreBehaviorImpl = {
      * This is due to the fact that most of these unsaved changes are actually saved (except the changes to the editor
      * for which tab-off wasn't actioned).
      */
-    canLeave: function () {
+    canLeave: async function (leaveReason = LeaveReason.CLOSED) {
         //First of all check whether egi is edit mode. If it's true then don't levae this centre otherwise keep check whether
         //insertion points can be left.
         if (this.$.egi.isEditing()) {
-            return {
+            throw {
                 msg: MSG_SAVE_OR_CANCEL
             };
         }
         // Check whether all insertion points can be left.
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
-            const canLeaveChild = insertionPoints[insPoIndex].canLeave();
-            if (canLeaveChild) {
-                return canLeaveChild;
-            }
+            await insertionPoints[insPoIndex].canLeave(leaveReason);
         }
+        return true;
     },
 
     /**
