@@ -300,6 +300,15 @@ final class PropertySpec {
             this.annotations.addAll(annotations);
         }
 
+        public Builder addAnnotation(final Annotation annotation) {
+            this.annotations.add(AnnotationSpec.get(annotation));
+            return this;
+        }
+
+        public Builder addAnnotation(final Optional<? extends Annotation> maybeAnnotation) {
+            return maybeAnnotation.map(this::addAnnotation).orElse(this);
+        }
+
         public Builder addAnnotation(final AnnotationSpec annotationSpec) {
             this.annotations.add(annotationSpec);
             return this;
