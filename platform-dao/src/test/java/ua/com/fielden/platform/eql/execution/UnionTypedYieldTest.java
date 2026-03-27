@@ -97,11 +97,13 @@ public class UnionTypedYieldTest extends AbstractEqlExecutionTestCase {
         assertTrue(co(TgBogie.class).exists(select(sourceQuery).where().prop("location").isNull().model()));
         assertFalse(co(TgBogie.class).exists(select(sourceQuery).where().prop("location").eq().val(123).model()));
 
+        // Re-yield via prop("location"), not val(null), to verify that the property expansion path
+        // correctly handles union properties that are all null from the inner query.
         final var entities = co(TgBogie.class).getAllEntities(
                 from(select(sourceQuery)
                              .yield().prop(ID).as(ID)
                              .yield().prop(KEY).as(KEY)
-                             .yield().val(null).as("location")
+                             .yield().prop("location").as("location")
                              .modelAsEntity(TgBogie.class))
                         .model());
         assertThat(entities)
