@@ -1,7 +1,6 @@
 # EQL Internal Design Guide
 
 How to extend EQL with new functions, operators, or language features.
-Based on the implementation of `concatOf` with intra-aggregate `ORDER BY` support.
 
 ## Multi-Stage Compilation Pipeline
 
@@ -47,7 +46,7 @@ The grammar has a two-step generation pipeline:
 - `specialize(Variable).into(Alt1, Alt2)` — defines alternative productions (generates ANTLR alternative labels, producing distinct `*Context` classes for each alternative in the visitor).
 - `annotate(Variable, inline())` — marks a variable as inlined (no separate parser rule).
 - `opt(Variable)` — optional, `repeat(...)` — zero or more, `repeat1(...)` — one or more.
-- `label("name", Variable)` — named field, `listLabel("name", Variable)` — named list field.
+- `label("name", Variable)` — named field, `listLabel("name", Variable)` — named list field, useful in `repeat` and `repeat1` for accumulating all occurrences.
 
 **`EQL.g4`** (`platform-eql-grammar/src/main/antlr4/EQL.g4`) is auto-generated.
 Do not edit it manually — run `GrammarActions generate antlr4` to regenerate from the canonical grammar.
@@ -62,28 +61,43 @@ This regenerates `EQLParser.java`, `EQLLexer.java`, `EQLBaseVisitor.java`, `EQLV
 
 ### 2. Fluent API
 
-**Progressive interfaces** (`EntityQueryProgressiveInterfaces.java`):
-- Define interfaces for each step in the fluent chain.
-- Use `ISingleOperand<NextStep, ET>` for steps that accept an arbitrary single operand.
-- Use intersection interfaces (extending multiple interfaces) for steps where multiple continuations are valid (e.g., `IYieldOperandConcatOfNext` extends both `IYieldOperandConcatOfOrderBy` and `IYieldOperandConcatOfSeparator`).
+#### Progressive interfaces (`EntityQueryProgressiveInterfaces`)
 
-**Implementation classes** (one per interface, package-private, extend `AbstractQueryLink` or `SingleOperand`):
-- Each class has a `protected abstract T nextFor...(EqlSentenceBuilder builder)` method for wiring.
+- Define interfaces for each step in the fluent chain.
+- Each interface is parameterised with `<T, ET>`. 
+  Type parameter `T` represents the "continuation" (the next interface in the chain).
+  Type parameter `T` must be propagated by each interface, i.e., must be used to parameterise any extended interfaces and any return types of methods.
+  Note that `T` may be used by itself as a method return type.
+  Type parameter `ET` represents the entity type used as the query source.
+  Type parameter `ET` must be propagated by each interface.
+  Type parameter `ET` enables the Fluent API method `model()` to return a query whose entity type is `ET`,
+  in contrast to explicit specification via `modelAsEntity(Class)`.
+- Use intersection interfaces (extending multiple interfaces) for steps where multiple continuations are valid (e.g., `IYieldOperandConcatOfNext` extends both `IYieldOperandConcatOfOrderBy` and `IYieldOperandConcatOfSeparator`).
+- For example, if the next step in a method call chain is a single operand, the interface methods should return `ISingleOperand<T, ET>`. Futhermore, `T` may be replaced by other interfaces to specify what `ISingleOperand` should be followed by (e.g., `ISingleOperand<IYieldOperandConcatOfOrderByOperandOrder<T, ET>, ET>`).
+
+#### Implementation classes 
+
+One per interface, package-private, extend `AbstractQueryLink` or another implementation class.
+
+- Each class has a `protected abstract T nextFor...(EqlSentenceBuilder builder)` method for specifying the continuation.
 - Override interface methods to create the next step, passing the builder with the appropriate token appended.
 - Use anonymous inner classes in the `nextFor...` methods to close over the outer class's continuation.
 
-**`EqlSentenceBuilder`** — add token-emitting methods if new tokens are needed (e.g., `concatOf()`, `separator()`).
+#### `EqlSentenceBuilder` 
+
+`EqlSentenceBuilder` is used in token-emitting methods to add the tokens (e.g., `concatOf()`, `separator()`).
 Existing methods (`orderBy()`, `asc()`, `desc()`, `val()`, `param()`, `prop()`, `order()`) can be reused.
+
 There are two kinds of tokens:
 - **Simple tokens** — fluent API methods with no parameters (e.g., `concatOf()`, `asc()`). No special handling needed.
 - **Parameterised tokens** — methods that carry data (e.g., `val(value)`, `prop(name)`, `param(name)`). Each requires a custom token class extending `AbstractParameterisedEqlToken` in `ua.com.fielden.platform.eql.antlr.tokens`.
 
-**Support `OrderingModel`** — when a function accepts ordering, support both inline (`prop().asc()`) and pre-built `OrderingModel` via an `order(OrderingModel)` method.
-This allows reuse of ordering definitions across queries.
-**Important:** `order(OrderingModel)` must return the **post-direction** step (e.g., `IYieldOperandConcatOfOrderByOperandOrSeparator`), not the direction step (`IYieldOperandConcatOfOrderByOperandOrder`), because the `OrderingModel` already contains sort direction.
-Requiring `asc()`/`desc()` after `order(OrderingModel)` would be redundant and semantically incorrect.
+#### Support for `OrderingModel`
 
-**`YieldedItem`** — wire the top-level entry point (e.g., `concatOf()`) by creating the initial `SingleOperand` that transitions into the function's chain.
+When a function accepts ordering, support both inline (`prop().asc()`) and pre-built `OrderingModel` via an `order(OrderingModel)` method.
+This allows reuse of ordering definitions across queries.
+
+**Important:** the continuation of `order(OrderingModel)` **must not** be the "order direction" (`asc` and `desc`), as the `OrderingModel` will already contain this information.
 
 ### 3. Stage Classes
 
@@ -107,7 +121,7 @@ Requiring `asc()`/`desc()` after `order(OrderingModel)` would be redundant and s
 
 ### 4. ANTLR Visitor
 
-**`YieldOperandVisitor`** (for yield-context functions) or **`SingleOperandVisitor`** (for scalar functions):
+All ANTLR visitors should extend `AbstractEqlVisitor`.
 - Add a `visit*` method matching the grammar rule's label.
 - Extract operands by visiting child contexts with the appropriate visitor.
 - Validate operand types (e.g., separator must be `CharSequence`).
@@ -128,7 +142,7 @@ Requiring `asc()`/`desc()` after `order(OrderingModel)` would be redundant and s
 
 ## Key Design Patterns
 
-### Reuse Existing Infrastructure
+### Reuse Existing Code
 
 Prefer reusing existing types over creating new ones.
 For example, `concatOf`'s ORDER BY reuses the existing `OrderBy1/2/3` records rather than creating dedicated `ConcatOfOrderItem1/2/3` types.
