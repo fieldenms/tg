@@ -356,7 +356,7 @@
                 entity.hyperlinkKey = null;
                 entity.entityKey = null;
                 entity.selfKey = null;
-                assert.strictEqual(reflector.tg_convert(entity), '1700');
+                assert.strictEqual(reflector.tg_convert(entity), 'A$ 1700.00');
                 done();
             });
             
@@ -405,7 +405,8 @@
                 entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.entityKey.key = 'KEY2';
                 entity.selfKey = null;
-                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null, null) + ':1500:16000000000:1700.1234:1700:FFCC80:https://www.example.com:KEY2');
+                assert.strictEqual(reflector.tg_convert(entity),
+                                   'KEY1:' + _millisDateRepresentation(entity.dateKey, null, null) + ':1500:16000000000:1700.1234:A$ 1700.00:FFCC80:https://www.example.com:KEY2');
                 done();
             });
             
@@ -1070,7 +1071,8 @@
             test('tg_toString for display: Money converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.moneyKey = { amount: 1700, currency: 'AUD', taxPercent: null };
-                assert.strictEqual(reflector.tg_toString(entity.get('moneyKey'), entity.type(), 'moneyKey', { display: true, locale: locale }), reflector.tg_formatMoney(entity.get('moneyKey'), locale, entity.type().prop('moneyKey').scale(), entity.type().prop('moneyKey').trailingZeros()));
+                assert.strictEqual(reflector.tg_toString(entity.get('moneyKey'), entity.type(), 'moneyKey', { display: true, locale: locale }),
+                                   reflector.tg_formatMoney(entity.get('moneyKey'), locale, entity.type().prop('moneyKey').scale(), entity.type().prop('moneyKey').trailingZeros()));
                 done();
             });
             
@@ -1650,23 +1652,25 @@
             
             test('equalsEx method works for money values', function (done) {
                 assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, undefined), false);
+                assert.strictEqual(reflector.equalsEx(undefined, { amount: 45.6 }), false);
                 assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, null), false);
+                assert.strictEqual(reflector.equalsEx(null, { amount: 45.6 }), false);
                 assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, {}), false);
+                assert.strictEqual(reflector.equalsEx({}, { amount: 45.6 }), false);
                 assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6 }), true);
                 assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 44.6 }), false);
-                assert.strictEqual(reflector.equalsEx({ amount: 45.6, currency: 'AUD' }, { amount: 45.6 }), true);
-                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6, currency: 'AUD' }), true);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6, currency: 'AUD' }, { amount: 45.6 }), false);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6, currency: 'AUD' }), false);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 , currency: 'AUD' }, { amount: 45.6, currency: 'AUD' }), true);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 , currency: 'USD' }, { amount: 45.6, currency: 'AUD' }), false);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 , currency: 'AUD' }, { amount: 45.6, currency: 'USD' }), false);
                 assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6, taxPercent: null }), true);
-                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6, currency: 'AUD', taxPercent: null }), true);
-                
-                assert.strictEqual(reflector.equalsEx(undefined, { amount: 45.6 }), false);
-                assert.strictEqual(reflector.equalsEx(null, { amount: 45.6 }), false);
-                assert.strictEqual(reflector.equalsEx({}, { amount: 45.6 }), false);
-                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6, currency: 'AUD' }), true);
-                assert.strictEqual(reflector.equalsEx({ amount: 45.6, currency: 'AUD' }, { amount: 45.6 }), true);
                 assert.strictEqual(reflector.equalsEx({ amount: 45.6, taxPercent: null }, { amount: 45.6 }), true);
-                assert.strictEqual(reflector.equalsEx({ amount: 45.6, currency: 'AUD', taxPercent: null }, { amount: 45.6 }), true);
-                
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6 }, { amount: 45.6, currency: 'AUD', taxPercent: null }), false);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6, currency: 'AUD', taxPercent: null }, { amount: 45.6 }), false);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6, currency: 'AUD' }, { amount: 45.6, currency: 'AUD', taxPercent: null }), true);
+                assert.strictEqual(reflector.equalsEx({ amount: 45.6, currency: 'AUD', taxPercent: null }, { amount: 45.6, currency: 'AUD' }), true);
+
                 done();
             });
             
