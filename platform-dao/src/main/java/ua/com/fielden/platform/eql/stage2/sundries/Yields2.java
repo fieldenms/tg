@@ -59,8 +59,8 @@ public record Yields2 (SortedMap<String, Yield2> yieldsMap, boolean allGenerated
     }
 
     public TransformationResultFromStage2To3<Yields3> transform(
-            final TransformationContextFromStage2To3 context, final
-            AbstractQuery2 query)
+            final TransformationContextFromStage2To3 context,
+            final AbstractQuery2 query)
     {
         final List<Yield3> yieldsList = new ArrayList<>(); 
         TransformationContextFromStage2To3 currentContext = context;
