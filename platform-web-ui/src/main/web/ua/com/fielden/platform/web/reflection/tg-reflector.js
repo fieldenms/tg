@@ -884,6 +884,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
         return typeof this['_compoundMenuItem'] === 'undefined' ? false : this['_compoundMenuItem'];
     }
 
+    /**
+     * Returns 'true' if the entity type implements 'ICustomisableCanLeave', indicating that its master provides a custom 'canLeave' implementation on the server.
+     *
+     */
+    EntityType.prototype.isCustomisableCanLeave = function () {
+        return typeof this['_isCustomisableCanLeave'] === 'undefined' ? false : this['_isCustomisableCanLeave'];
+    }
+
     /** 
      * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
      */
@@ -921,11 +929,19 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
-     * Returns 'true' if the entity type represents a persistent entity and contains versioning information like created/updated, version, etc.
+     * Returns 'true' if the entity type is persistent and contains version information (created/updated date, created/updated by, version number).
      *
      */
-    EntityType.prototype.isPersistentWithAuditData = function () {
-        return typeof this['_persistentWithAudit'] === 'undefined' ? false : this['_persistentWithAudit'];
+    EntityType.prototype.isPersistentWithVersionData = function () {
+        return typeof this['_persistentWithVersion'] === 'undefined' ? false : this['_persistentWithVersion'];
+    }
+
+    /**
+     * Returns 'true' if the entity type is audited (i.e., annotated with @Audit).
+     *
+     */
+    EntityType.prototype.isAudited = function () {
+        return typeof this['_audited'] === 'undefined' ? false : this['_audited'];
     }
 
     /**

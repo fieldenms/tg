@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.error.Result.successful;
 
 /**
  *
@@ -273,7 +274,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             // setter proceeded successfully (no exception or result were thrown). -> update DYNAMIC validator by correct result if validator exists and if no warning was detected
             // :
             if (metaProperty.containsDynamicValidator() && !metaProperty.hasWarnings()) {
-                metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, StubValidator.singleton(), new Result(entity, "Dynamic validation (inside the setter) passed correctly."));
+                metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, StubValidator.singleton(), successful());
             }
             return new SetterResult(true, setterReturningValue);
         } catch (final Result ex) {

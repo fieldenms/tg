@@ -69,6 +69,13 @@ const template = html`
         on-error="_processSaverError"
         loading="{{_saverLoading}}">
     </iron-ajax>
+    <iron-ajax id="canLeaveAjax"
+        headers="[[_headers]]"
+        url="[[_url]]"
+        method="POST"
+        handle-as="json"
+        reject-with-request>
+    </iron-ajax>
     <div id="masterContainer" class="layout vertical">
         <tg-scrollable-component id="scrollableContainer" class="layout vertical flex-auto relative">
             <div class="layout horizontal end-justified master-util-toolbar">
@@ -189,6 +196,13 @@ Polymer({
      */
     _ajaxSaver: function () {
         return this.$.ajaxSaver;
+    },
+
+    /**
+     * Returns ajax for custom can leave
+     */
+    _canLeaveAjax: function () {
+        return this.$.canLeaveAjax;
     },
 
     /**

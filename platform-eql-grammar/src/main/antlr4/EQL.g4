@@ -1,4 +1,4 @@
-// This grammar was generated. Timestamp: 2024-08-16T09:09:23.035716004+03:00[Europe/Kyiv]
+// This grammar was generated. Timestamp: 2026-03-25T18:30:46.978376070+02:00[Europe/Kyiv]
 
 grammar EQL;
 
@@ -197,6 +197,7 @@ yieldOperand :
     | BEGINYIELDEXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* ENDYIELDEXPR # YieldOperandExpr
     | COUNTALL # YieldOperand_CountAll
     | funcName=yieldOperandFunctionName argument=singleOperand # YieldOperandFunction
+    | CONCATOF expr=singleOperand yieldOperandConcatOfOrderBy? SEPARATOR separator=yieldOperandConcatOfSeparator # YieldOperandConcatOf
 ;
 
 yieldOperandFunctionName :
@@ -208,6 +209,20 @@ yieldOperandFunctionName :
     | token=SUMOFDISTINCT
     | token=COUNTOFDISTINCT
     | token=AVGOFDISTINCT
+;
+
+yieldOperandConcatOfSeparator :
+      token=VAL
+    | token=PARAM
+;
+
+yieldOperandConcatOfOrderBy :
+      ORDERBY operands+=yieldOperandConcatOfOrderByOperand+
+;
+
+yieldOperandConcatOfOrderByOperand :
+      singleOperand order # YieldOperandConcatOfOrderByOperand_Single
+    | token=ORDER # YieldOperandConcatOfOrderByOperand_OrderingModel
 ;
 
 yieldAlias :
@@ -281,6 +296,7 @@ BEGINYIELDEXPR : 'beginYieldExpr' ;
 BETWEEN : 'between' ;
 CASEWHEN : 'caseWhen' ;
 CONCAT : 'concat' ;
+CONCATOF : 'concatOf' ;
 COND : 'cond' ;
 CONDITION : 'condition' ;
 COUNT : 'count' ;
@@ -367,6 +383,7 @@ ROUND : 'round' ;
 SECONDOF : 'secondOf' ;
 SECONDS : 'seconds' ;
 SELECT : 'select' ;
+SEPARATOR : 'separator' ;
 SUB : 'sub' ;
 SUMOF : 'sumOf' ;
 SUMOFDISTINCT : 'sumOfDistinct' ;
