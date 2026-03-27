@@ -52,18 +52,18 @@ public record Yield2(ISingleOperand2<? extends ISingleOperand3> operand, String 
                 updatedContext);
     }
 
-        @Override
-        public String toString() {
-            return toString(ToString.separateLines());
-        }
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines());
+    }
 
-        @Override
-        public String toString(final ToString.IFormat format) {
-            return format.toString(this)
-                    .add("alias", alias)
-                    .add("hasNonnullableHint", hasNonnullableHint)
-                    .add("operand", operand)
-                    .$();
-        }
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("alias", alias)
+                .add("hasNonnullableHint", hasNonnullableHint)
+                .add("operand", operand)
+                .$();
+    }
 
 }
