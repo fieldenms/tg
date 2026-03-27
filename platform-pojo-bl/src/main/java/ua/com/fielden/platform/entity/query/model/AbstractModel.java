@@ -1,36 +1,40 @@
 package ua.com.fielden.platform.entity.query.model;
 
+import com.google.common.collect.ImmutableList;
+import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
-import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
+
+import java.util.List;
 
 import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
 
 public abstract class AbstractModel {
-    protected final ListTokenSource tokenSource;
 
-    public AbstractModel(final ListTokenSource tokenSource) {
-        requireNotNullArgument(tokenSource, "tokenSource");
-        this.tokenSource = tokenSource;
+    protected final List<? extends Token> tokens;
+
+    public AbstractModel(final List<? extends Token> tokens) {
+        requireNotNullArgument(tokens, "tokens");
+        this.tokens = ImmutableList.copyOf(tokens);
     }
 
-    public final ListTokenSource getTokenSource() {
-        return tokenSource.restart();
+    public final List<? extends Token> tokens() {
+        return tokens;
     }
 
     @Override
     public int hashCode() {
-        return 31 * tokenSource.tokens().hashCode();
+        return 31 * tokens.hashCode();
     }
 
     @Override
     public boolean equals(final Object obj) {
-        return this == obj || obj instanceof AbstractModel other && tokenSource.equalTokens(other.tokenSource);
+        return this == obj || obj instanceof AbstractModel other && tokens.equals(other.tokens);
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        for (final var token : tokenSource.tokens()) {
+        for (final var token : tokens) {
             sb.append("%n    %s".formatted(StringUtils.rightPad(token.getText(), 32, '.')));
         }
         return sb.toString();

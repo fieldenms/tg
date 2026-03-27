@@ -397,4 +397,29 @@ public abstract class StrictEQLBaseVisitor<T> extends AbstractParseTreeVisitor<T
         return defaultVisit();
     }
 
+    @Override
+    public T visitYieldOperandConcatOf(final EQLParser.YieldOperandConcatOfContext ctx) {
+        return defaultVisit();
+    }
+
+    @Override
+    public T visitYieldOperandConcatOfSeparator(final EQLParser.YieldOperandConcatOfSeparatorContext ctx) {
+        return defaultVisit();
+    }
+
+    @Override
+    public T visitYieldOperandConcatOfOrderBy(final EQLParser.YieldOperandConcatOfOrderByContext ctx) {
+        return defaultVisit();
+    }
+
+    @Override
+    public T visitYieldOperandConcatOfOrderByOperand_OrderingModel(final EQLParser.YieldOperandConcatOfOrderByOperand_OrderingModelContext ctx) {
+        return defaultVisit();
+    }
+
+    @Override
+    public T visitYieldOperandConcatOfOrderByOperand_Single(final EQLParser.YieldOperandConcatOfOrderByOperand_SingleContext ctx) {
+        return defaultVisit();
+    }
+
 }

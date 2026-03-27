@@ -19,7 +19,7 @@ public final class QueryModelToken<T extends QueryModel<?>> extends AbstractPara
 
     @Override
     public String parametersText() {
-        return getInstance().format(model.getTokenSource());
+        return getInstance().format(model.tokens());
     }
 
     @Override
