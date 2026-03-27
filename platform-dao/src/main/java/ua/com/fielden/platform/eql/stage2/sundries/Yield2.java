@@ -29,7 +29,10 @@ public record Yield2(ISingleOperand2<? extends ISingleOperand3> operand, String 
         final var updatedContext = operandTransformationResult.updatedContext.cloneWithNextSqlId();
 
         // If the operand has the null type, try to use the type of the property which is the target of this yield.
-        // This makes type information more precise, enabling us to generate explicit type casts for PostgreSQL.
+        // This makes type information more precise, enabling database-specific type casts for untyped NULL literals.
+        // Without this, NULL is generated without a type, which causes issues on both PostgreSQL and SQL Server
+        // when the database needs to infer the type (e.g., in UNION queries, STRING_AGG, or parameterised contexts).
+        // With precise type info, the SQL generator can emit typed NULLs such as CAST(NULL AS VARCHAR).
         final PropType type;
         if (operand.type().isNull() && query.resultType != null && query.resultType != EntityAggregates.class && isEntityType(query.resultType)) {
             type = context.domainMetadata().forPropertyOpt(query.resultType, alias())
