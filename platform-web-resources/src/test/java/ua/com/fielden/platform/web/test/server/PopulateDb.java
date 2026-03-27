@@ -400,6 +400,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 setActive(true).
                 setLeased(false).
                 setReplacedBy(car2));
+
+        save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
+        save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));
     }
 
     /**
