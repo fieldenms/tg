@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.test.domain.entities;
 
-import java.util.Date;
-
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -11,6 +9,10 @@ import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.error.Result;
+
+import java.util.Date;
+
+import static ua.com.fielden.platform.error.Result.failure;
 
 /**
  * Position within an advice that may or may no contain a rotable.
@@ -114,7 +116,7 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
     public AdvicePosition setReceivingWorkshop(final Workshop receivingWorkshop) throws Result {
         // TODO the isReceived() should be moved to a domain validator
         if (isReceived()) {
-            throw new Result(this, new IllegalStateException("Receiving workshop cannot be changed once position is received."));
+            throw failure("Receiving workshop cannot be changed once position is received.");
         }
         this.receivingWorkshop = receivingWorkshop;
         return this;
@@ -196,7 +198,7 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
                 errorMessage = "Position " + getPosition() + " contains no rotable but 'Remove bearings' flag is set";
             }
             if (errorMessage != null) {
-                return new Result(this, new Exception(errorMessage));
+                return failure(errorMessage);
             }
         }
         return superResult;

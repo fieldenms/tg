@@ -1,27 +1,17 @@
 package ua.com.fielden.platform.persistence.types;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import ua.com.fielden.platform.dao.IEntityWithMoney;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-import ua.com.fielden.platform.dao.IEntityWithMoney;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.types.Money;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.error.Result.failure;
 
 /**
  * This is a test entity, which is currently used for testing of classes {@link Money} and {@link HibernateValueMatcher}.
@@ -79,7 +69,7 @@ public class EntityWithMoney extends AbstractEntity<String> {
     @Observable
     public EntityWithMoney setMoney(final Money money) {
         if (money == null) {
-            throw new Result(this, new IllegalArgumentException("money should not be null"));
+            throw failure("money should not be null");
         }
         this.money = money;
         return this;

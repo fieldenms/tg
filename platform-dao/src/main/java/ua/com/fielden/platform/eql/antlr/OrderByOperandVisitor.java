@@ -27,6 +27,13 @@ final class OrderByOperandVisitor extends AbstractEqlVisitor<Stream<OrderBy1>> {
     }
 
     @Override
+    public Stream<OrderBy1> visitYieldOperandConcatOfOrderByOperand_Single(final EQLParser.YieldOperandConcatOfOrderByOperand_SingleContext ctx) {
+        final ISingleOperand1<? extends ISingleOperand2<?>> operand = ctx.singleOperand()
+                .accept(new SingleOperandVisitor(transformer));
+        return Stream.of(new OrderBy1(operand, isDesc(ctx.order())));
+    }
+
+    @Override
     public Stream<OrderBy1> visitOrderByOperand_Yield(final EQLParser.OrderByOperand_YieldContext ctx) {
         final YieldToken yieldToken = (YieldToken) ctx.yield;
         return Stream.of(new OrderBy1(yieldToken.yieldName, isDesc(ctx.order())));
@@ -34,6 +41,15 @@ final class OrderByOperandVisitor extends AbstractEqlVisitor<Stream<OrderBy1>> {
 
     @Override
     public Stream<OrderBy1> visitOrderByOperand_OrderingModel(final EQLParser.OrderByOperand_OrderingModelContext ctx) {
+        final OrderToken orderToken = (OrderToken) ctx.token;
+        final OrderBys1 innerModel = new EqlCompiler(transformer).compile(orderToken.model.tokens(),
+                                                                          EqlCompilationResult.StandaloneOrderBy.class)
+                .model();
+        return innerModel.models().stream();
+    }
+
+    @Override
+    public Stream<OrderBy1> visitYieldOperandConcatOfOrderByOperand_OrderingModel(final EQLParser.YieldOperandConcatOfOrderByOperand_OrderingModelContext ctx) {
         final OrderToken orderToken = (OrderToken) ctx.token;
         final OrderBys1 innerModel = new EqlCompiler(transformer).compile(orderToken.model.tokens(),
                                                                           EqlCompilationResult.StandaloneOrderBy.class)
