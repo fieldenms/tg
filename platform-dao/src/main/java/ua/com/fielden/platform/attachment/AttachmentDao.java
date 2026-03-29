@@ -69,7 +69,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         return file.canRead() ? of(file) : empty();
     }
 
-    /// Overriden to specify a custom fetch model for refetching if the revision history is modified.
+    /// Overridden to specify a custom fetch model for refetching if the revision history is modified.
     ///
     @Override
     public Attachment save(final Attachment attachment) {
