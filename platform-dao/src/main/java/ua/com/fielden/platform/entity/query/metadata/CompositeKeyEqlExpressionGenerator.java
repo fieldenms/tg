@@ -161,7 +161,7 @@ public class CompositeKeyEqlExpressionGenerator {
                     .concat().expr(signExpr)
                     .with().expr(symbolExpr)
                     .with().val(CURRENCY_SYMBOL_AND_AMOUNT_SEPARATOR)
-                    .with().prop(property + "." + AMOUNT)
+                    .with().absOf().prop(property + "." + AMOUNT)
                     .end()
                     .model();
         }
