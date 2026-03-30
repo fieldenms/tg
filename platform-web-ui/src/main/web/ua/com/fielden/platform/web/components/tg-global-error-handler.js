@@ -14,7 +14,7 @@ class GenericTgError extends Error {
         super(...params);
 
         if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor); // Always trims the actual subclass.
+            Error.captureStackTrace(this, this.constructor); // trim subclass constructor from stack trace
         }
         this.name = this.constructor.name;
     }

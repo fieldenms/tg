@@ -836,6 +836,7 @@ Polymer({
                         currentSection._showBlockingPane();
                     }
                 }).catch(cannotLeaveReason => {
+                    // Reset route before any further rethrow or error handling.
                     this.route = this.sectionRoute;
                     if (cannotLeaveReason instanceof UnexpectedCustomError) {
                         throw cannotLeaveReason;
