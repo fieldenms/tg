@@ -359,7 +359,23 @@
                 assert.strictEqual(reflector.tg_convert(entity), 'A$ 1700.00');
                 done();
             });
-            
+
+            test('tg_convert composite entity: negative Money key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = { amount: -1700, currency: 'AUD', taxPercent: null };
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '-A$ 1700.00');
+                done();
+            });
+
             test('tg_convert composite entity: Colour key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = null;
