@@ -42,6 +42,8 @@ public final class OperandToSqlAsString {
                 return operand.sql(metadata, dbVersion());
             } else if (operand.type().javaType() == Integer.class) {
                 return fromInteger(metadata, operand);
+            } else if (operand.type().javaType() == Long.class) {
+                return fromLong(metadata, operand);
             } else if (operand.type().javaType() == Date.class) {
                 return fromDate(metadata, operand);
             } else {
@@ -52,6 +54,11 @@ public final class OperandToSqlAsString {
         default String fromInteger(final IDomainMetadata metadata, final ISingleOperand3 operand) {
             // Integers are unlikely to be larger than 8 bytes, which is 19 characters + a sign.
             return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(20)");
+        }
+
+        default String fromLong(final IDomainMetadata metadata, final ISingleOperand3 operand) {
+            // Longs are unlikely to be larger than 16 bytes, which is 39 characters + a sign.
+            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(40)");
         }
 
         default String fromDate(final IDomainMetadata metadata, final ISingleOperand3 operand) {
