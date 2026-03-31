@@ -50,8 +50,8 @@ public final class OperandToSqlAsString {
         }
 
         default String fromInteger(final IDomainMetadata metadata, final ISingleOperand3 operand) {
-            // optimisation for integers: max integer value length is 10 chars
-            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(10)");
+            // Integers are unlikely to be larger than 8 bytes, which is 19 characters + a sign.
+            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(20)");
         }
 
         default String fromDate(final IDomainMetadata metadata, final ISingleOperand3 operand) {
