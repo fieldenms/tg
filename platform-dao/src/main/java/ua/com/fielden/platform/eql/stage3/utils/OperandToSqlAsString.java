@@ -58,9 +58,7 @@ public final class OperandToSqlAsString {
             return fromAny(metadata, operand);
         }
 
-        default String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand) {
-            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR");
-        }
+        String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand);
 
     }
 
@@ -74,6 +72,11 @@ public final class OperandToSqlAsString {
             @Override
             public String fromDate(final IDomainMetadata metadata, final ISingleOperand3 operand) {
                 return "FORMATDATETIME(" + operand.sql(metadata, dbVersion()) + ", 'YYYY-MM-dd hh:mm:ss')";
+            }
+
+            @Override
+            public String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand) {
+                return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR");
             }
         },
 
@@ -100,6 +103,12 @@ public final class OperandToSqlAsString {
                         opSql, opSql,
                         opSql);
             }
+
+            @Override
+            public String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand) {
+                return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(MAX)");
+            }
+
         },
 
         POSTGRESQL {
@@ -124,6 +133,11 @@ public final class OperandToSqlAsString {
                         opSql, opSql,
                         opSql, opSql, opSql,
                         opSql);
+            }
+
+            @Override
+            public String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand) {
+                return dbVersion().castSql(operand.sql(metadata, dbVersion()), "TEXT");
             }
         },
 
