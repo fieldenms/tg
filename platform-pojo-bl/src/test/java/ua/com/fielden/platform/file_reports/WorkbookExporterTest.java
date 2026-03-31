@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.file_reports;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -16,13 +17,14 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.ioc.ApplicationSettingsTestIocModule;
 import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.Arrays;
+import java.util.Currency;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -31,6 +33,7 @@ import static java.util.Optional.of;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.MiscUtilities.mkProperties;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 public class WorkbookExporterTest {
@@ -41,9 +44,27 @@ public class WorkbookExporterTest {
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     private Injector createInjector() {
-        final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
+        final var properties = mkProperties(mapOf(
+                t2("currency.AUD.symbol", "TG-A$"),
+                t2("currency.USD.symbol", "TG-US$"),
+                t2("reports.path", ""),
+                t2("domain.path", "../platform-pojo-bl/target/classes"),
+                t2("domain.package", "ua.com.fielden.platform"),
+                t2("tokens.path", "../platform-pojo-bl/target/classes"),
+                t2("tokens.package", "ua.com.fielden.platform.security.tokens"),
+                t2("workflow", "development"),
+                t2("auth.mode", "SSO"),
+                t2("currency.symbol", "$")
+        ));
         return new ApplicationInjectorFactory()
-                .add(module)
+                .add(new CommonEntityTestIocModuleWithPropertyFactory(properties))
+                .add(new ApplicationSettingsTestIocModule(properties))
+                .add(new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        requestStaticInjection(WorkbookExporter.class);
+                    }
+                })
                 .getInjector();
     }
 
@@ -83,7 +104,7 @@ public class WorkbookExporterTest {
     @Test
     public void money_property_can_be_exported() {
         final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
-        final var amount = new Money("1.00");
+        final var amount = new Money("1.00", Currency.getInstance("AUD"));
         entityToExport.setMoneyProp(amount);
         final String[] propertyNames = { "moneyProp" };
         final String[] propertyTitles = { "Money property" };
@@ -91,7 +112,22 @@ public class WorkbookExporterTest {
         final Row exportedRow = sheet.getRow(1);
         final DataFormatter formatter = new DataFormatter();
         final String formattedCellValue = formatter.formatCellValue(exportedRow.getCell(0));
-        assertEquals("Money property of the exported row is formatted incorrectly.", amount.toString(), formattedCellValue);
+        assertEquals("Money property of the exported row is formatted incorrectly.", "TG-A$1.00", formattedCellValue);
+        assertEquals("Money property of the exported row is incorrect.", 1.0d, exportedRow.getCell(0).getNumericCellValue(), 0.0);
+    }
+
+    @Test
+    public void money_is_exported_with_the_default_app_currency_symbol_if_not_mapped() {
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
+        final var amount = new Money("1.00", Currency.getInstance("GBP"));
+        entityToExport.setMoneyProp(amount);
+        final String[] propertyNames = { "moneyProp" };
+        final String[] propertyTitles = { "Money property" };
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
+        final Row exportedRow = sheet.getRow(1);
+        final DataFormatter formatter = new DataFormatter();
+        final String formattedCellValue = formatter.formatCellValue(exportedRow.getCell(0));
+        assertEquals("Money property of the exported row is formatted incorrectly.", "$1.00", formattedCellValue);
         assertEquals("Money property of the exported row is incorrect.", 1.0d, exportedRow.getCell(0).getNumericCellValue(), 0.0);
     }
 
@@ -343,7 +379,7 @@ public class WorkbookExporterTest {
     @Test
     public void entity_aggregats_with_money_property_can_be_exported() {
         final EntityAggregates entityToExport = new EntityAggregates();
-        final var amount = new Money("1.00");
+        final var amount = new Money("1.00", Currency.getInstance("USD"));
         entityToExport.set("moneyProp", amount);
         final String[] propertyNames = { "moneyProp" };
         final String[] propertyTitles = { "Money property" };
@@ -351,7 +387,7 @@ public class WorkbookExporterTest {
         final Row exportedRow = sheet.getRow(1);
         final DataFormatter formatter = new DataFormatter();
         final String formattedCellValue = formatter.formatCellValue(exportedRow.getCell(0));
-        assertEquals("Money property of the exported row is formatted incorrectly.", amount.toString(), formattedCellValue);
+        assertEquals("Money property of the exported row is formatted incorrectly.", "TG-US$1.00", formattedCellValue);
         assertEquals("Money property of the exported row is incorrect.", 1.0d, exportedRow.getCell(0).getNumericCellValue(), 0.0);
     }
 

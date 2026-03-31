@@ -128,6 +128,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgPatternCo.class).to(TgPatternDao.class);
         bind(ITgAuthor.class).to(TgAuthorDao.class);
         bind(ITgFuelUsage.class).to(TgFuelUsageDao.class);
+        bind(TeProductPriceWithCurrencyCo.class).to(TeProductPriceWithCurrencyDao.class);
         bind(ITeVehicleFuelUsage.class).to(TeVehicleFuelUsageDao.class);
         bind(TeFuelUsageByTypeCo.class).to(TeFuelUsageByTypeDao.class);
         bind(ITgWorkOrder.class).to(TgWorkOrderDao.class);

@@ -2,8 +2,8 @@ import { TgAppConfig } from '/app/tg-app-config.js';
 
 const _appConfig = new TgAppConfig();
 
-function _getCurrencySymbol () {
-    return _appConfig.currencySymbol || '$';
+function _getCurrencySymbol (currency) {
+    return (currency && window.TG_APP.currencySymbolMap[currency]) || _appConfig.currencySymbol || '$';
 }
 
 // A space used to separate a currency symbol from a numeric part when representing monetary value as strings.
@@ -45,6 +45,21 @@ export function formatInteger (value, locale) {
     return '';
 }
 
+// Formats number `value` using fixed-point notation.
+// If the value is null, returns an empty string.
+//
+// @param scale - the number of digits to appear after the decimal point;
+//                should be within [0, 20];
+//                if this argument is omitted, a default scale will be used.
+//
+export function formatFixedPoint (value, scale) {
+    if (value !== null) {
+        const definedScale = typeof scale === 'undefined' || scale === null || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale */ ? DEFAULT_SCALE : scale;
+        return value.toFixed(definedScale);
+    }
+    return '';
+}
+
 // Formats number with floating point to string based on locale.
 // If the value is null then returns empty string.
 //
@@ -71,8 +86,30 @@ export function formatDecimal (value, locale, scale, trailingZeros) {
 //
 export function formatMoney (value, locale, scale, trailingZeros) {
     if (value !== null) {
-        const strValue = formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros);
-        return (value.amount < 0 ? `-${_getCurrencySymbol()}` : `${_getCurrencySymbol()}`) + CURRENCY_SYMBOL_SPACE + strValue;
+        return _prependCurrency(value, formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros));
     }
     return '';
+}
+
+// Formats money `value` using fixed-point notation.
+// If the value is null, returns an empty string.
+//
+// @param scale - the number of digits to appear after the decimal point;
+//                should be within [0, 20];
+//                if this argument is omitted, a default scale will be used.
+// @param opts.separator - an optional string that will separate the currency symbol from the amount;
+//                         if absent, the default separator will be used.
+//
+export function formatMoneyFixedPoint (value, scale, opts) {
+    if (value !== null) {
+        return _prependCurrency(value, formatFixedPoint(Math.abs(value.amount), scale), opts)
+    }
+    return '';
+}
+
+// Adds the currency symbol and sign prefix to the already formatted `toValue`.
+//
+function _prependCurrency(moneyValue, toValue, opts) {
+    const separator = (opts && opts.separator) || CURRENCY_SYMBOL_SPACE;
+    return (moneyValue.amount < 0 ? `-${_getCurrencySymbol(moneyValue.currency)}` : `${_getCurrencySymbol(moneyValue.currency)}`) + separator + toValue;
 }

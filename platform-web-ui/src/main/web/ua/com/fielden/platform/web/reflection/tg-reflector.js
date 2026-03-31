@@ -3,7 +3,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
-import { formatInteger, formatDecimal, formatMoney, DEFAULT_SCALE } from '/resources/reflection/tg-numeric-utils.js';
+import { formatInteger, formatDecimal, formatMoney, formatFixedPoint, formatMoneyFixedPoint, DEFAULT_SCALE } from '/resources/reflection/tg-numeric-utils.js';
 
 /**
  * If the precion for entity type property wasn't defined then the default one should be used.
@@ -1213,7 +1213,7 @@ const _equalsEx = function (value1, value2) {
     } else if (Array.isArray(value1)) {
         return _arraysEqualsEx(value1, value2);
     } else if (value1 !== null && _isMoney(value1)) {
-        return value2 !== null && _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2));
+        return value2 !== null && _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2)) && _equalsEx(value1.currency, value2.currency);
     } else if (value1 !== null && _isColour(value1)) {
         return value2 !== null && _isColour(value2) && _equalsEx(_colourVal(value1), _colourVal(value2));
     } else if (value1 !== null && _isHyperlink(value1)) {
@@ -1457,16 +1457,32 @@ const _toStringForCollection = function (bindingValue, rootEntityType, property,
 };
 
 /**
- * Converts composite entity's keyNamesAndValues to string.
+ * Converts an entity's composite key to a string.
  * 
- * @param keyNamesAndValues -- non-empty array of elements (also arrays) consisting on [0] index of composite key property name and on [1] index of actual value of that composite key
+ * @param keyNamesAndValues -- non-empty 2D array of composite key member names and values: [[name, value]]
  * @param entityType -- the type of composite entity
  * @param separator -- string value to glue string representations of values with
- * @param mappingFunction -- maps resulting elements before actual element-by-element toString conversion and glueing them all together; this is optional
+ * @param mappingFunction -- an optional mapping function applied to each key member value before converting it to a string
  */
 const _toStringForKeys = function (keyNamesAndValues, entityType, separator, mappingFunction) {
     return keyNamesAndValues
-        .map(keyNameAndValue => _toString(_convert(mappingFunction ? mappingFunction(keyNameAndValue[1]) : keyNameAndValue[1]), entityType, keyNameAndValue[0]))
+        .map(keyNameAndValue => {
+            const converted = _convert(mappingFunction ? mappingFunction(keyNameAndValue[1]) : keyNameAndValue[1]);
+            const prop = entityType.prop(keyNameAndValue[0]);
+            // Special case: the format of Money.amount must strictly match its persisted representation.
+            // To achieve that, use the fixed-point representation with the property's scale.
+            if (converted !== null && prop.type() === "Money") {
+                return formatMoneyFixedPoint(converted, prop.scale(), { separator: " " });
+            }
+            // Special case: the format of BigDecimal must strictly match its persisted representation.
+            // To achieve that, use the fixed-point representation with the property's scale.
+            if (converted !== null && prop.type() === "BigDecimal") {
+                return formatFixedPoint(converted, prop.scale());
+            }
+            else {
+                return _toString(converted, entityType, keyNameAndValue[0]);
+            }
+         })
         .filter(str => str !== '') // filter out empty strings not to include them into resulting string (especially important for functions that use 'mappingFunction')
         .join(separator);
 };

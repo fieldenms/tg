@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
 import ua.com.fielden.platform.eql.antlr.EqlCompiler;
@@ -43,7 +44,6 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByNameOptionally;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
@@ -56,7 +56,8 @@ record DefaultCalculatedPropertyExpressionProvider(
         IDates dates,
         IFilter filter,
         IDomainMetadata domainMetadata,
-        MoneyComponentInference moneyComponentInference)
+        MoneyComponentInference moneyComponentInference,
+        CompositeKeyEqlExpressionGenerator compositeKeyEqlExpressionGenerator)
         implements ICalculatedPropertyExpressionProvider
 {
 
@@ -200,7 +201,7 @@ record DefaultCalculatedPropertyExpressionProvider(
         final var mdEntity = domainMetadata.forEntity(entityType);
         final var propType = PropertyTypeDeterminator.determinePropertyType(entityType, property);
         if (propType.equals(DynamicEntityKey.class)) {
-            return Optional.of(new CalcPropInfo(generateCompositeKeyEqlExpression((Class) entityType), IMPLICIT));
+            return Optional.of(new CalcPropInfo(compositeKeyEqlExpressionGenerator.getKeyExpression(entityType), IMPLICIT));
         }
         // Synthetic one-2-one.
         else if (property.equals(ID) && mdEntity.isSynthetic() && isEntityType(getKeyType(entityType))) {

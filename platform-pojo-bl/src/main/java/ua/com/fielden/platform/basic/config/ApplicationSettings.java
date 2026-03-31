@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.basic.config;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import jakarta.inject.Singleton;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * Default implementation of the contract for generally used in the application settings.
@@ -25,9 +27,11 @@ public class ApplicationSettings implements IApplicationSettings {
     private final String smtpServer;
     private final String fromAddress;
     private final String currencySymbol;
+    private final Map<String, String> currencySymbolMap;
 
+    // TODO Reduce visibility once EQL tests use IoC.
     @Inject
-    protected ApplicationSettings(
+    public ApplicationSettings(
             final @Named("app.name") String appName,
             final @Named("reports.path") String pathToStorage,
             final @Named("domain.path") String classPath,
@@ -38,7 +42,8 @@ public class ApplicationSettings implements IApplicationSettings {
             final @Named("auth.mode") String authMode,
             final @Named("email.smtp") String smtpServer,
             final @Named("email.fromAddress") String fromAddress,
-            final @Named("currency.symbol") String currencySymbol)
+            final @Named("currency.symbol") String currencySymbol,
+            final @Named("currencySymbolMap") Map<String, String> currencySymbolMap)
     {
         this.appName = appName;
         this.pathToStorage = prepareSettings(pathToStorage);
@@ -51,6 +56,7 @@ public class ApplicationSettings implements IApplicationSettings {
         this.smtpServer = smtpServer;
         this.fromAddress = fromAddress;
         this.currencySymbol = currencySymbol;
+        this.currencySymbolMap = ImmutableMap.copyOf(currencySymbolMap);
     }
 
     @Override
@@ -81,6 +87,11 @@ public class ApplicationSettings implements IApplicationSettings {
     @Override
     public String currencySymbol() {
         return currencySymbol;
+    }
+
+    @Override
+    public Map<String, String> currencySymbolMap() {
+        return currencySymbolMap;
     }
 
     @Override

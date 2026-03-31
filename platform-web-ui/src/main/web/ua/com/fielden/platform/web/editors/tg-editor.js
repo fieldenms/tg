@@ -1178,7 +1178,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     }
 
     /**
-     * This method is called once the the accepted value was changed after the editor has commited its value.
+     * This method is called once the accepted value was changed after the editor has commited its value.
      *
      * IMPORTANT: please do not override this method. This method have some additional customisation points:
      * _shouldInvokeValidation() and _skipValidationAction().

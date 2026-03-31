@@ -86,6 +86,8 @@ public class ApplicationConfigurationResource extends AbstractWebResource {
         configs.put("panelColor", webUiConfig.mainPanelColor());
         configs.put("watermark", webUiConfig.watermark());
         configs.put("watermarkStyle", webUiConfig.watermarkStyle());
+        configs.put("currencySymbolMap", appSettings.currencySymbolMap());
+
         return restUtil.webApiResultRepresentation(configs);
     }
 

@@ -41,10 +41,10 @@ const customInputTemplate = html`
             on-focus="_onFocus"
             on-blur="_outFocus"
             disabled$="[[_disabled]]"
-            tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]"
+            tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable, entity)]]"
             autocomplete="off"/>
     </iron-input>`;
-const inputLayerTemplate = html`<div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]">[[_formatText(_editingValue)]]</div>`;
+const inputLayerTemplate = html`<div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable, entity)]]">[[_formatText(_editingValue, entity)]]</div>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgMoneyEditor extends TgNumericEditor {
@@ -71,8 +71,19 @@ export class TgMoneyEditor extends TgNumericEditor {
         
         // TODO currency and tax are ignored at this stage, but their support should most likely be implemented at some
         //      there is a need to have a better more general understanding of the role for currency and tax at the platfrom level
-        const amount = (+strValue) 
-        return {'amount': amount};
+        const fullEntity = this.reflector().tg_getFullEntity(this.entity);
+        const metaProperty = fullEntity.prop(this.propertyName);
+        const lastValue = this.reflector().isError(metaProperty.validationResult()) ? metaProperty.lastInvalidValue() : fullEntity.get(this.propertyName);
+        
+        return {'amount': (+strValue), 'currency': lastValue && lastValue.currency};
+    }
+
+    _formatText (_editingValue, entity) {
+        return super._formatText(_editingValue);
+    }
+
+    _getTooltip (_editingValue, _scanAvailable, entity) {
+        return super._getTooltip(_editingValue, _scanAvailable);
     }
 
 }

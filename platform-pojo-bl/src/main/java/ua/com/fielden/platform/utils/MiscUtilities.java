@@ -7,7 +7,12 @@ import ua.com.fielden.platform.types.either.Either;
 import javax.swing.filechooser.FileFilter;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -104,21 +109,29 @@ public class MiscUtilities {
 
     /// Loads the specified property file returning a corresponding instance of [Properties].
     ///
+    /// @deprecated Use method [#readProperties] instead.
+    ///
+    @Deprecated
     public static Properties propertyExtractor(final String fileName) throws IOException {
-        try (final InputStream st = new FileInputStream(fileName)) {
-            final Properties props = new Properties();
-            props.load(st);
+        return readProperties(fileName);
+    }
 
-            // clean loaded properties off loading and trailing whitespace characters
-            for (final Enumeration<?> propKeys = props.propertyNames(); propKeys.hasMoreElements();) {
-                final String key = (String) propKeys.nextElement();
-                String value = props.getProperty(key);
-                value = value.trim();
-                props.put(key, value);
-            }
-
-            return props;
+    /// Reads properties from the file at `path` using the UTF-8 encoding.
+    /// Leading and trailing whitespace is removed from all property values.
+    ///
+    public static Properties readProperties(final CharSequence path) {
+        final var properties = new Properties();
+        try (final var reader = Files.newBufferedReader(Path.of(path.toString()), StandardCharsets.UTF_8)) {
+            properties.load(reader);
+        } catch (final IOException ex) {
+            throw new RuntimeException(ex);
         }
+
+        for (final var key : properties.stringPropertyNames()) {
+            properties.put(key, properties.getProperty(key).trim());
+        }
+
+        return properties;
     }
 
     /// Creates a [Properties] instance populated with entries from the given map.

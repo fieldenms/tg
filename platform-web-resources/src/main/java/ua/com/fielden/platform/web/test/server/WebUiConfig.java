@@ -201,6 +201,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final TgEntityWithRichTextRefWebUiConfig tgEntityWithRichRefConfig = TgEntityWithRichTextRefWebUiConfig.register(injector(),configApp());
         final var tgNoteConfig = TgNoteWebUiConfig.register(injector(), configApp());
         final var tgFuelUsageConfig = TgFuelUsageWebUiConfig.register(injector(), configApp());
+        final var teProductPriceWithCurrencyWebUiConfig = TeProductPriceWithCurrencyWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
 
@@ -1063,6 +1064,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*  */.addMenuItem("Rich Text Centre").description("Entity Centre with rich text property").icon("editor:text-fields").centre(tgEntityWithRichTextConfig.centre).done()
                 /*  */.addMenuItem("Rich Text Ref Example").description("Entity centre for entity that references entity with rich text property").icon("editor:text-fields").centre(tgEntityWithRichRefConfig.centre).done()
                 /*  */.addMenuItem("Note Centre").description("Entity Centre with note").icon("editor:text-fields").centre(tgNoteConfig.centre).done()
+                /*  */.addMenuItem("Product Price with Currency").description("Product Price with Currency Centre").icon("editor:text-fields").centre(teProductPriceWithCurrencyWebUiConfig.centre).done()
                 /*  */.addMenuItem("Last group").description("Last group").icon("icons:find-replace")
                 /*    */.addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
                 /*    */.addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()

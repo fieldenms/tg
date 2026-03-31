@@ -1,17 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -22,6 +11,12 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 /**
  * DAO implementation for companion object {@link ITgGeneratedEntity}.
  *
@@ -59,7 +54,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisDao extends CommonEntityDao<T
     private void createAndSaveGeneratedEntity(final ITgGeneratedEntityForTrippleDecAnalysis coGenerator, final Random rand, final int entityCounter) {
         final TgGeneratedEntityForTrippleDecAnalysis generatedEntity = coGenerator.new_()
                 .setGroup("group " + entityCounter)
-                .setCost(Money.of(String.valueOf(rand.nextDouble() * maxRandNumber)))
+                .setCost(Money.of(String.valueOf(rand.nextDouble() * maxRandNumber)).withCurrency(Currency.getInstance("UAH")))
                 .setCount(Integer.valueOf(rand.nextInt(maxRandNumber + 1)))
                 .setHours(new BigDecimal(rand.nextDouble() * maxRandNumber).setScale(2, RoundingMode.HALF_UP))
                 .setDesc("group " + entityCounter + " description");

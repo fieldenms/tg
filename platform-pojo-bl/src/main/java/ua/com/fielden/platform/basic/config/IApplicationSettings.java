@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.basic.config;
 
+import java.util.Map;
+
 /// A contract for generally used in the application settings.
 ///
 public interface IApplicationSettings {
@@ -19,6 +21,10 @@ public interface IApplicationSettings {
 
     /// A currency symbol that should be used to display monetary values.
     String currencySymbol();
+
+    /// A map from currency codes to symbols.
+    ///
+    Map<String, String> currencySymbolMap();
 
     Workflows workflow();
     
