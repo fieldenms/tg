@@ -70,7 +70,7 @@
     "chai": "5.1.2",
     "lodash": "4.17.23",
     "mocha": "10.8.2",
-    "serialize-javascript": "7.0.3",
+    "serialize-javascript": "7.0.5",
     "glob": "13.0.6",
     "sinon": "21.0.2",
     "sinon-chai": "4.0.0",
