@@ -6,9 +6,7 @@ import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyType;
 
-import java.util.Date;
-
-/// Required, optional, optional, and required key members.
+/// Composite entity with money key member.
 ///
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
