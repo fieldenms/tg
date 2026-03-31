@@ -13,6 +13,7 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.List;
+import java.util.Map;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
@@ -141,7 +142,7 @@ public class CompositeKeyEqlExpressionGenerator {
                 && !appSettings.currencySymbolMap().isEmpty())
             {
                 // Build a case-when that compares the currency code with each configured mapping.
-                symbolExpr = foldLeft(appSettings.currencySymbolMap().entrySet().stream(),
+                symbolExpr = foldLeft(appSettings.currencySymbolMap().entrySet().stream().sorted(Map.Entry.comparingByKey()),
                                       expr().caseWhen(),
                                       (acc, entry) -> acc.prop(pm.name() + "." + CURRENCY).eq().val(entry.getKey()).then().val(entry.getValue()).when())
                         // This is like "otherwise", but in a different form due to Fluent API composition.
