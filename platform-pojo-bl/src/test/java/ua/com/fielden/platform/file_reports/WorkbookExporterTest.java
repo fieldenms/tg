@@ -117,6 +117,21 @@ public class WorkbookExporterTest {
     }
 
     @Test
+    public void money_is_exported_with_the_default_app_currency_symbol_if_not_mapped() {
+        final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
+        final var amount = new Money("1.00", Currency.getInstance("GBP"));
+        entityToExport.setMoneyProp(amount);
+        final String[] propertyNames = { "moneyProp" };
+        final String[] propertyTitles = { "Money property" };
+        final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
+        final Row exportedRow = sheet.getRow(1);
+        final DataFormatter formatter = new DataFormatter();
+        final String formattedCellValue = formatter.formatCellValue(exportedRow.getCell(0));
+        assertEquals("Money property of the exported row is formatted incorrectly.", "$1.00", formattedCellValue);
+        assertEquals("Money property of the exported row is incorrect.", 1.0d, exportedRow.getCell(0).getNumericCellValue(), 0.0);
+    }
+
+    @Test
     public void string_property_can_be_exported() {
         final MasterEntity entityToExport = factory.newEntity(MasterEntity.class);
         entityToExport.setStringProp("master1");

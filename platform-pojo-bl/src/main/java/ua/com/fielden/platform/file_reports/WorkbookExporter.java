@@ -266,7 +266,7 @@ public class WorkbookExporter {
         // Caching is used to avoid creating too many styles, as exceeding a certain limit will cause a runtime error.
         final Map<String, CellStyle> currencyStyleCache = new ConcurrentHashMap<>();
         final Function<String, CellStyle> getCurrencyStyle = code -> currencyStyleCache.computeIfAbsent(code, _ -> {
-            final var symbol = appSettings.currencySymbolMap().getOrDefault(code, Currency.getInstance(code).getSymbol());
+            final var symbol = appSettings.currencySymbolMap().getOrDefault(code, appSettings.currencySymbol());
             final var cellStyle = wb.createCellStyle();
             cellStyle.setDataFormat(dataFormat.getFormat("\"%1$s\"#,##0.00;[Red](\"%1$s\"#,##0.00)".formatted(symbol)));
             return cellStyle;
