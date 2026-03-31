@@ -179,6 +179,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(CompositeKeyEqlExpression_Entity10.class);
         add(CompositeKeyEqlExpression_Entity11.class);
         add(CompositeKeyEqlExpression_Entity12.class);
+        add(CompositeKeyEqlExpression_Entity13.class);
     }
 
     @Override

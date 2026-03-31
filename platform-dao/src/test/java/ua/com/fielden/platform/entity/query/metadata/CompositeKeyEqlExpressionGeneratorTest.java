@@ -6,10 +6,14 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
+// TODO This test should have its own currency-symbol mapping configuration.
+//      This requires the ability to control test configuration at the level of test classes.
 public class CompositeKeyEqlExpressionGeneratorTest extends AbstractDaoTestCase {
 
     private final CompositeKeyEqlExpressionGenerator generator = getInstance(CompositeKeyEqlExpressionGenerator.class);
@@ -241,6 +245,65 @@ public class CompositeKeyEqlExpressionGeneratorTest extends AbstractDaoTestCase 
                                 .end().model())
                 .end().model();
         assertThat(generator.getKeyExpression(CompositeKeyEqlExpression_Entity11.class)).isEqualTo(exp);
+    }
+
+    @Test
+    public void required_key_member_whose_type_is_money_with_currency() {
+        final var currencySymbolExpr = expr()
+                .caseWhen().prop("price.currency").eq().val("EUR").then().val("€")
+                .when().prop("price.currency").eq().val("UAH").then().val("грн")
+                .when().val(1).eq().val(1).then().val("$")
+                .end().model();
+        final var exp = expr()
+                .concat().expr(concatEmptyWith("name"))
+                .with().val(" ")
+                .with().expr(expr().concat().expr(expr().caseWhen().prop("price.amount").lt().val(0).then().val("-")
+                                                        .otherwise().val("")
+                                                        .end().model())
+                                            .with().expr(currencySymbolExpr)
+                                            .with().val(" ")
+                                            .with().absOf().prop("price.amount").end().model())
+                .end().model();
+        assertThat(generator.getKeyExpression(CompositeKeyEqlExpression_Entity12.class)).isEqualTo(exp);
+    }
+
+    @Test
+    public void optional_key_member_whose_type_is_money_with_currency() {
+        final var currencySymbolExpr = expr()
+                .caseWhen().prop("price.currency").eq().val("EUR").then().val("€")
+                .when().prop("price.currency").eq().val("UAH").then().val("грн")
+                .when().val(1).eq().val(1).then().val("$")
+                .end().model();
+        final var exp = expr().concat()
+                .expr(expr().caseWhen().prop("name").isNotNull()
+                        .then().concat()
+                        .expr(expr().caseWhen().condition(alwaysFalse())
+                                .then().val(" ")
+                                .otherwise().val("")
+                                .end().model())
+                        .with()
+                        .expr(concatEmptyWith("name"))
+                        .end()
+                        .otherwise().val("")
+                        .end().model())
+                .with().expr(
+                        expr().caseWhen().prop("price").isNotNull()
+                                .then().concat()
+                                .expr(expr().caseWhen().condition(cond().condition(alwaysFalse()).or().prop("name").isNotNull().model())
+                                        .then().val(" ")
+                                        .otherwise().val("")
+                                        .end().model())
+                                .with().expr(expr().concat().expr(expr().caseWhen().prop("price.amount").lt().val(0).then().val("-")
+                                                                        .otherwise().val("")
+                                                                        .end().model())
+                                                   .with().expr(currencySymbolExpr)
+                                                   .with().val(" ")
+                                                   .with().absOf().prop("price.amount").end().model())
+                                .end()
+                                .otherwise().val("")
+                                .end().model())
+                .end().model();
+        assertThat(generator.getKeyExpression(CompositeKeyEqlExpression_Entity13.class)).isEqualTo(exp);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

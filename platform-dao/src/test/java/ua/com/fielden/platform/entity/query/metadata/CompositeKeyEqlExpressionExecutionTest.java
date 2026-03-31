@@ -8,6 +8,8 @@ import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
+import java.util.Currency;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -132,11 +134,19 @@ public class CompositeKeyEqlExpressionExecutionTest extends AbstractDaoTestCase 
     }
 
     @Test
-    public void negative_money_key_member_should_be_formatted_well() {
+    public void Money_key_member_with_positive_value() {
         final var entity = save(new_(CompositeKeyEqlExpression_Entity12.class)
                 .setName("alpha")
-                .setPrice(Money.of("-100")));
-        assertKeyEquals("alpha -$ 100.00", entity);
+                .setPrice(Money.of("100").withCurrency(Currency.getInstance("EUR"))));
+        assertKeyEquals("alpha € 100.00", entity);
+    }
+
+    @Test
+    public void Money_key_member_with_negative_value() {
+        final var entity = save(new_(CompositeKeyEqlExpression_Entity12.class)
+                .setName("alpha")
+                .setPrice(Money.of("-100").withCurrency(Currency.getInstance("EUR"))));
+        assertKeyEquals("alpha -€ 100.00", entity);
     }
 
     private void assertKeyEquals(final String expected, final Class<? extends AbstractEntity<?>> entityType, final Long id) {

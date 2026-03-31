@@ -6,12 +6,12 @@ import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyType;
 
-/// Composite entity with a required money-with-currency key member.
+/// Composite entity with an optional money-with-currency key member.
 ///
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
 @CompanionIsGenerated
-public class CompositeKeyEqlExpression_Entity12 extends AbstractEntity<DynamicEntityKey> {
+public class CompositeKeyEqlExpression_Entity13 extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
@@ -20,12 +20,13 @@ public class CompositeKeyEqlExpression_Entity12 extends AbstractEntity<DynamicEn
 
     @IsProperty
     @MapTo
+    @Optional
     @CompositeKeyMember(2)
     @PersistentType(userType = IMoneyType.class)
     private Money price;
 
     @Observable
-    public CompositeKeyEqlExpression_Entity12 setName(final String name) {
+    public CompositeKeyEqlExpression_Entity13 setName(final String name) {
         this.name = name;
         return this;
     }
@@ -35,7 +36,7 @@ public class CompositeKeyEqlExpression_Entity12 extends AbstractEntity<DynamicEn
     }
 
     @Observable
-    public CompositeKeyEqlExpression_Entity12 setPrice(final Money price) {
+    public CompositeKeyEqlExpression_Entity13 setPrice(final Money price) {
         this.price = price;
         return this;
     }

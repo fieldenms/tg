@@ -54,6 +54,8 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         props.setProperty("web.domain", "tgdev.com");
         props.setProperty("web.port", "443");
         props.setProperty("web.path", "/");
+        props.setProperty("currency.UAH.symbol", "грн");
+        props.setProperty("currency.EUR.symbol", "€");
         // Custom Hibernate configuration properties
         props.setProperty("hibernate.show_sql", "false");
         props.setProperty("hibernate.format_sql", "true");
