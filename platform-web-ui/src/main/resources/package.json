@@ -78,7 +78,7 @@
   },
   "overrides": {
     "@toast-ui/editor": {
-      "dompurify": "^3.3.2",
+      "dompurify": "^3.3.3",
       "@types/trusted-types": "../_EXCLUDED_"
     },
     "mocha": {
