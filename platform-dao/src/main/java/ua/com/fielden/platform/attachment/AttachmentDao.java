@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
@@ -72,6 +73,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     /// Overridden to specify a custom fetch model for refetching if the revision history is modified.
     ///
     @Override
+    @SkipVerification
     public Attachment save(final Attachment attachment) {
         attachment.isValid().ifFailure(Result::throwRuntime);
 

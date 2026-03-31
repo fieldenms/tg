@@ -81,7 +81,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
             return ((ISaveWithFetch<T>) it).save(instance, maybeFetch);
         }
         else {
-            throw new EntityCompanionException(format(ERR_SAVE_WITH_FETCH_NOT_IMPLEMENTED, instance.getType().getSimpleName()));
+            throw new EntityCompanionException(ERR_SAVE_WITH_FETCH_NOT_IMPLEMENTED.formatted(instance.getType().getSimpleName()));
         }
     }
 

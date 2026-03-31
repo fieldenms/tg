@@ -24,6 +24,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibilityCo;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.IUserSession;
@@ -96,6 +97,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     @SessionRequired
+    @SkipVerification
     public User save(final User user) {
         // Use a fetch model that includes calculated properties, which would not get included in a reconstructed fetch model.
         return save(user, of(FETCH_PROVIDER.fetchModel())).orElseThrow(id -> new EntityCompanionException(ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE.formatted(id, user)));
