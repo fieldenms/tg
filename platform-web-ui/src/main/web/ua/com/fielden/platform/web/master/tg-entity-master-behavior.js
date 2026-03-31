@@ -1547,24 +1547,22 @@ const TgEntityMasterBehaviorImpl = {
         return this.remoteCanLeave().then(obj => {
             if (obj.xhr.status === 200 && obj.response) {
                 // Indicates successful execution of the request with a response received.
-                // Timeout errors may still result in status 200 with e.detail.response === null.
-                // A 504 error is also possible, but it is handled in the else clause.
                 const deserialisedResult = this._serialiser().deserialise(obj.response);
 
                 if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
-                    return Promise.reject(new UnexpectedCustomError(resultMessages(deserialisedResult).short));
+                    throw new UnexpectedCustomError(resultMessages(deserialisedResult).short);
                 } else {
                     const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
                     if (savedEntity.canLeave) {
-                        return Promise.resolve(true);
+                        return true;
                     } else {
                         return this.confirm(savedEntity.cannotLeaveReason, CanLeaveOptions[savedEntity.canLeaveOptions]).catch(e => {
                             throw {msg: savedEntity.leaveInstructions, imperative: true};
                         });
                     }
                 }
-            } else { // other codes
-                return Promise.reject(new UnexpectedCustomError(`An error occurred during canLeave with the following status: ${obj.xhr.status}`));
+            } else { // status 200 with empty response (e.g. backend timeout)
+               throw new UnexpectedCustomError("An error occurred during canLeave: empty server response");
             }
         }).catch(e => {
             if (e.request && e.error) {
