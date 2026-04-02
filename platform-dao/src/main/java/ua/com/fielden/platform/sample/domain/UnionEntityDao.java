@@ -14,7 +14,7 @@ public class UnionEntityDao extends CommonEntityDao<UnionEntity> implements IUni
 
     @Override
     public Either<Long, UnionEntity> save(final UnionEntity entity, final Optional<fetch<UnionEntity>> maybeFetch) {
-        return super.save(entity ,maybeFetch);
+        return super.save(entity, maybeFetch);
     }
 
 }

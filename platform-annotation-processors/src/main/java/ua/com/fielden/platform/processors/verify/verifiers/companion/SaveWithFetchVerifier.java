@@ -39,7 +39,6 @@ public class SaveWithFetchVerifier extends AbstractCompanionVerifier {
                     return Optional.of(new ViolatingElement(maybeOverriddenSaveWithFetch.get(), ERROR, errMustImplementSaveWithFetch(typeElement.getSimpleName())));
                 }
 
-
                 final var maybeOverriddenSave = streamDeclaredMethods(typeElement)
                         .filter(execElt -> execElt.getSimpleName().contentEquals("save")
                                            && execElt.getParameters().size() == 1

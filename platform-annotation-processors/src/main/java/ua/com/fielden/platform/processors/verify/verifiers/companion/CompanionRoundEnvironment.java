@@ -30,7 +30,7 @@ public class CompanionRoundEnvironment extends AbstractRoundEnvironment<TypeElem
         this.elementFinder = elementFinder;
     }
 
-    /// Returns a list of companion elements being processed in the current round.
+    /// Returns a list of companion (DAO implementation) elements being processed in the current round.
     /// The result is memoized.
     ///
     public List<TypeElement> listCompanions() {
