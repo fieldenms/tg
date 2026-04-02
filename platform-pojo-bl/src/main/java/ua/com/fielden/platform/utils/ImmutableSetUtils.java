@@ -65,7 +65,34 @@ public final class ImmutableSetUtils {
     /// @param ys  must not contain null elements
     ///
     public static <Y> Set<Y> intersection(final Set</*@Nonnull*/ Y> xs, final Set</*@Nonnull*/ Y> ys) {
-        return ImmutableSet.copyOf(Sets.intersection(xs, ys));
+        if (xs == ys) {
+            return ImmutableSet.copyOf(xs);
+        }
+        else if (xs.isEmpty() || ys.isEmpty()) {
+            return ImmutableSet.of();
+        }
+        else if (xs instanceof ImmutableSet<Y> && ys instanceof ImmutableSet<Y>) {
+            // If both input sets are immutable, we can return an unmodifiable view.
+            return Sets.intersection(xs, ys);
+        }
+        else {
+            final Set<Y> smallerSet, largerSet;
+            if (xs.size() < ys.size()) {
+                smallerSet = xs;
+                largerSet = ys;
+            }
+            else {
+                smallerSet = ys;
+                largerSet = xs;
+            }
+            final var builder = ImmutableSet.<Y>builderWithExpectedSize(Math.min(smallerSet.size(), 10));
+            for (final var elt : smallerSet) {
+                if (largerSet.contains(elt)) {
+                    builder.add(elt);
+                }
+            }
+            return builder.build();
+        }
     }
 
     /// Returns an immutable set that is a union of the given iterables.
