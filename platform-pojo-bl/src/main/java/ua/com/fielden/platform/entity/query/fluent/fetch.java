@@ -19,10 +19,10 @@ import java.util.Set;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.utils.ImmutableSetUtils.*;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
 
@@ -430,7 +430,7 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
         return new fetch<>(entityType,
                            getMergedFetchCategory(that),
                            (isInstrumented() || that.isInstrumented()),
-                           ImmutableMapUtils.union((k, fetch1, fetch2) -> fetch1.unionWith(fetch2),
+                           ImmutableMapUtils.union((_, fetch1, fetch2) -> fetch1.unionWith(fetch2),
                                                    this.includedPropsWithModels,
                                                    that.includedPropsWithModels),
                            union(this.includedProps, that.includedProps),
@@ -440,8 +440,8 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
     /// A convenience overload of [#unionWith(fetch)] that accepts an optional fetch model.
     /// Returns `this` if `maybeThat` is empty.
     ///
-    public fetch<T> unionWith(final Optional<fetch<?> > maybeThat) {
-        return maybeThat.map(that -> unionWith((fetch<?>) that)).orElseGet(() -> this);
+    public fetch<T> unionWith(final Optional<fetch<?>> maybeThat) {
+        return maybeThat.map(this::unionWith).orElse(this);
     }
 
 }
