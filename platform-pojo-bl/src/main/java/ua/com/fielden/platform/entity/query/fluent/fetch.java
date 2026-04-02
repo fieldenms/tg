@@ -14,6 +14,7 @@ import ua.com.fielden.platform.utils.ToString.IFormat;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -21,6 +22,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.utils.ImmutableSetUtils.*;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
 
@@ -415,10 +417,13 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
     /// * Excluded properties are *intersected* — only properties excluded by both models remain excluded,
     ///   so that neither side loses a property it depends on.
     ///
-    /// Returns `this` if `that` is `null` or the same instance.
+    /// Returns `this` if `that` is the same instance.
+    ///
+    /// @param that  must not be null; use [#unionWith(Optional)] for nullable fetch models
     ///
     public fetch<T> unionWith(final fetch<?> that) {
-        if (that == null || that == this) {
+        requireNonNull(that, "that");
+        if (that == this) {
             return this;
         }
 
@@ -430,6 +435,13 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
                                                    that.includedPropsWithModels),
                            union(this.includedProps, that.includedProps),
                            intersection(this.excludedProps, that.excludedProps));
+    }
+
+    /// A convenience overload of [#unionWith(fetch)] that accepts an optional fetch model.
+    /// Returns `this` if `maybeThat` is empty.
+    ///
+    public fetch<T> unionWith(final Optional<fetch<?> > maybeThat) {
+        return maybeThat.map(that -> unionWith((fetch<?>) that)).orElseGet(() -> this);
     }
 
 }

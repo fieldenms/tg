@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import org.junit.Test;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.Assert.*;
@@ -42,9 +44,22 @@ public class FetchTest {
     // unionWith tests
 
     @Test
-    public void unionWith_null_returns_this() {
+    public void unionWith_rejects_null() {
         final var fm = new fetch<>(TgVehicleMake.class, FetchCategory.DEFAULT);
-        assertSame(fm, fm.unionWith(null));
+        assertThrows(InvalidArgumentException.class, () -> fm.unionWith((fetch<?>) null));
+    }
+
+    @Test
+    public void unionWith_empty_optional_returns_this() {
+        final var fm = new fetch<>(TgVehicleMake.class, FetchCategory.DEFAULT);
+        assertSame(fm, fm.unionWith(Optional.empty()));
+    }
+
+    @Test
+    public void unionWith_present_optional_delegates_to_unionWith() {
+        final var fm1 = new fetch<>(TgVehicleMake.class, FetchCategory.DEFAULT).with("npProp");
+        final var fm2 = new fetch<>(TgVehicleMake.class, FetchCategory.DEFAULT).with("desc");
+        assertEquals(fm1.unionWith(fm2), fm1.unionWith(Optional.of(fm2)));
     }
 
     @Test
