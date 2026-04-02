@@ -21,8 +21,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.utils.ImmutableSetUtils.insert;
-import static ua.com.fielden.platform.utils.ImmutableSetUtils.union;
+import static ua.com.fielden.platform.utils.ImmutableSetUtils.*;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
 
 /// Represents an entity graph that describes the shape of an entity to be fetched.
@@ -408,19 +407,29 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
         return ID_ONLY;
     }
 
-    public fetch<?> unionWith(final fetch<?> second) {
-        if (second == null || second == this) {
+    /// Returns a new fetch model that is a union of `this` and `that`.
+    /// The result covers everything that either model covers:
+    /// * Fetch category is the wider of the two.
+    /// * Instrumented if either side is instrumented.
+    /// * Included properties and sub-models are merged (sub-models are merged recursively).
+    /// * Excluded properties are *intersected* — only properties excluded by both models remain excluded,
+    ///   so that neither side loses a property it depends on.
+    ///
+    /// Returns `this` if `that` is `null` or the same instance.
+    ///
+    public fetch<?> unionWith(final fetch<?> that) {
+        if (that == null || that == this) {
             return this;
         }
 
         return new fetch<>(entityType,
-                           getMergedFetchCategory(second),
-                           (isInstrumented() || second.isInstrumented()),
+                           getMergedFetchCategory(that),
+                           (isInstrumented() || that.isInstrumented()),
                            ImmutableMapUtils.union((k, fetch1, fetch2) -> fetch1.unionWith(fetch2),
-                                                   includedPropsWithModels,
-                                                   second.includedPropsWithModels),
-                           union(includedProps, second.includedProps),
-                           union(excludedProps, second.excludedProps));
+                                                   this.includedPropsWithModels,
+                                                   that.includedPropsWithModels),
+                           union(this.includedProps, that.includedProps),
+                           intersection(this.excludedProps, that.excludedProps));
     }
 
 }

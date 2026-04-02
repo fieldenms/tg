@@ -3,6 +3,7 @@ package ua.com.fielden.platform.utils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 import java.util.Set;
 import java.util.SortedSet;
@@ -56,6 +57,15 @@ public final class ImmutableSetUtils {
                     .add(y)
                     .build();
         }
+    }
+
+    /// Returns an immutable set that is an intersection of the given sets.
+    ///
+    /// @param xs  must not contain null elements
+    /// @param ys  must not contain null elements
+    ///
+    public static <Y> Set<Y> intersection(final Set</*@Nonnull*/ Y> xs, final Set</*@Nonnull*/ Y> ys) {
+        return ImmutableSet.copyOf(Sets.intersection(xs, ys));
     }
 
     /// Returns an immutable set that is a union of the given iterables.
