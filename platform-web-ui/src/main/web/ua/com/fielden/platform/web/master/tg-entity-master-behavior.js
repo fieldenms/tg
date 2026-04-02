@@ -1545,24 +1545,18 @@ const TgEntityMasterBehaviorImpl = {
     customCanLeave: function (leaveReason = LeaveReason.CLOSED) {
         this._currBindingEntity["leaveReason"] = leaveReason;
         return this.remoteCanLeave().then(obj => {
-            if (obj.xhr.status === 200 && obj.response) {
-                // Indicates successful execution of the request with a response received.
-                const deserialisedResult = this._serialiser().deserialise(obj.response);
-
-                if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
-                    throw new UnexpectedCustomError(resultMessages(deserialisedResult).short);
+            const deserialisedResult = this._serialiser().deserialise(obj.response);
+            if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
+                throw new UnexpectedCustomError(resultMessages(deserialisedResult).short);
+            } else {
+                const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
+                if (savedEntity.canLeave) {
+                    return true;
                 } else {
-                    const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
-                    if (savedEntity.canLeave) {
-                        return true;
-                    } else {
-                        return this.confirm(savedEntity.cannotLeaveReason, CanLeaveOptions[savedEntity.canLeaveOptions]).catch(e => {
-                            throw {msg: savedEntity.leaveInstructions, imperative: true};
-                        });
-                    }
+                    return this.confirm(savedEntity.cannotLeaveReason, CanLeaveOptions[savedEntity.canLeaveOptions]).catch(e => {
+                        throw {msg: savedEntity.leaveInstructions, imperative: true};
+                    });
                 }
-            } else { // status 200 with empty response (e.g. backend timeout)
-               throw new UnexpectedCustomError("An error occurred during canLeave: empty server response");
             }
         }).catch(e => {
             if (e.request && e.error) {
