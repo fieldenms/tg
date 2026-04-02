@@ -417,7 +417,7 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
     ///
     /// Returns `this` if `that` is `null` or the same instance.
     ///
-    public fetch<?> unionWith(final fetch<?> that) {
+    public fetch<T> unionWith(final fetch<?> that) {
         if (that == null || that == this) {
             return this;
         }
