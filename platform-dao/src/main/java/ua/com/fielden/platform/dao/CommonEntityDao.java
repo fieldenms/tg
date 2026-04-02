@@ -252,13 +252,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
-    /// @deprecated
-    /// To facilitate transition to save-with-fetch, place all custom saving logic in [#save(AbstractEntity, Optional)]
-    /// and make the corresponding companion interface extend [ISaveWithFetch].
-    /// Do not override this method, which will likely become `final` in the future.
+    /// ### Save-with-fetch as an alternative
+    /// For persistent entity types, it is generally recommended to implement save-with-fetch instead of this method, as
+    /// it provides control over refetching which may be used to improve performance.
     ///
-    /// Once save-with-fetch is implemented, this method **must not be called within the companion** to avoid non-termination.
-    /// Specifically, `this.save(entity)` and `super.save(entity)` must be replaced with calls to save-with-fetch.
+    /// Once save-with-fetch is implemented, this method (the ordinary save) **must not be called within save-with-fetch**,
+    /// as it may lead to non-termination.
+    /// Specifically, calls to `save(entity)` must be replaced with calls to save-with-fetch (both `this` and `super` calls).
     /// Note that this does not apply to external calls.
     /// For example, it is valid to call `PersonCo.save(person)` outside of `PersonCo` and `PersonDao` even if save-with-fetch
     /// is implemented for `Person`.
@@ -274,7 +274,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     ///
     @Override
     @SessionRequired
-    @Deprecated(since = "[See the JavaDoc]")
     public T save(final T entity) {
         if (entity == null) {
             throw new EntityCompanionException(format("Null entity of type [%s] cannot be saved.", entityType.getName()));

@@ -21,7 +21,7 @@ public interface IPersistentEntityMutator<T extends AbstractEntity<?>> extends I
     /// This method is relevant only for simple cases where method `save` is not overridden to provide an application specific logic.
     ///
     /// @deprecated This method will be gradually phased out and replaced by [ISaveWithFetch#save(AbstractEntity, Optional)].
-    ///             If the companion that you are calling this method on supports [ISaveWithFetch], use the supported alternative.
+    ///             If the companion that you are calling this method on supports [ISaveWithFetch], consider using `save(entity, Optional.empty())`.
     ///             Otherwise, consider enhancing the companion to support [ISaveWithFetch].
     ///             Only if the enhancement cannot be achieved within existing constraints, should this method be used.
     ///
