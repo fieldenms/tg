@@ -40,9 +40,14 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.
                : new Yields2(transform(yieldsMap.values().stream(), context, query).toList());
     }
 
-    private static Stream<Yield2> transform(final Stream<Yield1> yields, final TransformationContextFromStage1To2 context, final AbstractQuery1 query) {
+    private static Stream<Yield2> transform(
+            final Stream<Yield1> yields,
+            final TransformationContextFromStage1To2 context,
+            final AbstractQuery1 query)
+    {
+        final var expandUnionTypedYield1 = new ExpandUnionTypedYield1(context.domainMetadata);
         return yields
-                .flatMap(y -> ExpandUnionTypedPropYield1.INSTANCE.apply(y, context).orElseGet(() -> Stream.of(y)))
+                .flatMap(y -> expandUnionTypedYield1.apply(y, context, query).orElseGet(() -> Stream.of(y)))
                 .flatMap(y -> ExpandMoneyTypedYield1.INSTANCE.apply(y, context, query).orElseGet(() -> Stream.of(y)))
                 .map(y -> y.transform(context));
     }

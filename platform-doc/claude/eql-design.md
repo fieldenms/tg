@@ -234,6 +234,18 @@ public int hashCode() {
 }
 ```
 
+### Yield Expansion (Stage 1→2)
+
+The stage 1→2 transformation is not always 1:1.
+`Yields1.transform()` applies `ExpandUnionTypedYield1`, which can expand a single yield into multiple yields.
+For example, `yield().val(null).as("location")` where `location` is a union type expands into one null yield per union member (`location.workshop`, `location.wagonSlot`, etc.).
+This expansion uses `domainMetadata` to resolve the union type and its members.
+
+### Null Type Resolution in Yields
+
+When `val(null)` is yielded into a typed property, `Yield2.transform()` resolves the target property type via `domainMetadata` and produces a precise `PropType` instead of `NULL_TYPE`.
+This enables database-specific typed NULL casts (e.g., `CAST(NULL AS VARCHAR)`) which both PostgreSQL and SQL Server require in certain contexts (UNION queries, aggregate functions, parameterised expressions).
+
 ### Key Entry Points
 
 - `EqlQueryTransformer` — top-level orchestrator; transforms `QueryProcessingModel` → SQL. Start here to understand the full pipeline.

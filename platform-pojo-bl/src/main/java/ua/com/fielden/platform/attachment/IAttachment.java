@@ -3,6 +3,7 @@ package ua.com.fielden.platform.attachment;
 import java.io.File;
 import java.util.Optional;
 
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 
 /**
@@ -11,7 +12,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  * 
  */
-public interface IAttachment extends IEntityDao<Attachment> {
+public interface IAttachment extends IEntityDao<Attachment>, ISaveWithFetch<Attachment> {
 
     /**
      * Returns a file optionally. An empty result is returned if the identified by the attachment file could be located.
