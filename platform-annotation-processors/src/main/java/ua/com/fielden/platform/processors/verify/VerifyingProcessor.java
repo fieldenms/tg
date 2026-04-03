@@ -4,6 +4,7 @@ import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.ProcessorOptionDescriptor;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
+import ua.com.fielden.platform.processors.verify.verifiers.companion.SaveWithFetchVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier;
@@ -54,6 +55,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
         this.registeredVerifiersProviders.add(procEnv -> new KeyTypeVerifier(procEnv));
         this.registeredVerifiersProviders.add(procEnv -> new EssentialPropertyVerifier(procEnv));
         this.registeredVerifiersProviders.add(procEnv -> new UnionEntityVerifier(procEnv));
+        this.registeredVerifiersProviders.add(procEnv -> new SaveWithFetchVerifier(procEnv));
     }
 
     /**
