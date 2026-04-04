@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.security.user;
 
-import java.util.List;
-
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
+
+import java.util.List;
 
 /**
  * Interface that defines the API for retrieving and saving {@link UserRole} instances
@@ -10,7 +11,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  * 
  */
-public interface UserRoleCo extends IEntityDao<UserRole> {
+public interface UserRoleCo extends IEntityDao<UserRole>, ISaveWithFetch<UserRole> {
 
     /** Returns all available {@link UserRole}s. */
     List<UserRole> findAll();
