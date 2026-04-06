@@ -52,12 +52,12 @@ public final class OperandToSqlAsString {
         }
 
         default String fromInteger(final IDomainMetadata metadata, final ISingleOperand3 operand) {
-            // Java Integer is 4 bytes: max 10 digits + sign = 11 characters.
+            // Integer at the level of supported RDBMSes is 4 bytes: max 10 digits + sign = 11 characters.
             return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(11)");
         }
 
         default String fromLong(final IDomainMetadata metadata, final ISingleOperand3 operand) {
-            // Java Long is 8 bytes: max 19 digits + sign = 20 characters.
+            // Long at the level of supported RDBMSes is 8 bytes: max 19 digits + sign = 20 characters.
             return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(20)");
         }
 
