@@ -52,13 +52,13 @@ public final class OperandToSqlAsString {
         }
 
         default String fromInteger(final IDomainMetadata metadata, final ISingleOperand3 operand) {
-            // Integers are unlikely to be larger than 8 bytes, which is 19 characters + a sign.
-            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(20)");
+            // Java Integer is 4 bytes: max 10 digits + sign = 11 characters.
+            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(11)");
         }
 
         default String fromLong(final IDomainMetadata metadata, final ISingleOperand3 operand) {
-            // Longs are unlikely to be larger than 16 bytes, which is 39 characters + a sign.
-            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(40)");
+            // Java Long is 8 bytes: max 19 digits + sign = 20 characters.
+            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(20)");
         }
 
         default String fromDate(final IDomainMetadata metadata, final ISingleOperand3 operand) {
