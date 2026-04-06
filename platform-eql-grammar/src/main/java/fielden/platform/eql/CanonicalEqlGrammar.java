@@ -4,15 +4,14 @@ import fielden.platform.bnf.BNF;
 import fielden.platform.bnf.Terminal;
 import fielden.platform.bnf.Variable;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.Limit;
 import ua.com.fielden.platform.entity.query.model.*;
 
 import static fielden.platform.bnf.FluentBNF.start;
 import static fielden.platform.bnf.Metadata.inline;
 import static fielden.platform.bnf.Notation.*;
 import static fielden.platform.bnf.Terms.*;
-import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.values;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
+import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.values;
 import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.*;
 
 /**
@@ -266,6 +265,7 @@ public final class CanonicalEqlGrammar {
             or(YieldOperandExpr).
             or(altLabel("YieldOperand_CountAll", countAll)).
             or(YieldOperandFunction).
+            or(YieldOperandConcatOf).
 
         derive(YieldOperandExpr).
             to(beginExpr, label("first", YieldOperand), repeat(listLabel("operators", ArithmeticalOperator), listLabel("rest", YieldOperand)), endExpr).
@@ -276,6 +276,25 @@ public final class CanonicalEqlGrammar {
         derive(YieldOperandFunctionName).
             to(maxOf).or(minOf).or(sumOf).or(countOf).or(avgOf).
             or(sumOfDistinct).or(countOfDistinct).or(avgOfDistinct).
+
+        derive(YieldOperandConcatOf).
+            to(concatOf, label("expr", SingleOperand), opt(YieldOperandConcatOfOrderBy), separator, label("separator", YieldOperandConcatOfSeparator)).
+
+        derive(YieldOperandConcatOfSeparator).
+            to(val.with(CS)).
+            or(param.with(CS)).or(param.with(ENUM)).
+
+        derive(YieldOperandConcatOfOrderBy).
+            to(orderBy, repeat1(listLabel("operands", YieldOperandConcatOfOrderByOperand))).
+
+        specialize(YieldOperandConcatOfOrderByOperand).
+            into(YieldOperandConcatOfOrderByOperand_Single, YieldOperandConcatOfOrderByOperand_OrderingModel).
+
+        derive(YieldOperandConcatOfOrderByOperand_Single).
+            to(SingleOperand, Order).
+
+        derive(YieldOperandConcatOfOrderByOperand_OrderingModel).
+            to(order.with(OrderingModel.class)).
 
         derive(YieldAlias).
             to(as.with(CS)).or(as.with(ENUM)).
@@ -376,6 +395,7 @@ public final class CanonicalEqlGrammar {
         annotate(YieldManyTail, inline()).
         annotate(YieldOperandFunction, inline()).
         annotate(YieldOperandExpr, inline()).
+        annotate(YieldOperandConcatOf, inline()).
 
         annotate(AndStandaloneCondition, inline()).
         annotate(OrStandaloneCondition, inline()).
@@ -383,6 +403,8 @@ public final class CanonicalEqlGrammar {
         annotate(OrderByOperand_Single, inline()).
         annotate(OrderByOperand_Yield, inline()).
         annotate(OrderByOperand_OrderingModel, inline()).
+        annotate(YieldOperandConcatOfOrderByOperand_Single, inline()).
+        annotate(YieldOperandConcatOfOrderByOperand_OrderingModel, inline()).
         annotate(Limit, inline()).
         annotate(Offset, inline()).
 
@@ -405,6 +427,7 @@ public final class CanonicalEqlGrammar {
         JoinCondition,
         Model, GroupBy,
         AnyYield, YieldOperand, YieldOperandFunction, YieldOperandFunctionName, YieldAlias, LikeOperator, SubsequentYield,
+        YieldOperandConcatOf, YieldOperandConcatOfSeparator, YieldOperandConcatOfOrderBy, YieldOperandConcatOfOrderByOperand,
         UnaryPredicate,
         ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, StandaloneCondExpr,
         StandaloneCondition, OrStandaloneCondition, AndStandaloneCondition,
@@ -415,7 +438,7 @@ public final class CanonicalEqlGrammar {
         OrderBy,
         Offset,
         Limit,
-        MembershipPredicate
+        YieldOperandConcatOfOrderByOperand_Single, YieldOperandConcatOfOrderByOperand_OrderingModel, MembershipPredicate
     }
 
     public enum EqlTerminal implements Terminal {
@@ -453,6 +476,8 @@ public final class CanonicalEqlGrammar {
         props,
         params, iParams,
         maxOf, minOf, sumOf, countOf, avgOf, countAll, sumOfDistinct, countOfDistinct, avgOfDistinct,
+        concatOf,
+        separator,
         between,
         seconds, minutes, hours, days, months, years,
         to,

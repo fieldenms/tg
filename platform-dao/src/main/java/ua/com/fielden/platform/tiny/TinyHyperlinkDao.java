@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
-import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
@@ -25,12 +24,13 @@ import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.web.annotations.AppUri;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
@@ -47,7 +47,8 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             ERR_REQUIRED_PROPS_VALIDATION = "Either %s or all of [%s] must be specified.",
             ERR_INVALID_UNION_VALUE = "Invalid union value specified for property [%s]. Could not access the union's active property. Please ensure that the union value is instrumented.",
             ERR_NO_SUPPORT_FOR_COLLECTIONAL_PROPS = "Collectional properties cannot be shared with tiny hyperlinks.",
-            ERR_URLS_FOR_PERSISTED_ONLY = "URLs can be created only for persisted instances of [%s].";
+            ERR_URLS_FOR_PERSISTED_ONLY = "URLs can be created only for persisted instances of [%s].",
+            ERR_UNSUPPORTED_PROP_TYPE_FOR_SHARING = "Unsupported property type for tiny hyperlink sharing: %s.";
 
     private final ISerialiser serialiser;
     private final String appUri;
@@ -63,22 +64,16 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         return FETCH_PROVIDER;
     }
 
-    @Override
-    @SessionRequired
-    public TinyHyperlink save(final TinyHyperlink tinyHyperlink) {
-        return save(tinyHyperlink, Optional.of(FetchModelReconstructor.reconstruct(tinyHyperlink))).asRight().value();
-    }
-
     /// The definitive save method.
     ///
     @SessionRequired
     @Override
-    protected Either<Long, TinyHyperlink> save(final TinyHyperlink tinyHyperlink, final Optional<fetch<TinyHyperlink>> maybeFetch) {
+    public Either<Long, TinyHyperlink> save(final TinyHyperlink tinyHyperlink, final Optional<fetch<TinyHyperlink>> maybeFetch) {
         if (!tinyHyperlink.isPersisted()) {
             validateRequiredProperties(tinyHyperlink).ifFailure(Result::throwRuntime);
             final var hash = hash(tinyHyperlink);
             // An instrumented instance is required for `save`.
-            final var existingTinyHyperlink = co$(TinyHyperlink.class).findByKeyAndFetch(fetchIdOnly(TinyHyperlink.class).with(HASH), hash);
+            final var existingTinyHyperlink = co$(TinyHyperlink.class).findByKeyAndFetch(fetchOnly(TinyHyperlink.class).with(HASH), hash);
             if (existingTinyHyperlink != null) {
                 return super.save(existingTinyHyperlink, maybeFetch);
             }
@@ -276,7 +271,10 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         if (isEntityType(propertyType)) {
             final var entity = (AbstractEntity<?>) value;
             final var object = new HashMap<>();
-            object.put("val", Objects.toString(entity.getKey(), null));
+            // If this is an id-only proxy, we cannot access its key to associate with "val".
+            // Nor should we use `null`, because then this value will be skipped entirely during restoration.
+            // Hence, use an empty string.
+            object.put("val", entity.isIdOnlyProxy() ? "" : Objects.toString(entity.getKey(), null));
             object.put("valId", entity.getId());
             if (isUnionEntityType(propertyType)) {
                 final var unionValue = (AbstractUnionEntity) value;
@@ -317,9 +315,18 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
             final var klass = (Class<?>) value;
             return $.val(klass.getName());
         }
-        // Identity function for: Map, String, Integer, boolean, BigDecimal
-        else {
+        // Identity function for these types:
+        else if (Map.class.isAssignableFrom(propertyType)
+                 || String.class.isAssignableFrom(propertyType)
+                 || Integer.class.isAssignableFrom(propertyType)
+                 || Long.class.isAssignableFrom(propertyType)
+                 || isBoolean(propertyType)
+                 || BigDecimal.class.isAssignableFrom(propertyType))
+        {
             return $.val(value);
+        }
+        else {
+            throw new UnsupportedOperationException(ERR_UNSUPPORTED_PROP_TYPE_FOR_SHARING.formatted(propertyType.getTypeName()));
         }
     }
 

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
+import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Accessor;
@@ -136,11 +137,10 @@ public class EntityFinder extends ElementFinder {
         return streamDeclaredProperties(entityElement).toList();
     }
 
-    /**
-     * Returns an optional describing a property element with the given name that belongs to the given entity.
-     *
-     * @param propName  simple property path (limited by a single level of depth)
-     */
+    /// Returns an optional describing a property element with the given name that belongs to the given entity.
+    ///
+    /// @param propName  simple property path (limited by a single level of depth)
+    ///
     public Optional<PropertyElement> findDeclaredProperty(final EntityElement entityElement, final CharSequence propName) {
         return streamDeclaredProperties(entityElement)
                 .filter(elt -> elt.getSimpleName().contentEquals(propName))
@@ -172,20 +172,14 @@ public class EntityFinder extends ElementFinder {
         return streamInheritedProperties(entity).collect(collectingAndThen(toCollection(LinkedHashSet::new), Collections::unmodifiableSequencedSet));
     }
 
-    /**
-     * Processes properties of the entity element, collecting them into an unmodifiable set with preserved order.
-     * <p>
-     * The following properties are processed:
-     * <ul>
-     *  <li>{@code id} – included if this or any of the entities represented by supertypes, is persistent,
-     *                   or {@code entity} represents a synthetic type that declares {@code id}.
-     *  <li>{@code desc} – included if this or any of the entities represented by supertypes, declares {@code desc} or is annotated
-     *  with {@code @DescTitle}, excluded otherwise.
-     * </ul>
-     *
-     * @param properties
-     * @param entity
-     */
+    /// Processes properties of the entity element, collecting them into an unmodifiable set with preserved order.
+    ///
+    /// The following properties are processed:
+    /// - `id` – included if this or any of the entities represented by supertypes, is persistent,
+    ///   or `entity` represents a synthetic type that declares `id`.
+    /// - `desc` – included if this or any of the entities represented by supertypes, declares `desc`,
+    ///   or is annotated with `@DescTitle`, excluded otherwise.
+    ///
     public Set<PropertyElement> processProperties(final Collection<PropertyElement> properties, final EntityElement entity) {
         final Set<PropertyElement> processed = new LinkedHashSet<>(properties);
         maybePropId(entity).ifPresent(processed::add);
@@ -274,27 +268,22 @@ public class EntityFinder extends ElementFinder {
         return streamProperties(entityElement).distinct().collect(collectingAndThen(toCollection(LinkedHashSet::new), Collections::unmodifiableSequencedSet));
     }
 
-    /**
-     * Returns an optional describing a property of {@code entityElement} named {@code name}.
-     * <p>
-     * Entity type hiearchy is traversed in natural order and the first matching property is returned.
-     *
-     * @param name  simple property path
-     */
+    /// Returns an optional describing a property of `entityElement` named `name`.
+    ///
+    /// Entity type hierarchy is traversed in natural order and the first matching property is returned.
+    ///
+    /// @param name  simple property path
+    ///
     public Optional<PropertyElement> findProperty(final EntityElement entityElement, final CharSequence name) {
         return streamProperties(entityElement)
                 .filter(elt -> elt.getSimpleName().contentEquals(name))
                 .findFirst();
     }
 
-    /**
-     * Finds a property of an entity by traversing it and its hierarchy below {@code rootType}, which is not searched.
-     *
-     * @param entity
-     * @param name
-     * @param rootType the type at which traversal stops
-     * @return
-     */
+    /// Finds a property of an entity by traversing it and its hierarchy below `rootType`, which is not searched.
+    ///
+    /// @param rootType the type at which traversal stops
+    ///
     public Optional<PropertyElement> findPropertyBelow(final EntityElement entity, final String name, final Class<?> rootType) {
         if (!isSubtype(entity.asType(), rootType)) {
             return Optional.empty();
@@ -308,24 +297,20 @@ public class EntityFinder extends ElementFinder {
             .findFirst();
     }
 
-    /**
-     * Attempts to find an accessor method for the given property by name. The whole entity type hierarchy is searched.
-     *
-     * @param entity the entity element to be analysed
-     * @param propertyName simple property name
-     * @return
-     */
+    /// Attempts to find an accessor method for the given property by name. The whole entity type hierarchy is searched.
+    ///
+    /// @param entity the entity element to be analysed
+    /// @param propertyName simple property name
+    ///
     public Optional<ExecutableElement> findPropertyAccessor(final EntityElement entity, final CharSequence propertyName) {
         return doFindPropertyAccessor(streamMethods(entity.element()), propertyName);
     }
 
-    /**
-     * Attempts to find a declared accessor method for the given property by name.
-     *
-     * @param entity the entity element to be analysed
-     * @param propertyName simple property name
-     * @return
-     */
+    /// Attempts to find a declared accessor method for the given property by name.
+    ///
+    /// @param entity the entity element to be analysed
+    /// @param propertyName simple property name
+    ///
     public Optional<ExecutableElement> findDeclaredPropertyAccessor(final EntityElement entity, final CharSequence propertyName) {
         return doFindPropertyAccessor(streamDeclaredMethods(entity.element()), propertyName);
     }
@@ -340,24 +325,20 @@ public class EntityFinder extends ElementFinder {
         }).findAny();
     }
 
-    /**
-     * Attempts to find a setter method for the given property by name. The whole entity type hierarchy is searched.
-     *
-     * @param entity the entity element to be analysed
-     * @param propertyName simple property name
-     * @return
-     */
+    /// Attempts to find a setter method for the given property by name. The whole entity type hierarchy is searched.
+    ///
+    /// @param entity the entity element to be analysed
+    /// @param propertyName simple property name
+    ///
     public Optional<ExecutableElement> findPropertySetter(final EntityElement entity, final CharSequence propertyName) {
         return doFindPropertySetter(streamMethods(entity.element()), propertyName);
     }
 
-    /**
-     * Attempts to find a declared setter method for the given property by name.
-     *
-     * @param entity the entity element to be analysed
-     * @param propertyName simple property name
-     * @return
-     */
+    /// Attempts to find a declared setter method for the given property by name.
+    ///
+    /// @param entity the entity element to be analysed
+    /// @param propertyName simple property name
+    ///
     public Optional<ExecutableElement> findDeclaredPropertySetter(final EntityElement entity, final CharSequence propertyName) {
         return doFindPropertySetter(streamDeclaredMethods(entity.element()), propertyName);
     }
@@ -367,26 +348,23 @@ public class EntityFinder extends ElementFinder {
         return methods.filter(m -> m.getSimpleName().contentEquals(setterName)).findAny();
     }
 
-    /**
-     * Returns a pair of property title and description as specified by the annotation {@link Title}.
-     *
-     * @param propElement
-     * @return
-     * @throws ElementFinderException if {@link Title} does not have element {@code desc}
-     *                                or values of elements {@code value} and {@code desc} cannot be type casted to String
-     */
+    /// Returns a pair of property title and description as specified by the annotation [Title].
+    ///
+    /// @param propElement
+    /// @return
+    /// @throws ElementFinderException if [Title] does not have element `desc`
+    ///                                or values of elements `value` and `desc` cannot be typecast to `String`
+    ///
     public Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {
         return findAnnotationMirror(propElement, Title.class)
                 .map(annot -> pair(this.<String> getAnnotationElementValue(annot, "value"), this.<String> getAnnotationElementValue(annot, "desc")))
                 .orElse(TitlesDescsGetter.EMPTY_TITLE_AND_DESC);
     }
 
-    /**
-     * Returns a pair of entity title and description as specified by the annotation {@link EntityTitle}.
-     *
-     * @throws ElementFinderException if {@link EntityTitle} does not have element {@code desc}
-     *                                or values of elements {@code value} and {@code desc} cannot be type casted to String
-     */
+    /// Returns a pair of entity title and description as specified by the annotation [EntityTitle].
+    ///
+    /// @throws ElementFinderException if [EntityTitle] does not have element `desc`
+    ///                                or values of elements `value` and `desc` cannot be typecast to String
     public Pair<String, String> getEntityTitleAndDesc(final EntityElement entityElement) {
         return findAnnotationMirror(entityElement, EntityTitle.class)
                 .map(annot -> pair(this.<String> getAnnotationElementValue(annot, "value"), this.<String> getAnnotationElementValue(annot, "desc")))
@@ -396,56 +374,43 @@ public class EntityFinder extends ElementFinder {
                 });
     }
 
-    /**
-     * Returns the actual key type specified by the {@link KeyType} annotation's value.
-     *
-     * @param atKeyType
-     * @return
-     */
+    /// Returns the actual key type specified by the [KeyType] annotation's value.
+    ///
     public TypeMirror getKeyType(final KeyType atKeyType) {
         return getAnnotationElementValueOfClassType(atKeyType, KeyType::value);
     }
 
-    /**
-     * Returns an annotation value representing the actual key type specified by the {@link KeyType} annotation.
-     * <p>
-     * A runtime exception is thrown in case {@link KeyType#value()} could not be obtained, which might happend only if
-     * {@code annotMirror} does not represent {@link KeyType}.
-     */
+    /// Returns an annotation value representing the actual key type specified by the [KeyType] annotation.
+    ///
+    /// A runtime exception is thrown in case [KeyType#value()] could not be obtained, which might happen only if `annotMirror` does not represent [KeyType].
+    ///
     public AnnotationValue getKeyTypeAnnotationValue(final AnnotationMirror annotMirror) {
         return findAnnotationValue(annotMirror, "value")
                 .orElseThrow(() -> new ElementFinderException("Failed to obtain @KeyType.value() from annotation mirror."));
     }
 
-    /**
-     * Determines the type of key for an entity element by looking for a {@link KeyType} declaration in its type hierarchy.
-     * @param entity
-     * @return
-     */
+    /// Determines the type of key for an entity element by looking for a [KeyType] declaration in its type hierarchy.
+    ///
     public Optional<TypeMirror> determineKeyType(final EntityElement entity) {
         return findAnnotation(entity, KeyType.class).map(this::getKeyType);
     }
 
-    /**
-     * Tests whether the type mirror represents an entity type, which is defined as any subtype of {@link AbstractEntity}
-     * (itself included).
-     */
+    /// Tests whether the type mirror represents an entity type, which is defined as any subtype of [AbstractEntity] (itself included).
+    ///
     public boolean isEntityType(final TypeMirror type) {
         return isSubtype(type, ROOT_ENTITY_CLASS);
     }
 
-    /**
-     * Tests whether the type mirror represents a union entity type, which is defined as any subtype of
-     * {@link AbstractUnionEntity} (itself included).
-     */
+    /// Tests whether the type mirror represents a union entity type, which is defined as any subtype of
+    /// [AbstractUnionEntity] (itself included).
+    ///
     public boolean isUnionEntityType(final TypeMirror type) {
         return isSubtype(type, UNION_ENTITY_CLASS);
     }
 
-    /**
-     * Tests whether the entity element represents a union entity type, which is defined as any subtype of
-     * {@link AbstractUnionEntity} (itself included).
-     */
+    /// Tests whether the entity element represents a union entity type, which is defined as any subtype of
+    /// [AbstractUnionEntity] (itself included).
+    ///
     public boolean isUnionEntityType(final EntityElement element) {
         return isUnionEntityType(element.asType());
     }
@@ -454,11 +419,11 @@ public class EntityFinder extends ElementFinder {
         return streamDeclaredFields(entity.element())
                 .filter(ElementFinder::isStatic)
                 .anyMatch(varElt -> {
-                    // static EntityResulQueryModel model_
+                    // Static `EntityResulQueryModel model_`.
                     if (varElt.getSimpleName().contentEquals("model_") && isSubtype(varElt.asType(), EntityResultQueryModel.class)) {
                         return true;
                     }
-                    // static List<EntityResulQueryModel> models_
+                    // Static `List<EntityResulQueryModel> models_`.
                     else if (varElt.getSimpleName().contentEquals("models_") && isSubtype(varElt.asType(), List.class)) {
                         final List<? extends TypeMirror> typeArgs = asDeclaredType(varElt.asType()).getTypeArguments();
                         if (!typeArgs.isEmpty()) {
@@ -470,43 +435,27 @@ public class EntityFinder extends ElementFinder {
                 });
     }
 
-    /**
-     * Any entity annotated with {@code @MapEntityTo} is considered to be a persistent entity.
-     *
-     * @param element
-     * @return
-     */
+    /// Any entity annotated with [@MapEntityTo] is considered to be a persistent entity.
+    ///
     public boolean isPersistentEntityType(final EntityElement element) {
         return isEntityType(element.asType()) && element.getAnnotation(MapEntityTo.class) != null;
     }
 
-    /**
-     * Determines whether any of the supertypes for entity represented by {@code element} is a persistent entity.
-     * If {@code element} is persistent, but none of its supertypes are persistent, then {@code false} is returned.
-     *
-     * @param element
-     * @return
-     */
+    /// Determines whether any of the supertypes for entity represented by `element` is a persistent entity.
+    /// If `element` is persistent, but none of its supertypes are persistent, then `false` is returned.
+    ///
     public boolean doesExtendPersistentEntity(final EntityElement element) {
         return streamSuperclasses(element).anyMatch(elt -> isPersistentEntityType(EntityElement.wrapperFor(elt)));
     }
 
-    /**
-     * Determines whether {@code element} represents an entity property.
-     *
-     * @param element
-     * @return
-     */
+    /// Determines whether `element` represents an entity property.
+    ///
     public boolean isProperty(final VariableElement element) {
         return element.getKind() == ElementKind.FIELD && element.getAnnotation(IsProperty.class) != null;
     }
 
-    /**
-     * A predicate to determine if {@code propElement} represents an entity-typed property, which is a domain entity.
-     *
-     * @param propElement
-     * @return
-     */
+    /// A predicate to determine if `propElement` represents an entity-typed property, which is a domain entity.
+    ///
     public boolean isPropertyOfDomainEntityType(final PropertyElement propElement) {
         return propElement.getType().accept(IS_PROPERTY_OF_DOMAIN_ENTITY_TYPE_VISITOR, null);
     }
@@ -523,10 +472,9 @@ public class EntityFinder extends ElementFinder {
         }
     };
 
-    /**
-     * Tests whether the property element represents a collectional property.
-     * This method is similar to {@link EntityUtils#isCollectional(Class)}.
-     */
+    /// Tests whether the property element represents a collectional property.
+    /// This method is similar to [EntityUtils#isCollectional(Class)].
+    ///
     public boolean isCollectionalProperty(final PropertyElement property) {
         return isSubtype(property.getType(), Collection.class);
     }
@@ -541,48 +489,34 @@ public class EntityFinder extends ElementFinder {
         return property.getAnnotation(CompositeKeyMember.class) != null;
     }
 
-    /**
-     * A predicate that determines whether {@code element} represent an entity that needs a meta model.
-     *
-     * @param element
-     * @return
-     */
+    /// A predicate that determines whether `element` represent an entity that needs a meta-model.
+    ///
     public boolean isEntityThatNeedsMetaModel(final TypeElement element) {
         return isEntityType(element.asType()) &&
-               hasAnyPresentAnnotation(element, ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION) ||
-               (!isAbstract(element) && (isUnionEntityType(element.asType()) || isSyntheticEntityType(newEntityElement(element))));
+               !hasAnnotation(element, WithoutMetaModel.class) &&
+               (hasAnyPresentAnnotation(element, ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION) ||
+                (!isAbstract(element) && (isUnionEntityType(element.asType()) || isSyntheticEntityType(newEntityElement(element)))));
     }
 
     public boolean isEntityThatNeedsMetaModel(final EntityElement element) {
         return isEntityThatNeedsMetaModel(element.element());
     }
 
-    /**
-     * Returns a stream of entity elements, which are superclasses of the given entity element, up to and including {@link AbstractEntity}.
-     *
-     * @param element
-     * @return
-     */
+    /// Returns a stream of entity elements, which are superclasses of the given entity element, up to and including [AbstractEntity].
+    ///
     public Stream<EntityElement> streamParents(final EntityElement element) {
         return streamSuperclasses(element, ROOT_ENTITY_CLASS).map(this::newEntityElement);
     }
 
-    /**
-     * Returns the immediate parent entity type of the entity element.
-     * Empty optional is returned if {@code element} represents {@link AbstractEntity} or the element's superclass could
-     * not be resolved.
-     */
+    /// Returns the immediate parent entity type of the entity element.
+    /// Empty optional is returned if `element` represents [AbstractEntity] or the element's superclass could not be resolved.
+    ///
     public Optional<EntityElement> getParent(final EntityElement element) {
         return streamParents(element).findFirst();
     }
 
-    /**
-     * Looks for annotation of type {@code annotationClass}, declared for entity {@code element} or any of the supertypes for this entity.
-     *
-     * @param element
-     * @param annotationClass
-     * @return
-     */
+    /// Looks for annotation of type `annotationClass`, declared for entity `element` or any of the supertypes for this entity.
+    ///
     public <A extends Annotation> Optional<A> findAnnotation(final EntityElement element, final Class<A> annotationClass) {
         return Stream.concat(Stream.of(element), streamParents(element))
                 .map(elt -> elt.getAnnotation(annotationClass))
@@ -590,11 +524,10 @@ public class EntityFinder extends ElementFinder {
                 .findFirst();
     }
 
-    /**
-     * Returns an optional describing the underlying entity of a given meta-model by analysing its {@link MetaModelForType}
-     * annotation. If this annotation is not present, then a warning is reported and an empty optional returned.
-     * If the underlying entity is missing (e.g., due to renaming/removal), then an empty optional is returned.
-     */
+    /// Returns an optional describing the underlying entity of a given meta-model by analysing its [MetaModelForType] annotation.
+    /// If this annotation is not present, then a warning is reported and an empty optional returned.
+    /// If the underlying entity is missing (e.g., due to renaming/removal), then an empty optional is returned.
+    ///
     public Optional<EntityElement> findEntityForMetaModel(final MetaModelElement mme) {
         final MetaModelForType annot = mme.getAnnotation(MetaModelForType.class);
         if (annot == null) {
@@ -603,18 +536,28 @@ public class EntityFinder extends ElementFinder {
             return Optional.empty();
         }
         final TypeMirror entityType = getAnnotationElementValueOfClassType(annot, a -> a.value());
-        // missing types have TypeKind.ERROR
+        // Missing types have TypeKind.ERROR.
         return entityType.getKind() == TypeKind.ERROR ? Optional.empty() : Optional.of(newEntityElement(asTypeElementOfTypeMirror(entityType)));
     }
 
-    /**
-     * Returns a new instance of {@link EntityElement} that is composed of the specified type element.
-     *
-     * @param typeElement
-     * @return
-     */
+    /// Returns a new instance of [EntityElement] that is composed of the specified type element.
+    ///
     public EntityElement newEntityElement(final TypeElement typeElement) {
         return new EntityElement(typeElement, getPackageOfTypeElement(typeElement).getQualifiedName().toString());
+    }
+
+    /// Assuming that `daoElt` represents a DAO companion class, tries to find its corresponding entity type.
+    ///
+    public Optional<TypeElement> findEntityForDao(final TypeElement daoElt) {
+        final var atEntityType = daoElt.getAnnotation(EntityType.class);
+        if (atEntityType == null) {
+            return Optional.empty();
+        }
+        else {
+            final TypeMirror entityType = getAnnotationElementValueOfClassType(atEntityType, a -> a.value());
+            // missing types have TypeKind.ERROR
+            return entityType.getKind() == TypeKind.ERROR ? Optional.empty() : Optional.of(asTypeElementOfTypeMirror(entityType));
+        }
     }
 
 }

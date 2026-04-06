@@ -9,6 +9,9 @@ import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
+import ua.com.fielden.platform.audit.AuditingMode;
+import ua.com.fielden.platform.audit.IAuditTypeFinder;
+import ua.com.fielden.platform.audit.ISynAuditEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -40,8 +43,10 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.Lazy;
 
 import javax.persistence.OptimisticLockException;
 import java.util.*;
@@ -57,45 +62,47 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
+import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.model.IFillModel.emptyFillModel;
 import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
-import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableReference;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 import static ua.com.fielden.platform.utils.MiscUtilities.optional;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
-/**
- * The default implementation of contract {@link IEntityActuator} to save/update persistent entities.
- * 
- * @author TG Team
- *
- * @param <T>
- */
+/// The default implementation of contract [IEntityActuator] to save/update persistent entities.
+///
 public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements IEntityActuator<T> {
 
-    public static final String ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES = "Could not resolve conflicting changes.";
-    public static final String ERR_OPTIMISTIC_LOCK = "%s [%s] was updated or deleted by another user. Please try saving again.";
-    public static final String ERR_CONFLICTING_CONCURRENT_CHANGE = "There was a conflicting change by another user. Please try saving again.";
-    public static final String ERR_ALREADY_EXISTS = "%s [%s] already exists.";
-    public static final String ERR_NOW_CONSTANT_MISSING_VALUE = "The now() constant has not been assigned!";
-    public static final String ERR_NO_VALUE_FOR_AUTO_ASSIGNABLE_PROP = "Property %s@%s is marked as assignable before save, but no value could be determined.";
-    public static final String ERR_NO_CURRENT_USER = "The current user is not defined.";
+    public static final String
+            ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES = "Could not resolve conflicting changes.",
+            ERR_OPTIMISTIC_LOCK = "%s [%s] was updated or deleted by another user. Please try saving again.",
+            ERR_CONFLICTING_CONCURRENT_CHANGE = "There was a conflicting change by another user. Please try saving again.",
+            ERR_ALREADY_EXISTS = "%s [%s] already exists.",
+            ERR_NOW_CONSTANT_MISSING_VALUE = "The now() constant has not been assigned!",
+            ERR_NO_VALUE_FOR_AUTO_ASSIGNABLE_PROP = "Property %s@%s is marked as assignable before save, but no value could be determined.",
+            ERR_NO_CURRENT_USER = "The current user is not defined.",
+            ERR_NULL_OR_NON_PERSISTENT_ENTITY = "Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.",
+            ERR_UNINSTRUMENTED_ENTITY = "Uninstrumented entity of type [%s] cannot be saved.",
+            ERR_PROXIED_VERSION = "Entity of type [%s] with unfetched [version] cannot be saved. Use at least fetchOnly (ID_AND_VERSION) when fetching entities intended for saving.";
 
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;
@@ -108,12 +115,14 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final IEntityFetcher entityFetcher;
     private final IUserProvider userProvider;
     private final Supplier<DateTime> now;
-    
+
     private final BiConsumer<T, Set<String>> processAfterSaveEvent;
     private final Consumer<MetaProperty<?>> assignBeforeSave;
 
     private final FindEntityById<T> findById;
     private final Function<EntityResultQueryModel<T>, Boolean> entityExists;
+    private final boolean audited;
+    private final Lazy<Auditor<T>> lazyAuditor;
 
     private Boolean targetEntityTypeHasValidateOverridden;
     
@@ -135,7 +144,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final IUserProvider userProvider,
             final IUniversalConstants universalConstants,
             final ICompanionObjectFinder coFinder,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final IAuditTypeFinder auditTypeFinder,
+            final AuditingMode auditingMode)
     {
         this.session = session;
         this.transactionGuid = transactionGuid;
@@ -152,6 +163,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.now = universalConstants::now;
         this.coFinder = coFinder;
         this.domainMetadata = domainMetadata;
+        this.audited = auditingMode == AuditingMode.ENABLED && isAudited(entityType);
+        this.lazyAuditor = lazySupplier(() -> makeAuditor(entityType, audited, auditTypeFinder, coFinder));
     }
 
     @ImplementedBy(FactoryImpl.class)
@@ -168,19 +181,21 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final Logger logger);
     }
     
-    /**
-     * Saves the provided entity. This method checks entity version and throws StaleObjectStateException if the provided entity is stale. There is no in-memory referential
-     * integrity guarantee -- the returned instance is always a different instance. However, from the perspective of data loading, it is guaranteed that the object graph of the
-     * returned instance contains the object graph of the passed in entity as its subgraph (i.e. it can be wider, but not narrower).
-     * <p>
-     * New or already persisted entity instances should not be reused after successful saving.
-     * There is no guarantee as to what properties may or may not get mutated as part of the saving logic.
-     * For example, saving new entities does not result in assigning their {@code ID} values to the passed in instances.
-     * Instead, the returned instances should be used.
-     * The future direction is complete immutability where setting any property value would not modify that entity, but return a new instance with the new property value assigned. 
-     * <p>
-     * This method must be invoked in the context of an open DB session and supports saving only of persistent entities. Otherwise, an exception is thrown. 
-     */
+    /// Saves the provided entity.
+    /// This method checks entity version and throws StaleObjectStateException if the provided entity is stale.
+    /// There is no in-memory referential integrity guarantee — the returned instance is always a different instance.
+    /// However, from the perspective of data loading, it is guaranteed that the object graph of the returned instance contains the object graph of the passed in entity as its subgraph
+    /// (i.e. it can be wider, but not narrower).
+    ///
+    /// New or already persisted entity instances should not be reused after successful saving.
+    /// There is no guarantee as to what properties may or may not get mutated as part of the saving logic.
+    /// For example, saving new entities does not result in assigning their `ID` values to the passed in instances.
+    /// Instead, the returned instances should be used.
+    /// The future direction is complete immutability where setting any property value would not modify that entity, but return a new instance with the new property value assigned.
+    ///
+    /// This method must be invoked in the context of an open DB session and supports saving only of persistent entities.
+    /// Otherwise, an exception is thrown.
+    ///
     @Override
     public T save(final T entity) {
         return coreSave(entity, false, empty())._2;
@@ -188,9 +203,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
     public T2<Long, T> coreSave(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch) {
         if (entity == null || !entity.isPersistent()) {
-            throw new EntityCompanionException(format("Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.", entityType.getName()));
+            throw new EntityCompanionException(ERR_NULL_OR_NON_PERSISTENT_ENTITY.formatted(entityType.getName()));
         } else if (!entity.isInstrumented()) {
-            throw new EntityCompanionException(format("Uninstrumented entity of type [%s] cannot be saved.", entityType.getName()));
+            throw new EntityCompanionException(ERR_UNINSTRUMENTED_ENTITY.formatted(entityType.getName()));
+        } else if (entity.isPersisted() && entity.proxiedPropertyNames().contains(AbstractEntity.VERSION)) {
+            throw new EntityCompanionException(ERR_PROXIED_VERSION.formatted(entityType.getName()));
         } else if (!entity.isDirty()) {
             final Result isValid = validateEntity(entity);
             if (isValid.isSuccessful()) {
@@ -207,7 +224,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     }
                     else {
                         final var fillModelBld = new FillModelBuilder(domainMetadata);
-                        plainProps.stream().forEach(dmp -> {
+                        plainProps.forEach(dmp -> {
                             final var value = entity.get(dmp.name());
                             if (value != null) {
                                 fillModelBld.set(dmp.name(), value);
@@ -237,7 +254,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return propName;
         }).collect(toSet());
 
-        final T2<Long, T> savedEntityAndId;
+        final T3<Long, Long, T> savedResult;
         // let's try to save entity
         try {
             // firstly validate the entity
@@ -249,19 +266,56 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                savedEntityAndId = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
+                savedResult = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
             } else { // so, this is a modified entity
-                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
+                savedResult = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
 
-        final T savedEntity = savedEntityAndId._2;
-        // this call never throws any exceptions
+        final Long savedId = savedResult._1;
+        final Long savedVersion = savedResult._2;
+        final T savedEntity = savedResult._3;
+
+        // This call never throws any exceptions.
+        //
+        // NOTE: `savedEntity` will be a Hibernate proxy if refetching is skipped.
+        //       This may be confusing if "after-save" logic expects an entity instantiated in the usual way (via EntityFactory).
         processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
-        return savedEntityAndId;
+        // Auditing: version is obtained directly from Hibernate (via savedResult), not from the refetched entity whose fetch model may not include version.
+        lazyAuditor.get().audit(savedId, savedVersion, transactionGuid.get(), dirtyPropNames);
+
+        return t2(savedId, savedEntity);
+    }
+
+    /// Performs the auditing function if auditing is enabled and the entity type is audited.
+    /// Otherwise, has no effect.
+    ///
+    /// The benefit of this abstraction over plain code statements is performance: the initialisation phase will occur only once.
+    ///
+    @FunctionalInterface
+    private interface Auditor<E extends AbstractEntity<?>> {
+
+        void audit(final Long auditEntityId, final Long auditEntityVersion, final String transactionGuid, Collection<String> dirtyProperties);
+
+    }
+
+    private static <E extends AbstractEntity<?>> Auditor<E> makeAuditor(
+            final Class<E> entityType,
+            final boolean audited,
+            final IAuditTypeFinder auditTypeFinder,
+            final ICompanionObjectFinder coFinder)
+    {
+        if (audited) {
+            // Performance benefit: the companion is created only once.
+            final ISynAuditEntityDao<E> coSynAudit = coFinder.find(auditTypeFinder.navigate(entityType).synAuditEntityType());
+            return coSynAudit::audit;
+        }
+        else {
+            return (auditedEntityId, auditedEntityVersion, transactionGuid, dirtyProperties) -> {};
+        }
     }
 
     /**
@@ -328,7 +382,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param entityMetadata  entity domain metadata
      * @param session  the current database session
      */
-    private T2<Long, T> saveModifiedEntity(
+    private T3<Long, Long, T> saveModifiedEntity(
             final T entity,
             final boolean skipRefetching,
             final Optional<fetch<T>> maybeFetch,
@@ -412,9 +466,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
 
         // update entity
+        final Long savedVersion;
         try {
             session.update(persistedEntity);
             session.flush();
+            savedVersion = persistedEntity.getVersion();
         } catch (final OptimisticLockException ex) {
             // optimistic locking exception may occur during concurrent saving
             // let's present a more user-friendly message and log the error
@@ -431,7 +487,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             }
         }
 
-        return t2(persistedEntity.getId(),
+        return t3(persistedEntity.getId(), savedVersion,
                   entityFetchOption.map(fetch -> findById.find(persistedEntity.getId(), fetch, fillModel.get())).orElse(persistedEntity));
     }
 
@@ -513,7 +569,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param fillModel  will be applied only in the presence of a fetch model
      * @param session  the current database session
      */
-    private T2<Long, T> saveNewEntity(
+    private T3<Long, Long, T> saveNewEntity(
             final T entity,
             final boolean skipRefetching,
             final Optional<fetch<T>> maybeFetch,
@@ -542,18 +598,20 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // In the case of one-2-one association, the value of ID is derived from its key's ID and does not need to be generated.
         final boolean isOne2OneAssociation = AbstractEntity.class.isAssignableFrom(entity.getKeyType());
         final Long newEntityId = isOne2OneAssociation ? ((AbstractEntity<?>) entity.getKey()).getId() : nextIdValue(ID_SEQUENCE_NAME, session);
+        final Long savedVersion;
         try {
             final var entityToSave = isOne2OneAssociation ? entity : entity.set(ID, newEntityId);
             session.save(entityToSave);
             session.flush(); // force saving to DB
+            savedVersion = entityToSave.getVersion();
             session.clear();
         } finally {
             // Reset the value of ID to null for the passed-in entity to avoid any possible confusion stemming from the fact that `entity` became persisted.
             // This is relevant for all entities, including one-2-one associations.
             entity.set(ID, null);
         }
-        
-        return t2(newEntityId,
+
+        return t3(newEntityId, savedVersion,
                   entityFetchOption.map(fetch -> findById.find(newEntityId, fetch, fillModel.get())).orElse(entity));
     }
 
@@ -880,6 +938,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         private final IUniversalConstants universalConstants;
         private final ICompanionObjectFinder coFinder;
         private final IDomainMetadata domainMetadata;
+        private final IAuditTypeFinder auditTypeFinder;
+        private final AuditingMode auditingMode;
 
         @Inject
         FactoryImpl(final IDbVersionProvider dbVersionProvider,
@@ -887,13 +947,18 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     final IUserProvider userProvider,
                     final IUniversalConstants universalConstants,
                     final ICompanionObjectFinder coFinder,
-                    final IDomainMetadata domainMetadata) {
+                    final IDomainMetadata domainMetadata,
+                    final IAuditTypeFinder auditTypeFinder,
+                    final AuditingMode auditingMode)
+        {
             this.dbVersionProvider = dbVersionProvider;
             this.entityFetcher = entityFetcher;
             this.userProvider = userProvider;
             this.universalConstants = universalConstants;
             this.coFinder = coFinder;
             this.domainMetadata = domainMetadata;
+            this.auditTypeFinder = auditTypeFinder;
+            this.auditingMode = auditingMode;
         }
 
         public <E extends AbstractEntity<?>> PersistentEntitySaver<E> create(
@@ -910,7 +975,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return new PersistentEntitySaver<>(session, transactionGuid, entityType, keyType, processAfterSaveEvent,
                                                assignBeforeSave, findById, entityExists, logger,
                                                dbVersionProvider, entityFetcher, userProvider, universalConstants,
-                                               coFinder, domainMetadata);
+                                               coFinder, domainMetadata, auditTypeFinder, auditingMode);
         }
     }
 

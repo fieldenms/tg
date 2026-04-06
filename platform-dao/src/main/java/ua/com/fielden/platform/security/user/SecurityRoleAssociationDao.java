@@ -4,7 +4,6 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -18,7 +17,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static java.util.stream.Collectors.partitioningBy;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
@@ -51,14 +49,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     @Authorise(SecurityRoleAssociation_CanSave_Token.class)
-    public SecurityRoleAssociation save(final SecurityRoleAssociation entity) {
-        return save(entity, of(FetchModelReconstructor.reconstruct(entity))).asRight().value();
-    }
-
-    @Override
-    @SessionRequired
-    @Authorise(SecurityRoleAssociation_CanSave_Token.class)
-    protected Either<Long, SecurityRoleAssociation> save(final SecurityRoleAssociation entity, final Optional<fetch<SecurityRoleAssociation>> maybeFetch) {
+    public Either<Long, SecurityRoleAssociation> save(final SecurityRoleAssociation entity, final Optional<fetch<SecurityRoleAssociation>> maybeFetch) {
         return super.save(entity, maybeFetch);
     }
 

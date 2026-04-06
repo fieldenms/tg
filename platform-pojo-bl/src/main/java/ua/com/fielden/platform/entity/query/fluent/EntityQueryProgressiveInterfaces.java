@@ -1,25 +1,13 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.*;
+
 import java.util.Collection;
 import java.util.Date;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-
-/**
- * Class for collecting all interfaces, which are part of Entity Query Progressive Interfaces.
- *
- * @author TG Team
- *
- */
+/// Class for collecting all interfaces, which are part of Entity Query Progressive Interfaces.
+///
 public interface EntityQueryProgressiveInterfaces {
 
     interface IComparisonOperator<T extends ILogicalOperator<?>, ET extends AbstractEntity<?>> {
@@ -461,7 +449,8 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     interface IYieldOperand<T, ET extends AbstractEntity<?>> //
-            extends ISingleOperand<T, ET> {
+            extends ISingleOperand<T, ET>
+    {
         IFunctionLastArgument<T, ET> maxOf();
 
         IFunctionLastArgument<T, ET> minOf();
@@ -472,6 +461,17 @@ public interface EntityQueryProgressiveInterfaces {
 
         IFunctionLastArgument<T, ET> avgOf();
 
+        /// Aggregate function that concatenates values into a string, separated by a separator.
+        /// Maps to `STRING_AGG` in SQL.
+        ///
+        /// Without `orderBy`, the concatenation order is nondeterministic.
+        /// Use `orderBy` between the expression and `separator` to control the order:
+        /// ```
+        /// yield().concatOf().prop("name").orderBy().prop("name").asc().separator().val(", ")
+        /// ```
+        ///
+        ISingleOperand<IYieldOperandConcatOfNext<T, ET>, ET> concatOf();
+
         T countAll();
 
         IFunctionLastArgument<T, ET> sumOfDistinct();
@@ -479,6 +479,46 @@ public interface EntityQueryProgressiveInterfaces {
         IFunctionLastArgument<T, ET> countOfDistinct();
 
         IFunctionLastArgument<T, ET> avgOfDistinct();
+    }
+
+    interface IYieldOperandConcatOfNext<T, ET extends AbstractEntity<?>>
+        extends IYieldOperandConcatOfOrderBy<T, ET>,
+                IYieldOperandConcatOfSeparator<T, ET>
+    {}
+
+    interface IYieldOperandConcatOfSeparator<T, ET extends AbstractEntity<?>> {
+        IYieldOperandConcatOfSeparatorOperand<T, ET> separator();
+    }
+
+    interface IYieldOperandConcatOfOrderBy<T, ET extends AbstractEntity<?>> {
+        /// Specifies an intra-aggregate ORDER BY for `concatOf`.
+        ///
+        IYieldOperandConcatOfOrderByOperand<T, ET> orderBy();
+    }
+
+    interface IYieldOperandConcatOfOrderByOperand<T, ET extends AbstractEntity<?>>
+        extends ISingleOperand<IYieldOperandConcatOfOrderByOperandOrder<T, ET>, ET>
+
+    {
+        /// Includes a pre-built [OrderingModel] (which already contains sort direction).
+        /// Transitions directly to the separator/next-orderBy step, skipping `asc()`/`desc()`.
+        IYieldOperandConcatOfOrderByOperandOrSeparator<T, ET> order(OrderingModel model);
+    }
+
+    interface IYieldOperandConcatOfOrderByOperandOrSeparator<T, ET extends AbstractEntity<?>>
+        extends IYieldOperandConcatOfOrderByOperand<T, ET>,
+                IYieldOperandConcatOfSeparator<T, ET>
+    {}
+
+    interface IYieldOperandConcatOfOrderByOperandOrder<T, ET extends AbstractEntity<?>>  {
+        IYieldOperandConcatOfOrderByOperandOrSeparator<T, ET> asc();
+        IYieldOperandConcatOfOrderByOperandOrSeparator<T, ET> desc();
+    }
+
+    interface IYieldOperandConcatOfSeparatorOperand<T, ET extends AbstractEntity<?>> {
+        T val(CharSequence separator);
+        T param(CharSequence paramName);
+        T param(Enum<?> paramName);
     }
 
     interface IDateDiffFunction<T, ET extends AbstractEntity<?>> {

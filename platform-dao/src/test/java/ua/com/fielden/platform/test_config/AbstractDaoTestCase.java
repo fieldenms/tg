@@ -64,7 +64,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
                                                               .map(tok -> coSecurityRoleAssociation.new_().setRole(admin).setSecurityToken(tok)).toList());
         }
 
-        up.setUsername(testUser.getKey(), getInstance(IUser.class));
+        up.setUser(testUser);
     }
 
     @Override

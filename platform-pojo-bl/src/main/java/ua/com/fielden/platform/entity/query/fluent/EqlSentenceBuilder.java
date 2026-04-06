@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 import com.google.common.collect.ImmutableList;
 import org.antlr.v4.runtime.Token;
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
@@ -47,7 +48,11 @@ final class EqlSentenceBuilder {
 
     @Override
     public String toString() {
-        return tokens.toString();
+        final StringBuilder sb = new StringBuilder();
+        for (final var token : tokens) {
+            sb.append("%n    %s".formatted(StringUtils.rightPad(token.getText(), 32, '.')));
+        }
+        return sb.toString();
     }
 
     private EqlSentenceBuilder makeCopy() {
@@ -524,6 +529,14 @@ final class EqlSentenceBuilder {
 
     public EqlSentenceBuilder averageOf() {
         return _add(token(AVGOF));
+    }
+
+    public EqlSentenceBuilder concatOf() {
+        return _add(token(CONCATOF));
+    }
+
+    public EqlSentenceBuilder separator() {
+        return _add(token(SEPARATOR));
     }
 
     public EqlSentenceBuilder sumOfDistinct() {

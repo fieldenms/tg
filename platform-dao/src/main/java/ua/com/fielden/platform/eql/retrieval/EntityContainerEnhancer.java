@@ -153,10 +153,12 @@ public class EntityContainerEnhancer {
         if (isUnionEntityType(propType)) {
             for (final var entity : entities) {
                 final var unionContainer = entity.getEntities().get(propName);
-                for (final var memberContainer : unionContainer.getEntities().values()) {
-                    final var memberProxyType = idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(memberContainer.getResultType());
-                    if (memberProxyType != null) {
-                        memberContainer.setProxiedResultType((Class) memberProxyType);
+                if (unionContainer != null) {
+                    for (final var memberContainer : unionContainer.getEntities().values()) {
+                        final var memberProxyType = idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(memberContainer.getResultType());
+                        if (memberProxyType != null) {
+                            memberContainer.setProxiedResultType((Class) memberProxyType);
+                        }
                     }
                 }
             }
