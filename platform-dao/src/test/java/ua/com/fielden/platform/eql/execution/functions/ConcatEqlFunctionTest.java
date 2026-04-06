@@ -94,11 +94,43 @@ public class ConcatEqlFunctionTest extends AbstractEqlExecutionTestCase {
     }
 
     @Test
+    public void works_with_min_integer_value() {
+        final var qry = select().yield().concat().
+                val(Integer.MIN_VALUE).
+                end().as(RESULT).modelAsAggregate();
+        assertEquals(Integer.toString(Integer.MIN_VALUE), retrieveResult(qry));
+    }
+
+    @Test
+    public void works_with_max_integer_value() {
+        final var qry = select().yield().concat().
+                val(Integer.MAX_VALUE).
+                end().as(RESULT).modelAsAggregate();
+        assertEquals(Integer.toString(Integer.MAX_VALUE), retrieveResult(qry));
+    }
+
+    @Test
     public void works_with_long_value() {
         final var qry = select().yield().concat().
                 val(100l).
                 end().as(RESULT).modelAsAggregate();
         assertEquals("100", retrieveResult(qry));
+    }
+
+    @Test
+    public void works_with_min_long_value() {
+        final var qry = select().yield().concat().
+                val(Long.MIN_VALUE).
+                end().as(RESULT).modelAsAggregate();
+        assertEquals(Long.toString(Long.MIN_VALUE), retrieveResult(qry));
+    }
+
+    @Test
+    public void works_with_max_long_value() {
+        final var qry = select().yield().concat().
+                val(Long.MAX_VALUE).
+                end().as(RESULT).modelAsAggregate();
+        assertEquals(Long.toString(Long.MAX_VALUE), retrieveResult(qry));
     }
 
     @Test
