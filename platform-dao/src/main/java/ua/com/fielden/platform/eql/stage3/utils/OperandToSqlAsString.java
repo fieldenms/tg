@@ -161,7 +161,7 @@ public final class OperandToSqlAsString {
 
             @Override
             public String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand) {
-                return DbVersion.ORACLE.castSql(operand.sql(metadata, dbVersion()), "VARCHAR2");
+                return DbVersion.ORACLE.castSql(operand.sql(metadata, dbVersion()), "VARCHAR2(4000)");
             }
         }
     }
