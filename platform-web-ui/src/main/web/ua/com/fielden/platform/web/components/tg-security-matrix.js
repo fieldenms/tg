@@ -417,10 +417,11 @@ Polymer({
     
     canLeave: function () {
         if (this.entities && this.entities.some(entity => entity.isChanged())) {
-            return {
+            return Promise.reject({
                 msg: "Please save or cancel changes."
-            };
+            });
         }
+        return Promise.resolve(true);
     },
 
     filterTokens: function (text) {
@@ -497,6 +498,13 @@ Polymer({
      */
     _ajaxSaver: function () {
         return this._masterDom()._ajaxSaver();
+    },
+
+    /**
+     * The core-ajax component for custom canLeave logic.
+     */
+    _canLeaveAjax: function () {
+        return this._masterDom()._canLeaveAjax();
     },
 
     /**

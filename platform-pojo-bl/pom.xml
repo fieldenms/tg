@@ -3,7 +3,7 @@
     <parent>
         <groupId>fielden</groupId>
         <artifactId>platform-parent</artifactId>
-        <version>2.2.8</version>
+        <version>2.3.0</version>
     </parent>
 
     <artifactId>platform-pojo-bl</artifactId>
@@ -22,6 +22,7 @@
         <poi.verstion>5.4.1</poi.verstion>
         <xalan.version>2.7.3</xalan.version>
         <guice.version>7.0.0</guice.version>
+        <asm.version>9.9.1</asm.version><!-- Required to override the outdated dependency in Guice. -->
         <qrcodegen.version>1.8.0</qrcodegen.version>
     </properties>
 
@@ -47,9 +48,20 @@
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
-              <artifactId>guice</artifactId>
-              <version>${guice.version}</version>
+            <artifactId>guice</artifactId>
+            <version>${guice.version}</version>
+            <!-- Classifier "classes" unshades the Guice dependency,
+                 which makes using explicit dependency on ASM below replace the original dependency in Guice.
+                 This is as per suggestion https://github.com/google/guice/issues/1926#issuecomment-3991531593
+                  -->
+            <classifier>classes</classifier>
         </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-assistedinject</artifactId>
@@ -277,6 +289,14 @@
             <version>1.18.1</version>
         </dependency>
 
+      <!-- https://mvnrepository.com/artifact/com.google.testing.compile/compile-testing -->
+      <dependency>
+        <groupId>com.google.testing.compile</groupId>
+        <artifactId>compile-testing</artifactId>
+        <version>0.23.0</version>
+        <scope>test</scope>
+      </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.assertj/assertj-core -->
         <dependency>
             <groupId>org.assertj</groupId>
@@ -329,6 +349,26 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>audit-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <!-- The location of generated audit sources. -->
+                                <source>src/audit/java/</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

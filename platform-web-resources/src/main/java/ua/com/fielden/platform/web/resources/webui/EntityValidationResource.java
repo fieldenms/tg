@@ -13,13 +13,8 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
@@ -36,14 +31,10 @@ import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.creat
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
 
-/**
- * The web resource for entity validation serves as a back-end mechanism of changing entity properties and validating that changes.
- *
- * The server does not keep any state about the entities to be modified.
- *
- * @author TG Team
- *
- */
+/// This web resource handles entity validation.
+///
+/// The server does not maintain any state pertaining to the entities being modified and validated.
+///
 public class EntityValidationResource<T extends AbstractEntity<?>> extends AbstractWebResource {
     static final String VALIDATION_COUNTER = "@validationCounter";
     private final Class<T> entityType;
@@ -82,9 +73,8 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
         this.sharingModel = sharingModel;
     }
 
-    /**
-     * Handles POST request resulting from tg-entity-master <code>validate()</code> method.
-     */
+    /// Handles POST request resulting from tg-entity-master <code>validate()</code> method.
+    ///
     @Post
     public Representation validate(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
@@ -94,11 +84,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
 
             final User user = userProvider.getUser();
-            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
-            final IUser userCompanion = companionFinder.find(User.class);
-
-            final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, PropertyAssignmentErrorHandler.standard, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device(), eccCompanion, mmiCompanion, userCompanion, sharingModel);
+            final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, PropertyAssignmentErrorHandler.standard, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device(), sharingModel);
 
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
             final Result result = restUtil.singleEntityResult(applied);

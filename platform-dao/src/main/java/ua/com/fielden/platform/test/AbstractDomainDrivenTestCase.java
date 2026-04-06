@@ -7,37 +7,41 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
 import org.junit.Before;
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.utils.DbUtils;
 
 import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
+import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
 
 /// This is a base class for all test cases in TG-based applications.
 ///
 public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData, ISessionEnabled {
+
+    private static final String ERR_SAVE_WITH_FETCH_NOT_IMPLEMENTED =
+            "Save-with-fetch cannot be used because the companion for entity [%s] does not implement [" + ISaveWithFetch.class.getSimpleName() + "].";
 
     public static final String
             ERR_CANNOT_SAVE_NULL = "Null instances cannot be saved.",
@@ -46,18 +50,18 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
             ERR_INVALID_NUMBER_OF_KEY_VALUES = "Number of key values is %s but should be %s.",
             ERR_MISSING_SESSION = "Session is missing, most likely, due to missing @SessionRequired annotation.";
 
-    private DbCreator dbCreator;
-    private static ICompanionObjectFinder coFinder;
-    private static EntityFactory factory;
-    private static Function<Class<?>, Object> instantiator;
-
     private static final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateFormat DATE_TIME_FORMAT_WITHOUT_SECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private static final DateFormat DATE_TIME_FORMAT_WITHOUT_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final DateFormat DATE_TIME_FORMAT_WITH_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
+    // The following three static fields are reflectively assigned only once, by the platform test runner.
+    private static ICompanionObjectFinder coFinder;
+    private static EntityFactory factory;
+    private static Function<Class<?>, Object> instantiator;
 
+    private DbCreator dbCreator;
     private Session session;
     private String transactionGuid;
 
@@ -111,6 +115,23 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         return pp.save(instance);
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends AbstractEntity<?>> Either<Long, T> save(final T instance, final Optional<fetch<T>> maybeFetch) {
+        if (instance == null) {
+            throw new DomainDrivenTestException(ERR_CANNOT_SAVE_NULL);
+        }
+        final IEntityDao<T> pp = coFinder.find((Class<T>) instance.getType());
+        if (pp == null) {
+            throw new DomainDrivenTestException(ERR_MISSING_COMPANION.formatted(instance.getType().getSimpleName()));
+        }
+        if (pp instanceof ISaveWithFetch<?> it) {
+            return ((ISaveWithFetch<T>) it).save(instance, maybeFetch);
+        }
+        else {
+            throw new EntityCompanionException(ERR_SAVE_WITH_FETCH_NOT_IMPLEMENTED.formatted(instance.getType().getSimpleName()));
+        }
+    }
 
     private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> co$Cache = new HashMap<>();
     private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();

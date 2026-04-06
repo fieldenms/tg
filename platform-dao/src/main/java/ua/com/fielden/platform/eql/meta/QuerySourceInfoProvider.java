@@ -298,7 +298,7 @@ public class QuerySourceInfoProvider {
                         final var propTpi = new QuerySourceItemForComponentType<>(name, ct.javaType(), hibType);
                         for (final PropertyMetadata spm : pmUtils.subProperties(pm)) {
                             propTpi.addSubitem(
-                                    new QuerySourceItemForPrimType<>(spm.name(), (Class<?>) spm.type().javaType(),
+                                    new QuerySourceItemForPrimType<>(spm.name(), spm.type().javaType(),
                                                                      spm.hibType(),
                                                                      spm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null)));
                         }
@@ -346,7 +346,7 @@ public class QuerySourceInfoProvider {
     }
     // where
     private QuerySourceItemForPrimType<?> mkPrim(final PropertyMetadata pm) {
-        return new QuerySourceItemForPrimType<>(pm.name(), (Class<?>) pm.type().javaType(), pm.hibType(),
+        return new QuerySourceItemForPrimType<>(pm.name(), pm.type().javaType(), pm.hibType(),
                                                 pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null));
     }
 

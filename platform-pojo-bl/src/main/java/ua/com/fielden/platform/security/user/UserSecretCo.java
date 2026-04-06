@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.security.user;
 
+import org.joda.time.DateTime;
+import ua.com.fielden.platform.companion.ISaveWithFetch;
+import ua.com.fielden.platform.dao.IEntityDao;
+
 import java.util.Date;
 import java.util.Optional;
 
-import org.joda.time.DateTime;
-import ua.com.fielden.platform.dao.IEntityDao;
-
-public interface UserSecretCo extends IEntityDao<UserSecret> {
+public interface UserSecretCo extends IEntityDao<UserSecret>, ISaveWithFetch<UserSecret> {
 
     int RESET_UUID_EXPIRATION_IN_MUNUTES = 15;
     int INITIAL_USER_UUID_EXPIRATION_IN_MUNUTES = 60 * 24;

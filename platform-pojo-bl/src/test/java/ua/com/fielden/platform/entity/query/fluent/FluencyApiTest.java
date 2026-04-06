@@ -25,7 +25,7 @@ public class FluencyApiTest {
     private static final String[] functions = new String[] { "round", "now", "caseWhen", "lowerCase", "upperCase", "ifNull",
             "dateOf", "hourOf", "dayOf", "monthOf", "yearOf", "minuteOf", "secondOf", "count", "concat", "absOf", "addTimeIntervalOf", "dayOfWeekOf" };
 
-    private static final String[] aggregateFunctions = new String[] { "maxOf", "minOf", "sumOf", "countOf", "avgOf",
+    private static final String[] aggregateFunctions = new String[] { "maxOf", "minOf", "sumOf", "countOf", "avgOf", "concatOf",
             "sumOfDistinct", "countOfDistinct", "avgOfDistinct", "countAll" };
 
     private static final String[] anyOfs = new String[] { "anyOfProps", "anyOfModels", "anyOfValues", "anyOfParams",
