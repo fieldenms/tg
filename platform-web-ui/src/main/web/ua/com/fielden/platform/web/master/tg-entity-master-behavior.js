@@ -1545,18 +1545,22 @@ const TgEntityMasterBehaviorImpl = {
     customCanLeave: function (leaveReason = LeaveReason.CLOSED) {
         this._currBindingEntity["leaveReason"] = leaveReason;
         return this.remoteCanLeave().then(obj => {
-            const deserialisedResult = this._serialiser().deserialise(obj.response);
-            if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
-                throw new UnexpectedCustomError(resultMessages(deserialisedResult).short);
-            } else {
-                const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
-                if (savedEntity.canLeave) {
-                    return true;
+            if (obj.xhr.status === 200 && obj.response) {
+                const deserialisedResult = this._serialiser().deserialise(obj.response);
+                if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
+                    throw new UnexpectedCustomError(resultMessages(deserialisedResult).short);
                 } else {
-                    return this.confirm(savedEntity.cannotLeaveReason, CanLeaveOptions[savedEntity.canLeaveOptions]).catch(e => {
-                        throw {msg: savedEntity.leaveInstructions, imperative: true};
-                    });
+                    const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
+                    if (savedEntity.canLeave) {
+                        return true;
+                    } else {
+                        return this.confirm(savedEntity.cannotLeaveReason, CanLeaveOptions[savedEntity.canLeaveOptions]).catch(e => {
+                            throw {msg: savedEntity.leaveInstructions, imperative: true};
+                        });
+                    }
                 }
+            } else { // Handle non-200 or empty responses (e.g., Jetty timeout may return empty 200 response).
+                throw new UnexpectedCustomError("Most likely due to networking issues the request could not be dispatched to server. Please try again later.");
             }
         }).catch(e => {
             if (e.request && e.error) {
