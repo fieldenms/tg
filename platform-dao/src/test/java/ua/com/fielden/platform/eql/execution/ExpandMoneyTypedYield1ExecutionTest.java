@@ -28,7 +28,7 @@ public class ExpandMoneyTypedYield1ExecutionTest extends AbstractDaoTestCase {
 
     private static final String CAR_1 = "CAR1";
     private static final Money CAR_1_price = new Money("200");
-    private static final Money FUEL_USAGE_CAR_1_pricePerLitre = new Money("1.25", Currency.getInstance("EUR"));
+    private static final Money FUEL_USAGE_CAR_1_pricePerLitre = new Money("1.25");
     private static final BigDecimal FUEL_USAGE_CAR_1_qty = new BigDecimal("5");
 
     private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);

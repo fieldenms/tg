@@ -232,6 +232,14 @@ public class Money implements Comparable<Money> {
         return currency;
     }
 
+    /// Returns a [Money] instance equal to this one but with the specified currency.
+    ///
+    public Money withCurrency(final Currency currency) {
+        return getCurrency().equals(currency)
+                ? this
+                : getTaxPercent() != null ? new Money(getAmount(), getTaxPercent(), currency) : new Money(getAmount(), currency);
+    }
+
     public BigDecimal getAmount() {
         return amount;
     }
