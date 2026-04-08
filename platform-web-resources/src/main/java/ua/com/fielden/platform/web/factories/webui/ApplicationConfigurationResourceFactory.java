@@ -10,10 +10,10 @@ import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.application.IUserPreferencesProvider;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.ApplicationConfigurationResource;
-import ua.com.fielden.platform.web.utils.IUserPreferencesProvider;
 
 import java.io.ByteArrayInputStream;
 

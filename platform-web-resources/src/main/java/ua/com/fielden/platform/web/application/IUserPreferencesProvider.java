@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.utils;
+package ua.com.fielden.platform.web.application;
 
 import com.google.inject.ImplementedBy;
 import ua.com.fielden.platform.security.user.User;

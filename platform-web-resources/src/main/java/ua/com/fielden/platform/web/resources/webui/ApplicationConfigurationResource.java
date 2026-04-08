@@ -14,9 +14,9 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.application.IUserPreferencesProvider;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.utils.IUserPreferencesProvider;
 
 import java.util.LinkedHashMap;
 import java.util.TimeZone;
