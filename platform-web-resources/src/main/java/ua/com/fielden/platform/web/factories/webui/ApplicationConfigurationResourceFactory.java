@@ -7,11 +7,13 @@ import org.restlet.Restlet;
 import org.restlet.data.MediaType;
 import org.restlet.data.Method;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.ApplicationConfigurationResource;
+import ua.com.fielden.platform.web.utils.IUserPreferencesProvider;
 
 import java.io.ByteArrayInputStream;
 
@@ -29,6 +31,8 @@ public class ApplicationConfigurationResourceFactory extends Restlet {
     private final RestServerUtil restUtil;
     private final IWebUiConfig webUiConfig;
     private final IApplicationSettings appSettings;
+    private final IUserPreferencesProvider userPreferencesProvider;
+    private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     private final IDates dates;
 
@@ -36,6 +40,8 @@ public class ApplicationConfigurationResourceFactory extends Restlet {
         this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.appSettings = injector.getInstance(IApplicationSettings.class);
+        this.userPreferencesProvider = injector.getInstance(IUserPreferencesProvider.class);
+        this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
         this.dates = injector.getInstance(IDates.class);
     }
@@ -49,6 +55,8 @@ public class ApplicationConfigurationResourceFactory extends Restlet {
                     restUtil,
                     webUiConfig,
                     appSettings,
+                    userPreferencesProvider,
+                    userProvider,
                     deviceProvider,
                     dates,
                     getContext(),
