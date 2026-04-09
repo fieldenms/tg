@@ -55,5 +55,8 @@ hs_err_pid*
 dependency-reduced-pom.xml
 platform-dao/src/test/resources/attachments/eicar.com.txt
 
+# Byproduct of GrammarActions regeneration
+platform-eql-grammar/src/main/antlr4/tokens/
+
 # Ignore local .claude
 .claude/
