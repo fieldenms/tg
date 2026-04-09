@@ -21,18 +21,18 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @typedef {object} NextAsyncTickMode
- * @property {"nextAsync"} mode
+ * @property {"nextAsync"} mode - runs timers one macrotask at a time
  */
 
 /**
  * @typedef {object} ManualTickMode
- * @property {"manual"} mode
+ * @property {"manual"} mode - advances only when the caller explicitly ticks
  */
 
 /**
  * @typedef {object} IntervalTickMode
- * @property {"interval"} mode
- * @property {number} [delta]
+ * @property {"interval"} mode - advances automatically on a native interval
+ * @property {number} [delta] - interval duration in milliseconds
  */
 
 /**
@@ -40,17 +40,35 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
+ * @callback TimeRemaining
+ * @returns {number}
+ */
+
+/**
  * @typedef {object} IdleDeadline
  * @property {boolean} didTimeout - whether or not the callback was called before reaching the optional timeout
- * @property {function():number} timeRemaining - a floating-point value providing an estimate of the number of milliseconds remaining in the current idle period
+ * @property {TimeRemaining} timeRemaining - a floating-point value providing an estimate of the number of milliseconds remaining in the current idle period
+ */
+
+/**
+ * @callback RequestIdleCallbackCallback
+ * @param {IdleDeadline} deadline
  */
 
 /**
  * Queues a function to be called during a browser's idle periods
  * @callback RequestIdleCallback
- * @param {function(IdleDeadline)} callback
- * @param {{timeout: number}} options - an options object
+ * @param {RequestIdleCallbackCallback} callback
+ * @param {{timeout: number}} [options] - an options object
  * @returns {number} the id
+ */
+
+/**
+ * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask"} FakeMethod
+ */
+
+/**
+ * @typedef {number | NodeImmediate | Timer} TimerId
  */
 
 /**
@@ -68,98 +86,355 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
- * @callback VoidVarArgsFunc
- * @param {...*} callback - the callback to run
+ * @callback SetTimeout
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @param {number} [delay] - optional delay in milliseconds
+ * @param {...*} args - optional arguments to call the callback with
+ * @returns {TimerId} - the timeout identifier
+ */
+
+/**
+ * @callback ClearTimeout
+ * @param {TimerId} [id] - the timeout identifier to clear
  * @returns {void}
  */
 
 /**
- * @typedef RequestAnimationFrame
- * @property {function(number):void} requestAnimationFrame
- * @returns {number} - the id
+ * @callback SetInterval
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @param {number} [delay] - optional delay in milliseconds
+ * @param {...*} args - optional arguments to call the callback with
+ * @returns {TimerId} - the interval identifier
+ */
+
+/**
+ * @callback ClearInterval
+ * @param {TimerId} [id] - the interval identifier to clear
+ * @returns {void}
+ */
+
+/**
+ * @callback QueueMicrotask
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @returns {void}
+ */
+
+/**
+ * @callback VoidVarArgsFunc
+ * @param {...*} args - optional arguments to call the callback with
+ * @returns {void}
+ */
+
+/**
+ * @callback PerformanceNow
+ * @returns {number}
  */
 
 /**
  * @typedef Performance
- * @property {function(): number} now
+ * @property {PerformanceNow} now - returns the current high-resolution time
+ * @property {(name: string) => void} [mark] - adds a mark
+ * @property {(name: string, start?: string, end?: string) => void} [measure] - adds a measure
+ * @property {number} [timeOrigin] - the time origin
+ */
+
+/**
+ * @callback AnimationFrameCallback
+ * @param {number} time - the current time
+ * @returns {void}
+ */
+
+/**
+ * @callback RequestAnimationFrame
+ * @param {AnimationFrameCallback} callback - schedules a frame callback
+ * @returns {TimerId} - the request id
+ */
+
+/**
+ * @callback CancelAnimationFrame
+ * @param {TimerId} id - cancels a frame callback
+ * @returns {void}
+ */
+
+/**
+ * @callback CancelIdleCallback
+ * @param {TimerId} id - cancels a scheduled idle callback
+ * @returns {void}
+ */
+
+/**
+ * @callback ClearImmediate
+ * @param {NodeImmediate} id - faked `clearImmediate`
+ * @returns {void}
+ */
+
+/**
+ * @callback CountTimers
+ * @returns {number}
+ */
+
+/**
+ * @callback RunMicrotasks
+ * @returns {void}
+ */
+
+/**
+ * @callback Tick
+ * @param {string | number} tickValue - advancement in milliseconds or a string
+ * @returns {number}
+ */
+
+/**
+ * @callback TickAsync
+ * @param {string | number} tickValue - advancement in milliseconds or a string
+ * @returns {Promise<number>}
+ */
+
+/**
+ * @callback Next
+ * @returns {number}
+ */
+
+/**
+ * @callback NextAsync
+ * @returns {Promise<number>}
+ */
+
+/**
+ * @callback RunAll
+ * @returns {number}
+ */
+
+/**
+ * @callback RunToFrame
+ * @returns {number}
+ */
+
+/**
+ * @callback RunAllAsync
+ * @returns {Promise<number>}
+ */
+
+/**
+ * @callback RunToLast
+ * @returns {number}
+ */
+
+/**
+ * @callback RunToLastAsync
+ * @returns {Promise<number>}
+ */
+
+/**
+ * @callback Reset
+ * @returns {void}
+ */
+
+/**
+ * @callback SetSystemTime
+ * @param {number | Date} [systemTime] - the time to set
+ * @returns {void}
+ */
+
+/**
+ * @callback Jump
+ * @param {number} ms - advancement in milliseconds
+ * @returns {number}
+ */
+
+/**
+ * @callback Uninstall
+ * @returns {void}
+ */
+
+/**
+ * @callback SetTickMode
+ * @param {TimerTickMode} mode - the new tick mode
+ * @returns {void}
+ */
+
+/**
+ * @callback Hrtime
+ * @param {number[]} [prevTime] - previous high-resolution time
+ * @returns {number[]}
+ */
+
+/**
+ * @callback WithGlobal
+ * @param {*} globalObject - the global object to mock
+ * @returns {FakeTimers}
+ */
+
+/**
+ * @typedef {object} Timers
+ * @property {SetTimeout} setTimeout - native `setTimeout`
+ * @property {ClearTimeout} clearTimeout - native `clearTimeout`
+ * @property {SetInterval} setInterval - native `setInterval`
+ * @property {ClearInterval} clearInterval - native `clearInterval`
+ * @property {Date} Date - native `Date`
+ * @property {typeof Intl} [Intl] - native `Intl`
+ * @property {SetImmediate} [setImmediate] - native `setImmediate`, if available
+ * @property {ClearImmediate} [clearImmediate] - native `clearImmediate`, if available
+ * @property {Hrtime} [hrtime] - native `process.hrtime`, if available
+ * @property {NextTick} [nextTick] - native `process.nextTick`, if available
+ * @property {Performance} [performance] - native `performance`, if available
+ * @property {RequestAnimationFrame} [requestAnimationFrame] - native `requestAnimationFrame`, if available
+ * @property {QueueMicrotask} [queueMicrotask] - whether `queueMicrotask` exists
+ * @property {CancelAnimationFrame} [cancelAnimationFrame] - native `cancelAnimationFrame`, if available
+ * @property {RequestIdleCallback} [requestIdleCallback] - native `requestIdleCallback`, if available
+ * @property {CancelIdleCallback} [cancelIdleCallback] - native `cancelIdleCallback`, if available
+ */
+
+/**
+ * @typedef {object} ClockState
+ * @property {number} tickFrom - lower bound of the current tick range
+ * @property {number} tickTo - upper bound of the current tick range
+ * @property {number} [previous] - previous timer time used during ticking
+ * @property {number | null} [oldNow] - previous value of `now`
+ * @property {Timer} [timer] - timer currently being processed
+ * @property {any} [firstException] - first exception raised while processing timers
+ * @property {number} [nanosTotal] - accumulated nanoseconds from fractional ticks
+ * @property {number} [msFloat] - accumulated fractional milliseconds
+ * @property {number} [ms] - accumulated whole milliseconds
+ */
+
+/**
+ * @typedef {object} TimerInitialProps
+ * @property {VoidVarArgsFunc} func - callback or string to execute
+ * @property {*[]} [args] - arguments passed to the callback
+ * @property {'Timeout' | 'Interval' | 'Immediate' | 'AnimationFrame' | 'IdleCallback'} [type] - timer kind
+ * @property {number} [delay] - requested delay in milliseconds
+ * @property {number} [callAt] - scheduled execution time
+ * @property {number} [createdAt] - time at which the timer was created
+ * @property {boolean} [immediate] - whether this timer should run before non-immediate timers at the same time
+ * @property {number} [id] - unique timer identifier
+ * @property {Error} [error] - captured stack for loop diagnostics
+ * @property {number} [interval] - interval for repeated timers
+ * @property {boolean} [animation] - whether this is an animation frame timer
+ * @property {boolean} [requestIdleCallback] - whether this is an idle callback timer
+ * @property {number} [order] - execution order for timers at the same time
+ * @property {number} [heapIndex] - index in the timer heap
+ */
+
+/**
+ * @callback CreateClockCallback
+ * @param {number|Date} [start] initial mocked time, as milliseconds since epoch or a Date
+ * @param {number} [loopLimit] maximum number of timers run before aborting with an infinite-loop error
+ * @returns {Clock}
+ */
+
+/**
+ * @callback InstallCallback
+ * @param {Config} [config] Optional config
+ * @returns {Clock}
+ */
+
+/**
+ * @typedef {object} FakeTimers
+ * @property {Timers} timers - the native timer APIs saved for later restoration
+ * @property {CreateClockCallback} createClock - creates a new fake clock
+ * @property {InstallCallback} install - installs the fake timers onto the default global object
+ * @property {WithGlobal} withGlobal - creates a fake-timers instance for a provided global object
  */
 
 /* eslint-disable jsdoc/require-property-description */
 /**
  * @typedef {object} Clock
- * @property {number} now - the current time
- * @property {Date} Date - the Date constructor
- * @property {number} loopLimit - the maximum number of timers before assuming an infinite loop
- * @property {RequestIdleCallback} requestIdleCallback
- * @property {function(number):void} cancelIdleCallback
- * @property {setTimeout} setTimeout
- * @property {clearTimeout} clearTimeout
- * @property {NextTick} nextTick
- * @property {queueMicrotask} queueMicrotask
- * @property {setInterval} setInterval
- * @property {clearInterval} clearInterval
- * @property {SetImmediate} setImmediate
- * @property {function(NodeImmediate):void} clearImmediate
- * @property {function():number} countTimers
- * @property {RequestAnimationFrame} requestAnimationFrame
- * @property {function(number):void} cancelAnimationFrame
- * @property {function():void} runMicrotasks
- * @property {function(string | number): number} tick
- * @property {function(string | number): Promise<number>} tickAsync
- * @property {function(): number} next
- * @property {function(): Promise<number>} nextAsync
- * @property {function(): number} runAll
- * @property {function(): number} runToFrame
- * @property {function(): Promise<number>} runAllAsync
- * @property {function(): number} runToLast
- * @property {function(): Promise<number>} runToLastAsync
- * @property {function(): void} reset
- * @property {function(number | Date): void} setSystemTime
- * @property {function(number): void} jump
- * @property {Performance} performance
- * @property {function(number[]): number[]} hrtime - process.hrtime (legacy)
- * @property {function(): void} uninstall Uninstall the clock.
- * @property {Function[]} methods - the methods that are faked
- * @property {boolean} [shouldClearNativeTimers] inherited from config
- * @property {{methodName:string, original:any}[] | undefined} timersModuleMethods
- * @property {{methodName:string, original:any}[] | undefined} timersPromisesModuleMethods
- * @property {Map<function(): void, AbortSignal>} abortListenerMap
- * @property {function(TimerTickMode): void} setTickMode
+ * @property {number} now - current mocked time in milliseconds
+ * @property {typeof Date & {clock?: Clock}} Date - fake Date constructor bound to this clock
+ * @property {number} loopLimit - maximum number of timers before assuming an infinite loop
+ * @property {RequestIdleCallback} requestIdleCallback - schedules an idle callback
+ * @property {CancelIdleCallback} cancelIdleCallback - cancels a scheduled idle callback
+ * @property {SetTimeout} setTimeout - faked `setTimeout`
+ * @property {ClearTimeout} clearTimeout - faked `clearTimeout`
+ * @property {NextTick} nextTick - faked `process.nextTick`
+ * @property {QueueMicrotask} queueMicrotask - faked `queueMicrotask`
+ * @property {SetInterval} setInterval - faked `setInterval`
+ * @property {ClearInterval} clearInterval - faked `clearInterval`
+ * @property {SetImmediate} setImmediate - faked `setImmediate`
+ * @property {ClearImmediate} clearImmediate - faked `clearImmediate`
+ * @property {CountTimers} countTimers - counts scheduled timers
+ * @property {RequestAnimationFrame} requestAnimationFrame - schedules a frame callback
+ * @property {CancelAnimationFrame} cancelAnimationFrame - cancels a frame callback
+ * @property {RunMicrotasks} runMicrotasks - drains microtasks
+ * @property {Tick} tick - advances fake time synchronously
+ * @property {TickAsync} tickAsync - advances fake time asynchronously
+ * @property {Next} next - runs the next scheduled timer
+ * @property {NextAsync} nextAsync - runs the next scheduled timer asynchronously
+ * @property {RunAll} runAll - runs all scheduled timers
+ * @property {RunToFrame} runToFrame - runs timers up to the next animation frame
+ * @property {RunAllAsync} runAllAsync - runs all scheduled timers asynchronously
+ * @property {RunToLast} runToLast - runs timers up to the last scheduled timer
+ * @property {RunToLastAsync} runToLastAsync - runs timers up to the last scheduled timer asynchronously
+ * @property {Reset} reset - clears all timers and resets the clock
+ * @property {SetSystemTime} setSystemTime - sets the clock to a specific wall-clock time
+ * @property {Jump} jump - advances time and returns the new `now`
+ * @property {Performance} performance - fake performance object
+ * @property {Hrtime} hrtime - faked `process.hrtime`
+ * @property {Uninstall} uninstall - restores native timers
+ * @property {string[]} methods - names of faked methods
+ * @property {boolean} [shouldClearNativeTimers] - inherited from config
+ * @property {{methodName:string, original:any}[] | undefined} timersModuleMethods - saved Node timers module methods
+ * @property {{methodName:string, original:any}[] | undefined} timersPromisesModuleMethods - saved Node timers/promises methods
+ * @property {Map<VoidVarArgsFunc, AbortSignal>} abortListenerMap - active abort listeners
+ * @property {SetTickMode} setTickMode - switches the auto-tick mode
+ * @property {Map<number, Timer>} [timers] - internal timer storage
+ * @property {any} [timerHeap] - internal timer heap
+ * @property {boolean} [duringTick] - internal flag
+ * @property {boolean} isNearInfiniteLimit - internal flag indicating the loop limit is nearly reached
+ * @property {any} [attachedInterval] - internal flag
+ * @property {any} [tickMode] - internal flag
+ * @property {Timer[]} [jobs] - internal flag
+ * @property {any} [Intl] - fake Intl object
  */
 /* eslint-enable jsdoc/require-property-description */
 
 /**
  * Configuration object for the `install` method.
  * @typedef {object} Config
- * @property {number|Date} [now] a number (in milliseconds) or a Date object (default epoch)
- * @property {string[]} [toFake] names of the methods that should be faked.
- * @property {number} [loopLimit] the maximum number of timers that will be run when calling runAll()
- * @property {boolean} [shouldAdvanceTime] tells FakeTimers to increment mocked time automatically (default false)
- * @property {number} [advanceTimeDelta] increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
- * @property {boolean} [shouldClearNativeTimers] forwards clear timer calls to native functions if they are not fakes (default: false)
- * @property {boolean} [ignoreMissingTimers] default is false, meaning asking to fake timers that are not present will throw an error
+ * @property {number|Date} [now] initial mocked time, as milliseconds since epoch or a Date
+ * @property {FakeMethod[]} [toFake] method names that should be faked
+ * @property {FakeMethod[]} [toNotFake] method names that should remain native
+ * @property {number} [loopLimit] maximum number of timers run before aborting with an infinite-loop error
+ * @property {boolean} [shouldAdvanceTime] automatically increments mocked time while the clock is installed
+ * @property {number} [advanceTimeDelta] interval in milliseconds used when `shouldAdvanceTime` is enabled
+ * @property {boolean} [shouldClearNativeTimers] forwards clear calls to native methods when the timer is not fake
+ * @property {boolean} [ignoreMissingTimers] suppresses errors when a requested timer is missing from the global object
+ * @property {object} [target] global object to install onto
  */
 
 /* eslint-disable jsdoc/require-property-description */
 /**
  * The internal structure to describe a scheduled fake timer
- * @typedef {object} Timer
- * @property {Function} func
- * @property {*[]} args
- * @property {number} delay
- * @property {number} callAt
- * @property {number} createdAt
- * @property {boolean} immediate
- * @property {number} id
- * @property {Error} [error]
+ * @typedef {TimerInitialProps} Timer
+ * @property {*[]} args - arguments passed to the callback
+ * @property {number} callAt - scheduled execution time
+ * @property {number} createdAt - time at which the timer was created
+ * @property {number} id - unique timer identifier
+ * @property {'Timeout' | 'Interval' | 'Immediate' | 'AnimationFrame' | 'IdleCallback'} type - timer kind
+ */
+
+/**
+ * @callback NodeImmediateHasRef
+ * @returns {boolean}
+ */
+
+/**
+ * @callback NodeImmediateRef
+ * @returns {NodeImmediate}
+ */
+
+/**
+ * @callback NodeImmediateUnref
+ * @returns {NodeImmediate}
  */
 
 /**
  * A Node timer
  * @typedef {object} NodeImmediate
- * @property {function(): boolean} hasRef
- * @property {function(): NodeImmediate} ref
- * @property {function(): NodeImmediate} unref
+ * @property {NodeImmediateHasRef} hasRef - reports whether the timer keeps the event loop alive
+ * @property {NodeImmediateRef} ref - marks the timer as referenced
+ * @property {NodeImmediateUnref} unref - marks the timer as unreferenced
  */
 /* eslint-enable jsdoc/require-property-description */
 
@@ -207,7 +482,10 @@ function withGlobal(_global) {
         _global.performance &&
         _global.performance.constructor &&
         _global.performance.constructor.prototype;
-    isPresent.queueMicrotask = _global.hasOwnProperty("queueMicrotask");
+    isPresent.queueMicrotask = Object.prototype.hasOwnProperty.call(
+        _global,
+        "queueMicrotask",
+    );
     isPresent.requestAnimationFrame =
         _global.requestAnimationFrame &&
         typeof _global.requestAnimationFrame === "function";
@@ -217,7 +495,7 @@ function withGlobal(_global) {
     isPresent.requestIdleCallback =
         _global.requestIdleCallback &&
         typeof _global.requestIdleCallback === "function";
-    isPresent.cancelIdleCallbackPresent =
+    isPresent.cancelIdleCallback =
         _global.cancelIdleCallback &&
         typeof _global.cancelIdleCallback === "function";
     isPresent.setImmediate =
@@ -238,6 +516,8 @@ function withGlobal(_global) {
           )
         : undefined;
     let uniqueTimerId = idCounterStart;
+    /** @type {number} */
+    let uniqueTimerOrder = 0;
 
     if (NativeDate === undefined) {
         throw new Error(
@@ -278,23 +558,23 @@ function withGlobal(_global) {
         return isFinite(num);
     }
 
-    let isNearInfiniteLimit = false;
-
     /**
      * @param {Clock} clock
      * @param {number} i
      */
     function checkIsNearInfiniteLimit(clock, i) {
         if (clock.loopLimit && i === clock.loopLimit - 1) {
-            isNearInfiniteLimit = true;
+            clock.isNearInfiniteLimit = true;
         }
     }
 
     /**
-     *
+     * @param {Clock} clock
      */
-    function resetIsNearInfiniteLimit() {
-        isNearInfiniteLimit = false;
+    function resetIsNearInfiniteLimit(clock) {
+        if (clock) {
+            clock.isNearInfiniteLimit = false;
+        }
     }
 
     /**
@@ -359,7 +639,7 @@ function withGlobal(_global) {
         if (!epoch) {
             return 0;
         }
-        if (typeof epoch.getTime === "function") {
+        if (epoch instanceof Date) {
             return epoch.getTime();
         }
         if (typeof epoch === "number") {
@@ -381,6 +661,7 @@ function withGlobal(_global) {
     /**
      * @param {Clock} clock
      * @param {Timer} job
+     * @returns {Error}
      */
     function getInfiniteLoopError(clock, job) {
         const infiniteLoopError = new Error(
@@ -447,7 +728,9 @@ function withGlobal(_global) {
         return infiniteLoopError;
     }
 
-    //eslint-disable-next-line jsdoc/require-jsdoc
+    /**
+     * @returns {typeof Date}
+     */
     function createDate() {
         class ClockDate extends NativeDate {
             /**
@@ -458,7 +741,6 @@ function withGlobal(_global) {
              * @param {number} minute
              * @param {number} second
              * @param {number} ms
-             * @returns void
              */
             // eslint-disable-next-line no-unused-vars
             constructor(year, month, date, hour, minute, second, ms) {
@@ -505,7 +787,7 @@ function withGlobal(_global) {
         /**
          * A normal Class constructor cannot be called without `new`, but Date can, so we need
          * to wrap it in a Proxy in order to ensure this functionality of Date is kept intact
-         * @type {ClockDate}
+         * @type {Function}
          */
         const ClockDateProxy = new Proxy(ClockDate, {
             // handler for [[Call]] invocations (i.e. not using `new`)
@@ -522,7 +804,7 @@ function withGlobal(_global) {
             },
         });
 
-        return ClockDateProxy;
+        return /** @type {any} */ (ClockDateProxy);
     }
 
     /**
@@ -588,6 +870,7 @@ function withGlobal(_global) {
         if (!clock.jobs) {
             return;
         }
+        const wasNearLimit = clock.isNearInfiniteLimit;
         for (let i = 0; i < clock.jobs.length; i++) {
             const job = clock.jobs[i];
             job.func.apply(null, job.args);
@@ -597,38 +880,275 @@ function withGlobal(_global) {
                 throw getInfiniteLoopError(clock, job);
             }
         }
-        resetIsNearInfiniteLimit();
+        if (!wasNearLimit) {
+            resetIsNearInfiniteLimit(clock);
+        }
         clock.jobs = [];
+    }
+
+    /**
+     * A compact "soonest timer first" container.
+     *
+     * Think of this as a waiting room for scheduled callbacks where the next
+     * callback to run is always kept at the front of the list. The internal
+     * array is arranged so we can find, add, remove, and reorder timers
+     * efficiently without sorting the whole list every time something changes.
+     *
+     * The important idea is not the data structure name, but the behavior:
+     * the timer that should run next stays near the front, and when one timer
+     * moves, the rest are shifted just enough to keep that promise true.
+     */
+    class TimerHeap {
+        constructor() {
+            this.timers = [];
+        }
+
+        /**
+         * Look at the next timer without removing it.
+         * This is the timer the clock would run first if time advanced now.
+         * @returns {Timer}
+         */
+        peek() {
+            return this.timers[0];
+        }
+
+        /**
+         * Add a timer to the waiting room, then move it upward until it is in
+         * the right place relative to the timers it should run before and after.
+         * @param {Timer} timer
+         */
+        push(timer) {
+            this.timers.push(timer);
+            this.bubbleUp(this.timers.length - 1);
+        }
+
+        /**
+         * Remove and return the next timer to run.
+         *
+         * We pull the front timer out, move the last timer into the empty spot,
+         * and then shift that replacement down until the ordering is correct
+         * again. That avoids rebuilding the whole list from scratch.
+         * @returns {Timer|undefined}
+         */
+        pop() {
+            if (this.timers.length === 0) {
+                return undefined;
+            }
+            const first = this.timers[0];
+            const last = this.timers.pop();
+            if (this.timers.length > 0) {
+                this.timers[0] = last;
+                last.heapIndex = 0;
+                this.bubbleDown(0);
+            }
+            delete first.heapIndex;
+            return first;
+        }
+
+        /**
+         * Remove a specific timer from the waiting room.
+         *
+         * The heap stores timers in a shape that lets us jump directly to the
+         * timer's current position, replace it with the last timer, and then
+         * move that replacement up or down until the ordering is correct again.
+         * @param {Timer} timer
+         * @returns {boolean}
+         */
+        remove(timer) {
+            const index = timer.heapIndex;
+            if (index === undefined || this.timers[index] !== timer) {
+                return false;
+            }
+            const last = this.timers.pop();
+            if (timer !== last) {
+                this.timers[index] = last;
+                last.heapIndex = index;
+                if (compareTimers(last, timer) < 0) {
+                    this.bubbleUp(index);
+                } else {
+                    this.bubbleDown(index);
+                }
+            }
+            delete timer.heapIndex;
+            return true;
+        }
+
+        /**
+         * Move a timer toward the front until it is no longer "earlier" than
+         * the timer above it.
+         *
+         * Conceptually, this is what happens when something newly scheduled
+         * turns out to belong ahead of its parent in the waiting room. We keep
+         * swapping it upward until it is no longer out of place.
+         * @param {number} index
+         */
+        bubbleUp(index) {
+            const timer = this.timers[index];
+            let currentIndex = index;
+            while (currentIndex > 0) {
+                const parentIndex = Math.floor((currentIndex - 1) / 2);
+                const parent = this.timers[parentIndex];
+                if (compareTimers(timer, parent) < 0) {
+                    this.timers[currentIndex] = parent;
+                    parent.heapIndex = currentIndex;
+                    currentIndex = parentIndex;
+                } else {
+                    break;
+                }
+            }
+            this.timers[currentIndex] = timer;
+            timer.heapIndex = currentIndex;
+        }
+
+        /**
+         * Move a timer away from the front until the timer below it is no
+         * longer supposed to run after it.
+         *
+         * This is the opposite of `bubbleUp`: when a timer at the front is
+         * removed or moved, the replacement may be too far ahead, so we
+         * repeatedly swap it downward with the best child until the waiting
+         * room is ordered again.
+         * @param {number} index
+         */
+        bubbleDown(index) {
+            const timer = this.timers[index];
+            let currentIndex = index;
+            const halfLength = Math.floor(this.timers.length / 2);
+            while (currentIndex < halfLength) {
+                const leftIndex = currentIndex * 2 + 1;
+                const rightIndex = leftIndex + 1;
+                let bestChildIndex = leftIndex;
+                let bestChild = this.timers[leftIndex];
+
+                if (
+                    rightIndex < this.timers.length &&
+                    compareTimers(this.timers[rightIndex], bestChild) < 0
+                ) {
+                    bestChildIndex = rightIndex;
+                    bestChild = this.timers[rightIndex];
+                }
+
+                if (compareTimers(bestChild, timer) < 0) {
+                    this.timers[currentIndex] = bestChild;
+                    bestChild.heapIndex = currentIndex;
+                    currentIndex = bestChildIndex;
+                } else {
+                    break;
+                }
+            }
+            this.timers[currentIndex] = timer;
+            timer.heapIndex = currentIndex;
+        }
+    }
+
+    /**
+     * Ensure timer storage and heap stay in sync even if a clear path touches
+     * timer state before anything has been scheduled.
+     *
+     * Why do we need two data structures to keep tabs on timers?
+     * 1. Fast ID Lookup (clock.timers): This is a Map from timer IDs to their respective timer objects. It allows clearTimeout(id) and
+     * clearInterval(id) to be $O(1)$ operations. Without this map, finding a specific timer in the heap to remove it would require a linear
+     * $O(n)$ search, which would significantly degrade performance as the number of active timers grows.
+     * 2. Efficient Scheduling (clock.timerHeap): This is a priority queue (min-heap) that keeps timers ordered by their execution time (callAt). It
+     * allows the library to instantly find the next timer to run (peek() in $O(1)$) and efficiently update the schedule when timers are added or
+     * removed ($O(\log n)$).
+     *
+     * In short: clock.timers provides fast access by ID, while clock.timerHeap provides fast access by Time. Removing either one would make common
+     * operations (like clearing or finding the next timer) much slower.
+     * @param {Clock} clock
+     */
+    function ensureTimerState(clock) {
+        if (!clock.timers) {
+            clock.timers = new Map();
+            clock.timerHeap = new TimerHeap();
+        }
+    }
+
+    /**
+     * @param {Clock} clock
+     * @param {number} id
+     * @returns {boolean}
+     */
+    function hasTimer(clock, id) {
+        return clock.timers ? clock.timers.has(id) : false;
+    }
+
+    /**
+     * @param {Clock} clock
+     * @param {number} id
+     * @returns {Timer}
+     */
+    function getTimer(clock, id) {
+        return clock.timers ? clock.timers.get(id) : undefined;
     }
 
     /**
      * @param {Clock} clock
      * @param {Timer} timer
-     * @returns {number} id of the created timer
+     */
+    function setTimer(clock, timer) {
+        ensureTimerState(clock);
+        clock.timers.set(timer.id, timer);
+    }
+
+    /**
+     * @param {Clock} clock
+     * @param {number} id
+     * @returns {boolean}
+     */
+    function deleteTimer(clock, id) {
+        return clock.timers ? clock.timers.delete(id) : false;
+    }
+
+    /**
+     * @param {Clock} clock
+     * @param {(timer: Timer) => void} callback
+     */
+    function forEachActiveTimer(clock, callback) {
+        if (!clock.timers) {
+            return;
+        }
+
+        for (const timer of clock.timers.values()) {
+            callback(timer);
+        }
+    }
+
+    /**
+     * @param {Clock} clock
+     */
+    function rebuildTimerHeap(clock) {
+        clock.timerHeap = new TimerHeap();
+        forEachActiveTimer(clock, (timer) => {
+            clock.timerHeap.push(timer);
+        });
+    }
+
+    /**
+     * @param {Clock} clock
+     * @param {TimerInitialProps} timer
+     * @returns {TimerId} id of the created timer
      */
     function addTimer(clock, timer) {
         if (timer.func === undefined) {
             throw new Error("Callback must be provided to timer calls");
         }
 
-        if (addTimerReturnsObject) {
-            // Node.js environment
-            if (typeof timer.func !== "function") {
-                throw new TypeError(
-                    `[ERR_INVALID_CALLBACK]: Callback must be a function. Received ${
-                        timer.func
-                    } of type ${typeof timer.func}`,
-                );
-            }
+        if (typeof timer.func !== "function") {
+            throw new TypeError(
+                `[ERR_INVALID_CALLBACK]: Callback must be a function. Received ${
+                    timer.func
+                } of type ${typeof timer.func}`,
+            );
         }
 
-        if (isNearInfiniteLimit) {
+        if (clock.isNearInfiniteLimit) {
             timer.error = new Error();
         }
 
         timer.type = timer.immediate ? "Immediate" : "Timeout";
 
-        if (timer.hasOwnProperty("delay")) {
+        if (Object.prototype.hasOwnProperty.call(timer, "delay")) {
             if (typeof timer.delay !== "number") {
                 timer.delay = parseInt(timer.delay, 10);
             }
@@ -640,42 +1160,60 @@ function withGlobal(_global) {
             timer.delay = Math.max(0, timer.delay);
         }
 
-        if (timer.hasOwnProperty("interval")) {
+        if (Object.prototype.hasOwnProperty.call(timer, "interval")) {
             timer.type = "Interval";
             timer.interval = timer.interval > maxTimeout ? 1 : timer.interval;
         }
 
-        if (timer.hasOwnProperty("animation")) {
+        if (Object.prototype.hasOwnProperty.call(timer, "animation")) {
             timer.type = "AnimationFrame";
             timer.animation = true;
         }
 
-        if (timer.hasOwnProperty("idleCallback")) {
-            timer.type = "IdleCallback";
-            timer.idleCallback = true;
+        if (
+            Object.prototype.hasOwnProperty.call(timer, "requestIdleCallback")
+        ) {
+            // mark timer as IdleCallback type if it has no delay, otherwise it'd be of type timeout
+            // this way we are able to sort such that the timer only gets called when there's truly no pending task to run
+            if (!timer.delay) {
+                timer.type = "IdleCallback";
+            }
+            timer.requestIdleCallback = true;
         }
 
-        if (!clock.timers) {
-            clock.timers = {};
+        ensureTimerState(clock);
+
+        while (hasTimer(clock, uniqueTimerId)) {
+            uniqueTimerId++;
+            if (uniqueTimerId >= Number.MAX_SAFE_INTEGER) {
+                uniqueTimerId = idCounterStart;
+            }
         }
 
         timer.id = uniqueTimerId++;
+        if (uniqueTimerId >= Number.MAX_SAFE_INTEGER) {
+            uniqueTimerId = idCounterStart;
+        }
+
+        timer.order = uniqueTimerOrder++;
         timer.createdAt = clock.now;
         timer.callAt =
-            clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
+            clock.now +
+            (parseInt(String(timer.delay)) || (clock.duringTick ? 1 : 0));
 
-        clock.timers[timer.id] = timer;
+        setTimer(clock, timer);
+        clock.timerHeap.push(timer);
 
         if (addTimerReturnsObject) {
             const res = {
                 refed: true,
                 ref: function () {
                     this.refed = true;
-                    return res;
+                    return this;
                 },
                 unref: function () {
                     this.refed = false;
-                    return res;
+                    return this;
                 },
                 hasRef: function () {
                     return this.refed;
@@ -683,12 +1221,15 @@ function withGlobal(_global) {
                 refresh: function () {
                     timer.callAt =
                         clock.now +
-                        (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
+                        (parseInt(String(timer.delay)) ||
+                            (clock.duringTick ? 1 : 0));
 
-                    // it _might_ have been removed, but if not the assignment is perfectly fine
-                    clock.timers[timer.id] = timer;
+                    clock.timerHeap.remove(timer);
+                    timer.order = uniqueTimerOrder++;
+                    setTimer(clock, timer);
+                    clock.timerHeap.push(timer);
 
-                    return res;
+                    return this;
                 },
                 [Symbol.toPrimitive]: function () {
                     return timer.id;
@@ -702,12 +1243,20 @@ function withGlobal(_global) {
 
     /* eslint consistent-return: "off" */
     /**
-     * Timer comparitor
+     * Timer comparator
      * @param {Timer} a
      * @param {Timer} b
      * @returns {number}
      */
     function compareTimers(a, b) {
+        // Sort IdleCallback timers to the bottom when scheduled for the same time
+        if (a.type === "IdleCallback" && b.type !== "IdleCallback") {
+            return 1;
+        }
+        if (a.type !== "IdleCallback" && b.type === "IdleCallback") {
+            return -1;
+        }
+
         // Sort first by absolute timing
         if (a.callAt < b.callAt) {
             return -1;
@@ -721,6 +1270,13 @@ function withGlobal(_global) {
             return -1;
         }
         if (!a.immediate && b.immediate) {
+            return 1;
+        }
+
+        if (a.order < b.order) {
+            return -1;
+        }
+        if (a.order > b.order) {
             return 1;
         }
 
@@ -741,6 +1297,7 @@ function withGlobal(_global) {
         }
 
         // As timer ids are unique, no fallback `0` is necessary
+        return 0;
     }
 
     /**
@@ -750,20 +1307,31 @@ function withGlobal(_global) {
      * @returns {Timer}
      */
     function firstTimerInRange(clock, from, to) {
-        const timers = clock.timers;
+        if (!clock.timerHeap) {
+            return null;
+        }
+
+        const timers = clock.timerHeap.timers;
+        if (timers.length === 1 && timers[0].requestIdleCallback) {
+            return timers[0];
+        }
+
+        const first = clock.timerHeap.peek();
+        if (first && inRange(from, to, first)) {
+            return first;
+        }
+
+        /**
+         * @type {?Timer}
+         */
         let timer = null;
-        let id, isInRange;
 
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                isInRange = inRange(from, to, timers[id]);
-
-                if (
-                    isInRange &&
-                    (!timer || compareTimers(timer, timers[id]) === 1)
-                ) {
-                    timer = timers[id];
-                }
+        for (let i = 0; i < timers.length; i++) {
+            if (
+                inRange(from, to, timers[i]) &&
+                (!timer || compareTimers(timer, timers[i]) === 1)
+            ) {
+                timer = timers[i];
             }
         }
 
@@ -775,19 +1343,10 @@ function withGlobal(_global) {
      * @returns {Timer}
      */
     function firstTimer(clock) {
-        const timers = clock.timers;
-        let timer = null;
-        let id;
-
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                if (!timer || compareTimers(timer, timers[id]) === 1) {
-                    timer = timers[id];
-                }
-            }
+        if (!clock.timerHeap) {
+            return null;
         }
-
-        return timer;
+        return clock.timerHeap.peek() || null;
     }
 
     /**
@@ -795,15 +1354,15 @@ function withGlobal(_global) {
      * @returns {Timer}
      */
     function lastTimer(clock) {
-        const timers = clock.timers;
+        if (!clock.timerHeap) {
+            return null;
+        }
+        const timers = clock.timerHeap.timers;
         let timer = null;
-        let id;
 
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                if (!timer || compareTimers(timer, timers[id]) === -1) {
-                    timer = timers[id];
-                }
+        for (let i = 0; i < timers.length; i++) {
+            if (!timer || compareTimers(timer, timers[i]) === -1) {
+                timer = timers[i];
             }
         }
 
@@ -816,25 +1375,27 @@ function withGlobal(_global) {
      */
     function callTimer(clock, timer) {
         if (typeof timer.interval === "number") {
-            clock.timers[timer.id].callAt += timer.interval;
+            clock.timerHeap.remove(timer);
+            timer.callAt += timer.interval;
+            timer.order = uniqueTimerOrder++;
+            if (clock.isNearInfiniteLimit) {
+                timer.error = new Error();
+            }
+            clock.timerHeap.push(timer);
         } else {
-            delete clock.timers[timer.id];
+            deleteTimer(clock, timer.id);
+            clock.timerHeap.remove(timer);
         }
 
         if (typeof timer.func === "function") {
             timer.func.apply(null, timer.args);
-        } else {
-            /* eslint no-eval: "off" */
-            const eval2 = eval;
-            (function () {
-                eval2(timer.func);
-            })();
         }
     }
 
     /**
      * Gets clear handler name for a given timer type
      * @param {string} ttype
+     * @returns {string}
      */
     function getClearHandler(ttype) {
         if (ttype === "IdleCallback" || ttype === "AnimationFrame") {
@@ -846,6 +1407,7 @@ function withGlobal(_global) {
     /**
      * Gets schedule handler name for a given timer type
      * @param {string} ttype
+     * @returns {string}
      */
     function getScheduleHandler(ttype) {
         if (ttype === "IdleCallback" || ttype === "AnimationFrame") {
@@ -856,6 +1418,7 @@ function withGlobal(_global) {
 
     /**
      * Creates an anonymous function to warn only once
+     * @returns {(msg: string) => void}
      */
     function createWarnOnce() {
         let calls = 0;
@@ -868,18 +1431,15 @@ function withGlobal(_global) {
 
     /**
      * @param {Clock} clock
-     * @param {number} timerId
+     * @param {TimerId} timerId
      * @param {string} ttype
+     * @returns {*}
      */
     function clearTimer(clock, timerId, ttype) {
         if (!timerId) {
             // null appears to be allowed in most browsers, and appears to be
             // relied upon by some libraries, like Bootstrap carousel
             return;
-        }
-
-        if (!clock.timers) {
-            clock.timers = {};
         }
 
         // in Node, the ID is stored as the primitive value for `Timeout` objects
@@ -909,15 +1469,16 @@ function withGlobal(_global) {
             );
         }
 
-        if (clock.timers.hasOwnProperty(id)) {
+        if (hasTimer(clock, id)) {
             // check that the ID matches a timer of the correct type
-            const timer = clock.timers[id];
+            const timer = getTimer(clock, id);
             if (
                 timer.type === ttype ||
                 (timer.type === "Timeout" && ttype === "Interval") ||
                 (timer.type === "Interval" && ttype === "Timeout")
             ) {
-                delete clock.timers[id];
+                deleteTimer(clock, id);
+                clock.timerHeap.remove(timer);
             } else {
                 const clear = getClearHandler(ttype);
                 const schedule = getScheduleHandler(timer.type);
@@ -962,7 +1523,7 @@ function withGlobal(_global) {
                     _global[method] = clock[`_${method}`];
                 }
             } else {
-                if (_global[method] && _global[method].hadOwnProperty) {
+                if (clock[method] && clock[method].hasOwnProperty) {
                     _global[method] = clock[`_${method}`];
                 } else {
                     try {
@@ -990,7 +1551,7 @@ function withGlobal(_global) {
             }
         }
 
-        clock.setTickMode("manual");
+        clock.setTickMode({ mode: "manual" });
 
         // Prevent multiple executions which will completely remove these props
         clock.methods = [];
@@ -1001,12 +1562,10 @@ function withGlobal(_global) {
         }
 
         // return pending timers, to enable checking what timers remained on uninstall
-        if (!clock.timers) {
+        if (!clock.timerHeap) {
             return [];
         }
-        return Object.keys(clock.timers).map(function mapper(key) {
-            return clock.timers[key];
-        });
+        return clock.timerHeap.timers.slice();
     }
 
     /**
@@ -1015,7 +1574,7 @@ function withGlobal(_global) {
      * @param {Clock} clock
      */
     function hijackMethod(target, method, clock) {
-        clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(
+        clock[method].hasOwnProperty = Object.prototype.hasOwnProperty.call(
             target,
             method,
         );
@@ -1071,26 +1630,6 @@ function withGlobal(_global) {
     function doIntervalTick(clock, advanceTimeDelta) {
         clock.tick(advanceTimeDelta);
     }
-
-    /**
-     * @typedef {object} Timers
-     * @property {setTimeout} setTimeout
-     * @property {clearTimeout} clearTimeout
-     * @property {setInterval} setInterval
-     * @property {clearInterval} clearInterval
-     * @property {Date} Date
-     * @property {Intl} Intl
-     * @property {SetImmediate=} setImmediate
-     * @property {function(NodeImmediate): void=} clearImmediate
-     * @property {function(number[]):number[]=} hrtime
-     * @property {NextTick=} nextTick
-     * @property {Performance=} performance
-     * @property {RequestAnimationFrame=} requestAnimationFrame
-     * @property {boolean=} queueMicrotask
-     * @property {function(number): void=} cancelAnimationFrame
-     * @property {RequestIdleCallback=} requestIdleCallback
-     * @property {function(number): void=} cancelIdleCallback
-     */
 
     /** @type {Timers} */
     const timers = {
@@ -1155,30 +1694,36 @@ function withGlobal(_global) {
      * @returns {Clock}
      */
     function createClock(start, loopLimit) {
+        /** @type {number} */
         // eslint-disable-next-line no-param-reassign
         start = Math.floor(getEpoch(start));
         // eslint-disable-next-line no-param-reassign
         loopLimit = loopLimit || 1000;
+        /** @type {number} */
         let nanos = 0;
+        /** @type {number[]} */
         const adjustedSystemTime = [0, 0]; // [millis, nanoremainder]
 
-        const clock = {
+        /** @type {Clock} */
+        const clock = /** @type {any} */ ({
             now: start,
             Date: createDate(),
             loopLimit: loopLimit,
+            isNearInfiniteLimit: false,
             tickMode: { mode: "manual", counter: 0, delta: undefined },
-        };
+        });
 
         clock.Date.clock = clock;
 
         //eslint-disable-next-line jsdoc/require-jsdoc
         function getTimeToNextFrame() {
-            return 16 - ((clock.now - start) % 16);
+            return 16 - ((clock.now - /** @type {any} */ (start)) % 16);
         }
 
         //eslint-disable-next-line jsdoc/require-jsdoc
         function hrtime(prev) {
-            const millisSinceStart = clock.now - adjustedSystemTime[0] - start;
+            const millisSinceStart =
+                clock.now - adjustedSystemTime[0] - /** @type {any} */ (start);
             const secsSinceStart = Math.floor(millisSinceStart / 1000);
             const remainderInNanos =
                 (millisSinceStart - secsSinceStart * 1e3) * 1e6 +
@@ -1237,7 +1782,9 @@ function withGlobal(_global) {
          * @param {TimerTickMode} tickModeConfig - The new configuration for how the clock should tick.
          */
         clock.setTickMode = function (tickModeConfig) {
-            const { mode: newMode, delta: newDelta } = tickModeConfig;
+            const { mode: newMode, delta: newDelta } = /** @type {any} */ (
+                tickModeConfig
+            );
             const { mode: oldMode, delta: oldDelta } = clock.tickMode;
             if (newMode === oldMode && newDelta === oldDelta) {
                 return;
@@ -1260,7 +1807,15 @@ function withGlobal(_global) {
             }
         };
 
+        /**
+         * Keeps advancing the native event loop until the tick mode changes.
+         * @returns {Promise<void>}
+         */
         async function advanceUntilModeChanges() {
+            /**
+             * Waits for one native macrotask and then one microtask turn.
+             * @returns {Promise<void>}
+             */
             async function newMacrotask() {
                 // MessageChannel ensures that setTimeout is not throttled to 4ms.
                 // https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#reasons_for_delays_longer_than_specified
@@ -1268,7 +1823,7 @@ function withGlobal(_global) {
                 const channel = new MessageChannel();
                 await new Promise((resolve) => {
                     channel.port1.onmessage = () => {
-                        resolve();
+                        resolve(undefined);
                         channel.port1.close();
                     };
                     channel.port2.postMessage(undefined);
@@ -1291,6 +1846,11 @@ function withGlobal(_global) {
             }
         }
 
+        /**
+         * Temporarily pauses nextAsync auto-ticking while an async operation runs.
+         * @param {Promise<*>} promise
+         * @returns {Promise<*>}
+         */
         function pauseAutoTickUntilFinished(promise) {
             if (clock.tickMode.mode !== "nextAsync") {
                 return promise;
@@ -1301,24 +1861,37 @@ function withGlobal(_global) {
             });
         }
 
-        clock.requestIdleCallback = function requestIdleCallback(
-            func,
-            timeout,
-        ) {
+        /**
+         * Returns the remaining time in the current idle window.
+         * @returns {number}
+         */
+        function getTimeToNextIdlePeriod() {
             let timeToNextIdlePeriod = 0;
 
             if (clock.countTimers() > 0) {
                 timeToNextIdlePeriod = 50; // const for now
             }
 
+            return timeToNextIdlePeriod;
+        }
+
+        clock.requestIdleCallback = function requestIdleCallback(
+            func,
+            { timeout } = /** @type {any} */ ({}),
+        ) {
+            /**
+             * @type {IdleDeadline}
+             */
+            const idleDeadline = {
+                didTimeout: true,
+                timeRemaining: getTimeToNextIdlePeriod,
+            };
+
             const result = addTimer(clock, {
                 func: func,
-                args: Array.prototype.slice.call(arguments, 2),
-                delay:
-                    typeof timeout === "undefined"
-                        ? timeToNextIdlePeriod
-                        : Math.min(timeout, timeToNextIdlePeriod),
-                idleCallback: true,
+                args: [idleDeadline],
+                delay: timeout,
+                requestIdleCallback: true,
             });
 
             return Number(result);
@@ -1358,7 +1931,7 @@ function withGlobal(_global) {
             return enqueueJob(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 1),
-                error: isNearInfiniteLimit ? new Error() : null,
+                error: clock.isNearInfiniteLimit ? new Error() : null,
             });
         };
 
@@ -1368,7 +1941,7 @@ function withGlobal(_global) {
 
         clock.setInterval = function setInterval(func, timeout) {
             // eslint-disable-next-line no-param-reassign
-            timeout = parseInt(timeout, 10);
+            timeout = parseInt(/** @type {any} */ (timeout), 10);
             return addTimer(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 2),
@@ -1382,13 +1955,15 @@ function withGlobal(_global) {
         };
 
         if (isPresent.setImmediate) {
-            clock.setImmediate = function setImmediate(func) {
-                return addTimer(clock, {
-                    func: func,
-                    args: Array.prototype.slice.call(arguments, 1),
-                    immediate: true,
-                });
-            };
+            clock.setImmediate = /** @type {any} */ (
+                function setImmediate(func) {
+                    return addTimer(clock, {
+                        func: func,
+                        args: Array.prototype.slice.call(arguments, 1),
+                        immediate: true,
+                    });
+                }
+            );
 
             if (typeof _global.Promise !== "undefined" && utilPromisify) {
                 clock.setImmediate[utilPromisify.custom] =
@@ -1412,7 +1987,7 @@ function withGlobal(_global) {
 
         clock.countTimers = function countTimers() {
             return (
-                Object.keys(clock.timers || {}).length +
+                (clock.timerHeap ? clock.timerHeap.timers.length : 0) +
                 (clock.jobs || []).length
             );
         };
@@ -1440,12 +2015,9 @@ function withGlobal(_global) {
 
         /**
          * @param {number|string} tickValue milliseconds or a string parseable by parseTime
-         * @param {boolean} isAsync
-         * @param {Function} resolve
-         * @param {Function} reject
-         * @returns {number|undefined} will return the new `now` value or nothing for async
+         * @returns {ClockState} a mutable state object for the tick execution
          */
-        function doTick(tickValue, isAsync, resolve, reject) {
+        function createTickState(tickValue) {
             const msFloat =
                 typeof tickValue === "number"
                     ? tickValue
@@ -1465,122 +2037,202 @@ function withGlobal(_global) {
                 nanosTotal -= 1e6;
             }
 
-            nanos = nanosTotal;
-            let tickFrom = clock.now;
-            let previous = clock.now;
-            // ESLint fails to detect this correctly
-            /* eslint-disable prefer-const */
-            let timer,
-                firstException,
-                oldNow,
-                nextPromiseTick,
-                compensationCheck,
-                postTimerCall;
-            /* eslint-enable prefer-const */
+            return /** @type {any} */ ({
+                msFloat: msFloat,
+                ms: ms,
+                nanosTotal: nanosTotal,
+                tickFrom: clock.now,
+                tickTo: tickTo,
+                previous: clock.now,
+                timer: null,
+                firstException: null,
+                oldNow: null,
+            });
+        }
 
+        /**
+         * @param {ClockState} state mutable tick state
+         * @param {number} oldNow the clock.now before some action
+         * @param {object} [options] compensation options
+         * @param {boolean} [options.includePrevious] whether to also update state.previous
+         */
+        function applyClockChangeCompensation(state, oldNow, options) {
+            if (oldNow !== clock.now) {
+                const difference = clock.now - oldNow;
+                state.tickFrom += difference;
+                state.tickTo += difference;
+                if (options && options.includePrevious) {
+                    state.previous += difference;
+                }
+            }
+        }
+
+        /**
+         * @param {ClockState} state mutable tick state
+         */
+        function runInitialJobs(state) {
+            state.oldNow = clock.now;
+            runJobs(clock);
+            applyClockChangeCompensation(state, state.oldNow);
+        }
+
+        /**
+         * @param {ClockState} state mutable tick state
+         */
+        function runPostLoopJobs(state) {
+            state.oldNow = clock.now;
+            runJobs(clock);
+            applyClockChangeCompensation(state, state.oldNow);
+        }
+
+        /**
+         * @param {ClockState} state mutable tick state
+         */
+        function selectNextTimerInRange(state) {
+            state.timer = firstTimerInRange(
+                clock,
+                state.previous,
+                state.tickTo,
+            );
+            state.previous = state.tickFrom;
+        }
+
+        /**
+         * @param {ClockState} state mutable tick state
+         * @param {boolean} isAsync whether this is an async tick
+         * @param {Function} nextPromiseTick callback for async promise settlement
+         * @param {Function} compensationCheck callback for clock change compensation
+         * @returns {boolean} whether an early return was triggered (async mode)
+         */
+        function runTimersInRange(
+            state,
+            isAsync,
+            nextPromiseTick,
+            compensationCheck,
+        ) {
+            state.timer = firstTimerInRange(
+                clock,
+                state.tickFrom,
+                state.tickTo,
+            );
+            // eslint-disable-next-line no-unmodified-loop-condition
+            while (state.timer && state.tickFrom <= state.tickTo) {
+                if (hasTimer(clock, state.timer.id)) {
+                    state.tickFrom = state.timer.callAt;
+                    clock.now = state.timer.callAt;
+                    state.oldNow = clock.now;
+                    try {
+                        runJobs(clock);
+                        callTimer(clock, state.timer);
+                    } catch (e) {
+                        state.firstException = state.firstException || e;
+                    }
+
+                    if (isAsync) {
+                        // finish up after native setImmediate callback to allow
+                        // all native es6 promises to process their callbacks after
+                        // each timer fires.
+                        originalSetTimeout(nextPromiseTick);
+                        return true;
+                    }
+
+                    compensationCheck();
+                }
+
+                selectNextTimerInRange(state);
+            }
+            return false;
+        }
+
+        /**
+         * @param {ClockState} state mutable tick state
+         * @param {boolean} isAsync whether this is an async tick
+         * @param {Function} resolve promise resolve function
+         * @returns {number|undefined} the new clock.now or nothing for async
+         */
+        function finalizeTick(state, isAsync, resolve) {
+            // corner case: during runJobs new timers were scheduled which could be in the range [clock.now, tickTo]
+            state.timer = firstTimerInRange(
+                clock,
+                state.tickFrom,
+                state.tickTo,
+            );
+            if (state.timer) {
+                try {
+                    clock.tick(state.tickTo - clock.now); // do it all again - for the remainder of the requested range
+                } catch (e) {
+                    state.firstException = state.firstException || e;
+                }
+            } else {
+                // no timers remaining in the requested range: move the clock all the way to the end
+                clock.now = state.tickTo;
+
+                // update nanos
+                nanos = state.nanosTotal;
+            }
+            if (state.firstException) {
+                throw state.firstException;
+            }
+
+            if (isAsync) {
+                resolve(clock.now);
+            } else {
+                return clock.now;
+            }
+        }
+
+        /**
+         * @param {number|string} tickValue milliseconds or a string parseable by parseTime
+         * @param {boolean} isAsync whether this is an async tick
+         * @param {Function} [resolve] promise resolve function
+         * @param {Function} [reject] promise reject function
+         * @returns {number|undefined} the new clock.now or nothing for async
+         */
+        function doTick(tickValue, isAsync, resolve, reject) {
+            /** @type {ClockState} */
+            const state = createTickState(tickValue);
+
+            nanos = state.nanosTotal;
             clock.duringTick = true;
 
-            // perform microtasks
-            oldNow = clock.now;
-            runJobs(clock);
-            if (oldNow !== clock.now) {
-                // compensate for any setSystemTime() call during microtask callback
-                tickFrom += clock.now - oldNow;
-                tickTo += clock.now - oldNow;
-            }
+            runInitialJobs(state);
 
-            //eslint-disable-next-line jsdoc/require-jsdoc
-            function doTickInner() {
-                // perform each timer in the requested range
-                timer = firstTimerInRange(clock, tickFrom, tickTo);
-                // eslint-disable-next-line no-unmodified-loop-condition
-                while (timer && tickFrom <= tickTo) {
-                    if (clock.timers[timer.id]) {
-                        tickFrom = timer.callAt;
-                        clock.now = timer.callAt;
-                        oldNow = clock.now;
-                        try {
-                            runJobs(clock);
-                            callTimer(clock, timer);
-                        } catch (e) {
-                            firstException = firstException || e;
-                        }
+            const compensationCheck = function () {
+                applyClockChangeCompensation(state, state.oldNow, {
+                    includePrevious: true,
+                });
+            };
 
-                        if (isAsync) {
-                            // finish up after native setImmediate callback to allow
-                            // all native es6 promises to process their callbacks after
-                            // each timer fires.
-                            originalSetTimeout(nextPromiseTick);
-                            return;
-                        }
-
-                        compensationCheck();
-                    }
-
-                    postTimerCall();
-                }
-
-                // perform process.nextTick()s again
-                oldNow = clock.now;
-                runJobs(clock);
-                if (oldNow !== clock.now) {
-                    // compensate for any setSystemTime() call during process.nextTick() callback
-                    tickFrom += clock.now - oldNow;
-                    tickTo += clock.now - oldNow;
-                }
-                clock.duringTick = false;
-
-                // corner case: during runJobs new timers were scheduled which could be in the range [clock.now, tickTo]
-                timer = firstTimerInRange(clock, tickFrom, tickTo);
-                if (timer) {
-                    try {
-                        clock.tick(tickTo - clock.now); // do it all again - for the remainder of the requested range
-                    } catch (e) {
-                        firstException = firstException || e;
-                    }
-                } else {
-                    // no timers remaining in the requested range: move the clock all the way to the end
-                    clock.now = tickTo;
-
-                    // update nanos
-                    nanos = nanosTotal;
-                }
-                if (firstException) {
-                    throw firstException;
-                }
-
-                if (isAsync) {
-                    resolve(clock.now);
-                } else {
-                    return clock.now;
-                }
-            }
-
-            nextPromiseTick =
+            const nextPromiseTick =
                 isAsync &&
                 function () {
                     try {
                         compensationCheck();
-                        postTimerCall();
+                        selectNextTimerInRange(state);
                         doTickInner();
                     } catch (e) {
                         reject(e);
                     }
                 };
 
-            compensationCheck = function () {
-                // compensate for any setSystemTime() call during timer callback
-                if (oldNow !== clock.now) {
-                    tickFrom += clock.now - oldNow;
-                    tickTo += clock.now - oldNow;
-                    previous += clock.now - oldNow;
+            //eslint-disable-next-line jsdoc/require-jsdoc
+            function doTickInner() {
+                if (
+                    runTimersInRange(
+                        state,
+                        isAsync,
+                        nextPromiseTick,
+                        compensationCheck,
+                    )
+                ) {
+                    return;
                 }
-            };
 
-            postTimerCall = function () {
-                timer = firstTimerInRange(clock, previous, tickTo);
-                previous = tickFrom;
-            };
+                runPostLoopJobs(state);
+                clock.duringTick = false;
+
+                return finalizeTick(state, isAsync, resolve);
+            }
 
             return doTickInner();
         }
@@ -1592,26 +2244,6 @@ function withGlobal(_global) {
         clock.tick = function tick(tickValue) {
             return doTick(tickValue, false);
         };
-
-        if (typeof _global.Promise !== "undefined") {
-            /**
-             * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
-             * @returns {Promise}
-             */
-            clock.tickAsync = function tickAsync(tickValue) {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        originalSetTimeout(function () {
-                            try {
-                                doTick(tickValue, true, resolve, reject);
-                            } catch (e) {
-                                reject(e);
-                            }
-                        });
-                    }),
-                );
-            };
-        }
 
         clock.next = function next() {
             runJobs(clock);
@@ -1631,61 +2263,40 @@ function withGlobal(_global) {
             }
         };
 
-        if (typeof _global.Promise !== "undefined") {
-            clock.nextAsync = function nextAsync() {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        originalSetTimeout(function () {
-                            try {
-                                const timer = firstTimer(clock);
-                                if (!timer) {
-                                    resolve(clock.now);
-                                    return;
-                                }
-
-                                let err;
-                                clock.duringTick = true;
-                                clock.now = timer.callAt;
-                                try {
-                                    callTimer(clock, timer);
-                                } catch (e) {
-                                    err = e;
-                                }
-                                clock.duringTick = false;
-
-                                originalSetTimeout(function () {
-                                    if (err) {
-                                        reject(err);
-                                    } else {
-                                        resolve(clock.now);
-                                    }
-                                });
-                            } catch (e) {
-                                reject(e);
-                            }
-                        });
-                    }),
-                );
-            };
+        /**
+         * @param {Function} callback function to run inside native setTimeout
+         * @returns {Promise}
+         */
+        function runAsyncWithNativeTimeout(callback) {
+            return pauseAutoTickUntilFinished(
+                new _global.Promise(function (resolve, reject) {
+                    originalSetTimeout(function () {
+                        try {
+                            callback(resolve, reject);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    });
+                }),
+            );
         }
 
         clock.runAll = function runAll() {
-            let numTimers, i;
             runJobs(clock);
-            for (i = 0; i < clock.loopLimit; i++) {
+            for (let i = 0; i < clock.loopLimit; i++) {
                 if (!clock.timers) {
-                    resetIsNearInfiniteLimit();
+                    resetIsNearInfiniteLimit(clock);
                     return clock.now;
                 }
 
-                numTimers = Object.keys(clock.timers).length;
+                const numTimers = clock.timerHeap.timers.length;
                 if (numTimers === 0) {
-                    resetIsNearInfiniteLimit();
+                    resetIsNearInfiniteLimit(clock);
                     return clock.now;
                 }
 
-                clock.next();
                 checkIsNearInfiniteLimit(clock, i);
+                clock.next();
             }
 
             const excessJob = firstTimer(clock);
@@ -1695,60 +2306,6 @@ function withGlobal(_global) {
         clock.runToFrame = function runToFrame() {
             return clock.tick(getTimeToNextFrame());
         };
-
-        if (typeof _global.Promise !== "undefined") {
-            clock.runAllAsync = function runAllAsync() {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        let i = 0;
-                        /**
-                         *
-                         */
-                        function doRun() {
-                            originalSetTimeout(function () {
-                                try {
-                                    runJobs(clock);
-
-                                    let numTimers;
-                                    if (i < clock.loopLimit) {
-                                        if (!clock.timers) {
-                                            resetIsNearInfiniteLimit();
-                                            resolve(clock.now);
-                                            return;
-                                        }
-
-                                        numTimers = Object.keys(
-                                            clock.timers,
-                                        ).length;
-                                        if (numTimers === 0) {
-                                            resetIsNearInfiniteLimit();
-                                            resolve(clock.now);
-                                            return;
-                                        }
-
-                                        clock.next();
-
-                                        i++;
-
-                                        doRun();
-                                        checkIsNearInfiniteLimit(clock, i);
-                                        return;
-                                    }
-
-                                    const excessJob = firstTimer(clock);
-                                    reject(
-                                        getInfiniteLoopError(clock, excessJob),
-                                    );
-                                } catch (e) {
-                                    reject(e);
-                                }
-                            });
-                        }
-                        doRun();
-                    }),
-                );
-            };
-        }
 
         clock.runToLast = function runToLast() {
             const timer = lastTimer(clock);
@@ -1761,32 +2318,110 @@ function withGlobal(_global) {
         };
 
         if (typeof _global.Promise !== "undefined") {
-            clock.runToLastAsync = function runToLastAsync() {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        originalSetTimeout(function () {
-                            try {
-                                const timer = lastTimer(clock);
-                                if (!timer) {
-                                    runJobs(clock);
-                                    resolve(clock.now);
-                                }
+            /**
+             * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+             * @returns {Promise}
+             */
+            clock.tickAsync = function tickAsync(tickValue) {
+                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                    doTick(tickValue, true, resolve, reject);
+                });
+            };
 
-                                resolve(
-                                    clock.tickAsync(timer.callAt - clock.now),
-                                );
-                            } catch (e) {
-                                reject(e);
+            clock.nextAsync = function nextAsync() {
+                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                    const timer = firstTimer(clock);
+                    if (!timer) {
+                        resolve(clock.now);
+                        return;
+                    }
+
+                    let err;
+                    clock.duringTick = true;
+                    clock.now = timer.callAt;
+                    try {
+                        callTimer(clock, timer);
+                    } catch (e) {
+                        err = e;
+                    }
+                    clock.duringTick = false;
+
+                    originalSetTimeout(function () {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(clock.now);
+                        }
+                    });
+                });
+            };
+
+            clock.runAllAsync = function runAllAsync() {
+                let i = 0;
+                /**
+                 * @param {Function} resolve promise resolve function
+                 * @param {Function} reject promise reject function
+                 */
+                function doRun(resolve, reject) {
+                    try {
+                        runJobs(clock);
+
+                        let numTimers;
+                        if (i < clock.loopLimit) {
+                            if (!clock.timerHeap) {
+                                resetIsNearInfiniteLimit(clock);
+                                resolve(clock.now);
+                                return;
                             }
-                        });
-                    }),
-                );
+
+                            numTimers = clock.timerHeap.timers.length;
+                            if (numTimers === 0) {
+                                resetIsNearInfiniteLimit(clock);
+                                resolve(clock.now);
+                                return;
+                            }
+
+                            checkIsNearInfiniteLimit(clock, i);
+                            clock.next();
+
+                            i++;
+
+                            originalSetTimeout(function () {
+                                doRun(resolve, reject);
+                            });
+                            return;
+                        }
+
+                        const excessJob = firstTimer(clock);
+                        reject(getInfiniteLoopError(clock, excessJob));
+                    } catch (e) {
+                        reject(e);
+                    }
+                }
+
+                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                    doRun(resolve, reject);
+                });
+            };
+
+            clock.runToLastAsync = function runToLastAsync() {
+                return runAsyncWithNativeTimeout(function (resolve) {
+                    const timer = lastTimer(clock);
+                    if (!timer) {
+                        runJobs(clock);
+                        resolve(clock.now);
+                        return;
+                    }
+
+                    resolve(clock.tickAsync(timer.callAt - clock.now));
+                });
             };
         }
 
         clock.reset = function reset() {
             nanos = 0;
-            clock.timers = {};
+            clock.timers = new Map();
+            clock.timerHeap = new TimerHeap();
             clock.jobs = [];
             clock.now = start;
         };
@@ -1795,7 +2430,6 @@ function withGlobal(_global) {
             // determine time difference
             const newNow = getEpoch(systemTime);
             const difference = newNow - clock.now;
-            let id, timer;
 
             adjustedSystemTime[0] = adjustedSystemTime[0] + difference;
             adjustedSystemTime[1] = adjustedSystemTime[1] + nanos;
@@ -1804,18 +2438,15 @@ function withGlobal(_global) {
             nanos = 0;
 
             // update timers and intervals to keep them stable
-            for (id in clock.timers) {
-                if (clock.timers.hasOwnProperty(id)) {
-                    timer = clock.timers[id];
-                    timer.createdAt += difference;
-                    timer.callAt += difference;
-                }
-            }
+            forEachActiveTimer(clock, (timer) => {
+                timer.createdAt += difference;
+                timer.callAt += difference;
+            });
         };
 
         /**
          * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
-         * @returns {number} will return the new `now` value
+         * @returns {number} the new `now` value
          */
         clock.jump = function jump(tickValue) {
             const msFloat =
@@ -1824,12 +2455,17 @@ function withGlobal(_global) {
                     : parseTime(tickValue);
             const ms = Math.floor(msFloat);
 
-            for (const timer of Object.values(clock.timers)) {
+            forEachActiveTimer(clock, (timer) => {
                 if (clock.now + ms > timer.callAt) {
                     timer.callAt = clock.now + ms;
                 }
-            }
+            });
+
+            // Rebuild heap as order might have changed
+            rebuildTimerHeap(clock);
+
             clock.tick(ms);
+            return clock.now;
         };
 
         if (isPresent.performance) {
@@ -1844,6 +2480,11 @@ function withGlobal(_global) {
         return clock;
     }
 
+    /**
+     * Starts the interval used to advance the clock automatically.
+     * @param {Clock} clock
+     * @param {number} delta
+     */
     function createIntervalTick(clock, delta) {
         const intervalTick = doIntervalTick.bind(null, clock, delta);
         const intervalId = originalSetInterval(intervalTick, delta);
@@ -1885,6 +2526,21 @@ function withGlobal(_global) {
         config.shouldClearNativeTimers =
             config.shouldClearNativeTimers || false;
 
+        const hasToFake = Object.prototype.hasOwnProperty.call(
+            config,
+            "toFake",
+        );
+        const hasToNotFake = Object.prototype.hasOwnProperty.call(
+            config,
+            "toNotFake",
+        );
+
+        if (hasToFake && hasToNotFake) {
+            throw new TypeError(
+                "config.toFake and config.toNotFake cannot be used together",
+            );
+        }
+
         if (config.target) {
             throw new TypeError(
                 "config.target is no longer supported. Use `withGlobal(target)` instead.",
@@ -1892,8 +2548,8 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {string} timer/object the name of the thing that is not present
-         * @param timer
+         * Handles a missing timer or API name during installation.
+         * @param {string} timer - the name of the missing timer or object
          */
         function handleMissingTimer(timer) {
             if (config.ignoreMissingTimers) {
@@ -1915,9 +2571,18 @@ function withGlobal(_global) {
 
         clock.abortListenerMap = new Map();
 
-        clock.methods = config.toFake || [];
-
-        if (clock.methods.length === 0) {
+        if (hasToFake) {
+            clock.methods = config.toFake || [];
+            if (clock.methods.length === 0) {
+                clock.methods = Object.keys(timers);
+            }
+        } else if (hasToNotFake) {
+            const methodsToNotFake = config.toNotFake || [];
+            clock.methods = Object.keys(timers).filter(
+                (method) =>
+                    !methodsToNotFake.includes(/** @type {any} */ (method)),
+            );
+        } else {
             clock.methods = Object.keys(timers);
         }
 
@@ -1955,7 +2620,7 @@ function withGlobal(_global) {
                 // (or the Worker was installed)
                 clock.performance.timeOrigin = getEpoch(config.now);
             } else if ((config.toFake || []).includes("performance")) {
-                return handleMissingTimer("performance");
+                handleMissingTimer("performance");
             }
         }
         if (_global === globalObject && timersModule) {
@@ -2119,10 +2784,12 @@ function withGlobal(_global) {
                         [Symbol.asyncIterator]: () => {
                             const createResolvable = () => {
                                 let resolve, reject;
-                                const promise = new Promise((res, rej) => {
-                                    resolve = res;
-                                    reject = rej;
-                                });
+                                const promise = /** @type {any} */ (
+                                    new Promise((res, rej) => {
+                                        resolve = res;
+                                        reject = rej;
+                                    })
+                                );
                                 promise.resolve = resolve;
                                 promise.reject = reject;
                                 return promise;
@@ -2249,14 +2916,6 @@ function withGlobal(_global) {
         withGlobal: withGlobal,
     };
 }
-
-/**
- * @typedef {object} FakeTimers
- * @property {Timers} timers
- * @property {createClock} createClock
- * @property {Function} install
- * @property {withGlobal} withGlobal
- */
 
 /* eslint-enable complexity */
 
