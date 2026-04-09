@@ -113,3 +113,87 @@ from(query)
 ```
 
 Execute via: `co(E.class).getAllEntities(qem)`, `.getPage(qem, page, size)`, `.stream(qem)` (use try-with-resources).
+
+## JOIN to Aggregated Subqueries
+
+`leftJoin` accepts entity classes, `EntityResultQueryModel`, and `AggregatedResultQueryModel`:
+```java
+select(Entity.class)
+    .leftJoin(select(Other.class).where(...)
+        .groupBy().prop(Other_.foreignKey())
+        .yield().prop(Other_.foreignKey()).as("fk")
+        .yield().sumOf().prop(Other_.amount()).as("total")
+        .modelAsAggregate()).as("agg")
+    .on().prop("agg.fk").eq().prop(AbstractEntity.ID)
+    .yield().prop(Entity_.name()).as("name")
+    .yield().ifNull().prop("agg.total").then().val(0).as("total")
+    ...
+```
+
+Joined subquery columns are referenced via the alias: `prop("alias.columnName")`.
+`IFNULL` handles the LEFT JOIN no-match case (NULL → default).
+
+## Union Entity `.id()` in EQL
+
+`union.id()` resolves to `CASE WHEN member1 IS NOT NULL THEN member1 WHEN member2 IS NOT NULL THEN member2 ... END` in the generated SQL (not `COALESCE`).
+Because TG uses **contiguous entity IDs** (globally unique across all tables), this produces a collision-free scalar key.
+
+This enables using union entity IDs in `groupBy`, `yield`, and JOIN conditions:
+```java
+// GROUP BY a union entity's ID — one group per unique entity across all member types
+.groupBy().prop(SomeEntity_.unionProp().id())
+.yield().prop(SomeEntity_.unionProp().id()).as("unionId")
+
+// JOIN on a union entity's ID
+.leftJoin(pivot).as("p").on().prop("p.unionId").eq().prop(SynEntity_.unionProp().id())
+```
+
+## Conditional Aggregation (Pivot Pattern)
+
+Replace N correlated scalar subqueries with a single `GROUP BY` + `SUM(CASE WHEN)`.
+This is the EQL equivalent of SQL's conditional aggregation / pivot pattern.
+
+**Before** — N correlated subqueries, each scanning the source table **per outer row**:
+```java
+// Each .model() is a correlated subquery with extProp — executed once per row in the outer query.
+// With 7 categories × 1000 assets = 7000 subquery executions.
+.yield().ifNull().model(costByCategory(DAMAGE)).then().val(0).as("damageCost")
+.yield().ifNull().model(costByCategory(REPAIR)).then().val(0).as("repairCost")
+// ... 5 more categories
+```
+
+**After** — one aggregated subquery, scanned **once**, LEFT JOINed:
+```java
+private static AggregatedResultQueryModel costPivot() {
+    return select(SourceEntity.class).where(...)
+        .groupBy().prop(SourceEntity_.foreignKey().id())
+        .yield().prop(SourceEntity_.foreignKey().id()).as("fkId")
+        .yield().sumOf().caseWhen().prop(category).eq().val(DAMAGE)
+                .then().prop(cost).otherwise().val(0).end().as("damageCost")
+        .yield().sumOf().caseWhen().prop(category).eq().val(REPAIR)
+                .then().prop(cost).otherwise().val(0).end().as("repairCost")
+        // ... one yield per category
+        .modelAsAggregate();
+}
+```
+
+Then LEFT JOIN the pivot and use `IFNULL` for the no-match default:
+```java
+select(mainQuery)
+    .leftJoin(costPivot()).as("cp").on().prop("cp.fkId").eq().prop(MainEntity_.id())
+    .yield().ifNull().prop("cp.damageCost").then().val(0).as("damageCost")
+    ...
+```
+
+`sumOf()` accepts `caseWhen()` directly (no need for an intermediate `ExpressionModel`), or use `sumOf().expr(exprModel)` for reusable CASE expressions.
+
+## `critCondition` in Subqueries
+
+`critCondition(entityProp, critProp)` works inside LEFT JOIN subqueries and correlated subqueries, not just the main query.
+Criteria parameter injection applies to the entire query tree:
+```java
+.leftJoin(select(Timesheet.class).where()
+        .critCondition(Timesheet_.date(), SynEntity_.dateRangeCrit())  // works here
+        .groupBy()...
+        .modelAsAggregate()).as("lc").on()...
+```

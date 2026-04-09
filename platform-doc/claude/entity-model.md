@@ -124,6 +124,10 @@ Extend `AbstractUnionEntity`. Model polymorphic references where a property can 
 
 **`@SkipActivatableTracking`:** Use on union members that should be allowed to become inactive while entities referencing the union remain active.
 
+**Union `.id()` in EQL:** `union.id()` resolves to `CASE WHEN member1 IS NOT NULL THEN member1 WHEN member2 IS NOT NULL THEN member2 ... END` (not `COALESCE`).
+Because TG uses contiguous entity IDs (globally unique across all tables), this is a collision-free scalar key usable in `groupBy`, `yield`, and JOIN conditions.
+See @../eql-reference.md for examples.
+
 ## Entity Producer Pattern
 
 Extend `DefaultEntityProducerWithContext<T>` for context-aware entity instantiation.
@@ -230,6 +234,9 @@ protected static final ExpressionModel numberOfTasks_ = expr()
 @Calculated("price.amount + purchasePrice.amount")
 private BigDecimal calc0;
 ```
+
+**SQL expansion:** When a `@Calculated` property is used in aggregations (e.g., `sumOf().prop(cost)` where `cost = hours * rate`), EQL expands it to the underlying expression in SQL (e.g., `SUM(hours * rate)`).
+The calculated property has no physical column — database covering indexes must include the expression's operand columns, not the calculated property itself.
 
 ## Synthetic / Report Entities
 
