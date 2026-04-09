@@ -68,7 +68,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE = "Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].",
             ERR_INITIATING_PASSWORD_RESET = "Could not initiate password reset.",
             ERR_DELETING_USERS_WITH_ROLES = "Users assigned to roles can’t be deleted. Deactivate such users instead.",
-            ERR_SELF_EDITING = "Self-editing is not allowed.";
+            ERR_SELF_EDITING = "Users are not permitted to modify their own record.";
 
     private static final fetch<User> FETCH_USER_WITH_ROLES = fetch(User.class)
             .with(ACTIVE_ROLES, fetch(SynUserAndRoleAssociationActive.class))

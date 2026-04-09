@@ -20,7 +20,7 @@ import java.util.Optional;
 @EntityType(UserAndRoleAssociation.class)
 public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssociation> implements UserAndRoleAssociationCo {
 
-    public static final String ERR_SELF_CHANGING_ROLES = "Changing roles for yourself is not allowed.";
+    public static final String ERR_SELF_CHANGING_ROLES = "Users are not permitted to modify their own role associations.";
 
     private final IApplicationSettings appSettings;
 
