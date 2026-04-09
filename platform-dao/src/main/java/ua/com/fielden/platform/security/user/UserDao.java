@@ -36,6 +36,7 @@ import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.util.*;
 import java.util.function.Function;
@@ -66,7 +67,8 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public static final String
             ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE = "Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].",
             ERR_INITIATING_PASSWORD_RESET = "Could not initiate password reset.",
-            ERR_DELETING_USERS_WITH_ROLES = "Users assigned to roles can’t be deleted. Deactivate such users instead.";
+            ERR_DELETING_USERS_WITH_ROLES = "Users assigned to roles can’t be deleted. Deactivate such users instead.",
+            ERR_SELF_EDITING = "Self-editing is not allowed.";
 
     private static final fetch<User> FETCH_USER_WITH_ROLES = fetch(User.class)
             .with(ACTIVE_ROLES, fetch(SynUserAndRoleAssociationActive.class))
@@ -74,7 +76,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
-    private final boolean ssoMode;
+    private final IApplicationSettings appSettings;
 
     @Inject
     public UserDao(
@@ -84,13 +86,17 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     {
         this.newUserNotifier = newUserNotifier;
         this.crypto = crypto;
-        this.ssoMode = appSettings.authMode() == AuthMode.SSO;
+        this.appSettings = appSettings;
+    }
+
+    private boolean ssoMode() {
+        return appSettings.authMode() == AuthMode.SSO;
     }
 
     @Override
     public User new_() {
         final User newUser = super.new_();
-        newUser.getProperty(User.SSO_ONLY).setValue(ssoMode, /* enforce */ true); // set ssoOnly to reflect the current authentication mode; set forcibly to ensure execution of UserSsoOnlyDefiner, which processes the meta-property
+        newUser.getProperty(User.SSO_ONLY).setValue(ssoMode(), /* enforce */ true); // set ssoOnly to reflect the current authentication mode; set forcibly to ensure execution of UserSsoOnlyDefiner, which processes the meta-property
         newUser.getProperty(User.BASED_ON_USER).setRequired(true);
         return newUser;
     }
@@ -110,6 +116,15 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         if (User.system_users.VIRTUAL_USER.matches(user)) {
             throw new SecurityException("VIRTUAL_USER cannot be persisted.");
         }
+
+        final var currUser = getUser();
+        if (currUser == null) {
+            throw new SecurityException("Current user is required to save changes.");
+        }
+        if (!appSettings.usersSelfEdit() && EntityUtils.equalsEx(user.getId(), currUser.getId()) && user.isDirty()) {
+            throw new SecurityException(ERR_SELF_EDITING);
+        }
+
         user.isValid().ifFailure(Result::throwRuntime);
         // Remove all authenticated sessions in case the user is being deactivated.
         if (user.isPersisted() && !user.isActive() && user.getProperty(ACTIVE).isDirty()) {
@@ -155,7 +170,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     /// A helper predicate, which returns `true` for users who are not restricted to SSO only in the SSO authentication mode.
     ///
     private boolean notRestrictedToSsoOnly(final User user) {
-        return !ssoMode || !user.isSsoOnly();
+        return !ssoMode() || !user.isSsoOnly();
     }
 
     /// Saves new [WebMenuItemInvisibility] for menu item URIs specified in menuItems, and the specified non-base user.
@@ -361,7 +376,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
                     .lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail).or()
                     .lowerCase().prop(EMAIL).eq().lowerCase().val(usernameOrEmail)
                 .end();
-        final EntityResultQueryModel<User> query = (ssoMode ? rsoCondition.and().prop(User.SSO_ONLY).eq().val(false) : rsoCondition).model();
+        final EntityResultQueryModel<User> query = (ssoMode() ? rsoCondition.and().prop(User.SSO_ONLY).eq().val(false) : rsoCondition).model();
 
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
 
