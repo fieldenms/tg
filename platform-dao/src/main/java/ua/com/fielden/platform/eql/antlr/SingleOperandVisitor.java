@@ -75,6 +75,16 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
     }
 
     @Override
+    public ISingleOperand1<? extends ISingleOperand2<?>> visitCeil(final CeilContext ctx) {
+        return new Ceil1(ctx.singleOperand().accept(this));
+    }
+
+    @Override
+    public ISingleOperand1<? extends ISingleOperand2<?>> visitFloor(final FloorContext ctx) {
+        return new Floor1(ctx.singleOperand().accept(this));
+    }
+
+    @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitExpr(final ExprContext ctx) {
         return visitExprBody(ctx.exprBody());
     }

@@ -228,6 +228,16 @@ public abstract class StrictEQLBaseVisitor<T> extends AbstractParseTreeVisitor<T
     }
 
     @Override
+    public T visitCeil(final EQLParser.CeilContext ctx) {
+        return defaultVisit();
+    }
+
+    @Override
+    public T visitFloor(final EQLParser.FloorContext ctx) {
+        return defaultVisit();
+    }
+
+    @Override
     public T visitConcat(final EQLParser.ConcatContext ctx) {
         return defaultVisit();
     }
