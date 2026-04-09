@@ -2,7 +2,7 @@ package ua.com.fielden.platform.meta;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappingsProvider;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
@@ -20,7 +20,7 @@ public class DomainMetadataTest {
 
     public DomainMetadataTest() {
         final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
-        domainMetadata = wrap(new DomainMetadataBuilder(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+        domainMetadata = wrap(new DomainMetadataBuilder(new PlatformHibernateTypeMappingsProvider(dbVersionProvider).get(),
                                                         List.of(),
                                                         dbVersionProvider)
                                       .build());

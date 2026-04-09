@@ -1,0 +1,52 @@
+package ua.com.fielden.platform.persistence.types;
+
+import com.google.inject.Inject;
+import org.hibernate.type.YesNoType;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
+import ua.com.fielden.platform.types.*;
+import ua.com.fielden.platform.types.markers.*;
+
+import java.util.Date;
+
+/// Standard Hibernate type mappings for TG-based applications.
+///
+public final class PlatformHibernateTypeMappingsProvider implements HibernateTypeMappings.Provider {
+
+    private final IDbVersionProvider dbVersionProvider;
+
+    @Inject
+    public PlatformHibernateTypeMappingsProvider(final IDbVersionProvider dbVersionProvider) {
+        this.dbVersionProvider = dbVersionProvider;
+    }
+
+    @Override
+    public HibernateTypeMappings get() {
+        final var richTextType = RichTextType.getInstance(dbVersionProvider.dbVersion());
+
+        return HibernateTypeMappings.builder()
+                // Map property types to Hibernate types.
+                .put(boolean.class, YesNoType.INSTANCE)
+                .put(Date.class, DateTimeType.INSTANCE)
+                .put(PropertyDescriptor.class, PropertyDescriptorType.INSTANCE)
+                .put(Money.class, SimpleMoneyType.INSTANCE)
+                .put(Colour.class, ColourType.INSTANCE)
+                .put(Hyperlink.class, HyperlinkType.INSTANCE)
+                .put(RichText.class, richTextType)
+
+                // Map Hibernate type interfaces to their implementations.
+                .put(ISecurityTokenType.class, SecurityTokenType.INSTANCE)
+                .put(IPropertyDescriptorType.class, PropertyDescriptorType.INSTANCE)
+                .put(IColourType.class, ColourType.INSTANCE)
+                .put(IHyperlinkType.class, HyperlinkType.INSTANCE)
+                .put(IUtcDateTimeType.class, UtcDateTimeType.INSTANCE)
+                .put(IRichTextType.class, richTextType)
+                .put(IMoneyType.class, MoneyType.INSTANCE)
+                .put(ISimpleMoneyType.class, SimpleMoneyType.INSTANCE)
+                .put(ISimplyMoneyWithTaxAndExTaxAmountType.class, SimplyMoneyWithTaxAndExTaxAmountType.INSTANCE)
+                .put(ISimplyMoneyWithTaxAmountType.class, SimplyMoneyWithTaxAmountType.INSTANCE)
+                .put(IMoneyWithTaxAmountType.class, MoneyWithTaxAmountType.INSTANCE)
+                .build();
+    }
+
+}

@@ -11,5 +11,5 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
  * 
  */
 public record ValueTree(
-        ICompositeUserTypeInstantiate hibCompositeType, //e.g. ISimpleMoneyType
+        ICompositeUserTypeInstantiate<?> hibCompositeType, //e.g. ISimpleMoneyType
         List<QueryResultLeaf> leaves) {}
