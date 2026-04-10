@@ -20,7 +20,7 @@ import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
-import ua.com.fielden.platform.web.application.IUserPreferencesProvider;
+import ua.com.fielden.platform.web.interfaces.IUserPreferencesProvider;
 
 import java.util.List;
 import java.util.Properties;

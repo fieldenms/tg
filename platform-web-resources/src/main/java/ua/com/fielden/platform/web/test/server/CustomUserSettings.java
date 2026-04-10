@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.test.server;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
-import ua.com.fielden.platform.web.application.IUserPreferencesProvider;
+import ua.com.fielden.platform.web.interfaces.IUserPreferencesProvider;
 
 import java.util.Map;
 

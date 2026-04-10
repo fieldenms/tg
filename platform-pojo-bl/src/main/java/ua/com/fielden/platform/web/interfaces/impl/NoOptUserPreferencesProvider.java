@@ -1,5 +1,6 @@
-package ua.com.fielden.platform.web.application;
+package ua.com.fielden.platform.web.interfaces.impl;
 
+import ua.com.fielden.platform.web.interfaces.IUserPreferencesProvider;
 import ua.com.fielden.platform.security.user.User;
 
 import java.util.Map;
