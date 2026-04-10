@@ -16,6 +16,7 @@ public final class DataPopulationConfigForWebTests extends DataPopulationConfig 
 
     /// Creates a configuration using the provided properties.
     /// Some default properties are set by this constructor, but the provided ones take precedence.
+    ///
     public DataPopulationConfigForWebTests(final Properties props) {
         super(enableAuditing(props));
     }
