@@ -10,7 +10,7 @@ import java.util.Map;
 public class CustomUserSettings implements IUserPreferencesProvider {
 
     @Override
-    public Map<String, Object> getUserPreferences(final User user) {
+    public Map<String, Object> getPreferencesFor(final User user) {
         return CollectionUtil.mapOf(
                 T2.t2("title", "Custom TG test app"),
                 T2.t2("watermark", "Custom config example app")

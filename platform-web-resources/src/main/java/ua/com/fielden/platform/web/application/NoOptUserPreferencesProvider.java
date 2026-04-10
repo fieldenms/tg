@@ -12,7 +12,7 @@ import java.util.Map;
 public class NoOptUserPreferencesProvider implements IUserPreferencesProvider {
 
     @Override
-    public Map<String, Object> getUserPreferences(final User user) {
+    public Map<String, Object> getPreferencesFor(final User user) {
         return Map.of();
     }
 

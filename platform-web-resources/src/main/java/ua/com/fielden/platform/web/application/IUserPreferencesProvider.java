@@ -17,9 +17,9 @@ import java.util.Map;
 @ImplementedBy(NoOptUserPreferencesProvider.class)
 public interface IUserPreferencesProvider {
 
-    /// Returns a map of preference keys and their values specific to `user`.
-    /// Entries with keys matching the standard platform-level configuration will override the defaults.
+    /// Returns a map of application settings (keys) and their values specific to `user`.
+    /// Entries with keys matching the standard platform-level application settings will override the defaults.
     ///
-    Map<String, Object> getUserPreferences(final User user);
+    Map<String, Object> getPreferencesFor(final User user);
 
 }

@@ -10,8 +10,6 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.IUserPreferencesProvider;
@@ -20,6 +18,9 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 import java.util.LinkedHashMap;
 import java.util.TimeZone;
+
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
 /// A web resource that exposes the client-side application configuration.
 /// Extend this resource when additional platform-level configuration settings are needed.
@@ -69,7 +70,7 @@ public class ApplicationConfigurationResource extends AbstractWebResource {
         if (webUiConfig.minDesktopWidth() <= webUiConfig.minTabletWidth()) {
             LOGGER.error(ERR_DEVICE_SCREEN_WIDTH);
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
-            return restUtil.webApiResultRepresentation(CollectionUtil.linkedMapOf(T2.t2("errorMsg", ERR_DEVICE_SCREEN_WIDTH)));
+            return restUtil.webApiResultRepresentation(linkedMapOf(t2("errorMsg", ERR_DEVICE_SCREEN_WIDTH)));
         }
         final var configs = new LinkedHashMap<String, Object>();
         configs.put("siteAllowlist", webUiConfig.siteAllowList());
@@ -90,7 +91,7 @@ public class ApplicationConfigurationResource extends AbstractWebResource {
         configs.put("panelColor", webUiConfig.mainPanelColor());
         configs.put("watermark", webUiConfig.watermark());
         configs.put("watermarkStyle", webUiConfig.watermarkStyle());
-        configs.putAll(userPreferencesProvider.getUserPreferences(userProvider.getUser()));
+        configs.putAll(userPreferencesProvider.getPreferencesFor(userProvider.getUser()));
         return restUtil.webApiResultRepresentation(configs);
     }
 
