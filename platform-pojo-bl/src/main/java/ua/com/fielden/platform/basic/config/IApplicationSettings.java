@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.basic.config;
 
-/// A contract for generally used in the application settings.
+import com.google.inject.ImplementedBy;
+
+/// A contract that represents core settings for TG-based applications.
 ///
+@ImplementedBy(ApplicationSettings.class)
 public interface IApplicationSettings {
     String appHome();
 
@@ -23,10 +26,15 @@ public interface IApplicationSettings {
     Workflows workflow();
     
     AuthMode authMode();
-    
+
+    /// Indicates whether users are permitted to edit their own [User] record.
+    /// Defaults to `true` for backward compatibility.
+    /// When set to `false`, a user's own [User] record is read-only, preventing self-modification and changes to their roles ([UserAndRoleAssociation]).
+    boolean usersSelfEdit();
+
     /// Defines 2 possible authentication modes – Reduced Sigh-On (RSO) and Single Sign-On (SSO).
     /// Authentication mode is used to guide the login workflow.
-    public enum AuthMode {
+    enum AuthMode {
         RSO, SSO;
     }
 }
