@@ -506,22 +506,6 @@ Polymer({
         return this._selectedPage;
     },
 
-    canLeave: async function (leaveReason = LeaveReason.CLOSED) {
-        const items = this.shadowRoot.querySelectorAll("tg-menu-item-view");
-        const changedViews = [];
-        for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-            try {
-                await items[itemIndex].canLeave(leaveReason);
-            } catch (e) {
-                changedViews.push(items[itemIndex].submoduleId);
-            }
-        }
-        if (changedViews.length > 0) {
-            throw changedViews;
-        }
-        return true;
-    },
-
     searchMenu: function (event) {
         this.$.menuSearcher.searchMenu();
     },

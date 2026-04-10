@@ -149,22 +149,6 @@ Polymer({
         this.$.view._selectMenu(subroute);
     },
 
-    canLeave: async function(leaveReason = LeaveReason.CLOSED) {
-        try {
-            await this.$.view.canLeave(leaveReason);
-            return true;
-        } catch (viewThatWasChanged) {
-            const viewsDesc = [];
-            if (Array.isArray(viewThatWasChanged)) {
-                viewThatWasChanged.forEach(function (element) {
-                    viewsDesc.push(this.menuItem.key + " \u2192 " +  element);
-                }.bind(this));
-                throw viewsDesc;
-            }
-            throw viewThatWasChanged;
-        }
-    },
-
     _calcStyleForItem: function (menuItem) {
         return "background-color: " + menuItem.bgColor + ";";
     },

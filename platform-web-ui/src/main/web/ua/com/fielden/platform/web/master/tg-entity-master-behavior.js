@@ -8,7 +8,7 @@ import { createEntityActionThenCallback } from '/resources/master/actions/tg-ent
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
-import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
+import { enhanceStateRestoration, UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 
@@ -1546,25 +1546,21 @@ const TgEntityMasterBehaviorImpl = {
         this._currBindingEntity["leaveReason"] = leaveReason;
         return this.remoteCanLeave().then(obj => {
             if (obj.xhr.status === 200 && obj.response) {
-                // Indicates successful execution of the request with a response received.
-                // Timeout errors may still result in status 200 with e.detail.response === null.
-                // A 504 error is also possible, but it is handled in the else clause.
                 const deserialisedResult = this._serialiser().deserialise(obj.response);
-
                 if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
-                    return Promise.reject({msg: resultMessages(deserialisedResult).short});
+                    throw new UnexpectedCustomError(resultMessages(deserialisedResult).short);
                 } else {
                     const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
                     if (savedEntity.canLeave) {
-                        return Promise.resolve(true);
+                        return true;
                     } else {
                         return this.confirm(savedEntity.cannotLeaveReason, CanLeaveOptions[savedEntity.canLeaveOptions]).catch(e => {
                             throw {msg: savedEntity.leaveInstructions, imperative: true};
                         });
                     }
                 }
-            } else { // other codes
-                return Promise.reject({msg: `An error occurred during canLeave with the following status: ${obj.xhr.status}`});
+            } else { // Handle non-200 or empty responses (e.g., Jetty timeout may return empty 200 response).
+                throw new UnexpectedCustomError("Most likely due to networking issues the request could not be dispatched to server. Please try again later.");
             }
         }).catch(e => {
             if (e.request && e.error) {
