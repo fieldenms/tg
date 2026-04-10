@@ -34,12 +34,82 @@ private Location locationCrit;
 
 @CritOnly(value = MULTI, mnemonics = WITHOUT)        // Multi-select with "without" mnemonic
 private InventoryPart inventoryPartCrit;
-
-// Advanced: filter on a related entity's property
-@CritOnly(value = Type.MULTI, entityUnderCondition = WorkOrderDetail.class,
-    propUnderCondition = WorkOrderDetailMetaModel.comment_)
-private String commentCrit;
 ```
+
+**`@CritOnly` on persistent entities is an anti-pattern.**
+A persistent (`@MapEntityTo`) entity models domain state; crit-only properties are filtering criteria for the UI and do not belong there.
+Wrap the persistent entity in a synthetic `Re*` entity (inheriting from it or yielding over it) and host the crit-only properties on the synthetic wrapper — see *Synthetic / Report Entities* below.
+
+### Declarative correlated filters (the `{propName}_` stem pattern)
+
+For filters that correlate against cross-reference tables on Entity Centres, the model-driven style is `@CritOnly(entityUnderCondition = ..., propUnderCondition = ...)` paired with a companion `protected static final ICompoundCondition0<?> {propName}_` stem field on the synthetic entity.
+This replaces the older approach of hand-wiring `.critCondition(...)` clauses inside the synthetic entity's `model_`, and it unlocks the full mnemonic matrix (`missing`, `not missing`, negation, empty/non-empty, per-value matching) uniformly for every criterion.
+
+Two cooperating pieces are required on the synthetic entity:
+
+1. The annotation on the `@CritOnly` property, with **both** `entityUnderCondition` and `propUnderCondition` supplied.
+2. A companion static field named `{propName}_` holding the **stem** — a subquery "start" that scopes the xref lookup and anchors it to the outer row.
+
+```java
+@IsProperty
+@CritOnly(value = MULTI,
+          entityUnderCondition = Document2WorkActivityXref.class,
+          propUnderCondition = Document2WorkActivityXrefMetaModel.workActivity_)
+private WorkActivity workActivityCrit;
+
+protected static final ICompoundCondition0<Document2WorkActivityXref> workActivityCrit_ =
+    select(Document2WorkActivityXref.class).where()
+        .prop(Document2WorkActivityXref_.document()).eq().prop(createConditionProperty(ReDocument_.id()));
+```
+
+**How the platform resolves it.**
+At Entity Centre query-assembly time, `DynamicQueryBuilder.QueryProperty.findCritOnlySubmodelField` reflects on the entity class looking for a static field whose name is `{propertyName}_`.
+If found — and the annotation hints are present and `propUnderCondition` actually resolves on `entityUnderCondition` — the stem is combined with the user-entered values into a real `.critCondition(collectionQueryStart, propName, critPropName)` clause in the final query.
+If the criterion has no value and no mnemonic set, it is skipped entirely — nothing lands in the SQL.
+
+**`createConditionProperty(...)` vs `extProp(...)`.**
+The stem is built at class-init time, before any outer query exists, so it cannot use `extProp(...)` (which correlates against the *immediate enclosing* query).
+Use `createConditionProperty(SyntheticEntity_.id())` from `DynamicQueryBuilder` instead — it resolves to the canonical alias that `DynamicQueryBuilder` always imposes around the managed type when building the Entity Centre query.
+Application code references the helper, not the internal alias string — this is the supported encapsulation boundary.
+
+**`entityUnderCondition` rule.**
+It must be the source type the stem's `.critCondition(...)` operator iterates over — for a direct xref stem, the xref entity itself; for a *union stem* (multiple xref tables yielding the same type), the **yielded type**, not either underlying table.
+
+**Union stem idiom.**
+When one criterion must span two or more xref sources yielding the same type, compose them via `select(query1, query2).where().condition(emptyCondition())`.
+The trailing `.where().condition(emptyCondition())` is the no-op continuation that exposes the required `ICompoundCondition0<YieldedType>`:
+
+```java
+// ReDocument.locationCrit spans both Document2LocationSubsystemXref and Document2LocationXref,
+// both yielding Location.
+private static ICompoundCondition0<Location> makeUnifiedLocationModel() {
+    final var query1 = select(Document2LocationSubsystemXref.class).where()
+            .prop(Document2LocationSubsystemXref_.document()).eq().prop(createConditionProperty(ReDocument_.id()))
+            .yield().prop(Document2LocationSubsystemXref_.locationSubsystem().location())
+            .modelAsEntity(Location.class);
+    final var query2 = select(Document2LocationXref.class).where()
+            .prop(Document2LocationXref_.document()).eq().prop(createConditionProperty(ReDocument_.id()))
+            .yield().prop(Document2LocationXref_.location())
+            .modelAsEntity(Location.class);
+    return select(query1, query2).where().condition(emptyCondition());
+}
+
+@IsProperty
+@CritOnly(value = MULTI, entityUnderCondition = Location.class, propUnderCondition = LocationMetaModel.key_)
+private Location locationCrit;
+protected static final ICompoundCondition0<Location> locationCrit_ = makeUnifiedLocationModel();
+```
+
+**Silent-typo gotcha.**
+If `propUnderCondition` does not resolve to a real property on `entityUnderCondition`, `findCritOnlySubmodelField` silently skips the stem and the criterion is disabled — there is no runtime error.
+Use metamodel constants for every path segment (e.g., `Document2LocationSubsystemXrefMetaModel.locationSubsystem_ + "." + LocationSubsystemMetaModel.subsystem_`) — compile-time safety for each segment closes most of the gap.
+Invalid *chaining* across segments (each segment valid on its own, but the chain not forming a real path on `entityUnderCondition`) must still be caught by interactive testing.
+
+**Mnemonic matrix.**
+Because the resolved clause routes through the `.critCondition(collectionQueryStart, propName, critPropName)` overload, every declarative criterion automatically supports the full v/n/m matrix — values × negation × mnemonics — documented on `EntityQueryProgressiveInterfaces.critCondition`.
+
+**See also.** For a "when to use which" between this declarative style and `IQueryEnhancer`, see *Query Enhancer Pattern* in @platform-doc/claude/web-ui.md.
+For testing such criteria without an actual Entity Centre, see *Testing Entity Centre criteria via `DynamicQueryBuilder`* in @platform-doc/claude/testing-and-security.md.
 
 ## Composite Keys
 
@@ -126,7 +196,7 @@ Extend `AbstractUnionEntity`. Model polymorphic references where a property can 
 
 **Union `.id()` in EQL:** `union.id()` resolves to `CASE WHEN member1 IS NOT NULL THEN member1 WHEN member2 IS NOT NULL THEN member2 ... END` (not `COALESCE`).
 Because TG uses contiguous entity IDs (globally unique across all tables), this is a collision-free scalar key usable in `groupBy`, `yield`, and JOIN conditions.
-See @../eql-reference.md for examples.
+See @platform-doc/claude/eql-reference.md for examples.
 
 ## Entity Producer Pattern
 
@@ -269,6 +339,11 @@ Key characteristics:
 - The `model_` field defines the base query; the platform applies criteria and fetch models on top
 - Commonly use `@CritOnly` properties for filtering and `@Calculated` properties for derived values
 - Not annotated with `@MapEntityTo` (not directly persisted)
+
+**Wrapping a persistent entity as a synthetic `Re*`.**
+A common use of synthetic entities is to host crit-only filters that would otherwise pollute a persistent entity.
+The wrapper typically inherits from the persistent entity and yields over it (`select(PersistentEntity.class).yieldAll().modelAsEntity(ReEntity.class)`), then adds `@CritOnly` properties with the declarative stem pattern (see *Declarative correlated filters* above).
+This is the preferred remedy when a persistent entity otherwise carries `@CritOnly` properties.
 
 ## MetaModel Annotation Processor
 

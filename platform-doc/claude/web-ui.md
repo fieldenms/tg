@@ -276,7 +276,15 @@ Use sparingly — prefer declarative configuration. Typical uses: coordinating r
 
 ## Query Enhancer Pattern
 
-For embedded centres filtering by master entity:
+`IQueryEnhancer` lets a centre configuration mutate the final query after `DynamicQueryBuilder` has finished building it.
+Its primary legitimate use is **master-context binding in embedded centres** — making an embedded centre filter by the root Entity Master's key or other context values.
+
+**When NOT to use `IQueryEnhancer`.**
+For correlated filters over cross-reference tables driven by the user's selection criteria (the classic Entity Centre filtering scenario), use the declarative `@CritOnly(entityUnderCondition, propUnderCondition)` + `{propName}_` stem pattern on a synthetic `Re*` entity instead — see *Declarative correlated filters* in @platform-doc/claude/entity-model.md.
+That style was added later to TG; historically `IQueryEnhancer` was the only option for correlated filters, but placing correlation logic in the Web UI config layer is against TG's model-driven philosophy.
+Use `IQueryEnhancer` for master-context propagation into embedded centres (where the filter genuinely belongs to the UI-composition layer), and use the declarative crit-only pattern for everything else.
+
+**Master-context binding in an embedded centre** (the canonical `IQueryEnhancer` use case):
 ```java
 private static class FuelUsageCentre_QueryEnhancer implements IQueryEnhancer<FuelUsage> {
     @Override

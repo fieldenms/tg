@@ -20,6 +20,37 @@ Business logic (validators, definers) resides in `pojo-bl` but is tested **indir
 - A single DAO test may validate multiple validators and definers
 - Legacy tests may be `@Deprecated` in favor of newer `IDomainData` approach
 
+### Testing Entity Centre criteria via `DynamicQueryBuilder`
+
+When a synthetic `Re*` entity uses the declarative crit-only style (`@CritOnly(entityUnderCondition, propUnderCondition)` + `{propName}_` stem field — see *Declarative correlated filters* in @platform-doc/claude/entity-model.md), its `model_` is a bare passthrough and does **not** contain any `.critCondition(...)` clauses.
+Running `co(ReEntity.class).count(select(ReEntity.class).model(), params)` therefore exercises none of the criteria — the test would produce the same result regardless of the filter values.
+
+To test such criteria, replicate the Entity Centre runtime path: build `QueryProperty` instances for each criterion, then feed them into `DynamicQueryBuilder.createQuery(...)`, which is what translates the declarative hints into real `.critCondition(...)` clauses.
+
+```java
+// For each (path, value) pair, create a QueryProperty and index it in the params map
+// under the conventional QP_ key that DynamicQueryBuilder expects.
+final Map<String, Object> params = new HashMap<>();
+for (int i = 0; i < paths.size(); i++) {
+    final var qp = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(ReEntity.class, paths.get(i));
+    qp.setValue(values.get(i));
+    params.put(queryPropertyParamName(paths.get(i)), qp);
+}
+final var queryProperties = params.values().stream()
+    .mapMulti(typeFilter(QueryProperty.class)).toList();
+
+// Assemble the query exactly as the Entity Centre runtime would.
+final var count = co(ReEntity.class).count(
+    DynamicQueryBuilder.createQuery(ReEntity.class, queryProperties, getInstance(IDates.class)).model(),
+    params);
+```
+
+Relevant platform helpers:
+- `EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(Class, CharSequence)` — creates an unconfigured `QueryProperty` ready to accept `setValue`/`setValue2`/mnemonic state. The `CharSequence` overload accepts metamodel path objects directly.
+- `QueryProperty.queryPropertyParamName(CharSequence)` — produces the `QP_<path>` key that `DynamicQueryBuilder` expects in the params map.
+- `DynamicQueryBuilder.createQuery(managedType, queryProperties, dates)` — assembles the final query (there is also a 4-arg overload that accepts an `IQueryEnhancer`).
+- `StreamUtils.typeFilter(Class)` — filters a heterogeneous `Map<String, Object>.values()` stream down to just `QueryProperty` instances, useful when the params map mixes types.
+
 ### Test Data Population Script Caching
 
 `saveDataPopulationScriptToFile()` and `useSavedDataPopulationScript()` control test data caching:
