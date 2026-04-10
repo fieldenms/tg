@@ -10,8 +10,9 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.security.tokens.persistent.TgGeneratedEntity_CanRead_Token;
-import ua.com.fielden.platform.security.user.*;
-import ua.com.fielden.platform.security.user.User.system_users;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerContextSelectorForWebTests;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
@@ -184,8 +185,6 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultExists_method_returns_invalid_result_for_orphan_inherited_from_shared_named_configuration() {
         final var uuid = randomUUID().toString();
 
-        setupUser(system_users.UNIT_TEST_USER, "example.tg.test");
-
         final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgCompoundEntity.class);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, null);
@@ -202,8 +201,6 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     @Test
     public void executing_resultExists_method_returns_invalid_result_for_unusual_named_configuration_with_no_miType() {
         final var uuid = randomUUID().toString();
-
-        setupUser(system_users.UNIT_TEST_USER, "example.tg.test");
 
         final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, null);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
@@ -222,8 +219,6 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultExists_method_returns_invalid_result_for_unusual_default_configuration_with_uuid() {
         final var uuid = randomUUID().toString();
 
-        setupUser(system_users.UNIT_TEST_USER, "example.tg.test");
-
         final var configSettings = new ConfigSettings(empty(), getUser(), DESKTOP, MiTgCompoundEntity.class);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
@@ -241,8 +236,6 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultExists_method_returns_invalid_result_for_link_configuration() {
         final var uuid = randomUUID().toString();
 
-        setupUser(system_users.UNIT_TEST_USER, "example.tg.test");
-
         final var configSettings = new ConfigSettings(of(LINK_CONFIG_TITLE), getUser(), DESKTOP, MiTgCompoundEntity.class);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
@@ -259,8 +252,6 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     @Test
     public void executing_resultExists_method_returns_invalid_result_for_invalid_configuration() {
         final var uuid = randomUUID().toString();
-
-        setupUser(system_users.UNIT_TEST_USER, "example.tg.test");
 
         final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
@@ -281,8 +272,6 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultExists_method_returns_invalid_result_for_unauthorised_configuration() {
         final var uuid = randomUUID().toString();
 
-        setupUser(system_users.UNIT_TEST_USER, "example.tg.test");
-
         final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
@@ -290,7 +279,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         final SecurityRoleAssociationCo co$ = co$(SecurityRoleAssociation.class);
         co$.removeAssociations(setOf(
             co$.new_()
-                .setRole(co(UserRole.class).findByKey(ADMIN))
+                .setRole(co(UserRole.class).findByKey(UNIT_TEST_ROLE))
                 .setSecurityToken(TgGeneratedEntity_CanRead_Token.class)
         ));
 
@@ -306,8 +295,6 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     @Test
     public void executing_resultExists_method_returns_invalid_result_for_configuration_with_invalid_generation() {
         final var uuid = randomUUID().toString();
-
-        setupUser(system_users.UNIT_TEST_USER, "example.tg.test");
 
         final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
@@ -339,8 +326,6 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     /// @param enhanceCentreManager mutating function for centre manager to provide custom criteria and other configuration parameters
     ///
     private void initTestData(final String uuid, final DeviceProfile device, final Runnable createData, final Consumer<ICentreDomainTreeManagerAndEnhancer> enhanceCentreManager) {
-        setupUser(system_users.UNIT_TEST_USER, "example.tg.test");
-
         createData.run();
 
         final var configSettings = new ConfigSettings(of("saveAs"), getUser(), device, MiTgCompoundEntity.class);
@@ -406,11 +391,6 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         return co(MainMenuItem.class)
             .findByKeyOptional(menuItemTypeName)
             .orElseGet(() -> (MainMenuItem) save(new_(MainMenuItem.class).setKey(menuItemTypeName)));
-    }
-
-    @Override
-    protected void populateDomain() {
-        // Override to use standard IUniversalConstants implementation instead of UniversalConstantsForTesting.
     }
 
 }
