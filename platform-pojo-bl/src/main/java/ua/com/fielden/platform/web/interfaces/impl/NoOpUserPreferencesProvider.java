@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.interfaces.impl;
 
-import ua.com.fielden.platform.web.interfaces.IUserPreferencesProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.web.interfaces.IUserPreferencesProvider;
 
 import java.util.Map;
 
@@ -10,7 +10,7 @@ import java.util.Map;
 /// This is the default binding — applications that do not need to provide additional user-specific
 /// preferences do not need to override this binding.
 ///
-public class NoOptUserPreferencesProvider implements IUserPreferencesProvider {
+public class NoOpUserPreferencesProvider implements IUserPreferencesProvider {
 
     @Override
     public Map<String, Object> getPreferencesFor(final User user) {

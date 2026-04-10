@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.web.interfaces;
 
 import com.google.inject.ImplementedBy;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.web.interfaces.impl.NoOptUserPreferencesProvider;
+import ua.com.fielden.platform.web.interfaces.impl.NoOpUserPreferencesProvider;
 
 import java.util.Map;
 
@@ -15,12 +16,14 @@ import java.util.Map;
 /// Implement and bind this interface in an application-specific IoC module to provide user-specific preferences.
 ///
 @FunctionalInterface
-@ImplementedBy(NoOptUserPreferencesProvider.class)
+@ImplementedBy(NoOpUserPreferencesProvider.class)
 public interface IUserPreferencesProvider {
 
     /// Returns a map of application settings (keys) and their values specific to `user`.
     /// Entries with keys matching the standard platform-level application settings will override the defaults.
     ///
-    Map<String, Object> getPreferencesFor(final User user);
+    /// The implementors should handle the situation where `user` might be `null`.
+    ///
+    Map<String, Object> getPreferencesFor(final @Nullable User user);
 
 }
