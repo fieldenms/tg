@@ -36,7 +36,34 @@ Running multiple test cases with `useSavedDataPopulationScript = true` will fail
 `saveDataPopulationScriptToFile = true` generates unnecessary files.
 Always verify these return `false` in any test file being committed.
 
-### Web Testing
+### Web Resource Testing
+
+**Server-side web resource logic** is tested via `AbstractWebResourceWithDaoTestCase` (`platform-web-resources/src/test/`).
+This base class extends `AbstractDaoTestCase` and uses `WebResourcesTestRunner`, which loads web UI bindings (`IWebUiConfig`, `IApplicationSettings`, etc.) in addition to standard DAO bindings.
+
+Tests `@Inject` platform interfaces directly — no manual stubs needed for standard platform contracts:
+```java
+public class ApplicationConfigurationResourceTest extends AbstractWebResourceWithDaoTestCase {
+    @Inject private IWebUiConfig webUiConfig;
+    @Inject private IApplicationSettings appSettings;
+    @Inject private IDates dates;
+    @Inject private IUserProvider userProvider;
+    // ...
+}
+```
+
+**Testability pattern for Restlet resources:** Restlet resource classes (`AbstractWebResource` subclasses) require `Context`, `Request`, and `Response` for construction, making direct instantiation in tests impractical.
+Extract business logic into `static` methods with explicit parameters, then call them directly in tests using injected dependencies:
+```java
+// In the resource — static, no Restlet dependencies
+static LinkedHashMap<String, Object> buildConfiguration(
+        final IWebUiConfig webUiConfig, final IApplicationSettings appSettings, ...) { ... }
+
+// In the test — call directly with injected deps
+final var config = buildConfiguration(webUiConfig, appSettings, dates, provider, user);
+```
+
+### Web Client Testing
 
 Browser-based test suites using Web Component Tester (WCT):
 - Main suite: `platform-web-ui/src/main/web/ua/com/fielden/platform/web/tests.html`
