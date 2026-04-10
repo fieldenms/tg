@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
@@ -10,10 +11,11 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.interfaces.IUserPreferencesProvider;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+import ua.com.fielden.platform.web.interfaces.IUserPreferencesProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 import java.util.LinkedHashMap;
@@ -72,6 +74,19 @@ public class ApplicationConfigurationResource extends AbstractWebResource {
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
             return restUtil.webApiResultRepresentation(linkedMapOf(t2("errorMsg", ERR_DEVICE_SCREEN_WIDTH)));
         }
+        return restUtil.webApiResultRepresentation(buildConfiguration(webUiConfig, appSettings, dates, userPreferencesProvider, userProvider.getUser()));
+    }
+
+    /// Builds the application configuration map by combining platform-level settings with user-specific preferences.
+    /// User preferences (from [IUserPreferencesProvider]) are applied last, overriding any matching platform-level keys.
+    ///
+    static LinkedHashMap<String, Object> buildConfiguration(
+            final IWebUiConfig webUiConfig,
+            final IApplicationSettings appSettings,
+            final IDates dates,
+            final IUserPreferencesProvider userPreferencesProvider,
+            final @Nullable User user)
+    {
         final var configs = new LinkedHashMap<String, Object>();
         configs.put("siteAllowlist", webUiConfig.siteAllowList());
         configs.put("daysUntilSitePermissionExpires", webUiConfig.daysUntilSitePermissionExpires());
@@ -91,8 +106,8 @@ public class ApplicationConfigurationResource extends AbstractWebResource {
         configs.put("panelColor", webUiConfig.mainPanelColor());
         configs.put("watermark", webUiConfig.watermark());
         configs.put("watermarkStyle", webUiConfig.watermarkStyle());
-        configs.putAll(userPreferencesProvider.getPreferencesFor(userProvider.getUser()));
-        return restUtil.webApiResultRepresentation(configs);
+        configs.putAll(userPreferencesProvider.getPreferencesFor(user));
+        return configs;
     }
 
 }
