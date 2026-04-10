@@ -68,7 +68,7 @@
     "@polymer/test-fixture": "4.0.2",
     "async": "3.2.6",
     "chai": "5.1.2",
-    "lodash": "4.17.23",
+    "lodash": "4.18.1",
     "mocha": "10.8.2",
     "serialize-javascript": "7.0.5",
     "glob": "13.0.6",
