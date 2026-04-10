@@ -32,6 +32,7 @@ public final class DataPopulationConfigForWebTests implements IDomainDrivenTestC
             injector = new ApplicationInjectorFactory()
                 .add(new TgTestWebApplicationServerIocModule(appDomain, appDomain.domainTypes(), props))
                 .add(new NewUserEmailNotifierTestIocModule())
+                .add(new UniversalConstantsTestIocModule())
                 .getInjector();
         } catch (final Exception e) {
             throw new IllegalStateException("Could not create data population configuration.", e);
