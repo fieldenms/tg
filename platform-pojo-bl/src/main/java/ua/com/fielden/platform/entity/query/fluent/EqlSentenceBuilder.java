@@ -24,12 +24,9 @@ import static ua.com.fielden.platform.eql.antlr.tokens.IValToken.iValToken;
 import static ua.com.fielden.platform.eql.antlr.tokens.ValToken.valToken;
 import static ua.com.fielden.platform.eql.antlr.tokens.util.SimpleTokens.token;
 
-/**
- * Builds a sentence in the EQL language out of {@linkplain Token ANTLR tokens}.
- * Classes that implement EQL's DSL (fluent API) delegate to this builder.
- *
- * @author TG Team
- */
+/// Builds a sentence in the EQL language out of [ANTLR tokens][Token].
+/// Classes that implement EQL's DSL (fluent API) delegate to this builder.
+///
 final class EqlSentenceBuilder {
     public static final String ERR_NO_MODELS_WERE_SPECIFIED_AS_A_SOURCE_IN_THE_FROM_STATEMENT = "No models were specified as a source in the FROM statement!";
     private final List<Token> tokens;
@@ -449,6 +446,14 @@ final class EqlSentenceBuilder {
 
     public EqlSentenceBuilder round() {
         return _add(token(ROUND));
+    }
+
+    public EqlSentenceBuilder ceil() {
+        return _add(token(CEIL));
+    }
+
+    public EqlSentenceBuilder floor() {
+        return _add(token(FLOOR));
     }
 
     public EqlSentenceBuilder to(final int precision) {

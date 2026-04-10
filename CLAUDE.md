@@ -90,6 +90,10 @@ These are things that cannot be easily derived from reading the code:
 
 10. **GraphQL API**: Read-only queries only. Fields are uncapitalized entity names. Token: `GraphiQL_CanExecute_Token`.
 
+11. **Contiguous entity IDs**: All entities across all tables share a single ID sequence — IDs are globally unique, never colliding across entity types. This enables using a union entity's `.id()` as a single scalar key for `groupBy`, `yield`, and JOIN conditions without type-discriminator columns. EQL compiles `.id()` on a union to `CASE WHEN member1 IS NOT NULL THEN member1 WHEN member2 IS NOT NULL THEN member2 ... END` (not `COALESCE`). See `eql-reference.md` for examples.
+
+12. **`@Calculated` properties expand in SQL**: When a `@Calculated` property (e.g., `cost = hours * rate`) is used in aggregations like `sumOf().prop(cost)`, EQL expands it to `SUM(hours * rate)` in the generated SQL. The calculated property has no physical column — database covering indexes must target the expression's operand columns.
+
 ## Conventions
 
 **Naming:** Entities = singular nouns (`Vehicle`), Companions = `{Entity}Co`, DAOs = `{Entity}Dao`
