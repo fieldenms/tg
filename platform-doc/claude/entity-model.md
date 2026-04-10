@@ -40,6 +40,11 @@ private InventoryPart inventoryPartCrit;
 A persistent (`@MapEntityTo`) entity models domain state; crit-only properties are filtering criteria for the UI and do not belong there.
 Wrap the persistent entity in a synthetic `Re*` entity (inheriting from it or yielding over it) and host the crit-only properties on the synthetic wrapper — see *Synthetic / Report Entities* below.
 
+**Exception — generative entities.**
+*Generative entities* (`@MapEntityTo` + `implements WithCreatedByUser<T>`, driven by an `IGenerator<T>` at the Entity Centre `run` phase) legitimately host `@CritOnly` properties.
+Their crit-only fields carry generation parameters that drive an on-the-fly computation; they never touch the schema.
+See *Generative Entities* below.
+
 ### Declarative correlated filters (the `{propName}_` stem pattern)
 
 For filters that correlate against cross-reference tables on Entity Centres, the model-driven style is `@CritOnly(entityUnderCondition = ..., propUnderCondition = ...)` paired with a companion `protected static final ICompoundCondition0<?> {propName}_` stem field on the synthetic entity.
@@ -343,7 +348,127 @@ Key characteristics:
 **Wrapping a persistent entity as a synthetic `Re*`.**
 A common use of synthetic entities is to host crit-only filters that would otherwise pollute a persistent entity.
 The wrapper typically inherits from the persistent entity and yields over it (`select(PersistentEntity.class).yieldAll().modelAsEntity(ReEntity.class)`), then adds `@CritOnly` properties with the declarative stem pattern (see *Declarative correlated filters* above).
-This is the preferred remedy when a persistent entity otherwise carries `@CritOnly` properties.
+This is the preferred remedy when a persistent entity otherwise carries `@CritOnly` properties — **except** for generative entities, which have their own pattern (see below).
+
+## Generative Entities
+
+A **generative entity** is a persistent entity whose rows are computed ad hoc at Entity Centre `run` phase rather than maintained by normal CRUD.
+The user enters selection criteria; when the centre is run, a data generator clears any previously generated rows for the current user, computes new ones from the criteria, persists them, and the centre then queries the persistent table as usual.
+
+**Typical use cases** (from `IGenerator`'s javadoc):
+- Analysis / reporting where the data must be derived on demand from user-supplied parameters (date ranges, grouping choices, filters).
+- "Wizard" flows where a later step operates over data computed from earlier selection criteria.
+
+### Anatomy
+
+**Entity side.** A generative entity is persistent, implements `WithCreatedByUser<T>`, and mixes two kinds of fields: `@MapTo` fields holding the *shape of the generated data*, and `@CritOnly` fields holding the *generation parameters*.
+The composite key conventionally places `createdBy` as the first member so rows are naturally scoped per user.
+
+```java
+import ua.com.fielden.platform.data.generator.WithCreatedByUser;
+
+@EntityTitle("Reliability Analysis")
+@KeyType(DynamicEntityKey.class)
+@CompanionObject(IReReliability.class)
+@MapEntityTo
+public class ReReliability extends AbstractPersistentEntity<DynamicEntityKey>
+                           implements WithCreatedByUser<ReReliability> {
+
+    // Composite key member 1: the user for whom the rows were generated.
+    @IsProperty(assignBeforeSave = true)
+    @MapTo
+    @CompositeKeyMember(1)
+    @SkipEntityExistsValidation    // assigned by the platform at save time
+    private User createdBy;
+
+    @IsProperty @MapTo @CompositeKeyMember(2)
+    private String group;
+
+    // ... more @MapTo fields describing the generated-data shape:
+    // MTBF, MTTR, MDT, waCount, etc.
+
+    // Selection-criteria fields — drive generation, never persisted.
+    @IsProperty @CritOnly(SINGLE) @DateOnly
+    private Date dateFrom;
+
+    @IsProperty @CritOnly(MULTI)
+    private Service serviceCrit;
+    // ...
+}
+```
+
+**Marker interface.** `WithCreatedByUser<T>` (in `ua.com.fielden.platform.data.generator`) is a minimal type-safety marker declaring a `User getCreatedBy()` contract.
+Implementing it signals to the platform that the entity's rows are per-user and that a `createdBy:User` property exists for scoping.
+
+**Generator side.** The generator implements `IGenerator<T extends AbstractEntity<?> & WithCreatedByUser<T>>`.
+**Important:** the `IGenerator<T>` contract is almost always inherited via the companion interface, not declared on the DAO class directly:
+
+```java
+public interface IReReliability extends IEntityDao<ReReliability>, IGenerator<ReReliability> {}
+
+@EntityType(ReReliability.class)
+public class ReReliabilityDao extends CommonEntityDao<ReReliability> implements IReReliability {
+
+    @Override @SessionRequired
+    public Result gen(final Class<ReReliability> type, final Map<String, Optional<?>> params) {
+        // 1. Remove any previously generated rows for the current user.
+        // 2. Read selection-criteria values from params.
+        // 3. Compute the analysis and persist new rows.
+        return successful("Generated.");
+    }
+}
+```
+
+The generator is responsible for both **clearing** this user's previously generated rows and **writing** fresh ones.
+`@SessionRequired` is expected (per the javadoc of `IGenerator`) so clear + insert happen in a single transaction.
+
+**Centre side.** The Entity Centre config registers the generator via `.withGenerator(entityTypeToBeGenerated, generatorType)` on the criteria-layout stage (see `ILayoutConfigWithResultsetSupport.withGenerator`):
+
+```java
+EntityCentreBuilder.centreFor(ReReliability.class)
+    .addCrit(ReReliability_.dateFrom()).asSingle().date().also()
+    .addCrit(ReReliability_.serviceCrit()).asMulti().autocompleter(Service.class)
+    // ... more criteria ...
+    .setLayoutFor(Device.DESKTOP, ...)
+    .withGenerator(ReReliability.class, ReReliabilityDao.class)   // wire the generator
+    // ... result set definition ...
+    .build();
+```
+
+### Runtime flow
+
+1. User populates selection criteria on the centre and clicks *Run*.
+2. The centre's `run` phase locates the registered `IGenerator` (resolved from the Guice injector via the generator class passed to `.withGenerator`) and invokes `gen(Class, params)`.
+   `params` is a `Map<String, Optional<?>>` whose keys follow the `<entityTypeCamelCase>_<criteriaPropertyName>` convention (e.g., `leaveRequest_payrollCodeCrit`), and whose values are the criteria values wrapped in `Optional`.
+3. The generator clears any previously generated rows for the current user, computes the analysis from the criteria, and persists new rows to the entity's table.
+4. The centre then queries the persistent table as for any other entity.
+   Rows are automatically filtered to the current user because `createdBy` is a composite-key member and the centre's query includes the standard per-user restriction.
+
+**Forced regeneration.** `IGenerator.shouldForceRegeneration(params)` returns `true` when the params map contains the key `IGenerator.FORCE_REGENERATION_KEY` (`"@@forceRegeneration"`).
+Use this when the generator should regenerate even if it would otherwise consider the data up-to-date.
+
+### `@CritOnly` on generative entities is legitimate
+
+Generative entities are the **sole exemption** from the "no `@CritOnly` on persistent entities" anti-pattern.
+Their `@CritOnly` fields carry user-entered parameters that flow from the centre to the generator and are discarded — they are not `@MapTo` and never touch the schema.
+The class deliberately co-locates the *shape of the generated data* (the `@MapTo` fields) and the *parameters that drive generation* (the `@CritOnly` fields) because both are facets of the same analysis.
+
+When auditing a codebase for the `@CritOnly`-on-persistent-entities anti-pattern, `implements WithCreatedByUser<T>` on the entity itself is a cheap and definitive marker for "exempt" — no need to trace companion-interface inheritance or DAO generator implementations.
+
+### Relationship to synthetic / report entities
+
+Generative entities and synthetic entities both present computed data via Entity Centres but differ structurally:
+
+| | Synthetic / report | Generative |
+|---|---|---|
+| `@MapEntityTo` | No | Yes |
+| `model_` / `models_` | Required (defines the base EQL query) | Not used — the centre queries the persistent table directly after `gen()` |
+| Where the data comes from | An EQL query composed on the fly | Rows persisted by `IGenerator.gen(...)` during the centre's `run` phase |
+| `@CritOnly` status | Normal rules apply (declarative stems etc.) | Legitimate as generation parameters |
+| `WithCreatedByUser` | Not required | Required (enables per-user row scoping) |
+
+Choose the synthetic pattern when the computation can be expressed purely as a query over existing tables.
+Choose the generative pattern when the computation is too complex or iterative to express as EQL, or when it involves side effects that must be materialised before the centre queries.
 
 ## MetaModel Annotation Processor
 
