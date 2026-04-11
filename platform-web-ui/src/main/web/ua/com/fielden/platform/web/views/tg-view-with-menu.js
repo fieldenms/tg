@@ -654,8 +654,14 @@ Polymer({
         if (menuItem.key === decodeURIComponent(this.selectedModule)) {
             const parts = selectedSubmodule.substring(1).split('?');
             const selectedSubmodulePart = parts[0];
-            this._selectMenu(selectedSubmodulePart);
-            this._selectPage(selectedSubmodulePart, parts[1]);
+            const uuid = this._centreConfigInfo() && this._centreConfigInfo()[selectedSubmodulePart] && this._centreConfigInfo()[selectedSubmodulePart].configUuid; // configUuid of previously loaded centre configuration (selectedPage), if any
+            const uuidPart = uuid ? '/' + uuid : '';
+            if (!parts[1] && uuidPart && !selectedSubmodulePart.includes(uuidPart)) {
+                this._updateSelectedModuleWith(selectedSubmodulePart);
+            } else {
+                this._selectMenu(selectedSubmodulePart);
+                this._selectPage(selectedSubmodulePart, parts[1]);
+            }
         }
     },
 
