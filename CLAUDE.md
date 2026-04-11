@@ -62,6 +62,7 @@ LaTeX documentation in `platform-doc/`.
 - EQL internal design — how to add new functions, operators, and language features: @platform-doc/claude/eql-design.md
 - Entity Centre, Entity Master, Compound Master, actions, query enhancers, SSE: @platform-doc/claude/web-ui.md
 - Testing patterns, assertions, indirect testing, security tokens, authorization: @platform-doc/claude/testing-and-security.md
+- Generic auditing — `@Audited`, audit-entity generation and versioning, `IAuditTypeFinder`, `IAuditWebUiConfigFactory`, `PersistentEntityInfo` dynamic master, runtime plumbing: @platform-doc/claude/auditing.md
 
 ## Key Non-Obvious Design Decisions
 
@@ -93,6 +94,10 @@ These are things that cannot be easily derived from reading the code:
 11. **Contiguous entity IDs**: All entities across all tables share a single ID sequence — IDs are globally unique, never colliding across entity types. This enables using a union entity's `.id()` as a single scalar key for `groupBy`, `yield`, and JOIN conditions without type-discriminator columns. EQL compiles `.id()` on a union to `CASE WHEN member1 IS NOT NULL THEN member1 WHEN member2 IS NOT NULL THEN member2 ... END` (not `COALESCE`). See `eql-reference.md` for examples.
 
 12. **`@Calculated` properties expand in SQL**: When a `@Calculated` property (e.g., `cost = hours * rate`) is used in aggregations like `sumOf().prop(cost)`, EQL expands it to `SUM(hours * rate)` in the generated SQL. The calculated property has no physical column — database covering indexes must target the expression's operand columns.
+
+13. **Audited entities get a platform-built info master**: The "info" action on every `AbstractPersistentEntity` master opens `PersistentEntityInfo`, which the platform builds dynamically as a **compound** master with an audit-review menu when the target type is `@Audited`, or as a **simple** master otherwise. The compound variant wires a polymorphic centre (`AuditCompoundMenuItem.withPolymorphicCenter()`) bound at runtime to the right synthetic audit-entity type via `IAuditMenuItemInitialiser`. Consequence: do not hand-wire an "Audit" tab into an audited entity's own compound master — the platform already provides it through `PersistentEntityInfo`. See `auditing.md`.
+
+14. **`IApplicationDomainProvider` from the injector ≠ `new ApplicationDomain()`**: `BasicWebServerIocModule.provideApplicationDomain(...)` supplies `IApplicationDomainProvider` via `@Provides` as a lambda that augments the compile-time entity types with audit types for every `@Audited` entity (behaviour varies by `AuditingMode`). A freshly instantiated `new ApplicationDomain()` gives you only the compile-time types. Anywhere that needs the full entity-type list — especially `PersistDomainMetadataModel.persist(...)` — must use the injected provider, or audit tables will silently lack domain metadata.
 
 ## Conventions
 

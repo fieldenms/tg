@@ -135,3 +135,33 @@ public int batchDelete(final Collection<Long> entitiesIds) { ... }
 - **Producer:** Entity creation/opening
 - **Property:** Fine-grained access for sensitive properties
 - **Action:** Business process execution
+
+### Runtime-generated tokens for audit types
+
+Security tokens for auditing (see @platform-doc/claude/auditing.md) are **not** hand-written.
+`ISecurityTokenGenerator` produces them at application startup for the **synthetic** audit-entity side only — `Re{E}_a3t_CanRead_Token` and `Re{E}_a3t_CanReadModel_Token`.
+Persistent audit-entity types (`E_a3t_{n}`) and audit-prop types do not receive tokens — users never query those directly.
+
+Consequences:
+- Do not commit hand-written `Re{E}_a3t_*_Token` classes. If you see them in an application module under `security/tokens/`, they are remnants of a pre-generic-auditing design and should be deleted.
+- Dynamic token retrieval now goes through `ISecurityTokenProvider` rather than `Class.forName` — requests for tokens that are not in the provider are stricter than before, and an application using tokens outside the provider may break.
+- To customise audit-token generation or inject extra tokens, extend `SecurityTokenProvider` and override the appropriate methods.
+
+## Testing with auditing
+
+Enabling auditing (`audit.mode=ENABLED`) adds per-save overhead: one audit-entity insert plus one audit-prop insert per dirty auditable property.
+For DAO integration test suites that save many entities per run to exercise business logic, this overhead is significant and unnecessary — the DAO tests do not assert on audit rows.
+
+The conventional TG-application pattern is to **disable auditing in the DAO test configuration** (the application's `IDomainDrivenTestCaseConfiguration` implementation used by `AbstractDaoTestCase`):
+
+```java
+props.setProperty(AuditingIocModule.AUDIT_MODE, AuditingMode.DISABLED.name());
+// audit.path is not required when auditing is disabled
+```
+
+This is a deliberate speed trade-off, not a gap in coverage.
+The application's data-population configuration and the webapp itself still run with `AUDIT_MODE = ENABLED`, so web-UI tests, data population, and manual testing do exercise the audit hook on save.
+If a specific test genuinely needs auditing on, it should use a **separate** `IDomainDrivenTestCaseConfiguration` — do not flip the shared DAO test config.
+
+When reviewing a TG-based application, `AUDIT_MODE = DISABLED` in the DAO test configuration is expected, not a regression.
+In `DISABLED` mode `IAuditTypeFinder` is still injectable, but every `navigate*` method throws `AuditingModeException` — tests that need to reflect over audit types must use a separate configuration with `AUDIT_MODE = ENABLED` or `GENERATION`.

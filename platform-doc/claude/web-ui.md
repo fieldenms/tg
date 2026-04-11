@@ -312,6 +312,57 @@ private static class LabourHoursCentre_QueryEnhancer implements IQueryEnhancer<L
 }
 ```
 
+## Audit UI
+
+Two independent Web UI integration points exist for the platform's generic auditing facility (see @platform-doc/claude/auditing.md for the core feature).
+Both are driven by the presence of `@Audited` on the domain entity; neither is coded per-entity in the application.
+
+### Stand-alone audit centre via `IAuditWebUiConfigFactory`
+
+The factory is used once per audited entity in the application's `IWebUiConfig.initConfiguration()` to register a main-menu-level audit centre:
+
+```java
+final var auditWebUiConfigFactory = injector().getInstance(IAuditWebUiConfigFactory.class);
+final var vehicleAuditConfig = auditWebUiConfigFactory.create(Vehicle.class, builder);
+
+configDesktopMainMenu()
+    .addModule(APP.title)
+        .menu()
+            .addMenuItem(makeMenuItemTitle(vehicleAuditConfig.auditType()))
+                .description(makeMenuItemDesc(vehicleAuditConfig.auditType()))
+                .centre(vehicleAuditConfig.centre())
+                .done()
+            ...
+```
+
+`AuditWebUiConfig` is a record with accessors `auditType()` (the synthetic `Re{E}_a3t`) and `centre()`.
+Mi-types, producers, and security tokens for stand-alone audit centres are runtime-generated — do not define them by hand.
+`IAuditWebUiConfigFactory` also exposes `createEmbeddedCentre(E.class)` and `miTypeForEmbeddedCentre(E.class)`, but **these are for the platform's own use** in constructing `PersistentEntityInfo` (below), not for application code.
+
+### `PersistentEntityInfo` — the dynamically-built info master
+
+`PersistentEntityInfo` (`ua.com.fielden.platform.entity.PersistentEntityInfo`) is the functional action that backs the standard "info" button on any master for a subclass of `AbstractPersistentEntity`.
+The platform registers `PersistentEntityInfo` once, in one of two shapes, and the client opens whichever is appropriate for the target entity:
+
+| Target entity | Master shape | Built by |
+|---|---|---|
+| Not `@Audited` | **Simple master** showing version-info fields only (`createdBy`, `createdDate`, `lastUpdatedBy`, `lastUpdatedDate`, `entityId`, `entityVersion`). | `StandardMastersWebUiConfig.createPersistentEntityInfoSimpleMaster(injector)` |
+| `@Audited` | **Compound master** `OpenPersistentEntityInfoAction` — the main info view **plus** a dedicated audit-review menu. | `StandardMastersWebUiConfig.createPersistentEntityInfoCompoundMaster(injector, builder, mainMaster)` |
+
+The compound variant uses `.addMenuItem(AuditCompoundMenuItem.class).withPolymorphicCenter()`.
+`AuditCompoundMenuItem` extends `AbstractPolymorphicCentreCompoundMenuItem<PersistentEntityInfo>` — a polymorphic centre whose actual entity type is decided at runtime, not wired at configuration time.
+`IAuditMenuItemInitialiser.init(auditedType, menuItem)` parameterises the menu item with the correct `MiWithConfigurationSupport<?>` for the target type's synthetic audit-entity (`Re{E}_a3t`), so the same compound shell hosts a different audit centre each time it is opened.
+
+**Do not hand-wire audit tabs into application compound masters.**
+When you add `@Audited` to an entity, users get the audit-review UI for free through the standard info action.
+Specifically, do not:
+
+* add an "Audit" menu item to the entity's own `OpenEMasterAction` compound master builder;
+* call `IAuditWebUiConfigFactory.createEmbeddedCentre(E.class)` to produce a centre to embed in the entity's own compound master;
+* hand-write an `MiEMaster_OpenReE_a3t_MenuItem`, its producer, or its companion.
+
+Migrating an older TG application that has a hand-written audit tab on its own compound master (a common pre-2.3.0 shape) is a straight deletion — the replacement is `PersistentEntityInfo`, which the platform already registers.
+
 ## Server-Sent Events (SSE)
 
 - `IEventSource` / `AbstractEventSource<T, OK>` — implement `eventToData(T event)`

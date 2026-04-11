@@ -14,13 +14,17 @@ Entities annotated with `@MapEntityTo` are persistent.
 
 ## Core Annotations
 
-**Entity-level:** `@MapEntityTo`, `@KeyType`, `@CompanionObject`, `@EntityTitle(value, desc)`, `@DisplayDescription`, `@DescRequired`, `@DescTitle(value, desc)`, `@Subtitles(@PathTitle(path, title))`, `@DeactivatableDependencies({Dep1.class, Dep2.class})`, `@DomainEntity`, `@WithMetaModel`, `@SupportsEntityExistsValidation`
+**Entity-level:** `@MapEntityTo`, `@KeyType`, `@CompanionObject`, `@EntityTitle(value, desc)`, `@DisplayDescription`, `@DescRequired`, `@DescTitle(value, desc)`, `@Subtitles(@PathTitle(path, title))`, `@DeactivatableDependencies({Dep1.class, Dep2.class})`, `@DomainEntity`, `@WithMetaModel`, `@WithoutMetaModel`, `@SupportsEntityExistsValidation`, `@Audited`
 
 - `@DomainEntity` — marks synthetic entities (union entities, report entities) for metamodel generation and domain registration.
 - `@WithMetaModel` — explicitly enables metamodel generation for non-standard entities (e.g., action entities that need metamodel references).
+- `@WithoutMetaModel` — explicitly disables compile-time metamodel generation for the annotated entity. Used on generated audit types.
 - `@SupportsEntityExistsValidation` — enables entity existence validation for non-persistent entities used as criteria grouping properties.
+- `@Audited` — marks a persistent entity as audited; the platform generates audit-entity types for it and automatically creates audit records on save. See @platform-doc/claude/auditing.md for the full facility.
 
-**Property-level:** `@IsProperty`, `@MapTo`, `@Title`, `@Observable` (required on all setters), `@Calculated`, `@Required`, `@Final`, `@Readonly`, `@UpperCase`, `@DateOnly`, `@Dependent(prop1, prop2, ...)`, `@CompositeKeyMember(n)`, `@SkipEntityExistsValidation(skipActiveOnly, skipNew)`, `@LeProperty(prop)`, `@GeProperty(prop)`, `@CritOnly`
+**Property-level:** `@IsProperty`, `@MapTo`, `@Title`, `@Observable` (required on all setters), `@Calculated`, `@Required`, `@Final`, `@Readonly`, `@UpperCase`, `@DateOnly`, `@Dependent(prop1, prop2, ...)`, `@CompositeKeyMember(n)`, `@SkipEntityExistsValidation(skipActiveOnly, skipNew)`, `@LeProperty(prop)`, `@GeProperty(prop)`, `@CritOnly`, `@DisableAuditing`
+
+- `@DisableAuditing` — on a field of an `@Audited` entity, excludes the property from auditing. To opt `key` or `desc` out, redeclare them in the subclass first.
 
 **`@IsProperty` parameters:** `@IsProperty(Long.class)` for collection element type, `@IsProperty(length = 8000)` for string length, `@IsProperty(assignBeforeSave = true)` for auto-assigned values.
 
@@ -469,6 +473,21 @@ Generative entities and synthetic entities both present computed data via Entity
 
 Choose the synthetic pattern when the computation can be expressed purely as a query over existing tables.
 Choose the generative pattern when the computation is too complex or iterative to express as EQL, or when it involves side effects that must be materialised before the centre queries.
+
+## Audited Entities
+
+A persistent entity annotated with `@Audited` participates in the platform's generic auditing facility.
+On each successful save, the platform creates one row in a generated audit-entity table and one row per dirty auditable property in a generated audit-prop table.
+The mechanics are entirely runtime-driven:
+
+* Four audit types are generated per audited entity — persistent `E_a3t_{n}` + `E_a3t_{n}_Prop`, synthetic `Re{E}_a3t` + `Re{E}_a3t_Prop`.
+  Their base classes are `AbstractAuditEntity<E>`, `AbstractAuditProp<E>`, `AbstractSynAuditEntity<E>`, `AbstractSynAuditProp<E>`.
+* Audit types are not baked into the compile-time `ApplicationDomain`. `BasicWebServerIocModule` provides an `IApplicationDomainProvider` that augments the compile-time entity types with audit types during IoC initialisation (exact behaviour varies by `AuditingMode`) — anywhere the full entity-type list matters, use the **injected** `IApplicationDomainProvider`, not a freshly instantiated `new ApplicationDomain()`.
+* Audit-type companions are runtime-generated via `ICompanionGenerator` (ByteBuddy); never hand-write companions for an audit type.
+* `IAuditTypeFinder` maps an audited type to any of its audit types (latest persistent, a specific version, synthetic, or all).
+* `AuditUtils.isAudited(Class)` and related helpers are the supported boundary for reflecting on audit status.
+
+For the structure of audit-entity types, the version hierarchy (`E_a3t_n <: … <: E_a3t_1`), `@InactiveAuditProperty`, `@DisableAuditing`, evolution strategies (new version vs in-place refactor), auditing modes, and source generation tooling (`IAuditEntityGenerator`, `GenAudit`), see @platform-doc/claude/auditing.md.
 
 ## MetaModel Annotation Processor
 
