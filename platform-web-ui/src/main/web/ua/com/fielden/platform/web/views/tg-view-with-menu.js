@@ -657,6 +657,7 @@ Polymer({
             const uuid = this._centreConfigInfo() && this._centreConfigInfo()[selectedSubmodulePart] && this._centreConfigInfo()[selectedSubmodulePart].configUuid; // configUuid of previously loaded centre configuration (selectedPage), if any
             const uuidPart = uuid ? '/' + uuid : '';
             if (!parts[1] && uuidPart && !selectedSubmodulePart.includes(uuidPart)) {
+                this._updateURI({ detail: { newConfigUuid: uuid, configUuid: '' } });
                 this._updateSelectedModuleWith(selectedSubmodulePart);
             } else {
                 this._selectMenu(selectedSubmodulePart);
