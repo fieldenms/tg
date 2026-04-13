@@ -67,6 +67,50 @@ Running multiple test cases with `useSavedDataPopulationScript = true` will fail
 `saveDataPopulationScriptToFile = true` generates unnecessary files.
 Always verify these return `false` in any test file being committed.
 
+### Reference data parity between production and tests
+
+Production and test environments seed reference / lookup rows differently:
+- **Production** populates them via SQL migration scripts.
+- **Tests** populate them via `populate*` methods in the application's domain-data interface (commonly `IDomainData`).
+
+These two paths must be kept in sync.
+When you introduce a new constant for a reference table — typically a hand-curated enumeration of business values fetched at runtime via `findByKey(...)` — update **both** sides:
+1. Add the row to the relevant SQL migration script.
+2. Append the same row to the populate method that seeds the lookup table in tests.
+
+If only the production migration is updated, tests run against a database where `findByKey(...)` returns `null` for the new constant.
+Most code happily accepts that, persists `null` to dependent columns, and the symptom surfaces much later as a `NullPointerException` in an unrelated assertion or downstream query — far from the actual omission.
+
+### Test clock control
+
+When a test relies on `createdDate` / `lastUpdatedDate` ordering — e.g., a calculated property or query filters by `createdDate.lt(...)`, or assertions sort entities by their version timestamps — install the millisecond ticker so that consecutive saves get distinct timestamps.
+Without it, fast successive saves can share the same millisecond, silently breaking ordering filters (the predicate is `false` instead of `true`, so rows drop out of subqueries with no error).
+
+The pattern is two pieces:
+
+1. **Field** — obtain the mutable test constants from the injector:
+   ```java
+   private final UniversalConstantsForTesting constants =
+           (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+   ```
+2. **`@Before` reset** — re-install the ticker before every test method:
+   ```java
+   @Before
+   public void reset() {
+       constants.setNow(<chosen-start-time>);
+       // setNow clears the supplier — install the ticker again.
+       constants.setTimeSupplier(constants.mkMillisTicker(1000));
+   }
+   ```
+   `<chosen-start-time>` is a `DateTime` of the test's choosing.
+   Some applications expose a base-class helper like `resetNowAndStartTimeTicking(constants, dateTime)` (which wraps the two calls above) and a `prePopulatedNow` constant for the populate baseline — use them if available, otherwise inline the two calls.
+
+Why `@Before` and not just `populateDomain()`:
+- `UniversalConstantsForTesting` is mutable and shared across tests within a JVM fork — a previous test may have advanced or removed the supplier.
+- `populateDomain()` early-returns when `useSavedDataPopulationScript()` is `true`, so any clock setup done there is skipped in the fast-iteration path.
+
+If `populateDomain()` itself runs save logic that needs distinct timestamps, mirror the same `setNow` + `setTimeSupplier` pair inside it (after the `useSavedDataPopulationScript()` early-return guard).
+
 ### Web Resource Testing
 
 **Server-side web resource logic** is tested via `AbstractWebResourceWithDaoTestCase` (`platform-web-resources/src/test/`).
