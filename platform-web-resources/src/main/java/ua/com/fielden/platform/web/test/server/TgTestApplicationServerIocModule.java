@@ -22,6 +22,7 @@ import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
+import ua.com.fielden.platform.web.interfaces.IUserPreferencesProvider;
 
 import java.util.List;
 import java.util.Properties;
@@ -51,6 +52,7 @@ public class TgTestApplicationServerIocModule extends BasicWebServerIocModule {
 
         /////////////////////////////// application specific ////////////////////////////
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
+        bind(IUserPreferencesProvider.class).to(CustomUserSettings.class);
         bind(IAuthenticationModel.class).to(TgTestAppAuthenticationModel.class);
         bind(ISecurityTokenNodeTransformation.class).to(TgTestApplicationSecurityTokenNodeTransformation.class);
         bind(ISecurityTokenProvider.class).to(TgTestSecurityTokenProvider.class);

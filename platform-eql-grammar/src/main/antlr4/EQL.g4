@@ -1,4 +1,4 @@
-// This grammar was generated. Timestamp: 2026-03-25T18:30:46.978376070+02:00[Europe/Kyiv]
+// This grammar was generated. Timestamp: 2026-04-09T13:10:36.805953+10:00[Australia/Melbourne]
 
 grammar EQL;
 
@@ -97,6 +97,8 @@ singleOperand :
     | COUNT unit=dateIntervalUnit BETWEEN endDate=singleOperand AND startDate=singleOperand # DateDiffInterval
     | ADDTIMEINTERVALOF left=singleOperand unit=dateIntervalUnit TO right=singleOperand # DateAddInterval
     | ROUND singleOperand to=TO # Round
+    | CEIL singleOperand # Ceil
+    | FLOOR singleOperand # Floor
     | CONCAT operands+=singleOperand (WITH operands+=singleOperand)* END # Concat
     | CASEWHEN whens+=condition THEN thens+=singleOperand (WHEN whens+=condition THEN thens+=singleOperand)* (OTHERWISE otherwiseOperand=singleOperand)? caseWhenEnd # CaseWhen
     | BEGINEXPR exprBody ENDEXPR # Expr
@@ -295,6 +297,7 @@ BEGINEXPR : 'beginExpr' ;
 BEGINYIELDEXPR : 'beginYieldExpr' ;
 BETWEEN : 'between' ;
 CASEWHEN : 'caseWhen' ;
+CEIL : 'ceil' ;
 CONCAT : 'concat' ;
 CONCATOF : 'concatOf' ;
 COND : 'cond' ;
@@ -323,6 +326,7 @@ EXISTSALLOF : 'existsAllOf' ;
 EXISTSANYOF : 'existsAnyOf' ;
 EXPR : 'expr' ;
 EXTPROP : 'extProp' ;
+FLOOR : 'floor' ;
 GE : 'ge' ;
 GROUPBY : 'groupBy' ;
 GT : 'gt' ;

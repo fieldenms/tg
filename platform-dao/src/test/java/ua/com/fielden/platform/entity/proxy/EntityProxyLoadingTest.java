@@ -360,6 +360,29 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         assertFalse("sub-sub-properties of null are not proxied", isPropertyProxied(vehicle, "replacedBy.make.model"));
     }
 
+    @Test
+    public void isPropertyProxied_sub_props_of_not_null_components_are_not_proxied() {
+        final var car1 = coVehicle.findByKeyAndFetch(fetch(TgVehicle.class).with("price"), "CAR1");
+        assertNotNull(car1.getPrice());
+        shouldNotBeProxy(car1, "price.amount");
+
+        final var car2 = coVehicle.findByKeyAndFetch(fetch(TgVehicle.class).with("replacedBy", fetch(TgVehicle.class).with("price")), "CAR2");
+        assertNotNull(car2.getPrice());
+        shouldNotBeProxy(car2, "replacedBy.price.amount");
+    }
+
+    @Test
+    public void isPropertyProxied_sub_props_of_null_components_are_not_proxied() {
+        final var car3 = coVehicle.findByKeyAndFetch(fetch(TgVehicle.class).with("price"), "CAR3");
+        assertNull(car3.getPrice());
+        shouldNotBeProxy(car3, "price.amount");
+
+        final var car4 = coVehicle.findByKeyAndFetch(fetch(TgVehicle.class).with("replacedBy", fetch(TgVehicle.class).with("price")), "CAR4");
+        assertNotNull(car4.getReplacedBy());
+        assertNull(car4.getReplacedBy().getPrice());
+        shouldNotBeProxy(car4, "replacedBy.price.amount");
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
@@ -432,6 +455,8 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
         final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").setInitDate(date("2001-01-01 00:00:00")).setModel(m318).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
         final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5).setReplacedBy(car1));
+        final var car3 = save(new_(TgVehicle.class, "CAR3", "CAR3 DESC").setModel(m316).setActive(true));
+        final var car4 = save(new_(TgVehicle.class, "CAR4", "CAR4 DESC").setReplacedBy(car3).setModel(m316).setActive(true));
 
         save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
         save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));

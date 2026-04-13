@@ -28,6 +28,8 @@ public interface IUser extends IEntityDao<User>, ISaveWithFetch<User> {
             .with(BASE, BASED_ON_USER__BASE)
             .with(ACTIVE_ROLES, INACTIVE_ROLES);
 
+    fetch<User> FETCH_MODEL = FETCH_PROVIDER.fetchModel();
+
     /// Returns users with roles.
     ///
     List<User> findAllUsersWithRoles();

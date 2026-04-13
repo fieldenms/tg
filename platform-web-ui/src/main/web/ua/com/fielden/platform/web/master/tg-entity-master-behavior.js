@@ -919,7 +919,7 @@ const TgEntityMasterBehaviorImpl = {
 
             return new Promise((resolve, reject) => {
                 this.debounce('invoke-canLeave', function () {
-                    // cancel the 'invoke-saving' debouncer if there is any active one:
+                    // Cancel the 'invoke-canLeave' debouncer, if there is an active one.
                     this.cancelDebouncer('invoke-canLeave');
                     return resolve(this._createCanLeavePromise());
                 }, 50);

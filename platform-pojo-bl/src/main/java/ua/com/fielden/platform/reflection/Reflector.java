@@ -458,9 +458,16 @@ public final class Reflector {
             return true;
         }
         if (tail.hasNext()) {
-            final AbstractEntity<?> nextEntity = entity.get(propName);
-            // If the next entity is null then there is nothing to violate the proxy condition -- consider its sub-properties to be not proxied.
-            return nextEntity != null && isPropertyProxied_(nextEntity, tail.next(), tail);
+            final var nextValue = entity.get(propName);
+            if (nextValue instanceof AbstractEntity<?> nextEntity) {
+                return isPropertyProxied_(nextEntity, tail.next(), tail);
+            }
+            // Otherwise:
+            // * If the next value is null, traversing further is not possible, so consider not proxied.
+            // * If the value is not an entity, it must be component-typed, hence cannot have proxied sub-properties.
+            else {
+                return false;
+            }
         }
         return false;
     }

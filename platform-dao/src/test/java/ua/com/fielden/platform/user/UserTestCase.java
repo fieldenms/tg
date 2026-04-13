@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.user;
 
+import org.junit.After;
 import org.junit.Test;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
@@ -12,6 +13,7 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
+import ua.com.fielden.platform.test.ioc.ApplicationSettingsForTesting;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -21,11 +23,16 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.security.user.User.*;
+import static ua.com.fielden.platform.security.user.UserDao.ERR_SELF_EDITING;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
 import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
 
@@ -35,6 +42,58 @@ public class UserTestCase extends AbstractDaoTestCase {
 
     private final IUser coUser = co$(User.class);
     private final UserSecretCo coUserSecret = co$(UserSecret.class);
+
+    @After
+    public void tearDown() {
+        final ApplicationSettingsForTesting settings = (ApplicationSettingsForTesting) getInstance(IApplicationSettings.class);
+        settings.setUsersSelfEdit(true);
+    }
+
+    @Test
+    public void users_cannot_save_changes_to_their_own_record_if_self_editing_is_not_permitted() {
+        final ApplicationSettingsForTesting settings = (ApplicationSettingsForTesting) getInstance(IApplicationSettings.class);
+        settings.setUsersSelfEdit(false);
+
+        final UserDao co$User = co$(User.class);
+        assertThat(co$User.getUser()).isNotNull();
+        assertThat(co$User.getUser().getKey()).isEqualTo(UNIT_TEST_USER);
+
+        final var selfUser = co$User.findByKeyAndFetch(IUser.FETCH_MODEL, UNIT_TEST_USER);
+        selfUser.setEmail("some@domain.com");
+        assertThat(selfUser.isDirty()).isTrue();
+
+        assertThatThrownBy(() -> co$User.save(selfUser)).hasMessage(ERR_SELF_EDITING);
+    }
+
+    @Test
+    public void users_can_save_their_own_record_in_case_of_no_changes_even_if_self_editing_is_not_permitted() {
+        final ApplicationSettingsForTesting settings = (ApplicationSettingsForTesting) getInstance(IApplicationSettings.class);
+        settings.setUsersSelfEdit(false);
+
+        final UserDao co$User = co$(User.class);
+        assertThat(co$User.getUser()).isNotNull();
+        assertThat(co$User.getUser().getKey()).isEqualTo(UNIT_TEST_USER);
+
+        final var selfUser = co$User.findByKeyAndFetch(IUser.FETCH_MODEL, UNIT_TEST_USER);
+        assertThat(selfUser.isDirty()).isFalse();
+
+        assertThatCode(() -> co$User.save(selfUser)).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void users_can_change_their_own_record_if_self_editing_is_permitted() {
+        final UserDao co$User = co$(User.class);
+        assertThat(co$User.getUser()).isNotNull();
+        assertThat(co$User.getUser().getKey()).isEqualTo(UNIT_TEST_USER);
+
+        final var selfUser = co$User.findByKeyAndFetch(IUser.FETCH_MODEL, UNIT_TEST_USER);
+        final var newEmailAddress = "some@domain.com";
+        selfUser.setEmail(newEmailAddress);
+        assertThat(selfUser.isDirty()).isTrue();
+
+        final var selfUserAfterSave = co$User.save(selfUser);
+        assertThat(selfUserAfterSave.getEmail()).isEqualTo(newEmailAddress);
+    }
 
     @Test
     public void username_does_not_permit_password_reset_UUID_separator() {
@@ -57,7 +116,7 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void propety_email_in_user_is_defined_with_almost_unique_validator() {
+    public void property_email_in_user_is_defined_with_almost_unique_validator() {
         final User user1 = coUser.findByKey("USER1");
         final MetaProperty<String> emailProp = user1.getProperty(EMAIL);
         assertTrue(emailProp.getValidationAnnotations().stream().filter(a -> a instanceof BeforeChange).flatMap(a -> Stream.of(((BeforeChange) a).value())).anyMatch(handler -> handler.value().isAssignableFrom(UserAlmostUniqueEmailValidator.class)));
