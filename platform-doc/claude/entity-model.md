@@ -141,6 +141,12 @@ public class PmTask extends ActivatableAbstractEntity<DynamicEntityKey> {
 }
 ```
 
+**`.getKey()` on composite-key entities returns `DynamicEntityKey`, not a scalar.**
+For an entity with `@KeyType(DynamicEntityKey.class)`, `getKey()` returns the composite-key object whose `toString()` joins the members with the key-member separator.
+It is **not** interchangeable with any single member's value, even when there is only one composite member.
+In code — and especially in test assertions — compare against the named member accessor of the composite-key property (e.g., `Priority.getValue()` for `@CompositeKeyMember(1) Integer value`, `Severity.getCode()` for `@CompositeKeyMember(1) String code`), not `getKey()`.
+Only entities declared with `@KeyType(String.class)` / `@KeyType(Long.class)` / etc. can have their `getKey()` compared directly to a scalar.
+
 ## Activatable Entities and Deactivation Dependencies
 
 `ActivatableAbstractEntity` supports reference counting — the platform tracks how many other entities reference an activatable entity.
@@ -229,6 +235,19 @@ Extend `DefaultEntityProducerWithContext<T>` for context-aware entity instantiat
 | `co$(Type.class)` | `IEntityDao<T>` | Yes | Full CRUD — create, update, save, delete |
 
 **Critical:** `co$()` returns entities with full change tracking, validation, and meta-property support. `co()` returns lightweight, uninstrumented entities. Using the wrong one causes subtle bugs.
+
+**Use the companion's `FETCH_MODEL` when retrieving an entity for editing.**
+A companion's `FETCH_PROVIDER` / `FETCH_MODEL` enumerates exactly the properties — including the nested paths — that the DAO's save-time logic, validators, and definers touch.
+Retrieving with a narrower fetch (e.g., `findByKey` without an explicit fetch) or with a flat `fetchAll*` / `fetchAllInclCalc*` (which does not follow dot-notation into nested references) leaves deeper properties unfetched; any later access on the save path raises `StrictProxyException`.
+The rule applies everywhere an entity is loaded for mutation: tests, DAO code, producers.
+```java
+// Right — use the companion's declared fetch:
+co$(Vehicle.class).findByKeyAndFetch(VehicleCo.FETCH_MODEL, key);
+
+// Wrong — flat top-level fetch; breaks on nested access within save logic:
+co$(Vehicle.class).findByKeyAndFetch(fetchAllInclCalcAndInstrument(Vehicle.class), key);
+```
+Narrower fetches are fine for read-only queries where the reduced cost is deliberate, but never for the write path.
 
 **Two-parameter `save()`:** `save(entity, Optional<fetch<T>>)` returns `Either<Long, T>`.
 - `Optional.empty()` — entity is **not** refetched after persistence; returns `Either.left(id)` with just the ID. Use when the caller doesn't need the saved entity back.
