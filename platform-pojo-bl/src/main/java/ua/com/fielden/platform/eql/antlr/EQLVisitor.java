@@ -276,6 +276,20 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitRound(EQLParser.RoundContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code Ceil}
+	 * labeled alternative in {@link EQLParser#singleOperand}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCeil(EQLParser.CeilContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Floor}
+	 * labeled alternative in {@link EQLParser#singleOperand}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFloor(EQLParser.FloorContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code Concat}
 	 * labeled alternative in {@link EQLParser#singleOperand}.
 	 * @param ctx the parse tree

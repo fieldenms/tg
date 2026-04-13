@@ -1,20 +1,15 @@
 package ua.com.fielden.platform.security.user.impl;
 
-import static java.lang.String.format;
-
 import com.google.inject.Singleton;
-
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 
-/**
- * This is a thread-safe implementation of {@link IUserProvider} that simply holds a user value that is set via setter in a {@link ThreadLocal} variable.
- * 
- * @author TG Team
- * 
- */
+import static java.lang.String.format;
+
+/// This is a thread-safe implementation of [IUserProvider] that simply holds a user value that is set via setter in a [ThreadLocal] variable.
+///
 @Singleton
 public class ThreadLocalUserProvider implements IUserProvider {
 

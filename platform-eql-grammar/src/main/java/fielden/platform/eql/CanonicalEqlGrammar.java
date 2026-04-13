@@ -134,6 +134,8 @@ public final class CanonicalEqlGrammar {
             or(DateDiffInterval).
             or(DateAddInterval).
             or(Round).
+            or(Ceil).
+            or(Floor).
             or(Concat).
             or(CaseWhen).
             or(Expr).
@@ -161,6 +163,12 @@ public final class CanonicalEqlGrammar {
 
         derive(Round).
             to(round, SingleOperand, label("to", to.with(Integer.class))).
+
+        derive(Ceil).
+            to(ceil, SingleOperand).
+
+        derive(Floor).
+            to(floor, SingleOperand).
 
         derive(Concat).
             to(concat, listLabel("operands", SingleOperand), (repeat(with, listLabel("operands", SingleOperand))), end).
@@ -385,6 +393,8 @@ public final class CanonicalEqlGrammar {
         annotate(DateDiffInterval, inline()).
         annotate(DateAddInterval, inline()).
         annotate(Round, inline()).
+        annotate(Ceil, inline()).
+        annotate(Floor, inline()).
         annotate(Concat, inline()).
         annotate(CaseWhen, inline()).
         annotate(Expr, inline()).
@@ -421,7 +431,7 @@ public final class CanonicalEqlGrammar {
         ExtProp, Prop,
         UnaryComparisonOperator, Val, Param,
         ArithmeticalOperator, ExprBody, Expr,
-        UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateAddInterval, Round, Concat, CaseWhen, CaseWhenEnd,
+        UnaryFunction, UnaryFunctionName, IfNull, DateDiffInterval, DateAddInterval, Round, Ceil, Floor, Concat, CaseWhen, CaseWhenEnd,
         MembershipOperator,
         MembershipOperand, ComparisonOperator, ComparisonOperand, QuantifiedOperand, SingleConditionPredicate, Join, JoinOperator,
         JoinCondition,
@@ -461,6 +471,8 @@ public final class CanonicalEqlGrammar {
         addTimeIntervalOf,
         caseWhen,
         round,
+        ceil,
+        floor,
         concat,
         absOf,
         dateOf,
