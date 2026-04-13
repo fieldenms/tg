@@ -37,6 +37,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isCollectional;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.tiny.TinyHyperlink.*;
+import static ua.com.fielden.platform.types.Money.*;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 @EntityType(TinyHyperlink.class)
@@ -293,9 +294,9 @@ public class TinyHyperlinkDao extends CommonEntityDao<TinyHyperlink> implements 
         else if (Money.class.isAssignableFrom(propertyType)) {
             final var money = (Money) value;
             final var object = new HashMap<>();
-            object.put("amount", money.getAmount());
-            object.put("currency", money.getCurrency());
-            object.put("taxPercent", money.getTaxPercent());
+            object.put(AMOUNT, money.getAmount());
+            object.put(CURRENCY, money.getCurrency());
+            object.put(TAX_PERCENT, money.getTaxPercent());
             return $.val(object);
         }
         else if (Colour.class.isAssignableFrom(propertyType)) {

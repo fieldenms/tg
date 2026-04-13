@@ -5,6 +5,9 @@ import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 
 import java.util.Objects;
 
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.IMPLICIT;
+
 /**
  * A structure that represents resolution-related info for a query source item of type {@code T} within a query source.
  *
@@ -44,7 +47,7 @@ public abstract class AbstractQuerySourceItem<T> implements IResolvable<T> {
     }
 
     public boolean isCalculatedPropertyThatCouldBeMaterialisedAsSqlColumn() {
-        return expression != null && !expression.forTotals() && !expression.implicit();
+        return expression != null && !expression.category().equals(AGGREGATED_EXPRESSION) && !expression.category().equals(IMPLICIT);
     }
 
     @Override

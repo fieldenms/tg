@@ -1,21 +1,17 @@
 package ua.com.fielden.platform.sample.domain;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IMoneyType;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.types.Money;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyTitle("Fuel Usages")
 @KeyType(DynamicEntityKey.class)
@@ -44,13 +40,62 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty(precision = 18, scale = 4)
     @MapTo
+    @PersistentType(userType = IMoneyType.class)
     private Money pricePerLitre;
-    
+
+    @IsProperty
+    @Readonly
+    @Calculated
+    @PersistentType(userType = IMoneyType.class)
+    @Title(value = "Previous Price per Litre", desc = "Price per litre for the same vehicle on the previous date.")
+    private Money previousPricePerLitre;
+    // Example: Money.currency cannot be inferred due to the sub-query, so define it manually.
+    protected static final ExpressionModel
+            previousPricePerLitre_ = expr()
+                    .model(select(TgFuelUsage.class).where()
+                                   .prop("vehicle").eq().extProp("vehicle")
+                                   .and()
+                                   .prop("date").lt().extProp("date")
+                                   .orderBy().prop("date").desc()
+                                   .limit(1)
+                                   .yield().prop("pricePerLitre")
+                                   .modelAsPrimitive())
+                    .model(),
+            previousPricePerLitre_currency_ = expr()
+                    .model(select(TgFuelUsage.class).where()
+                                   .prop("vehicle").eq().extProp("vehicle")
+                                   .and()
+                                   .prop("date").lt().extProp("date")
+                                   .orderBy().prop("date").desc()
+                                   .limit(1)
+                                   .yield().prop("pricePerLitre.currency")
+                                   .modelAsPrimitive())
+                    .model();
+
+    @IsProperty
+    @Readonly
+    @Calculated
+    @PersistentType(userType = IMoneyType.class)
+    @Title(value = "Half Price per Litre")
+    private Money halfPricePerLitre;
+    // halfPricePerLitre.currency should be inferred.
+    protected static final ExpressionModel halfPricePerLitre_ = expr().prop("pricePerLitre").div().val(2).model();
+
     @IsProperty
     @Required
     @MapTo
     @Title(value = "Fuel type", desc = "Fuel type")
     private TgFuelType fuelType;
+
+    @Observable
+    protected TgFuelUsage setPreviousPricePerLitre(final Money previousPricePerLitre) {
+        this.previousPricePerLitre = previousPricePerLitre;
+        return this;
+    }
+
+    public Money getPreviousPricePerLitre() {
+        return previousPricePerLitre;
+    }
 
     @Observable
     public TgFuelUsage setFuelType(final TgFuelType fuelType) {
@@ -99,4 +144,15 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     public Money getPricePerLitre() {
         return pricePerLitre;
     }
+
+    @Observable
+    protected TgFuelUsage setHalfPricePerLitre(final Money halfPricePerLitre) {
+        this.halfPricePerLitre = halfPricePerLitre;
+        return this;
+    }
+
+    public Money getHalfPricePerLitre() {
+        return halfPricePerLitre;
+    }
+
 }

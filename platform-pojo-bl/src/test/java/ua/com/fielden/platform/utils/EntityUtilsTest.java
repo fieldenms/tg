@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.UserDefinableHelp;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.keygen.KeyNumber;
@@ -582,21 +583,9 @@ public class EntityUtilsTest {
     }
 
     @Test
-    public void key_paths_works_for_composite_key_without_further_nesting_and_with_parent_context_path() {
-        assertEquals(listOf("mr.vehicle.key", "mr.readingDate"),
-                keyPaths(TgMeterReading.class, "mr"));
-    }
-
-    @Test
     public void key_paths_works_for_composite_key_with_one_level_nesting() {
         assertEquals(listOf("parent.key", "name"),
                 keyPaths(TgOrgUnit2.class));
-    }
-
-    @Test
-    public void key_paths_works_for_composite_key_with_one_level_nesting_and_with_parent_context_path() {
-        assertEquals(listOf("parent.parent.parent.key", "parent.parent.name"),
-                keyPaths(TgOrgUnit2.class, "parent.parent"));
     }
 
     @Test
@@ -685,17 +674,17 @@ public class EntityUtilsTest {
 
     @Test
     public void splitPropPath_fails_if_path_contains_empty_property_names() {
-        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person."));
-        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.."));
-        assertThrows(IllegalArgumentException.class, () -> splitPropPath(".person"));
-        assertThrows(IllegalArgumentException.class, () -> splitPropPath("..person"));
-        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person..desc"));
-        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person..desc."));
-        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.desc."));
-        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.desc.."));
-        assertThrows(IllegalArgumentException.class, () -> splitPropPath(""));
-        assertThrows(IllegalArgumentException.class, () -> splitPropPath("."));
-        assertThrows(IllegalArgumentException.class, () -> splitPropPath(".."));
+        assertThrows(InvalidArgumentException.class, () -> splitPropPath("person."));
+        assertThrows(InvalidArgumentException.class, () -> splitPropPath("person.."));
+        assertThrows(InvalidArgumentException.class, () -> splitPropPath(".person"));
+        assertThrows(InvalidArgumentException.class, () -> splitPropPath("..person"));
+        assertThrows(InvalidArgumentException.class, () -> splitPropPath("person..desc"));
+        assertThrows(InvalidArgumentException.class, () -> splitPropPath("person..desc."));
+        assertThrows(InvalidArgumentException.class, () -> splitPropPath("person.desc."));
+        assertThrows(InvalidArgumentException.class, () -> splitPropPath("person.desc.."));
+        assertThrows(InvalidArgumentException.class, () -> splitPropPath(""));
+        assertThrows(InvalidArgumentException.class, () -> splitPropPath("."));
+        assertThrows(InvalidArgumentException.class, () -> splitPropPath(".."));
     }
 
     @Test

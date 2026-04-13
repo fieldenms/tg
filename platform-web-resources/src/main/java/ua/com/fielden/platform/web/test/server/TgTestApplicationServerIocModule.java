@@ -7,6 +7,8 @@ import com.google.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ioc.BasicWebServerIocModule;
+import ua.com.fielden.platform.persistence.types.IPropertyPersistentTypeVerification;
+import ua.com.fielden.platform.persistence.types.NoPropertyPersistentTypeVerification;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -54,6 +56,7 @@ public class TgTestApplicationServerIocModule extends BasicWebServerIocModule {
         bind(IAuthenticationModel.class).to(TgTestAppAuthenticationModel.class);
         bind(ISecurityTokenNodeTransformation.class).to(TgTestApplicationSecurityTokenNodeTransformation.class);
         bind(ISecurityTokenProvider.class).to(TgTestSecurityTokenProvider.class);
+        bind(IPropertyPersistentTypeVerification.class).to(NoPropertyPersistentTypeVerification.class);
 
         requireBinding(IDates.class);
         requireBinding(IUniversalConstants.class);

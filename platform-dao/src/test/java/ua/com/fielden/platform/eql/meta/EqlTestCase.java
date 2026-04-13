@@ -9,11 +9,13 @@ import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
 import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -68,6 +70,7 @@ public abstract class EqlTestCase {
     private static final QuerySourceInfoProvider QUERY_SOURCE_INFO_PROVIDER;
     private static final EqlTables EQL_TABLES;
     private static final EqlQueryTransformer EQL_QUERY_TRANSFORMER;
+    private static final MoneyComponentInference MONEY_COMPONENT_INFERENCE;
 
     static {
         final var dbVersionProvider = constantDbVersion(H2);
@@ -76,9 +79,21 @@ public abstract class EqlTestCase {
                                                     dbVersionProvider)
                 .build();
         final var domainMetadataUtils = new DomainMetadataUtils(new PlatformTestDomainTypes(), DOMAIN_METADATA);
-        QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA, domainMetadataUtils, new SyntheticModelProvider(null, null));
+        final var calculatedPropertyExpressionProvider = new DefaultCalculatedPropertyExpressionProvider(
+                injector.getInstance(IUserProvider.class),
+                dates,
+                filter,
+                DOMAIN_METADATA,
+                new MoneyComponentInference(DOMAIN_METADATA));
+        MONEY_COMPONENT_INFERENCE = new MoneyComponentInference(DOMAIN_METADATA);
+        QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(
+                DOMAIN_METADATA,
+                domainMetadataUtils,
+                new SyntheticModelProvider(null, null),
+                calculatedPropertyExpressionProvider,
+                MONEY_COMPONENT_INFERENCE);
         EQL_TABLES = new EqlTables(DOMAIN_METADATA, domainMetadataUtils);
-        EQL_QUERY_TRANSFORMER = new EqlQueryTransformer(filter, dates, EQL_TABLES, QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, dbVersionProvider);
+        EQL_QUERY_TRANSFORMER = new EqlQueryTransformer(filter, dates, EQL_TABLES, QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, MONEY_COMPONENT_INFERENCE, dbVersionProvider);
     }
     
     protected static final QueryModelToStage1Transformer qb() {
@@ -107,6 +122,10 @@ public abstract class EqlTestCase {
 
     protected static EqlQueryTransformer eqlQueryTransformer() {
         return EQL_QUERY_TRANSFORMER;
+    }
+
+    protected static MoneyComponentInference moneyComponentInference() {
+        return MONEY_COMPONENT_INFERENCE;
     }
 
 }

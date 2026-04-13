@@ -99,6 +99,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgOrgUnit5.class);
         add(TeNamedValuesVector.class);
         add(TeProductPrice.class);
+        add(TeProductPriceWithCurrency.class);
         add(TeVehicle.class);
         add(TeVehicleFinDetails.class);
         add(TeVehicleFuelUsage.class);
