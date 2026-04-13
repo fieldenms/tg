@@ -654,9 +654,16 @@ Polymer({
         if (menuItem.key === decodeURIComponent(this.selectedModule)) {
             const parts = selectedSubmodule.substring(1).split('?');
             const selectedSubmodulePart = parts[0];
-            const uuid = this._centreConfigInfo() && this._centreConfigInfo()[selectedSubmodulePart] && this._centreConfigInfo()[selectedSubmodulePart].configUuid; // configUuid of previously loaded centre configuration (selectedPage), if any
+            // In the case where `selectedSubmodule` where changed from some external source, then `configUuid` can be missing.
+            // This happens, e.g., when Entity Centre transition is made through F3 global search.
+            // Then `selectedSubmodule` === '/Work%20Orders', not '/Work%20Orders/8469d323-e3e5-4eec-8984-f848c466ddc7'.
+            const uuid = this._centreConfigInfo() && this._centreConfigInfo()[selectedSubmodulePart] && this._centreConfigInfo()[selectedSubmodulePart].configUuid;
+            // If `uuid` is missing, but Entity Centre named configuration was loaded, let's adjust `selectedSubmodule` accordingly.
+            // To narrow down the possible impact, don't adjust in the case where `?...` part is present.
             if (!parts[1] && uuid && !selectedSubmodulePart.includes('/' + uuid)) {
+                // Manually rewrite history not to contain link without UUID, but only resultant link with UUID.
                 this._updateURI({ detail: { newConfigUuid: uuid, configUuid: '' } });
+                // Do the actual adjustment.
                 this._updateSelectedModuleWith(selectedSubmodulePart);
             } else {
                 this._selectMenu(selectedSubmodulePart);
