@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -33,7 +34,10 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.*;
+import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
@@ -683,7 +687,7 @@ public class CriteriaResource extends AbstractWebResource {
                 }
 
                 // Execute actual Entity Centre configuration run / refresh / navigate / sort logic.
-                final var resultList = executeEntityCentreConfiguration(
+                final var resultListAndPage = executeEntityCentreConfiguration(
                     new ConfigSettings(saveAsName, user, device(), miType),
                     of(t2(updatedFreshCentre, previouslyRunCentre)),
                     isRunning,
@@ -699,7 +703,7 @@ public class CriteriaResource extends AbstractWebResource {
                 );
 
                 LOGGER.debug("CRITERIA_RESOURCE: run finished.");
-                return restUtil.rawListJsonRepresentation(resultList.toArray());
+                return restUtil.rawListJsonRepresentation(resultListAndPage._1.toArray());
             } finally {
                 if (lockAcquired) {
                     // it is necessary to unlock Lock in finally block (exceptions will be handled properly then)
@@ -714,7 +718,7 @@ public class CriteriaResource extends AbstractWebResource {
     /// @param updatedFreshCentreAndPreviouslyRunCentre an [Optional] pair of centre managers for more comprehensive and complete running;
     ///                                                 if passed, rendering hints / UI action indices / criteria indicator will be computed
     ///
-    public static List<Object> executeEntityCentreConfiguration(
+    public static T2<List<Object>, IPage<AbstractEntity<?>>> executeEntityCentreConfiguration(
         final ConfigSettings configSettings,
         final Optional<T2<ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer>> updatedFreshCentreAndPreviouslyRunCentre,
         final boolean isRunning,
@@ -743,8 +747,8 @@ public class CriteriaResource extends AbstractWebResource {
                 sharingModel
             )
         );
-        final var resultCustomObject = resultCustomObjectAndEntities.getKey();
-        final var resultEntities = resultCustomObjectAndEntities.getValue();
+        final var resultCustomObject = resultCustomObjectAndEntities._1;
+        final var resultEntities = resultCustomObjectAndEntities._2;
 
         final var skipCustomObjectCalculations = updatedFreshCentreAndPreviouslyRunCentre.isEmpty();
         if (!skipCustomObjectCalculations) {
@@ -783,17 +787,14 @@ public class CriteriaResource extends AbstractWebResource {
             resultCustomObject.put("dynamicColumns", createDynamicProperties(resPropsWithContext, centre));
         }
 
-        Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
-                centre,
-                centre.getCustomPropertiesDefinitions(),
-                centre.getCustomPropertiesAsignmentHandler(),
-                resultEntities.stream());
-
-        // Enhance entities with values defined with consumer in each dynamic property.
-        processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
+        final Stream<AbstractEntity<?>> enhancedEntities = enhanceEntities(resultEntities.stream(), resPropsWithContext, centre);
+        final Stream<AbstractEntity<?>> processedEntities;
         if (!skipCustomObjectCalculations) {
             // Enhance rendering hints with styles for each dynamic column.
-            processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(processedEntities, resPropsWithContext, (List) resultCustomObject.get("renderingHints"));
+            processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(enhancedEntities, resPropsWithContext, (List) resultCustomObject.get("renderingHints"));
+        }
+        else {
+            processedEntities = enhancedEntities;
         }
 
         final var list = new ArrayList<>();
@@ -802,11 +803,112 @@ public class CriteriaResource extends AbstractWebResource {
             list.add(resultCustomObject);
         }
 
+        final List<AbstractEntity<?>> data = new ArrayList<>();
         // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
         // FIXME Need to investigate why this is the case.
-        processedEntities.forEach(list::add);
+        processedEntities.forEach(entity -> {
+            list.add(entity);
+            data.add(entity);
+        });
+        return t2(list, new Page(resultCustomObjectAndEntities._3, data, resPropsWithContext, centre));
+    }
 
-        return list;
+    private static Stream<AbstractEntity<?>> enhanceEntities(
+        final Stream<AbstractEntity<?>> entityStream,
+        final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
+        final EntityCentre<AbstractEntity<?>> centre
+    ) {
+        final Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
+                centre,
+                centre.getCustomPropertiesDefinitions(),
+                centre.getCustomPropertiesAsignmentHandler(),
+                entityStream);
+
+        // Enhance entities with values defined with consumer in each dynamic property.
+        return enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
+    }
+
+    private static class Page implements IPage<AbstractEntity<?>> {
+        private final IPage<AbstractEntity<?>> backingPage;
+        private final List<AbstractEntity<?>> data;
+        private final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext;
+        private final EntityCentre<AbstractEntity<?>> centre;
+
+        public Page(
+            final IPage<AbstractEntity<?>> backingPage,
+            final List<AbstractEntity<?>> data,
+            final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
+            final EntityCentre<AbstractEntity<?>> centre
+        ) {
+            this.backingPage = backingPage;
+            this.data = data;
+            this.resPropsWithContext = resPropsWithContext;
+            this.centre = centre;
+        }
+
+        @Override
+        public List<AbstractEntity<?>> data() {
+            return data;
+        }
+
+        @Override
+        public int capacity() {
+            return backingPage.capacity();
+        }
+
+        @Override
+        public int no() {
+            return backingPage.no();
+        }
+
+        @Override
+        public int numberOfPages() {
+            return backingPage.numberOfPages();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return backingPage.hasNext();
+        }
+
+        @Override
+        public boolean hasPrev() {
+            return backingPage.hasPrev();
+        }
+
+        private Page createPage(final IPage<AbstractEntity<?>> page) {
+            return new Page(
+                page,
+                enhanceEntities(page.data().stream(), resPropsWithContext, centre).toList(),
+                resPropsWithContext,
+                centre
+            );
+        }
+
+        @Override
+        public IPage<AbstractEntity<?>> next() {
+            return createPage(backingPage.next());
+        }
+
+        @Override
+        public IPage<AbstractEntity<?>> prev() {
+            return createPage(backingPage.prev());
+        }
+
+        @Override
+        public IPage<AbstractEntity<?>> last() {
+            return createPage(backingPage.last());
+        }
+
+        @Override
+        public IPage<AbstractEntity<?>> first() {
+            return createPage(backingPage.first());
+        }
+
+        @Override
+        public AbstractEntity<?> summary() {
+            return backingPage.summary();
+        }
     }
 
     /// A method to try acquiring a lock for running a centre.

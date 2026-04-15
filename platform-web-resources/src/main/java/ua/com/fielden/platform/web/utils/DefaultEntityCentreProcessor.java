@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
@@ -23,8 +24,6 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -161,7 +160,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
     }
 
     @Override
-    public <T extends AbstractEntity<?>> Either<Result, List<T>> getResult(final String configUuid) {
+    public <T extends AbstractEntity<?>> Either<Result, IPage<T>> getResult(final String configUuid) {
         return entityCentreResult(configUuid, empty());
     }
 
@@ -169,7 +168,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
     ///
     /// @param maybeCustomPageCapacity optional page capacity, which will override the page capacity of the configuration
     ///
-    private <T extends AbstractEntity<?>> Either<Result, List<T>> entityCentreResult(
+    private <T extends AbstractEntity<?>> Either<Result, IPage<T>> entityCentreResult(
         final String configUuid,
         final Optional<Integer> maybeCustomPageCapacity
     ) {
@@ -212,7 +211,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
             );
 
             // Perform actual running of `freshCriteriaEntity` with `configSettings`.
-            final var resultList = executeEntityCentreConfiguration(
+            final var resultListAndPage = executeEntityCentreConfiguration(
                 configSettings,
                 empty(),
                 true,
@@ -226,9 +225,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
                 sharingModel
             );
 
-            final List<T> list = new ArrayList<>();
-            resultList.forEach(entity -> list.add((T) entity));
-            return right(list);
+            return right((IPage<T>) resultListAndPage._2);
         } catch (final Exception exception) {
             return left(failure(new EntityCentreExecutionException(ERR_CONFIG_COULD_NOT_BE_EXECUTED.formatted(configUuid), exception)));
         } finally {
@@ -240,7 +237,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
     @Override
     public Either<Result, Boolean> resultExists(final String configUuid) {
         return entityCentreResult(configUuid, of(1))
-            .map(result -> !result.isEmpty());
+            .map(result -> !result.data().isEmpty());
     }
 
     @Override

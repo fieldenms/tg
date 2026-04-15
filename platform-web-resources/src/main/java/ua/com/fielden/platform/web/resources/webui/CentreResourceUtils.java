@@ -35,6 +35,7 @@ import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
 import ua.com.fielden.platform.types.either.Right;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -74,6 +75,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
@@ -246,7 +248,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     ///
     /// @param updatedPreviouslyRunCriteriaEntity criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action), but not yet actually used for running
     ///
-    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<AbstractEntity<?>>> createCriteriaMetaValuesCustomObjectWithResult(
+    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> T3<Map<String, Object>, List<AbstractEntity<?>>, IPage<T>> createCriteriaMetaValuesCustomObjectWithResult(
             final Map<String, Object> customObject,
             final M updatedPreviouslyRunCriteriaEntity) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
@@ -304,7 +306,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final int pageCount = page != null ? page.numberOfPages() : pageCount(realPageCount(data.size(), secondTick.getPageCapacity()));
         resultantCustomObject.put("pageCount", pageCount);
         resultantCustomObject.put("pageNumber", page != null ? page.no() : pageCount <= pageNumber ? pageCount - 1 : pageNumber);
-        return new Pair<>(resultantCustomObject, (List<AbstractEntity<?>>) data);
+        return t3(resultantCustomObject, (List<AbstractEntity<?>>) data, page);
     }
 
     /// Runs the entity centre with option `retrieveAll`. Returns [Right] with a list of entities of all matching entities and a summary, if `retrieveAll == true`.

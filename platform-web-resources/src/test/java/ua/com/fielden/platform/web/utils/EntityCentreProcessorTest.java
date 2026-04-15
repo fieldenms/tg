@@ -56,7 +56,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         assertNotNull(result);
         assertTrue(result.isRight());
         assertNotNull(result.asRight().value());
-        assertEquals(0, result.asRight().value().size());
+        assertEquals(0, result.asRight().value().data().size());
     }
 
     @Test
@@ -81,8 +81,8 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         assertNotNull(result);
         assertTrue(result.isRight());
         assertNotNull(result.asRight().value());
-        assertEquals(1, result.asRight().value().size());
-        assertEquals("KEY1", result.asRight().value().getFirst().getKey());
+        assertEquals(1, result.asRight().value().data().size());
+        assertEquals("KEY1", result.asRight().value().data().getFirst().getKey());
     }
 
     @Test
@@ -110,8 +110,8 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         assertNotNull(result);
         assertTrue(result.isRight());
         assertNotNull(result.asRight().value());
-        assertEquals(1, result.asRight().value().size());
-        assertEquals("KEY2", result.asRight().value().getFirst().getKey());
+        assertEquals(1, result.asRight().value().data().size());
+        assertEquals("KEY2", result.asRight().value().data().getFirst().getKey());
     }
 
     @Test
@@ -139,8 +139,8 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         assertNotNull(result);
         assertTrue(result.isRight());
         assertNotNull(result.asRight().value());
-        assertEquals(1, result.asRight().value().size());
-        assertEquals("KEY1", result.asRight().value().getFirst().getKey());
+        assertEquals(1, result.asRight().value().data().size());
+        assertEquals("KEY1", result.asRight().value().data().getFirst().getKey());
     }
 
     @Test

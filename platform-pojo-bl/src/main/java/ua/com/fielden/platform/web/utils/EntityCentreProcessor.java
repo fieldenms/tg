@@ -3,13 +3,13 @@ package ua.com.fielden.platform.web.utils;
 import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
 import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
-import java.util.List;
 import java.util.function.Function;
 
 /// An interface for Entity Centre processing API.
@@ -47,14 +47,14 @@ public interface EntityCentreProcessor {
     /// - UUID represents configuration with authorisation errors (either Can Read or Can Read Property for non-empty criterion)
     /// - UUID represents configuration with generator errors.
     ///
-    /// Returns [Right] with [List] of entities corresponding to configuration criteria, ordering and page capacity.
+    /// Returns [Right] with [IPage] of entities corresponding to configuration criteria, ordering and page capacity.
     /// Entity Centre with [IGenerator] performs generation of new data during execution through this API.
     ///
     /// Entity Centres with dynamic properties are supported (see `IResultSetBuilderDynamicProps#addProps` API).
     ///
     /// Example:
     /// ```
-    /// final List<WorkOrder> workOrders = entityCentreProcessor
+    /// final IPage<WorkOrder> workOrders = entityCentreProcessor
     ///     .getResult(configUuid)
     ///     .orElseThrow(Result::throwRuntime);
     /// ```
@@ -64,7 +64,7 @@ public interface EntityCentreProcessor {
     ///
     /// @param <T> corresponds to the root entity type of the executed Entity Centre configuration.
     ///
-    <T extends AbstractEntity<?>> Either<Result, List<T>> getResult(
+    <T extends AbstractEntity<?>> Either<Result, IPage<T>> getResult(
         String configUuid
     );
 
