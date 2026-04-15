@@ -23,11 +23,14 @@ import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 
 import java.io.IOException;
+import java.util.Map;
 
 /// Web server resource for the MCP Server.
 ///
@@ -35,12 +38,24 @@ public class McpResource extends AbstractWebResource {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    /// Key for storing the current user in [McpTransportContext].
+    /// Value type: [User].
+    ///
+    /// [McpResource] will store the current user in [McpTransportContext] when handling a request.
+    /// Later, an MCP handler (tool, resource, etc.) should obtain the user from context and assign it via [IUserProvider#setUser].
+    /// This is necessary to ensure that the current user is preserved across threads, which may be created by the MCP Java SDK
+    /// to handle requests.
+    ///
+    public static final String USER_KEY = "tg.user";
+
     private final McpStatelessServerHandler mcpHandler;
+    private final IUserProvider userProvider;
 
     @Inject
     protected McpResource(
             final IDeviceProvider deviceProvider,
             final IDates dates,
+            final IUserProvider userProvider,
             @Assisted @Nullable final Context context,
             @Assisted @Nullable final Request request,
             @Assisted @Nullable final Response response,
@@ -48,6 +63,7 @@ public class McpResource extends AbstractWebResource {
     {
         super(context, request, response, deviceProvider, dates);
         this.mcpHandler = mcpHandler;
+        this.userProvider = userProvider;
     }
 
     public interface Factory {
@@ -66,10 +82,11 @@ public class McpResource extends AbstractWebResource {
         try {
             final var body = envelope.getText();
             final var message = McpSchema.deserializeJsonRpcMessage(McpJsonDefaults.getMapper(), body);
+            final var transportContext = createTransportContext();
 
             return switch (message) {
-                case JSONRPCRequest request -> handleRequest(request);
-                case JSONRPCNotification notification -> handleNotification(notification);
+                case JSONRPCRequest request -> handleRequest(transportContext, request);
+                case JSONRPCNotification notification -> handleNotification(transportContext, notification);
                 case null, default ->
                         errorResponse(Status.CLIENT_ERROR_BAD_REQUEST,
                                       McpError.builder(McpSchema.ErrorCodes.INVALID_REQUEST)
@@ -97,9 +114,15 @@ public class McpResource extends AbstractWebResource {
         return new EmptyRepresentation();
     }
 
-    private Representation handleRequest(final JSONRPCRequest jsonrpcRequest) {
+    private McpTransportContext createTransportContext() {
+        final var user = userProvider.getUser();
+        return user != null
+                ? McpTransportContext.create(Map.of(USER_KEY, user))
+                : McpTransportContext.EMPTY;
+    }
+
+    private Representation handleRequest(final McpTransportContext transportContext, final JSONRPCRequest jsonrpcRequest) {
         try {
-            final var transportContext = McpTransportContext.EMPTY;
             final JSONRPCResponse jsonrpcResponse = mcpHandler
                     .handleRequest(transportContext, jsonrpcRequest)
                     .contextWrite(ctx -> ctx.put(McpTransportContext.KEY, transportContext))
@@ -114,9 +137,8 @@ public class McpResource extends AbstractWebResource {
         }
     }
 
-    private Representation handleNotification(final JSONRPCNotification jsonrpcNotification) {
+    private Representation handleNotification(final McpTransportContext transportContext, final JSONRPCNotification jsonrpcNotification) {
         try {
-            final var transportContext = McpTransportContext.EMPTY;
             mcpHandler.handleNotification(transportContext, jsonrpcNotification)
                     .contextWrite(ctx -> ctx.put(McpTransportContext.KEY, transportContext))
                     .block();
