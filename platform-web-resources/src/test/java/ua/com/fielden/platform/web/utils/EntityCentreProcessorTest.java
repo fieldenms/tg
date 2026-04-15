@@ -311,6 +311,43 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         assertEquals("Can not generate the instance based on current user [%s], choose another user for that.".formatted(getUser()), result.asLeft().value().getMessage());
     }
 
+    @Test
+    public void executing_getResult_method_returns_page_supporting_next_navigation() {
+        final var uuid = initPaginatedData(8, 3);
+        final var firstPage = getInstance(EntityCentreProcessor.class).getResult(uuid).asRight().value();
+        assertEquals(3, firstPage.data().size());
+        final var secondPage = firstPage.next();
+        assertEquals(3, secondPage.data().size());
+        final var thirdPage = secondPage.next();
+        assertEquals(2, thirdPage.data().size());
+    }
+
+    @Test
+    public void executing_getResult_method_returns_page_supporting_prev_navigation() {
+        final var uuid = initPaginatedData(8, 3);
+        final var firstPage = getInstance(EntityCentreProcessor.class).getResult(uuid).asRight().value();
+        final var secondPage = firstPage.next();
+        final var backToFirst = secondPage.prev();
+        assertEquals(3, backToFirst.data().size());
+    }
+
+    @Test
+    public void executing_getResult_method_returns_page_supporting_last_navigation() {
+        final var uuid = initPaginatedData(8, 3);
+        final var firstPage = getInstance(EntityCentreProcessor.class).getResult(uuid).asRight().value();
+        final var lastPage = firstPage.last();
+        assertEquals(2, lastPage.data().size());
+    }
+
+    @Test
+    public void executing_getResult_method_returns_page_supporting_first_navigation() {
+        final var uuid = initPaginatedData(8, 3);
+        final var firstPage = getInstance(EntityCentreProcessor.class).getResult(uuid).asRight().value();
+        final var lastPage = firstPage.last();
+        final var backToFirst = lastPage.first();
+        assertEquals(3, backToFirst.data().size());
+    }
+
     /// Initialise test data for config `uuid` (desktop device profile).
     ///
     /// @param createData runnable for custom data creation
@@ -318,6 +355,19 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     ///
     private void initTestData(final String uuid, final Runnable createData, final Consumer<ICentreDomainTreeManagerAndEnhancer> enhanceCentreManager) {
         initTestData(uuid, DESKTOP, createData, enhanceCentreManager);
+    }
+
+    /// Initialise paginated test data: creates `entityCount` entities with the given `pageCapacity`.
+    /// Returns the config UUID.
+    ///
+    private String initPaginatedData(final int entityCount, final int pageCapacity) {
+        final var uuid = randomUUID().toString();
+        initTestData(uuid, () -> {
+            for (int i = 1; i <= entityCount; i++) {
+                save(new_(TgCompoundEntity.class, String.format("KEY%02d", i)).setActive(true).setDesc("desc " + i));
+            }
+        }, centreManager -> centreManager.getSecondTick().setPageCapacity(pageCapacity));
+        return uuid;
     }
 
     /// Initialise test data for config `uuid` and `device` profile.
