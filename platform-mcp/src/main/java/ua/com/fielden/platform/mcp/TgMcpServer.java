@@ -15,7 +15,10 @@ import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.mcp.web.McpResource;
 import ua.com.fielden.platform.mcp.web.McpResourceFactory;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.io.IOException;
@@ -47,12 +50,14 @@ public class TgMcpServer {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final IWebApi webApi;
+    private final IUserProvider userProvider;
     /// Retained reference to the running server for observability.
     private final McpStatelessSyncServer server;
 
     @Inject
-    protected TgMcpServer(final IWebApi webApi, final McpResourceFactory mcpResourceFactory) {
+    protected TgMcpServer(final IWebApi webApi, final McpResourceFactory mcpResourceFactory, final IUserProvider userProvider) {
         this.webApi = webApi;
+        this.userProvider = userProvider;
 
         final var transport = new StdioServerTransportProvider(new JacksonMcpJsonMapper(new JsonMapper()));
 
@@ -117,6 +122,15 @@ public class TgMcpServer {
                 .build();
     }
 
+    /// Sets the current user on this thread from [McpTransportContext].
+    ///
+    private void setCurrentUser(final McpTransportContext context) {
+        final var user = (User) context.get(McpResource.USER_KEY);
+        if (user != null) {
+            userProvider.setUser(user);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private CallToolResult handleExecuteQuery(final McpTransportContext context, final CallToolRequest request) {
         final var query = (String) request.arguments().get("query");
@@ -127,6 +141,8 @@ public class TgMcpServer {
                     .build();
         }
         final var variables = (Map<String, Object>) request.arguments().getOrDefault("variables", Map.of());
+
+        setCurrentUser(context);
 
         try {
             final var result = webApi.execute(Map.of("query", query, "variables", variables));
