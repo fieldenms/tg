@@ -1,13 +1,17 @@
 package ua.com.fielden.platform.mcp.test_config;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.util.Modules;
 import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.ioc.BasicWebServerIocModule;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.mcp.ioc.McpIocModule;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerIocModule;
@@ -25,7 +29,7 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
         final var appProperties = getProperties(properties);
         final var appDomain = new PlatformTestDomainTypes();
         injector = new ApplicationInjectorFactory()
-                .add(new IocModule(appDomain, appDomain.entityTypes(), appProperties))
+                .add(IocModule.create(appDomain, appDomain.entityTypes(), appProperties))
                 .add(new McpIocModule())
                 .add(new NewUserEmailNotifierTestIocModule())
                 .getInjector();
@@ -63,12 +67,33 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
 
     private static class IocModule extends PlatformTestServerIocModule {
 
-        public IocModule(
+        public static Module create(
+                final IApplicationDomainProvider applicationDomainProvider,
+                final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
+                final Properties props)
+        {
+            return Modules.override(new IocModule(applicationDomainProvider, domainEntityTypes, props))
+                    .with(moduleWithOverrides());
+        }
+
+        private IocModule(
                 final IApplicationDomainProvider applicationDomainProvider,
                 final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
                 final Properties props)
         {
             super(applicationDomainProvider, domainEntityTypes, props);
+        }
+
+        private static Module moduleWithOverrides() {
+            return new AbstractModule() {
+                @Override
+                protected void configure() {
+                    // Use SharedUserProvider so that the user set in test methods is visible to all threads (Restlet,
+                    // Reactor, etc.).
+                    bind(IUserProvider.class).to(SharedUserProvider.class);
+                    bind(IAuthorisationModel.class).to(AuthorisationModelForTests.class);
+                }
+            };
         }
 
     }
