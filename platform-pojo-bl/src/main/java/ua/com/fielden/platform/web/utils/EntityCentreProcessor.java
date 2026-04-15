@@ -97,6 +97,10 @@ public interface EntityCentreProcessor {
         String configUuid
     );
 
+    Either<Result, Integer> resultCount(
+        String configUuid
+    );
+
     /// Finds out whether named Entity Centre configuration, defined by UUID, is valid for API execution.
     ///
     /// Returns [Left] with invalid [Result] for the cases where

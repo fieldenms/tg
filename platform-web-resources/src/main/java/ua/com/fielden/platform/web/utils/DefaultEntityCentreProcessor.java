@@ -17,6 +17,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -38,6 +39,7 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREFIX_OF;
@@ -161,14 +163,15 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
 
     @Override
     public <T extends AbstractEntity<?>> Either<Result, IPage<T>> getResult(final String configUuid) {
-        return entityCentreResult(configUuid, empty());
+        return entityCentreResult(configUuid, empty())
+            .map(t3 -> executeWithEntities(t3._1, t3._2, t3._3)); // TODO exception handling
     }
 
     /// Executes Entity Centre configuration with `configUuid`.
     ///
     /// @param maybeCustomPageCapacity optional page capacity, which will override the page capacity of the configuration
     ///
-    private <T extends AbstractEntity<?>> Either<Result, IPage<T>> entityCentreResult(
+    private Either<Result, T3<ConfigSettings, Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?>>> entityCentreResult(
         final String configUuid,
         final Optional<Integer> maybeCustomPageCapacity
     ) {
@@ -210,22 +213,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
                 customPageCapacity -> freshCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().setPageCapacity(customPageCapacity)
             );
 
-            // Perform actual running of `freshCriteriaEntity` with `configSettings`.
-            final var resultListAndPage = executeEntityCentreConfiguration(
-                configSettings,
-                empty(),
-                true,
-                customObject,
-                freshCriteriaEntity,
-                webUiConfig,
-                companionFinder,
-                critGenerator,
-                entityFactory,
-                null,
-                sharingModel
-            );
-
-            return right((IPage<T>) resultListAndPage._2);
+            return right(t3(configSettings, customObject, freshCriteriaEntity));
         } catch (final Exception exception) {
             return left(failure(new EntityCentreExecutionException(ERR_CONFIG_COULD_NOT_BE_EXECUTED.formatted(configUuid), exception)));
         } finally {
@@ -234,10 +222,38 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
         }
     }
 
+    private <T extends AbstractEntity<?>> IPage<T> executeWithEntities(
+        final ConfigSettings configSettings,
+        final Map<String, Object> customObject,
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> freshCriteriaEntity
+    ) {
+        // Perform actual running of `freshCriteriaEntity` with `configSettings`.
+        final var resultListAndPage = executeEntityCentreConfiguration(
+            configSettings,
+            empty(),
+            true,
+            customObject,
+            freshCriteriaEntity,
+            webUiConfig,
+            companionFinder,
+            critGenerator,
+            entityFactory,
+            null,
+            sharingModel
+        );
+        return (IPage<T>) resultListAndPage._2;
+    }
+
+    @Override
+    public Either<Result, Integer> resultCount(final String configUuid) {
+        return entityCentreResult(configUuid, empty())
+            .map(t3 -> t3._3.runCount()); // TODO exception handling
+    }
+
     @Override
     public Either<Result, Boolean> resultExists(final String configUuid) {
         return entityCentreResult(configUuid, of(1))
-            .map(result -> !result.data().isEmpty());
+            .map(t3 -> !executeWithEntities(t3._1, t3._2, t3._3).data().isEmpty()); // TODO exception handling
     }
 
     @Override
