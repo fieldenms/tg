@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.mcp;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import io.modelcontextprotocol.common.McpTransportContext;
 import io.modelcontextprotocol.json.jackson2.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.server.McpServer;
-import io.modelcontextprotocol.server.McpServerFeatures.SyncResourceSpecification;
-import io.modelcontextprotocol.server.McpSyncServer;
-import io.modelcontextprotocol.server.McpSyncServerExchange;
+import io.modelcontextprotocol.server.McpStatelessServerFeatures.SyncResourceSpecification;
+import io.modelcontextprotocol.server.McpStatelessSyncServer;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpSchema.CallToolRequest;
@@ -15,6 +15,7 @@ import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.mcp.web.McpResourceFactory;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.io.IOException;
@@ -28,7 +29,8 @@ import java.util.Map;
 /// - `tg://query-guide` resource — GraphQL query syntax reference.
 /// - `execute_query` tool — executes GraphQL queries against the TG system.
 ///
-/// Uses stdio transport (stdin/stdout).
+/// Uses stateless HTTP transport.
+///
 /// Requires a running TG instance with a GraphQL endpoint.
 ///
 public class TgMcpServer {
@@ -46,16 +48,16 @@ public class TgMcpServer {
 
     private final IWebApi webApi;
     /// Retained reference to the running server for observability.
-    private final McpSyncServer server;
+    private final McpStatelessSyncServer server;
 
     @Inject
-    protected TgMcpServer(final IWebApi webApi) {
+    protected TgMcpServer(final IWebApi webApi, final McpResourceFactory mcpResourceFactory) {
         this.webApi = webApi;
 
         final var transport = new StdioServerTransportProvider(new JacksonMcpJsonMapper(new JsonMapper()));
 
         // After the builder is finished, the server will start.
-        server = McpServer.sync(transport)
+        server = McpServer.sync(mcpResourceFactory)
                 .serverInfo(SERVER_NAME, SERVER_VERSION)
                 .instructions("""
                               TG MCP Server provides access to a TG system's data via GraphQL.
@@ -116,7 +118,7 @@ public class TgMcpServer {
     }
 
     @SuppressWarnings("unchecked")
-    private CallToolResult handleExecuteQuery(final McpSyncServerExchange exchange, final CallToolRequest request) {
+    private CallToolResult handleExecuteQuery(final McpTransportContext context, final CallToolRequest request) {
         final var query = (String) request.arguments().get("query");
         if (query == null) {
             return CallToolResult.builder()
