@@ -111,14 +111,6 @@ final class EqlSentenceBuilder {
         return _add(token(ENDEXPR));
     }
 
-    public EqlSentenceBuilder beginYieldExpression() {
-        return _add(token(BEGINYIELDEXPR));
-    }
-
-    public EqlSentenceBuilder endYieldExpression() {
-        return _add(token(ENDYIELDEXPR));
-    }
-
     public EqlSentenceBuilder exists(final boolean negated, final QueryModel<?> model) {
         return _add(negated ? new NotExistsToken(model) : new ExistsToken(model));
     }
