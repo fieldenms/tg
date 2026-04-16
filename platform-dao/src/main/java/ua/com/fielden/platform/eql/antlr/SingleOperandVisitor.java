@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.antlr;
 
 import org.antlr.v4.runtime.Token;
-import ua.com.fielden.platform.entity.query.fluent.*;
+import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
@@ -71,31 +71,31 @@ final class SingleOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ex
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitRound(final RoundContext ctx) {
         final int precision = ((ToToken) ctx.to).value;
-        return new RoundTo1(ctx.singleOperand().accept(this), Value1.value(precision));
+        return new RoundTo1(ctx.expr().accept(this), Value1.value(precision));
     }
 
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitCeil(final CeilContext ctx) {
-        return new Ceil1(ctx.singleOperand().accept(this));
+        return new Ceil1(ctx.expr().accept(this));
     }
 
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitFloor(final FloorContext ctx) {
-        return new Floor1(ctx.singleOperand().accept(this));
+        return new Floor1(ctx.expr().accept(this));
     }
 
     @Override
-    public ISingleOperand1<? extends ISingleOperand2<?>> visitExpr(final ExprContext ctx) {
-        return visitExprBody(ctx.exprBody());
-    }
-
-    @Override
-    public ISingleOperand1<? extends ISingleOperand2<?>> visitExprBody(final ExprBodyContext ctx) {
+    public ISingleOperand1<? extends ISingleOperand2<?>> visitExprCompound(final ExprCompoundContext ctx) {
         final var first = ctx.first.accept(this);
         final List<CompoundSingleOperand1> rest = StreamUtils.zip(ctx.rest, ctx.operators, (rand, op) -> {
             return new CompoundSingleOperand1(rand.accept(this), toArithmeticalOperator(op));
         }).toList();
         return new Expression1(first, rest);
+    }
+
+    @Override
+    public ISingleOperand1<? extends ISingleOperand2<?>> visitExpr_SingleOperand(final Expr_SingleOperandContext ctx) {
+        return ctx.singleOperand().accept(this);
     }
 
     @Override

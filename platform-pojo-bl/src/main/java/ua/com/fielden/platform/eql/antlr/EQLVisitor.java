@@ -154,12 +154,12 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitLikeOperator(EQLParser.LikeOperatorContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code ComparisonOperand_Single}
+	 * Visit a parse tree produced by the {@code ComparisonOperand_Expr}
 	 * labeled alternative in {@link EQLParser#comparisonOperand}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitComparisonOperand_Single(EQLParser.ComparisonOperand_SingleContext ctx);
+	T visitComparisonOperand_Expr(EQLParser.ComparisonOperand_ExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ComparisonOperand_Multi}
 	 * labeled alternative in {@link EQLParser#comparisonOperand}.
@@ -180,11 +180,19 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitQuantifiedOperand(EQLParser.QuantifiedOperandContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link EQLParser#exprBody}.
+	 * Visit a parse tree produced by the {@code ExprCompound}
+	 * labeled alternative in {@link EQLParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprBody(EQLParser.ExprBodyContext ctx);
+	T visitExprCompound(EQLParser.ExprCompoundContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Expr_SingleOperand}
+	 * labeled alternative in {@link EQLParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpr_SingleOperand(EQLParser.Expr_SingleOperandContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link EQLParser#arithmeticalOperator}.
 	 * @param ctx the parse tree
@@ -303,13 +311,6 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitCaseWhen(EQLParser.CaseWhenContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code Expr}
-	 * labeled alternative in {@link EQLParser#singleOperand}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExpr(EQLParser.ExprContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link EQLParser#unaryFunctionName}.
 	 * @param ctx the parse tree
@@ -458,12 +459,12 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitYieldOperandConcatOfOrderBy(EQLParser.YieldOperandConcatOfOrderByContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code YieldOperandConcatOfOrderByOperand_Single}
+	 * Visit a parse tree produced by the {@code YieldOperandConcatOfOrderByOperand_Expr}
 	 * labeled alternative in {@link EQLParser#yieldOperandConcatOfOrderByOperand}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitYieldOperandConcatOfOrderByOperand_Single(EQLParser.YieldOperandConcatOfOrderByOperand_SingleContext ctx);
+	T visitYieldOperandConcatOfOrderByOperand_Expr(EQLParser.YieldOperandConcatOfOrderByOperand_ExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code YieldOperandConcatOfOrderByOperand_OrderingModel}
 	 * labeled alternative in {@link EQLParser#yieldOperandConcatOfOrderByOperand}.
@@ -523,12 +524,12 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitOrderBy(EQLParser.OrderByContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code OrderByOperand_Single}
+	 * Visit a parse tree produced by the {@code OrderByOperand_Expr}
 	 * labeled alternative in {@link EQLParser#orderByOperand}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitOrderByOperand_Single(EQLParser.OrderByOperand_SingleContext ctx);
+	T visitOrderByOperand_Expr(EQLParser.OrderByOperand_ExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code OrderByOperand_Yield}
 	 * labeled alternative in {@link EQLParser#orderByOperand}.
