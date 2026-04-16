@@ -658,18 +658,18 @@ final class EqlSentenceBuilder {
         return _add(new AsToken(alias.toString()));
     }
 
-    public <E extends AbstractEntity<?>> EqlSentenceBuilder from() {
+    public <E extends AbstractEntity<?>> EqlSentenceBuilder select() {
         return _add(SelectToken.values(), state.withMainSourceType(EntityAggregates.class));
     }
 
-    public <E extends AbstractEntity<?>> EqlSentenceBuilder from(final Class<E> entityType) {
+    public <E extends AbstractEntity<?>> EqlSentenceBuilder select(final Class<E> entityType) {
         if (entityType == null) {
             throw new EqlException("Missing entity type in query: " + tokens.stream().map(Token::getText).collect(joining(" ")));
         }
         return _add(SelectToken.entityType(entityType), state.withMainSourceType(entityType));
     }
 
-    public EqlSentenceBuilder from(final AggregatedResultQueryModel... sourceModels) {
+    public EqlSentenceBuilder select(final AggregatedResultQueryModel... sourceModels) {
         if (sourceModels.length == 0) {
             throw new EqlException(ERR_NO_MODELS_WERE_SPECIFIED_AS_A_SOURCE_IN_THE_FROM_STATEMENT);
         }
@@ -677,7 +677,7 @@ final class EqlSentenceBuilder {
     }
 
     @SafeVarargs
-    public final <T extends AbstractEntity<?>> EqlSentenceBuilder from(final EntityResultQueryModel<T>... sourceModels) {
+    public final <T extends AbstractEntity<?>> EqlSentenceBuilder select(final EntityResultQueryModel<T>... sourceModels) {
         if (sourceModels.length == 0) {
             throw new EqlException(ERR_NO_MODELS_WERE_SPECIFIED_AS_A_SOURCE_IN_THE_FROM_STATEMENT);
         }
