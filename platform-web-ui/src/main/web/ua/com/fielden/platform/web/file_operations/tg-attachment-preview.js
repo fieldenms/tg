@@ -35,7 +35,6 @@ const template = html`
         }
         img {
             object-fit: contain;
-            background-color: white;
             width: 100%;
             height:100%;
             @apply --layout-relative;
@@ -72,8 +71,7 @@ const template = html`
             width: 100%;
             height: 100%;
             border: 0;
-            display: block;
-            background-color: white;
+            @apply --layout-relative;
         }
         #loadingView {
             position: absolute;
@@ -90,13 +88,13 @@ const template = html`
             @apply --layout-center-center;
         }
     </style>
+    <div id="loadingView">Loading preview…</div>
     <template is="dom-if" if="[[_isImageVisible(_effectiveKind, _wasConfirmed, _attachmentUri)]]" restamp>
-        <img id="imageLoader" src$="[[_attachmentUri]]" on-load="_resourceLoadSuccess" on-error="_resourceLoadError"/>
+        <img id="imageLoader" src$="[[_attachmentUri]]" on-error="_resourceLoadError"/>
     </template>
     <template is="dom-if" if="[[_isPdfVisible(_effectiveKind, _wasConfirmed, _attachmentUri)]]" restamp>
-        <object id="pdfViewer" data$="[[_attachmentUri]]" type="application/pdf" on-load="_resourceLoadSuccess" on-error="_resourceLoadError"></object>
+        <object id="pdfViewer" data$="[[_attachmentUri]]" type="application/pdf" on-error="_resourceLoadError"></object>
     </template>
-    <div id="loadingView" hidden$="[[!_previewLoading]]">Loading preview…</div>
     <div id="altView" hidden$="[[!_isAltVisible(_effectiveKind, _wasConfirmed, _attachmentUri)]]">
         <span id="message">[[_getAltViewText(_linkCheckRes, _wasConfirmed)]]</span>
         <paper-button raised roll="button" on-tap="_downloadOrOpenAttachment" tooltip-text$="[[_getButtonTooltip(_linkCheckRes)]]" disabled$="[[_working]]">
@@ -164,14 +162,7 @@ class TgAttachmentPreview extends PolymerElement {
             /** The active rendering mode. For file attachments, equals _kind. For hyperlinks, cycles through HYPERLINK_RENDER_PIPELINE. */
             _effectiveKind: {
                 type: String,
-                value: null,
-                observer: "_effectiveKindChanged"
-            },
-
-            /** Indicates whether the active renderer (image or PDF) is still loading the attachment. */
-            _previewLoading: {
-                type: Boolean,
-                value: false
+                value: null
             },
 
             /** Indicates that the link should auto-open if the rendering pipeline exhausts after a fresh confirmation. */
@@ -214,24 +205,6 @@ class TgAttachmentPreview extends PolymerElement {
         }
     }
 
-    /**
-     * Handles successful load of `<img>` and `<object>` elements.
-     * Hides the loading view so the rendered content becomes visible.
-     */
-    _resourceLoadSuccess() {
-        this._previewLoading = false;
-    }
-
-    /**
-     * Observer for `_effectiveKind` changes.
-     * Switches the loading view on whenever a renderer (IMAGE or PDF) becomes active,
-     * so the user sees visual feedback while `<img>`/`<object>` attempts to load the resource.
-     * Switches it off when the pipeline exhausts (`null`) or moves to a non-renderable state (e.g., HYPERLINK alt view).
-     */
-    _effectiveKindChanged(newKind) {
-        this._previewLoading = HYPERLINK_RENDER_PIPELINE.includes(newKind);
-    }
-
     /** For hyperlinks, advances _effectiveKind to the next renderer in HYPERLINK_RENDER_PIPELINE, or null when all have been exhausted. */
     _advanceHyperlinkPipeline() {
         const idx = HYPERLINK_RENDER_PIPELINE.indexOf(this._effectiveKind);
@@ -257,7 +230,7 @@ class TgAttachmentPreview extends PolymerElement {
      * When the URI is unchanged, this short-circuits to avoid a reused-element race:
      * the reset phase of `_updateAttachmentPreviewProperties` churns `_effectiveKind` through `null → IMAGE`, which re-triggers the loading overlay.
      * Because the `<img>`'s `src` attribute is being set to its current value, the browser fires no fresh `load` event,
-     * so `_resourceLoadSuccess` never runs and the overlay would remain visible indefinitely on top of an already-loaded image.
+     * so the overlay would remain visible indefinitely on top of an already-loaded image.
      */
     _entityChanged(newEntity) {
         const newUri = newEntity && newEntity.attachmentUri;
