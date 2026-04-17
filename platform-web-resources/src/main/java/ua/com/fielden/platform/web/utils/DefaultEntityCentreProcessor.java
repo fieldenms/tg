@@ -213,6 +213,19 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
                 customPageCapacity -> freshCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().setPageCapacity(customPageCapacity)
             );
 
+            // Complements criteria entity with IGenerator-related user condition, query enhancer, fetch providers etc.
+            // I.e. prepares criteria entity for running.
+            complementCriteriaEntityBeforeRunning(
+                freshCriteriaEntity,
+                webUiConfig,
+                companionFinder,
+                configSettings.owner(),
+                critGenerator,
+                entityFactory,
+                null,
+                sharingModel
+            );
+
             return right(t3(configSettings, customObject, freshCriteriaEntity));
         } catch (final Exception exception) {
             return left(failure(new EntityCentreExecutionException(ERR_CONFIG_COULD_NOT_BE_EXECUTED.formatted(configUuid), exception)));

@@ -686,6 +686,19 @@ public class CriteriaResource extends AbstractWebResource {
                     }
                 }
 
+                // Complements criteria entity with IGenerator-related user condition, query enhancer, fetch providers etc.
+                // I.e. prepares criteria entity for running.
+                complementCriteriaEntityBeforeRunning(
+                    previouslyRunCriteriaEntity,
+                    webUiConfig,
+                    companionFinder,
+                    user,
+                    critGenerator,
+                    entityFactory,
+                    centreContextHolder,
+                    sharingModel
+                );
+
                 // Execute actual Entity Centre configuration run / refresh / navigate / sort logic.
                 final var resultListAndPage = executeEntityCentreConfiguration(
                     new ConfigSettings(saveAsName, user, device(), miType),
@@ -734,19 +747,7 @@ public class CriteriaResource extends AbstractWebResource {
     ) {
         final var centre = getEntityCentre(criteriaEntity.miType().getName(), webUiConfig);
 
-        final var resultCustomObjectAndEntities = createCriteriaMetaValuesCustomObjectWithResult(
-            customObject,
-            complementCriteriaEntityBeforeRunning( // complements criteriaEntity instance
-                criteriaEntity,
-                webUiConfig,
-                companionFinder,
-                configSettings.owner(),
-                critGenerator,
-                entityFactory,
-                centreContextHolder,
-                sharingModel
-            )
-        );
+        final var resultCustomObjectAndEntities = createCriteriaMetaValuesCustomObjectWithResult(customObject, criteriaEntity);
         final var resultCustomObject = resultCustomObjectAndEntities._1;
         final var resultEntities = resultCustomObjectAndEntities._2;
 
