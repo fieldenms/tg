@@ -348,6 +348,20 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         assertEquals(3, backToFirst.data().size());
     }
 
+    @Test
+    public void executing_resultCount_method_returns_entity_count_below_page_capacity() {
+        final var uuid = initPaginatedData(2, 3);
+        final var result = getInstance(EntityCentreProcessor.class).resultCount(uuid);
+        assertEquals(Integer.valueOf(2), result.asRight().value());
+    }
+
+    @Test
+    public void executing_resultCount_method_returns_entity_count_above_page_capacity() {
+        final var uuid = initPaginatedData(8, 3);
+        final var result = getInstance(EntityCentreProcessor.class).resultCount(uuid);
+        assertEquals(Integer.valueOf(8), result.asRight().value());
+    }
+
     /// Initialise test data for config `uuid` (desktop device profile).
     ///
     /// @param createData runnable for custom data creation
