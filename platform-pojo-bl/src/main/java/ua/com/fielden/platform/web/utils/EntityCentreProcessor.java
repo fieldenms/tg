@@ -97,7 +97,6 @@ public interface EntityCentreProcessor {
         String configUuid
     );
 
-
     /// Finds out a count of entities in named Entity Centre configuration, defined by UUID (similarly to Web UI running).
     /// Takes into account all unsaved changes in that configuration.
     ///

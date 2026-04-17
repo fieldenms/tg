@@ -788,7 +788,8 @@ public class CriteriaResource extends AbstractWebResource {
             resultCustomObject.put("dynamicColumns", createDynamicProperties(resPropsWithContext, centre));
         }
 
-        final Stream<AbstractEntity<?>> enhancedEntities = enhanceEntities(resultEntities.stream(), resPropsWithContext, centre);
+        // Enhance entities with custom / dynamic property values.
+        final Stream<AbstractEntity<?>> enhancedEntities = enhanceEntitiesWithValues(resultEntities.stream(), resPropsWithContext, centre);
         final Stream<AbstractEntity<?>> processedEntities;
         if (!skipCustomObjectCalculations) {
             // Enhance rendering hints with styles for each dynamic column.
@@ -814,43 +815,34 @@ public class CriteriaResource extends AbstractWebResource {
         return t2(list, new Page(resultCustomObjectAndEntities._3, data, resPropsWithContext, centre));
     }
 
-    private static Stream<AbstractEntity<?>> enhanceEntities(
+    /// Enhances entities with custom / dynamic property values.
+    ///
+    private static Stream<AbstractEntity<?>> enhanceEntitiesWithValues(
         final Stream<AbstractEntity<?>> entityStream,
         final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
         final EntityCentre<AbstractEntity<?>> centre
     ) {
-        final Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
+        // Enhance entities with values defined with consumer in each dynamic property.
+        return enhanceResultEntitiesWithDynamicPropertyValues(
+            // Enhance entities with custom values.
+            enhanceResultEntitiesWithCustomPropertyValues(
                 centre,
                 centre.getCustomPropertiesDefinitions(),
                 centre.getCustomPropertiesAsignmentHandler(),
-                entityStream);
-
-        // Enhance entities with values defined with consumer in each dynamic property.
-        return enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
+                entityStream
+            ),
+            resPropsWithContext
+        );
     }
 
-    private static class Page implements IPage<AbstractEntity<?>> {
-        private final IPage<AbstractEntity<?>> backingPage;
-        private final List<AbstractEntity<?>> data;
-        private final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext;
-        private final EntityCentre<AbstractEntity<?>> centre;
-
-        public Page(
-            final IPage<AbstractEntity<?>> backingPage,
-            final List<AbstractEntity<?>> data,
-            final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
-            final EntityCentre<AbstractEntity<?>> centre
-        ) {
-            this.backingPage = backingPage;
-            this.data = data;
-            this.resPropsWithContext = resPropsWithContext;
-            this.centre = centre;
-        }
-
-        @Override
-        public List<AbstractEntity<?>> data() {
-            return data;
-        }
+    /// A page implementation that takes into account the need to [#enhanceEntitiesWithValues(Stream, List, EntityCentre)].
+    ///
+    private record Page(
+        IPage<AbstractEntity<?>> backingPage,
+        List<AbstractEntity<?>> data,
+        List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
+        EntityCentre<AbstractEntity<?>> centre
+    ) implements IPage<AbstractEntity<?>> {
 
         @Override
         public int capacity() {
@@ -880,7 +872,7 @@ public class CriteriaResource extends AbstractWebResource {
         private Page createPage(final IPage<AbstractEntity<?>> page) {
             return new Page(
                 page,
-                enhanceEntities(page.data().stream(), resPropsWithContext, centre).toList(),
+                enhanceEntitiesWithValues(page.data().stream(), resPropsWithContext, centre).toList(),
                 resPropsWithContext,
                 centre
             );

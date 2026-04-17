@@ -238,18 +238,20 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
         }
     }
 
+    /// Executes Entity Centre configuration with previously determined `configSettings` and `criteriaEntity`.
+    ///
     private <T extends AbstractEntity<?>> IPage<T> executeWithEntities(
         final ConfigSettings configSettings,
         final Map<String, Object> customObject,
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> freshCriteriaEntity
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity
     ) {
-        // Perform actual running of `freshCriteriaEntity` with `configSettings`.
+        // Perform actual running of `criteriaEntity` with `configSettings`.
         final var resultListAndPage = executeEntityCentreConfiguration(
             configSettings,
             empty(),
             true,
             customObject,
-            freshCriteriaEntity,
+            criteriaEntity,
             webUiConfig,
             companionFinder,
             critGenerator,
