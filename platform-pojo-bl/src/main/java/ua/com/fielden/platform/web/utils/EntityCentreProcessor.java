@@ -97,6 +97,32 @@ public interface EntityCentreProcessor {
         String configUuid
     );
 
+
+    /// Finds out a count of entities in named Entity Centre configuration, defined by UUID (similarly to Web UI running).
+    /// Takes into account all unsaved changes in that configuration.
+    ///
+    /// Returns [Left] with invalid [Result] for the cases where
+    /// - UUID is blank (e.g. for default configurations)
+    /// - there is no configuration with that UUID (or there are multiple ones for some reason)
+    /// - there are only "orphan" inherited-from-shared configurations with no original one (i.e. if it was deleted)
+    /// - UUID represents so-called "link" configuration that originates from parameters like "?poCrit=PO001"
+    /// - UUID represents configuration with validation errors (e.g. requiredness or others)
+    /// - UUID represents configuration with authorisation errors (either Can Read or Can Read Property for non-empty criterion)
+    /// - UUID represents configuration with generator errors.
+    ///
+    /// Returns [Right] with [Integer] for a count of entities corresponding to configuration criteria.
+    /// Entity Centre with [IGenerator] still performs fresh data generation during execution through this API.
+    ///
+    /// Example:
+    /// ```
+    /// final int workOrdersCount = entityCentreProcessor
+    ///     .resultCount(configUuid)
+    ///     .orElseThrow(Result::throwRuntime);
+    /// ```
+    ///
+    /// **Important**: running of this method in context of `@SessionRequired` scope may roll back active transaction.
+    /// This means that API users must exercise caution if [Left] is returned (use [Either#orElseThrow(Function)]).
+    ///
     Either<Result, Integer> resultCount(
         String configUuid
     );
