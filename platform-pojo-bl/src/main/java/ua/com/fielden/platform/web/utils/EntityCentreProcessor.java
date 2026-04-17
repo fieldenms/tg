@@ -133,10 +133,11 @@ public interface EntityCentreProcessor {
     /// - UUID is blank (e.g. for default configurations)
     /// - there is no configuration with that UUID (or there are multiple ones for some reason)
     /// - there are only "orphan" inherited-from-shared configurations with no original one (i.e. if it was deleted)
-    /// - UUID represents so-called "link" configuration that originates from parameters like "?poCrit=PO001"
-    /// - UUID represents configuration with validation errors (e.g. requiredness or others)
-    /// - UUID represents configuration with authorisation errors (either Can Read or Can Read Property for non-empty criterion)
-    /// - UUID represents configuration with generator errors.
+    /// - UUID represents so-called "link" configuration that originates from parameters like "?poCrit=PO001".
+    ///
+    /// Other unlikely cases where this method returns [Left] with invalid [Result] are if
+    /// - miType for some reason does not exist, but configuration still refers to it (perhaps, renamed or deleted)
+    /// - default configuration was found with UUID (default configs should never have UUIDs).
     ///
     /// Returns [Right] with [ConfigSettings] in case of valid configuration.
     ///
