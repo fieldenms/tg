@@ -163,17 +163,20 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
 
     @Override
     public <T extends AbstractEntity<?>> Either<Result, IPage<T>> getResult(final String configUuid) {
-        return entityCentreResult(configUuid, empty())
-            .map(t3 -> executeWithEntities(t3._1, t3._2, t3._3)); // TODO exception handling
+        return entityCentreResult(configUuid, empty(), t3 -> executeWithEntities(t3._1, t3._2, t3._3));
     }
 
-    /// Executes Entity Centre configuration with `configUuid`.
+    /// Prepares Entity Centre configuration with `configUuid` for running and applies `executor` to the prepared state.
+    /// `executor` runs inside the same `try/catch/finally` that handles user-provider swap and exception wrapping,
+    /// so callers need not duplicate exception handling for each kind of execution (running, counting, existence check).
     ///
     /// @param maybeCustomPageCapacity optional page capacity, which will override the page capacity of the configuration
+    /// @param executor operation to perform on the prepared configuration state; its result becomes the right value
     ///
-    private Either<Result, T3<ConfigSettings, Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?>>> entityCentreResult(
+    private <R> Either<Result, R> entityCentreResult(
         final String configUuid,
-        final Optional<Integer> maybeCustomPageCapacity
+        final Optional<Integer> maybeCustomPageCapacity,
+        final Function<T3<ConfigSettings, Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?>>, R> executor
     ) {
         // Determine current user to be returned back into the user provider once the execution has been performed.
         final User currentUser = userProvider.getUser();
@@ -226,7 +229,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
                 sharingModel
             );
 
-            return right(t3(configSettings, customObject, freshCriteriaEntity));
+            return right(executor.apply(t3(configSettings, customObject, freshCriteriaEntity)));
         } catch (final Exception exception) {
             return left(failure(new EntityCentreExecutionException(ERR_CONFIG_COULD_NOT_BE_EXECUTED.formatted(configUuid), exception)));
         } finally {
@@ -259,14 +262,12 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
 
     @Override
     public Either<Result, Integer> resultCount(final String configUuid) {
-        return entityCentreResult(configUuid, empty())
-            .map(t3 -> t3._3.runCount()); // TODO exception handling
+        return entityCentreResult(configUuid, empty(), t3 -> t3._3.runCount());
     }
 
     @Override
     public Either<Result, Boolean> resultExists(final String configUuid) {
-        return entityCentreResult(configUuid, of(1))
-            .map(t3 -> !executeWithEntities(t3._1, t3._2, t3._3).data().isEmpty()); // TODO exception handling
+        return entityCentreResult(configUuid, of(1), t3 -> !executeWithEntities(t3._1, t3._2, t3._3).data().isEmpty());
     }
 
     @Override
