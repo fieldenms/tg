@@ -55,49 +55,15 @@ The platform targets **Java 25**:
 
 LaTeX documentation in `platform-doc/`.
 
-## Detailed Reference Guides
+## Critical Design Gotchas
 
-- Entity hierarchy, annotations, validators/definers, union entities, producers, companions, MetaProperty, calculated properties, metamodels: @platform-doc/claude/entity-model.md
-- EQL query construction, operators, functions, fetch models, QueryExecutionModel: @platform-doc/claude/eql-reference.md
-- EQL internal design — how to add new functions, operators, and language features: @platform-doc/claude/eql-design.md
-- Entity Centre, Entity Master, Compound Master, actions, query enhancers, SSE: @platform-doc/claude/web-ui.md
-- Testing patterns, assertions, indirect testing, security tokens, authorization: @platform-doc/claude/testing-and-security.md
-- Generic auditing — `@Audited`, audit-entity generation and versioning, `IAuditTypeFinder`, `IAuditWebUiConfigFactory`, `PersistentEntityInfo` dynamic master, runtime plumbing: @platform-doc/claude/auditing.md
-
-## Key Non-Obvious Design Decisions
-
-These are things that cannot be easily derived from reading the code:
-
-1. **`co()` vs `co$()`**: `co()` returns uninstrumented (read-only) entities; `co$()` returns instrumented entities with change tracking and validation. Using the wrong one causes subtle bugs.
-
-2. **`isInitialising()` in definers**: Definers execute both during DB retrieval and user mutations. Always check `entity.isInitialising()` to distinguish phases.
-
-3. **Definer mutations are not silent**: When a definer sets a property via its setter, it goes through `ObservableMutatorInterceptor` and triggers the full validation chain.
-
-4. **`isDirty()` before side effects**: In DAO `save()` methods, check property dirtiness before triggering cascading updates to avoid unnecessary work.
-
+1. **`co()` vs `co$()`**: `co()` returns uninstrumented (read-only) entities; `co$()` returns instrumented with change tracking. Using the wrong one causes subtle bugs.
+2. **`isInitialising()` in definers**: Definers execute during DB retrieval AND user mutations. Check `entity.isInitialising()` to distinguish.
+3. **Definer mutations are not silent**: Setting a property from a definer triggers the full validation chain via `ObservableMutatorInterceptor`.
+4. **`isDirty()` before side effects**: In DAO `save()`, check property dirtiness before cascading updates.
 5. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
-
-6. **Indirect testing pattern**: Business logic in `pojo-bl` is tested through DAO integration tests, not unit tests. This is intentional — don't expect unit tests in `pojo-bl`.
-
-7. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
-
-8. **Compound master fetch providers**: Menu item entities receive their key from the root entity's companion fetch provider, not their own.
-
-9. **DeleteOperations patterns**:
-   - Pessimistic locking with `UPGRADE` lock mode for activatable entities
-   - Deliberately catches only `PersistenceException` for referential integrity violations
-   - `case null, default -> null` in switch expressions is conventional TG shorthand
-
-10. **GraphQL API**: Read-only queries only. Fields are uncapitalized entity names. Token: `GraphiQL_CanExecute_Token`.
-
-11. **Contiguous entity IDs**: All entities across all tables share a single ID sequence — IDs are globally unique, never colliding across entity types. This enables using a union entity's `.id()` as a single scalar key for `groupBy`, `yield`, and JOIN conditions without type-discriminator columns. EQL compiles `.id()` on a union to `CASE WHEN member1 IS NOT NULL THEN member1 WHEN member2 IS NOT NULL THEN member2 ... END` (not `COALESCE`). See `eql-reference.md` for examples.
-
-12. **`@Calculated` properties expand in SQL**: When a `@Calculated` property (e.g., `cost = hours * rate`) is used in aggregations like `sumOf().prop(cost)`, EQL expands it to `SUM(hours * rate)` in the generated SQL. The calculated property has no physical column — database covering indexes must target the expression's operand columns.
-
-13. **Audited entities get a platform-built info master**: The "info" action on every `AbstractPersistentEntity` master opens `PersistentEntityInfo`, which the platform builds dynamically as a **compound** master with an audit-review menu when the target type is `@Audited`, or as a **simple** master otherwise. The compound variant wires a polymorphic centre (`AuditCompoundMenuItem.withPolymorphicCenter()`) bound at runtime to the right synthetic audit-entity type via `IAuditMenuItemInitialiser`. Consequence: do not hand-wire an "Audit" tab into an audited entity's own compound master — the platform already provides it through `PersistentEntityInfo`. See `auditing.md`.
-
-14. **`IApplicationDomainProvider` from the injector ≠ `new ApplicationDomain()`**: `BasicWebServerIocModule.provideApplicationDomain(...)` supplies `IApplicationDomainProvider` via `@Provides` as a lambda that augments the compile-time entity types with audit types for every `@Audited` entity (behaviour varies by `AuditingMode`). A freshly instantiated `new ApplicationDomain()` gives you only the compile-time types. Anywhere that needs the full entity-type list — especially `PersistDomainMetadataModel.persist(...)` — must use the injected provider, or audit tables will silently lack domain metadata.
+6. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
+7. **GraphQL API**: Read-only queries only. Fields are uncapitalized entity names. Token: `GraphiQL_CanExecute_Token`.
 
 ## Conventions
 
@@ -112,10 +78,21 @@ These are things that cannot be easily derived from reading the code:
 - End sentences with a full stop
 - Use Markdown for Javadoc (not HTML tags)
 
-**Use `StandardActions` and `Compound` helpers** for common centre/master actions instead of building custom actions.
+**Use `StandardActions` and `Compound` helpers** for common centre/master actions.
 
 **SQL migration scripts** for new persistent entities (in TG-based applications):
-- Use `GenDdl` (`IDdlGenerator.generateDatabaseDdl(dialect, EntityClass.class)`) to generate DDL.
-- Table names: entity class name uppercased + trailing `_` (e.g., `ROSTERPROFILE_`). Column names: property name uppercased + trailing `_`.
+- Use `GenDdl` to generate DDL. Table names: uppercased entity class + `_`. Column names: uppercased property + `_`.
 - `boolean` → `char(1) NOT NULL` (`'Y'`/`'N'`). Entity references → `bigint` (FK to `_ID`).
-- Bulk-insert security tokens via `INSERT ... SELECT ... FROM (UNION ALL subquery) JOIN USER_ROLE` with fully-qualified token class names.
+
+## Reference Topics
+
+Each topic directory under `platform-doc/claude/` has a `quick-reference.md` for common lookups and detailed files for full reference.
+Read the quick reference first; read the detailed file only when you need depth.
+
+| Directory | Quick reference | Detailed reference |
+|---|---|---|
+| `entity-model/` | Hierarchy, annotations, property patterns, companions, calculated/synthetic, metamodel | `reference.md` — composite keys, activatable, validators/definers, union entities, producers, ISaveWithFetch, MetaProperty, declarative filters, generative entities |
+| `eql/` | Query construction, operators, functions, fetch models | `reference.md` — JOIN patterns, pivot, CASE WHEN, critCondition, QEM. `design.md` — EQL internals, adding new functions |
+| `web-ui/` | Standard actions, criterion/editor types, centre/master options | `reference.md` — full builder APIs, action config, query enhancers, insertion points, rendering customisers |
+| `testing/` | Fetch patterns, indirect testing, test data caching, security tokens | `reference.md` — DynamicQueryBuilder testing, test clock, web resource testing, authorization |
+| `auditing/` | @Audited basics, generated types, test config | `reference.md` — full type hierarchy, versioning, runtime plumbing, GenAudit, Web UI |

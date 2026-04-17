@@ -1,29 +1,15 @@
-# Entity Model Reference
+# Entity Model — Detailed Reference
 
-## Entity Hierarchy
+Detailed patterns and advanced topics for the TG entity model.
+For the hierarchy table, annotation lists, companion basics, calculated property syntax, synthetic entity pattern, and metamodel usage, see `quick-reference.md` in this directory.
 
-All domain entities extend `AbstractEntity`. Common ancestors:
-
-| Base Class | Purpose |
-|------------|---------|
-| `AbstractPersistentEntity` | Adds `createdBy`, `createdDate`, `createdTransactionGuid`, `lastUpdatedBy`, `lastUpdatedDate`, `lastUpdatedTransactionGuid` |
-| `ActivatableAbstractEntity` | Adds `active` property with reference counting; values remain persisted but inactive ones shouldn't be used for new data |
-| `AbstractFunctionalEntityWithCentreContext` | Action entities (non-persistent); `save` on companion "executes" the action |
-
-Entities annotated with `@MapEntityTo` are persistent.
-
-## Core Annotations
-
-**Entity-level:** `@MapEntityTo`, `@KeyType`, `@CompanionObject`, `@EntityTitle(value, desc)`, `@DisplayDescription`, `@DescRequired`, `@DescTitle(value, desc)`, `@Subtitles(@PathTitle(path, title))`, `@DeactivatableDependencies({Dep1.class, Dep2.class})`, `@DomainEntity`, `@WithMetaModel`, `@WithoutMetaModel`, `@SupportsEntityExistsValidation`, `@Audited`
+## Annotation Details
 
 - `@DomainEntity` — marks synthetic entities (union entities, report entities) for metamodel generation and domain registration.
 - `@WithMetaModel` — explicitly enables metamodel generation for non-standard entities (e.g., action entities that need metamodel references).
 - `@WithoutMetaModel` — explicitly disables compile-time metamodel generation for the annotated entity. Used on generated audit types.
 - `@SupportsEntityExistsValidation` — enables entity existence validation for non-persistent entities used as criteria grouping properties.
-- `@Audited` — marks a persistent entity as audited; the platform generates audit-entity types for it and automatically creates audit records on save. See @platform-doc/claude/auditing.md for the full facility.
-
-**Property-level:** `@IsProperty`, `@MapTo`, `@Title`, `@Observable` (required on all setters), `@Calculated`, `@Required`, `@Final`, `@Readonly`, `@UpperCase`, `@DateOnly`, `@Dependent(prop1, prop2, ...)`, `@CompositeKeyMember(n)`, `@SkipEntityExistsValidation(skipActiveOnly, skipNew)`, `@LeProperty(prop)`, `@GeProperty(prop)`, `@CritOnly`, `@DisableAuditing`
-
+- `@Audited` — marks a persistent entity as audited; the platform generates audit-entity types for it and automatically creates audit records on save. See `auditing/reference.md` for the full facility.
 - `@DisableAuditing` — on a field of an `@Audited` entity, excludes the property from auditing. To opt `key` or `desc` out, redeclare them in the subclass first.
 
 **`@IsProperty` parameters:** `@IsProperty(Long.class)` for collection element type, `@IsProperty(length = 8000)` for string length, `@IsProperty(assignBeforeSave = true)` for auto-assigned values.
@@ -133,8 +119,8 @@ Invalid *chaining* across segments (each segment valid on its own, but the chain
 **Mnemonic matrix.**
 Because the resolved clause routes through the `.critCondition(collectionQueryStart, propName, critPropName)` overload, every declarative criterion automatically supports the full v/n/m matrix — values × negation × mnemonics — documented on `EntityQueryProgressiveInterfaces.critCondition`.
 
-**See also.** For a "when to use which" between this declarative style and `IQueryEnhancer`, see *Query Enhancer Pattern* in @platform-doc/claude/web-ui.md.
-For testing such criteria without an actual Entity Centre, see *Testing Entity Centre criteria via `DynamicQueryBuilder`* in @platform-doc/claude/testing-and-security.md.
+**See also.** For a "when to use which" between this declarative style and `IQueryEnhancer`, see *Query Enhancer Pattern* in `web-ui/reference.md`.
+For testing such criteria without an actual Entity Centre, see *Testing Entity Centre criteria via `DynamicQueryBuilder`* in `testing/reference.md`.
 
 ## Composite Keys
 
@@ -240,7 +226,7 @@ Extend `AbstractUnionEntity`. Model polymorphic references where a property can 
 
 **Union `.id()` in EQL:** `union.id()` resolves to `CASE WHEN member1 IS NOT NULL THEN member1 WHEN member2 IS NOT NULL THEN member2 ... END` (not `COALESCE`).
 Because TG uses contiguous entity IDs (globally unique across all tables), this is a collision-free scalar key usable in `groupBy`, `yield`, and JOIN conditions.
-See @platform-doc/claude/eql-reference.md for examples.
+See `eql/reference.md` for examples.
 
 ## Entity Producer Pattern
 
@@ -254,35 +240,20 @@ Extend `DefaultEntityProducerWithContext<T>` for context-aware entity instantiat
 - **Domain entity producers** — used in Web UI for Entity Masters/Centres to provide default values
 - **Action entity producers** — used both in Web UI and programmatically in DAO methods
 
-## Companion Object Pattern
+## Companion Object Pattern — Advanced
 
-**Naming:** Entity `Vehicle` → interface `VehicleCo` → implementation `VehicleDao`
-
-| Method | Returns | Instrumented | Use Case |
-|--------|---------|--------------|----------|
-| `co(Type.class)` | `IEntityReader<T>` | No | Read-only queries, exports, lookups |
-| `co$(Type.class)` | `IEntityDao<T>` | Yes | Full CRUD — create, update, save, delete |
-
-**Critical:** `co$()` returns entities with full change tracking, validation, and meta-property support. `co()` returns lightweight, uninstrumented entities. Using the wrong one causes subtle bugs.
-
-**Use the companion's `FETCH_MODEL` when retrieving an entity for editing.**
-A companion's `FETCH_PROVIDER` / `FETCH_MODEL` enumerates exactly the properties — including the nested paths — that the DAO's save-time logic, validators, and definers touch.
-Retrieving with a narrower fetch (e.g., `findByKey` without an explicit fetch) or with a flat `fetchAll*` / `fetchAllInclCalc*` (which does not follow dot-notation into nested references) leaves deeper properties unfetched; any later access on the save path raises `StrictProxyException`.
-The rule applies everywhere an entity is loaded for mutation: tests, DAO code, producers.
-```java
-// Right — use the companion's declared fetch:
-co$(Vehicle.class).findByKeyAndFetch(VehicleCo.FETCH_MODEL, key);
-
-// Wrong — flat top-level fetch; breaks on nested access within save logic:
-co$(Vehicle.class).findByKeyAndFetch(fetchAllInclCalcAndInstrument(Vehicle.class), key);
-```
-Narrower fetches are fine for read-only queries where the reduced cost is deliberate, but never for the write path.
+For basic `co()` vs `co$()` and `FETCH_MODEL` usage, see `quick-reference.md` in this directory.
 
 **`FETCH_PROVIDER` on companion interfaces.**
 Each companion interface declares `IFetchProvider<Entity> FETCH_PROVIDER` — the fetch model required for editing.
 To change any property of an entity, it must be fetched with this fetch model.
 It includes all properties accessed in validators and definers.
 The corresponding DAO class should use `FETCH_PROVIDER` to implement `createFetchProvider()`.
+
+**Why `FETCH_PROVIDER` matters over `fetchAll*`.**
+A companion's `FETCH_PROVIDER` / `FETCH_MODEL` enumerates exactly the properties — including the nested paths — that the DAO's save-time logic, validators, and definers touch.
+Retrieving with a narrower fetch (e.g., `findByKey` without an explicit fetch) or with a flat `fetchAll*` / `fetchAllInclCalc*` (which does not follow dot-notation into nested references) leaves deeper properties unfetched; any later access on the save path raises `StrictProxyException`.
+The rule applies everywhere an entity is loaded for mutation: tests, DAO code, producers.
 
 **`ISaveWithFetch<T>`.**
 Prefer `ISaveWithFetch<T>` on companion interfaces.
@@ -360,15 +331,11 @@ Access via `entity.getProperty(Entity_.propName())`. Key methods:
 | `getValue()` / `getOriginalValue()` / `getPrevValue()` | Value tracking |
 | `isChangedFromOriginal()` | Changed since entity retrieval |
 
-## Calculated Properties
+## Calculated Properties — Subquery Patterns
 
-Read-only, database-computed fields defined with `@Calculated`.
-Use a companion `protected static final ExpressionModel propertyName_` field with EQL's `expr()` API.
+For basic `@Calculated` syntax and `ExpressionModel` usage, see `quick-reference.md` in this directory.
 
 ```java
-// Simple dereferencing
-protected static final ExpressionModel assetClass_ = expr().prop(Vehicle_.vehicleClass().assetClass()).model();
-
 // Subquery returning an entity — use modelAsEntity()
 protected static final ExpressionModel location_ = expr().model(
     select(LocationTimeline.class).where()
@@ -384,6 +351,9 @@ protected static final ExpressionModel numberOfTasks_ = expr()
             .yield().countAll()
             .modelAsPrimitive())
     .then().val(0).model();
+
+// Simple dereferencing
+protected static final ExpressionModel assetClass_ = expr().prop(Vehicle_.vehicleClass().assetClass()).model();
 
 // Inline (trivial cases only)
 @Calculated("price.amount + purchasePrice.amount")
@@ -552,30 +522,7 @@ Choose the generative pattern when the computation is too complex or iterative t
 
 ## Audited Entities
 
-A persistent entity annotated with `@Audited` participates in the platform's generic auditing facility.
-On each successful save, the platform creates one row in a generated audit-entity table and one row per dirty auditable property in a generated audit-prop table.
-The mechanics are entirely runtime-driven:
+Add `@Audited` to a persistent entity to enable automatic audit-record creation on save.
+Use `@DisableAuditing` on individual fields to exclude them from auditing.
 
-* Four audit types are generated per audited entity — persistent `E_a3t_{n}` + `E_a3t_{n}_Prop`, synthetic `Re{E}_a3t` + `Re{E}_a3t_Prop`.
-  Their base classes are `AbstractAuditEntity<E>`, `AbstractAuditProp<E>`, `AbstractSynAuditEntity<E>`, `AbstractSynAuditProp<E>`.
-* Audit types are not baked into the compile-time `ApplicationDomain`. `BasicWebServerIocModule` provides an `IApplicationDomainProvider` that augments the compile-time entity types with audit types during IoC initialisation (exact behaviour varies by `AuditingMode`) — anywhere the full entity-type list matters, use the **injected** `IApplicationDomainProvider`, not a freshly instantiated `new ApplicationDomain()`.
-* Audit-type companions are runtime-generated via `ICompanionGenerator` (ByteBuddy); never hand-write companions for an audit type.
-* `IAuditTypeFinder` maps an audited type to any of its audit types (latest persistent, a specific version, synthetic, or all).
-* `AuditUtils.isAudited(Class)` and related helpers are the supported boundary for reflecting on audit status.
-
-For the structure of audit-entity types, the version hierarchy (`E_a3t_n <: … <: E_a3t_1`), `@InactiveAuditProperty`, `@DisableAuditing`, evolution strategies (new version vs in-place refactor), auditing modes, and source generation tooling (`IAuditEntityGenerator`, `GenAudit`), see @platform-doc/claude/auditing.md.
-
-## MetaModel Annotation Processor
-
-`MetaModelProcessor` generates type-safe metamodel classes at compile time.
-
-**Generated output** (in `target/generated-sources/`):
-- `metamodels/MetaModels.java` — static fields for all entity metamodels
-- `{package}/meta/{Entity}MetaModel.java` — individual metamodel
-- `{package}/meta/{Entity}MetaModelAliased.java` — for self-joins
-
-```java
-import static metamodels.MetaModels.*;
-.prop(Vehicle_.model())                              // Simple property
-.prop(PmXref_.asset().equipment().avgReading())      // Deep chain
-```
+For the full auditing facility — generated types, versioning, runtime plumbing (`IAuditTypeFinder`, `ICompanionGenerator`), auditing modes, source generation (`GenAudit`), and Web UI integration — see `auditing/reference.md`.

@@ -1,4 +1,4 @@
-# EQL Internal Design Guide
+# EQL Internal Design — Detailed Reference
 
 How to extend EQL with new functions, operators, or language features.
 

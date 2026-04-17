@@ -1,4 +1,6 @@
-# Generic Auditing Reference
+# Auditing — Detailed Reference
+
+For a quick overview of `@Audited`, generated types, and test configuration, see `quick-reference.md` in this directory.
 
 Generic auditing is a TG platform facility (introduced in 2.3.0) that creates an audit record whenever an audited entity is saved.
 An audit record captures a snapshot of the entity's auditable properties together with the set of properties that changed in that save, linked to the user and transaction.
@@ -178,7 +180,10 @@ If you see `WorkActivity_a3t_1_Dao.java` (or similar) in an application module, 
 Security tokens for audit types are generated at application startup by `ISecurityTokenGenerator` and made available through `ISecurityTokenProvider`.
 Only the synthetic audit-entity side receives tokens: `Re{E}_a3t_CanRead_Token` and `Re{E}_a3t_CanReadModel_Token` (no `CanSave`/`CanDelete` — audit records are immutable from the user's perspective).
 
-Customisation is possible by extending `SecurityTokenProvider` and overriding the relevant methods.
+Consequences:
+- Do not commit hand-written `Re{E}_a3t_*_Token` classes. If you see them in an application module under `security/tokens/`, they are remnants of a pre-generic-auditing design and should be deleted.
+- Dynamic token retrieval now goes through `ISecurityTokenProvider` rather than `Class.forName` — requests for tokens that are not in the provider are stricter than before, and an application using tokens outside the provider may break.
+- To customise audit-token generation or inject extra tokens, extend `SecurityTokenProvider` and override the appropriate methods.
 
 ### Audit types are *dynamically* registered in the application domain
 

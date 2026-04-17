@@ -1,4 +1,6 @@
-# Testing and Security Reference
+# Testing & Security — Detailed Reference
+
+For fetch patterns, security token templates, and other common lookups, see `quick-reference.md` in this directory.
 
 ## Testing Approach
 
@@ -32,7 +34,7 @@ Do not use `FETCH_PROVIDER` for read-only access to basic properties — it is u
 
 ### Testing Entity Centre criteria via `DynamicQueryBuilder`
 
-When a synthetic `Re*` entity uses the declarative crit-only style (`@CritOnly(entityUnderCondition, propUnderCondition)` + `{propName}_` stem field — see *Declarative correlated filters* in @platform-doc/claude/entity-model.md), its `model_` is a bare passthrough and does **not** contain any `.critCondition(...)` clauses.
+When a synthetic `Re*` entity uses the declarative crit-only style (`@CritOnly(entityUnderCondition, propUnderCondition)` + `{propName}_` stem field — see *Declarative correlated filters* in `entity-model/reference.md`), its `model_` is a bare passthrough and does **not** contain any `.critCondition(...)` clauses.
 Running `co(ReEntity.class).count(select(ReEntity.class).model(), params)` therefore exercises none of the criteria — the test would produce the same result regardless of the filter values.
 
 To test such criteria, replicate the Entity Centre runtime path: build `QueryProperty` instances for each criterion, then feed them into `DynamicQueryBuilder.createQuery(...)`, which is what translates the declarative hints into real `.critCondition(...)` clauses.
@@ -192,30 +194,15 @@ public int batchDelete(final Collection<Long> entitiesIds) { ... }
 
 ### Runtime-generated tokens for audit types
 
-Security tokens for auditing (see @platform-doc/claude/auditing.md) are **not** hand-written.
-`ISecurityTokenGenerator` produces them at application startup for the **synthetic** audit-entity side only — `Re{E}_a3t_CanRead_Token` and `Re{E}_a3t_CanReadModel_Token`.
-Persistent audit-entity types (`E_a3t_{n}`) and audit-prop types do not receive tokens — users never query those directly.
-
-Consequences:
-- Do not commit hand-written `Re{E}_a3t_*_Token` classes. If you see them in an application module under `security/tokens/`, they are remnants of a pre-generic-auditing design and should be deleted.
-- Dynamic token retrieval now goes through `ISecurityTokenProvider` rather than `Class.forName` — requests for tokens that are not in the provider are stricter than before, and an application using tokens outside the provider may break.
-- To customise audit-token generation or inject extra tokens, extend `SecurityTokenProvider` and override the appropriate methods.
+Security tokens for audit types (`Re{E}_a3t_CanRead_Token`, `Re{E}_a3t_CanReadModel_Token`) are generated at startup by `ISecurityTokenGenerator` — do not hand-write them.
+For the full token generation design, see `auditing/reference.md`.
 
 ## Testing with auditing
 
-Enabling auditing (`audit.mode=ENABLED`) adds per-save overhead: one audit-entity insert plus one audit-prop insert per dirty auditable property.
-For DAO integration test suites that save many entities per run to exercise business logic, this overhead is significant and unnecessary — the DAO tests do not assert on audit rows.
-
-The conventional TG-application pattern is to **disable auditing in the DAO test configuration** (the application's `IDomainDrivenTestCaseConfiguration` implementation used by `AbstractDaoTestCase`):
-
+Disable auditing in DAO test configurations — `AUDIT_MODE = DISABLED` is expected, not a regression:
 ```java
 props.setProperty(AuditingIocModule.AUDIT_MODE, AuditingMode.DISABLED.name());
-// audit.path is not required when auditing is disabled
 ```
 
-This is a deliberate speed trade-off, not a gap in coverage.
-The application's data-population configuration and the webapp itself still run with `AUDIT_MODE = ENABLED`, so web-UI tests, data population, and manual testing do exercise the audit hook on save.
-If a specific test genuinely needs auditing on, it should use a **separate** `IDomainDrivenTestCaseConfiguration` — do not flip the shared DAO test config.
-
-When reviewing a TG-based application, `AUDIT_MODE = DISABLED` in the DAO test configuration is expected, not a regression.
-In `DISABLED` mode `IAuditTypeFinder` is still injectable, but every `navigate*` method throws `AuditingModeException` — tests that need to reflect over audit types must use a separate configuration with `AUDIT_MODE = ENABLED` or `GENERATION`.
+The webapp and data-population configs still run with `ENABLED`, so audit behaviour is exercised there.
+For the full rationale and mode details, see `auditing/reference.md`.

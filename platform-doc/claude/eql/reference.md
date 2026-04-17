@@ -1,7 +1,8 @@
-# EQL Reference
+# EQL — Detailed Reference
 
 Type-safe fluent query language. Grammar: `platform-eql-grammar/src/main/antlr4/EQL.g4`.
 Utilities: `EntityQueryUtils` (static import). Multi-stage compilation (EqlStage0-3).
+For the operator/function/fetch cheat sheet, see `quick-reference.md` in this directory.
 
 ```java
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
