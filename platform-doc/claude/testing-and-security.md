@@ -20,6 +20,16 @@ Business logic (validators, definers) resides in `pojo-bl` but is tested **indir
 - A single DAO test may validate multiple validators and definers
 - Legacy tests may be `@Deprecated` in favor of newer `IDomainData` approach
 
+### Fetch Patterns in Tests
+
+| Scenario | Pattern | Rationale |
+|----------|---------|-----------|
+| Read-only, basic properties | `co(E.class).findByKey(...)` | No fetch model needed; lightweight |
+| Read-only, needs calculated properties | `co(E.class).findByKeyAndFetch(fetchAllInclCalc(E.class), ...)` | Calculated properties require explicit fetch |
+| Write path (modify + save) | `co$(E.class).findByKeyAndFetch(ECo.FETCH_PROVIDER.fetchModel(), ...)` | Instrumented + full fetch for validators/definers |
+
+Do not use `FETCH_PROVIDER` for read-only access to basic properties — it is unnecessary overhead and obscures intent.
+
 ### Testing Entity Centre criteria via `DynamicQueryBuilder`
 
 When a synthetic `Re*` entity uses the declarative crit-only style (`@CritOnly(entityUnderCondition, propUnderCondition)` + `{propName}_` stem field — see *Declarative correlated filters* in @platform-doc/claude/entity-model.md), its `model_` is a bare passthrough and does **not** contain any `.critCondition(...)` clauses.

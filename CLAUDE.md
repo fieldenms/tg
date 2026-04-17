@@ -113,3 +113,9 @@ These are things that cannot be easily derived from reading the code:
 - Use Markdown for Javadoc (not HTML tags)
 
 **Use `StandardActions` and `Compound` helpers** for common centre/master actions instead of building custom actions.
+
+**SQL migration scripts** for new persistent entities (in TG-based applications):
+- Use `GenDdl` (`IDdlGenerator.generateDatabaseDdl(dialect, EntityClass.class)`) to generate DDL.
+- Table names: entity class name uppercased + trailing `_` (e.g., `ROSTERPROFILE_`). Column names: property name uppercased + trailing `_`.
+- `boolean` → `char(1) NOT NULL` (`'Y'`/`'N'`). Entity references → `bigint` (FK to `_ID`).
+- Bulk-insert security tokens via `INSERT ... SELECT ... FROM (UNION ALL subquery) JOIN USER_ROLE` with fully-qualified token class names.

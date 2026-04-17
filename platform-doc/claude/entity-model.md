@@ -28,6 +28,22 @@ Entities annotated with `@MapEntityTo` are persistent.
 
 **`@IsProperty` parameters:** `@IsProperty(Long.class)` for collection element type, `@IsProperty(length = 8000)` for string length, `@IsProperty(assignBeforeSave = true)` for auto-assigned values.
 
+**`MaxLengthValidator` is implicit for `String` properties.**
+The platform automatically adds `MaxLengthValidator` based on `@IsProperty(length = ...)` — do not declare `@BeforeChange(@Handler(MaxLengthValidator.class))` manually; it is redundant.
+
+**`@Dependent` parameters must use metamodel constants**, not string literals.
+Import the constants from the entity's own `MetaModel` class:
+```java
+import static fielden.personnel.roster.meta.RosterProfileDayMetaModel.shiftFinish_;
+import static fielden.personnel.roster.meta.RosterProfileDayMetaModel.shiftStart_;
+
+@Dependent(shiftFinish_)
+private Date shiftStart;
+
+@Dependent(shiftStart_)
+private Date shiftFinish;
+```
+
 **`@CritOnly`** — marks properties as criteria-only (used for filtering, not displayed as result columns):
 ```java
 @CritOnly(RANGE)                                    // Date/numeric range filter
@@ -164,6 +180,15 @@ if (pm.getProperty(PmRoutine_.active()).isDirty() && !pm.isActive()) {
 }
 ```
 
+**`@SkipEntityExistsValidation(skipActiveOnly = true)` for references to activatable entities.**
+When an entity has a property referencing an activatable entity, the standard `EntityExistsValidator` rejects inactive values.
+If the referencing entity must accept inactive values for that property (e.g., to populate dependent data before activating the referenced entity), use `@SkipEntityExistsValidation(skipActiveOnly = true)`:
+```java
+@IsProperty
+@SkipEntityExistsValidation(skipActiveOnly = true)
+private RosterProfile rosterProfile;
+```
+
 ## Validators and Definers
 
 **`@BeforeChange(@Handler(ValidatorClass.class))`** — Validators (integrity constraints):
@@ -189,6 +214,10 @@ if (pm.getProperty(PmRoutine_.active()).isDirty() && !pm.isActive()) {
 - **Important:** Definer-initiated mutations go through `ObservableMutatorInterceptor` and trigger the full validation chain — they are **not** silent
 
 **Validation Result Types:** Failure (rejects value), Warning (accepts + warning), Informative (accepts + info), Success (accepts silently)
+
+**Result factory conventions:**
+- Use `Result.successful()` (no-arg) — not `Result.successful(newValue)`.
+- Use `Result.warningf(format, args...)` — not `Result.warning(format.formatted(args...))`.
 
 ## Union Entities (Polymorphic Associations)
 
@@ -249,6 +278,16 @@ co$(Vehicle.class).findByKeyAndFetch(fetchAllInclCalcAndInstrument(Vehicle.class
 ```
 Narrower fetches are fine for read-only queries where the reduced cost is deliberate, but never for the write path.
 
+**`FETCH_PROVIDER` on companion interfaces.**
+Each companion interface declares `IFetchProvider<Entity> FETCH_PROVIDER` — the fetch model required for editing.
+To change any property of an entity, it must be fetched with this fetch model.
+It includes all properties accessed in validators and definers.
+The corresponding DAO class should use `FETCH_PROVIDER` to implement `createFetchProvider()`.
+
+**`ISaveWithFetch<T>`.**
+Prefer `ISaveWithFetch<T>` on companion interfaces.
+The DAO then overrides the two-parameter `save(entity, maybeFetch)` instead of the one-parameter `save(entity)`.
+
 **Two-parameter `save()`:** `save(entity, Optional<fetch<T>>)` returns `Either<Long, T>`.
 - `Optional.empty()` — entity is **not** refetched after persistence; returns `Either.left(id)` with just the ID. Use when the caller doesn't need the saved entity back.
 - `Optional.of(fetchModel)` — entity is refetched with the provided fetch model; returns `Either.right(entity)`. Use when the caller needs the saved entity with specific properties populated.
@@ -289,6 +328,24 @@ protected IPm generateSinglePmInNonNestedSession(final PmXref pmXref) {
 
 **Why this matters:** Without `allowNestedScope = false`, the inner method would join the caller's transaction, and any exception would roll back the entire batch.
 The wrapper catches exceptions so that failures for individual items don't prevent processing of remaining items.
+
+## Canonical `batchDelete` Pattern
+
+Custom deletion logic goes in `batchDelete(Collection<Long>)`.
+The `batchDelete(List<T>)` overload calls `defaultBatchDelete(entities)`, which delegates to the ID-based overload — so custom logic runs for both paths.
+Use `Result.ifFailure(Result::throwRuntime)` to throw on validation failure:
+```java
+@Override @SessionRequired @Authorise(Entity_CanDelete_Token.class)
+public int batchDelete(final Collection<Long> entitiesIds) {
+    validateSomething(entitiesIds).ifFailure(Result::throwRuntime);
+    return defaultBatchDelete(entitiesIds);
+}
+
+@Override @SessionRequired @Authorise(Entity_CanDelete_Token.class)
+public int batchDelete(final List<Entity> entities) {
+    return defaultBatchDelete(entities);
+}
+```
 
 ## MetaProperty System
 
