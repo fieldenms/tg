@@ -325,6 +325,12 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         return buildParametersMap;
     }
 
+    /// Executes the configured Entity Centre query to find count of entities.
+    ///
+    public int runCount() {
+        return count(generateQueryWithSummaries().getKey());
+    }
+
     /// Executes the configured entity query.
     ///
     public final IPage<T> run(final int pageSize) {

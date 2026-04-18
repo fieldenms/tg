@@ -19,6 +19,8 @@ import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerIocModu
 import ua.com.fielden.platform.web.uri.EntityMasterUrlProvider;
 import ua.com.fielden.platform.web.utils.AuditMenuItemInitialiser;
 import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
+import ua.com.fielden.platform.web.utils.EntityCentreProcessor;
+import ua.com.fielden.platform.web.utils.DefaultEntityCentreProcessor;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 import static ua.com.fielden.platform.basic.config.Workflows.deployment;
@@ -63,6 +65,7 @@ public interface IBasicWebApplicationServerModule {
 
         // Dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure.
         bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class);
+        bindType(EntityCentreProcessor.class).to(DefaultEntityCentreProcessor.class);
 
         // Required to load entity centre data into Audit Menu Item entity.
         bindType(IAuditMenuItemInitialiser.class).to(AuditMenuItemInitialiser.class);

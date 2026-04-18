@@ -137,17 +137,23 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final ICompanionObjectFinder coFinder,
         final Function<EntityCentreConfig, EntityCentreConfig> adjustConfig
     ) {
-        final var co$MainMenuItem = coFinder.find(MainMenuItem.class);
-        final MainMenuItem menuItem = co$MainMenuItem.findByKeyOptional(menuItemType.getName()).orElseGet(() -> {
-            final MainMenuItem newMainMenuItem = co$MainMenuItem.new_();
-            newMainMenuItem.setKey(menuItemType.getName());
-            return co$MainMenuItem.save(newMainMenuItem);
-        });
+        final MainMenuItem menuItem = getMenuItem(menuItemType, coFinder);
         final EntityCentreConfigCo co$EntityCentreConfig = coFinder.find(EntityCentreConfig.class);
         final EntityCentreConfig ecc = adjustConfig.apply(co$EntityCentreConfig.new_().setOwner(user).setTitle(newName).setMenuItem(menuItem).setConfigBody(serialisedDifferences).setDesc(newDesc));
         return co$EntityCentreConfig.saveWithRetry(ecc);
     }
-    
+
+    /// Gets (or creates) [MainMenuItem] entity for `menuItemType`.
+    ///
+    private static MainMenuItem getMenuItem(final Class<?> menuItemType, final ICompanionObjectFinder coFinder) {
+        final var co$MainMenuItem = coFinder.find(MainMenuItem.class);
+        return co$MainMenuItem.findByKeyOptional(menuItemType.getName()).orElseGet(() -> {
+            final MainMenuItem newMainMenuItem = co$MainMenuItem.new_();
+            newMainMenuItem.setKey(menuItemType.getName());
+            return co$MainMenuItem.save(newMainMenuItem);
+        });
+    }
+
     /// Overrides existing [EntityCentreConfig] instance with new serialised diff.
     /// Otherwise, in case where there is no such instance in database, creates and saves new [EntityCentreConfig] instance with serialised diff inside.
     ///
@@ -198,38 +204,29 @@ public class CentreUpdaterUtils extends CentreUpdater {
         );
     }
     
-    /// Finds optional configuration for `model` and `uuid` with predefined fetch model, sufficient for most situations.
+    /// Finds optional configuration for `model` with predefined fetch model, sufficient for most situations.
     ///
-    private static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final ICompanionObjectFinder companionFinder) {
+    private static Optional<EntityCentreConfig> findConfigOptByModel(final ICompoundCondition0<EntityCentreConfig> model, final ICompanionObjectFinder companionFinder) {
         final EntityCentreConfigCo coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class, true);
-        return coEntityCentreConfig.getEntityOptional(from(model
-            .and().prop("configUuid").eq().val(uuid).model()
-        ).with(fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").with("configUuid").with("owner.base").with("configBody").with("runAutomatically").fetchModel()).model());
+        return coEntityCentreConfig.getEntityOptional(
+            from(model.model())
+            .with(fetchWithKeyAndDesc(EntityCentreConfig.class)
+                .with("preferred", "configUuid", "owner.base", "configBody", "runAutomatically")
+                .fetchModel()
+            ).model()
+        );
     }
     
     /// Finds optional configuration for `uuid`, `miType`, `device` and `surrogateName` with predefined fetch model, sufficient for most situations.
     ///
-    public static Optional<EntityCentreConfig> findConfigOptByUuid(
-        final String uuid,
-        final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final DeviceProfile device,
-        final String surrogateName,
-        final ICompanionObjectFinder companionFinder
-    ) {
-        return findConfigOptByUuid(centreConfigQueryFor(miType, device, surrogateName), uuid, companionFinder);
+    public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final ICompanionObjectFinder companionFinder) {
+        return findConfigOptByModel(centreConfigQueryFor(uuid, miType, device, surrogateName), companionFinder);
     }
     
     /// Finds optional configuration for `uuid`, `user`, `miType`, `device` and `surrogateName` with predefined fetch model, sufficient for most situations.
     ///
-    public static Optional<EntityCentreConfig> findConfigOptByUuid(
-        final String uuid,
-        final User user,
-        final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final DeviceProfile device,
-        final String surrogateName,
-        final ICompanionObjectFinder companionFinder
-    ) {
-        return findConfigOptByUuid(centreConfigQueryFor(user, miType, device, surrogateName), uuid, companionFinder);
+    public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final ICompanionObjectFinder companionFinder) {
+        return findConfigOptByModel(centreConfigQueryFor(uuid, miType, device, surrogateName).and().condition(centreConfigCondFor(user)), companionFinder);
     }
     
     /// Removes centre configurations from persistent storage.

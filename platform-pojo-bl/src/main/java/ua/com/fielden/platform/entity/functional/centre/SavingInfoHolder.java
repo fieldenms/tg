@@ -1,31 +1,27 @@
 package ua.com.fielden.platform.entity.functional.centre;
 
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
-import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.IContinuationData;
+import ua.com.fielden.platform.entity.NoKey;
+import ua.com.fielden.platform.entity.annotation.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.IContinuationData;
-import ua.com.fielden.platform.entity.NoKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
-/**
- * The entity holder for saving information: entity's modified props + centre context, if any.
- *
- * @author TG Team
- *
- */
+/// The entity holder for saving information: entity's modified props + centre context, if any.
+///
 @KeyType(NoKey.class)
 @CompanionObject(ISavingInfoHolder.class)
+// GraphQL Web API schema may not find `CentreContextHolder` type in case if it is used as property in allowed for introspection types
+// (e.g. those that are persistent / synthetic and have no @DenyIntrospection).
+// That's why it is explicitly denied for introspection and such properties become `AbstractDomainTreeRepresentation.isExcluded`.
+@DenyIntrospection
 public class SavingInfoHolder extends AbstractEntity<NoKey> {
     
     @IsProperty(Object.class)

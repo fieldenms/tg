@@ -15,13 +15,9 @@ import java.util.Properties;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 import static ua.com.fielden.platform.utils.MiscUtilities.propertiesUnionLeft;
 
-/**
- * Provides Web UI Testing Server specific implementation of {@link IDomainDrivenTestCaseConfiguration}
- * to be used for creation and population of the target development database.
- *
- * @author TG Team
- */
-public final class DataPopulationConfig implements IDomainDrivenTestCaseConfiguration {
+/// Provides Web UI Testing Server specific implementation of [IDomainDrivenTestCaseConfiguration] to be used for creation and population of the target development database.
+///
+public class DataPopulationConfig implements IDomainDrivenTestCaseConfiguration {
 
     private final Injector injector;
 
@@ -43,18 +39,19 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             defaultProps.setProperty("email.smtp", "localhost");
             defaultProps.setProperty("email.fromAddress", "tg@localhost");
 
-            final var finalProps = propertiesUnionLeft(props, defaultProps);
-
-            final ApplicationDomain appDomain = new ApplicationDomain();
-            injector = new ApplicationInjectorFactory()
-                    .add(new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), finalProps))
-                    .add(new NewUserEmailNotifierTestIocModule())
-                    .add(new DataFilterTestIocModule())
-                    .add(new IocModule())
-                    .getInjector();
+            injector = createFactory(propertiesUnionLeft(props, defaultProps)).getInjector();
         } catch (final Exception e) {
             throw new IllegalStateException("Could not create data population configuration.", e);
         }
+    }
+
+    protected ApplicationInjectorFactory createFactory(final Properties properties) {
+        final ApplicationDomain appDomain = new ApplicationDomain();
+        return new ApplicationInjectorFactory()
+                .add(new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), properties))
+                .add(new NewUserEmailNotifierTestIocModule())
+                .add(new DataFilterTestIocModule())
+                .add(new IocModule());
     }
 
     @Override
