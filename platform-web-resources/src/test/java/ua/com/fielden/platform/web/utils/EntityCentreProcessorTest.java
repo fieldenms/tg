@@ -10,9 +10,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.security.tokens.persistent.TgGeneratedEntity_CanRead_Token;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
-import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerContextSelectorForWebTests;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
@@ -29,6 +27,7 @@ import static java.util.Optional.of;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.meta.MetaProperty.ERR_REQUIRED;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
@@ -360,6 +359,52 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         final var uuid = initPaginatedData(8, 3);
         final var result = getInstance(EntityCentreProcessor.class).resultCount(uuid);
         assertEquals(Integer.valueOf(8), result.asRight().value());
+    }
+
+    @Test
+    public void executing_resultCount_method_returns_invalid_result_for_configuration_with_invalid_generation() {
+        final var uuid = randomUUID().toString();
+
+        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class);
+        createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
+        createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
+        initTestData(centreManager -> centreManager.getFirstTick().setValue(TgGeneratedEntity.class, "critOnlySingleProp", getUser()), configSettings);
+
+        final var result = getInstance(EntityCentreProcessor.class).resultCount(uuid);
+
+        assertNotNull(result);
+        assertTrue(result.isLeft());
+        assertNotNull(result.asLeft().value());
+        assertFalse(result.asLeft().value().isSuccessful());
+        assertEquals("Can not generate the instance based on current user [%s], choose another user for that.".formatted(getUser()), result.asLeft().value().getMessage());
+    }
+
+    @Test
+    public void executing_resultCount_method_returns_valid_result_for_configuration_with_valid_generation_and_does_not_include_entities_generated_by_other_users() {
+        final var uuid = randomUUID().toString();
+        final var user = save(new_(User.class, "USER").setBase(true).setEmail("USER@unit-test.software").setActive(true));
+        save(new_composite(UserAndRoleAssociation.class, user, co(UserRole.class).findByKey(UNIT_TEST_ROLE)));
+        final var configSettings = new ConfigSettings(of("saveAs"), user, DESKTOP, MiTgGeneratedEntity.class);
+        createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
+        createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
+        initTestData(centreManager -> centreManager.getFirstTick().setValue(TgGeneratedEntity.class, "critOnlySingleProp", getUser()), configSettings);
+        getInstance(EntityCentreProcessor.class).resultCount(uuid);
+        assertEquals(10, co(TgGeneratedEntity.class).count(select(TgGeneratedEntity.class).model()));
+
+        final var otherUuid = randomUUID().toString();
+        final var otherUser = save(new_(User.class, "OTHER_USER").setBase(true).setEmail("OTHER_USER@unit-test.software").setActive(true));
+        save(new_composite(UserAndRoleAssociation.class, otherUser, co(UserRole.class).findByKey(UNIT_TEST_ROLE)));
+        final var otherUserConfigSettings = new ConfigSettings(of("otherUserSaveAs"), otherUser, DESKTOP, MiTgGeneratedEntity.class);
+        createConfig(otherUserConfigSettings, FRESH_CENTRE_NAME, otherUuid);
+        createConfig(otherUserConfigSettings, SAVED_CENTRE_NAME, otherUuid);
+        initTestData(centreManager -> centreManager.getFirstTick().setValue(TgGeneratedEntity.class, "critOnlySingleProp", getUser()), otherUserConfigSettings);
+        final var result = getInstance(EntityCentreProcessor.class).resultCount(otherUuid);
+        assertEquals(20, co(TgGeneratedEntity.class).count(select(TgGeneratedEntity.class).model()));
+
+        assertNotNull(result);
+        assertTrue(result.isRight());
+        assertNotNull(result.asRight().value());
+        assertEquals(Integer.valueOf(10), result.asRight().value());
     }
 
     /// Initialise test data for config `uuid` (desktop device profile).
