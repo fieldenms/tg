@@ -40,7 +40,7 @@ import java.util.Date;
 @CompanionObject(EntityCentreConfigCo.class)
 @MapEntityTo("ENTITY_CENTRE_CONFIG")
 @DescTitle("Description")
-//@DenyIntrospection
+@DenyIntrospection
 public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> {
 
     @IsProperty

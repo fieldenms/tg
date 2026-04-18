@@ -3,7 +3,6 @@ package ua.com.fielden.platform.ui.config;
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
@@ -31,7 +30,7 @@ import static ua.com.fielden.platform.error.Result.failure;
 @DescTitle("Description")
 @CompanionObject(MainMenuItemCo.class)
 @MapEntityTo("MAIN_MENU")
-//@DenyIntrospection
+@DenyIntrospection
 public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<MainMenuItem> {
 
     @IsProperty
