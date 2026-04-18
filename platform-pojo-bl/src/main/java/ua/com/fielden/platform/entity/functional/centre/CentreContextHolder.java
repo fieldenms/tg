@@ -11,15 +11,15 @@ import java.util.Map;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
-/**
- * The entity holder for centre context and criteria entity's modified props.
- *
- * @author TG Team
- *
- */
+/// The entity holder for centre context and criteria entity's modified props.
+///
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(ICentreContextHolder.class)
+// GraphQL Web API schema may not find `CentreContextHolder` type in case if it is used as property in allowed for introspection types
+// (e.g. those that are persistent / synthetic and have no @DenyIntrospection).
+// That's why it is explicitly denied for introspection and such properties become `AbstractDomainTreeRepresentation.isExcluded`.
+@DenyIntrospection
 public class CentreContextHolder extends AbstractEntity<String> {
 
     @IsProperty(Object.class)
