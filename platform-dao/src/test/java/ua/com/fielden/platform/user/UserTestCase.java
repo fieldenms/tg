@@ -50,6 +50,25 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    public void new_active_user_can_be_saved_with_empty_fetch() {
+        final var newUser = new_(User.class, "USER_TEST")
+                .setActive(true)
+                .setBase(true)
+                .setEmail("USER_TEST@company.com");
+        assertThatCode(() -> coUser.save(newUser, Optional.empty())).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void existing_inactive_user_without_password_can_be_activated_by_saving_with_empty_fetch() {
+        final var user = coUser.save(new_(User.class, "USER_TEST")
+                                             .setActive(false)
+                                             .setBase(true)
+                                             .setEmail("USER_TEST@company.com"));
+        user.setActive(true);
+        assertThatCode(() -> coUser.save(user, Optional.empty())).doesNotThrowAnyException();
+    }
+
+    @Test
     public void users_cannot_save_changes_to_their_own_record_if_self_editing_is_not_permitted() {
         final ApplicationSettingsForTesting settings = (ApplicationSettingsForTesting) getInstance(IApplicationSettings.class);
         settings.setUsersSelfEdit(false);
