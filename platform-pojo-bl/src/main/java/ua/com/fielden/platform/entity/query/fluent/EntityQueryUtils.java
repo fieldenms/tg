@@ -24,38 +24,38 @@ public class EntityQueryUtils {
     /// Starts building a query that selects from the specified entity type.
     ///
     public static <T extends AbstractEntity<?>> IFromAlias<T> select(final Class<T> entityType) {
-        return new FromAlias<>(new EqlSentenceBuilder().from(entityType));
+        return new FromAlias<>(new EqlSentenceBuilder().select(entityType));
     }
 
     /// Starts building a query that selects from one or more entity query models.
     ///
     @SafeVarargs
     public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T>... sourceQueryModels) {
-        return new FromAlias<>(new EqlSentenceBuilder().from(sourceQueryModels));
+        return new FromAlias<>(new EqlSentenceBuilder().select(sourceQueryModels));
     }
 
     /// Starts building a query that selects from the specified entity query model.
     ///
     public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T> sourceQueryModel) {
-        return new FromAlias<>(new EqlSentenceBuilder().from(sourceQueryModel));
+        return new FromAlias<>(new EqlSentenceBuilder().select(sourceQueryModel));
     }
 
     /// Starts building a query that selects from the specified aggregated result query model.
     ///
     public static IFromAlias<EntityAggregates> select(final AggregatedResultQueryModel sourceQueryModel) {
-        return new FromAlias<>(new EqlSentenceBuilder().from(new AggregatedResultQueryModel[] { sourceQueryModel }));
+        return new FromAlias<>(new EqlSentenceBuilder().select(new AggregatedResultQueryModel[] { sourceQueryModel }));
     }
 
     /// Starts building a query that selects from one or more aggregated result query models.
     ///
     public static IFromAlias<EntityAggregates> select(final AggregatedResultQueryModel... sourceQueryModels) {
-        return new FromAlias<>(new EqlSentenceBuilder().from(sourceQueryModels));
+        return new FromAlias<>(new EqlSentenceBuilder().select(sourceQueryModels));
     }
 
     /// Starts building a query that has no `FROM` clause (e.g. for scalar expressions).
     ///
     public static <T extends AbstractEntity<?>> IFromNone<T> select() {
-        return new FromNone<>(new EqlSentenceBuilder().from());
+        return new FromNone<>(new EqlSentenceBuilder().select());
     }
 
     //:::::::::::::::::::::::::::: EXPR / COND :::::::::::::::::::::::::::::::::
