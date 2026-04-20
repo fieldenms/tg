@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>PDF.js spike — tg-pdf-preview-spike</title>
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; }
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: #eef0f3;
+            color: #222;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        h1 { font-size: 16px; margin: 0 0 4px; }
+        .hint { font-size: 12px; color: #555; margin-bottom: 12px; }
+        .layout {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 12px;
+            height: calc(100vh - 32px);
+        }
+        .controls {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            font-size: 13px;
+        }
+        .controls label { font-weight: 500; }
+        .controls input[type="text"] {
+            flex: 1;
+            min-width: 220px;
+            font: inherit;
+            padding: 4px 6px;
+            border: 1px solid #bbb;
+            border-radius: 3px;
+        }
+        .controls button {
+            font: inherit;
+            padding: 4px 10px;
+            border: 1px solid #bbb;
+            background: #fafafa;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .viewer {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        tg-pdf-preview-spike { height: 100%; }
+    </style>
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script type="module">
+        import './tg-pdf-preview-spike.js';
+    </script>
+</head>
+<body>
+    <div class="layout">
+        <div>
+            <h1>PDF.js spike</h1>
+            <div class="hint">
+                Validates that PDF.js can render PDFs via &lt;canvas&gt; inline on both desktop and mobile,
+                replacing the problematic &lt;object type="application/pdf"&gt; approach used by
+                tg-attachment-preview.
+            </div>
+            <div class="controls">
+                <label for="src">PDF URL:</label>
+                <input id="src" type="text" value="../sample-local-pdf.pdf">
+                <button id="load">Load</button>
+                <button id="loadBad">Load (404 test)</button>
+                <button id="loadCorrupt">Load (corrupt test)</button>
+                <button id="clear">Clear</button>
+            </div>
+        </div>
+        <div class="viewer">
+            <tg-pdf-preview-spike id="preview" src="../sample-local-pdf.pdf"></tg-pdf-preview-spike>
+        </div>
+    </div>
+    <script>
+        window.addEventListener('WebComponentsReady', () => {
+            const preview = document.getElementById('preview');
+            const input = document.getElementById('src');
+            document.getElementById('load').addEventListener('click', () => {
+                preview.src = input.value.trim();
+            });
+            document.getElementById('loadBad').addEventListener('click', () => {
+                input.value = '../does-not-exist.pdf';
+                preview.src = input.value;
+            });
+            document.getElementById('loadCorrupt').addEventListener('click', () => {
+                // An HTML page deliberately served as a "PDF" causes InvalidPDFException.
+                input.value = './pdfjs-spike.html';
+                preview.src = input.value;
+            });
+            document.getElementById('clear').addEventListener('click', () => {
+                input.value = '';
+                preview.src = '';
+            });
+        });
+    </script>
+</body>
+</html>

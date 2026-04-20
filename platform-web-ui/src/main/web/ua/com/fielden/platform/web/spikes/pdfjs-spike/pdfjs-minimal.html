@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>PDF.js minimal spike</title>
+    <style>
+        html, body { margin: 0; padding: 0; background: #eef0f3; }
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            padding: 16px;
+        }
+        h1 { font-size: 16px; margin: 0 0 4px; }
+        .hint { font-size: 12px; color: #555; margin-bottom: 12px; }
+        #status { color: #666; font-style: italic; }
+        #status.error { color: #c00; font-style: normal; font-weight: bold; }
+        canvas {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            max-width: 100%;
+            /* height: auto + only inline style.width (not style.height) preserves aspect ratio
+               when max-width: 100% clamps the canvas on narrow (mobile) viewports. */
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDF.js minimal spike</h1>
+    <div class="hint">
+        Smallest possible proof-of-concept: load PDF.js from CDN, fetch a local PDF, render page 1 to a canvas.
+        Works on mobile where &lt;object type="application/pdf"&gt; does not.
+    </div>
+    <div id="status">Loading PDF.js…</div>
+    <canvas id="canvas"></canvas>
+
+    <script type="module">
+        const PDFJS_VERSION = '4.10.38';
+        const statusEl = document.getElementById('status');
+        const canvas = document.getElementById('canvas');
+
+        const setStatus = (msg, isError) => {
+            statusEl.textContent = msg || '';
+            statusEl.className = isError ? 'error' : '';
+            statusEl.style.display = msg ? '' : 'none';
+        };
+
+        try {
+            const pdfjsLib = await import(`https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build/pdf.min.mjs`);
+            pdfjsLib.GlobalWorkerOptions.workerSrc =
+                `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.mjs`;
+
+            setStatus('Fetching PDF…');
+            const doc = await pdfjsLib.getDocument('../sample-local-pdf.pdf').promise;
+
+            setStatus(`Rendering page 1 of ${doc.numPages}…`);
+            const page = await doc.getPage(1);
+            const dpr = window.devicePixelRatio || 1;
+            const viewport = page.getViewport({ scale: 1.0 * dpr });
+
+            canvas.width = Math.floor(viewport.width);
+            canvas.height = Math.floor(viewport.height);
+            // Set only style.width — CSS `height: auto` derives the correct display
+            // height from the canvas's intrinsic aspect ratio, which keeps the PDF
+            // from looking squashed when max-width clamps the width on mobile.
+            canvas.style.width = Math.floor(viewport.width / dpr) + 'px';
+
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            setStatus('');
+        } catch (err) {
+            console.error(err);
+            setStatus('Failed: ' + (err && err.message || err), true);
+        }
+    </script>
+</body>
+</html>
