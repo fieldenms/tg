@@ -1,4 +1,6 @@
-# Web UI Configuration Reference
+# Web UI — Detailed Reference
+
+For standard actions, criterion/editor types, and centre/master options, see `quick-reference.md` in this directory.
 
 Web UI is built around three component types configured via fluent DSL builders.
 All components must be registered with `IWebUiBuilder` (via `configApp()` in `IWebUiConfig`).
@@ -165,7 +167,8 @@ Requires:
 - Menu item classes extending `AbstractFunctionalEntityForCompoundMenuItem<T>`
 - A producer class for the functional entity
 
-**Key fetch provider note:** Menu item entities receive their key from the compound master's root entity. If a menu item DAO needs a key property, the fetch provider on the **root entity's companion** must include it — adding one to the menu item's own companion has no effect.
+**Key fetch provider note:** Menu item entities receive their key from the compound master's root entity.
+If a menu item DAO needs a key property, the fetch provider on the **root entity's companion** must include it — adding one to the menu item's own companion has no effect.
 
 ## Action Configuration
 
@@ -272,7 +275,8 @@ new MasterWithCentreBuilder<OpenAction>()
     .done();
 ```
 
-Use sparingly — prefer declarative configuration. Typical uses: coordinating refresh between insertion points and parent centres, custom DOM manipulation.
+Use sparingly — prefer declarative configuration.
+Typical uses: coordinating refresh between insertion points and parent centres, custom DOM manipulation.
 
 ## Query Enhancer Pattern
 
@@ -280,7 +284,7 @@ Use sparingly — prefer declarative configuration. Typical uses: coordinating r
 Its primary legitimate use is **master-context binding in embedded centres** — making an embedded centre filter by the root Entity Master's key or other context values.
 
 **When NOT to use `IQueryEnhancer`.**
-For correlated filters over cross-reference tables driven by the user's selection criteria (the classic Entity Centre filtering scenario), use the declarative `@CritOnly(entityUnderCondition, propUnderCondition)` + `{propName}_` stem pattern on a synthetic `Re*` entity instead — see *Declarative correlated filters* in @platform-doc/claude/entity-model.md.
+For correlated filters over cross-reference tables driven by the user's selection criteria (the classic Entity Centre filtering scenario), use the declarative `@CritOnly(entityUnderCondition, propUnderCondition)` + `{propName}_` stem pattern on a synthetic `Re*` entity instead — see *Declarative correlated filters* in `entity-model/reference.md`.
 That style was added later to TG; historically `IQueryEnhancer` was the only option for correlated filters, but placing correlation logic in the Web UI config layer is against TG's model-driven philosophy.
 Use `IQueryEnhancer` for master-context propagation into embedded centres (where the filter genuinely belongs to the UI-composition layer), and use the declarative crit-only pattern for everything else.
 
@@ -314,54 +318,7 @@ private static class LabourHoursCentre_QueryEnhancer implements IQueryEnhancer<L
 
 ## Audit UI
 
-Two independent Web UI integration points exist for the platform's generic auditing facility (see @platform-doc/claude/auditing.md for the core feature).
-Both are driven by the presence of `@Audited` on the domain entity; neither is coded per-entity in the application.
-
-### Stand-alone audit centre via `IAuditWebUiConfigFactory`
-
-The factory is used once per audited entity in the application's `IWebUiConfig.initConfiguration()` to register a main-menu-level audit centre:
-
-```java
-final var auditWebUiConfigFactory = injector().getInstance(IAuditWebUiConfigFactory.class);
-final var vehicleAuditConfig = auditWebUiConfigFactory.create(Vehicle.class, builder);
-
-configDesktopMainMenu()
-    .addModule(APP.title)
-        .menu()
-            .addMenuItem(makeMenuItemTitle(vehicleAuditConfig.auditType()))
-                .description(makeMenuItemDesc(vehicleAuditConfig.auditType()))
-                .centre(vehicleAuditConfig.centre())
-                .done()
-            ...
-```
-
-`AuditWebUiConfig` is a record with accessors `auditType()` (the synthetic `Re{E}_a3t`) and `centre()`.
-Mi-types, producers, and security tokens for stand-alone audit centres are runtime-generated — do not define them by hand.
-`IAuditWebUiConfigFactory` also exposes `createEmbeddedCentre(E.class)` and `miTypeForEmbeddedCentre(E.class)`, but **these are for the platform's own use** in constructing `PersistentEntityInfo` (below), not for application code.
-
-### `PersistentEntityInfo` — the dynamically-built info master
-
-`PersistentEntityInfo` (`ua.com.fielden.platform.entity.PersistentEntityInfo`) is the functional action that backs the standard "info" button on any master for a subclass of `AbstractPersistentEntity`.
-The platform registers `PersistentEntityInfo` once, in one of two shapes, and the client opens whichever is appropriate for the target entity:
-
-| Target entity | Master shape | Built by |
-|---|---|---|
-| Not `@Audited` | **Simple master** showing version-info fields only (`createdBy`, `createdDate`, `lastUpdatedBy`, `lastUpdatedDate`, `entityId`, `entityVersion`). | `StandardMastersWebUiConfig.createPersistentEntityInfoSimpleMaster(injector)` |
-| `@Audited` | **Compound master** `OpenPersistentEntityInfoAction` — the main info view **plus** a dedicated audit-review menu. | `StandardMastersWebUiConfig.createPersistentEntityInfoCompoundMaster(injector, builder, mainMaster)` |
-
-The compound variant uses `.addMenuItem(AuditCompoundMenuItem.class).withPolymorphicCenter()`.
-`AuditCompoundMenuItem` extends `AbstractPolymorphicCentreCompoundMenuItem<PersistentEntityInfo>` — a polymorphic centre whose actual entity type is decided at runtime, not wired at configuration time.
-`IAuditMenuItemInitialiser.init(auditedType, menuItem)` parameterises the menu item with the correct `MiWithConfigurationSupport<?>` for the target type's synthetic audit-entity (`Re{E}_a3t`), so the same compound shell hosts a different audit centre each time it is opened.
-
-**Do not hand-wire audit tabs into application compound masters.**
-When you add `@Audited` to an entity, users get the audit-review UI for free through the standard info action.
-Specifically, do not:
-
-* add an "Audit" menu item to the entity's own `OpenEMasterAction` compound master builder;
-* call `IAuditWebUiConfigFactory.createEmbeddedCentre(E.class)` to produce a centre to embed in the entity's own compound master;
-* hand-write an `MiEMaster_OpenReE_a3t_MenuItem`, its producer, or its companion.
-
-Migrating an older TG application that has a hand-written audit tab on its own compound master (a common pre-2.3.0 shape) is a straight deletion — the replacement is `PersistentEntityInfo`, which the platform already registers.
+For the full audit Web UI reference — `IAuditWebUiConfigFactory`, `PersistentEntityInfo` compound master, and the "do not hand-wire audit tabs" rule — see `auditing/reference.md`.
 
 ## Server-Sent Events (SSE)
 
