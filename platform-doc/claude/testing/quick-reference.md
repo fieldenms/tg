@@ -21,7 +21,7 @@ Do not use `FETCH_PROVIDER` for read-only access to basic properties.
 
 ## Auditing in Tests
 
-`AUDIT_MODE = DISABLED` in DAO test config is expected — see `auditing/reference.md`.
+`AUDIT_MODE = DISABLED` in DAO test config is expected — see `auditing/quick-reference.md`.
 
 ## Authorization in Tests
 

@@ -1,7 +1,7 @@
 # Testing — Detailed Reference
 
 For fetch patterns and other common lookups, see `quick-reference.md` in this directory.
-For security tokens and authorization, see `security/reference.md`.
+For security tokens and authorization, see `security/quick-reference.md`.
 
 ## Testing Approach
 

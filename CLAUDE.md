@@ -88,6 +88,7 @@ LaTeX documentation in `platform-doc/`.
 
 Each topic directory under `platform-doc/claude/` has a `quick-reference.md` for common lookups and detailed files for full reference.
 Read the quick reference first; read the detailed file only when you need depth.
+Cross-links from a quick-reference should prefer another quick-reference; from a detailed reference, point to wherever the content lives.
 
 | Directory | Quick reference | Detailed reference |
 |---|---|---|
