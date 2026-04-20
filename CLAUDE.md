@@ -34,7 +34,8 @@ mvn test -Dmaven.javadoc.skip=true -Dfork.count=4 -DdatabaseUri.prefix=//localho
 # Args: release-version, next-snapshot, db-uri-prefix, fork-count, base-branch
 ```
 Release follows Git Flow: create release branch → set version → merge to master → tag → build & deploy → merge back → set next SNAPSHOT → push.
-Includes automatic rollback on failure. Requires Maven deploy credentials and Git push privileges.
+Includes automatic rollback on failure.
+Requires Maven deploy credentials and Git push privileges.
 
 ## Module Structure
 
@@ -57,13 +58,20 @@ LaTeX documentation in `platform-doc/`.
 
 ## Critical Design Gotchas
 
-1. **`co()` vs `co$()`**: `co()` returns uninstrumented (read-only) entities; `co$()` returns instrumented with change tracking. Using the wrong one causes subtle bugs.
-2. **`isInitialising()` in definers**: Definers execute during DB retrieval AND user mutations. Check `entity.isInitialising()` to distinguish.
+These apply regardless of topic.
+Topic-specific gotchas live in each directory's `quick-reference.md`.
+
+1. **`co()` vs `co$()`**: `co()` returns uninstrumented (read-only) entities; `co$()` returns instrumented with change tracking.
+   Using the wrong one causes subtle bugs.
+2. **`isInitialising()` in definers**: Definers execute during DB retrieval AND user mutations.
+   Check `entity.isInitialising()` to distinguish.
 3. **Definer mutations are not silent**: Setting a property from a definer triggers the full validation chain via `ObservableMutatorInterceptor`.
 4. **`isDirty()` before side effects**: In DAO `save()`, check property dirtiness before cascading updates.
 5. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
 6. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
-7. **GraphQL API**: Read-only queries only. Fields are uncapitalized entity names. Token: `GraphiQL_CanExecute_Token`.
+7. **GraphQL API**: Read-only queries only.
+   Fields are uncapitalized entity names.
+   Token: `GraphiQL_CanExecute_Token`.
 
 ## Conventions
 
@@ -71,7 +79,8 @@ LaTeX documentation in `platform-doc/`.
 
 **Always use metamodel references** (`Entity_.property()`) instead of string literals in EQL, fetch models, and UI configurations.
 
-**Property declaration:** `@IsProperty` + `@Title` + `@MapTo` (for persistent) + `@Observable` on setter. Validators chain in declaration order.
+**Property declaration:** `@IsProperty` + `@Title` + `@MapTo` (for persistent) + `@Observable` on setter.
+Validators chain in declaration order.
 
 **Code documentation:**
 - Each sentence on its own line (better diffs)
@@ -81,8 +90,11 @@ LaTeX documentation in `platform-doc/`.
 **Use `StandardActions` and `Compound` helpers** for common centre/master actions.
 
 **SQL migration scripts** for new persistent entities (in TG-based applications):
-- Use `GenDdl` to generate DDL. Table names: uppercased entity class + `_`. Column names: uppercased property + `_`.
-- `boolean` → `char(1) NOT NULL` (`'Y'`/`'N'`). Entity references → `bigint` (FK to `_ID`).
+- Use `GenDdl` to generate DDL.
+  Table names: uppercased entity class + `_`.
+  Column names: uppercased property + `_`.
+- `boolean` → `char(1) NOT NULL` (`'Y'`/`'N'`).
+  Entity references → `bigint` (FK to `_ID`).
 
 ## Reference Topics
 

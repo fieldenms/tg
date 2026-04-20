@@ -180,7 +180,8 @@ If you see `WorkActivity_a3t_1_Dao.java` (or similar) in an application module, 
 Security tokens for audit types are generated at application startup by `ISecurityTokenGenerator` and made available through `ISecurityTokenProvider`.
 Only the synthetic audit-entity side receives tokens: `Re{E}_a3t_CanRead_Token` and `Re{E}_a3t_CanReadModel_Token`.
 
-See `security/reference.md` for why only these two tokens exist and the consequences for application code — hand-written token hygiene, dynamic retrieval via `ISecurityTokenProvider`, and customising token generation.
+See `security/reference.md` for why only these two tokens exist.
+The consequences for application code — hand-written token hygiene, dynamic retrieval via `ISecurityTokenProvider`, and customising token generation — are covered there too.
 
 ### Audit types are *dynamically* registered in the application domain
 
