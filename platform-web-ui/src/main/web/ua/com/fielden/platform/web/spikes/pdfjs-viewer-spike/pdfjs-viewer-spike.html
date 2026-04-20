@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>PDF.js spike — pdfjs-viewer-element</title>
+    <!--
+        Alternative PDF preview spike that embeds pdfjs-viewer-element
+        (https://github.com/alekswebnet/pdfjs-viewer-element), a drop-in web
+        component that wraps the full Mozilla PDF.js reference viewer.
+
+        Unlike tg-pdf-preview-spike (which renders canvas pages ourselves on
+        top of the raw PDF.js API), this spike delegates everything — toolbar,
+        sidebar, text selection, search, zoom, thumbnails — to the bundled
+        viewer inside an iframe. The trade-off: we get a full-featured UI out
+        of the box, at the cost of an iframe and a fixed look-and-feel that's
+        harder to theme than our canvas-based approach.
+
+        The element and its assets are loaded from jsDelivr for this spike.
+        Production integration would bundle `pdfjs-viewer-element` via the
+        rollup pipeline (add to package.json and import from
+        tg-attachment-preview).
+    -->
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; }
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: #eef0f3;
+            color: #222;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        h1 { font-size: 16px; margin: 0 0 4px; }
+        .hint { font-size: 12px; color: #555; margin-bottom: 12px; }
+        .layout {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 12px;
+            height: calc(100vh - 32px);
+        }
+        .controls {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            font-size: 13px;
+        }
+        .controls label { font-weight: 500; }
+        .controls input[type="text"] {
+            flex: 1;
+            min-width: 220px;
+            font: inherit;
+            padding: 4px 6px;
+            border: 1px solid #bbb;
+            border-radius: 3px;
+        }
+        .controls select {
+            font: inherit;
+            padding: 4px 6px;
+            border: 1px solid #bbb;
+            border-radius: 3px;
+        }
+        .controls button {
+            font: inherit;
+            padding: 4px 10px;
+            border: 1px solid #bbb;
+            background: #fafafa;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .viewer {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        pdfjs-viewer-element {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/pdfjs-viewer-element/dist/pdfjs-viewer-element.js"></script>
+</head>
+<body>
+    <div class="layout">
+        <div>
+            <h1>PDF.js spike — pdfjs-viewer-element</h1>
+            <div class="hint">
+                Drops in Mozilla's full PDF.js reference viewer via the
+                pdfjs-viewer-element web component. Compare against the custom
+                canvas-based tg-pdf-preview-spike to decide which approach fits
+                the tg-attachment-preview replacement.
+            </div>
+            <div class="controls">
+                <label for="src">PDF URL:</label>
+                <input id="src" type="text" value="../sample-local-pdf.pdf">
+                <label for="theme">Theme:</label>
+                <select id="theme">
+                    <option value="AUTOMATIC">Automatic</option>
+                    <option value="LIGHT">Light</option>
+                    <option value="DARK">Dark</option>
+                </select>
+                <label for="pagemode">Sidebar:</label>
+                <select id="pagemode">
+                    <option value="none">None</option>
+                    <option value="thumbs">Thumbnails</option>
+                    <option value="bookmarks">Bookmarks</option>
+                    <option value="attachments">Attachments</option>
+                </select>
+                <button id="load">Load</button>
+                <button id="loadBad">Load (404 test)</button>
+                <button id="clear">Clear</button>
+            </div>
+        </div>
+        <div class="viewer">
+            <pdfjs-viewer-element id="viewer"
+                                  viewer-css-theme="AUTOMATIC"
+                                  pagemode="none">
+            </pdfjs-viewer-element>
+        </div>
+    </div>
+    <script>
+        const viewer = document.getElementById('viewer');
+        const srcInput = document.getElementById('src');
+        const themeSelect = document.getElementById('theme');
+        const pagemodeSelect = document.getElementById('pagemode');
+
+        // The element embeds PDF.js inside an iframe whose document is set via
+        // `srcdoc`, so it has no base URL of its own. Relative PDF URLs would
+        // resolve against `about:srcdoc` and fail. Resolve to absolute against
+        // this page's location before handing to the element.
+        const toAbsolute = (url) => url ? new URL(url, window.location.href).toString() : '';
+
+        const applySrc = (url) => {
+            const abs = toAbsolute(url.trim());
+            if (abs) {
+                viewer.setAttribute('src', abs);
+            } else {
+                viewer.removeAttribute('src');
+            }
+        };
+
+        document.getElementById('load').addEventListener('click', () => {
+            applySrc(srcInput.value);
+        });
+        document.getElementById('loadBad').addEventListener('click', () => {
+            srcInput.value = '../does-not-exist.pdf';
+            applySrc(srcInput.value);
+        });
+        document.getElementById('clear').addEventListener('click', () => {
+            srcInput.value = '';
+            viewer.removeAttribute('src');
+        });
+        themeSelect.addEventListener('change', () => {
+            viewer.setAttribute('viewer-css-theme', themeSelect.value);
+        });
+        pagemodeSelect.addEventListener('change', () => {
+            viewer.setAttribute('pagemode', pagemodeSelect.value);
+        });
+
+        // Load the default PDF once the element is upgraded.
+        applySrc(srcInput.value);
+
+        // Surface the viewer's ready event for easy debugging. 'initPromise'
+        // resolves with { viewerApp: PDFViewerApplication } once the inner
+        // iframe's PDF.js instance is live.
+        viewer.initPromise
+            .then(({ viewerApp }) => console.log('[pdfjs-viewer-spike] viewer ready', viewerApp))
+            .catch(err => console.error('[pdfjs-viewer-spike] viewer init failed', err));
+    </script>
+</body>
+</html>
