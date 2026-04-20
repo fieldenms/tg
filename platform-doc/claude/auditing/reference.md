@@ -182,7 +182,8 @@ Only the synthetic audit-entity side receives tokens: `Re{E}_a3t_CanRead_Token` 
 See `security/reference.md` for why no `CanSave` / `CanDelete` tokens exist.
 
 Consequences:
-- Do not commit hand-written `Re{E}_a3t_*_Token` classes. If you see them in an application module under `security/tokens/`, they are remnants of a pre-generic-auditing design and should be deleted.
+- Do not commit hand-written `Re{E}_a3t_*_Token` classes.
+  If you see them in an application module under `security/tokens/`, they are remnants of a pre-generic-auditing design and should be deleted.
 - Dynamic token retrieval now goes through `ISecurityTokenProvider` rather than `Class.forName` — requests for tokens that are not in the provider are stricter than before, and an application using tokens outside the provider may break.
 - To customise audit-token generation or inject extra tokens, extend `SecurityTokenProvider` and override the appropriate methods.
 
@@ -194,7 +195,8 @@ A freshly instantiated `new ApplicationDomain().entityTypes()` does **not** incl
 `BasicWebServerIocModule.provideApplicationDomain(IAuditTypeFinder, AuditingMode)` provides a **different** `IApplicationDomainProvider` via `@Provides` — a lambda that starts from the generated provider's entity types and, for each `@Audited` entity, appends all of its audit types.
 What gets appended depends on the mode:
 
-* `ENABLED` — appends every persistent audit-entity type (`E_a3t_{n}` for all `n`), each paired with its corresponding audit-prop type, plus the synthetic audit-entity and synthetic audit-prop. All are required to exist; missing types cause failure at binding time.
+* `ENABLED` — appends every persistent audit-entity type (`E_a3t_{n}` for all `n`), each paired with its corresponding audit-prop type, plus the synthetic audit-entity and synthetic audit-prop.
+  All are required to exist; missing types cause failure at binding time.
 * `GENERATION` — same shape, but uses the `find*` optional variants on `IAuditTypeFinder.Navigator` so missing types are silently skipped.
 * `DISABLED` — no audit types are appended; the provider returns only the compile-time types.
 
@@ -306,7 +308,8 @@ public final class GenAudit {
 `AuditGenerationConfig` is a separate `IDomainDrivenTestCaseConfiguration` that forces `AUDIT_MODE = GENERATION` before building the Guice module — otherwise the generator cannot start because audit types for the entities being generated do not yet exist.
 
 > [!WARNING]
-> Do not let the IDE auto-import `ua.com.fielden.platform.audit.AuditGenerationConfig` from the TG platform — that is a test-only class. Create your own `AuditGenerationConfig` in the application's `dev_mod/util` package.
+> Do not let the IDE auto-import `ua.com.fielden.platform.audit.AuditGenerationConfig` from the TG platform — that is a test-only class.
+> Create your own `AuditGenerationConfig` in the application's `dev_mod/util` package.
 
 ### `GenDdl`
 
@@ -380,7 +383,8 @@ Both masters are registered once by the platform and reused for every persistent
 ### Do not hand-wire audit tabs in application compound masters
 
 > [!IMPORTANT]
-> When an existing `@Audited` entity's info/open-master is opened, the platform's `PersistentEntityInfo` compound master already hosts the audit-review menu. Do not add an "Audit" tab to the entity's own `OpenEMasterAction` compound master — that duplicates the platform's standard UI and will drift out of sync.
+> When an existing `@Audited` entity's info/open-master is opened, the platform's `PersistentEntityInfo` compound master already hosts the audit-review menu.
+> Do not add an "Audit" tab to the entity's own `OpenEMasterAction` compound master — that duplicates the platform's standard UI and will drift out of sync.
 
 Concretely, in `*WebUiConfig` classes for audited entities:
 

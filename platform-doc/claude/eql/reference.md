@@ -1,7 +1,9 @@
 # EQL — Detailed Reference
 
-Type-safe fluent query language. Grammar: `platform-eql-grammar/src/main/antlr4/EQL.g4`.
-Utilities: `EntityQueryUtils` (static import). Multi-stage compilation (EqlStage0-3).
+Type-safe fluent query language.
+Grammar: `platform-eql-grammar/src/main/antlr4/EQL.g4`.
+Utilities: `EntityQueryUtils` (static import).
+Multi-stage compilation (EqlStage0-3).
 For the operator/function/fetch cheat sheet, see `quick-reference.md` in this directory.
 
 ```java
@@ -82,7 +84,8 @@ Parentheses: `.beginExpr()...endExpr()`
 
 ## Fetch Models
 
-Control which properties are loaded. Core class: `fetch<T>` (immutable).
+Control which properties are loaded.
+Core class: `fetch<T>` (immutable).
 
 **FetchCategory hierarchy** (most → least comprehensive):
 `ALL_INCL_CALC` → `ALL` → `DEFAULT` → `KEY_AND_DESC` → `ID_AND_VERSION` → `ID_ONLY` → `NONE`
@@ -98,7 +101,8 @@ static final IFetchProvider<PmXref> FETCH_PROVIDER = EntityUtils.fetch(PmXref.cl
 static final fetch<PmXref> FETCH_MODEL = FETCH_PROVIDER.fetchModel();
 ```
 
-Override `createFetchProvider()` in DAOs. Raw `fetch<T>` does **not** support dot-notation — use nested fetch models or `IFetchProvider` instead.
+Override `createFetchProvider()` in DAOs.
+Raw `fetch<T>` does **not** support dot-notation — use nested fetch models or `IFetchProvider` instead.
 
 **Instrumentation precedence:** Fetch model instrumentation overrides `QueryExecutionModel` lightweightness.
 

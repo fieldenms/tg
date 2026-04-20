@@ -28,9 +28,12 @@ props.setProperty(AuditingIocModule.AUDIT_MODE, AuditingMode.DISABLED.name());
 ## Key Helpers
 
 - `AuditUtils.isAudited(Class)` — check whether a type is audited.
-- `IAuditTypeFinder.navigate(E.class)` — lookup audited type ↔ audit type mappings. Throws `AuditingModeException` in `DISABLED` mode.
+- `IAuditTypeFinder.navigate(E.class)` — lookup audited type ↔ audit type mappings.
+  Throws `AuditingModeException` in `DISABLED` mode.
 
 ## Topic-Specific Gotchas
 
-- **Audited entities get a platform-built info master**: The "info" action on every `AbstractPersistentEntity` master opens `PersistentEntityInfo`, which includes an audit-review menu for `@Audited` types. Do not hand-wire an "Audit" tab into an entity's own compound master.
-- **`IApplicationDomainProvider` from the injector ≠ `new ApplicationDomain()`**: The injected provider augments compile-time types with audit types. Use the injected provider wherever the full entity-type list is needed (especially `PersistDomainMetadataModel.persist(...)`).
+- **Audited entities get a platform-built info master**: The "info" action on every `AbstractPersistentEntity` master opens `PersistentEntityInfo`, which includes an audit-review menu for `@Audited` types.
+  Do not hand-wire an "Audit" tab into an entity's own compound master.
+- **`IApplicationDomainProvider` from the injector ≠ `new ApplicationDomain()`**: The injected provider augments compile-time types with audit types.
+  Use the injected provider wherever the full entity-type list is needed (especially `PersistDomainMetadataModel.persist(...)`).

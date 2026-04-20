@@ -210,7 +210,8 @@ private RosterProfile rosterProfile;
 
 ## Union Entities (Polymorphic Associations)
 
-Extend `AbstractUnionEntity`. Model polymorphic references where a property can reference different entity types.
+Extend `AbstractUnionEntity`.
+Model polymorphic references where a property can reference different entity types.
 
 **Constraints:**
 - Only one union property can have a value at a time
@@ -263,8 +264,10 @@ Prefer `ISaveWithFetch<T>` on companion interfaces.
 The DAO then overrides the two-parameter `save(entity, maybeFetch)` instead of the one-parameter `save(entity)`.
 
 **Two-parameter `save()`:** `save(entity, Optional<fetch<T>>)` returns `Either<Long, T>`.
-- `Optional.empty()` — entity is **not** refetched after persistence; returns `Either.left(id)` with just the ID. Use when the caller doesn't need the saved entity back.
-- `Optional.of(fetchModel)` — entity is refetched with the provided fetch model; returns `Either.right(entity)`. Use when the caller needs the saved entity with specific properties populated.
+- `Optional.empty()` — entity is **not** refetched after persistence; returns `Either.left(id)` with just the ID.
+  Use when the caller doesn't need the saved entity back.
+- `Optional.of(fetchModel)` — entity is refetched with the provided fetch model; returns `Either.right(entity)`.
+  Use when the caller needs the saved entity with specific properties populated.
 ```java
 // No refetch — just persist and get the ID
 final Either<Long, WorkOrder> result = super.save(wo, Optional.empty());
@@ -331,7 +334,8 @@ public int batchDelete(final List<Entity> entities) {
 
 ## MetaProperty System
 
-Access via `entity.getProperty(Entity_.propName())`. Key methods:
+Access via `entity.getProperty(Entity_.propName())`.
+Key methods:
 
 | Method | Purpose |
 |--------|---------|

@@ -10,7 +10,8 @@ Test data fixtures using `DbDrivenTestCase` pattern with test-specific Guice mod
 
 ### Assertions
 
-Both JUnit and AssertJ are acceptable. Prefer AssertJ for:
+Both JUnit and AssertJ are acceptable.
+Prefer AssertJ for:
 - **Exceptions:** `assertThatThrownBy(() -> ...).isInstanceOf(X.class).hasMessageContaining("...")`
 - **Collections:** `assertThat(list).hasSize(3).containsExactly("a", "b", "c")`
 - **Descriptive messages:** `.as("context")` is cleaner than JUnit's message parameter
@@ -59,7 +60,8 @@ final var count = co(ReEntity.class).count(
 ```
 
 Relevant platform helpers:
-- `EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(Class, CharSequence)` — creates an unconfigured `QueryProperty` ready to accept `setValue`/`setValue2`/mnemonic state. The `CharSequence` overload accepts metamodel path objects directly.
+- `EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(Class, CharSequence)` — creates an unconfigured `QueryProperty` ready to accept `setValue`/`setValue2`/mnemonic state.
+  The `CharSequence` overload accepts metamodel path objects directly.
 - `QueryProperty.queryPropertyParamName(CharSequence)` — produces the `QP_<path>` key that `DynamicQueryBuilder` expects in the params map.
 - `DynamicQueryBuilder.createQuery(managedType, queryProperties, dates)` — assembles the final query (there is also a 4-arg overload that accepts an `IQueryEnhancer`).
 - `StreamUtils.typeFilter(Class)` — filters a heterogeneous `Map<String, Object>.values()` stream down to just `QueryProperty` instances, useful when the params map mixes types.

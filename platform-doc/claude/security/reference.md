@@ -49,7 +49,8 @@ Only the synthetic audit-entity side receives tokens — persistent audit-entity
 Only `CanRead` and `CanReadModel` are generated — no `CanSave` or `CanDelete` — because audit records are immutable from the user's perspective.
 
 Consequences:
-- Do not commit hand-written `Re{E}_a3t_*_Token` classes. If you see them in an application module under `security/tokens/`, they are remnants of a pre-generic-auditing design and should be deleted.
+- Do not commit hand-written `Re{E}_a3t_*_Token` classes.
+  If you see them in an application module under `security/tokens/`, they are remnants of a pre-generic-auditing design and should be deleted.
 - Dynamic token retrieval now goes through `ISecurityTokenProvider` rather than `Class.forName` — requests for tokens that are not in the provider are stricter than before, and an application using tokens outside the provider may break.
 - To customise audit-token generation or inject extra tokens, extend `SecurityTokenProvider` and override the appropriate methods.
 

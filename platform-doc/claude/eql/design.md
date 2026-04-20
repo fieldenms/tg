@@ -85,7 +85,8 @@ The generated `tokens/` directory is gitignored and should not be committed.
   Type parameter `ET` enables the Fluent API method `model()` to return a query whose entity type is `ET`,
   in contrast to explicit specification via `modelAsEntity(Class)`.
 - Use intersection interfaces (extending multiple interfaces) for steps where multiple continuations are valid (e.g., `IYieldOperandConcatOfNext` extends both `IYieldOperandConcatOfOrderBy` and `IYieldOperandConcatOfSeparator`).
-- For example, if the next step in a method call chain is a single operand, the interface methods should return `ISingleOperand<T, ET>`. Futhermore, `T` may be replaced by other interfaces to specify what `ISingleOperand` should be followed by (e.g., `ISingleOperand<IYieldOperandConcatOfOrderByOperandOrder<T, ET>, ET>`).
+- For example, if the next step in a method call chain is a single operand, the interface methods should return `ISingleOperand<T, ET>`.
+  Furthermore, `T` may be replaced by other interfaces to specify what `ISingleOperand` should be followed by (e.g., `ISingleOperand<IYieldOperandConcatOfOrderByOperandOrder<T, ET>, ET>`).
 
 #### Implementation classes 
 
@@ -101,8 +102,10 @@ One per interface, package-private, extend `AbstractQueryLink` or another implem
 Existing methods (`orderBy()`, `asc()`, `desc()`, `val()`, `param()`, `prop()`, `order()`) can be reused.
 
 There are two kinds of tokens:
-- **Simple tokens** — fluent API methods with no parameters (e.g., `concatOf()`, `asc()`). No special handling needed.
-- **Parameterised tokens** — methods that carry data (e.g., `val(value)`, `prop(name)`, `param(name)`). Each requires a custom token class extending `AbstractParameterisedEqlToken` in `ua.com.fielden.platform.eql.antlr.tokens`.
+- **Simple tokens** — fluent API methods with no parameters (e.g., `concatOf()`, `asc()`).
+  No special handling needed.
+- **Parameterised tokens** — methods that carry data (e.g., `val(value)`, `prop(name)`, `param(name)`).
+  Each requires a custom token class extending `AbstractParameterisedEqlToken` in `ua.com.fielden.platform.eql.antlr.tokens`.
 
 #### Support for `OrderingModel`
 
@@ -196,7 +199,8 @@ return switch (dbVersion) {
 };
 ```
 
-PostgreSQL and H2 use the `default` branch. SQL Server (`MSSQL`) uses `WITHIN GROUP (ORDER BY ...)`.
+PostgreSQL and H2 use the `default` branch.
+SQL Server (`MSSQL`) uses `WITHIN GROUP (ORDER BY ...)`.
 This `switch` pattern is used throughout Stage 3 functions — see `MinuteOf3`, `DayOf3`, `CountDateInterval3` for more examples.
 
 ### Context Threading in Stage 2→3

@@ -57,7 +57,8 @@ select(select(...).model())                  // FROM subquery
 **Aggregates (in yield):** `countAll()`, `countOf()`, `sumOf()`, `avgOf()`, `maxOf()`, `minOf()`
 **CASE WHEN:** `caseWhen().prop("x").eq().val(1).then().val("A").otherwise().val("B").end()`
 Typed endings: `.endAsInt()`, `.endAsStr(50)`, `.endAsDecimal(10, 2)`, `.endAsBool()`
-**Arithmetic:** `.add()`, `.sub()`, `.mult()`, `.div()`, `.mod()`. Parentheses: `.beginExpr()...endExpr()`
+**Arithmetic:** `.add()`, `.sub()`, `.mult()`, `.div()`, `.mod()`.
+**Parentheses:** `.beginExpr()...endExpr()`
 
 ## Fetch Models
 
@@ -82,5 +83,8 @@ Raw `fetch<T>` does **not** support dot-notation — use nested fetch models or 
 
 ## Topic-Specific Gotchas
 
-- **Contiguous entity IDs**: All entities share a single ID sequence — IDs are globally unique across tables. Union entity `.id()` compiles to `CASE WHEN member1 IS NOT NULL THEN member1 WHEN member2 IS NOT NULL THEN member2 ... END`. Usable in `groupBy`, `yield`, and JOIN conditions.
-- **`@Calculated` properties expand in SQL**: `sumOf().prop(cost)` where `cost = hours * rate` becomes `SUM(hours * rate)`. Database covering indexes must target the operand columns.
+- **Contiguous entity IDs**: All entities share a single ID sequence — IDs are globally unique across tables.
+  Union entity `.id()` compiles to `CASE WHEN member1 IS NOT NULL THEN member1 WHEN member2 IS NOT NULL THEN member2 ... END`.
+  Usable in `groupBy`, `yield`, and JOIN conditions.
+- **`@Calculated` properties expand in SQL**: `sumOf().prop(cost)` where `cost = hours * rate` becomes `SUM(hours * rate)`.
+  Database covering indexes must target the operand columns.

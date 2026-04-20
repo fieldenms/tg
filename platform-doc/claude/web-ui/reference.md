@@ -167,7 +167,8 @@ Requires:
 - Menu item classes extending `AbstractFunctionalEntityForCompoundMenuItem<T>`
 - A producer class for the functional entity
 
-**Key fetch provider note:** Menu item entities receive their key from the compound master's root entity. If a menu item DAO needs a key property, the fetch provider on the **root entity's companion** must include it — adding one to the menu item's own companion has no effect.
+**Key fetch provider note:** Menu item entities receive their key from the compound master's root entity.
+If a menu item DAO needs a key property, the fetch provider on the **root entity's companion** must include it — adding one to the menu item's own companion has no effect.
 
 ## Action Configuration
 
@@ -274,7 +275,8 @@ new MasterWithCentreBuilder<OpenAction>()
     .done();
 ```
 
-Use sparingly — prefer declarative configuration. Typical uses: coordinating refresh between insertion points and parent centres, custom DOM manipulation.
+Use sparingly — prefer declarative configuration.
+Typical uses: coordinating refresh between insertion points and parent centres, custom DOM manipulation.
 
 ## Query Enhancer Pattern
 

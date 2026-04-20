@@ -25,7 +25,8 @@ Generally only `SAVE` is used. `SAVE_NEW` / `SAVE_MODIFIED` are for the rare cas
 public int batchDelete(final Collection<Long> entitiesIds) { ... }
 ```
 
-Apply to DAO methods and producers. Combined with `@SessionRequired` for transactional methods.
+Apply to DAO methods and producers.
+Combine with `@SessionRequired` for transactional methods.
 
 ## Topic-Specific Gotcha
 
