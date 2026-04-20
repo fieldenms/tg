@@ -46,6 +46,7 @@ public int batchDelete(final Collection<Long> entitiesIds) { ... }
 
 Security tokens for audit types (`Re{E}_a3t_CanRead_Token`, `Re{E}_a3t_CanReadModel_Token`) are generated at application startup by `ISecurityTokenGenerator` and served through `ISecurityTokenProvider`.
 Only the synthetic audit-entity side receives tokens — persistent audit-entity types (`E_a3t_{n}`) and audit-prop types do not, because users never query those directly.
+Only `CanRead` and `CanReadModel` are generated — no `CanSave` or `CanDelete` — because audit records are immutable from the user's perspective.
 
 Consequences:
 - Do not commit hand-written `Re{E}_a3t_*_Token` classes. If you see them in an application module under `security/tokens/`, they are remnants of a pre-generic-auditing design and should be deleted.
