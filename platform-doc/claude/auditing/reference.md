@@ -400,8 +400,11 @@ props.setProperty(AuditingIocModule.AUDIT_MODE, AuditingMode.DISABLED.name());
 // audit.path is not needed when the mode is DISABLED
 ```
 
+DAO tests do not assert on audit rows — their role is to exercise validators, definers, and business logic, for which audit-row generation is incidental overhead.
+Disabling in this context is a deliberate speed trade-off, not a gap in coverage.
+
 Data-population configurations (`DataPopulationConfig`) and the live webapp still run with `AUDIT_MODE = ENABLED`, so web-UI tests and manual testing exercise the audit path.
-If a specific test genuinely needs auditing on, it should configure a custom `IDomainDrivenTestCaseConfiguration` rather than flip the shared DAO test config.
+If a specific test genuinely needs auditing on — including any test that reflects over audit types via `IAuditTypeFinder.navigate*` (which throws `AuditingModeException` under `DISABLED`) — it should configure a custom `IDomainDrivenTestCaseConfiguration` with `AUDIT_MODE = ENABLED` or `GENERATION`, rather than flip the shared DAO test config.
 
 Do not interpret "tests must pass with auditing enabled" as "every DAO test must run with `AUDIT_MODE = ENABLED`" — the requirement is satisfied at the webapp and data-population level.
 

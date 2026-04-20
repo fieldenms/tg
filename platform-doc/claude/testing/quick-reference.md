@@ -1,4 +1,4 @@
-# Testing & Security — Quick Reference
+# Testing — Quick Reference
 
 ## Indirect Testing Pattern
 
@@ -23,18 +23,6 @@ Do not use `FETCH_PROVIDER` for read-only access to basic properties.
 
 `AUDIT_MODE = DISABLED` in DAO test config is expected — see `auditing/reference.md`.
 
-## Security Token Templates
+## Authorization in Tests
 
-| Template | Token Name Pattern | Purpose |
-|---|---|---|
-| `SAVE` | `Entity_CanSave_Token` | Standard save (most common) |
-| `SAVE_NEW` / `SAVE_MODIFIED` | `Entity_CanSaveNew_Token` | Separate create vs update (rare) |
-| `DELETE` | `Entity_CanDelete_Token` | Deletion |
-| `READ` | `Entity_CanRead_Token` | Reading data |
-| `READ_MODEL` | `Entity_CanReadModel_Token` | Reading data model |
-| `EXECUTE` | `Entity_CanExecute_Token` | Action execution |
-| `MODIFY` | `Entity_CanModify_Property_Token` | Property-level modification |
-| `MASTER_OPEN` | `Entity_CanOpen_Token` | Opening entity masters |
-| `MASTER_MENU_ITEM_ACCESS` | `Entity_CanAccess_Token` | Compound master menu items |
-
-Apply via `@Authorise(Token.class)` on DAO methods and producers.
+DAO methods and producers are guarded by `@Authorise(Token.class)` — see `security/quick-reference.md` for the token templates.

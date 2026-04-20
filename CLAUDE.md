@@ -94,5 +94,6 @@ Read the quick reference first; read the detailed file only when you need depth.
 | `entity-model/` | Hierarchy, annotations, property patterns, companions, calculated/synthetic, metamodel | `reference.md` — composite keys, activatable, validators/definers, union entities, producers, ISaveWithFetch, MetaProperty, declarative filters, generative entities |
 | `eql/` | Query construction, operators, functions, fetch models | `reference.md` — JOIN patterns, pivot, CASE WHEN, critCondition, QEM. `design.md` — EQL internals, adding new functions |
 | `web-ui/` | Standard actions, criterion/editor types, centre/master options | `reference.md` — full builder APIs, action config, query enhancers, insertion points, rendering customisers |
-| `testing/` | Fetch patterns, indirect testing, test data caching, security tokens | `reference.md` — DynamicQueryBuilder testing, test clock, web resource testing, authorization |
+| `testing/` | Fetch patterns, indirect testing, test data caching | `reference.md` — DynamicQueryBuilder testing, test clock, web resource testing |
+| `security/` | Token templates, `@Authorise` usage | `reference.md` — authorization levels, infrastructure, runtime-generated audit tokens |
 | `auditing/` | @Audited basics, generated types, test config | `reference.md` — full type hierarchy, versioning, runtime plumbing, GenAudit, Web UI |
