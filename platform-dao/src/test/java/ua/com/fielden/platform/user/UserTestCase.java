@@ -51,14 +51,21 @@ public class UserTestCase extends AbstractDaoTestCase {
 
     @Test
     public void new_active_user_can_be_saved_with_empty_fetch() {
-        coUser.save(new_(User.class, "USER_TEST").setActive(true).setBase(true).setEmail("USER_TEST@company.com"),
-                    Optional.empty());
+        final var newUser = new_(User.class, "USER_TEST")
+                .setActive(true)
+                .setBase(true)
+                .setEmail("USER_TEST@company.com");
+        assertThatCode(() -> coUser.save(newUser, Optional.empty())).doesNotThrowAnyException();
     }
 
     @Test
     public void existing_inactive_user_without_password_can_be_activated_by_saving_with_empty_fetch() {
-        final var user = coUser.save(new_(User.class, "USER_TEST").setActive(false).setBase(true).setEmail("USER_TEST@company.com"));
-        coUser.save(user.setActive(true), Optional.empty());
+        final var user = coUser.save(new_(User.class, "USER_TEST")
+                                             .setActive(false)
+                                             .setBase(true)
+                                             .setEmail("USER_TEST@company.com"));
+        user.setActive(true);
+        assertThatCode(() -> coUser.save(user, Optional.empty())).doesNotThrowAnyException();
     }
 
     @Test
