@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.antlr;
 
 import org.antlr.v4.runtime.Token;
+import ua.com.fielden.platform.eql.antlr.EQLParser.ComparisonOperand_ExprContext;
 import ua.com.fielden.platform.eql.antlr.EQLParser.ComparisonOperand_MultiContext;
 import ua.com.fielden.platform.eql.antlr.exceptions.EqlSyntaxException;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
@@ -15,8 +16,6 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
 import java.util.List;
 import java.util.function.Function;
-
-import static ua.com.fielden.platform.eql.antlr.EQLParser.ComparisonOperand_SingleContext;
 
 final class ComparisonOperandVisitor extends AbstractEqlVisitor<ComparisonOperandVisitor.Finisher> {
 
@@ -44,8 +43,8 @@ final class ComparisonOperandVisitor extends AbstractEqlVisitor<ComparisonOperan
     }
 
     @Override
-    public Finisher visitComparisonOperand_Single(final ComparisonOperand_SingleContext ctx) {
-        final ISingleOperand1<? extends ISingleOperand2<?>> operand = ctx.singleOperand().accept(new SingleOperandVisitor(transformer));
+    public Finisher visitComparisonOperand_Expr(final ComparisonOperand_ExprContext ctx) {
+        final ISingleOperand1<? extends ISingleOperand2<?>> operand = ctx.expr().accept(new SingleOperandVisitor(transformer));
         return fn -> fn.apply(operand);
     }
 
