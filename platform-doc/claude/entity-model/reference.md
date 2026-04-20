@@ -316,12 +316,13 @@ public int batchDelete(final Collection<Long> entitiesIds) {
 Only override `batchDelete(Collection<Long>)` — skip `batchDelete(List<T>)`.
 The generic delete action in Entity Centres invokes the `Collection<Long>` overload, and having both overrides tends to confuse developers without adding behaviour.
 
-Override `batchDelete(List<T>)` only when a caller genuinely needs logic that depends on the full entity instances (not just their IDs) — e.g., pre-deletion notifications, event publishing, or validation over entity state:
+The original intent for `batchDelete(List<T>)` was a marginal convenience in cases where a list of entities is present.
+This method will likely be deprecated.
+If you must override it, simply invoke `defaultBatchDelete(entities)` as per the example below:
 ```java
 @Override @SessionRequired @Authorise(Entity_CanDelete_Token.class)
 public int batchDelete(final List<Entity> entities) {
-    notifyPreDelete(entities);                 // logic that needs whole entities, not just IDs
-    return defaultBatchDelete(entities);       // delegates to batchDelete(Collection<Long>) — ID-based validation there still runs
+    return defaultBatchDelete(entities); // delegates to batchDelete(Collection<Long>)
 }
 ```
 
