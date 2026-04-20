@@ -7,10 +7,13 @@ For the hierarchy table, annotation lists, companion basics, calculated property
 
 - `@DomainEntity` — marks synthetic entities (union entities, report entities) for metamodel generation and domain registration.
 - `@WithMetaModel` — explicitly enables metamodel generation for non-standard entities (e.g., action entities that need metamodel references).
-- `@WithoutMetaModel` — explicitly disables compile-time metamodel generation for the annotated entity. Used on generated audit types.
+- `@WithoutMetaModel` — explicitly disables compile-time metamodel generation for the annotated entity.
+  Used on generated audit types.
 - `@SupportsEntityExistsValidation` — enables entity existence validation for non-persistent entities used as criteria grouping properties.
-- `@Audited` — marks a persistent entity as audited; the platform generates audit-entity types for it and automatically creates audit records on save. See `auditing/reference.md` for the full facility.
-- `@DisableAuditing` — on a field of an `@Audited` entity, excludes the property from auditing. To opt `key` or `desc` out, redeclare them in the subclass first.
+- `@Audited` — marks a persistent entity as audited; the platform generates audit-entity types for it and automatically creates audit records on save.
+  See `auditing/reference.md` for the full facility.
+- `@DisableAuditing` — on a field of an `@Audited` entity, excludes the property from auditing.
+  To opt `key` or `desc` out, redeclare them in the subclass first.
 
 **`@IsProperty` parameters:** `@IsProperty(Long.class)` for collection element type, `@IsProperty(length = 8000)` for string length, `@IsProperty(assignBeforeSave = true)` for auto-assigned values.
 
