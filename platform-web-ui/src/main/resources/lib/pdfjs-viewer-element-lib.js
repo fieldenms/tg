@@ -1,0 +1,1 @@
+import 'pdfjs-viewer-element';
