@@ -46,6 +46,13 @@
             <artifactId>platform-web-resources</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>fielden</groupId>
+            <artifactId>platform-web-resources</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>io.modelcontextprotocol.sdk</groupId>
@@ -69,6 +76,11 @@
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <version>${mssql.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
