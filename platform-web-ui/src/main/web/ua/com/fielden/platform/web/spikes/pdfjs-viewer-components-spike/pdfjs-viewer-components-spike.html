@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>PDF.js spike — pdf_viewer components</title>
+    <!--
+        Third PDF.js spike in the series.
+
+        Unlike pdfjs-spike (raw canvas rendering we drive ourselves) and
+        pdfjs-viewer-spike (the full Mozilla reference viewer inside an
+        iframe), this spike uses pdfjs-dist's `pdf_viewer` module directly:
+        PDFViewer + EventBus + PDFLinkService + PDFFindController, rendered
+        straight into our DOM with no iframe and no toolbar.
+
+        That gives us pagination, text selection, search, and link handling
+        out of the box — and leaves styling/chrome entirely up to us. If the
+        attachment-preview replacement needs a custom surrounding UI, this
+        is the approach that fits.
+
+        PDF.js core, its worker, the viewer CSS, cmaps, fonts, and wasm are
+        pulled from jsDelivr for now so the spike runs without changes to
+        rollup. Production integration would add `pdfjs-dist` to the
+        platform package.json and serve those assets from
+        /resources/polymer/pdfjs-dist/.
+    -->
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; }
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: #eef0f3;
+            color: #222;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        h1 { font-size: 16px; margin: 0 0 4px; }
+        .hint { font-size: 12px; color: #555; margin-bottom: 12px; }
+        .layout {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 12px;
+            height: calc(100vh - 32px);
+        }
+        .controls {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            font-size: 13px;
+        }
+        .controls label { font-weight: 500; }
+        .controls input[type="text"] {
+            flex: 1;
+            min-width: 220px;
+            font: inherit;
+            padding: 4px 6px;
+            border: 1px solid #bbb;
+            border-radius: 3px;
+        }
+        .controls button {
+            font: inherit;
+            padding: 4px 10px;
+            border: 1px solid #bbb;
+            background: #fafafa;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        /*
+            PDFViewer requires its container to be position:absolute (or
+            equivalent) so pages can lay out with `top` offsets. The wrapper
+            is position:relative so the container fills it without escaping.
+        */
+        .viewer-wrap {
+            position: relative;
+            background: #525659;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #viewerContainer {
+            position: absolute;
+            inset: 0;
+            overflow: auto;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/web/pdf_viewer.css">
+</head>
+<body>
+    <div class="layout">
+        <div>
+            <h1>PDF.js spike — pdf_viewer components</h1>
+            <div class="hint">
+                Uses pdfjs-dist's PDFViewer/EventBus/PDFLinkService directly
+                — no iframe, no wrapper web component. Good baseline for a
+                custom-chrome attachment preview.
+            </div>
+            <div class="controls">
+                <label for="src">PDF URL:</label>
+                <input id="src" type="text" value="../sample-local-pdf.pdf">
+                <button id="load">Load</button>
+                <button id="prev">Prev</button>
+                <button id="next">Next</button>
+                <span id="pageInfo"></span>
+            </div>
+        </div>
+        <div class="viewer-wrap">
+            <div id="viewerContainer">
+                <div id="viewer" class="pdfViewer"></div>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import * as pdfjs from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.mjs';
+        import {
+            EventBus,
+            GenericL10n,
+            PDFLinkService,
+            PDFFindController,
+            PDFViewer,
+        } from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/web/pdf_viewer.mjs';
+
+        // Workers run the heavy parsing. Without this pdf.js logs a warning
+        // and falls back to a single-threaded "fake worker" that is slower
+        // and occasionally fails on non-trivial documents.
+        pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+
+        // cmaps map CID-encoded character codes (common in CJK fonts) to
+        // Unicode. standard_fonts provides fallback fonts for documents
+        // that reference but don't embed the 14 PDF standard fonts. wasm
+        // contains image decoders (JPEG 2000 / JBIG2). sandboxBundleSrc is
+        // loaded for PDFs containing JavaScript (AcroForms, etc.). Missing
+        // any of these silently breaks text extraction or interactivity.
+        const CMAP_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/cmaps/';
+        const STANDARD_FONTS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/standard_fonts/';
+        const WASM_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/web/wasm/';
+        const SANDBOX_BUNDLE_SRC = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.sandbox.mjs';
+
+        const container = document.getElementById('viewerContainer');
+        const eventBus = new EventBus();
+        const pdfLinkService = new PDFLinkService({ eventBus });
+        const pdfFindController = new PDFFindController({ eventBus, linkService: pdfLinkService });
+        // l10n is required in 4.x — without it button labels/messages
+        // generated by the text layer renderer can throw.
+        const l10n = new GenericL10n('en');
+        const pdfViewer = new PDFViewer({
+            container,
+            eventBus,
+            linkService: pdfLinkService,
+            findController: pdfFindController,
+            l10n,
+            textLayerMode: 1,
+        });
+        pdfLinkService.setViewer(pdfViewer);
+
+        const srcInput = document.getElementById('src');
+        const pageInfo = document.getElementById('pageInfo');
+
+        const updatePageInfo = () => {
+            pageInfo.textContent = `Page ${pdfViewer.currentPageNumber} / ${pdfViewer.pagesCount}`;
+        };
+
+        eventBus.on('pagesinit', () => {
+            pdfViewer.currentScaleValue = 'page-width';
+            updatePageInfo();
+        });
+        eventBus.on('pagechanging', updatePageInfo);
+        eventBus.on('pagerendered', async (e) => {
+            const textContent = await e.source.pdfPage.getTextContent();
+            console.log(`[spike] page ${e.pageNumber}: ${textContent.items.length} text items`);
+        });
+
+        const load = async (url) => {
+            try {
+                const loadingTask = pdfjs.getDocument({
+                    url: new URL(url.trim(), window.location.href).href,
+                    cMapUrl: CMAP_URL,
+                    cMapPacked: true,
+                    standardFontDataUrl: STANDARD_FONTS_URL,
+                    wasmUrl: WASM_URL,
+                });
+                const pdf = await loadingTask.promise;
+                pdfViewer.setDocument(pdf);
+                pdfLinkService.setDocument(pdf, null);
+            } catch (err) {
+                console.error('[spike] load failed', err);
+            }
+        };
+
+        document.getElementById('load').addEventListener('click', () => load(srcInput.value));
+        document.getElementById('prev').addEventListener('click', () => {
+            if (pdfViewer.currentPageNumber > 1) pdfViewer.currentPageNumber--;
+        });
+        document.getElementById('next').addEventListener('click', () => {
+            if (pdfViewer.currentPageNumber < pdfViewer.pagesCount) pdfViewer.currentPageNumber++;
+        });
+
+        load(srcInput.value);
+    </script>
+</body>
+</html>
