@@ -24,15 +24,12 @@ const ATTACHMENT_KIND = {
     HYPERLINK: 'HYPERLINK'
 }
 
-/** The rendering pipeline for hyperlink attachments: each renderer is tried in order until one succeeds. */
-const HYPERLINK_RENDER_PIPELINE = [ATTACHMENT_KIND.IMAGE, ATTACHMENT_KIND.PDF];
-
 /**
  * Guesses the attachment kind from the URL's pathname extension.
- * Returns `PDF` for `.pdf`, `IMAGE` for common raster/vector image extensions, or null when the extension is unrecognised or the URL is malformed.
+ * Returns `PDF` for `.pdf`, `IMAGE` for common raster/vector image extensions, or `HYPERLINK` when the extension is unrecognised or the URL is malformed.
  *
- * This is used to pick a starting point in HYPERLINK_RENDER_PIPELINE that matches the actual resource type,
- * avoiding misrenders such as macOS Safari rasterising a PDF as an image when the `<img>` renderer is attempted first.
+ * Callers use the result directly as `_effectiveKind`: an unguessable URL ends up in the HYPERLINK alt view,
+ * rather than being rendered with an arbitrary default renderer that would likely just fail.
  */
 const guessAttachmentKindFromUrl = function (url) {
     try {
@@ -40,7 +37,7 @@ const guessAttachmentKindFromUrl = function (url) {
         if (path.endsWith('.pdf')) return ATTACHMENT_KIND.PDF;
         if (/\.(png|jpe?g|gif|webp|svg|bmp|ico|avif)$/.test(path)) return ATTACHMENT_KIND.IMAGE;
     } catch (e) {}
-    return null;
+    return ATTACHMENT_KIND.HYPERLINK;
 };
 
 const template = html`
@@ -111,7 +108,7 @@ const template = html`
         <img id="imageLoader" src$="[[_attachmentUri]]" on-error="_resourceLoadError"/>
     </template>
     <template is="dom-if" if="[[_isPdfVisible(_isPdfPreviewAvailable, _effectiveKind, _wasConfirmed, _attachmentUri)]]" restamp>
-        <object id="pdfViewer" data$="[[_attachmentUri]]" type="application/pdf" on-error="_resourceLoadError"></object>
+        <object id="pdfViewer" data$="[[_attachmentUri]]" type="application/pdf" on-error="_resourceLoadError" on-load="_resourceLoadSuccess"></object>
     </template>
     <div id="altView" hidden$="[[!_isAltVisible(_effectiveKind, _attachmentUri)]]">
         <span id="message">[[_getAltViewText(_linkCheckRes, _wasConfirmed, _kind, _isPdfPreviewAvailable)]]</span>
@@ -130,11 +127,11 @@ const template = html`
  * For file attachments (IMAGE, PDF), the element renders the appropriate viewer directly.
  * If loading fails, it falls back to an alt view with a DOWNLOAD button.
  *
- * For hyperlink attachments, a rendering pipeline (IMAGE -> PDF) is tried in order.
+ * For hyperlink attachments, the initial renderer is picked from the URL extension (IMAGE or PDF); if the URL doesn't reveal a type,
+ * the alt view is shown immediately with an OPEN button rather than speculatively attempting to render.
  * If the hyperlink is untrusted, the alt view prompts the user to confirm before attempting any preview.
- * After confirmation, the pipeline runs; if all renderers fail, the link opens automatically.
- * For already-trusted hyperlinks, the pipeline runs on load; if all renderers fail,
- * the alt view shows with an OPEN button (no auto-open).
+ * After confirmation, a single render attempt is made; if it fails, the link opens automatically.
+ * For already-trusted hyperlinks, the render runs on load; if it fails, the alt view shows with an OPEN button (no auto-open).
  *
  * Visibility invariant: exactly one of the image preview, PDF preview, or alt view is visible at any time.
  */
@@ -181,7 +178,7 @@ class TgAttachmentPreview extends PolymerElement {
                 value: null
             },
 
-            /** The rendering kind chosen by the server-side producer: "IMAGE", "PDF", "HYPERLINK", or null when no preview is available. */
+            /** The rendering kind chosen by the server-side producer: "IMAGE", "PDF", "HYPERLINK", or HYPERLINK when the kind couldn't be determined. */
             _kind: {
                 type: String,
                 value: null
@@ -192,9 +189,9 @@ class TgAttachmentPreview extends PolymerElement {
              *  - `null` — no attachment bound (loading view is shown);
              *  - `IMAGE` / `PDF` — the corresponding inline preview is active;
              *  - `HYPERLINK` — the alt view is shown, covering: untrusted-hyperlink confirmation,
-             *    exhausted hyperlink render pipeline, or fallback for a file that cannot be previewed.
-             * For file attachments this starts as `_kind`; a PDF on a browser without inline PDF support is immediately advanced to `HYPERLINK` by the observer.
-             * For trusted hyperlinks it cycles through HYPERLINK_RENDER_PIPELINE and settles on `HYPERLINK` if no renderer succeeds.
+             *    a failed render attempt, or an attachment whose type cannot be determined.
+             * For file attachments this starts as `_kind`; a PDF on a browser without inline PDF support is immediately collapsed to `HYPERLINK` by the observer.
+             * For trusted hyperlinks it starts at IMAGE/PDF (guessed from URL) or HYPERLINK (when the URL reveals nothing), and collapses to HYPERLINK on any render failure.
              */
             _effectiveKind: {
                 type: String,
@@ -212,7 +209,7 @@ class TgAttachmentPreview extends PolymerElement {
                 value: !(isMobileApp() || isIPhoneOs() || isIPadOs() || isMacSafari())
             },
 
-            /** Indicates that the link should auto-open if the rendering pipeline exhausts after a fresh confirmation. */
+            /** Indicates that the link should auto-open if the inline render attempt fails after a fresh confirmation. */
             _pendingLinkOpen: {
                 type: Boolean,
                 value: false
@@ -240,31 +237,26 @@ class TgAttachmentPreview extends PolymerElement {
     }
 
     /**
-     * Handles load errors from `<img>` and `<object>` elements.
-     * For confirmed hyperlinks, advances the rendering pipeline to the next renderer.
-     * For file attachments, falls back to the alt view so the user can still download the file.
+     * Handles load errors from the `<img>` and `<object>` elements.
+     * Any render failure collapses to the alt view (HYPERLINK), regardless of attachment kind — there's no "try another renderer" step.
      */
     _resourceLoadError() {
-        if (this._kind === ATTACHMENT_KIND.HYPERLINK && this._wasConfirmed) {
-            this._advanceHyperlinkPipeline();
-        } else if (this._kind !== ATTACHMENT_KIND.HYPERLINK) {
-            this._effectiveKind = ATTACHMENT_KIND.HYPERLINK;
-        }
+        this._fallbackToHyperlink();
     }
 
-    /** For hyperlinks, advances _effectiveKind to the next renderer in HYPERLINK_RENDER_PIPELINE, or to HYPERLINK (alt view) when all have been exhausted. */
-    _advanceHyperlinkPipeline() {
-        const idx = HYPERLINK_RENDER_PIPELINE.indexOf(this._effectiveKind);
-        if (idx >= 0 && idx < HYPERLINK_RENDER_PIPELINE.length - 1) {
-            this._effectiveKind = HYPERLINK_RENDER_PIPELINE[idx + 1];
-        } else {
-            this._effectiveKind = ATTACHMENT_KIND.HYPERLINK;
-            // If the pipeline exhausted right after a fresh confirmation, open the link automatically
-            // instead of making the user click OPEN again.
-            if (this._pendingLinkOpen && this._wasConfirmed) {
-                this._pendingLinkOpen = false;
-                this._openAttachment();
-            }
+    _resourceLoadSuccess() {
+        console.log("PDF was loaded");
+    }
+
+    /**
+     * Collapses `_effectiveKind` to HYPERLINK (alt view).
+     * When a freshly-confirmed hyperlink fails to render inline, the link is opened automatically so the user isn't asked to click OPEN again.
+     */
+    _fallbackToHyperlink() {
+        this._effectiveKind = ATTACHMENT_KIND.HYPERLINK;
+        if (this._pendingLinkOpen && this._wasConfirmed) {
+            this._pendingLinkOpen = false;
+            this._openAttachment();
         }
     }
 
@@ -288,14 +280,11 @@ class TgAttachmentPreview extends PolymerElement {
 
     /**
      * Observer for `_effectiveKind`.
-     *
-     * When the active renderer becomes PDF but the browser can't display PDFs inline, short-circuits the pipeline:
-     * for file PDFs this falls back to the alt view (OPEN button); for hyperlink PDFs this advances past the PDF stage,
-     * letting the remaining pipeline logic decide whether to open the link or show the alt view.
+     * When the active renderer becomes PDF but the browser can't display PDFs inline, collapses to the alt view (OPEN/DOWNLOAD button).
      */
     _effectiveKindChanged(newKind) {
         if (newKind === ATTACHMENT_KIND.PDF && !this._isPdfPreviewAvailable) {
-            this._advanceHyperlinkPipeline();
+            this._fallbackToHyperlink();
         }
     }
 
@@ -309,7 +298,7 @@ class TgAttachmentPreview extends PolymerElement {
         openLink(url, target);
     }
 
-    /** Initialises preview state for the given attachment: determines the rendering kind, checks link trust, and starts the pipeline if applicable. */
+    /** Initialises preview state for the given attachment: determines the rendering kind, checks link trust, and picks the initial renderer if applicable. */
     _updateAttachmentPreviewProperties(attachment) {
         this._linkCheckRes = null;
         this._wasConfirmed = true;
@@ -319,19 +308,19 @@ class TgAttachmentPreview extends PolymerElement {
         this._pendingLinkOpen = false;
         if (attachment && attachment.attachmentUri) {
             this._attachmentUri = attachment.attachmentUri;
-            this._kind = ATTACHMENT_KIND[attachment.kind] || null;
+            // Unknown or missing kinds are treated as HYPERLINK so the code below runs the hyperlink flow (trust check, alt view with OPEN) rather than leaving the element in a loading state.
+            this._kind = ATTACHMENT_KIND[attachment.kind] || ATTACHMENT_KIND.HYPERLINK;
             if (this._kind === ATTACHMENT_KIND.HYPERLINK && isSupportedLink(this._attachmentUri)) {
                 this._linkCheckRes = canOpenLinkWithoutConfirmation(this._attachmentUri);
                 if (this._linkCheckRes && !this._linkCheckRes.canOpenWithoutConfirmation) {
                     this._wasConfirmed = false;
                     this._effectiveKind = ATTACHMENT_KIND.HYPERLINK;
                 } else {
-                    this._effectiveKind = guessAttachmentKindFromUrl(this._attachmentUri) || HYPERLINK_RENDER_PIPELINE[0];
+                    this._effectiveKind = guessAttachmentKindFromUrl(this._attachmentUri);
                 }
             } else {
-                // For IMAGE/PDF file attachments set the effective kind directly.
-                // For unrecognised kinds, fall back to the alt view (DOWNLOAD button) rather than leaving `null`, which means "loading".
-                this._effectiveKind = this._kind || ATTACHMENT_KIND.HYPERLINK;
+                // Either an IMAGE/PDF file attachment (render directly) or a HYPERLINK whose URI isn't a supported link (show alt view).
+                this._effectiveKind = this._kind;
             }
         }
     }
@@ -367,7 +356,7 @@ class TgAttachmentPreview extends PolymerElement {
 
     /**
      * Whether the alt view should be visible.
-     * True when either `_effectiveKind` is HYPERLINK (trust prompt, exhausted pipeline, or unsupported kind)
+     * True when either `_effectiveKind` is HYPERLINK (trust prompt, failed render, unknown type, or unsupported URI)
      * or no URI is bound (non-previewable file such as `.docx`, where the server returns a null preview URI).
      */
     _isAltVisible (_effectiveKind, _attachmentUri) {
@@ -402,19 +391,26 @@ class TgAttachmentPreview extends PolymerElement {
         // Tapping the OPEN button should open the link, but with security verification.
         if (this._linkCheckRes || (this._kind === ATTACHMENT_KIND.PDF && !this._isPdfPreviewAvailable)) {
             if (this._wasConfirmed) {
-                // No renderer in the pipeline could preview the linked resource.
+                // Either the inline render failed, or the URL gave no hint about the resource type.
                 // Open the link instead.
                 this._openAttachment();
             }
             // If the link is not yet trusted, confirm it first.
             else if (this._linkCheckRes) {
                 confirmLinkAndThen(this._linkCheckRes, opt => {
-                    // Mark the attachment as confirmed if the user accepts it.
-                    // The next assignments will trigger the rendering pipeline to try each renderer in order.
-                    // If all renderers fail, _pendingLinkOpen causes the link to open automatically.
-                    this._effectiveKind = guessAttachmentKindFromUrl(this._attachmentUri) || HYPERLINK_RENDER_PIPELINE[0];
-                    this._pendingLinkOpen = true;
                     this._wasConfirmed = true;
+                    this._pendingLinkOpen = true;
+                    const guessed = guessAttachmentKindFromUrl(this._attachmentUri);
+                    if (guessed === ATTACHMENT_KIND.HYPERLINK) {
+                        // No inline render to attempt — open the link directly (handles both the
+                        // "URL reveals no type" case and the "_effectiveKind was already HYPERLINK" case
+                        // where a bare assignment wouldn't fire the observer).
+                        this._fallbackToHyperlink();
+                    } else {
+                        // Try the inline renderer. If it errors, _resourceLoadError falls back to
+                        // HYPERLINK and _pendingLinkOpen causes the link to open automatically.
+                        this._effectiveKind = guessed;
+                    }
                 });
             }
         }
