@@ -178,7 +178,15 @@ class TgAttachmentPreview extends PolymerElement {
                 value: null
             },
 
-            /** The rendering kind chosen by the server-side producer: "IMAGE", "PDF", "HYPERLINK", or HYPERLINK when the kind couldn't be determined. */
+            /**
+             * The rendering kind chosen by the server-side producer: "IMAGE", "PDF", or "HYPERLINK".
+             * `HYPERLINK` also serves as the fallback when the server didn't supply a recognised kind,
+             * so the element drops straight to the alt view rather than leaving the loading view up.
+             *
+             * The alt view's action button depends on whether the URI is an openable link:
+             *  - supported external link (http/https) → trust check → OPEN in a new tab;
+             *  - anything else (e.g., an attachment URI for an undetermined file kind) → DOWNLOAD.
+             */
             _kind: {
                 type: String,
                 value: null
