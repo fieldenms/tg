@@ -49,6 +49,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.fetch.FetchModelReconstructor.reconstruct;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.security.user.User.*;
 import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER;
@@ -153,7 +154,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         final Either<Long, User> savedUser;
         if ((!user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user)) ||
             ( user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user) && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
-            savedUser = super.save(user, maybeFetch);
+            savedUser = super.save(user, Optional.of(reconstruct(user).unionWith(maybeFetch)));
             final Function<Long, EntityCompanionException> error = (Long id) -> new EntityCompanionException(ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE.formatted(id, user));
             newUserNotifier.notify(assignPasswordResetUuid(savedUser.orElseThrow(error).getKey(), newUserPasswordRestExpirationTime()).orElseThrow(() -> new SecurityException(ERR_INITIATING_PASSWORD_RESET)));
         } else {
