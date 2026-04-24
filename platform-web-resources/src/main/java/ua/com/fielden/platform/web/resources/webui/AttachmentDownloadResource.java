@@ -12,12 +12,11 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
+import ua.com.fielden.platform.attachment.PreviewKind;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-
-import java.util.Set;
 
 import static com.google.common.net.UrlEscapers.urlPathSegmentEscaper;
 import static java.lang.String.format;
@@ -32,20 +31,12 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 ///
 /// By default, the response uses a `TYPE_ATTACHMENT` content disposition, which causes browsers to offer the
 /// file as a download. Clients that want the browser to render the file inline (e.g. a PDF quick preview) can pass
-/// `?inline=true`. The flag is honoured only for MIME types listed in [#INLINE_SAFE_MIME_TYPES]; for any
-/// other type the file is still served as an attachment, so untrusted user-uploaded content with executable payloads
+/// `?inline=true`. The flag is honoured only for MIMEs whose [PreviewKind] returns `true` from [PreviewKind#servesInline];
+/// for any other type the file is still served as an attachment, so untrusted user-uploaded content with executable payloads
 /// (HTML, SVG with scripts, JavaScript, etc.) cannot be rendered in the application's origin.
 ///
 public class AttachmentDownloadResource extends AbstractWebResource {
     private static final Logger LOGGER = LogManager.getLogger(AttachmentDownloadResource.class);
-
-    /// MIME types that are safe to render inline in the browser when requested via `?inline=true`.
-    /// Anything not on this list is served as a downloadable attachment regardless of the flag.
-    ///
-    /// The allow-list exists to prevent execution of script-carrying content (HTML, SVG with scripts, JavaScript,
-    /// XML, etc.) in the application's origin via a user-uploaded attachment.
-    ///
-    private static final Set<String> INLINE_SAFE_MIME_TYPES = Set.of(MediaType.APPLICATION_PDF.getName());
 
     private final RestServerUtil restUtil;
     private final IAttachment coAttachment;
@@ -82,7 +73,7 @@ public class AttachmentDownloadResource extends AbstractWebResource {
                     LOGGER.debug(format("Preparing and sending the response with file for attachment [ID=%s].", attachmentId));
                     final MediaType fileType = MediaType.valueOf(attachment.getMime());
                     final Disposition disposition = new Disposition();
-                    disposition.setType(inline && INLINE_SAFE_MIME_TYPES.contains(fileType.getName())
+                    disposition.setType(inline && PreviewKind.fromMime(attachment.getMime()).map(PreviewKind::servesInline).orElse(false)
                             ? Disposition.TYPE_INLINE
                             : Disposition.TYPE_ATTACHMENT);
                     disposition.setFilename(urlPathSegmentEscaper().escape(attachment.getOrigFileName()));

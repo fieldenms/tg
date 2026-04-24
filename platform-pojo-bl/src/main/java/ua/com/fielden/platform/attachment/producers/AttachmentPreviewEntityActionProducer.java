@@ -56,20 +56,14 @@ public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducer
         if (Hyperlink.validate(attachment.getTitle()).isSuccessful()) {
             return new Preview(attachment.getTitle(), PreviewKind.HYPERLINK);
         }
-        final String mime = attachment.getMime();
-        if (mime == null) {
-            return Preview.NONE;
-        }
-        final String downloadUri = "/download-attachment/" + attachment.getId() + "/" + attachment.getSha1();
-        // Images: served via <img>, which ignores Content-Disposition, so no inline flag is required.
-        if (mime.startsWith("image/")) {
-            return new Preview(downloadUri, PreviewKind.IMAGE);
-        }
-        // PDFs: rendered via <object>, which honours Content-Disposition; request inline serving.
-        if ("application/pdf".equals(mime)) {
-            return new Preview(downloadUri + "?inline=true", PreviewKind.PDF);
-        }
-        return Preview.NONE;
+        // MIME-to-kind mapping and the "requires inline serving" policy both live in PreviewKind,
+        // so URL construction here and the inline-disposition gate in AttachmentDownloadResource stay in sync by construction.
+        return PreviewKind.fromMime(attachment.getMime())
+                .map(kind -> {
+                    final String downloadUri = "/download-attachment/" + attachment.getId() + "/" + attachment.getSha1();
+                    return new Preview(kind.servesInline() ? downloadUri + "?inline=true" : downloadUri, kind);
+                })
+                .orElse(Preview.NONE);
     }
 
     private Long getAttachmentId() {

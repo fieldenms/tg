@@ -85,6 +85,35 @@ public class AttachmentPreviewEntityActionProducerTest extends AbstractDaoTestCa
         assertNull(action.getAttachmentUri());
     }
 
+    /// Pins the cross-file invariant that makes [PreviewKind] the single source of truth:
+    /// the producer appends `?inline=true` to the download URL iff the resolved kind's [PreviewKind#servesInline] is `true`.
+    /// The download resource consults the same predicate to decide `Disposition.TYPE_INLINE`, so if this test ever fails,
+    /// the producer's URL construction and the resource's inline-disposition gate have drifted apart and the preview will silently break.
+    ///
+    /// Extend the sample list whenever a new previewable kind is added to [PreviewKind#fromMime].
+    ///
+    @Test
+    public void producer_url_inline_flag_matches_kind_servesInline_contract() {
+        final Attachment image = save(new_(Attachment.class)
+                .setSha1("EA35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4")
+                .setOrigFileName("diagram.png")
+                .setMime("image/png"));
+        final Attachment pdf = save(new_(Attachment.class)
+                .setSha1("EB35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4")
+                .setOrigFileName("manual.pdf")
+                .setMime("application/pdf"));
+
+        for (final Attachment attachment : listOf(image, pdf)) {
+            final AttachmentPreviewEntityAction action = produceAction(attachment);
+            final PreviewKind kind = action.kind().orElseThrow();
+            final boolean urlHasInlineFlag = action.getAttachmentUri().endsWith("?inline=true");
+            assertEquals(
+                "URL inline flag must match " + kind + ".servesInline() for MIME " + attachment.getMime(),
+                kind.servesInline(),
+                urlHasInlineFlag);
+        }
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
