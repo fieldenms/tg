@@ -108,7 +108,7 @@ const template = html`
         <img id="imageLoader" src$="[[_attachmentUri]]" on-error="_resourceLoadError"/>
     </template>
     <template is="dom-if" if="[[_isPdfVisible(_isPdfPreviewAvailable, _effectiveKind, _wasConfirmed, _attachmentUri)]]" restamp>
-        <object id="pdfViewer" data$="[[_attachmentUri]]" type="application/pdf" on-error="_resourceLoadError" on-load="_resourceLoadSuccess"></object>
+        <object id="pdfViewer" data$="[[_attachmentUri]]" type="application/pdf" on-error="_resourceLoadError"></object>
     </template>
     <div id="altView" hidden$="[[!_isAltVisible(_effectiveKind, _attachmentUri)]]">
         <span id="message">[[_getAltViewText(_linkCheckRes, _wasConfirmed, _kind, _isPdfPreviewAvailable)]]</span>
@@ -242,10 +242,6 @@ class TgAttachmentPreview extends PolymerElement {
      */
     _resourceLoadError() {
         this._fallbackToHyperlink();
-    }
-
-    _resourceLoadSuccess() {
-        console.log("PDF was loaded");
     }
 
     /**
