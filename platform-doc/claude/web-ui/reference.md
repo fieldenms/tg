@@ -139,7 +139,7 @@ return new EntityMaster<>(OpenAction.class, OpenActionProducer.class, masterConf
 
 ## Compound Master
 
-Multi-tab master via `CompoundMasterBuilder`:
+Multi-menu-item master via `CompoundMasterBuilder`:
 
 ```java
 final EntityMaster<OpenVehicleMasterAction> compoundMaster =
@@ -157,15 +157,15 @@ final EntityMaster<OpenVehicleMasterAction> compoundMaster =
             .shortDesc("Fuel Usages")
             .longDesc("Fuel usage records")
             .withView(fuelUsageCentre)                  // Embed a centre
-        .andDefaultItemNumber(0)                        // Default tab (0-based)
+        .andDefaultItemNumber(0)                        // Default menu item (0-based)
         .done();
 builder.register(compoundMaster);
 ```
 
 Requires:
-- Functional entity extending `AbstractFunctionalEntityWithCentreContext<T>`
+- Action entity extending `AbstractFunctionalEntityWithCentreContext<T>` (the Java class keeps its historical name; the conceptual term is "action entity")
 - Menu item classes extending `AbstractFunctionalEntityForCompoundMenuItem<T>`
-- A producer class for the functional entity
+- A producer class for the action entity
 
 **Key fetch provider note:** Menu item entities receive their key from the compound master's root entity.
 If a menu item DAO needs a key property, the fetch provider on the **root entity's companion** must include it — adding one to the menu item's own companion has no effect.
@@ -250,7 +250,7 @@ EntityCentreBuilder.centreFor(MyWorkOrder.class)
 ```
 
 Each insertion point needs:
-- A functional entity (the insertion point action)
+- An action entity (the insertion point action)
 - A master wrapping the embedded centre, built via `MasterWithCentreBuilder`:
 
 ```java
@@ -318,7 +318,7 @@ private static class LabourHoursCentre_QueryEnhancer implements IQueryEnhancer<L
 
 ## Audit UI
 
-For the full audit Web UI reference — `IAuditWebUiConfigFactory`, `PersistentEntityInfo` compound master, and the "do not hand-wire audit tabs" rule — see `auditing/reference.md`.
+For the full audit Web UI reference — `IAuditWebUiConfigFactory`, `PersistentEntityInfo` compound master, and the "do not hand-wire audit menu items" rule — see `auditing/reference.md`.
 
 ## Server-Sent Events (SSE)
 

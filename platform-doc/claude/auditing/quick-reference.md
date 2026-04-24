@@ -34,6 +34,6 @@ props.setProperty(AuditingIocModule.AUDIT_MODE, AuditingMode.DISABLED.name());
 ## Topic-Specific Gotchas
 
 - **Audited entities get a platform-built info master**: The "info" action on every `AbstractPersistentEntity` master opens `PersistentEntityInfo`, which includes an audit-review menu for `@Audited` types.
-  Do not hand-wire an "Audit" tab into an entity's own compound master.
+  Do not hand-wire an "Audit" menu item into an entity's own compound master.
 - **`IApplicationDomainProvider` from the injector ≠ `new ApplicationDomain()`**: The injected provider augments compile-time types with audit types.
   Use the injected provider wherever the full entity-type list is needed (especially `PersistDomainMetadataModel.persist(...)`).

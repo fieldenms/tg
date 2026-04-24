@@ -328,7 +328,7 @@ auditedDomainEntities.forEach(auditedType -> {
 Two orthogonal integration points:
 
 1. A **stand-alone audit centre** under a main-menu item — built through `IAuditWebUiConfigFactory`.
-2. An **audit tab on every persistent entity's info master** — built dynamically by the platform via `PersistentEntityInfo`; **no per-application code required**.
+2. An **audit menu item on every persistent entity's info master** — built dynamically by the platform via `PersistentEntityInfo`; **no per-application code required**.
 
 ### Stand-alone audit centre via `IAuditWebUiConfigFactory`
 
@@ -362,7 +362,7 @@ Mi-types and producers for stand-alone audit centres are generated at runtime �
 
 ### `PersistentEntityInfo` — the dynamically-built info master
 
-`PersistentEntityInfo` (`ua.com.fielden.platform.entity.PersistentEntityInfo`) is the functional action entity that backs the standard "info" button on every `AbstractPersistentEntity` master.
+`PersistentEntityInfo` (`ua.com.fielden.platform.entity.PersistentEntityInfo`) is the action entity that backs the standard "info" button on every `AbstractPersistentEntity` master.
 At runtime the platform opens `PersistentEntityInfo` in one of two shapes depending on whether the target entity type is `@Audited`:
 
 | Target entity | Master shape | Built by |
@@ -376,19 +376,19 @@ The compound variant uses `.addMenuItem(AuditCompoundMenuItem.class).withPolymor
 
 Both masters are registered once by the platform and reused for every persistent entity in the application.
 
-### Do not hand-wire audit tabs in application compound masters
+### Do not hand-wire audit menu items in application compound masters
 
 > [!IMPORTANT]
-> When an existing `@Audited` entity's info/open-master is opened, the platform's `PersistentEntityInfo` compound master already hosts the audit-review menu.
-> Do not add an "Audit" tab to the entity's own `OpenEMasterAction` compound master — that duplicates the platform's standard UI and will drift out of sync.
+> When an existing `@Audited` entity's info/open-master is opened, the platform's `PersistentEntityInfo` compound master already hosts the audit-review menu item.
+> Do not add an "Audit" menu item to the entity's own `OpenEMasterAction` compound master — that duplicates the platform's standard UI and will drift out of sync.
 
 Concretely, in `*WebUiConfig` classes for audited entities:
 
 * **Do not** add `.addMenuItem(EMaster_OpenReE_a3t_MenuItem.class).withView(embeddedAuditCentre)` to the compound-master builder.
 * **Do not** call `IAuditWebUiConfigFactory.createEmbeddedCentre(E.class)` to embed an audit centre in the entity's own compound master — the factory is provided for the platform's own use through `PersistentEntityInfo`; applications call only `create(...)` (for the stand-alone main-menu centre).
-* **Do not** define `MiEMaster_OpenReE_a3t_MenuItem` / producer / companion for an audit tab; the platform owns this.
+* **Do not** define `MiEMaster_OpenReE_a3t_MenuItem` / producer / companion for an audit menu item; the platform owns this.
 
-When migrating an older TG application with a hand-written audit tab (a common shape before 2.3.0), the migration is a straight deletion of the tab and its supporting classes — no replacement factory call is needed.
+When migrating an older TG application with a hand-written audit menu item (a common shape before 2.3.0), the migration is a straight deletion of the menu item and its supporting classes — no replacement factory call is needed.
 
 ## Testing with auditing
 
