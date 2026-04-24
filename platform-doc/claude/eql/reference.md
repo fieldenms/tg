@@ -119,6 +119,24 @@ from(query)
 
 Execute via: `co(E.class).getAllEntities(qem)`, `.getPage(qem, page, size)`, `.stream(qem)` (use try-with-resources).
 
+## Existence Checks: `exists` over `count`
+
+When the goal is to check **whether matching rows exist** — not to obtain their count — prefer `co.exists(model)` over `co.count(model) == 0` (or `> 0`).
+
+```java
+// Preferred — short-circuits on the first matching row.
+if (!co(RosterProfileDay.class).exists(daysForProfile)) { ... }
+
+// Discouraged — materialises the full count just to compare against zero.
+if (co(RosterProfileDay.class).count(daysForProfile) == 0) { ... }
+```
+
+`IEntityReader.exists(EntityResultQueryModel)` compiles to a SQL `EXISTS` predicate (`SELECT CASE WHEN EXISTS (...) THEN 1 ELSE 0 END`), letting the database stop after finding the first match.
+`count(...)` uses the page-count path (`evalNumOfPages`) and always tallies the full match set, which is wasted work when the caller only branches on zero / non-zero.
+
+Reach for `count` only when the count value is itself part of the result — e.g., a number rendered to the user, an aggregate used in further logic, or a threshold check `count > N` for some `N > 0` (where you genuinely need to know whether the count exceeds the threshold).
+Calls of the form `count(...) == 0`, `count(...) > 0`, `count(...) >= 1`, or any presence check should be rewritten as `exists(...)` / `!exists(...)`.
+
 ## JOIN to Aggregated Subqueries
 
 `leftJoin` accepts entity classes, `EntityResultQueryModel`, and `AggregatedResultQueryModel`:

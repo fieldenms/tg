@@ -88,3 +88,5 @@ Raw `fetch<T>` does **not** support dot-notation — use nested fetch models or 
   Usable in `groupBy`, `yield`, and JOIN conditions.
 - **`@Calculated` properties expand in SQL**: `sumOf().prop(cost)` where `cost = hours * rate` becomes `SUM(hours * rate)`.
   Database covering indexes must target the operand columns.
+- **Prefer `co.exists(model)` over `co.count(model) == 0` (or `> 0`) for existence checks**: `exists` compiles to SQL `EXISTS` and short-circuits on the first matching row, whereas `count` materialises the full count.
+  Use `count` only when the count value itself is needed.
