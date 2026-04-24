@@ -383,6 +383,26 @@ protected static final ExpressionModel assetClass_ = expr().prop(Vehicle_.vehicl
 private BigDecimal calc0;
 ```
 
+**Scale of literal defaults must match `@IsProperty(scale = ...)`.**
+For `BigDecimal` properties, the literal value supplied to `then().val(...)` (and to any other place a literal default is needed — DAO defaults, test factories, assertions) must have the same scale as the property's declared `@IsProperty(scale = N)`.
+`BigDecimal.equals` compares scale as well as numeric value, so a default of `BigDecimal.ZERO` (scale 0) for a column declared `@IsProperty(precision = 18, scale = 2)` round-trips from the DB as `0.00` and fails `assertEquals(BigDecimal.ZERO, ...)` despite the values being numerically equal.
+
+Define a scale-matching constant on the entity and use it on both sides — the EQL default and any consumer (test assertions, downstream calculations):
+
+```java
+@IsProperty(precision = 18, scale = 2)
+@Readonly
+@Calculated
+private BigDecimal totalPaidHoursPerCycle;
+
+public static final BigDecimal ZERO_POINT_ZERO_ZERO = new BigDecimal("0.00");
+
+protected static final ExpressionModel totalPaidHoursPerCycle_ = expr()
+        .ifNull().model(select(...).yield().sumOf().prop(...).modelAsPrimitive())
+        .then().val(ZERO_POINT_ZERO_ZERO)
+        .model();
+```
+
 **SQL expansion:** When a `@Calculated` property is used in aggregations (e.g., `sumOf().prop(cost)` where `cost = hours * rate`), EQL expands it to the underlying expression in SQL (e.g., `SUM(hours * rate)`).
 The calculated property has no physical column — database covering indexes must include the expression's operand columns, not the calculated property itself.
 

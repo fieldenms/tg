@@ -65,6 +65,10 @@ protected static final ExpressionModel totalCost_ = expr().prop(X_.hours()).mult
 
 Used in aggregations, EQL expands the expression inline (e.g., `SUM(hours * rate)`).
 
+For `BigDecimal` calculated properties, any literal default (`then().val(...)`) — and any consumer literal such as a test assertion — must match the declared `@IsProperty(scale = N)`.
+`BigDecimal.equals` is scale-sensitive, so `BigDecimal.ZERO` (scale 0) does not equal `0.00` (scale 2) returned from the DB.
+See *Calculated Properties — Subquery Patterns* in `reference.md` for the recommended scale-matching constant pattern.
+
 ## Synthetic / Report Entities
 
 Non-persistent entities with a `model_` query.
