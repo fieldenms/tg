@@ -351,8 +351,13 @@ Key methods:
 | `isValid()` / `validationResult()` | Validation state |
 | `setDomainValidationResult(result)` | Set result from definer/DAO |
 | `isEditable()` / `setEditable(boolean)` | Control editability |
+| `isRequired()` / `setRequired(boolean)` | Control requiredness; failure surfaces as the default "Required" message |
+| `setRequired(boolean, String)` | As above, but with a custom failure message; the message is meaningful only when `required` is `true` |
 | `getValue()` / `getOriginalValue()` / `getPrevValue()` | Value tracking |
 | `isChangedFromOriginal()` | Changed since entity retrieval |
+
+When a definer toggles requiredness based on the state of another property, prefer the 2-arg `setRequired` overload with a contextual message (e.g., `"Shift Finish is required when Shift Start is assigned."`) over the default `"Required"` string — it tells the user *why* the field is required, not just *that* it is.
+Property-level requiredness is also generally preferable to an entity-level `validate()` override for both-or-neither / mutual-presence invariants, since the failure surfaces next to the missing field rather than as a top-level entity error.
 
 ## Calculated Properties — Subquery Patterns
 
