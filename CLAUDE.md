@@ -87,6 +87,14 @@ Validators chain in declaration order.
 - End sentences with a full stop
 - Use Markdown for Javadoc (not HTML tags)
 
+**Grouped constants:** when several `static final` fields of the same type form a logical *set of alternatives* — alternative error messages produced by the same validator, alternative warnings from the same definer, parallel format-string templates — declare them under a single `public static final <Type>` line, separated by commas:
+```java
+public static final String
+    ERR_NO_ROSTERED_DAYS = "Cannot activate: the profile must have at least one rostered day (with Shift Start assigned).",
+    ERR_GAPS_IN_DAY_NUMBERS = "Cannot activate: there are gaps in Day numbers. Day count is [%s] but the highest Day number is [%s].";
+```
+Common cases: validator error messages, named query aliases, related token strings.
+
 **Use `StandardActions` and `Compound` helpers** for common centre/master actions.
 
 **SQL migration scripts** for new persistent entities (in TG-based applications):
