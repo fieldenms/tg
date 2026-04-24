@@ -38,8 +38,9 @@ public MyEntity setSomeProperty(final String value) {
 }
 ```
 
-Validators: `@BeforeChange(@Handler(ValidatorClass.class))` — chain in declaration order.
-Definers: `@AfterChange(DefinerClass.class)` — execute during DB retrieval too; check `entity.isInitialising()`.
+Property setter calls are intercepted; validators and definers fire synchronously per setter call (no `save()` needed):
+- Validators: `@BeforeChange(@Handler(ValidatorClass.class))` — run **before** the setter; chain in declaration order; can prevent the assignment by returning `Result.failure()`.
+- Definers: `@AfterChange(DefinerClass.class)` — run **after** the setter; also execute during DB retrieval (check `entity.isInitialising()` to distinguish).
 
 ## Companion Objects
 

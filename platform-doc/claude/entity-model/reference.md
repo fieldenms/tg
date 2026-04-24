@@ -180,6 +180,15 @@ private RosterProfile rosterProfile;
 
 ## Validators and Definers
 
+Calls to property setters on instrumented entities are intercepted by `ObservableMutatorInterceptor`.
+On each setter call:
+1. Validators (`@BeforeChange`) run **before** the setter; if any returns `Result.failure()`, the setter is short-circuited and the assignment does **not** happen.
+2. The setter executes (when validation passed).
+3. Definers (`@AfterChange`) run **after** the setter.
+
+All three steps run synchronously inside the setter call — no `save()` is required to fire validators or definers.
+A definer's own setter calls are observed too: definer-initiated mutations re-enter the same interception chain and are **not** silent.
+
 **`@BeforeChange(@Handler(ValidatorClass.class))`** — Validators (integrity constraints):
 - Implements `IBeforeChangeEventHandler<T>`
 - Returns `Result.failure()` / `Result.warning()` / `Result.informative()` / successful `Result`
@@ -200,7 +209,6 @@ private RosterProfile rosterProfile;
 - **Executes during database retrieval too** (unlike validators)
 - Check `entity.isInitialising()` to distinguish DB load from user mutation
 - Cannot reject values; runs after successful validation
-- **Important:** Definer-initiated mutations go through `ObservableMutatorInterceptor` and trigger the full validation chain — they are **not** silent
 
 **Validation Result Types:** Failure (rejects value), Warning (accepts + warning), Informative (accepts + info), Success (accepts silently)
 
