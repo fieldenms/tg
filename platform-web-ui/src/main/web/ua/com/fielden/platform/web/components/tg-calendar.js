@@ -82,7 +82,7 @@ const template = html`
         </div>
         <div class="col relative">
             <neon-animated-pages class="fit" id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-select="_onPageChange">
-                <tg-month-selector id="defaultPage" page-name="defaultPage" selected-date="{{selectedDate}}" time-zone="[[timeZone]]"></tg-month-selector>
+                <tg-month-selector id="defaultPage" page-name="defaultPage" selected-date="{{selectedDate}}" prop="[[prop]]"></tg-month-selector>
                 <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}" on-number-selected="_showDefaultPage"></tg-number-selector>
                 <tg-number-selector page-name="monthSelector" selected-number="{{selectedMonth}}" lower-bound="0" upper-bound="11" formatter="[[formatMonth]]" on-number-selected="_showDefaultPage"></tg-number-selector>
                 <tg-number-selector page-name="hourSelector" selected-number="{{selectedHour}}" lower-bound="[[_getHourLowerBound(showMeridian)]]" upper-bound="[[_getHourUpperBound(showMeridian)]]" on-number-selected="_timeSelected"></tg-number-selector>
@@ -109,8 +109,8 @@ template.setAttribute('strip-whitespace', '');
              * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods.
              * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
              */
-            timeZone: {
-                type: String
+            prop: {
+                type: Object
             },
 
             selectedDate: {
@@ -162,7 +162,7 @@ template.setAttribute('strip-whitespace', '');
         },
 
         attached: function () {
-            var todayDate = _momentTz(this.timeZone).startOf('minute');
+            var todayDate = _momentTz(this.prop).startOf('minute');
             this.selectedDate = this.selectedDate || todayDate.valueOf();
             this.selectedHour = (typeof this.selectedHour !== 'undefined' && this.selectedHour !== null) ? this.selectedHour : todayDate.hour();
             this.selectedMinute = (typeof this.selectedMinute !== 'undefined' && this.selectedMinute !== null) ? this.selectedMinute : todayDate.minutes();
@@ -190,11 +190,11 @@ template.setAttribute('strip-whitespace', '');
         _selectYearMonthDay: function (newYear, newMonth, newDay) {
             if (newYear !== null && newMonth !== null && newDay !== null) {
                 const yearMonth = { year: newYear, month: newMonth, day: 1 };
-                const lastDayOfTheMonth = _momentTz(yearMonth, this.timeZone).daysInMonth();
+                const lastDayOfTheMonth = _momentTz(yearMonth, this.prop).daysInMonth();
 
                 const computedDay = newDay > lastDayOfTheMonth ? lastDayOfTheMonth : newDay;
                 const yearMonthDay = { year: newYear, month: newMonth, day: computedDay };
-                this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
+                this.selectedDate = _momentTz(yearMonthDay, this.prop).valueOf();
             }
         },
 
@@ -203,7 +203,7 @@ template.setAttribute('strip-whitespace', '');
          */
         _selectedDateChanged: function (newValue, oldValue) {
             if (newValue !== null) {
-                var newMoment = _momentTz(newValue, this.timeZone);
+                var newMoment = _momentTz(newValue, this.prop);
                 this._adjustDate(newMoment);
             }
         },
