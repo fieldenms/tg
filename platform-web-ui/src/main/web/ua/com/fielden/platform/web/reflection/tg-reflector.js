@@ -111,6 +111,15 @@ var _createEntityTypePropPrototype = function () {
     }
 
     /**
+     * Returns specific time-zone for the property of type date.
+     *
+     * IMPORTANT: do not use '_timeZone' field directly!
+     */
+    EntityTypeProp.prototype.isDependentTimeZoneMode = function () { // TODO
+        return ['startDate', 'lastExecutionDate', 'nextExecutionDate'].includes(this._name);
+    }
+
+    /**
      * Returns 'true' when the type property is secrete, false otherwise.
      *
      * IMPORTANT: do not use '_secrete' field directly!
@@ -1378,7 +1387,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
     } else if (typeof bindingValue === 'number') {
         if (propertyType === 'Date') {
             const prop = rootEntityType.prop(property);
-            return _millisDateRepresentation(bindingValue, prop.timeZone(), prop.datePortion());
+            return _millisDateRepresentation(bindingValue, prop, prop.datePortion());
         } else {
             return '' + bindingValue; // Integer value (or Long, but very rare) and BigDecimal value
         }

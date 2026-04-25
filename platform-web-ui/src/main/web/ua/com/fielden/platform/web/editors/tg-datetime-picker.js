@@ -88,8 +88,8 @@ export class TgDatetimePicker extends TgEditor {
              * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods.
              * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
              */
-            timeZone: {
-                type: String,
+            prop: {
+                type: Object,
                 value: null
             },
     
@@ -227,7 +227,7 @@ export class TgDatetimePicker extends TgEditor {
 
         domBind._acceptDateBind = function () {
             self._isAcceptingDateFromPicker = true;
-            const acceptedMoment = _momentTz(this.$.datePicker.selectedDate, self.timeZone)
+            const acceptedMoment = _momentTz(this.$.datePicker.selectedDate, self.prop)
                 .hour(this.$.datePicker.selectedHour)
                 .minute(this.$.datePicker.selectedMinute)
                 .seconds(this.$.datePicker.seconds)
@@ -281,12 +281,12 @@ export class TgDatetimePicker extends TgEditor {
             }.bind(domBind));
         }.bind(domBind);
 
-        domBind.timeZone = self.timeZone;
+        domBind.prop = self.prop;
 
         const dialogTemplate = document.createElement('template');
         dialogTemplate.innerHTML =
             '<paper-dialog id="dateDialog" class="date-picker layout vertical" modal always-on-top entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_dialogOpened">' +
-            '<tg-calendar id="datePicker" pick-time time-zone="[[timeZone]]"></tg-calendar>' +
+            '<tg-calendar id="datePicker" pick-time prop="[[prop]]"></tg-calendar>' +
             '<div class="buttons">' +
             '<paper-button dialog-dismiss affirmative>Cancel</paper-button>' +
             '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +
@@ -334,7 +334,7 @@ export class TgDatetimePicker extends TgEditor {
                     return this.convertToString(this._validMoment.valueOf());
                 }
                 // determine current date portion format for this editor ...
-                const datePortionFormat = this.timeZone ? timeZoneFormats[this.timeZone]['L'] : moment.localeData().longDateFormat('L');
+                const datePortionFormat = this?.prop.timeZone() ? timeZoneFormats[this?.prop.timeZone()]['L'] : moment.localeData().longDateFormat('L');
                 // ... and its separator;
                 const separator = datePortionFormat.includes('/') ? '/' : datePortionFormat.includes('-') ? '-' : null;
                 // validate separator and ...
@@ -364,7 +364,7 @@ export class TgDatetimePicker extends TgEditor {
                             let adjustedMoment = validMoment;
                             if (indexOfY > -1 && format.indexOf('Y', indexOfY + 1) === -1) { // only one Y in the format
                                 const strWithDoubleDigitYear = this._convertToDoubleDigitYear(stringValue, indexOfY === 0 ? 0 : this._findSecondSeparatorIndex(stringValue, separator) + 1);
-                                adjustedMoment = _momentTz(strWithDoubleDigitYear, format.replace('Y', 'YY'), true, this.timeZone);
+                                adjustedMoment = _momentTz(strWithDoubleDigitYear, format.replace('Y', 'YY'), true, this.prop);
                             }
                             if (datePortionFormats.indexOf(format) !== -1 && this.timePortionToBecomeEndOfDay === true) {
                                 adjustedMoment.add(1, 'days').subtract(1, 'milliseconds'); // even though original validMoment can be mutated here, it will not be used anywhere else; so it is safe to do this mutation
@@ -423,7 +423,7 @@ export class TgDatetimePicker extends TgEditor {
         const upperCasedValue = editingValue[0].toUpperCase();
         // In concrete time-zone (e.g. UTC) just use standard method _momentTz for creating 'now' in that time-zone.
         // Otherwise use standard now() function.
-        const convertedMoment = this.timeZone ? _momentTz(this.timeZone) : now();
+        const convertedMoment = this?.prop.timeZone() ? _momentTz(this?.prop.timeZone()) : now(this?.prop);
 
         if ('T' === upperCasedValue) {
             const todayMoment = convertedMoment.startOf("day");
@@ -445,7 +445,7 @@ export class TgDatetimePicker extends TgEditor {
             return null;
         } else {
             const firstFormat = formats[0];
-            let tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
+            let tryingMoment = _momentTz(stringValue, firstFormat, true, this.prop);
             if (tryingMoment.isValid()) {
                 if (adjustValidMoment) {
                     return adjustValidMoment(stringValue, tryingMoment, firstFormat);
@@ -512,7 +512,7 @@ export class TgDatetimePicker extends TgEditor {
                     return strWithoutSpaces;
                 } else {
                     const insertionPoint = firstSeparatorIndex + numberOfDigitsAfterLastSeparator + 1;
-                    const currYearStr = _momentTz(this.timeZone).format('YYYY');
+                    const currYearStr = _momentTz(this.prop).format('YYYY');
                     return yearsOnEnding // years are only supported on beginning and ending of datePortionFormat (not in the middle, like MM-YYYY-DD)
                         ? strWithoutSpaces.slice(0, insertionPoint) + separator + currYearStr + ' ' + strWithoutSpaces.slice(insertionPoint)
                         : currYearStr + separator + strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint)
@@ -522,6 +522,14 @@ export class TgDatetimePicker extends TgEditor {
             return strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint);
         }
     }
+
+    _entityChanged (newValue, oldValue) {
+        if (this.reflector().isEntity(newValue)) {
+            this.prop = newValue.type().prop(this.propertyName);
+        }
+        super._entityChanged (newValue, oldValue);
+    }
+
 }
 
 customElements.define('tg-datetime-picker', TgDatetimePicker);
