@@ -146,8 +146,10 @@ const template = html`
 
         properties: {
             /**
-             * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods. 
-             * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
+             * Holds an instance of `tg-reflector.EntityTypeProp` corresponding to the property being edited.
+             * Must be used as the last parameter for `_momentTz(...)` invocations.
+             *
+             * It is used for moment conversions for a) fixed time-zone properties b) props with enforced dependent time-zone mode.
              */
             prop: {
                 type: Object
