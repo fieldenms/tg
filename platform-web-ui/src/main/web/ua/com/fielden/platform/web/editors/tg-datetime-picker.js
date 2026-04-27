@@ -423,7 +423,7 @@ export class TgDatetimePicker extends TgEditor {
         const upperCasedValue = editingValue[0].toUpperCase();
         // In concrete time-zone (e.g. UTC) just use standard method _momentTz for creating 'now' in that time-zone.
         // Otherwise use standard now() function.
-        const convertedMoment = this?.prop.timeZone() ? _momentTz(this?.prop.timeZone()) : now(this?.prop);
+        const convertedMoment = this.prop?.timeZone() ? _momentTz(this.prop) : now(this.prop);
 
         if ('T' === upperCasedValue) {
             const todayMoment = convertedMoment.startOf("day");
