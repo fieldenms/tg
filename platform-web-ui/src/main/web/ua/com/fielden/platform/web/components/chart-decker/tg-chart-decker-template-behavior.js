@@ -79,7 +79,7 @@ const TgChartDeckerTemplateBehaviorImpl = {
         return function (entity, value) {
             if (!value) {
                 const splitedType = dateType.split(':');
-                return _millisDateRepresentation(entity.get(propertyName), splitedType[1] || null, splitedType[2] || null);
+                return _millisDateRepresentation(entity.get(propertyName), entity.type().prop(propertyName), splitedType[2] || null);
             }
         }
     },
