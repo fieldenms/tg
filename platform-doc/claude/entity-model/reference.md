@@ -448,6 +448,171 @@ A common use of synthetic entities is to host crit-only filters that would other
 The wrapper typically inherits from the persistent entity and yields over it (`select(PersistentEntity.class).yieldAll().modelAsEntity(ReEntity.class)`), then adds `@CritOnly` properties with the declarative stem pattern (see *Declarative correlated filters* above).
 This is the preferred remedy when a persistent entity otherwise carries `@CritOnly` properties — **except** for generative entities, which have their own pattern (see below).
 
+## Synthetic Grouping Property Entities
+
+A **synthetic grouping property entity** is a non-persistent entity that presents a fixed set of options — typically grouping dimensions or distribution modes — for use as `@CritOnly` selectors on report centres.
+Unlike query-derived synthetic entities that use a singular `model_` field, grouping property entities use a **plural `models_` field** — a `List<EntityResultQueryModel<T>>` where each element represents one option.
+
+### Anatomy
+
+```java
+@KeyType(String.class)
+@KeyTitle("Grouping Property")
+@SupportsEntityExistsValidation
+@EntityTitle("Report Grouping Property")
+@CompanionObject(MyGroupingPropertyCo.class)
+public class MyGroupingProperty extends AbstractEntity<String> {
+
+    protected static final List<EntityResultQueryModel<MyGroupingProperty>> models_ = models();
+
+    public enum GroupingProperty {
+        OPTION_A(1L, "Option A"),
+        OPTION_B(2L, "Option B");
+
+        public final long id;
+        public final String key;
+
+        GroupingProperty(final long id, final String key) {
+            this.id = id;
+            this.key = key;
+        }
+
+        /// Creates an entity instance from this enum value.
+        public MyGroupingProperty asEntity() {
+            final MyGroupingProperty v = new MyGroupingProperty();
+            v.setId(id);
+            v.setKey(key);
+            return v;
+        }
+
+        /// Recovers the enum value from an entity instance.
+        public static GroupingProperty fromValue(final MyGroupingProperty property) {
+            return findByKey(property.getKey())
+                    .orElseThrow(() -> new SomeException(format("Value [%s] is not supported.", property.getKey())));
+        }
+
+        public static Optional<GroupingProperty> findByKey(final String key) {
+            return Arrays.stream(GroupingProperty.values())
+                    .filter(v -> v.key.equals(key))
+                    .findFirst();
+        }
+    }
+
+    @Override
+    public Long getId() {
+        return GroupingProperty.fromValue(this).id;
+    }
+
+    private static List<EntityResultQueryModel<MyGroupingProperty>> models() {
+        return Stream.of(GroupingProperty.values())
+                .map(gp -> select()
+                        .yield().val(gp.id).as(ID)
+                        .yield().val(gp.key).as(KEY)
+                        .modelAsEntity(MyGroupingProperty.class))
+                .toList();
+    }
+}
+```
+
+Key characteristics:
+- Extends `AbstractEntity<String>` — non-persistent, no `@MapEntityTo`, no `@DomainEntity`.
+- `@SupportsEntityExistsValidation` — enables the platform to validate references to this entity via the `models_` queries.
+- The inner `enum` is the single source of truth for the available options.
+- `models_()` produces one EQL model per enum value, each yielding a constant `ID` and `KEY`.
+- `getId()` is overridden to derive the ID from the enum, ensuring consistency.
+- `asEntity()` on each enum value creates a detached entity instance (useful for value matchers).
+- `fromValue()` and `findByKey()` recover the enum from an entity instance (useful in DAO/generator logic).
+
+### Rich variant — grouping with metadata
+
+When the grouping property drives dynamic query construction (e.g. selecting which property to group by, which criteria to apply), enum values carry additional metadata fields.
+Each value maps three concerns: which *criterion* on the report entity it corresponds to, which property path to use as the *group key*, and which property path to use as the *group description*.
+
+```java
+public enum GroupingProperty {
+    ASSET_TYPE(1L, "Asset Type",
+               ReportEntity_.assetTypeCrit(),
+               PmXref_.asset().assetClass().assetType().key(),
+               PmXref_.asset().assetClass().assetType().desc()),
+    WORKSHOP(2L, "Workshop",
+             ReportEntity_.workshopCrit(),
+             PmXref_.workshop().key(),
+             PmXref_.workshop().desc());
+
+    public final long id;
+    public final String key;
+    public final String groupCrit;   // path to the @CritOnly property on the report entity
+    public final String groupKey;    // path to the grouping key property
+    public final String groupDesc;   // path to the grouping description property
+
+    GroupingProperty(final long id, 
+                     final String key,
+                     final CharSequence groupCrit, 
+                     final CharSequence groupKey, 
+                     final CharSequence groupDesc) 
+    {
+        this.id = id;
+        this.key = key;
+        this.groupCrit = groupCrit.toString();
+        this.groupKey = groupKey.toString();
+        this.groupDesc = groupDesc.toString();
+    }
+    // asEntity(), fromValue(), findByKey() — same as simple variant
+}
+```
+
+The generator or query enhancer then uses `groupKey` / `groupDesc` to build dynamic EQL queries at runtime.
+
+### Required companion pieces
+
+**Companion interface** — empty, extends `IEntityDao<T>`:
+
+```java
+public interface MyGroupingPropertyCo extends IEntityDao<MyGroupingProperty> {}
+```
+
+**DAO** — empty, extends `CommonEntityDao<T>`:
+
+```java
+@EntityType(MyGroupingProperty.class)
+public class MyGroupingPropertyDao extends CommonEntityDao<MyGroupingProperty> implements MyGroupingPropertyCo {}
+```
+
+**Value matcher** — returns all enum values regardless of search string:
+
+```java
+public class MyGroupingPropertyMatcher extends AbstractSearchEntityByKeyWithCentreContext<MyGroupingProperty> {
+    private static final List<MyGroupingProperty> options =
+            Stream.of(GroupingProperty.values()).map(GroupingProperty::asEntity).toList();
+
+    public MyGroupingPropertyMatcher() { super(null); }
+
+    @Override
+    public List<MyGroupingProperty> findMatches(final String searchString) { return options; }
+
+    @Override
+    public List<MyGroupingProperty> findMatchesWithModel(final String searchString, final int dataPage) {
+        return findMatches(searchString);
+    }
+}
+```
+
+### Integration with report entities
+
+Grouping property entities are referenced as `@CritOnly(SINGLE)` properties on report or generative entities:
+
+```java
+@IsProperty @CritOnly(SINGLE) @Required
+@Title("Distribution")
+private MyDistribution primaryDistribution;
+
+@IsProperty @CritOnly(SINGLE)
+@Title("Group By")
+private MyGroupingProperty groupingProperty;
+```
+
+The Entity Centre registers the matcher via `.withMatcher(MatcherClass.class)` on the criterion builder.
+
 ## Generative Entities
 
 A **generative entity** is a persistent entity whose rows are computed ad hoc at Entity Centre `run` phase rather than maintained by normal CRUD.
