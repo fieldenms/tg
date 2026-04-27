@@ -229,6 +229,173 @@ Register in centre config: `.setRenderingCustomiser(WorkOrderRenderingCustomiser
 
 **Important:** The fetch provider for the centre must include any properties accessed by the customiser (e.g., colour properties).
 
+## Dynamic Columns
+
+Dynamic columns is a mechanism for adding extra result-set properties to an entity centre dynamically, on a per centre run basis.
+Dynamic columns display values from a **collectional property** as separate columns — one column per distinct group value.
+The set of columns is determined at runtime by an `IDynamicColumnBuilder` implementation.
+
+### Entity model prerequisites
+
+Dynamic columns require a **one-to-many association** between the centre's entity (the "one" side) and a collectional element entity (the "many" side).
+The "many" entity carries three roles:
+- **group key** — determines which column a value belongs to (each distinct key becomes one column)
+- **display value** — the value shown in the cell
+- **link property** — references the "one" side so the platform can match rows to columns
+
+```java
+// "One" side — the entity shown in the centre.
+@IsProperty(value = PeriodGroup.class, linkProperty = "period")
+@Title("Groups")
+private final Set<PeriodGroup> groups = new TreeSet<>();
+```
+
+```java
+// "Many" side — the collectional element.
+public static final String NULL_GROUP_KEY = "68ef4daf-4bf7-4b56-8797-4d7c50750afa";
+
+@IsProperty @CompositeKeyMember(1) @MapTo
+private Period period;          // link back to the "one" side
+
+@IsProperty @CompositeKeyMember(2) @MapTo @Optional
+private String groupKey;        // becomes the column identity
+
+@IsProperty @MapTo
+private BigDecimal compliancePercent;   // displayed in the cell
+```
+
+#### Handling null group keys
+
+Dynamic columns cannot display values when the group property is null — the Web UI JavaScript code silently skips them.
+If `groupKey` can be null (`@Optional`), declare a calculated helper property that substitutes a sentinel value:
+
+```java
+@IsProperty @Calculated
+@Title(value = "Dynamic Column Key", desc = "Helper property based on Group Key but with a default value instead of null.")
+private String dynColumnKey;
+protected static final ExpressionModel dynColumnKey_ = expr().ifNull().prop(PeriodGroup_.groupKey()).then().val(NULL_GROUP_KEY).model();
+```
+
+Use `dynColumnKey` (not `groupKey`) as the group property for dynamic columns.
+The sentinel is mapped back to a human-readable title in the `IDynamicColumnBuilder` implementation.
+
+Both entities can be persistent (generative pattern) or synthetic.
+
+### Centre configuration
+
+Three things must be configured on the centre:
+
+**1. Register the collectional property and a dynamic column builder:**
+
+```java
+.addProps(Period_.groups(), DynColumnsBasedOnGroup.class,
+          MyWebUiConfig::prepCollectionalElements,
+          context().withSelectionCrit().build())
+```
+
+- `Period_.groups()` — the collectional property
+- `DynColumnsBasedOnGroup.class` — the `IDynamicColumnBuilder` implementation (injected by Guice)
+- `prepCollectionalElements` — a `BiConsumer<Period, Optional<CentreContext>>` for optional pre-processing (can be a no-op)
+- `context().withSelectionCrit().build()` — provides the selection criteria to the column builder
+
+**2. Set a fetch provider that includes the collectional property and its required sub-properties:**
+
+```java
+.setFetchProvider(fetchWithKeyAndDesc(Period.class)
+                  .with(Period_.groups(),
+                        fetchWithKeyAndDesc(PeriodGroup.class)
+                        .with(PeriodGroup_.dynColumnKey(), PeriodGroup_.groupDesc(), PeriodGroup_.compliancePercent())))
+```
+
+This is critical — without it the collectional elements arrive without the properties needed for display.
+
+**3. Implement `IDynamicColumnBuilder`:**
+
+```java
+public static final String GROUP_KEY_NULL_TITLE = "Unassigned";
+public static final String GROUP_KEY_NULL_DESC = "A group for entries with unassigned %s";
+
+private static class DynColumnsBasedOnGroup implements IDynamicColumnBuilder<Period> {
+
+    private final IUserProvider userProvider;
+    private final ICompanionObjectFinder coFinder;
+
+    @Inject
+    public DynColumnsBasedOnGroup(final IUserProvider userProvider, final ICompanionObjectFinder coFinder) {
+        this.userProvider = userProvider;
+        this.coFinder = coFinder;
+    }
+
+    @Override
+    public Optional<IDynamicColumnConfig> getColumnsConfig(final Optional<CentreContext<Period, ?>> context) {
+        final var ctx = decompose(context);
+        if (ctx.contextEmpty() || ctx.selectionCritEmpty()) {
+            return empty();
+        }
+
+        // Check whether the user selected a secondary distribution.
+        final var params = ctx.selectionCrit();
+        return Optional.ofNullable(params.<GroupingProperty>get(critName(Period.class, Period_.groupingProperty())))
+                .flatMap(groupingProp -> {
+                    // Use dynColumnKey (not groupKey) — it substitutes a sentinel for nulls, ensuring all rows are displayed.
+                    final var builder = DynamicColumnBuilder.forProperty(Period.class, Period_.groups())
+                            .withGroupProp(PeriodGroup_.dynColumnKey())
+                            .withDisplayProp(PeriodGroup_.compliancePercent());
+
+                    // Discover distinct group values from the generated data.
+                    final var query = select(select(PeriodGroup.class).where()
+                                                     .prop(PeriodGroup_.period().createdBy()).eq().val(userProvider.getUser())
+                                                     .yield().prop(PeriodGroup_.dynColumnKey()).as("dynColumnKey")
+                                                     .yield().prop(PeriodGroup_.groupDesc()).as("groupDesc")
+                                                     .modelAsAggregate())
+                            .groupBy().prop("dynColumnKey")
+                            .orderBy().caseWhen().prop("dynColumnKey").eq().val(NULL_GROUP_KEY).then().val(1).otherwise().val(0).end().asc()
+                                      .prop("dynColumnKey").asc()
+                            .yield().prop("dynColumnKey").as("dynColumnKey")
+                            .yield().maxOf().prop("groupDesc").as("groupDesc")
+                            .modelAsAggregate();
+
+                    final var coAgg = coFinder.find(EntityAggregates.class, true);
+                    final var aggs = coAgg.getAllEntities(from(query).model());
+                    if (aggs.isEmpty()) {
+                        return Optional.empty();
+                    }
+
+                    // Build the column configuration, mapping the sentinel back to a readable title.
+                    aggs.forEach(agg -> {
+                        final String dynColumnKey = agg.get("dynColumnKey");
+                        final String groupTitle = NULL_GROUP_KEY.equals(dynColumnKey) ? GROUP_KEY_NULL_TITLE : dynColumnKey;
+                        final String groupDesc = NULL_GROUP_KEY.equals(dynColumnKey) ? GROUP_KEY_NULL_DESC.formatted(groupingProp.key) : agg.get("groupDesc");
+                        builder.addColumn(dynColumnKey)
+                                .title(groupTitle)
+                                .desc(groupDesc);
+                    });
+
+                    return Optional.of(builder.done());
+                });
+    }
+}
+```
+
+### How it works at runtime
+
+1. The user selects criteria (including a grouping property) and clicks *Run*.
+2. The generator (`IGenerator.gen()`) populates the "one" rows and the "many" rows.
+3. The centre invokes `getColumnsConfig()` on the `IDynamicColumnBuilder`.
+4. The builder queries the "many" table to discover distinct group values, then returns an `IDynamicColumnConfig` mapping each group key to a column.
+5. The centre renders the result set with the fixed columns plus one dynamic column per group.
+6. Each dynamic column's cell shows the display property (`compliancePercent`) from the matching collectional element (matched by `groupKey`).
+
+### Key imports
+
+```java
+import ua.com.fielden.platform.web.centre.api.IDynamicColumnConfig;
+import ua.com.fielden.platform.web.centre.api.impl.DynamicColumnBuilder;
+import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
+import static ua.com.fielden.platform.entity.IContextDecomposer.decompose;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
+```
+
 ## Insertion Points
 
 Insertion points inject additional views (typically centres) into an Entity Centre, shown as alternative panels.
