@@ -2,7 +2,7 @@ import { TgAppConfig } from '/app/tg-app-config.js';
 
 import { TgEntityMasterTemplateBehavior} from '/resources/master/tg-entity-master-template-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
-import {_momentTz, _millisDateRepresentation} from '/resources/reflection/tg-date-utils.js';
+import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 
 const generateActionTooltip = function (action) {
     const shortDesc = "<b>" + action.shortDesc + "</b>";
