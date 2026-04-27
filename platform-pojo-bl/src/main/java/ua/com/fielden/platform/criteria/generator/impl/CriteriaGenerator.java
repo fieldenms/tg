@@ -1,45 +1,8 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Stream.empty;
-import static java.util.stream.Stream.of;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.*;
-import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.applySnapshot;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
-import static ua.com.fielden.platform.entity.annotation.factory.DateAnnotations.newDateOnlyAnnotation;
-import static ua.com.fielden.platform.entity.annotation.factory.DateAnnotations.newTimeOnlyAnnotation;
-import static ua.com.fielden.platform.entity.annotation.factory.DateAnnotations.newUtcAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.modifiedClass;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.generateCriteriaTypeName;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.EntityUtils.*;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import com.google.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
-
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.criteria.enhanced.CentreEntityQueryCriteriaToEnhance;
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
@@ -62,6 +25,34 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.empty;
+import static java.util.stream.Stream.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.*;
+import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.applySnapshot;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.*;
+import static ua.com.fielden.platform.entity.annotation.factory.DateAnnotations.*;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.modifiedClass;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.generateCriteriaTypeName;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * The implementation of the {@link ICriteriaGenerator} that generates {@link EntityQueryCriteria} with criteria properties.
@@ -198,15 +189,10 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         return generatedProperties;
     }
 
-    /**
-     * Copies date-related property annotations.
-     * 
-     * @param managedType
-     * @param propertyName
-     * @return
-     */
+    /// Copies date-related property annotations.
+    ///
     private static List<Annotation> copyDateAnnotations(final Class<?> managedType, final String propertyName) {
-        return of(DateOnly.class, TimeOnly.class, PersistentType.class)
+        return of(DateOnly.class, TimeOnly.class, PersistentType.class, DependentTimeZoneMode.class)
             .map(annotationType -> getPropertyAnnotationOptionally(annotationType, managedType, propertyName))
             .flatMap(annotation -> annotation.isPresent() ? of(annotation.get()) : empty())
             .map(annotation -> {
@@ -214,8 +200,10 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                     return newDateOnlyAnnotation();
                 } else if (annotation instanceof TimeOnly) {
                     return newTimeOnlyAnnotation();
-                } else {
+                } else if (annotation instanceof PersistentType) {
                     return newUtcAnnotation();
+                } else {
+                    return newDependentTimeZoneModeAnnotation();
                 }
             })
             .collect(toList());
