@@ -111,12 +111,12 @@ var _createEntityTypePropPrototype = function () {
     }
 
     /**
-     * Returns specific time-zone for the property of type date.
+     * Indicates whether dependent time-zone mode is enforced for the property of date type.
      *
-     * IMPORTANT: do not use '_timeZone' field directly!
+     * IMPORTANT: do not use '_dependentTimeZoneMode' field directly!
      */
-    EntityTypeProp.prototype.isDependentTimeZoneMode = function () { // TODO
-        return ['startDate', 'lastExecutionDate', 'nextExecutionDate'].includes(this._name);
+    EntityTypeProp.prototype.isDependentTimeZoneMode = function () {
+        return typeof this._dependentTimeZoneMode === 'undefined' ? false : this._dependentTimeZoneMode;
     }
 
     /**
