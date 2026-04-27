@@ -78,6 +78,7 @@ Topic-specific gotchas live in each directory's `quick-reference.md`.
 **Naming:** Entities = singular nouns (`Vehicle`), Companions = `{Entity}Co`, DAOs = `{Entity}Dao`
 
 **Always use metamodel references** (`Entity_.property()`) instead of string literals in EQL, fetch models, and UI configurations.
+Metamodel references implement `CharSequence`, so APIs typed for `CharSequence` (or with a `PropertyMetaModel` overload) accept `Entity_.property()` directly — there is no need to fall back to a `String`.
 
 **Property declaration:** `@IsProperty` + `@Title` + `@MapTo` (for persistent) + `@Observable` on setter.
 Validators chain in declaration order.
