@@ -6,7 +6,6 @@ import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.widgets.*;
@@ -142,7 +141,6 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()),
                     propertyName,
                     false,
-                    DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName),
                     null
                     );
             return new DateTimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
@@ -159,7 +157,6 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()),
                     propertyName,
                     false,
-                    DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName),
                     DATE_ONLY
                     );
             return new DatePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
@@ -175,7 +172,6 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()),
                     propertyName,
                     false,
-                    DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName),
                     TIME_ONLY
                     );
             return new TimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);

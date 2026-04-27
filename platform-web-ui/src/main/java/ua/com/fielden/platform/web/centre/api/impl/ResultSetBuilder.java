@@ -160,7 +160,6 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             return of(new CheckboxWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (isDate(propertyType)) {
             return of(new DateTimePickerWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName, false,
-                    DefaultValueContract.getTimeZone(root, propName),
                     DefaultValueContract.getTimePortionToDisplay(root, propName)));
         } else if (isCollectional(propertyType)) {
             return of(new CollectionalRepresentorWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()),propName));
