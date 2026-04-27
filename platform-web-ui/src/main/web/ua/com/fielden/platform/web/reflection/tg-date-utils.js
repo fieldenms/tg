@@ -22,7 +22,7 @@ export function _millis(fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.S
 };
 
 export function _millisDateRepresentation(dateMillis, prop, portionToDisplay) {
-    const timeZone = prop?.timeZone();
+    const timeZone = prop?.timeZone?.();
     const millisecondsExist = dateMillis % 1000 !== 0;
     const secondsExist = !millisecondsExist ? (dateMillis / 1000) % 60 !== 0 : true;
     const timeFormat = () => {
@@ -54,12 +54,12 @@ export function _millisDateRepresentation(dateMillis, prop, portionToDisplay) {
 export function _momentTz(input) {
     const args = Array.prototype.slice.call(arguments, 0, -1);
     const prop = arguments[arguments.length - 1];
-    const timeZone = prop?.timeZone();
+    const timeZone = prop?.timeZone?.();
     if (timeZone) {
         args.push(timeZone);
         return moment.tz.apply(null, args);
     }
-    if (window.TG_APP && window.TG_APP.timeZone && prop.isDependentTimeZoneMode()) {
+    if (window.TG_APP?.timeZone && prop?.isDependentTimeZoneMode?.()) {
         moment.tz.setDefault(moment.tz.guess(true));
         const result = moment.apply(null, args);
         moment.tz.setDefault(window.TG_APP.timeZone);
@@ -78,7 +78,7 @@ export function _timeZoneHeader () {
  * Returns time-zone mode-specific 'now' moment.
  */
 export function now(prop) {
-    if (window.TG_APP && window.TG_APP.timeZone && prop && prop.isDependentTimeZoneMode()) {
+    if (window.TG_APP?.timeZone && prop?.isDependentTimeZoneMode?.()) {
         moment.tz.setDefault(moment.tz.guess(true));
         const result = moment(moment().tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'));
         moment.tz.setDefault(window.TG_APP.timeZone);
