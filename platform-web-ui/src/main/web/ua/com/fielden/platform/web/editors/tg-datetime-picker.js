@@ -85,8 +85,10 @@ export class TgDatetimePicker extends TgEditor {
     static get properties () {
         return {
             /**
-             * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods.
-             * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
+             * Holds an instance of `tg-reflector.EntityTypeProp` corresponding to the property being edited.
+             * Must be used as the last parameter for `_momentTz(...)` invocations.
+             *
+             * It is used for moment conversions for a) fixed time-zone properties b) props with enforced dependent time-zone mode.
              */
             prop: {
                 type: Object,
@@ -523,6 +525,10 @@ export class TgDatetimePicker extends TgEditor {
         }
     }
 
+    /**
+     * An overridden 'entity' observer to provide 'EntityTypeProp' computed instance once the entity has been provided.
+     * That instance would be bound uni-directionally to child `tg-calendar` and `tg-month-selector` elements.
+     */
     _entityChanged (newValue, oldValue) {
         if (this.reflector().isEntity(newValue)) {
             this.prop = newValue.type().prop(this.propertyName);
