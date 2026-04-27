@@ -25,7 +25,6 @@ import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.join;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
@@ -171,9 +170,8 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         if (Money.class.isAssignableFrom(propertyType)) {
             return "this._moneyPropAccessor('" + aggregationProperty + "')";
         } else if (EntityUtils.isDate(propertyType)) {
-            final Optional<String> timeZone = ofNullable(getTimeZone(deckType, aggregationProperty));
             final Optional<String> timePortion = ofNullable(getTimePortionToDisplay(deckType, aggregationProperty));
-            final String typeSpec = "Date:" + timeZone.orElse(":") + timePortion.orElse("");
+            final String typeSpec = "Date:" + timePortion.orElse("");
             return "this._datePropAccessor('" + aggregationProperty + "', '" + typeSpec + "')";
         }
         return "'" + aggregationProperty + "'";

@@ -66,7 +66,6 @@ const TgScatterPlotMasterBehaviorImpl = {
     _datePropAccessor: function (propertyName, dateType) {
         return function (entity, value) {
             if (!value) {
-                const splitedType = dateType.split(':');
                 return _momentTz(entity.get(propertyName), entity.type().prop(propertyName)).toDate();
             }
         }
