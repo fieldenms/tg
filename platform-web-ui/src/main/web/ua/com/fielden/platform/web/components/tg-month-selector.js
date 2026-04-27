@@ -178,7 +178,7 @@ const template = html`
         },
 
         ready: function () {
-            var today = _momentTz(this.prop);
+            const today = _momentTz(this.prop);
             this.todayDay = today.date();
             this.todayMonth = today.month();
             this.todayYear = today.year();
@@ -223,8 +223,8 @@ const template = html`
          * Selects month depending on increment (the increment might be positive or negetive).
          */
         _selectMonth: function (inc) {
-            var yearMonth = { year: this.year, month: this.month, day: 1 };
-            var momentToShow = _momentTz(yearMonth, this.prop).add(inc, 'M');
+            const yearMonth = { year: this.year, month: this.month, day: 1 };
+            const momentToShow = _momentTz(yearMonth, this.prop).add(inc, 'M');
             this._adjustMonth(momentToShow, this._firstDayOfWeek);
         },
 
@@ -257,7 +257,7 @@ const template = html`
          */
         _selectedDateChanged: function (newValue, oldValue) {
             if (newValue !== null) {
-                var newMoment = _momentTz(newValue, this.prop);
+                const newMoment = _momentTz(newValue, this.prop);
                 if (newMoment.isValid()) {
                     this.selectedYear = newMoment.year();
                     this.selectedMonth = newMoment.month();

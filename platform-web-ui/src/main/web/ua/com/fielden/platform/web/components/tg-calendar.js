@@ -14,7 +14,7 @@ import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import moment from '/resources/polymer/lib/moment-lib.js'; // used for moment.localeData() and moment.monthsShort().
-import {_momentTz} from '/resources/reflection/tg-date-utils.js';
+import { _momentTz } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
     <style>
@@ -164,7 +164,7 @@ template.setAttribute('strip-whitespace', '');
         },
 
         attached: function () {
-            var todayDate = _momentTz(this.prop).startOf('minute');
+            const todayDate = _momentTz(this.prop).startOf('minute');
             this.selectedDate = this.selectedDate || todayDate.valueOf();
             this.selectedHour = (typeof this.selectedHour !== 'undefined' && this.selectedHour !== null) ? this.selectedHour : todayDate.hour();
             this.selectedMinute = (typeof this.selectedMinute !== 'undefined' && this.selectedMinute !== null) ? this.selectedMinute : todayDate.minutes();
@@ -205,7 +205,7 @@ template.setAttribute('strip-whitespace', '');
          */
         _selectedDateChanged: function (newValue, oldValue) {
             if (newValue !== null) {
-                var newMoment = _momentTz(newValue, this.prop);
+                const newMoment = _momentTz(newValue, this.prop);
                 this._adjustDate(newMoment);
             }
         },
