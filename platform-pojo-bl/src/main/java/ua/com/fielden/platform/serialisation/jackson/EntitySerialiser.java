@@ -205,6 +205,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
                     entityTypeProp.set_time(TRUE);
                 }
+                if (isPropertyAnnotationPresent(DependentTimeZoneMode.class, type, name)) {
+                    entityTypeProp.set_dependentTimeZoneMode(TRUE);
+                }
                 final IsProperty isPropertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, name);
                 if (isPropertyAnnotation != null) {
                     final Long length = Long.valueOf(isPropertyAnnotation.length());
