@@ -46,6 +46,22 @@ export function _millisDateRepresentation(dateMillis, prop, portionToDisplay) {
 };
 
 /**
+ * In case of independent time-zone mode, enforces real client time-zone for properties with @DependentTimeZoneMode.
+ * Returns server time-zone back after `momentComputation()` is completed - for normal operation of all other properties.
+ */
+function _enforceDependentTimeZoneModeFor(momentComputation, prop) {
+    if (window.TG_APP?.timeZone && prop?.isDependentTimeZoneMode?.()) {
+        moment.tz.setDefault(moment.tz.guess(true));
+        const result = momentComputation();
+        moment.tz.setDefault(window.TG_APP.timeZone);
+        return result;
+    }
+    else {
+        return momentComputation();
+    }
+};
+
+/**
  * Performs timeZone-aware momentjs computation.
  *
  * @params -- first parameters need to be specified as for standard moment(...) function
@@ -59,15 +75,7 @@ export function _momentTz(input) {
         args.push(timeZone);
         return moment.tz.apply(null, args);
     }
-    if (window.TG_APP?.timeZone && prop?.isDependentTimeZoneMode?.()) {
-        moment.tz.setDefault(moment.tz.guess(true));
-        const result = moment.apply(null, args);
-        moment.tz.setDefault(window.TG_APP.timeZone);
-        return result;
-    }
-    else {
-        return moment.apply(null, args);
-    }
+    return _enforceDependentTimeZoneModeFor(() => moment.apply(null, args), prop);
 };
 
 export function _timeZoneHeader () {
@@ -78,17 +86,11 @@ export function _timeZoneHeader () {
  * Returns time-zone mode-specific 'now' moment.
  */
 export function now(prop) {
-    if (window.TG_APP?.timeZone && prop?.isDependentTimeZoneMode?.()) {
-        moment.tz.setDefault(moment.tz.guess(true));
-        const result = moment(moment().tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'));
-        moment.tz.setDefault(window.TG_APP.timeZone);
-        return result;
-    }
     // In independent time-zone mode we do the following trick:
     // 1. create 'now' moment in current surrogate (equal to server one) time-zone;
     // 2. convert it to real time-zone to be able to format it into our 'real' string;
     // 3. convert it to string that defines moment in our 'real' time-zone;
     // 4. then use that string to create moment in surrogate time-zone.
     // In dependent time-zone mode this trick will return the same moment object as just moment().
-    return moment(moment().tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'));
+    return _enforceDependentTimeZoneModeFor(() => moment(moment().tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS')), prop);
 };
