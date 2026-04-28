@@ -16,6 +16,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static com.google.common.base.Charsets.UTF_8;
@@ -31,6 +32,19 @@ import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepres
  *
  */
 public class FileResource extends AbstractWebResource {
+
+    /**
+     * Media types whose content is safe to round-trip through a Java {@code String} (UTF-8 decode then encode).
+     * Only types listed here are served via {@link #createRepresentation}, which goes through {@link IWebResourceLoader#loadSource}.
+     * Everything else is served as a raw byte stream via {@link #createStreamRepresentation}, which is binary-safe.
+     * New binary types added to {@link #determineMediaType} require no changes here — they default to the stream path.
+     */
+    private static final Set<MediaType> TEXT_LIKE_MEDIA_TYPES = Set.of(
+            TEXT_HTML,
+            TEXT_CSS,
+            TEXT_JAVASCRIPT,
+            IMAGE_SVG);
+
     private final List<String> resourcePaths;
     private final IWebResourceLoader webResourceLoader;
 
@@ -55,10 +69,10 @@ public class FileResource extends AbstractWebResource {
     public Representation load() {
         final String extension = getReference().getExtensions();
         final MediaType mediaType = determineMediaType(extension);
-        if (IMAGE_PNG.equals(mediaType) || ALL.equals(mediaType)) {
-            return createStreamRepresentation(webResourceLoader, resourcePaths, mediaType, getReference().getPath(), getReference().getRemainingPart());
-        } else {
+        if (TEXT_LIKE_MEDIA_TYPES.contains(mediaType)) {
             return createRepresentation(webResourceLoader, mediaType, getReference().getPath(), getReference().getRemainingPart(), of(getResponse()));
+        } else {
+            return createStreamRepresentation(webResourceLoader, resourcePaths, mediaType, getReference().getPath(), getReference().getRemainingPart());
         }
     }
     
@@ -165,6 +179,8 @@ public class FileResource extends AbstractWebResource {
             return TEXT_CSS;
         case "svg":
             return IMAGE_SVG;
+        case "pdf":
+            return APPLICATION_PDF;
         default:
             return ALL;
         }
