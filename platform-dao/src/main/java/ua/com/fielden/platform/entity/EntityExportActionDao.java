@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExp
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -28,6 +30,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getDefaultEnt
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
 
 /// DAO implementation for companion object [EntityExportActionCo].
 ///
@@ -39,7 +42,12 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     public static final String ERR_NOTHING_TO_EXPORT = "There is nothing to export.";
 
     public static final String EXPORT_FILE_NAME_TEMPLATE = "export-of-%s.xlsx";
+    public static final String EXPORT_FILE_NAME_WITH_CONFIG_TEMPLATE = "export-of-%s-%s.xlsx";
     public static final String EXPORT_FILE_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+    /// Maximum number of characters used from the configuration title in the export file name.
+    /// Keeps the total file name comfortably under common file-system limits (255 chars).
+    static final int MAX_CONFIG_TITLE_IN_FILE_NAME = 100;
 
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     private final IEntityMasterUrlProvider entityMasterUrlProvider;
@@ -77,14 +85,14 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         // selectionCrit.getDynamicProperties() are used only for EntityExportAction and only in this class;
         //   they are initialised in below selectionCrit.export(...) calls; see selectionCrit.setDynamicProperties method callers for more details;
         //   that's why there is no need to initialise selectionCrit.getDynamicProperties() anywhere outside EntityExportAction, i.e. for other functional actions.
-        // Generate export data
-        final String entityTypeName = generateExportData(entity, topCentreContextHolder, false, entities, titles, propAndTitles, dynamicProperties);
+        // Generate export data; the returned tuple holds the top-level entity type name and the active save-as title (if any).
+        final T2<String, Optional<String>> entityTypeAndSaveAsName = generateExportData(entity, topCentreContextHolder, false, entities, titles, propAndTitles, dynamicProperties);
 
         if (entities.isEmpty()) {
             throw failure(ERR_NOTHING_TO_EXPORT);
         }
 
-        entity.setFileName(EXPORT_FILE_NAME_TEMPLATE.formatted(entityTypeName));
+        entity.setFileName(buildFileName(entityTypeAndSaveAsName._1, entityTypeAndSaveAsName._2));
         entity.setMime(EXPORT_FILE_MIME);
 
         try {
@@ -98,7 +106,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         return entity;
     }
 
-    private String generateExportData(
+    private T2<String, Optional<String>> generateExportData(
             final EntityExportAction entity,
             final CentreContextHolder contextEntry,
             final boolean allowEmptySelectionForExportOfSelected,
@@ -119,7 +127,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         if (!contextEntry.proxiedPropertyNames().contains("relatedContexts")) {
             contextEntry.getRelatedContexts().forEach((key, relatedContext) -> generateExportData(entity, relatedContext, true, entities, titles, propAndTitles, dynamicProperties));
         }
-        return selectionCrit.getEntityClass().getSimpleName();
+        return t2(selectionCrit.getEntityClass().getSimpleName(), selectionCrit.saveAsName());
     }
 
     private CentreContextHolder getParentCentreContextHolder(final CentreContextHolder centreContextHolder) {
@@ -166,6 +174,22 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             }
             return selectionCrit.export(linkedMapOf(t2("ids", selectedEntitiesIds.toArray(new Long[0]))));
         }
+    }
+
+    /// Builds the export file name, appending the active configuration title for non-default, non-link configurations.
+    /// For the default and link configurations, returns the original `export-of-{entityType}.xlsx` form.
+    static String buildFileName(final String entityTypeName, final Optional<String> saveAsName) {
+        if (isDefaultOrLink(saveAsName)) {
+            return EXPORT_FILE_NAME_TEMPLATE.formatted(entityTypeName);
+        }
+        return EXPORT_FILE_NAME_WITH_CONFIG_TEMPLATE.formatted(entityTypeName, sanitiseForFileName(saveAsName.get()));
+    }
+
+    /// Replaces characters disallowed in file names on common operating systems with `-`,
+    /// collapses runs of `-`, trims leading/trailing `-`, and truncates the result to [MAX_CONFIG_TITLE_IN_FILE_NAME] characters.
+    static String sanitiseForFileName(final String title) {
+        final String replaced = title.replaceAll("[\\\\/:*?\"<>|]", "-").replaceAll("-{2,}", "-").replaceAll("(^-|-$)", "");
+        return replaced.length() > MAX_CONFIG_TITLE_IN_FILE_NAME ? replaced.substring(0, MAX_CONFIG_TITLE_IN_FILE_NAME) : replaced;
     }
 
 }
