@@ -231,123 +231,169 @@ Register in centre config: `.setRenderingCustomiser(WorkOrderRenderingCustomiser
 
 ## Dynamic Columns
 
-Dynamic columns is a mechanism for adding extra result-set properties to an entity centre dynamically, on a per centre run basis.
-Dynamic columns display values from a **collectional property** as separate columns — one column per distinct group value.
-The set of columns is determined at runtime by an `IDynamicColumnBuilder` implementation.
+Dynamic columns add extra result-set columns to an entity centre at run-time — one column per "group" produced by a collectional property.
+The wiring is uniform — a one-to-many association, an `addProps` registration, a fetch provider, an `IDynamicColumnBuilder` implementation — but **how the column set is decided** splits cleanly into two patterns.
+Both are equally important and routinely deployed.
 
-### Entity model prerequisites
+| | Pattern A — criteria-driven | Pattern B — data-driven |
+|---|---|---|
+| "One" entity | Synthetic (`model_` over an existing table) | Generative (persistent + `WithCreatedByUser`, populated by `IGenerator`) |
+| Column source | Computed deterministically from selection criteria (e.g. iterate dates between `fromDate` and `toDate`) | Discovered post-generation by aggregate-querying the "many" table |
+| Group key shape | Always present, deterministic format (`yyyyMMdd`, `yyyyMM`, `yyyy`, …) | May be null — handled with a sentinel UUID and a calculated `dynColumnKey` helper |
+| Pre-processor work | Often substantial — composes a display string from each collectional element | Usually a no-op |
+| Typical use | Calendars, time-series grids, period-over-period | Distribution / breakdown reports with user-driven facets |
 
-Dynamic columns require a **one-to-many association** between the centre's entity (the "one" side) and a collectional element entity (the "many" side).
+### Common prerequisites
+
+A **one-to-many association** between the centre's entity (the "one" side) and a collectional element entity (the "many" side).
 The "many" entity carries three roles:
-- **group key** — determines which column a value belongs to (each distinct key becomes one column)
-- **display value** — the value shown in the cell
-- **link property** — references the "one" side so the platform can match rows to columns
+
+- **group key** — determines which column a value belongs to; each distinct key becomes one column.
+- **display value** — what the cell renders.
+- **link property** — references the "one" side via `@IsProperty(linkProperty = "...")` on the collection.
 
 ```java
 // "One" side — the entity shown in the centre.
-@IsProperty(value = PeriodGroup.class, linkProperty = "period")
+@IsProperty(value = MyGroup.class, linkProperty = "parent")
 @Title("Groups")
-private final Set<PeriodGroup> groups = new TreeSet<>();
+private final Set<MyGroup> groups = new TreeSet<>();
 ```
 
+**The matching contract.** The string passed to `builder.addColumn(id)` and the row's group-key value are compared as strings; if they don't match exactly, the cell stays blank.
+This is the most common cause of "all my dynamic cells are empty" — the format used to yield the row's group key (in EQL or in a calculated property) and the column-builder's id format must agree.
+
+### Pattern A — criteria-driven (synthetic)
+
+The centre's entity is synthetic; its `model_` joins the source table and emits one collectional row per `(parent, groupKey)` pair, with `groupKey` formatted in EQL according to whichever bucketing the criteria selected (year, month, week, …).
+Every row has a deterministic bucket, so nulls don't arise.
+
+**The "many" entity** is a synthetic entity whose `model_` projects the bucketed rows; its `groupKey` is a plain `String` formatted to match the column ids the builder will produce, and its display string is computed by the pre-processor:
+
 ```java
-// "Many" side — the collectional element.
+@IsProperty @CompositeKeyMember(1) private MyParent parent;
+@IsProperty @CompositeKeyMember(2) private String groupKey;        // e.g. "20260302" (week), "202603" (month), "2026" (year)
+@IsProperty                        private String valueToDisplay;  // computed by the pre-processor
+```
+
+**The pre-processor** is where most of the per-row work lives — combine the collectional element's data with selection criteria into the display string:
+
+```java
+private static void prepCollectionalElements(final MyParent entity, final Optional<CentreContext<MyParent, ?>> maybeContext) {
+    final var ctx = decompose(maybeContext);
+    if (ctx.contextNotEmpty() && ctx.selectionCritNotEmpty()) {
+        final var params = ctx.selectionCrit();
+        final boolean showDuplicates = params.get(critName(MyParent.class, "showDuplicates"));
+        entity.getGroups().forEach(g -> g.setValueToDisplay(/* derived from g + criteria */));
+    }
+}
+```
+
+**The column builder** asks a typed companion for the actual data window (so columns aren't rendered for empty stretches), then iterates buckets between the criteria-supplied bounds, calling `addColumn(...)` with an id that matches the EQL-produced group key:
+
+```java
+private static class DynColumnsByPeriod implements IDynamicColumnBuilder<MyParent> {
+
+    private final IMyParent co;
+
+    @Inject
+    public DynColumnsByPeriod(final IMyParent co) { this.co = co; }
+
+    @Override
+    public Optional<IDynamicColumnConfig> getColumnsConfig(final Optional<CentreContext<MyParent, ?>> context) {
+        final var ctx = decompose(context);
+        if (ctx.contextEmpty() || ctx.selectionCritEmpty()) return empty();
+
+        final var params = ctx.selectionCrit();
+        final IDynamicColumnBuilderAddPropWithDone propBuilder =
+                DynamicColumnBuilder.forProperty(MyParent.class, MyParent_.groups())
+                        .withGroupProp(MyGroup_.groupKey())
+                        .withDisplayProp(MyGroup_.valueToDisplay());
+
+        // Clamp the criteria range to the data window.
+        final Date fromDate = params.get(critName(MyParent.class, "fromDate"));
+        final Date toDate   = params.get(critName(MyParent.class, "toDate"));
+        final Date startDate = co.getFirstGroupDate().filter(d -> fromDate == null || d.after(fromDate)).orElse(fromDate);
+        final Date endDate   = co.getLastGroupDate() .filter(d -> toDate   == null || d.before(toDate)).orElse(toDate);
+
+        final var grouping = params.<MyGroupingProperty>get(critName(MyParent.class, MyParent_.groupingProperty()));
+        return switch (MyGroupingProperty.GroupingProperty.fromValue(grouping)) {
+            case YEAR  -> Optional.of(buildYearColumns (startDate, endDate, propBuilder));
+            case MONTH -> Optional.of(buildMonthColumns(startDate, endDate, propBuilder));
+            case WEEK  -> Optional.of(buildWeekColumns (startDate, endDate, propBuilder));
+            default    -> throw new MyModuleException("Grouping property must be specified.");
+        };
+    }
+
+    private IDynamicColumnConfig buildMonthColumns(final Date from, final Date to, final IDynamicColumnBuilderAddPropWithDone propBuilder) {
+        // Iterate months between from and to; the addColumn id MUST match the EQL groupKey format.
+        // propBuilder.addColumn("202603").title("Mar 2026").desc("March 2026").minWidth(100);
+        return propBuilder.done();
+    }
+    // buildYearColumns / buildWeekColumns — analogous.
+}
+```
+
+The intermediate type returned by `DynamicColumnBuilder.forProperty(...).withGroupProp(...).withDisplayProp(...)` is `IDynamicColumnBuilderAddPropWithDone` — name it explicitly when factoring out helper methods like `buildMonthColumns`.
+
+### Pattern B — data-driven (generative)
+
+The centre's entity is generative; `IGenerator.gen()` writes both the "one" rows and the "many" rows into persistent tables.
+Group keys originate in user data and may be null, so the "many" entity needs a sentinel-based workaround.
+
+**Sentinel + calculated `dynColumnKey`.**
+The Web UI silently skips rows whose group property is null, so a calculated property substitutes a UUID literal for `null`; the literal cannot collide with any real key:
+
+```java
 public static final String NULL_GROUP_KEY = "68ef4daf-4bf7-4b56-8797-4d7c50750afa";
 
 @IsProperty @CompositeKeyMember(1) @MapTo
-private Period period;          // link back to the "one" side
+private MyParent parent;
 
 @IsProperty @CompositeKeyMember(2) @MapTo @Optional
-private String groupKey;        // becomes the column identity
+private String groupKey;        // user-supplied, may be null
 
-@IsProperty @MapTo
-private BigDecimal compliancePercent;   // displayed in the cell
-```
-
-#### Handling null group keys
-
-Dynamic columns cannot display values when the group property is null — the Web UI JavaScript code silently skips them.
-If `groupKey` can be null (`@Optional`), declare a calculated helper property that substitutes a sentinel value:
-
-```java
 @IsProperty @Calculated
 @Title(value = "Dynamic Column Key", desc = "Helper property based on Group Key but with a default value instead of null.")
 private String dynColumnKey;
-protected static final ExpressionModel dynColumnKey_ = expr().ifNull().prop(PeriodGroup_.groupKey()).then().val(NULL_GROUP_KEY).model();
+protected static final ExpressionModel dynColumnKey_ = expr().ifNull().prop(MyGroup_.groupKey()).then().val(NULL_GROUP_KEY).model();
+
+@IsProperty @MapTo
+private BigDecimal compliancePercent;   // shown in the cell
 ```
 
-Use `dynColumnKey` (not `groupKey`) as the group property for dynamic columns.
-The sentinel is mapped back to a human-readable title in the `IDynamicColumnBuilder` implementation.
+Use `dynColumnKey` (not `groupKey`) as the dynamic-columns group property and map the sentinel back to a readable title in the column builder.
+The pre-processor for this pattern is typically a no-op — display values are already in `@MapTo` columns written by `gen()`.
 
-Both entities can be persistent (generative pattern) or synthetic.
-
-### Centre configuration
-
-Three things must be configured on the centre:
-
-**1. Register the collectional property and a dynamic column builder:**
-
-```java
-.addProps(Period_.groups(), DynColumnsBasedOnGroup.class,
-          MyWebUiConfig::prepCollectionalElements,
-          context().withSelectionCrit().build())
-```
-
-- `Period_.groups()` — the collectional property
-- `DynColumnsBasedOnGroup.class` — the `IDynamicColumnBuilder` implementation (injected by Guice)
-- `prepCollectionalElements` — a `BiConsumer<Period, Optional<CentreContext>>` for optional pre-processing (can be a no-op)
-- `context().withSelectionCrit().build()` — provides the selection criteria to the column builder
-
-**2. Set a fetch provider that includes the collectional property and its required sub-properties:**
-
-```java
-.setFetchProvider(fetchWithKeyAndDesc(Period.class)
-                  .with(Period_.groups(),
-                        fetchWithKeyAndDesc(PeriodGroup.class)
-                        .with(PeriodGroup_.dynColumnKey(), PeriodGroup_.groupDesc(), PeriodGroup_.compliancePercent())))
-```
-
-This is critical — without it the collectional elements arrive without the properties needed for display.
-
-**3. Implement `IDynamicColumnBuilder`:**
+**The column builder** discovers distinct groups by aggregate-querying the just-generated table and maps the sentinel back to a readable title:
 
 ```java
 public static final String GROUP_KEY_NULL_TITLE = "Unassigned";
 public static final String GROUP_KEY_NULL_DESC = "A group for entries with unassigned %s";
 
-private static class DynColumnsBasedOnGroup implements IDynamicColumnBuilder<Period> {
+private record DynColumnsByGroup(IUserProvider userProvider, ICompanionObjectFinder coFinder)
+        implements IDynamicColumnBuilder<MyParent> {
 
-    private final IUserProvider userProvider;
-    private final ICompanionObjectFinder coFinder;
-
-    @Inject
-    public DynColumnsBasedOnGroup(final IUserProvider userProvider, final ICompanionObjectFinder coFinder) {
-        this.userProvider = userProvider;
-        this.coFinder = coFinder;
-    }
+    @Inject DynColumnsByGroup {}
 
     @Override
-    public Optional<IDynamicColumnConfig> getColumnsConfig(final Optional<CentreContext<Period, ?>> context) {
+    public Optional<IDynamicColumnConfig> getColumnsConfig(final Optional<CentreContext<MyParent, ?>> context) {
         final var ctx = decompose(context);
-        if (ctx.contextEmpty() || ctx.selectionCritEmpty()) {
-            return empty();
-        }
+        if (ctx.contextEmpty() || ctx.selectionCritEmpty()) return empty();
 
-        // Check whether the user selected a secondary distribution.
         final var params = ctx.selectionCrit();
-        return Optional.ofNullable(params.<GroupingProperty>get(critName(Period.class, Period_.groupingProperty())))
+        return Optional.ofNullable(params.<MyGroupingProperty>get(critName(MyParent.class, MyParent_.groupingProperty())))
+                .map(MyGroupingProperty.GroupingProperty::fromValue)
                 .flatMap(groupingProp -> {
-                    // Use dynColumnKey (not groupKey) — it substitutes a sentinel for nulls, ensuring all rows are displayed.
-                    final var builder = DynamicColumnBuilder.forProperty(Period.class, Period_.groups())
-                            .withGroupProp(PeriodGroup_.dynColumnKey())
-                            .withDisplayProp(PeriodGroup_.compliancePercent());
+                    final var builder = DynamicColumnBuilder.forProperty(MyParent.class, MyParent_.groups())
+                            .withGroupProp(MyGroup_.dynColumnKey())
+                            .withDisplayProp(MyGroup_.compliancePercent());
 
-                    // Discover distinct group values from the generated data.
-                    final var query = select(select(PeriodGroup.class).where()
-                                                     .prop(PeriodGroup_.period().createdBy()).eq().val(userProvider.getUser())
-                                                     .yield().prop(PeriodGroup_.dynColumnKey()).as("dynColumnKey")
-                                                     .yield().prop(PeriodGroup_.groupDesc()).as("groupDesc")
-                                                     .modelAsAggregate())
+                    // Aggregate-query the just-generated rows for distinct (dynColumnKey, groupDesc).
+                    final var query = select(select(MyGroup.class).where()
+                                                .prop(MyGroup_.parent().createdBy()).eq().val(userProvider.getUser())
+                                                .yield().prop(MyGroup_.dynColumnKey()).as("dynColumnKey")
+                                                .yield().prop(MyGroup_.groupDesc()).as("groupDesc")
+                                                .modelAsAggregate())
                             .groupBy().prop("dynColumnKey")
                             .orderBy().caseWhen().prop("dynColumnKey").eq().val(NULL_GROUP_KEY).then().val(1).otherwise().val(0).end().asc()
                                       .prop("dynColumnKey").asc()
@@ -355,36 +401,52 @@ private static class DynColumnsBasedOnGroup implements IDynamicColumnBuilder<Per
                             .yield().maxOf().prop("groupDesc").as("groupDesc")
                             .modelAsAggregate();
 
-                    final var coAgg = coFinder.find(EntityAggregates.class, true);
-                    final var aggs = coAgg.getAllEntities(from(query).model());
-                    if (aggs.isEmpty()) {
-                        return Optional.empty();
-                    }
+                    final var aggs = coFinder.find(EntityAggregates.class, true).getAllEntities(from(query).model());
+                    if (aggs.isEmpty()) return empty();
 
-                    // Build the column configuration, mapping the sentinel back to a readable title.
                     aggs.forEach(agg -> {
                         final String dynColumnKey = agg.get("dynColumnKey");
                         final String groupTitle = NULL_GROUP_KEY.equals(dynColumnKey) ? GROUP_KEY_NULL_TITLE : dynColumnKey;
-                        final String groupDesc = NULL_GROUP_KEY.equals(dynColumnKey) ? GROUP_KEY_NULL_DESC.formatted(groupingProp.key) : agg.get("groupDesc");
-                        builder.addColumn(dynColumnKey)
-                                .title(groupTitle)
-                                .desc(groupDesc);
+                        final String groupDesc  = NULL_GROUP_KEY.equals(dynColumnKey)
+                                ? GROUP_KEY_NULL_DESC.formatted(groupingProp.key)
+                                : agg.<String>get("groupDesc");
+                        builder.addColumn(dynColumnKey).title(groupTitle).desc(groupDesc);
                     });
-
                     return Optional.of(builder.done());
                 });
     }
 }
 ```
 
-### How it works at runtime
+Note the `.map(...::fromValue)` step: `params.get(...)` returns the `@CritOnly` *entity* (`MyGroupingProperty`), not its inner enum value — convert via the entity's `fromValue` adapter before reading enum metadata fields like `groupingProp.key`.
 
-1. The user selects criteria (including a grouping property) and clicks *Run*.
-2. The generator (`IGenerator.gen()`) populates the "one" rows and the "many" rows.
-3. The centre invokes `getColumnsConfig()` on the `IDynamicColumnBuilder`.
-4. The builder queries the "many" table to discover distinct group values, then returns an `IDynamicColumnConfig` mapping each group key to a column.
-5. The centre renders the result set with the fixed columns plus one dynamic column per group.
-6. Each dynamic column's cell shows the display property (`compliancePercent`) from the matching collectional element (matched by `groupKey`).
+### Centre wiring — common to both patterns
+
+Two pieces on the centre config, identical in shape regardless of which pattern is used:
+
+```java
+.addProps(MyParent_.groups(), DynColumnsByX.class,
+          MyWebUiConfig::prepCollectionalElements,
+          context().withSelectionCrit().build())
+
+.setFetchProvider(fetchWithKeyAndDesc(MyParent.class)
+                  .with(MyParent_.groups(),
+                        fetchWithKeyAndDesc(MyGroup.class)
+                                .with(MyGroup_.groupKey(), MyGroup_.valueToDisplay())))
+```
+
+- `addProps(propName, dynColBuilderType, entityPreProcessor, contextConfig)` — there is also a 5-arg overload taking a rendering-hints provider before `contextConfig`.
+- The fetch provider must include the collectional property *and* the sub-properties read for both the group key and the display (e.g. `dynColumnKey`, `groupDesc`, `compliancePercent` for pattern B).
+- Style each column via the chained calls on `addColumn(...)` — `.title(...)`, `.desc(...)`, `.minWidth(px)`.
+
+### Runtime flow
+
+1. The user populates selection criteria and clicks *Run*.
+2. **Pattern B only:** the centre invokes `IGenerator.gen()`, which clears the previous run for this user and writes fresh "one" / "many" rows.
+   **Pattern A:** no generator step — the centre executes the synthetic `model_` to produce the result set.
+3. The centre invokes `getColumnsConfig()` on the `IDynamicColumnBuilder`, passing the selection-crit context.
+4. The builder returns an `IDynamicColumnConfig`: pattern A enumerates buckets from the criteria; pattern B aggregate-queries the "many" table for distinct group values.
+5. For each row, the centre matches the row's group-key value to a column id and renders the display property in that column's cell.
 
 ### Key imports
 
@@ -392,6 +454,7 @@ private static class DynColumnsBasedOnGroup implements IDynamicColumnBuilder<Per
 import ua.com.fielden.platform.web.centre.api.IDynamicColumnConfig;
 import ua.com.fielden.platform.web.centre.api.impl.DynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderAddPropWithDone;
 import static ua.com.fielden.platform.entity.IContextDecomposer.decompose;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
 ```
