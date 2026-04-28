@@ -451,7 +451,7 @@ This is the preferred remedy when a persistent entity otherwise carries `@CritOn
 ## Synthetic Grouping Property Entities
 
 A **synthetic grouping property entity** is a non-persistent entity that presents a fixed set of options — typically grouping dimensions or distribution modes — for use as `@CritOnly` selectors on report centres.
-Unlike query-derived synthetic entities that use a singular `model_` field, grouping property entities use a **plural `models_` field** — a `List<EntityResultQueryModel<T>>` where each element represents one option.
+Grouping property entities use a **plural `models_` field** — a `List<EntityResultQueryModel<T>>` where each element represents one option.
 
 ### Anatomy
 
