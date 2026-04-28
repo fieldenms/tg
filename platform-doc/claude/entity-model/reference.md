@@ -448,6 +448,160 @@ A common use of synthetic entities is to host crit-only filters that would other
 The wrapper typically inherits from the persistent entity and yields over it (`select(PersistentEntity.class).yieldAll().modelAsEntity(ReEntity.class)`), then adds `@CritOnly` properties with the declarative stem pattern (see *Declarative correlated filters* above).
 This is the preferred remedy when a persistent entity otherwise carries `@CritOnly` properties — **except** for generative entities, which have their own pattern (see below).
 
+## Synthetic Grouping Property Entities
+
+A **synthetic grouping property entity** is a non-persistent entity that presents a fixed, enum-backed set of options — typically grouping dimensions or distribution modes — for use as `@CritOnly(SINGLE)` selectors on report centres.
+
+A plain Java `enum` cannot fill this role: `@CritOnly` autocompleters require an `AbstractEntity` subtype, and `EntityExistsValidator` validates references by running EQL queries against the property type.
+The grouping property pattern wraps the enum in a non-persistent entity whose `models_` field synthesises one constant-yield query per enum value, so both the autocompleter and the validator have something to talk to while the enum remains the single source of truth.
+
+### Anatomy
+
+```java
+@KeyType(String.class)
+@KeyTitle("Grouping Property")
+@SupportsEntityExistsValidation
+@EntityTitle("Report Grouping Property")
+@CompanionObject(MyGroupingPropertyCo.class)
+public class MyGroupingProperty extends AbstractEntity<String> {
+
+    protected static final List<EntityResultQueryModel<MyGroupingProperty>> models_ = models();
+
+    public enum GroupingProperty {
+        OPTION_A(1L, "Option A"),
+        OPTION_B(2L, "Option B");
+
+        public final long id;
+        public final String key;
+
+        GroupingProperty(final long id, final String key) {
+            this.id = id;
+            this.key = key;
+        }
+
+        public MyGroupingProperty asEntity() {
+            final MyGroupingProperty v = new MyGroupingProperty();
+            v.setId(id);
+            v.setKey(key);
+            return v;
+        }
+
+        public static GroupingProperty fromValue(final MyGroupingProperty property) {
+            return findByKey(property.getKey())
+                    .orElseThrow(() -> new MyModuleException("Value [%s] is not supported.".formatted(property.getKey())));
+        }
+
+        public static Optional<GroupingProperty> findByKey(final String key) {
+            return Arrays.stream(values()).filter(v -> v.key.equals(key)).findFirst();
+        }
+    }
+
+    @Override
+    public Long getId() {
+        return GroupingProperty.fromValue(this).id;
+    }
+
+    private static List<EntityResultQueryModel<MyGroupingProperty>> models() {
+        return Stream.of(GroupingProperty.values())
+                .map(gp -> select().yield().val(gp.id).as(ID).yield().val(gp.key).as(KEY).modelAsEntity(MyGroupingProperty.class))
+                .toList();
+    }
+}
+```
+
+The non-obvious points:
+- **No `@DomainEntity` or `@WithMetaModel`.** Nothing on the entity is worth `prop()`-ing into — the enum is the API.
+- **`getId()` is overridden** to derive the id from the enum so it always matches `models_` regardless of how the instance was constructed.
+- **`asEntity()` exists for the value matcher**, which materialises every option as a detached entity instance.
+- **`fromValue()` throws an application-specific exception** (e.g. `AnalysesModuleException`) when the key is unknown — substitute a real type from your domain.
+
+### Driving query construction (metadata-driven extension)
+
+When the grouping property must do more than be a label — selecting which property a report groups by, or which criterion to apply — extend the same enum with metadata fields naming the relevant property paths.
+A typical set is three paths: the `@CritOnly` *criterion* on the report entity, the *group key*, and the *group description*.
+A generator or query enhancer reads them at runtime to build the EQL.
+
+The diff against the *Anatomy* example is confined to the enum: three new fields, three new constructor parameters typed `CharSequence`, and updated value declarations that pass the metadata paths (or `null` for options handled by a separate code branch, such as date-truncated time buckets).
+
+```java
+public enum GroupingProperty {
+    OPTION_A(1L, "Option A",
+             MyReport_.optionACrit(),  MySource_.target().key(),    MySource_.target().desc()),
+    OPTION_B(2L, "Option B",
+             MyReport_.optionBCrit(),  MySource_.workshop().key(),  MySource_.workshop().desc()),
+    DAY  (3L, "Day",   null, null, null),  // time-bucket options are computed via date truncation
+    MONTH(4L, "Month", null, null, null);  // and read by a separate code branch
+
+    public final long id;
+    public final String key;
+    public final String groupCrit, groupKey, groupDesc;
+
+    GroupingProperty(final long id, final String key,
+                     final CharSequence groupCrit, final CharSequence groupKey, final CharSequence groupDesc) {
+        this.id = id;
+        this.key = key;
+        this.groupCrit = groupCrit == null ? null : groupCrit.toString();
+        this.groupKey  = groupKey  == null ? null : groupKey.toString();
+        this.groupDesc = groupDesc == null ? null : groupDesc.toString();
+    }
+    // asEntity(), fromValue(), findByKey() — unchanged.
+}
+```
+
+The constructor accepts `CharSequence` so callers can pass either a metamodel reference (`Entity_.foo().bar().key()`) or a plain `String`; the field is stored as `String` because downstream EQL builders consume property paths as strings.
+
+### Companion, DAO, and value matcher
+
+A vanilla `IEntityDao<T>` companion and `CommonEntityDao<T>` DAO are sufficient — no overrides.
+`EntityExistsValidator` runs the standard EQL query for the entity type, and for a synthetic with `models_` that yields exactly the valid `(id, key)` rows.
+
+The value matcher ignores the search string and returns every option:
+
+```java
+public class MyGroupingPropertyMatcher extends AbstractSearchEntityByKeyWithCentreContext<MyGroupingProperty> {
+    private static final List<MyGroupingProperty> options =
+            Stream.of(GroupingProperty.values()).map(GroupingProperty::asEntity).toList();
+
+    public MyGroupingPropertyMatcher() { super(null); }
+
+    @Override
+    public List<MyGroupingProperty> findMatches(final String searchString) { return options; }
+
+    @Override
+    public List<MyGroupingProperty> findMatchesWithModel(final String searchString, final int dataPage) {
+        return findMatches(searchString);
+    }
+}
+```
+
+### Integration with report entities
+
+The grouping property is hosted as a `@CritOnly(SINGLE)` field on a report or generative entity, and the matcher is wired up on the criterion builder:
+
+```java
+@IsProperty @CritOnly(SINGLE)
+@Title("Group By")
+private MyGroupingProperty groupingProperty;
+```
+
+```java
+.addCrit(MyReport_.groupingProperty()).asSingle().autocompleter(MyGroupingProperty.class)
+    .withMatcher(MyGroupingPropertyMatcher.class)
+```
+
+### Comparison with other synthetic entity shapes
+
+Both the regular synthetic / report shape and the grouping property shape are synthetic entities; either may use `model_` (single query) or `models_` (list of queries).
+The distinguishing line is *what kind of data they present*, not the field shape:
+
+| | Synthetic / report | Synthetic grouping property |
+|---|---|---|
+| Source of rows | Computed from existing tables | Hard-coded enum values, one constant-yield query per option |
+| Class-level annotations | `@DomainEntity` (+ optionally `@WithMetaModel`) | `@SupportsEntityExistsValidation`; no `@DomainEntity` |
+| Typical use | Report data, `Re*` and `Syn*` wrappers | `@CritOnly(SINGLE)` selectors |
+
+Grouping property entities pair naturally with **generative entities** below — the latter typically host them as `@CritOnly(SINGLE)` selection criteria that drive the data generator.
+
 ## Generative Entities
 
 A **generative entity** is a persistent entity whose rows are computed ad hoc at Entity Centre `run` phase rather than maintained by normal CRUD.
