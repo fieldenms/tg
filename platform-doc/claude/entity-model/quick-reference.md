@@ -84,7 +84,7 @@ protected static final EntityResultQueryModel<T> model_ = select(Source.class)
 
 **Synthetic grouping property entities** — fixed-option selectors for report grouping/distribution.
 Use `models_` (plural `List`), inner `enum`, `@SupportsEntityExistsValidation`.
-See `entity-model/reference.md` § *Synthetic grouping property entities*.
+See `entity-model/reference.md` § *Synthetic Grouping Property Entities*.
 
 ## Metamodel References
 
