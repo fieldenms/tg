@@ -34,6 +34,12 @@ Compound.openNew(OpenAction.class, "add-circle-outline", ENTITY_TITLE, "Add new 
 
 `.order(n).asc()/.desc()`, `.width(px)/.minWidth(px)`, `.withSummary(alias, eqlExpr, titleAndDesc)`, `.withAction(config)`, `.withWordWrap()`
 
+## Dynamic Columns
+
+`.addProps(Entity_.collection(), DynColumnBuilder.class, prepFn, context)` + `.setFetchProvider(...)` including collectional sub-properties.
+Requires a one-to-many collectional property and an `IDynamicColumnBuilder` implementation.
+See `web-ui/reference.md` § *Dynamic Columns*.
+
 ## Context Options
 
 `.withCurrentEntity()`, `.withSelectedEntities()`, `.withSelectionCrit()`, `.withMasterEntity()`, `.withComputation((entity, context) -> value)`
