@@ -165,16 +165,16 @@
 
             (() => {
                 const fixedNow = 1640000000000;
-                test(`now [${fixedNow}] produces moment whose representation matches real client (${CLIENT_TIMEZONE}) time`, done => {
+                test(`now [${fixedNow}] produces moment whose representation matches UTC time`, done => {
                     master.entityId = 'new';
                     master.postRetrieved = function () {
                         const datePropUtc = master.$.editor_4_datePropUtc.prop;
                         moment.now = () => fixedNow;
                         try {
-                            // now(prop) does not consult prop.timeZone(); a UTC-fixed property therefore takes the regular-property branch
+                            // now(prop) consults prop.timeZone(); a UTC-fixed property therefore takes the regular-property branch
                             // and produces a moment whose formatted output equals the current real client time.
-                            const expected = moment.tz(fixedNow, CLIENT_TIMEZONE).format('YYYY-MM-DD HH:mm:ss.SSS');
-                            assert.strictEqual(now(datePropUtc).format('YYYY-MM-DD HH:mm:ss.SSS'), expected, 'now(prop) for a UTC-fixed property should format equally to the real client current time.');
+                            const expected = moment.tz(fixedNow, 'UTC').format('YYYY-MM-DD HH:mm:ss.SSS');
+                            assert.strictEqual(now(datePropUtc).format('YYYY-MM-DD HH:mm:ss.SSS'), expected, 'now(prop) for a UTC-fixed property should format to UTC time.');
                         } finally {
                             moment.now = originalNow;
                         }
