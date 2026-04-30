@@ -26,7 +26,6 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.join;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
@@ -154,9 +153,7 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
         if (Money.class.isAssignableFrom(propertyType)) {
             return "this._moneyPropAccessor('" + propertyName + "')";
         } else if (EntityUtils.isDate(propertyType)) {
-            final Optional<String> timePortion = ofNullable(getTimePortionToDisplay(entityType, propertyName));
-            final String typeSpec = "Date:" + timePortion.orElse("");
-            return "this._datePropAccessor('" + propertyName + "', '" + typeSpec + "')";
+            return "this._datePropAccessor('" + propertyName + "')";
         }
         return "'" + propertyName + "'";
     }
