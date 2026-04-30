@@ -1,0 +1,261 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>tg-datetime-picker tests for independent time-zone mode</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
+    <script>
+        // Override TG_APP.timeZone to enable independent time-zone mode.
+        // The configured zone plays the role of the surrogate (server-aligned) zone.
+        // A different zone is mocked as the real client zone via 'moment.tz.guess' in the suite setup.
+        // The literal here must match the SERVER_TIMEZONE constant defined in the module script below.
+        window.TG_APP.timeZone = 'Australia/Melbourne';
+    </script>
+</head>
+
+<body>
+    <tg-reflector id="reflector"></tg-reflector>
+    <test-fixture id="MasterFixture">
+        <template>
+            <tg-TgEntityWithTimeZoneDates-master
+                id="master"
+                entity-type="ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates"
+                entity-id="new"
+                current-state="EDIT">
+            </tg-TgEntityWithTimeZoneDates-master>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+
+        import '/app/tg-reflector.js';
+        import moment from '/resources/polymer/lib/moment-lib.js';
+        import { _millisDateRepresentation, _momentTz, now } from '/resources/reflection/tg-date-utils.js';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates';
+
+        const SERVER_TIMEZONE = 'Australia/Melbourne'; // surrogate (server-aligned) zone; must match window.TG_APP.timeZone above
+        const CLIENT_TIMEZONE = 'Europe/Kyiv';         // real client zone; mocked via moment.tz.guess in suite setup
+
+        // Independent time-zone mode exercised against a 'regular' Date property (no fixed time-zone, no @DependentTimeZoneMode).
+        // Such a property follows the surrogate (server-aligned) zone.
+        suite(`Independent time-zone mode (${SERVER_TIMEZONE}) - dateProp (regular property)`, function () {
+            let master, guess, originalNow;
+
+            suiteSetup(() => {
+                guess = moment.tz.guess;
+                originalNow = moment.now;
+                moment.tz.guess = (force) => CLIENT_TIMEZONE; // simulate real client zone
+                moment.tz.setDefault(SERVER_TIMEZONE);        // surrogate (server-aligned) zone
+            });
+            suiteTeardown(() => {
+                moment.tz.guess = guess;
+                moment.now = originalNow;
+                moment.tz.setDefault();
+            });
+
+            setup(function () {
+                master = fixture('MasterFixture');
+            });
+
+            (() => {
+                const millis = 1473057180015;
+                test(`_millisDateRepresentation [${millis}] produces representation in surrogate zone (${SERVER_TIMEZONE})`, done => {
+                    master.entityId = 'new';
+                    master.postRetrieved = function () {
+                        const dateProp = master.$.editor_4_dateProp.prop;
+                        const expected = moment.tz(millis, SERVER_TIMEZONE).format('DD/MM/YYYY HH:mm:ss.SSS');
+                        assert.strictEqual(_millisDateRepresentation(millis, dateProp), expected, '_millisDateRepresentation should format in surrogate zone for a regular property.');
+                        done();
+                    };
+                    master.retrieve();
+                });
+            })();
+
+            (() => {
+                const millis = 1473057180015;
+                test(`_momentTz [${millis}] produces moment in surrogate zone (${SERVER_TIMEZONE})`, done => {
+                    master.entityId = 'new';
+                    master.postRetrieved = function () {
+                        const dateProp = master.$.editor_4_dateProp.prop;
+                        const expected = moment.tz(millis, SERVER_TIMEZONE).format('DD/MM/YYYY HH:mm:ss.SSS');
+                        assert.strictEqual(_momentTz(millis, dateProp).format('DD/MM/YYYY HH:mm:ss.SSS'), expected, '_momentTz should produce a moment formatting equally to surrogate zone for a regular property.');
+                        done();
+                    };
+                    master.retrieve();
+                });
+            })();
+
+            (() => {
+                const fixedNow = 1640000000000;
+                test(`now [${fixedNow}] produces moment whose representation matches real client (${CLIENT_TIMEZONE}) time`, done => {
+                    master.entityId = 'new';
+                    master.postRetrieved = function () {
+                        const dateProp = master.$.editor_4_dateProp.prop;
+                        moment.now = () => fixedNow;
+                        try {
+                            // For a regular property in independent mode, now(prop) returns a moment whose formatted output
+                            // equals the current real client time, while its underlying offset is the surrogate one.
+                            const expected = moment.tz(fixedNow, CLIENT_TIMEZONE).format('YYYY-MM-DD HH:mm:ss.SSS');
+                            assert.strictEqual(now(dateProp).format('YYYY-MM-DD HH:mm:ss.SSS'), expected, 'now(prop) for a regular property should format equally to the real client current time.');
+                        } finally {
+                            moment.now = originalNow;
+                        }
+                        done();
+                    };
+                    master.retrieve();
+                });
+            })();
+        });
+
+        // Independent time-zone mode exercised against a UTC-fixed Date property (@PersistentType(userType = IUtcDateTimeType.class)).
+        // UTC-fixed properties are unaffected by the active mode.
+        suite(`Independent time-zone mode (${SERVER_TIMEZONE}) - datePropUtc (UTC-fixed property)`, function () {
+            let master, guess, originalNow;
+
+            suiteSetup(() => {
+                guess = moment.tz.guess;
+                originalNow = moment.now;
+                moment.tz.guess = (force) => CLIENT_TIMEZONE;
+                moment.tz.setDefault(SERVER_TIMEZONE);
+            });
+            suiteTeardown(() => {
+                moment.tz.guess = guess;
+                moment.now = originalNow;
+                moment.tz.setDefault();
+            });
+
+            setup(function () {
+                master = fixture('MasterFixture');
+            });
+
+            (() => {
+                const millis = 1473057180015;
+                test(`_millisDateRepresentation [${millis}] produces representation in UTC zone`, done => {
+                    master.entityId = 'new';
+                    master.postRetrieved = function () {
+                        const datePropUtc = master.$.editor_4_datePropUtc.prop;
+                        const expected = moment.tz(millis, 'UTC').format('YYYY-MM-DD HH:mm:ss.SSS');
+                        assert.strictEqual(_millisDateRepresentation(millis, datePropUtc), expected, '_millisDateRepresentation should format in UTC for a UTC-fixed property regardless of mode.');
+                        done();
+                    };
+                    master.retrieve();
+                });
+            })();
+
+            (() => {
+                const millis = 1473057180015;
+                test(`_momentTz [${millis}] produces moment in UTC zone`, done => {
+                    master.entityId = 'new';
+                    master.postRetrieved = function () {
+                        const datePropUtc = master.$.editor_4_datePropUtc.prop;
+                        const expected = moment.tz(millis, 'UTC').format('YYYY-MM-DD HH:mm:ss.SSS');
+                        assert.strictEqual(_momentTz(millis, datePropUtc).format('YYYY-MM-DD HH:mm:ss.SSS'), expected, '_momentTz should produce a UTC moment for a UTC-fixed property regardless of mode.');
+                        done();
+                    };
+                    master.retrieve();
+                });
+            })();
+
+            (() => {
+                const fixedNow = 1640000000000;
+                test(`now [${fixedNow}] produces moment whose representation matches real client (${CLIENT_TIMEZONE}) time`, done => {
+                    master.entityId = 'new';
+                    master.postRetrieved = function () {
+                        const datePropUtc = master.$.editor_4_datePropUtc.prop;
+                        moment.now = () => fixedNow;
+                        try {
+                            // now(prop) does not consult prop.timeZone(); a UTC-fixed property therefore takes the regular-property branch
+                            // and produces a moment whose formatted output equals the current real client time.
+                            const expected = moment.tz(fixedNow, CLIENT_TIMEZONE).format('YYYY-MM-DD HH:mm:ss.SSS');
+                            assert.strictEqual(now(datePropUtc).format('YYYY-MM-DD HH:mm:ss.SSS'), expected, 'now(prop) for a UTC-fixed property should format equally to the real client current time.');
+                        } finally {
+                            moment.now = originalNow;
+                        }
+                        done();
+                    };
+                    master.retrieve();
+                });
+            })();
+        });
+
+        // Independent time-zone mode exercised against a Date property annotated with @DependentTimeZoneMode.
+        // Such a property follows the real client zone, even though independent mode is active.
+        suite(`Independent time-zone mode (${SERVER_TIMEZONE}) - datePropDependent (@DependentTimeZoneMode property)`, function () {
+            let master, guess, originalNow;
+
+            suiteSetup(() => {
+                guess = moment.tz.guess;
+                originalNow = moment.now;
+                moment.tz.guess = (force) => CLIENT_TIMEZONE;
+                moment.tz.setDefault(SERVER_TIMEZONE);
+            });
+            suiteTeardown(() => {
+                moment.tz.guess = guess;
+                moment.now = originalNow;
+                moment.tz.setDefault();
+            });
+
+            setup(function () {
+                master = fixture('MasterFixture');
+            });
+
+            (() => {
+                const millis = 1473057180015;
+                test(`_millisDateRepresentation [${millis}] produces representation in real client zone (${CLIENT_TIMEZONE})`, done => {
+                    master.entityId = 'new';
+                    master.postRetrieved = function () {
+                        const datePropDependent = master.$.editor_4_datePropDependent.prop;
+                        const expected = moment.tz(millis, CLIENT_TIMEZONE).format('DD/MM/YYYY HH:mm:ss.SSS');
+                        assert.strictEqual(_millisDateRepresentation(millis, datePropDependent), expected, '_millisDateRepresentation should format in real client zone for a @DependentTimeZoneMode property.');
+                        done();
+                    };
+                    master.retrieve();
+                });
+            })();
+
+            (() => {
+                const millis = 1473057180015;
+                test(`_momentTz [${millis}] produces moment in real client zone (${CLIENT_TIMEZONE})`, done => {
+                    master.entityId = 'new';
+                    master.postRetrieved = function () {
+                        const datePropDependent = master.$.editor_4_datePropDependent.prop;
+                        const expected = moment.tz(millis, CLIENT_TIMEZONE).format('DD/MM/YYYY HH:mm:ss.SSS');
+                        assert.strictEqual(_momentTz(millis, datePropDependent).format('DD/MM/YYYY HH:mm:ss.SSS'), expected, '_momentTz should produce a moment formatting equally to real client zone for a @DependentTimeZoneMode property.');
+                        done();
+                    };
+                    master.retrieve();
+                });
+            })();
+
+            (() => {
+                const fixedNow = 1640000000000;
+                test(`now [${fixedNow}] produces moment whose representation matches real client (${CLIENT_TIMEZONE}) time`, done => {
+                    master.entityId = 'new';
+                    master.postRetrieved = function () {
+                        const datePropDependent = master.$.editor_4_datePropDependent.prop;
+                        moment.now = () => fixedNow;
+                        try {
+                            // For a @DependentTimeZoneMode property in independent mode, now(prop) returns a moment whose formatted output
+                            // equals the current real client time and whose underlying offset is the real client one.
+                            const expected = moment.tz(fixedNow, CLIENT_TIMEZONE).format('YYYY-MM-DD HH:mm:ss.SSS');
+                            assert.strictEqual(now(datePropDependent).format('YYYY-MM-DD HH:mm:ss.SSS'), expected, 'now(prop) for a @DependentTimeZoneMode property should format the current real client time.');
+                        } finally {
+                            moment.now = originalNow;
+                        }
+                        done();
+                    };
+                    master.retrieve();
+                });
+            })();
+        });
+    </script>
+</body>
+
+</html>
