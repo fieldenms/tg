@@ -6,6 +6,7 @@ import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuil
 import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWidth;
 import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithDesc;
 import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithTitle;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWordWrap;
 
 import java.util.Optional;
 
@@ -13,7 +14,7 @@ import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement.DEFAULT_COLUMN_WIDTH;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement.MIN_COLUMN_WIDTH;
 
-public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColumnBuilderWithTitle, IDynamicColumnBuilderWithDesc {
+public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColumnBuilderWithTitle, IDynamicColumnBuilderWithDesc, IDynamicColumnBuilderWordWrap {
     public static final String DYN_COL_GROUP_PROP_VALUE = "keyPropValue";
     public static final String DYN_COL_TYPE = "type";
     public static final String DYN_COL_GROUP_PROP = "keyProp";
@@ -35,6 +36,7 @@ public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColum
     private int width = DEFAULT_COLUMN_WIDTH;
     private int minWidth = MIN_COLUMN_WIDTH;
     private int growFactor = 1;
+    private boolean wordWrap = false;
 
     public DynamicColumn(final DynamicColumnBuilder<T> dynamicColumnBuilder, final String groupPropValue) {
         this.dynamicColumnBuilder = dynamicColumnBuilder;
@@ -54,15 +56,21 @@ public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColum
     }
 
     @Override
-    public IDynamicColumnBuilderAddPropWithDone width(final int width) {
+    public IDynamicColumnBuilderWordWrap width(final int width) {
         this.width = width;
         this.growFactor = 0;
         return this;
     }
 
     @Override
-    public IDynamicColumnBuilderAddPropWithDone minWidth(final int minWidth) {
+    public IDynamicColumnBuilderWordWrap minWidth(final int minWidth) {
         this.minWidth = minWidth > this.width ? this.width: minWidth;
+        return this;
+    }
+
+    @Override
+    public IDynamicColumnBuilderAddPropWithDone withWordWrap() {
+        this.wordWrap = true;
         return this;
     }
 
@@ -93,6 +101,10 @@ public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColum
 
     public int getGrowFactor() {
         return growFactor;
+    }
+
+    public boolean getWordWrap() {
+        return wordWrap;
     }
 
     @Override

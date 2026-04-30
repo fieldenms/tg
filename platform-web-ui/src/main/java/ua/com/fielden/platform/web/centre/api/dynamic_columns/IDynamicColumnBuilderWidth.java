@@ -6,9 +6,9 @@ package ua.com.fielden.platform.web.centre.api.dynamic_columns;
  * @author TG Team
  *
  */
-public interface IDynamicColumnBuilderWidth  extends IDynamicColumnBuilderAddPropWithDone{
+public interface IDynamicColumnBuilderWidth  extends IDynamicColumnBuilderWordWrap {
 
-    IDynamicColumnBuilderAddPropWithDone width(final int width);
+    IDynamicColumnBuilderWordWrap width(final int width);
 
-    IDynamicColumnBuilderAddPropWithDone minWidth(final int width);
+    IDynamicColumnBuilderWordWrap minWidth(final int width);
 }
