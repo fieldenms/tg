@@ -14,6 +14,14 @@ import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement.DEFAULT_COLUMN_WIDTH;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement.MIN_COLUMN_WIDTH;
 
+/// Holds the per-column configuration produced by [DynamicColumnBuilder#addColumn(String)].
+///
+/// Acts as the receiver for the fluent calls that follow `addColumn`: `title`, `desc`, `width`/`minWidth`, and `withWordWrap`.
+/// The `addColumn` method on this class delegates back to the parent builder to start a new column, and `done` finalises configuration.
+///
+/// [DynamicColumnBuilder#build()] reads the accumulated settings to produce the per-column attribute map keyed by the `DYN_COL_*` constants below.
+/// Those keys are consumed by the EGI rendering layer -- see `PropertyColumnElement` and the `tg-property-column` Polymer component.
+///
 public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColumnBuilderWithTitle, IDynamicColumnBuilderWithDesc, IDynamicColumnBuilderWordWrap {
     public static final String DYN_COL_GROUP_PROP_VALUE = "keyPropValue";
     public static final String DYN_COL_TYPE = "type";
