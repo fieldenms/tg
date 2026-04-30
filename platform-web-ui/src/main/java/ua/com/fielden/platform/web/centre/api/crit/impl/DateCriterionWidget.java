@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 
 import java.util.Map;
@@ -14,18 +13,17 @@ public class DateCriterionWidget extends AbstractRangeCriterionWidget {
     ///
     public DateCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
         super(root, "centre/criterion/multi/range/tg-date-range-criterion", propertyName,
-                new DateTimePickerWidget(
-                        AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),
-                        AbstractCriterionWidget.generateNames(root, managedType, propertyName).getKey(),
-                        false,
-                        DefaultValueContract.getTimePortionToDisplay(managedType, propertyName)
-                ),
-                new DateTimePickerWidget(
-                        AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getValue(),
-                        AbstractCriterionWidget.generateNames(root, managedType, propertyName).getValue(),
-                        true,
-                        DefaultValueContract.getTimePortionToDisplay(managedType, propertyName)
-                ));
+            new DateTimePickerWidget(
+                generateTitleDesc(root, managedType, propertyName).getKey(),
+                generateNames(root, managedType, propertyName).getKey(),
+                false
+            ),
+            new DateTimePickerWidget(
+                generateTitleDesc(root, managedType, propertyName).getValue(),
+                generateNames(root, managedType, propertyName).getValue(),
+                true
+            )
+        );
     }
 
     @Override
