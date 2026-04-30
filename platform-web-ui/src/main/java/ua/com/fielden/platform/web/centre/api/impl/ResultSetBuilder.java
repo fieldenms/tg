@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -159,8 +158,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         } else if (isBoolean(propertyType)) {
             return of(new CheckboxWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (isDate(propertyType)) {
-            return of(new DateTimePickerWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName, false,
-                    DefaultValueContract.getTimePortionToDisplay(root, propName)));
+            return of(new DateTimePickerWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName, false));
         } else if (isCollectional(propertyType)) {
             return of(new CollectionalRepresentorWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()),propName));
         }

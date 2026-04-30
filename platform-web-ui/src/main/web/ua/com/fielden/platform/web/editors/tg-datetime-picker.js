@@ -524,11 +524,13 @@ export class TgDatetimePicker extends TgEditor {
 
     /**
      * An overridden 'entity' observer to provide 'EntityTypeProp' computed instance once the entity has been provided.
-     * That instance would be bound uni-directionally to child `tg-calendar` and `tg-month-selector` elements.
+     * That instance will be bound uni-directionally to child `tg-calendar` and `tg-month-selector` elements.
+     * Initialises also 'datePortion' property.
      */
     _entityChanged (newValue, oldValue) {
         if (this.reflector().isEntity(newValue)) {
             this.prop = newValue.type().prop(this.propertyName);
+            this.datePortion = this.prop?.datePortion?.();
         }
         super._entityChanged (newValue, oldValue);
     }

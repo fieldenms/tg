@@ -199,10 +199,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (!isIgnoreDefault(ignore)) {
                     entityTypeProp.set_ignore(ignore);
                 }
-                if (isPropertyAnnotationPresent(DateOnly.class, type, name)) {
+                final var timePortion = getTimePortionToDisplay(type, name);
+                if (DATE_ONLY.equals(timePortion)) {
                     entityTypeProp.set_date(TRUE);
                 }
-                if (isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
+                else if (TIME_ONLY.equals(timePortion)) {
                     entityTypeProp.set_time(TRUE);
                 }
                 if (isPropertyAnnotationPresent(DependentTimeZoneMode.class, type, name)) {
