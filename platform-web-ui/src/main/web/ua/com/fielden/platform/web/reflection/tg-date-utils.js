@@ -1,6 +1,6 @@
 import moment from '/resources/polymer/lib/moment-lib.js';
 
-export const timeZoneFormats = {
+const timeZoneFormats = {
     "UTC": {
         "L": "YYYY-MM-DD",
         "LTS": "HH:mm:ss.SSS",
@@ -22,19 +22,37 @@ export function _millis(fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.S
 };
 
 /**
+ * Calculates 'timeZone' for fixed-tz properties (annotated with @PersistentType(userType = IUtcDateTimeType.class)).
+ * Returns empty value for regular date properties.
+ *
+ * @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `timeZone()`.
+ */
+function _fixedTimeZone(prop) {
+    return prop?.timeZone?.();
+};
+
+/**
+ * Calculates format for concrete 'prop' based on its 'timeZone()' and 'name'.
+ *
+ * @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `timeZone()`.
+ */
+export function _timeZoneFormat(prop, name) {
+    const timeZone = _fixedTimeZone(prop);
+    return timeZone ? timeZoneFormats[timeZone][name] : moment.localeData().longDateFormat(name);
+};
+
+/**
  * Converts 'dateMillis' to String-based date representation according to property configuration in 'prop' object.
  *
  * @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `timeZone()` / `datePortion` / `isDependentTimeZoneMode`.
  * @param portionToDisplay {String} -- "DATE", "TIME" or empty for full date+time representation; this option is taken from 'prop' if not specified
  */
 export function _millisDateRepresentation(dateMillis, prop, portionToDisplay) {
-    // Calculate 'timeZone' for fixed-tz properties (annotated with @PersistentType(userType = IUtcDateTimeType.class)).
-    const timeZone = prop?.timeZone?.();
     // Create proper 'timeFormat' function based on the 'timeZone' and whether milliseconds / seconds are present.
     const millisecondsExist = dateMillis % 1000 !== 0;
     const secondsExist = !millisecondsExist ? (dateMillis / 1000) % 60 !== 0 : true;
     const timeFormat = () => {
-        const fullFormat = timeZone ? timeZoneFormats[timeZone]['LTS'] : moment.localeData().longDateFormat('LTS');
+        const fullFormat = _timeZoneFormat(prop, 'LTS');
         const noMillisFormat = fullFormat ? fullFormat.replace('.SSS', '') : 'LT';
         return millisecondsExist ? 'LTS' : secondsExist ? noMillisFormat : 'LT';
     };
@@ -42,6 +60,7 @@ export function _millisDateRepresentation(dateMillis, prop, portionToDisplay) {
     const portion = portionToDisplay || prop?.datePortion?.();
     // Calculate 'format' based on 'portion', or use full format if empty / unknown.
     const format = portion === "DATE" ? "L" : portion === "TIME" ? timeFormat() : "L " + timeFormat();
+    const timeZone = _fixedTimeZone(prop);
     return _momentTz(dateMillis, prop).format(timeZone ? timeZoneFormats[timeZone][format] : format);
 };
 
@@ -79,7 +98,7 @@ export function _momentTz(input) {
     const args = Array.prototype.slice.call(arguments, 0, -1);
     // Take last argument, which may contain time-zone.
     const prop = arguments[arguments.length - 1];
-    const timeZone = prop?.timeZone?.();
+    const timeZone = _fixedTimeZone(prop);
     // For the case of fixed-tz property, perform computation in that time-zone.
     if (timeZone) {
         args.push(timeZone);
@@ -99,6 +118,10 @@ export function _timeZoneHeader () {
  * @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `isDependentTimeZoneMode`.
  */
 export function now(prop) {
+    // In concrete time-zone (e.g. UTC) just use standard method _momentTz for creating 'now' in that time-zone.
+    if (_fixedTimeZone(prop)) {
+        return _momentTz(prop);
+    }
     // In independent time-zone mode we do the following trick:
     // 1. create 'now' moment in current surrogate (equal to server one) time-zone;
     // 2. convert it to real time-zone to be able to format it into our 'real' string;

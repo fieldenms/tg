@@ -14,7 +14,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 import moment from '/resources/polymer/lib/moment-lib.js'; // used for moment.localeData(). ...
-import { _momentTz, timeZoneFormats, now } from '/resources/reflection/tg-date-utils.js';
+import { _momentTz, _timeZoneFormat, now } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js'
 
 const AFTER = 'AFTER';
@@ -336,7 +336,7 @@ export class TgDatetimePicker extends TgEditor {
                     return this.convertToString(this._validMoment.valueOf());
                 }
                 // determine current date portion format for this editor ...
-                const datePortionFormat = this?.prop.timeZone() ? timeZoneFormats[this?.prop.timeZone()]['L'] : moment.localeData().longDateFormat('L');
+                const datePortionFormat = _timeZoneFormat(this.prop, 'L');
                 // ... and its separator;
                 const separator = datePortionFormat.includes('/') ? '/' : datePortionFormat.includes('-') ? '-' : null;
                 // validate separator and ...
@@ -423,10 +423,7 @@ export class TgDatetimePicker extends TgEditor {
 
     _tryLiterals (editingValue) {
         const upperCasedValue = editingValue[0].toUpperCase();
-        // In concrete time-zone (e.g. UTC) just use standard method _momentTz for creating 'now' in that time-zone.
-        // Otherwise use standard now() function.
-        const convertedMoment = this.prop?.timeZone?.() ? _momentTz(this.prop) : now(this.prop);
-
+        const convertedMoment = now(this.prop);
         if ('T' === upperCasedValue) {
             const todayMoment = convertedMoment.startOf("day");
             return this.timePortionToBecomeEndOfDay === true ? todayMoment.add(1, 'days').subtract(1, 'milliseconds') : todayMoment;
