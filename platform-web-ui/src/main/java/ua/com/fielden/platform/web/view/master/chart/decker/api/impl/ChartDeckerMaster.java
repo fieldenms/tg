@@ -116,9 +116,9 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    },\n"
                     + "    lines: " + generateListOfValues(deck.getLines(), l -> generateLine(l)) + ",\n"
                     + "    dataPropertyNames: {\n"
-                    + "        groupKeyProp: " + generateValueAccessor(deck.getEntityType(), deck.getPropertyType(), deck.getGroupKeyProp()) + ",\n"
+                    + "        groupKeyProp: " + generateValueAccessor(deck.getPropertyType(), deck.getGroupKeyProp()) + ",\n"
                     + "        groupDescProp: '" + deck.getGroupDescProperty() + "',\n"
-                    + "        valueProps: " + generateListOfValues(deck.getSeries(), s -> generateValueAccessor(s.getEntityType(), s.getPropertyType(), s.getPropertyName())) + "\n"
+                    + "        valueProps: " + generateListOfValues(deck.getSeries(), s -> generateValueAccessor(s.getPropertyType(), s.getPropertyName())) + "\n"
                     + "    },\n"
                     + "    colours: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getColour().getColourValue() + "'") + ",\n"
                     + "    barColour: (d, i) => self.barOptions[" + deckIndex + "].colours[i],\n"
@@ -126,8 +126,8 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    propertyTypes: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getPropertyType().getSimpleName() + "'") + ",\n"
                     + "    barLabel: (d, i) => this._labelFormatter(d, i, self.barOptions[" + deckIndex + "].propertyNames, self.barOptions[" + deckIndex + "].propertyTypes, self.barOptions[" + deckIndex + "].mode),\n"
                     + "    tooltip: (d, i) => this._tooltip(d, "
-                                + generateValueAccessor(deck.getEntityType(), deck.getPropertyType(), deck.getGroupKeyProp()) + ", "
-                                + generateValueAccessor(deck.getEntityType(), String.class, deck.getGroupDescProperty()) + ", "
+                                + generateValueAccessor(deck.getPropertyType(), deck.getGroupKeyProp()) + ", "
+                                + generateValueAccessor(String.class, deck.getGroupDescProperty()) + ", "
                                 + "self.barOptions[" + deckIndex + "].propertyNames[i], "
                                 + "self.barOptions[" + deckIndex + "].propertyTypes[i], "
                                 + "self.legendItems[" + deckIndex + "][i].title, " + deckIndex + ", i),\n"
@@ -144,7 +144,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
     }
 
     private String generateLine(final ChartLine<T> line) {
-        return "{property: " + generateValueAccessor(line.getEntityType(), line.getPropertyType(), line.getProperty()) + ", title: '"  + line.getTitle() + "', colour: '" + line.getColour().getColourValue() + "'}";
+        return "{property: " + generateValueAccessor(line.getPropertyType(), line.getProperty()) + ", title: '"  + line.getTitle() + "', colour: '" + line.getColour().getColourValue() + "'}";
     }
 
     private <C> String generateListOfValues(final List<C> series, final Function<C, String> func) {
@@ -164,7 +164,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         return "{title: '"  + (isEmpty(series.getTitle()) ? "" : series.getTitle()) + "', colour: '" + series.getColour().getColourValue() + "'}";
     }
 
-    private String generateValueAccessor(final Class<?> deckType, final Class<?> propertyType, final String aggregationProperty) {
+    private String generateValueAccessor(final Class<?> propertyType, final String aggregationProperty) {
         if (Money.class.isAssignableFrom(propertyType)) {
             return "this._moneyPropAccessor('" + aggregationProperty + "')";
         } else if (EntityUtils.isDate(propertyType)) {

@@ -63,7 +63,7 @@ const TgScatterPlotMasterBehaviorImpl = {
         this._getValueRange = this._getValueRange.bind(this);
     },
 
-    _datePropAccessor: function (propertyName, dateType) {
+    _datePropAccessor: function (propertyName) {
         return function (entity, value) {
             if (!value) {
                 return _momentTz(entity.get(propertyName), entity.type().prop(propertyName)).toDate();
