@@ -30,15 +30,14 @@ export function _millisDateRepresentation(dateMillis, prop, portionToDisplay) {
         const noMillisFormat = fullFormat ? fullFormat.replace('.SSS', '') : 'LT';
         return millisecondsExist ? 'LTS' : secondsExist ? noMillisFormat : 'LT';
     };
+    // If 'portionToDisplay' is present and non-empty, use it; otherwise fall back to 'prop.datePortion()'.
+    // 'prop' can be empty, hence the optional chaining.
+    const portion = portionToDisplay || prop?.datePortion?.();
     let format;
-    if (portionToDisplay) {
-        if (portionToDisplay == "DATE") {
-            format = "L";
-        } else if (portionToDisplay == "TIME") {
-            format = timeFormat();
-        } else {
-            format = "L " + timeFormat();
-        }
+    if (portion === "DATE") {
+        format = "L";
+    } else if (portion === "TIME") {
+        format = timeFormat();
     } else {
         format = "L " + timeFormat();
     }

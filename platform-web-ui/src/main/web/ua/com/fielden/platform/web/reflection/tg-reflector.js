@@ -1387,7 +1387,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
     } else if (typeof bindingValue === 'number') {
         if (propertyType === 'Date') {
             const prop = rootEntityType.prop(property);
-            return _millisDateRepresentation(bindingValue, prop, prop.datePortion());
+            return _millisDateRepresentation(bindingValue, prop);
         } else {
             return '' + bindingValue; // Integer value (or Long, but very rare) and BigDecimal value
         }
