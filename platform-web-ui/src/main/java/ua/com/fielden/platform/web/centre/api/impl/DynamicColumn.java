@@ -2,11 +2,7 @@ package ua.com.fielden.platform.web.centre.api.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.IDynamicColumnConfig;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderAddPropWithDone;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWidth;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithDesc;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithTitle;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWordWrap;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.*;
 
 import java.util.Optional;
 
@@ -20,22 +16,22 @@ import static ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColu
 /// The `addColumn` method on this class delegates back to the parent builder to start a new column, and `done` finalises configuration.
 ///
 /// [DynamicColumnBuilder#build()] reads the accumulated settings to produce the per-column attribute map keyed by the `DYN_COL_*` constants below.
-/// Those keys are consumed by the EGI rendering layer -- see `PropertyColumnElement` and the `tg-property-column` Polymer component.
+/// Those keys are consumed by the EGI rendering layer — see `PropertyColumnElement` and the `tg-property-column` Polymer component.
 ///
 public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColumnBuilderWithTitle, IDynamicColumnBuilderWithDesc, IDynamicColumnBuilderWordWrap {
-    public static final String DYN_COL_GROUP_PROP_VALUE = "keyPropValue";
-    public static final String DYN_COL_TYPE = "type";
-    public static final String DYN_COL_GROUP_PROP = "keyProp";
-    public static final String DYN_COL_DISPLAY_PROP = "valueProp";
-    public static final String DYN_COL_TOOLTIP_PROP = "tooltipProp";
-    public static final String DYN_COL_TITLE = "title";
-    public static final String DYN_COL_DESC = "desc";
-    public static final String DYN_COL_WIDTH = "width";
-    public static final String DYN_COL_MIN_WIDTH = "minWidth";
-    public static final String DYN_COL_GROW_FACTOR = "growFactor";
-    public static final String DYN_COL_WORDWRAP="wordWrap";
+    public static final String
+            DYN_COL_GROUP_PROP_VALUE = "keyPropValue",
+            DYN_COL_TYPE = "type",
+            DYN_COL_GROUP_PROP = "keyProp",
+            DYN_COL_DISPLAY_PROP = "valueProp",
+            DYN_COL_TOOLTIP_PROP = "tooltipProp",
+            DYN_COL_TITLE = "title",
+            DYN_COL_DESC = "desc",
+            DYN_COL_WIDTH = "width",
+            DYN_COL_MIN_WIDTH = "minWidth",
+            DYN_COL_GROW_FACTOR = "growFactor",
+            DYN_COL_WORD_WRAP = "wordWrap";
 
-    
     private final DynamicColumnBuilder<T> dynamicColumnBuilder;
     private final String groupPropValue;
 
@@ -44,7 +40,7 @@ public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColum
     private int width = DEFAULT_COLUMN_WIDTH;
     private int minWidth = MIN_COLUMN_WIDTH;
     private int growFactor = 1;
-    private boolean wordWrap = false;
+    private boolean wordWrap;
 
     public DynamicColumn(final DynamicColumnBuilder<T> dynamicColumnBuilder, final String groupPropValue) {
         this.dynamicColumnBuilder = dynamicColumnBuilder;
@@ -72,7 +68,7 @@ public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColum
 
     @Override
     public IDynamicColumnBuilderWordWrap minWidth(final int minWidth) {
-        this.minWidth = minWidth > this.width ? this.width: minWidth;
+        this.minWidth = Math.min(minWidth, this.width);
         return this;
     }
 
@@ -111,7 +107,7 @@ public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColum
         return growFactor;
     }
 
-    public boolean getWordWrap() {
+    public boolean isWordWrap() {
         return wordWrap;
     }
 

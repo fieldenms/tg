@@ -143,11 +143,11 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     }
 
     private Object wordWrapBinding() {
-        return isDynamic ? format("[[item.%s]]", DYN_COL_WORDWRAP) : Boolean.valueOf(wordWrap);
+        return isDynamic ? format("[[item.%s]]", DYN_COL_WORD_WRAP) : Boolean.valueOf(wordWrap);
     }
 
     private String minWidthBinding() {
-        return isDynamic ? format("[[item.%s]]", DYN_COL_MIN_WIDTH) : String.valueOf(MIN_COLUMN_WIDTH > width ? width : MIN_COLUMN_WIDTH);
+        return isDynamic ? format("[[item.%s]]", DYN_COL_MIN_WIDTH) : String.valueOf(Math.min(MIN_COLUMN_WIDTH, width));
     }
 
     private String widthBinding() {
