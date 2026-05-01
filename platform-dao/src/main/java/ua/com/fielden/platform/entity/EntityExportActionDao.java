@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import com.google.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -186,8 +187,8 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         if (isDefaultOrLink(saveAsName)) {
             return EXPORT_FILE_NAME_TEMPLATE.formatted(entityTypeName);
         }
-        final String sanitised = sanitiseForFileName(saveAsName.get());
-        if (sanitised.isEmpty()) {
+        final String sanitised = saveAsName.map(EntityExportActionDao::sanitiseForFileName).orElse(null);
+        if (StringUtils.isBlank(sanitised)) {
             return EXPORT_FILE_NAME_TEMPLATE.formatted(entityTypeName);
         }
         return EXPORT_FILE_NAME_WITH_CONFIG_TEMPLATE.formatted(entityTypeName, sanitised);
