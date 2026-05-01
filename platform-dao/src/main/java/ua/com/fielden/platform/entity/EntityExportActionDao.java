@@ -124,8 +124,12 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             dynamicProperties.add(selectionCrit.getDynamicProperties());
         }
         if (!contextEntry.proxiedPropertyNames().contains("relatedContexts")) {
+            // Recursing into related contexts.
+            // The returned tuples are intentionally discarded — the file name uses the top-level frame's value only.
             contextEntry.getRelatedContexts().forEach((key, relatedContext) -> generateExportData(entity, relatedContext, true, entities, titles, propAndTitles, dynamicProperties));
         }
+
+        // Always return the current frame's entity type and saveAsName, even when the result set is hidden — only the outermost frame's value is consumed by the caller for the file name.
         return t2(selectionCrit.getEntityClass().getSimpleName(), selectionCrit.saveAsName());
     }
 
