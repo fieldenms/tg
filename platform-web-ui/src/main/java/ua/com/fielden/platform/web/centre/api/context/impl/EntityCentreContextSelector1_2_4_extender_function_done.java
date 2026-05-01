@@ -59,6 +59,7 @@ class EntityCentreContextSelector1_2_4_extender_function_done<T extends Abstract
                 withAllSelectedEntities,
                 withSelectionCrit,
                 withMasterEntity,
+                false,
                 computation,
                 of(relatedContexts),
                 parentCentreContext

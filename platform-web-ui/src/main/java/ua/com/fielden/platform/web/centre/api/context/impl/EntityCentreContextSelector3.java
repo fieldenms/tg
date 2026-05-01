@@ -44,6 +44,7 @@ class EntityCentreContextSelector3<T extends AbstractEntity<?>> implements IEnti
                 false,
                 withSelectionCrit,
                 withMasterEntity,
+                false,
                 null,
                 empty(),
                 empty()

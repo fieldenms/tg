@@ -44,6 +44,7 @@ class EntityCentreContextSelector0<T extends AbstractEntity<?>> implements IEnti
                 withAllSelectedEntities,
                 false,
                 false,
+                false,
                 null,
                 empty(),
                 empty()
