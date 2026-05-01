@@ -14,13 +14,11 @@ import java.util.*;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.*;
 
-/**
- * Implementation and the entry point for dynamic column building API. It is used to define dynamic columns that are used for representing collectional properties in-line with the main entity.
- *
- * @author TG Team
- *
- * @param <T>
- */
+/// Implementation and entry point for the dynamic-column building API.
+///
+/// Used to define dynamic columns that represent a collectional property's elements in-line with the main entity row.
+/// Start a configuration with [#forProperty(Class, CharSequence)], chain `withGroupProp` / `withDisplayProp` / `withTooltipProp`, then add columns with `addColumn(...)` and finalise with `done()`.
+///
 public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynamicColumnBuilderAddProp, IDynamicColumnBuilderGroupProp, IDynamicColumnBuilderDisplayProp, IDynamicColumnBuilderWithTooltipProp, IDynamicColumnConfig {
 
     private final List<DynamicColumn<T>> dynamicColumns = new ArrayList<>();
@@ -31,12 +29,10 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
     private String displayProp;
     private Optional<String> tooltipProp = Optional.empty();
 
-    /**
-     * This is the entry to the Dynamic Column Builder API.
-     * @param type
-     * @param collectionalPropertyName
-     * @return
-     */
+    /// Entry point of the dynamic-column building API.
+    ///
+    /// `type` is the parent entity that declares the collectional property; `collectionalPropertyName` is the dot-notation name of that property within `type`.
+    ///
     public static <M extends AbstractEntity<?>> IDynamicColumnBuilderGroupProp forProperty(final Class<M> type, final CharSequence collectionalPropertyName) {
         return new DynamicColumnBuilder<M>(type, collectionalPropertyName.toString());
     }
@@ -74,6 +70,7 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
             res.put(DYN_COL_WIDTH, dynamicProp.getWidth());
             res.put(DYN_COL_MIN_WIDTH, dynamicProp.getMinWidth());
             res.put(DYN_COL_GROW_FACTOR, dynamicProp.getGrowFactor());
+            res.put(DYN_COL_WORD_WRAP, dynamicProp.isWordWrap());
             return res;
         }).collect(toList());
     }
