@@ -176,18 +176,25 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     }
 
     /// Builds the export file name, appending the active configuration title for non-default, non-link configurations.
-    /// For the default and link configurations, returns the original `export-of-{entityType}.xlsx` form.
+    /// For the default and link configurations, or when the sanitised title is blank, returns the original `export-of-{entityType}.xlsx` form.
+    ///
     static String buildFileName(final String entityTypeName, final Optional<String> saveAsName) {
         if (isDefaultOrLink(saveAsName)) {
             return EXPORT_FILE_NAME_TEMPLATE.formatted(entityTypeName);
         }
-        return EXPORT_FILE_NAME_WITH_CONFIG_TEMPLATE.formatted(entityTypeName, sanitiseForFileName(saveAsName.get()));
+        final String sanitised = sanitiseForFileName(saveAsName.get());
+        if (sanitised.isEmpty()) {
+            return EXPORT_FILE_NAME_TEMPLATE.formatted(entityTypeName);
+        }
+        return EXPORT_FILE_NAME_WITH_CONFIG_TEMPLATE.formatted(entityTypeName, sanitised);
     }
 
     /// Replaces characters disallowed in file names on common operating systems with `-`,
-    /// collapses runs of `-`, trims leading/trailing `-`, and truncates the result to [MAX_CONFIG_TITLE_IN_FILE_NAME] characters.
+    /// collapses runs of `-`, trims leading/trailing whitespace and `-`, and truncates the result to [MAX_CONFIG_TITLE_IN_FILE_NAME] characters.
+    /// Returns an empty string if nothing usable remains after sanitisation.
+    /// 
     static String sanitiseForFileName(final String title) {
-        final String replaced = title.replaceAll("[\\\\/:*?\"<>|]", "-").replaceAll("-{2,}", "-").replaceAll("(^-|-$)", "");
+        final String replaced = title.replaceAll("[\\\\/:*?\"<>|]", "-").replaceAll("-{2,}", "-").replaceAll("(^[\\s-]+|[\\s-]+$)", "");
         return replaced.length() > MAX_CONFIG_TITLE_IN_FILE_NAME ? replaced.substring(0, MAX_CONFIG_TITLE_IN_FILE_NAME) : replaced;
     }
 

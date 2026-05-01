@@ -7,9 +7,7 @@ import java.util.Optional;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.EntityExportActionDao.MAX_CONFIG_TITLE_IN_FILE_NAME;
-import static ua.com.fielden.platform.entity.EntityExportActionDao.buildFileName;
-import static ua.com.fielden.platform.entity.EntityExportActionDao.sanitiseForFileName;
+import static ua.com.fielden.platform.entity.EntityExportActionDao.*;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 
 /// Unit tests for the export file-name construction in {@link EntityExportActionDao}.
@@ -79,6 +77,29 @@ public class EntityExportActionDaoFileNameTest {
     public void empty_optional_is_treated_as_default() {
         final Optional<String> noConfig = empty();
         assertEquals("export-of-WorkActivity.xlsx", buildFileName("WorkActivity", noConfig));
+    }
+
+    @Test
+    public void title_made_of_only_disallowed_chars_falls_back_to_default_name() {
+        assertEquals("export-of-Equipment.xlsx", buildFileName("Equipment", of("***")));
+        assertEquals("export-of-Equipment.xlsx", buildFileName("Equipment", of("///")));
+        assertEquals("export-of-Equipment.xlsx", buildFileName("Equipment", of("*/*")));
+    }
+
+    @Test
+    public void title_made_of_only_whitespace_falls_back_to_default_name() {
+        assertEquals("export-of-Equipment.xlsx", buildFileName("Equipment", of("   ")));
+    }
+
+    @Test
+    public void leading_and_trailing_whitespace_in_title_is_trimmed() {
+        assertEquals("My filter", sanitiseForFileName("  My filter  "));
+        assertEquals("export-of-Equipment-My filter.xlsx", buildFileName("Equipment", of("  My filter  ")));
+    }
+
+    @Test
+    public void leading_and_trailing_whitespace_mixed_with_dashes_is_trimmed() {
+        assertEquals("name", sanitiseForFileName(" -name- "));
     }
 
 }
