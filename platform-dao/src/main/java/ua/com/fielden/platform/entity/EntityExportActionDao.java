@@ -15,11 +15,7 @@ import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -36,14 +32,17 @@ import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLi
 ///
 @EntityType(EntityExportAction.class)
 public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> implements EntityExportActionCo {
-    public static final String ERR_EMPTY_SELECTION_FOR_EXPORT_OF_SELECTED = "Please select at least one entity to export from %s view.";
-    public static final String ERR_MISSING_IDS_FOR_EXPORT_OF_SELECTED = "Export of selected entities from %s view is not supported due to missing IDs.";
-    public static final String ERR_EXCEPTION_DURING_DATA_EXPORT = "An exception occurred during the data export.";
-    public static final String ERR_NOTHING_TO_EXPORT = "There is nothing to export.";
 
-    public static final String EXPORT_FILE_NAME_TEMPLATE = "export-of-%s.xlsx";
-    public static final String EXPORT_FILE_NAME_WITH_CONFIG_TEMPLATE = "export-of-%s-%s.xlsx";
-    public static final String EXPORT_FILE_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    public static final String
+            ERR_EMPTY_SELECTION_FOR_EXPORT_OF_SELECTED = "Please select at least one entity to export from %s view.",
+            ERR_MISSING_IDS_FOR_EXPORT_OF_SELECTED = "Export of selected entities from %s view is not supported due to missing IDs.",
+            ERR_EXCEPTION_DURING_DATA_EXPORT = "An exception occurred during the data export.",
+            ERR_NOTHING_TO_EXPORT = "There is nothing to export.";
+
+    public static final String
+            EXPORT_FILE_NAME_TEMPLATE = "export-of-%s.xlsx",
+            EXPORT_FILE_NAME_WITH_CONFIG_TEMPLATE = "export-of-%s-%s.xlsx",
+            EXPORT_FILE_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
     /// Maximum number of characters used from the configuration title in the export file name.
     /// Keeps the total file name comfortably under common file-system limits (255 chars).
