@@ -767,6 +767,13 @@ Polymer({
                 self._reflector.setCustomProperty(context, '@@sharedUri', self._sharedUri);
             }
         }
+        // Customly enhance context by applying `customiseContext` function, that can be implemented, e.g., in `preAction`.
+        self.customiseContext?.(
+            context, // The `context` to be customised.
+            self, // `tg-ui-action` itself.
+            // Convenient `setCustomProperty` function.
+            (customPropertyName, customPropertyValue) => self._reflector.setCustomProperty(context, customPropertyName, customPropertyValue)
+        );
         return context;
     },
 
