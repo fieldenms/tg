@@ -701,7 +701,7 @@ public class CriteriaResource extends AbstractWebResource {
 
                 // Execute actual Entity Centre configuration run / refresh / navigate / sort logic.
                 final var resultListAndPage = executeEntityCentreConfiguration(
-                    new ConfigSettings(saveAsName, user, device(), miType),
+                    new ConfigSettings(saveAsName, user, device(), miType, null),
                     of(t2(updatedFreshCentre, previouslyRunCentre)),
                     isRunning,
 

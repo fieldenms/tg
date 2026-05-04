@@ -158,7 +158,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
         if (LINK_CONFIG_TITLE.equals(saveAsNameString)) {
             return left(failure(ERR_LINK_CONFIG_IS_NOT_AVAILABLE_FOR_RUNNING.formatted(configUuid, saveAsNameString)));
         }
-        return right(new ConfigSettings(of(saveAsNameString), owner, device, miType));
+        return right(new ConfigSettings(of(saveAsNameString), owner, device, miType, freshConfig));
     }
 
     @Override
