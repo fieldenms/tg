@@ -248,7 +248,7 @@ public class DefaultEntityCentreProcessor implements EntityCentreProcessor {
         // Perform actual running of `criteriaEntity` with `configSettings`.
         final var resultListAndPage = executeEntityCentreConfiguration(
             configSettings,
-            empty(),
+            new HeadlessCentreExecution(),
             true,
             customObject,
             criteriaEntity,
