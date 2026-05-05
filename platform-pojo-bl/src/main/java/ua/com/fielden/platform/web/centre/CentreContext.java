@@ -80,6 +80,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
     /// `null` if `withChosenEntity()` was not configured for the action's context.
     ///
     private AbstractEntity<?> chosenEntity;
+    public static final String CHOSENENTITY_PROPERTY_NAME = "chosenEntity";
 
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
