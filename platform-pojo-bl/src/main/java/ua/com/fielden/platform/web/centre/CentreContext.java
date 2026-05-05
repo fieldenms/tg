@@ -75,6 +75,12 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
     private AbstractEntity<?> instanceBasedContinuation;
     public static final String INSTANCEBASEDCONTINUATION_PROPERTY_NAME = "instanceBasedContinuation";
 
+    /// The entity behind `chosenProperty` as resolved on the client when `withChosenEntity()` was opted in.
+    /// May be the entity-typed value of `chosenProperty` itself, the active member of a union value, the row entity (for simple-typed properties), or a collectional item (for dynamic columns).
+    /// `null` if `withChosenEntity()` was not configured for the action's context.
+    ///
+    private AbstractEntity<?> chosenEntity;
+
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
             return selectedEntities.getFirst();
@@ -134,9 +140,10 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
                 masterEntity = %s,
                 computation = %s,
                 chosenProperty = %s,
+                chosenEntity = %s,
                 customObject = %s,
                 instanceBasedContinuation = %s
-            ]""".formatted(selectionCrit, selectedEntities, masterEntity, computation, chosenProperty, customObject, instanceBasedContinuation);
+            ]""".formatted(selectionCrit, selectedEntities, masterEntity, computation, chosenProperty, chosenEntity, customObject, instanceBasedContinuation);
     }
 
     public CentreContext<T, M> setComputation(final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
@@ -154,6 +161,15 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
 
     public CentreContext<T, M> setChosenProperty(final String chosenProperty) {
         this.chosenProperty = chosenProperty;
+        return this;
+    }
+
+    public AbstractEntity<?> getChosenEntity() {
+        return chosenEntity;
+    }
+
+    public CentreContext<T, M> setChosenEntity(final AbstractEntity<?> chosenEntity) {
+        this.chosenEntity = chosenEntity;
         return this;
     }
 
