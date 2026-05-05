@@ -23,12 +23,8 @@ import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 
-/**
- * Ensures correct construction of the entity centre context configuration as the result of using Entity Centre DSL.
- *
- * @author TG Team
- *
- */
+/// Ensures correct construction of the entity centre context configuration as the result of using Entity Centre DSL.
+///
 public class EntityCentreContextSelectorTest {
 
     @Test
@@ -198,5 +194,48 @@ public class EntityCentreContextSelectorTest {
         assertTrue(Try(() -> context().withSelectedEntities().withMasterEntity().withComputation(null).build()) instanceof Left);
         assertTrue(Try(() -> context().withSelectedEntities().withMasterEntity().withSelectionCrit().withComputation(null).build()) instanceof Left);
 
+    }
+
+    @Test
+    public void context_with_chosen_entity_only() {
+       final CentreContextConfig config = context().withChosenEntity().build();
+       assertEquals(new CentreContextConfig(false, false, false, false, true, null, empty(), empty()), config);
+    }
+
+    @Test
+    public void context_with_chosen_entity_and_current_entity() {
+       final CentreContextConfig config = context().withChosenEntity().withCurrentEntity().build();
+       assertEquals(new CentreContextConfig(true, false, false, false, true, null, empty(), empty()), config);
+    }
+
+    @Test
+    public void context_with_chosen_entity_and_selected_entities() {
+       final CentreContextConfig config = context().withChosenEntity().withSelectedEntities().build();
+       assertEquals(new CentreContextConfig(false, true, false, false, true, null, empty(), empty()), config);
+    }
+
+    @Test
+    public void context_with_chosen_entity_and_selection_crit() {
+       final CentreContextConfig config = context().withChosenEntity().withSelectionCrit().build();
+       assertEquals(new CentreContextConfig(false, false, true, false, true, null, empty(), empty()), config);
+    }
+
+    @Test
+    public void context_with_chosen_entity_and_master_entity() {
+       final CentreContextConfig config = context().withChosenEntity().withMasterEntity().build();
+       assertEquals(new CentreContextConfig(false, false, false, true, true, null, empty(), empty()), config);
+    }
+
+    @Test
+    public void context_with_chosen_entity_threaded_through_full_chain() {
+       final CentreContextConfig config = context().withChosenEntity().withMasterEntity().withSelectionCrit().withSelectedEntities().build();
+       assertEquals(new CentreContextConfig(false, true, true, true, true, null, empty(), empty()), config);
+    }
+
+    @Test
+    public void context_with_chosen_entity_and_computation() {
+       final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation = (entity, ctx) -> entity.getType();
+       final CentreContextConfig config = context().withChosenEntity().withSelectionCrit().withComputation(computation).build();
+       assertEquals(new CentreContextConfig(false, false, true, false, true, computation, empty(), empty()), config);
     }
 }

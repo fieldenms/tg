@@ -9,13 +9,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
-/**
- * An entity centre context configuration to be used for determining the parts of an entity centre, which should be serialised to construct an execution context
- * {@link CentreContext} for execution of an associated action.
- *
- * @author TG Team
- *
- */
+/// An entity centre context configuration to be used for determining the parts of an entity centre, which should be serialised to construct an execution context.
+/// The materialised context is [CentreContext] for execution of an associated action.
+///
 public final class CentreContextConfig {
     public final Boolean withCurrentEtity;
     public final Boolean withAllSelectedEntities;
