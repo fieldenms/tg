@@ -184,7 +184,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultExists_method_returns_invalid_result_for_orphan_inherited_from_shared_named_configuration() {
         final var uuid = randomUUID().toString();
 
-        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgCompoundEntity.class);
+        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgCompoundEntity.class, null);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, null);
 
@@ -201,7 +201,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultExists_method_returns_invalid_result_for_unusual_named_configuration_with_no_miType() {
         final var uuid = randomUUID().toString();
 
-        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, null);
+        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, null, null);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
 
@@ -218,7 +218,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultExists_method_returns_invalid_result_for_unusual_default_configuration_with_uuid() {
         final var uuid = randomUUID().toString();
 
-        final var configSettings = new ConfigSettings(empty(), getUser(), DESKTOP, MiTgCompoundEntity.class);
+        final var configSettings = new ConfigSettings(empty(), getUser(), DESKTOP, MiTgCompoundEntity.class, null);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
 
@@ -235,7 +235,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultExists_method_returns_invalid_result_for_link_configuration() {
         final var uuid = randomUUID().toString();
 
-        final var configSettings = new ConfigSettings(of(LINK_CONFIG_TITLE), getUser(), DESKTOP, MiTgCompoundEntity.class);
+        final var configSettings = new ConfigSettings(of(LINK_CONFIG_TITLE), getUser(), DESKTOP, MiTgCompoundEntity.class, null);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
 
@@ -252,7 +252,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultExists_method_returns_invalid_result_for_invalid_configuration() {
         final var uuid = randomUUID().toString();
 
-        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class);
+        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class, null);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
 
@@ -271,7 +271,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultExists_method_returns_invalid_result_for_unauthorised_configuration() {
         final var uuid = randomUUID().toString();
 
-        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class);
+        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class, null);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
 
@@ -295,7 +295,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultExists_method_returns_invalid_result_for_configuration_with_invalid_generation() {
         final var uuid = randomUUID().toString();
 
-        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class);
+        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class, null);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
 
@@ -365,7 +365,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     public void executing_resultCount_method_returns_invalid_result_for_configuration_with_invalid_generation() {
         final var uuid = randomUUID().toString();
 
-        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class);
+        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), DESKTOP, MiTgGeneratedEntity.class, null);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
         initTestData(centreManager -> centreManager.getFirstTick().setValue(TgGeneratedEntity.class, "critOnlySingleProp", getUser()), configSettings);
@@ -384,7 +384,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         final var uuid = randomUUID().toString();
         final var user = save(new_(User.class, "USER").setBase(true).setEmail("USER@unit-test.software").setActive(true));
         save(new_composite(UserAndRoleAssociation.class, user, co(UserRole.class).findByKey(UNIT_TEST_ROLE)));
-        final var configSettings = new ConfigSettings(of("saveAs"), user, DESKTOP, MiTgGeneratedEntity.class);
+        final var configSettings = new ConfigSettings(of("saveAs"), user, DESKTOP, MiTgGeneratedEntity.class, null);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
         initTestData(centreManager -> centreManager.getFirstTick().setValue(TgGeneratedEntity.class, "critOnlySingleProp", getUser()), configSettings);
@@ -394,7 +394,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
         final var otherUuid = randomUUID().toString();
         final var otherUser = save(new_(User.class, "OTHER_USER").setBase(true).setEmail("OTHER_USER@unit-test.software").setActive(true));
         save(new_composite(UserAndRoleAssociation.class, otherUser, co(UserRole.class).findByKey(UNIT_TEST_ROLE)));
-        final var otherUserConfigSettings = new ConfigSettings(of("otherUserSaveAs"), otherUser, DESKTOP, MiTgGeneratedEntity.class);
+        final var otherUserConfigSettings = new ConfigSettings(of("otherUserSaveAs"), otherUser, DESKTOP, MiTgGeneratedEntity.class, null);
         createConfig(otherUserConfigSettings, FRESH_CENTRE_NAME, otherUuid);
         createConfig(otherUserConfigSettings, SAVED_CENTRE_NAME, otherUuid);
         initTestData(centreManager -> centreManager.getFirstTick().setValue(TgGeneratedEntity.class, "critOnlySingleProp", getUser()), otherUserConfigSettings);
@@ -437,7 +437,7 @@ public class EntityCentreProcessorTest extends AbstractDaoTestCase {
     private void initTestData(final String uuid, final DeviceProfile device, final Runnable createData, final Consumer<ICentreDomainTreeManagerAndEnhancer> enhanceCentreManager) {
         createData.run();
 
-        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), device, MiTgCompoundEntity.class);
+        final var configSettings = new ConfigSettings(of("saveAs"), getUser(), device, MiTgCompoundEntity.class, null);
         createConfig(configSettings, FRESH_CENTRE_NAME, uuid);
         createConfig(configSettings, SAVED_CENTRE_NAME, uuid);
 
