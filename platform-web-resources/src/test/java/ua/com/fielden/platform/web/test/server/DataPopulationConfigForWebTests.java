@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
+import com.google.inject.Module;
 import ua.com.fielden.platform.audit.AuditingMode;
-import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
@@ -30,13 +29,13 @@ public final class DataPopulationConfigForWebTests extends DataPopulationConfig 
     }
 
     @Override
-    protected ApplicationInjectorFactory createFactory(final Properties properties) {
-        final ApplicationDomain appDomain = new ApplicationDomain();
-        return new ApplicationInjectorFactory()
-            .add(new TgTestWebApplicationServerIocModule(appDomain, appDomain.domainTypes(), properties))
-            .add(new NewUserEmailNotifierTestIocModule())
-            .add(new DataFilterTestIocModule())
-            .add(new UniversalConstantsTestIocModule());
+    protected TgTestApplicationServerIocModule createApplicationServerModule(final ApplicationDomain appDomain, final Properties properties) {
+        return new TgTestWebApplicationServerIocModule(appDomain, appDomain.domainTypes(), properties);
+    }
+
+    @Override
+    protected Module createAdditionalIocModule() {
+        return new UniversalConstantsTestIocModule();
     }
 
 }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -48,10 +49,24 @@ public class DataPopulationConfig implements IDomainDrivenTestCaseConfiguration 
     protected ApplicationInjectorFactory createFactory(final Properties properties) {
         final ApplicationDomain appDomain = new ApplicationDomain();
         return new ApplicationInjectorFactory()
-                .add(new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), properties))
+                .add(createApplicationServerModule(appDomain, properties))
                 .add(new NewUserEmailNotifierTestIocModule())
                 .add(new DataFilterTestIocModule())
-                .add(new IocModule());
+                .add(createAdditionalIocModule());
+    }
+
+    /// Creates the application-server [Module] used by [#createFactory].
+    /// Subclasses can override to substitute a different (e.g. web-aware) server module.
+    ///
+    protected TgTestApplicationServerIocModule createApplicationServerModule(final ApplicationDomain appDomain, final Properties properties) {
+        return new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), properties);
+    }
+
+    /// Creates an additional [Module] appended at the end of the factory chain.
+    /// Subclasses can override to substitute a module appropriate for their context (e.g. one that does not duplicate bindings already provided by their server module).
+    ///
+    protected Module createAdditionalIocModule() {
+        return new IocModule();
     }
 
     @Override
