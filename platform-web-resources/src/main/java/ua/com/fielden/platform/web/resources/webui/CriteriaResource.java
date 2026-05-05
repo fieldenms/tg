@@ -46,7 +46,9 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.CentreExecutionMode;
 import ua.com.fielden.platform.web.utils.ConfigSettings;
+import ua.com.fielden.platform.web.utils.UiCentreExecution;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -702,7 +704,7 @@ public class CriteriaResource extends AbstractWebResource {
                 // Execute actual Entity Centre configuration run / refresh / navigate / sort logic.
                 final var resultListAndPage = executeEntityCentreConfiguration(
                     new ConfigSettings(saveAsName, user, device(), miType, null),
-                    of(t2(updatedFreshCentre, previouslyRunCentre)),
+                    new UiCentreExecution(updatedFreshCentre, previouslyRunCentre),
                     isRunning,
 
                     customObject,
@@ -728,12 +730,13 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// Executes Entity Centre configuration with [ConfigSettings]. Uses `criteriaEntity` for execution.
     ///
-    /// @param updatedFreshCentreAndPreviouslyRunCentre an [Optional] pair of centre managers for more comprehensive and complete running;
-    ///                                                 if passed, rendering hints / UI action indices / criteria indicator will be computed
+    /// @param mode  distinguishes UI-driven execution (computes rendering hints, action indices,
+    ///              dynamic-column metadata, and -- when `isRunning` -- the criteria-changed indication)
+    ///              from headless execution (data only). See [CentreExecutionMode].
     ///
     public static T2<List<Object>, IPage<AbstractEntity<?>>> executeEntityCentreConfiguration(
         final ConfigSettings configSettings,
-        final Optional<T2<ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer>> updatedFreshCentreAndPreviouslyRunCentre,
+        final CentreExecutionMode mode,
         final boolean isRunning,
         final Map<String, Object> customObject,
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
@@ -751,14 +754,14 @@ public class CriteriaResource extends AbstractWebResource {
         final var resultCustomObject = resultCustomObjectAndEntities._1;
         final var resultEntities = resultCustomObjectAndEntities._2;
 
-        final var skipCustomObjectCalculations = updatedFreshCentreAndPreviouslyRunCentre.isEmpty();
-        if (!skipCustomObjectCalculations) {
+        // Pattern-bind once for use across the four UI-mode gates below.
+        // Equivalent in shape to the previous single-boolean gate, so the original computation order is preserved exactly.
+        final var ui = (mode instanceof UiCentreExecution u) ? u : null;
+        if (ui != null) {
             if (isRunning) {
-                final var updatedFreshCentre = updatedFreshCentreAndPreviouslyRunCentre.get()._1;
-                final var previouslyRunCentre = updatedFreshCentreAndPreviouslyRunCentre.get()._2;
                 final var updatedSavedCentre = updateCentre(configSettings.owner(), configSettings.miType(), SAVED_CENTRE_NAME, configSettings.saveAsName(), configSettings.device(), webUiConfig, companionFinder);
-                final var changedCriteriaIndication = createChangedCriteriaIndication(updatedFreshCentre, updatedSavedCentre);
-                updateResultantCustomObject(criteriaEntity.centreDirtyCalculatorWithSavedSupplier().apply(() -> updatedSavedCentre), configSettings.miType(), configSettings.saveAsName(), previouslyRunCentre, resultCustomObject, of(changedCriteriaIndication));
+                final var changedCriteriaIndication = createChangedCriteriaIndication(ui.updatedFreshCentre(), updatedSavedCentre);
+                updateResultantCustomObject(criteriaEntity.centreDirtyCalculatorWithSavedSupplier().apply(() -> updatedSavedCentre), configSettings.miType(), configSettings.saveAsName(), ui.previouslyRunCentre(), resultCustomObject, of(changedCriteriaIndication));
             }
 
             // Running the rendering customiser for result set of entities.
@@ -784,14 +787,14 @@ public class CriteriaResource extends AbstractWebResource {
             sharingModel
         );
 
-        if (!skipCustomObjectCalculations) {
+        if (ui != null) {
             resultCustomObject.put("dynamicColumns", createDynamicProperties(resPropsWithContext, centre));
         }
 
         // Enhance entities with custom / dynamic property values.
         final Stream<AbstractEntity<?>> enhancedEntities = enhanceEntitiesWithValues(resultEntities.stream(), resPropsWithContext, centre);
         final Stream<AbstractEntity<?>> processedEntities;
-        if (!skipCustomObjectCalculations) {
+        if (ui != null) {
             // Enhance rendering hints with styles for each dynamic column.
             processedEntities = enhanceResultEntitiesWithDynamicPropertyRenderingHints(enhancedEntities, resPropsWithContext, (List) resultCustomObject.get("renderingHints"));
         }
@@ -800,7 +803,7 @@ public class CriteriaResource extends AbstractWebResource {
         }
 
         final var list = new ArrayList<>();
-        if (!skipCustomObjectCalculations) {
+        if (ui != null) {
             list.add(isRunning ? criteriaEntity : null);
             list.add(resultCustomObject);
         }
