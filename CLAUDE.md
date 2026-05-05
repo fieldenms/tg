@@ -63,13 +63,17 @@ Topic-specific gotchas live in each directory's `quick-reference.md`.
 
 1. **`co()` vs `co$()`**: `co()` returns uninstrumented (read-only) entities; `co$()` returns instrumented with change tracking.
    Using the wrong one causes subtle bugs.
-2. **`isInitialising()` in definers**: Definers execute during DB retrieval AND user mutations.
+2. **Definers fire per successful property change, NOT on save.**
+   A definer runs synchronously after every successful setter call, plus once per property during DB load.
+   It does not run "on save".
+   For compute-on-save logic, set the property in the DAO's `save()` before `super.save(entity)` — never in a definer.
+3. **`isInitialising()` in definers**: Definers execute during DB retrieval AND user mutations.
    Check `entity.isInitialising()` to distinguish.
-3. **Definer mutations are not silent**: Setting a property from a definer triggers the full validation chain via `ObservableMutatorInterceptor`.
-4. **`isDirty()` before side effects**: In DAO `save()`, check property dirtiness before cascading updates.
-5. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
-6. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
-7. **GraphQL API**: Read-only queries only.
+4. **Definer mutations are not silent**: Setting a property from a definer triggers the full validation chain via `ObservableMutatorInterceptor`.
+5. **`isDirty()` before side effects**: In DAO `save()`, check property dirtiness before cascading updates.
+6. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
+7. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
+8. **GraphQL API**: Read-only queries only.
    Fields are uncapitalized entity names.
    Token: `GraphiQL_CanExecute_Token`.
 

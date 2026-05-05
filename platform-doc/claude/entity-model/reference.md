@@ -210,6 +210,31 @@ A definer's own setter calls are observed too: definer-initiated mutations re-en
 - Check `entity.isInitialising()` to distinguish DB load from user mutation
 - Cannot reject values; runs after successful validation
 
+#### When NOT to use a definer
+
+Don't use a definer when any of the following hold:
+- The computation is heavy (e.g. uses EQL) and depends on **multiple properties whose values must be settled together**.
+  A definer fires on each individual setter call, so it sees inconsistent intermediate states and each change performs heavy computations.
+  However, in case of light computations, definers for inter-dependent properties make sense.
+  Example: an order's `subtotal` that depends on `quantity`, `unitPrice`, `discountRate`, and `taxRate` — putting it in a definer attached to all of those properties means it computes from a partially-updated entity on every edit step, which is okay because these are local computations.
+- The computation is **expensive** (DB joins, range walks, EQL queries against other entities) and only needs to settle once per save.
+  A definer would re-run on every setter call along the way.
+- You only want the value persisted; **intermediate property mutations during edit should not re-trigger** the computation.
+
+In these cases, compute the value in the DAO's `save()` method, immediately before delegating to `super.save(entity)`:
+
+```java
+@Override
+@SessionRequired
+public Order save(final Order entity) {
+    entity.setSubtotal(computeSubtotal(entity));
+    return super.save(entity);
+}
+```
+
+In many situations it is worth defining the destination property `@Readonly` so the master form doesn't expose it as user-editable.
+The setter call inside `save()` still re-enters the validator/definer chain, so any guards on the `@Readonly` property must allow programmatic mutation (or use `setDomainValidationResult` / a flag-aware validator) — see *MetaProperty*.
+
 **Validation Result Types:** Failure (rejects value), Warning (accepts + warning), Informative (accepts + info), Success (accepts silently)
 
 **Result factory conventions:**

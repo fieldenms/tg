@@ -42,6 +42,12 @@ Property setter calls are intercepted; validators and definers fire synchronousl
 - Validators: `@BeforeChange(@Handler(ValidatorClass.class))` — run **before** the setter; chain in declaration order; can prevent the assignment by returning `Result.failure()`.
 - Definers: `@AfterChange(DefinerClass.class)` — run **after** the setter; also execute during DB retrieval (check `entity.isInitialising()` to distinguish).
 
+**Anti-pattern: definer as save-time hook.**
+A definer is not a save-time hook — it fires per setter call and per loaded property.
+If you want a value computed *once per save* (e.g., expensive aggregation over a date range, multi-property snapshot), compute it in the DAO's `save()` method just before `super.save(entity)`.
+In many situations it is worth defining the destination property `@Readonly` so the master form doesn't expose it as editable.
+Symptom of misuse: the computation runs many times during edit, sees inconsistent intermediate states, or you find yourself reaching for `isInitialising()` to suppress unwanted firings.
+
 ## Companion Objects
 
 | Method | Returns | Use Case |
