@@ -178,7 +178,16 @@ Polymer({
         },
 
         /**
-         * Defines hierarchycal structure of contexts related to the view where this action is. This related contexts are contexts for insertion points on entity centre. 
+         * Determines whether the chosen entity (the entity behind chosenProperty) is required to be sent inside the centre context.
+         *
+         * 'true' / 'false' string. 'false' (or absent) means the slot will be proxied after server-side deserialisation.
+         */
+        requireChosenEntity: {
+            type: String
+        },
+
+        /**
+         * Defines hierarchycal structure of contexts related to the view where this action is. This related contexts are contexts for insertion points on entity centre.
          */
         relatedContexts: {
             type: Array
@@ -314,6 +323,20 @@ Polymer({
          * (in preAction for example).
         */
         currentEntity: {
+            type: Function,
+            value: function () {
+                return () => null;
+            }
+        },
+
+        /**
+         * The 'chosenEntity' should resolve to the entity behind 'chosenProperty' for the column that triggered the action.
+         * For an entity-typed leaf this is the value of that property; for a union-typed leaf this is the active member instance;
+         * for a simple-typed leaf this is the row entity (the holder of that property); for a dynamic column this is the
+         * collection item whose key matches the column property.
+         * Defaults to a function returning null, populated only when the action's context configuration opts in via withChosenEntity().
+         */
+        chosenEntity: {
             type: Function,
             value: function () {
                 return () => null;
@@ -468,11 +491,13 @@ Polymer({
         /**
          * Runs dynamic action with the specified mandatory context. Both 'currentEntity' and 'chosenProperty' must be specified.
          * 'chosenProperty' can be null -- in this case dynamic action runs for 'currentEntity' itself.
+         * 'chosenEntity' is optional and only meaningful when the action's context configuration opts in via withChosenEntity().
          */
-        self._runDynamicAction = function (currentEntity, chosenProperty) {
+        self._runDynamicAction = function (currentEntity, chosenProperty, chosenEntity) {
             this.requireSelectedEntities = 'ONE';
             this.currentEntity = currentEntity;
             this.chosenProperty = chosenProperty;
+            this.chosenEntity = chosenEntity || (() => null);
             this.rootEntityType = null;
 
             this._run();
@@ -485,6 +510,7 @@ Polymer({
             this.requireSelectedEntities = 'NONE';
             this.currentEntity = () => null;
             this.chosenProperty = null;
+            this.chosenEntity = () => null;
             this.rootEntityType = rootEntityType;
 
             this._run();
@@ -745,6 +771,13 @@ Polymer({
                 || self.chosenProperty
             );
         }
+        // enhances it with the resolved 'chosenEntity()' when the action opted in via withChosenEntity()
+        if (self.requireChosenEntity === 'true') {
+            const chosenEntity = self.chosenEntity && self.chosenEntity();
+            if (chosenEntity) {
+                self._enhanceContextWithChosenEntity(context, chosenEntity);
+            }
+        }
         if (self.rootEntityType) {
             self._reflector.setCustomProperty(context, '@@rootEntityType', self.rootEntityType);
         }
@@ -791,6 +824,10 @@ Polymer({
 
     _enhanceContextWithChosenProperty: function (context, chosenProperty) {
         context["chosenProperty"] = chosenProperty;
+    },
+
+    _enhanceContextWithChosenEntity: function (context, chosenEntity) {
+        context["chosenEntity"] = chosenEntity;
     },
 
     _enhanceContextWithCurrentEntity: function (context, currentEntity, requireSelectedEntities) {
