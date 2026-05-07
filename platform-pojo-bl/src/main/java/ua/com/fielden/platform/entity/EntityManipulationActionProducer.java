@@ -2,6 +2,8 @@ package ua.com.fielden.platform.entity;
 
 import static java.lang.Class.forName;
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -39,18 +41,21 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
     @Override
     protected T provideDefaultValues(final T entity) {
         if (contextNotEmpty()) {
-            final Supplier<? extends Class<AbstractEntity<?>>> determineTypeFrom = () -> chosenEntityType().orElseGet(() -> { // if it is empty
-                if (selectionCrit() != null) { // use selection criteria type as a fallback
-                    return (Class<AbstractEntity<?>>) selectionCrit().getEntityClass();
-                }
-                final String rootEntityTypeName = (String) getContext().getCustomObject().get("@@rootEntityType"); // then try auxiliary root entity type, if present
-                try {
-                    return !isEmpty(rootEntityTypeName) ? (Class<AbstractEntity<?>>) forName(rootEntityTypeName) : null; // otherwise return 'null'
-                } catch (final ClassNotFoundException ex) {
-                    logger.error(format("Could not find class [%s].", rootEntityTypeName), ex);
-                    return null; // in case of unrecognised type return 'null'
-                }
-            });
+            final Supplier<? extends Class<AbstractEntity<?>>> determineTypeFrom = () -> chosenEntityType()
+                // when the [currentEntity; chosenProperty] path produced no type, fall back to the type carried directly by `chosenEntity` (when `withChosenEntity()` was opted in).
+                .or(() -> chosenEntityNotEmpty() ? of(determineBaseEntityType((Class<AbstractEntity<?>>) chosenEntity().getType())) : empty())
+                .orElseGet(() -> { // if it is empty
+                    if (selectionCrit() != null) { // use selection criteria type as a fallback
+                        return (Class<AbstractEntity<?>>) selectionCrit().getEntityClass();
+                    }
+                    final String rootEntityTypeName = (String) getContext().getCustomObject().get("@@rootEntityType"); // then try auxiliary root entity type, if present
+                    try {
+                        return !isEmpty(rootEntityTypeName) ? (Class<AbstractEntity<?>>) forName(rootEntityTypeName) : null; // otherwise return 'null'
+                    } catch (final ClassNotFoundException ex) {
+                        logger.error(format("Could not find class [%s].", rootEntityTypeName), ex);
+                        return null; // in case of unrecognised type return 'null'
+                    }
+                });
             ofNullable(
                 computation()
                 .map(computation -> {

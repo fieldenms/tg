@@ -37,6 +37,13 @@ public abstract class AbstractProducerForOpenEntityMasterAction<T extends Abstra
     protected A provideDefaultValues(final A openAction) {
         if (currentEntityNotEmpty()) {
             openAction.setKey(refetch(chosenEntityId(entityType).orElseThrow(NOTHING_TO_OPEN_EXCEPTION_SUPPLIER), entityType, KEY));
+        } else if (chosenEntityNotEmpty() && chosenEntityInstanceOf(entityType)) {
+            // No `currentEntity` was provided, but `withChosenEntity()` carried a type-compatible entity directly — open the master for it.
+            final Long id = chosenEntity().getId();
+            if (id == null) {
+                throw NOTHING_TO_OPEN_EXCEPTION_SUPPLIER.get();
+            }
+            openAction.setKey(refetch(id, entityType, KEY));
         } else if (selectedEntitiesEmpty()) {
             final RestrictCreationByUsers restrictUserCreation = getAnnotationForClass(RestrictCreationByUsers.class, entityType);
             if (restrictUserCreation != null) {
