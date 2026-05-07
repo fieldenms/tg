@@ -2101,11 +2101,67 @@ Polymer({
 
     _currentEntity: function (entity) {
         const egi = this;
-        // Return old fashion javascript function (not arrow function). This function will be called by 
+        // Return old fashion javascript function (not arrow function). This function will be called by
         // action therefore this of the function will be the action (in case of arrow function this would be the EGI).
         return function () {
             //this - is the action that calls this function.
             return this.supportsNavigation && egi.editingEntity ? egi.editingEntity : entity;
+        };
+    },
+
+    /**
+     * Resolves the entity behind `column.property` for a row, mirroring `_currentEntity` in shape.
+     *
+     * The returned function is invoked from the action (so `this` refers to the action). It encodes the four shapes:
+     *   1. entity-typed leaf -> the value itself
+     *   2. union-typed leaf  -> the active member instance (or null if none)
+     *   3. simple-typed leaf -> the holder entity (the row itself, or the deepest entity-typed prefix for dotted property paths)
+     *   4. dynamic column    -> the collection item from `column.collectionalProperty` whose key matches `column.property`
+     */
+    _chosenEntity: function (entity, column) {
+        const egi = this;
+        return function () {
+            // Reuse `_currentEntity` to derive the row entity, applying the same navigation-aware fallback to `egi.editingEntity`.
+            // Two binding details matter:
+            //   - `egi._currentEntity(...)` (not `this._currentEntity(...)`): inside this returned function `this` is the action, which has no `_currentEntity` method, so we go through the captured `egi`.
+            //   - `.call(this)`: `_currentEntity`'s inner function reads `this.supportsNavigation` from the action; we must invoke it with the action as `this` (i.e. our outer `this`), otherwise `supportsNavigation` would be undefined and the navigation branch would never fire.
+            const referenceEntity = egi._currentEntity(entity).call(this);
+            if (!referenceEntity || !column) {
+                return null;
+            }
+            // Case 4: dynamic column.
+            if (column.collectionalProperty) {
+                return egi.getCollectionalItem(referenceEntity, column);
+            }
+            const chosenProperty = column.property;
+            // The row-itself column ("this"): the chosen entity is the row entity.
+            if (!chosenProperty) {
+                return referenceEntity;
+            }
+            const value = referenceEntity.get(chosenProperty);
+            // Determine whether the value is an entity (cases 1 / 2) or a simple type (case 3).
+            let valueType = null;
+            try {
+                if (value && value.constructor && value.constructor.prototype && typeof value.constructor.prototype.type === 'function') {
+                    valueType = value.constructor.prototype.type.call(value);
+                }
+            } catch (e) {
+                valueType = null;
+            }
+            if (valueType) {
+                // Case 2: union — return the active member instance (or null if there is no active member).
+                if (valueType.isUnionEntity()) {
+                    return value._activeEntity() || null;
+                }
+                // Case 1: entity-typed leaf.
+                return value;
+            }
+            // Case 3: simple-typed leaf — return the holder of that property.
+            const lastDotIndex = chosenProperty.lastIndexOf('.');
+            if (lastDotIndex >= 0) {
+                return referenceEntity.get(chosenProperty.substring(0, lastDotIndex));
+            }
+            return referenceEntity;
         };
     },
 
