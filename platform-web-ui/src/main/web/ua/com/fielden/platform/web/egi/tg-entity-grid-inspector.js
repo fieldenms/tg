@@ -459,7 +459,7 @@ const template = html`
                         <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                     </div>
                     <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
-                        <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
+                        <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" chosen-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
                     </div>
                     <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
@@ -470,7 +470,7 @@ const template = html`
                         <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                     </template>
                     <div class="action-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
-                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
+                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" chosen-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
                     </div>
                 </div>
             </template>
@@ -896,8 +896,8 @@ Polymer({
         });
 
         //Init secondary action drop down trigger
-        this._openDropDown = function (currentEntity, currentIndices, currentAction) {
-            this.$.secondaryActionDropDown.open(currentEntity, currentIndices, currentAction);
+        this._openDropDown = function (currentEntity, chosenEntity, currentIndices, currentAction) {
+            this.$.secondaryActionDropDown.open(currentEntity, chosenEntity, currentIndices, currentAction);
         }.bind(this);
 
         //Initiate entity master for inline editing
@@ -1349,7 +1349,7 @@ Polymer({
         if (clickedLink) {
             const targetAttr = clickedLink.getAttribute("target");
             checkLinkAndOpen(clickedLink.getAttribute("href"), targetAttr ? targetAttr : "_self");
-        } else if (!column.runAction(this._currentEntity(entity), actionIndex)) {
+        } else if (!column.runAction(this._currentEntity(entity), this._chosenEntity(entity, column), actionIndex)) {
             if (this.isHyperlinkProp(entity, column) === false) {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
@@ -1357,7 +1357,7 @@ Polymer({
                         // No action needed; errors are gracefully handled within the downloadAttachment function.
                     });
                 } else if (this.hasDefaultAction(entity, column)) {
-                    column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
+                    column.runDefaultAction(this._currentEntity(entity), this._chosenEntity(entity, column), this._defaultPropertyAction);
                 }
             }
         }

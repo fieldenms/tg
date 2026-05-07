@@ -50,26 +50,31 @@ Polymer({
         this.customActions = [...this.$.action_selector.assignedNodes()];
     },
 
-    /** 
-     * Executes a custom action and returns true if the action was provided. 
-     * Otherwise, simply returns false to indicate that there was no custom action to be executed. 
-     * the passed in currentEntity is a function that returns choosen entity. 
+    /**
+     * Executes a custom action and returns true if the action was provided.
+     * Otherwise, simply returns false to indicate that there was no custom action to be executed.
+     *
+     * `currentEntity` is a function that returns the row entity (navigation-aware).
+     * `chosenEntity` is a function that returns the entity behind `column.property` according to the four resolution shapes
+     * (entity / union active member / simple-typed -> holder / dynamic column -> collection item).
+     * It is meaningful only when the action's context configuration opts in via `withChosenEntity()`.
      */
-    runAction: function (currentEntity, actionIndex) {
-        const actionToRun = this.customActions[actionIndex]; 
+    runAction: function (currentEntity, chosenEntity, actionIndex) {
+        const actionToRun = this.customActions[actionIndex];
         if (actionToRun) {
             actionToRun.currentEntity = currentEntity;
+            actionToRun.chosenEntity = chosenEntity;
             actionToRun._run();
             return true;
         }
         return false;
     },
 
-    runDefaultAction: function (currentEntity, defaultPropertyAction) {
+    runDefaultAction: function (currentEntity, chosenEntity, defaultPropertyAction) {
         if (defaultPropertyAction) {
-            defaultPropertyAction._runDynamicAction(currentEntity, getFirstEntityTypeAndProperty(currentEntity.bind(defaultPropertyAction)(), this.getActualProperty())[1]);
+            defaultPropertyAction._runDynamicAction(currentEntity, getFirstEntityTypeAndProperty(currentEntity.bind(defaultPropertyAction)(), this.getActualProperty())[1], chosenEntity);
             return true;
-        } 
+        }
         return false;
     },
 

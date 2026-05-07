@@ -55,6 +55,19 @@ Polymer({
             observer: "_currentEntityChanged"
         },
 
+        /**
+         * Returns the entity behind chosenProperty for the column that triggered the action.
+         * For secondary actions (row-level) this typically resolves to the row entity itself.
+         * Function changes every time after another secondary action is pressed; the observer forwards it onto slotted action items.
+         */
+        chosenEntity: {
+            type: Function,
+            value: function () {
+                return () => null;
+            },
+            observer: "_chosenEntityChanged"
+        },
+
         currentIndices: {
             type: Array,
             observer: "_currentIndicesChanged"
@@ -88,15 +101,20 @@ Polymer({
         this._setSecondaryActions(actions);
     },
 
-    open: function(currentEntity, currentIndices, currentAction) {
+    open: function(currentEntity, chosenEntity, currentIndices, currentAction) {
         this.currentEntity = currentEntity;
+        this.chosenEntity = chosenEntity;
         this.currentIndices = currentIndices;
         this.$.dropdown.positionTarget = currentAction;
         this.$.dropdown.open();
     },
-    
+
     _currentEntityChanged: function (newValue) {
         this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.currentEntity = newValue);
+    },
+
+    _chosenEntityChanged: function (newValue) {
+        this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.chosenEntity = newValue);
     },
 
     _currentIndicesChanged: function (newValue) {
