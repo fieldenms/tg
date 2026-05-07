@@ -932,9 +932,7 @@ public class DynamicQueryBuilder {
     private static ConditionModel propertyLike(final String prop, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
         return partitionBy(searchValues, str -> str.contains("*"))
                 .map((wildVals, exactVals) -> {
-                    final var propWithoutKey = getPropertyNameWithoutKeyPart(prop);
-                    // TODO After #2452, adding ".id" for union-typed properties will no longer be necessary.
-                    final var propId = propWithoutKey + (isUnionEntityType(propType) ? ".id" : "");
+                    final var propId = getPropertyNameWithoutKeyPart(prop);
                     // Exact and wilcard search values.
                     if (!exactVals.isEmpty() && !wildVals.isEmpty()) {
                         return cond()
