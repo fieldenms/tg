@@ -813,9 +813,12 @@ public class DynamicQueryBuilder {
         return compoundCondition == null ? collectionBegin : compoundCondition.or();
     }
 
-    /// Enhances "where" with concrete property condition defined by "key" parameter taking into account condition negation and **null** values treatment.
+    /// Builds condition for a criterion in application to another property.
+    /// This method takes into account negation and interpretation of null values.
     ///
-    /// @param isNegated -- indicates whether appropriate condition should be negated
+    /// @param property  a criterion corresponding to a crit-only property
+    /// @param propertyName  a property against which the criterion is applied
+    /// @param isNegated  whether the condition should be negated
     ///
     public static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final String propertyName, final boolean isNegated, final IDates dates) {
         final boolean orNull = Boolean.TRUE.equals(property.getOrNull());
@@ -841,11 +844,6 @@ public class DynamicQueryBuilder {
 
     /// More specific use of the previous method [#buildCondition(QueryProperty,String,boolean,IDates)].
     ///
-    /// @param property
-    /// @param isNegated
-    /// @param dates
-    ///
-    /// @return
     private static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final boolean isNegated, final IDates dates) {
         if (property.isCritOnlyWithModel()) {
             return cond().critCondition(property.critOnlyModel, property.propertyUnderCondition, property.propertyName).model();
@@ -853,8 +851,11 @@ public class DynamicQueryBuilder {
         return buildCondition(property, property.getConditionBuildingName(), isNegated, dates);
     }
 
-    /// Builds an atomic condition for `propertyName` based on its definition `property`. This could be "is True", ">= and <", "like", etc.
+    /// Builds an atomic condition for a criterion in application to another property.
     /// This method handles all three kinds of criteria – single, range and multi.
+    ///
+    /// @param property  a criterion corresponding to a crit-only property
+    /// @param propertyName  a property against which the criterion is applied
     ///
     @SuppressWarnings("unchecked")
     private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName, final IDates dates) {
@@ -926,7 +927,9 @@ public class DynamicQueryBuilder {
 
     /// Generates a condition for an entity-typed property using values specified for a criterion.
     ///
-    /// @param prop  property path that ends with an entity-typed property or with `key`
+    /// @param prop  a property against which the crit-condition is applied;
+    ///              this property path that end with an entity-typed property or with `key`.
+    /// @param searchValues  actual search values specified for the criterion property
     /// @param propType  type of the criterion property
     ///
     private static ConditionModel propertyLike(final String prop, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
