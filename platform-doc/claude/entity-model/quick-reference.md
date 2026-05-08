@@ -15,7 +15,7 @@ Entities annotated with `@MapEntityTo` are persistent.
 
 **Entity-level:** `@MapEntityTo`, `@KeyType`, `@CompanionObject`, `@EntityTitle(value, desc)`, `@DisplayDescription`, `@DescRequired`, `@DescTitle`, `@Subtitles`, `@DeactivatableDependencies`, `@DomainEntity`, `@WithMetaModel`, `@WithoutMetaModel`, `@SupportsEntityExistsValidation`, `@Audited`
 
-**Property-level:** `@IsProperty`, `@MapTo`, `@Title`, `@Observable` (required on all setters), `@Calculated`, `@Required`, `@Final`, `@Readonly`, `@UpperCase`, `@DateOnly`, `@Dependent`, `@CompositeKeyMember(n)`, `@SkipEntityExistsValidation`, `@LeProperty`, `@GeProperty`, `@CritOnly`, `@DisableAuditing`
+**Property-level:** `@IsProperty`, `@MapTo`, `@Title`, `@Observable` (required on all setters), `@Calculated`, `@Required`, `@Final`, `@Readonly`, `@UpperCase`, `@DateOnly`, `@TimeOnly`, `@Dependent`, `@CompositeKeyMember(n)`, `@SkipEntityExistsValidation`, `@LeProperty`, `@GeProperty`, `@CritOnly`, `@DisableAuditing`
 
 **`@IsProperty` parameters:** `(Long.class)` for collection element type, `(length = 8000)` for string length, `(assignBeforeSave = true)` for auto-assigned values.
 `MaxLengthValidator` is implicit for `String` properties — do not declare it manually.
@@ -108,3 +108,10 @@ Generated in `target/generated-sources/` by `MetaModelProcessor`.
 Pessimistic locking with `UPGRADE` lock mode for activatable entities.
 Deliberately catches only `PersistenceException` for referential integrity violations.
 `case null, default -> null` in switch expressions is conventional TG shorthand.
+
+**`@DateOnly` and `@TimeOnly` are semantic markers, not data transformations.**
+Both apply to `java.util.Date` properties and signal the UI to render only the relevant portion.
+The other portion of the underlying `Date` is **not** truncated or zeroed automatically — it is up to domain logic to handle it as appropriate.
+A `@TimeOnly` property whose setter has been given a full `Date` retains both the date and time parts in storage; reading the value returns the full datetime.
+Do not write date-composition or anchoring code (e.g. `entity.getDate()` + `entity.getTimeOnlyField()`) to "reconstruct" a datetime — the field already has it.
+The reverse holds for `@DateOnly`: the time portion is preserved unless the upstream code zeroed it.
