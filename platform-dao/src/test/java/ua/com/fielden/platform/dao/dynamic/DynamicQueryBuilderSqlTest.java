@@ -1397,6 +1397,7 @@ public class DynamicQueryBuilderSqlTest extends AbstractDaoTestCase {
     }
 
     //-------------------------  property authorisation tests -------------------------------//
+
     @Test
     public void authorised_prop_should_be_present_in_query() {
         test_atomic_query_composition_for_range_type("authorisedProp");
@@ -1437,6 +1438,8 @@ public class DynamicQueryBuilderSqlTest extends AbstractDaoTestCase {
         ));
     }
 
+    /// Joins property paths.
+    ///
     private static String path(final CharSequence... xs) {
         return String.join(".", xs);
     }

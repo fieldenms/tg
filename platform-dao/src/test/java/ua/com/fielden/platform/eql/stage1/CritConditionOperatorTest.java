@@ -28,18 +28,20 @@ import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildCondition;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createNotInitialisedQueryProperty;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 
 public class CritConditionOperatorTest extends EqlStage1TestCase {
-    private static final IWhere0<TeVehicle> select_veh_where = select(VEHICLE).where();
 
-    private static final String critProp = "fuelTypeCrit";
-    private static final String persistedProp = "lastFuelUsage.fuelType.key";
-    private static final String persistedPropInCollection = "fuelType.key";
-    private static final String D = "D";
+    private static final String
+            critProp = "fuelTypeCrit",
+            persistedProp = "lastFuelUsage.fuelType.key",
+            persistedPropInCollection = "fuelType.key",
+            D = "D";
+    private static final IWhere0<TeVehicle> select_veh_where = select(VEHICLE).where();
     private static final ICompoundCondition0<TgFuelUsage> modelStart = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID);
     private static final IDates dates = new DatesForTesting();
 
@@ -249,11 +251,12 @@ public class CritConditionOperatorTest extends EqlStage1TestCase {
                            getParams(TgBogie.LOCATION_CRIT, locationCrit)));
     }
 
-    //////////////////////////////////////////////////////
-    ///////////////// helper functions ///////////////////
-    //////////////////////////////////////////////////////
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Helpers
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
     private static Map<String, Object> getParams(final String critPropName, final QueryProperty queryProperty) {
-        return mapOf(t2(DynamicQueryBuilder.QueryProperty.queryPropertyParamName(critPropName), queryProperty));
+        return mapOf(t2(queryPropertyParamName(critPropName), queryProperty));
     }
 
     private static QueryProperty getQueryProperty(final Optional<String> value, final boolean negated, final boolean missing) {
@@ -264,24 +267,28 @@ public class CritConditionOperatorTest extends EqlStage1TestCase {
         return queryProperty;
     }
     
-    /** A helper function to remove confusion that has to do with passing {@code false} as the last argument value for calls to {@link DynamicQueryBuilder#buildCondition(QueryProperty, String, boolean)}. */
-    public static <ET extends AbstractEntity<?>> ConditionModel dqbBuildCondition(final QueryProperty property, final String propertyName, final IDates dates) {
+    /// A helper function to remove confusion that has to do with passing `false` as the last argument value for calls to [DynamicQueryBuilder#buildCondition(QueryProperty, String, boolean, IDates)].
+    ///
+    private static <ET extends AbstractEntity<?>> ConditionModel dqbBuildCondition(final QueryProperty property, final String propertyName, final IDates dates) {
         return buildCondition(property, propertyName, false, dates);
     }
 
-    protected static Conditions1 conditions(final ICompoundCondition0<?> condition) {
+    private static Conditions1 conditions(final ICompoundCondition0<?> condition) {
         return resultQry(condition.model()).whereConditions;
     }
 
-    protected static Conditions1 conditions(final ICompoundCondition0<?> condition, final Map<String, Object> paramValues) {
+    private static Conditions1 conditions(final ICompoundCondition0<?> condition, final Map<String, Object> paramValues) {
         return resultQry(condition.model(), paramValues).whereConditions;
     }
    
-    protected static void assertModelsEquals(final Conditions1 exp, final Conditions1 act) {
+    private static void assertModelsEquals(final Conditions1 exp, final Conditions1 act) {
         assertEquals(exp, act);
     }
 
+    /// Joins property paths.
+    ///
     private static String path(final CharSequence... xs) {
         return String.join(".", xs);
     }
+
 }
