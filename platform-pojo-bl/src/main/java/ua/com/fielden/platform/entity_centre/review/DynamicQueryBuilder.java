@@ -51,7 +51,6 @@ import static ua.com.fielden.platform.entity_centre.mnemonics.DateMnemonicUtils.
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.*;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.CollectionUtil.partitionBy;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
@@ -823,8 +822,6 @@ public class DynamicQueryBuilder {
     public static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final String propertyName, final boolean isNegated, final IDates dates) {
         final boolean orNull = Boolean.TRUE.equals(property.getOrNull());
         final boolean not = Boolean.TRUE.equals(property.getNot());
-        // IMPORTANT : in order not to make extra joins properties like "alias.key", "alias.property1.key" and so on will be enhanced by
-        // conditions like "alias is [not] null", "alias.property1 is [not] null" and so on (respectively).
         final IStandAloneConditionComparisonOperator<ET> sc = EntityQueryUtils.<ET> cond().prop(getPropertyNameWithoutKeyPart(propertyName));
         // indicates whether a condition should be negated
         final boolean negate = not ^ isNegated;
@@ -891,7 +888,7 @@ public class DynamicQueryBuilder {
         } else if (isEntityType(property.getType())) {
             return isPropertyDescriptor(property.getType())
                     ? propertyDescriptorLike(propertyName, (List<String>) property.getValue(), (Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, property.getEntityClass(), property.getPropertyName()).value())
-                    : propertyLike(propertyName, (List<String>) property.getValue(), baseEntityType((Class<AbstractEntity<?>>) property.getType()));
+                    : propertyLike(propertyName, (List<String>) property.getValue());
         } else {
             throw new UnsupportedTypeException(property.getType());
         }
@@ -928,37 +925,31 @@ public class DynamicQueryBuilder {
     /// Generates a condition for an entity-typed property using values specified for a criterion.
     ///
     /// @param prop  a property against which the crit-condition is applied;
-    ///              this property path that end with an entity-typed property or with `key`.
+    ///              this property path must end with an entity-typed property or with `key`.
     /// @param searchValues  actual search values specified for the criterion property
-    /// @param propType  type of the criterion property
     ///
-    private static ConditionModel propertyLike(final String prop, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
+    private static ConditionModel propertyLike(final String prop, final List<String> searchValues) {
         return partitionBy(searchValues, str -> str.contains("*"))
                 .map((wildVals, exactVals) -> {
-                    final var propId = getPropertyNameWithoutKeyPart(prop);
+                    // Apply the condition against property `key`.
+                    final var propKey = KEY.equals(prop) ? KEY : (prop.endsWith(".key") ? prop : prop + "." + KEY);
                     // Exact and wilcard search values.
                     if (!exactVals.isEmpty() && !wildVals.isEmpty()) {
                         return cond()
-                                // Condition for exact search values.
-                                .prop(propId).in().model(select(propType).where().prop(KEY).in().values(exactVals).model())
+                                // Exact search values.
+                                .prop(propKey).in().values(exactVals)
                                 .or()
-                                // Condition for wildcard search values.
-                                .prop(propId).in().model(select(propType).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals)).model())
+                                // Wildcard search values.
+                                .prop(propKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals))
                                 .model();
                     }
                     // Only exact search values.
                     else if (!exactVals.isEmpty()) {
-                        return cond()
-                                .prop(propId).in().model(select(propType).where().prop(KEY).in().values(exactVals).model())
-                                .model();
+                        return cond().prop(propKey).in().values(exactVals).model();
                     }
                     // Only wildcards.
                     else {
-                        return cond()
-                                .prop(propId)
-                                .in()
-                                .model(select(propType).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals)).model())
-                                .model();
+                        return cond().prop(propKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals)).model();
                     }
                 });
     }

@@ -9,7 +9,10 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.eql.meta.EqlStage1TestCase;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
-import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.sample.domain.TeVehicle;
+import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.TgFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -212,7 +215,7 @@ public class CritConditionOperatorTest extends EqlStage1TestCase {
                 conditions(select(TgBogie.class).where().condition(
                         cond()
                         .prop(TgBogie.LOCATION).isNotNull()
-                        .and().condition(cond().prop(TgBogie.LOCATION).in().model(select(TgBogieLocation.class).where().prop(KEY).in().values("x").model()).model())
+                        .and().condition(cond().prop(path(TgBogie.LOCATION, KEY)).in().values("x").model())
                         .model())),
                 conditions(select(TgBogie.class).where().critCondition(TgBogie.LOCATION, TgBogie.LOCATION_CRIT),
                            getParams(TgBogie.LOCATION_CRIT, locationCrit)));
@@ -226,7 +229,7 @@ public class CritConditionOperatorTest extends EqlStage1TestCase {
                 conditions(select(TgBogie.class).where().condition(
                         cond()
                         .prop(TgBogie.LOCATION).isNotNull()
-                        .and().condition(cond().prop(TgBogie.LOCATION).in().model(select(TgBogieLocation.class).where().prop(KEY).in().values("x").model()).model())
+                        .and().condition(cond().prop(path(TgBogie.LOCATION, KEY)).in().values("x").model())
                         .model())),
                 conditions(select(TgBogie.class).where().critCondition(TgBogie.LOCATION + "." + KEY, TgBogie.LOCATION_CRIT),
                            getParams(TgBogie.LOCATION_CRIT, locationCrit)));
@@ -240,7 +243,7 @@ public class CritConditionOperatorTest extends EqlStage1TestCase {
                 conditions(select(TgWorkshop.class).where().condition(
                         cond()
                         .prop(ID).isNotNull()
-                        .and().condition(cond().prop(ID).in().model(select(TgBogieLocation.class).where().prop(KEY).in().values("x").model()).model())
+                        .and().condition(cond().prop(KEY).in().values("x").model())
                         .model())),
                 conditions(select(TgWorkshop.class).where().critCondition(KEY, TgBogie.LOCATION_CRIT),
                            getParams(TgBogie.LOCATION_CRIT, locationCrit)));
@@ -275,6 +278,10 @@ public class CritConditionOperatorTest extends EqlStage1TestCase {
     }
    
     protected static void assertModelsEquals(final Conditions1 exp, final Conditions1 act) {
-        assertEquals(("Condition models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
+        assertEquals(exp, act);
+    }
+
+    private static String path(final CharSequence... xs) {
+        return String.join(".", xs);
     }
 }
