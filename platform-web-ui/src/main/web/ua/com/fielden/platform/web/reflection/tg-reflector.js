@@ -395,6 +395,9 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      * IMPORTANT: do not use 'prop@' field directly!
      */
     Entity.prototype.prop = function (name) {
+        if (name === '') { // mirror AbstractEntity.getProperty: there is no meta-property associated with the entity itself
+            throw 'Meta-data for property [' + name + '] in entity [' + this.constructor.prototype.type.call(this).fullClassName() + '] could not be located.';
+        }
         this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
         if (this._isObjectUndefined(name + '@')) {
             this[name + '@'] = new EntityInstanceProp(); // lazily initialise entity instance prop in case where it was not JSON-serialised (all information was 'default')
