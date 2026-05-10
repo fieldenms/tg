@@ -87,6 +87,18 @@ Metamodel references implement `CharSequence`, so APIs typed for `CharSequence` 
 **Property declaration:** `@IsProperty` + `@Title` + `@MapTo` (for persistent) + `@Observable` on setter.
 Validators chain in declaration order.
 
+**Title strings — no backticks, no straight quotes.**
+The platform serialises `@Title` / `@EntityTitle` / `@KeyTitle` values (`value` and `desc`) into generated JavaScript as string literals; embedded `` ` `` or `"` characters break that JS at parse time.
+If you need quotation marks or an apostrophe, use the Unicode equivalents — U+2019 `’` for apostrophe, U+201C `“` and U+201D `”` for double quotes — they survive serialisation cleanly.
+This rule covers only `@Title`/`@EntityTitle`/`@KeyTitle` annotation values; surrounding Javadoc is unrestricted (Markdown backticks remain the right tool there).
+
+**Title constants — opt in when a title is referenced elsewhere.**
+The dominant style in the codebase is inline string titles (`@Title(value = "Bowser ID", desc = "...")`); ~97% of `@Title` annotations follow it.
+Switch to a `public static final String <PROPERTY>_TITLE = "Title Text";` constant **only when the title appears in more than one place** — typically when another property's `desc` references it (`desc = "... resolved from " + X_TITLE + "."`), or when another file needs the title via static import.
+The constant pays off by removing the drift risk between the title string and its references; for single-use titles it's pure boilerplate.
+Group related title constants under a single `public static final String` line per the *Grouped constants* convention below.
+Example: `MeterReading.TOTAL_READING_TITLE` is declared on the entity because it is statically imported into `Equipment` (and other files) that reference it.
+
 **Code documentation:**
 - Each sentence on its own line (better diffs)
 - End sentences with a full stop
