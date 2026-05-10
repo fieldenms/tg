@@ -40,7 +40,11 @@ public MyEntity setSomeProperty(final String value) {
 
 Property setter calls are intercepted; validators and definers fire synchronously per setter call (no `save()` needed):
 - Validators: `@BeforeChange(@Handler(ValidatorClass.class))` — run **before** the setter; chain in declaration order; can prevent the assignment by returning `Result.failure()`.
-- Definers: `@AfterChange(DefinerClass.class)` — run **after** the setter; also execute during DB retrieval (check `entity.isInitialising()` to distinguish).
+  Validators do **not** run at DB load (load uses direct field writes that bypass `ObservableMutatorInterceptor`).
+  Use a definer with `metaProp.setDomainValidationResult(...)` to surface a load-time message.
+- Definers: `@AfterChange(DefinerClass.class)` — run **after** the setter; also execute at DB retrieval, but *not* per-property during the load itself — TG sets every field directly, then `DefinersExecutor` walks the graph and fires each definer with all sibling properties already populated (so cross-property reads from a definer at load time are safe; check `entity.isInitialising()` to distinguish load from user mutation).
+- **No-op setters short-circuit both.** When the new value equals the current (`equalsEx`), `ObservableMutatorInterceptor` skips validation and the `@AfterChange` handler entirely. Tests that try to provoke a validator on the loaded value must set a different value first to clear, then re-set.
+- **Chained reads in a definer:** prefer the dot-path idiom — `Reflector.isPropertyProxied(entity, MetaModel_.a().b().c())` to short-circuit when programmatic flows passed a thinly-fetched ref, then `entity.get(MetaModel_.a().b().c())` for a null-safe traversal that returns `null` on any missing link. See `entity-model/reference.md` § *Chained reads in definers*.
 
 **Anti-pattern: definer as save-time hook.**
 A definer is not a save-time hook — it fires per setter call and per loaded property.
