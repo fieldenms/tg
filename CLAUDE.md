@@ -91,6 +91,24 @@ Validators chain in declaration order.
 - Each sentence on its own line (better diffs)
 - End sentences with a full stop
 - Use Markdown for Javadoc (not HTML tags)
+- Use Markdown backticks (`` ` ``) for inline code, identifiers, and literals; in new code do **not** use the `{@code …}` Javadoc tag (predates Markdown support, is now noise — more characters, breaks Markdown rendering of the surrounding text). Same for paths and shell snippets. Legacy `{@code}` is still widespread; touch it opportunistically rather than mass-rewriting.
+
+**String formatting:** in new code, prefer the `String#formatted` instance method over `String.format(…)`.
+Reads as the format string operating on its arguments (`"foo [%s]".formatted(x)`) and avoids the `java.lang.String.format` import.
+Legacy `String.format` calls are still common; touch them opportunistically but don't churn unrelated code.
+
+**Lazy logging:** when a log call requires string formatting, pass a `Supplier` lambda so the formatting cost is paid only when the level is enabled:
+```java
+LOGGER.info(() -> "…".formatted(args));
+LOGGER.error(() -> "…".formatted(args), ex);
+```
+Constants (`LOGGER.info("static text")`) and parameterised SLF4J/Log4j-style calls (`LOGGER.warn("template [{}]", arg)` — already lazy) do not need a lambda.
+When the same formatted message is also needed by surrounding code (e.g. as a response body), format eagerly into a local and pass it to the logger.
+
+**`@Singleton` for stateless / immutable injectables:** default to `@Singleton` (from `jakarta.inject.Singleton` — the in-project convention) for any Guice-injected class whose state is set once at construction and never mutated.
+Settings holders (e.g. `WebApiSettings`), stateless services, and IoC-bound utilities all qualify.
+Without `@Singleton`, Guice creates a fresh instance per injection point — wasteful, and conceptually wrong for "global app config" or shared infrastructure.
+Do **not** apply `@Singleton` to classes that hold per-request / per-thread state, or that are explicitly intended to be re-instantiated.
 
 **Grouped constants:** when several `static final` fields of the same type form a logical *set of alternatives* — alternative error messages produced by the same validator, alternative warnings from the same definer, parallel format-string templates — declare them under a single `public static final <Type>` line, separated by commas:
 ```java
