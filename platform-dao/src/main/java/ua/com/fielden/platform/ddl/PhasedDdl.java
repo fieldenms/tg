@@ -10,21 +10,20 @@ import java.util.stream.Stream;
 ///
 /// The phases are ordered such that, when applied in sequence, all referenced objects exist by the time a phase that depends on them is executed.
 /// In particular, all `CREATE TABLE` and primary-key statements complete before any `CREATE INDEX`, and all indices complete before any foreign keys.
-/// Forcing this ordering at the JDBC batch level avoids name-resolution races in dialects (notably MS SQL Server with filtered indices) where statements within a single submitted batch may be parsed before the metadata effects of preceding statements are visible.
+/// Forcing this ordering at the JDBC batch level avoids name-resolution races in dialects (notably MS SQL Server with filtered indices)
+/// where statements within a single submitted batch may be parsed before the metadata effects of preceding statements are visible.
+///
+/// @param tables
+///     `CREATE TABLE` and primary-key constraint statements.
+/// @param indices
+///     `CREATE INDEX` and `CREATE UNIQUE INDEX` statements (including those for composite keys).
+/// @param foreignKeys
+///     Foreign-key constraint statements.
+///     May be empty when foreign keys are deliberately omitted (e.g., for test database creation that supports out-of-order data insertion and table truncation).
 ///
 public record PhasedDdl(
-        /// `CREATE TABLE` and primary-key constraint statements.
-        ///
         List<String> tables,
-
-        /// `CREATE INDEX` and `CREATE UNIQUE INDEX` statements (including those for composite keys).
-        ///
         List<String> indices,
-
-        /// Foreign-key constraint statements.
-        ///
-        /// May be empty when foreign keys are deliberately omitted (e.g., for test database creation that supports out-of-order data insertion and table truncation).
-        ///
         List<String> foreignKeys)
 {
 

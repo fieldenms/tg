@@ -16,7 +16,6 @@ import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.ddl.MetadataProvider;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.*;
 
@@ -33,7 +32,7 @@ import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
 public class DbUtils {
     private static final Logger LOGGER = getLogger(DbUtils.class);
 
-    /// A marker used by [#batchExecSql(List, Connection, int)] to force a JDBC batch boundary.
+    /// A marker used by [#batchExecSql] to force a JDBC batch boundary.
     ///
     /// When present in the input list, the marker is not added to the JDBC batch.
     /// Instead, any statements queued so far are submitted via `executeBatch()` and a new batch starts.
