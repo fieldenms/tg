@@ -15,9 +15,8 @@ public class PhasedDdlTest {
                 List.of("CREATE TABLE A;", "PK A;"),
                 List.of("CREATE INDEX I1;"),
                 List.of("FK A;"));
-        assertEquals(
-                List.of("CREATE TABLE A;", "PK A;", "CREATE INDEX I1;", "FK A;"),
-                ddl.flatten());
+        assertEquals(List.of("CREATE TABLE A;", "PK A;", "CREATE INDEX I1;", "FK A;"),
+                     ddl.flatten());
     }
 
     @Test
@@ -26,13 +25,12 @@ public class PhasedDdlTest {
                 List.of("CREATE TABLE A;", "PK A;"),
                 List.of("CREATE INDEX I1;"),
                 List.of("FK A;"));
-        assertEquals(
-                List.of("CREATE TABLE A;", "PK A;",
-                        DbUtils.PHASE_BOUNDARY_MARKER,
-                        "CREATE INDEX I1;",
-                        DbUtils.PHASE_BOUNDARY_MARKER,
-                        "FK A;"),
-                ddl.flattenWithMarkers());
+        assertEquals(List.of("CREATE TABLE A;", "PK A;",
+                             DbUtils.PHASE_BOUNDARY_MARKER,
+                             "CREATE INDEX I1;",
+                             DbUtils.PHASE_BOUNDARY_MARKER,
+                             "FK A;"),
+                     ddl.flattenWithMarkers());
     }
 
     @Test
@@ -42,9 +40,8 @@ public class PhasedDdlTest {
                 List.of("CREATE TABLE A;"),
                 List.of(),
                 List.of("FK A;"));
-        assertEquals(
-                List.of("CREATE TABLE A;", DbUtils.PHASE_BOUNDARY_MARKER, "FK A;"),
-                ddl.flattenWithMarkers());
+        assertEquals(List.of("CREATE TABLE A;", DbUtils.PHASE_BOUNDARY_MARKER, "FK A;"),
+                     ddl.flattenWithMarkers());
     }
 
     @Test

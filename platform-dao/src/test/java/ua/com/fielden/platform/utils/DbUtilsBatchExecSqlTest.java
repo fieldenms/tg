@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.utils.DbUtils.PHASE_BOUNDARY_MARKER;
 import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
 
@@ -42,25 +42,19 @@ public class DbUtilsBatchExecSqlTest {
 
     @Test
     public void marker_forces_a_batch_boundary() {
-        final var result = run(asList("CREATE TABLE A;", "CREATE TABLE B;",
-                                       PHASE_BOUNDARY_MARKER,
-                                       "CREATE INDEX A1;", "CREATE INDEX B1;"), 1000);
-        assertEquals(asList(
-                asList("CREATE TABLE A;", "CREATE TABLE B;"),
-                asList("CREATE INDEX A1;", "CREATE INDEX B1;")),
-                result.batches());
+        final var result = run(
+                asList("CREATE TABLE A;", "CREATE TABLE B;", PHASE_BOUNDARY_MARKER, "CREATE INDEX A1;", "CREATE INDEX B1;"),
+                1000);
+        assertEquals(asList(asList("CREATE TABLE A;", "CREATE TABLE B;"),
+                            asList("CREATE INDEX A1;", "CREATE INDEX B1;")),
+                     result.batches());
     }
 
     @Test
     public void marker_is_not_added_to_any_batch() {
         final var result = run(asList("a;", PHASE_BOUNDARY_MARKER, "b;"), 1000);
-        for (final var batch : result.batches()) {
-            for (final var stmt : batch) {
-                if (stmt.equals(PHASE_BOUNDARY_MARKER)) {
-                    fail("Marker leaked into a JDBC batch: " + result.batches());
-                }
-            }
-        }
+        assertThat(result.batches())
+                .allSatisfy(batch -> assertThat(batch).doesNotContain(PHASE_BOUNDARY_MARKER));
     }
 
     @Test
@@ -84,15 +78,12 @@ public class DbUtilsBatchExecSqlTest {
     @Test
     public void marker_combined_with_size_based_batching() {
         // batchSize=2 splits the first phase, marker forces a hard boundary regardless of size accumulator
-        final var result = run(asList("a;", "b;", "c;",
-                                       PHASE_BOUNDARY_MARKER,
-                                       "x;", "y;", "z;"), 2);
-        assertEquals(asList(
-                asList("a;", "b;"),  // first 2 of phase 1
-                List.of("c;"),       // remainder of phase 1, flushed by marker
-                asList("x;", "y;"),  // first 2 of phase 2
-                List.of("z;")),      // remainder of phase 2
-                result.batches());
+        final var result = run(asList("a;", "b;", "c;", PHASE_BOUNDARY_MARKER, "x;", "y;", "z;"), 2);
+        assertEquals(asList(asList("a;", "b;"),  // first 2 of phase 1
+                            List.of("c;"),       // remainder of phase 1, flushed by marker
+                            asList("x;", "y;"),  // first 2 of phase 2
+                            List.of("z;")),      // remainder of phase 2
+                     result.batches());
     }
 
     /// Records the sequence of `addBatch(...)` and `executeBatch()` calls on a mocked `Statement`.
