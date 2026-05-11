@@ -2115,7 +2115,12 @@ Polymer({
      * The returned function is invoked from the action (so `this` refers to the action). It encodes the four shapes:
      *   1. entity-typed leaf -> the value itself
      *   2. union-typed leaf  -> the active member instance (or null if none)
-     *   3. simple-typed leaf -> the holder entity (the row itself, or the deepest entity-typed prefix for dotted property paths)
+     *   3. simple-typed leaf -> the entity that holds that property:
+     *        - the row entity for a top-level property,
+     *        - the entity at the deepest entity-typed prefix for dotted paths (e.g. `vehicle.make.name` -> the entity at `vehicle.make`),
+     *        - the active member when the holder is a union (e.g. for a common property accessed as `unionProp.commonProp`).
+     *        Non-common simple properties on a union are always addressed via a dot-notated path that names the specific member
+     *        (e.g. `unionProp.engineer.specificProp`), so the prefix already lands on the member entity directly.
      *   4. dynamic column    -> the collection item from `column.collectionalProperty` whose key matches `column.property`
      */
     _chosenEntity: function (entity, column) {
@@ -2140,14 +2145,7 @@ Polymer({
             }
             const value = referenceEntity.get(chosenProperty);
             // Determine whether the value is an entity (cases 1 / 2) or a simple type (case 3).
-            let valueType = null;
-            try {
-                if (value && value.constructor && value.constructor.prototype && typeof value.constructor.prototype.type === 'function') {
-                    valueType = value.constructor.prototype.type.call(value);
-                }
-            } catch (e) {
-                valueType = null;
-            }
+            const valueType = typeOf(value);
             if (valueType) {
                 // Case 2: union — return the active member instance (or null if there is no active member).
                 if (valueType.isUnionEntity()) {
@@ -2156,12 +2154,30 @@ Polymer({
                 // Case 1: entity-typed leaf.
                 return value;
             }
-            // Case 3: simple-typed leaf — return the holder of that property.
+            // Case 3: simple-typed leaf — return the entity that holds that property.
             const lastDotIndex = chosenProperty.lastIndexOf('.');
-            if (lastDotIndex >= 0) {
-                return referenceEntity.get(chosenProperty.substring(0, lastDotIndex));
+            const holder = lastDotIndex >= 0
+                ? referenceEntity.get(chosenProperty.substring(0, lastDotIndex))
+                : referenceEntity;
+            // If the holder is itself a union, the chosen property is a common simple property on every union member —
+            // unwrap to the active member, mirroring case 2.
+            const holderType = typeOf(holder);
+            if (holderType && holderType.isUnionEntity()) {
+                return holder._activeEntity() || null;
             }
-            return referenceEntity;
+            return holder;
+
+            // Returns the TG entity-type metadata for `v`, or `null` if `v` is not an entity-shaped value.
+            function typeOf (v) {
+                try {
+                    if (v && v.constructor && v.constructor.prototype && typeof v.constructor.prototype.type === 'function') {
+                        return v.constructor.prototype.type.call(v);
+                    }
+                } catch (e) {
+                    // not an entity — fall through.
+                }
+                return null;
+            }
         };
     },
 
