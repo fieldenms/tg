@@ -813,7 +813,7 @@ Polymer({
         // Undefined `chosenProperty` was actually used for locators.
         if (typeof chosenProperty !== 'undefined') {
             const entity = currentEntity.get(chosenProperty);
-            const entityType = entity && entity.constructor.prototype.type.call(entity);
+            const entityType = entity && entity.constructor.prototype.type && entity.constructor.prototype.type.call(entity);
             if (entityType && entityType.isUnionEntity()) {
                 const activeProp = entity._activeProperty();
                 if (activeProp) {
