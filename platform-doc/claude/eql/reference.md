@@ -156,6 +156,42 @@ select(Entity.class)
 Joined subquery columns are referenced via the alias: `prop("alias.columnName")`.
 `IFNULL` handles the LEFT JOIN no-match case (NULL → default).
 
+## `select(model1, model2, …)` — UNION ALL of Sources
+
+`select(...)` is overloaded with varargs that take multiple `EntityResultQueryModel<T>` or `AggregatedResultQueryModel` sources.
+The generated SQL is **`UNION ALL`** of those sources, wrapped as a derived table that the outer query selects FROM.
+Use this whenever you need to query across multiple parallel sources in a single round-trip — e.g. union entity members or sibling tables with the same shape — instead of running per-source queries and merging in Java.
+
+```java
+// Two like-shaped subqueries against different entity types.
+final AggregatedResultQueryModel sourceA = select(EntityA.class).where()
+        .prop(EntityA_.someProp()).in().values(keys)
+        .yield().prop(EntityA_.someProp()).as("name")
+        .modelAsAggregate();
+final AggregatedResultQueryModel sourceB = select(EntityB.class).where()
+        .prop(EntityB_.someProp()).in().values(keys)
+        .yield().prop(EntityB_.someProp()).as("name")
+        .modelAsAggregate();
+// Outer query: GROUP BY across the union → per-name match count across both sources.
+final AggregatedResultQueryModel grouped = select(sourceA, sourceB)
+        .groupBy().prop("name")
+        .yield().prop("name").as("name")
+        .yield().countAll().as("count")
+        .modelAsAggregate();
+```
+
+Outer-query operations (`where`, `groupBy`, `yield`, `orderBy`, …) operate over the unified row stream and can reference any alias produced by the sources via `prop("aliasName")`.
+
+**Contracts** enforced by the EQL stage-3 compiler:
+- All source models must yield the **same number of values**.
+- The yielded value **types must be compatible** across sources (Postgres requires explicit casts, which EQL emits automatically).
+- The result is `UNION ALL` (duplicates preserved). To deduplicate, add a `groupBy` on the outer query, or use `countOfDistinct`.
+
+**When to reach for this vs. alternatives:**
+- `select(sub1, sub2, ...)` — sources are concatenated as one logical input (like-shaped rows from each).
+- `leftJoin(aggregateModel)` — one base entity correlated against per-group aggregates of another (§ JOIN to Aggregated Subqueries).
+- `select(Union.class)` (where `Union` is an `AbstractUnionEntity`) — the union is *modelled* in the domain; EQL handles member dispatch via `unionProp.id()` (§ Union Entity `.id()` in EQL).
+
 ## Union Entity `.id()` in EQL
 
 `union.id()` resolves to `CASE WHEN member1 IS NOT NULL THEN member1 WHEN member2 IS NOT NULL THEN member2 ... END` in the generated SQL (not `COALESCE`).
