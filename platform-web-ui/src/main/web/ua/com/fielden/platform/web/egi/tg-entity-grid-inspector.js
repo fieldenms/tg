@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages, getFirstEntityTypeAndProperty } from '/resources/reflection/tg-polymer-utils.js';
 import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 const EGI_BOTTOM_MARGIN = "15px";
@@ -2112,16 +2112,20 @@ Polymer({
     /**
      * Resolves the entity behind `column.property` for a row, mirroring `_currentEntity` in shape.
      *
-     * The returned function is invoked from the action (so `this` refers to the action). It encodes the four shapes:
-     *   1. entity-typed leaf -> the value itself
-     *   2. union-typed leaf  -> the active member instance (or null if none)
-     *   3. simple-typed leaf -> the entity that holds that property:
-     *        - the row entity for a top-level property,
-     *        - the entity at the deepest entity-typed prefix for dotted paths (e.g. `vehicle.make.name` -> the entity at `vehicle.make`),
-     *        - the active member when the holder is a union (e.g. for a common property accessed as `unionProp.commonProp`).
+     * The returned function is invoked from the action (so `this` refers to the action). The resolution covers four shapes:
+     *   1. entity-typed leaf -> the value at the leaf, or null when the cell is empty
+     *   2. union-typed leaf  -> the active member instance, or null when the union has no active member
+     *   3. simple-typed leaf -> the entity that holds the leaf, determined by `getFirstEntityTypeAndProperty`:
+     *        - for a top-level simple property (e.g. `desc`, or the row-itself "this" column where `column.property` is empty) the holder is the row entity (via the `Entity.prototype.get('')` short-circuit),
+     *        - for a dotted path (e.g. `vehicle.make.name`) the holder is the entity at the deepest entity-typed prefix (`vehicle.make`), or null when that prefix is empty,
+     *        - when the holder prefix itself is a union, it is unwrapped to its active member (or null when there is no active member).
      *        Non-common simple properties on a union are always addressed via a dot-notated path that names the specific member
      *        (e.g. `unionProp.engineer.specificProp`), so the prefix already lands on the member entity directly.
      *   4. dynamic column    -> the collection item from `column.collectionalProperty` whose key matches `column.property`
+     *
+     * Returns null whenever the resolved holder is empty — null entity-typed leaf (1), union with no active member (2),
+     * or dotted simple leaf whose entity-typed prefix is null (3). The resolver does not walk further up the property path
+     * when the immediate entity-typed prefix is empty; the caller's action producer is expected to handle the null case.
      */
     _chosenEntity: function (entity, column) {
         const egi = this;
@@ -2138,34 +2142,19 @@ Polymer({
             if (column.collectionalProperty) {
                 return egi.getCollectionalItem(referenceEntity, column);
             }
-            const chosenProperty = column.property;
-            // The row-itself column ("this"): the chosen entity is the row entity.
-            if (!chosenProperty) {
-                return referenceEntity;
-            }
-            const value = referenceEntity.get(chosenProperty);
-            // Determine whether the value is an entity (cases 1 / 2) or a simple type (case 3).
-            const valueType = typeOf(value);
-            if (valueType) {
-                // Case 2: union — return the active member instance (or null if there is no active member).
-                if (valueType.isUnionEntity()) {
-                    return value._activeEntity() || null;
+
+            const [, propName] = getFirstEntityTypeAndProperty(referenceEntity, column.property);
+            const propValue = referenceEntity.get(propName);
+
+            if (propValue) {
+                const propType = typeOf(propValue);
+                if (propType && propType.isUnionEntity()) {
+                    return propValue._activeEntity() || null;
                 }
-                // Case 1: entity-typed leaf.
-                return value;
+                return propValue;
             }
-            // Case 3: simple-typed leaf — return the entity that holds that property.
-            const lastDotIndex = chosenProperty.lastIndexOf('.');
-            const holder = lastDotIndex >= 0
-                ? referenceEntity.get(chosenProperty.substring(0, lastDotIndex))
-                : referenceEntity;
-            // If the holder is itself a union, the chosen property is a common simple property on every union member —
-            // unwrap to the active member, mirroring case 2.
-            const holderType = typeOf(holder);
-            if (holderType && holderType.isUnionEntity()) {
-                return holder._activeEntity() || null;
-            }
-            return holder;
+
+            return null;
 
             // Returns the TG entity-type metadata for `v`, or `null` if `v` is not an entity-shaped value.
             function typeOf (v) {
