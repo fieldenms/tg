@@ -300,7 +300,11 @@ public interface IContextDecomposer {
     }
 
     /// Returns the chosen entity carried directly on [CentreContext], or `null` if not present.
-    /// Resolved on the client according to the column shape — entity-typed leaf, union active member, holder of a simple-typed leaf, or collectional item for a dynamic column.
+    /// Resolved on the client according to the column shape:
+    /// for an entity-typed leaf it is the value of that property;
+    /// for a union-typed leaf it is the active member instance;
+    /// for a simple-typed leaf it is the entity that holds that property — the row entity for a top-level property, or the entity at the deepest entity-typed prefix of the dotted path (e.g. for `vehicle.make.name` it is the entity at `vehicle.make`);
+    /// for a dynamic column it is the collection item whose key matches the column property.
     ///
     default AbstractEntity<?> chosenEntity() {
         return getContext() == null ? null : getContext().getChosenEntity();

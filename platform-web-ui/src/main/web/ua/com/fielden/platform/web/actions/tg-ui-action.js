@@ -332,8 +332,9 @@ Polymer({
         /**
          * The 'chosenEntity' should resolve to the entity behind 'chosenProperty' for the column that triggered the action.
          * For an entity-typed leaf this is the value of that property; for a union-typed leaf this is the active member instance;
-         * for a simple-typed leaf this is the row entity (the holder of that property); for a dynamic column this is the
-         * collection item whose key matches the column property.
+         * for a simple-typed leaf this is the entity that holds that property — the row entity for a top-level property,
+         * or the entity at the deepest entity-typed prefix of the dotted path (e.g. for 'vehicle.make.name' it is the entity at 'vehicle.make');
+         * for a dynamic column this is the collection item whose key matches the column property.
          * Defaults to a function returning null, populated only when the action's context configuration opts in via withChosenEntity().
          */
         chosenEntity: {
