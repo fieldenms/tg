@@ -10,6 +10,7 @@ import static metamodels.MetaModels.*;
 ```
 select(Entity.class)                         // FROM entity type
 select(select(...).model())                  // FROM subquery
+select(model1, model2, ...)                  // UNION ALL of N source models (varargs)
   .join(E.class).as("e").on()...             // JOIN
   .leftJoin(E.class).on()...
   .where().prop(E_.x()).eq().val(v)          // WHERE
