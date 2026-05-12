@@ -140,7 +140,6 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgUnionType2.class);
         add(TgUnionCommonType.class);
         add(TgNote.class);
-        add(TgEntityWithIsPropertyOverriddenId.class);
         add(PersistentEntityWithAllKindsOfProperties.class);
         add(TrivialPersistentEntity.class);
         add(EntityToFill.class);
