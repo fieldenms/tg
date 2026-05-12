@@ -1,16 +1,17 @@
 package ua.com.fielden.platform.entity;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntityEditActionProducer.NOTHING_TO_OPEN_MSG;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotationForClass;
-
-import java.util.function.Supplier;
-
 import ua.com.fielden.platform.entity.annotation.RestrictCreationByUsers;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_master.exceptions.CompoundMasterException;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+
+import java.util.function.Supplier;
+
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntityEditActionProducer.NOTHING_TO_OPEN_MSG;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotationForClass;
 
 /**
  * A base class that should be applicable in most cases for implementing open entity master action producers.
@@ -39,11 +40,7 @@ public abstract class AbstractProducerForOpenEntityMasterAction<T extends Abstra
             openAction.setKey(refetch(chosenEntityId(entityType).orElseThrow(NOTHING_TO_OPEN_EXCEPTION_SUPPLIER), entityType, KEY));
         } else if (chosenEntityNotEmpty() && chosenEntityInstanceOf(entityType)) {
             // No `currentEntity` was provided, but `withChosenEntity()` carried a type-compatible entity directly — open the master for it.
-            final Long id = chosenEntity().getId();
-            if (id == null) {
-                throw NOTHING_TO_OPEN_EXCEPTION_SUPPLIER.get();
-            }
-            openAction.setKey(refetch(id, entityType, KEY));
+            openAction.setKey(refetch(ofNullable(chosenEntity().getId()).orElseThrow(NOTHING_TO_OPEN_EXCEPTION_SUPPLIER), entityType, KEY));
         } else if (selectedEntitiesEmpty()) {
             final RestrictCreationByUsers restrictUserCreation = getAnnotationForClass(RestrictCreationByUsers.class, entityType);
             if (restrictUserCreation != null) {

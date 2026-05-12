@@ -1,20 +1,7 @@
 package ua.com.fielden.platform.entity;
 
-import static java.lang.Class.forName;
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseOpening;
-
-import java.util.function.Supplier;
-
-import org.apache.logging.log4j.Logger;
-
 import com.google.inject.Inject;
-
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_master.exceptions.SimpleMasterException;
@@ -23,6 +10,17 @@ import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
+
+import java.util.function.Supplier;
+
+import static java.lang.Class.forName;
+import static java.lang.String.format;
+import static java.util.Optional.*;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntityEditActionProducer.NOTHING_TO_OPEN_MSG;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseOpening;
 
 public class EntityManipulationActionProducer<T extends AbstractEntityManipulationAction> extends DefaultEntityProducerWithContext<T> {
     private final Logger logger = getLogger(getClass());
@@ -43,7 +41,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
         if (contextNotEmpty()) {
             final Supplier<? extends Class<AbstractEntity<?>>> determineTypeFrom = () -> chosenEntityType()
                 // when the [currentEntity; chosenProperty] path produced no type, fall back to the type carried directly by `chosenEntity` (when `withChosenEntity()` was opted in).
-                .or(() -> chosenEntityNotEmpty() ? of(determineBaseEntityType((Class<AbstractEntity<?>>) chosenEntity().getType())) : empty())
+                .or(() -> chosenEntityNotEmpty() ? of(determineBaseEntityType((Class<AbstractEntity<?>>)getOriginalType(chosenEntity().getType()))) : empty())
                 .orElseGet(() -> { // if it is empty
                     if (selectionCrit() != null) { // use selection criteria type as a fallback
                         return (Class<AbstractEntity<?>>) selectionCrit().getEntityClass();
@@ -76,7 +74,10 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
                 authoriseOpening(entityType.getSimpleName(), authorisation, securityTokenProvider).ifFailure(Result::throwRuntime);
                 return entity.setEntityTypeForEntityMaster(entityType);
             })
-            .orElseThrow(() -> new SimpleMasterException(format("Please add selection criteria or current entity to the context of the functional entity with type: %s", entity.getType().getName())));
+            .orElseThrow(() -> {
+                logger.debug("Could not determine entity type from context. Please enhance context with current entity, chosen entity or selection criteria.");
+                return new SimpleMasterException(NOTHING_TO_OPEN_MSG);
+            });
         }
         return entity;
     }
