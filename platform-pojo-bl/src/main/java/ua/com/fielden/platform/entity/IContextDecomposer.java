@@ -287,7 +287,6 @@ public interface IContextDecomposer {
 
     // CHOSEN ENTITY:
     /// Returns `true` if the chosen entity is not present, `false` otherwise.
-    /// `chosenEntity` is populated only when the action's context configuration opts in via `withChosenEntity()`.
     ///
     default boolean chosenEntityEmpty() {
         return chosenEntity() == null;
@@ -300,10 +299,11 @@ public interface IContextDecomposer {
     }
 
     /// Returns the chosen entity carried directly on [CentreContext], or `null` if not present.
+    /// Populated only when the action's context configuration opts in via `withChosenEntity()`.
     /// Resolved on the client according to the column shape:
     /// for an entity-typed leaf it is the value of that property;
-    /// for a union-typed leaf it is the active member instance;
-    /// for a simple-typed leaf it is the entity that holds that property — the row entity for a top-level property, or the entity at the deepest entity-typed prefix of the dotted path (e.g. for `vehicle.make.name` it is the entity at `vehicle.make`);
+    /// for a union-typed leaf it is the active member instance (or `null` when the union has no active member);
+    /// for a simple-typed leaf it is the entity that holds that property — the row entity for a top-level property, or the entity at the deepest entity-typed prefix of the dotted path (e.g. for `vehicle.make.name` it is the entity at `vehicle.make`), with the holder unwrapped to its active member when it is itself a union (e.g. for a common simple property accessed as `unionProp.commonProp`);
     /// for a dynamic column it is the collection item whose key matches the column property.
     ///
     default AbstractEntity<?> chosenEntity() {
