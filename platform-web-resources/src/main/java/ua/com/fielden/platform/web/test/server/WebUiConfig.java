@@ -803,6 +803,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<>(TgEntityForColourMaster.class, masterConfigForColour, injector());
 
+        // Master for an entity with `id` redeclared as `@IsProperty`. The master deliberately does not expose `id`.
+        // Used to verify entity-master retrieval works for entities with `@IsProperty` on `id` (issue #2726).
+        final String overriddenIdMasterActionBar = format("['horizontal', 'padding: 20px', 'wrap', 'justify-content: center', [%s], [%s]]", MASTER_ACTION_SPECIFICATION, MASTER_ACTION_SPECIFICATION);
+        final String overriddenIdMasterLayout = "['padding:20px', ['justified', ['flex', 'min-width:200px']]]";
+        final IMaster<TgEntityWithIsPropertyOverriddenId> masterConfigForOverriddenId = new SimpleMasterBuilder<TgEntityWithIsPropertyOverriddenId>()
+                .forEntity(TgEntityWithIsPropertyOverriddenId.class)
+                .addProp("key").asSinglelineText().also()
+                .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancels current changes if any or refresh the data.")
+                .addAction(MasterActions.SAVE)
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), overriddenIdMasterActionBar)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), overriddenIdMasterLayout)
+                .done();
+        final EntityMaster<TgEntityWithIsPropertyOverriddenId> overriddenIdMaster = new EntityMaster<>(TgEntityWithIsPropertyOverriddenId.class, masterConfigForOverriddenId, injector());
 
         final EntityMaster<AttachmentsUploadAction> attachmentsUploadActionMaster = StandardMastersWebUiConfig
                 .createAttachmentsUploadMaster(injector(), mkDim(400, Unit.PX, 400, Unit.PX), 10240,
@@ -835,6 +848,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             addMaster(userWebUiConfig.master).
             addMaster(userRoleWebUiConfig.master).
             addMaster(clourMaster).//
+            addMaster(overriddenIdMaster).
 
                 addMaster(new EntityMaster<>(
                         TgFunctionalEntityWithCentreContext.class,
