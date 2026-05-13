@@ -414,7 +414,7 @@ const template = html`
                     <!--Primary action stub header goes here-->
                 </div>
                 <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
-                    <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
+                    <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]" mutable-data>
                         <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                             <div class="table-header-column-content">
                                 <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
@@ -428,7 +428,7 @@ const template = html`
                         </div>
                     </template>
                 </div>
-                <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]">
+                <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]" mutable-data>
                     <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                         <div class="table-header-column-content">
                             <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
