@@ -22,6 +22,8 @@ public class FunctionalMultiActionElement implements IRenderable, IImportable {
 
     private final String widgetName;
     private final String widgetPath;
+    private final FunctionalActionKind actionKind;
+    private final String chosenProperty;
 
     private final List<FunctionalActionElement> actionElements = new ArrayList<>();
 
@@ -33,13 +35,32 @@ public class FunctionalMultiActionElement implements IRenderable, IImportable {
      * @param actionKind
      */
     public FunctionalMultiActionElement(final EntityMultiActionConfig entityMultiActionConfig, final int numberOfAction, final FunctionalActionKind actionKind) {
+        this(entityMultiActionConfig, numberOfAction, actionKind, null);
+    }
+
+    /// Creates a property-action multi-action element. Each inner action element is built with `chosenProperty` so the rendered `tg-ui-action` carries `chosen-property`.
+    /// Kind is forced to [FunctionalActionKind#PROP].
+    ///
+    public FunctionalMultiActionElement(final EntityMultiActionConfig entityMultiActionConfig, final int numberOfAction, final String chosenProperty) {
+        this(entityMultiActionConfig, numberOfAction, FunctionalActionKind.PROP, chosenProperty);
+    }
+
+    private FunctionalMultiActionElement(final EntityMultiActionConfig entityMultiActionConfig, final int numberOfAction, final FunctionalActionKind actionKind, final String chosenProperty) {
         this.widgetPath = "egi/tg-egi-multi-action";
         this.widgetName = AbstractCriterionWidget.extractNameFrom(this.widgetPath);
+        this.actionKind = actionKind;
+        this.chosenProperty = chosenProperty;
 
         for (int configIndex = 0; configIndex < entityMultiActionConfig.actions().size(); configIndex++) {
             final EntityActionConfig entityActionConfig = entityMultiActionConfig.actions().get(configIndex);
-            actionElements.add(new FunctionalActionElement(entityActionConfig, numberOfAction + configIndex, actionKind));
+            actionElements.add(chosenProperty != null
+                    ? new FunctionalActionElement(entityActionConfig, numberOfAction + configIndex, chosenProperty)
+                    : new FunctionalActionElement(entityActionConfig, numberOfAction + configIndex, actionKind));
         }
+    }
+
+    public FunctionalActionKind getFunctionalActionKind() {
+        return actionKind;
     }
 
     @Override

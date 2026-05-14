@@ -55,10 +55,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.S
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -91,7 +88,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     protected Optional<String> tooltipProp = empty();
     protected Optional<PropDef<?>> propDef = empty();
     protected Optional<AbstractWidget> widget = empty();
-    private Optional<EntityMultiActionConfig> entityActionConfig = empty();
+    private List<EntityMultiActionConfig> entityActionsConfig = new ArrayList<>();
     private Integer orderSeq;
     private int width = 80;
     private boolean wordWrap = false;
@@ -122,7 +119,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = empty();
         this.propDef = empty();
         this.orderSeq = null;
-        this.entityActionConfig = empty();
+        this.entityActionsConfig = new ArrayList<>();
         return this;
     }
 
@@ -236,7 +233,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = empty();
         this.propDef = of(propDef);
         this.orderSeq = null;
-        this.entityActionConfig = empty();
+        this.entityActionsConfig = new ArrayList<>();
         return this;
     }
 
@@ -269,35 +266,32 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IAlsoProp<T> withAction(final EntityActionConfig actionConfig) {
+    public IResultSetBuilder5WithPropAction<T> withAction(final EntityActionConfig actionConfig) {
         if (actionConfig == null) {
             throw new EntityCentreConfigurationException("Property action configuration should not be null.");
         }
 
-        this.entityActionConfig = of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig))));
-        completePropIfNeeded();
+        this.entityActionsConfig.add(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig))));
         return this;
     }
 
     @Override
-    public IAlsoProp<T> withMultiAction(final EntityMultiActionConfig multiActionConfig) {
+    public IResultSetBuilder5WithPropAction<T> withMultiAction(final EntityMultiActionConfig multiActionConfig) {
         if (multiActionConfig == null) {
             throw new IllegalArgumentException("Property action configuration should not be null.");
         }
 
-        this.entityActionConfig = of(multiActionConfig);
-        completePropIfNeeded();
+        this.entityActionsConfig.add(multiActionConfig);
         return this;
     }
 
     @Override
-    public IAlsoProp<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier) {
+    public IResultSetBuilder5WithPropAction<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier) {
         if (actionConfigSupplier == null) {
             throw new IllegalArgumentException("Property action configuration supplier should not be null.");
         }
 
-        this.entityActionConfig = of(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier)));
-        completePropIfNeeded();
+        this.entityActionsConfig.add(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier)));
         return this;
     }
 
@@ -441,10 +435,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private void completePropIfNeeded() {
         // construct and add property to the builder
         if (propName.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), presentByDefault, width, wordWrap, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), presentByDefault, width, wordWrap, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionsConfig);
             this.builder.addToResultSet(prop);
         } else if (propDef.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), presentByDefault, width, wordWrap, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), presentByDefault, width, wordWrap, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionsConfig);
             this.builder.addToResultSet(prop);
         }
 
@@ -454,7 +448,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = empty();
         this.propDef = empty();
         this.orderSeq = null;
-        this.entityActionConfig = empty();
+        this.entityActionsConfig = new ArrayList<>();
         this.widget = empty();
         this.wordWrap = false;
     }

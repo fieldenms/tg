@@ -58,8 +58,8 @@ public class MultiActionUtils {
     }
 
     /**
-     * Returns indices of actions for {@code entity} and list of {@code selectors}.
-     * 
+     * Returns indices of actions for {@code entity} and a per-property single selector (master side).
+     *
      * @param entity
      * @param selectors
      * @return
@@ -71,13 +71,29 @@ public class MultiActionUtils {
     }
 
     /**
+     * Returns indices of property actions for {@code entity}, where each property maps to an ordered list of selectors (centre side).
+     * For each property, returns the list of sub-action indices selected by the corresponding selectors.
+     *
+     * @param entity
+     * @param selectors
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> Map<String, List<Integer>> getCentreIndicesFor(final T entity, final Map<String, List<IEntityMultiActionSelector>> selectors) {
+        return selectors.entrySet().stream()
+            .map(entry -> t2(entry.getKey(), entry.getValue().stream().map(selector -> selector.getActionFor(entity)).collect(toList())))
+            .collect(toMap(tt -> tt._1, tt -> tt._2));
+    }
+
+    /**
      * Calculates indices of property actions for each entity in result set.
+     * Each property may have several multi-action groups (one per `withAction` / `withMultiAction` call); for each entity the value is a list of indices — one per group.
      *
      * @param entities - result set entities
      * @return
      */
-    static T2<String, List<Map<String, Integer>>> createPropertyActionIndicesForCentre(final List<AbstractEntity<?>> entities, final EntityCentre<AbstractEntity<?>> centre) {
-        return t2(PROPERTY_ACTION_INDICES, entities.stream().map(entity -> getIndicesFor(entity, centre.createPropertyActionSelectors())).collect(toList()));
+    static T2<String, List<Map<String, List<Integer>>>> createPropertyActionIndicesForCentre(final List<AbstractEntity<?>> entities, final EntityCentre<AbstractEntity<?>> centre) {
+        final Map<String, List<IEntityMultiActionSelector>> selectors = centre.createPropertyActionSelectors(); // build once, reuse per entity
+        return t2(PROPERTY_ACTION_INDICES, entities.stream().map(entity -> getCentreIndicesFor(entity, selectors)).collect(toList()));
     }
 
     /**

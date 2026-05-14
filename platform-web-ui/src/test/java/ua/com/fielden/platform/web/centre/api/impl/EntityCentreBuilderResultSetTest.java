@@ -90,11 +90,11 @@ public class EntityCentreBuilderResultSetTest {
                 .build();
 
         assertEquals(2, config.getResultSetProperties().get().size());
-        assertTrue(config.getResultSetProperties().get().get(0).getPropAction().isPresent());
-        assertTrue(config.getResultSetProperties().get().get(0).getPropAction().get().actions().get(0).longDesc.isPresent());
-        assertTrue(config.getResultSetProperties().get().get(1).getPropAction().isPresent());
-        assertTrue(config.getResultSetProperties().get().get(1).getPropAction().get().actions().get(0).longDesc.isPresent());
-        assertEquals("Changes vehicle status", config.getResultSetProperties().get().get(1).getPropAction().get().actions().get(0).longDesc.get());
+        assertEquals(1, config.getResultSetProperties().get().get(0).getPropActions().size());
+        assertTrue(config.getResultSetProperties().get().get(0).getPropActions().get(0).actions().get(0).longDesc.isPresent());
+        assertEquals(1, config.getResultSetProperties().get().get(1).getPropActions().size());
+        assertTrue(config.getResultSetProperties().get().get(1).getPropActions().get(0).actions().get(0).longDesc.isPresent());
+        assertEquals("Changes vehicle status", config.getResultSetProperties().get().get(1).getPropActions().get(0).actions().get(0).longDesc.get());
     }
 
     @Test(expected = EntityCentreConfigurationException.class)

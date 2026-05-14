@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre.api.impl;
 import static java.util.Arrays.asList;
 import static java.util.Optional.of;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -129,7 +130,7 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
             throw new CentreConfigException("Property action configuration should not be null.");
         }
 
-        resultSetProp.setPropAction(of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig)))));
+        resultSetProp.setPropActions(List.of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig)))));
         return this;
     }
 
@@ -139,7 +140,7 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
             throw new CentreConfigException("Property action configuration supplier should not be null.");
         }
 
-        resultSetProp.setPropAction(of(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier))));
+        resultSetProp.setPropActions(List.of(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier))));
         return this;
     }
 

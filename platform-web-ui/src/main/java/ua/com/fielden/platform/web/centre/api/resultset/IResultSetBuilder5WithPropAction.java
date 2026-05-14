@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.web.centre.api.resultset;
 
-import java.util.Optional;
-import java.util.function.Supplier;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder;
 import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
+
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * This contract is responsible for providing a way to associate actions with properties that are added to an entity centre result set.
@@ -31,7 +31,7 @@ public interface IResultSetBuilder5WithPropAction<T extends AbstractEntity<?>> e
      * @param actionConfig
      * @return
      */
-    IAlsoProp<T> withAction(final EntityActionConfig actionConfig);
+    IResultSetBuilder5WithPropAction<T> withAction(final EntityActionConfig actionConfig);
 
     /**
      * Adds an instance of {@link EntityMultiActionConfig} to the result set definition.
@@ -42,7 +42,7 @@ public interface IResultSetBuilder5WithPropAction<T extends AbstractEntity<?>> e
      * @param multiActionConfig
      * @return
      */
-    IAlsoProp<T> withMultiAction(final EntityMultiActionConfig multiActionConfig);
+    IResultSetBuilder5WithPropAction<T> withMultiAction(final EntityMultiActionConfig multiActionConfig);
 
     /**
      * A variation of {@link #withAction(EntityActionConfig)} with delayed instantiation of the action configuration until the moment it is used for Web UI rendering.
@@ -53,5 +53,5 @@ public interface IResultSetBuilder5WithPropAction<T extends AbstractEntity<?>> e
      * @param actionConfigSupplier
      * @return
      */
-    IAlsoProp<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier);
+    IResultSetBuilder5WithPropAction<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier);
 }

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.api.actions.multi.FunctionalMultiActionElement;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -28,7 +29,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     private final String widgetPath;
     private final Object propertyType;
     private final Pair<String, String> titleDesc;
-    private final List<FunctionalActionElement> actions = new ArrayList<>();
+    private final List<FunctionalMultiActionElement> actions = new ArrayList<>();
     private final List<SummaryElement> summary;
     private boolean debug = false;
     private final int growFactor;
@@ -39,7 +40,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     /// Creates [PropertyColumnElement] from `entityType` type and `propertyName` and the name&path of widget.
     ///
-    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean wordWrap, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final List<FunctionalActionElement> actions) {
+    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean wordWrap, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final List<FunctionalMultiActionElement> actions) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
@@ -181,7 +182,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         return new LinkedHashMap<>();
     }
 
-    public List<FunctionalActionElement> getActions() {
+    public List<FunctionalMultiActionElement> getActions() {
         return unmodifiableList(actions);
     }
 
@@ -197,7 +198,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     private DomElement renderColumnElement () {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
-        for (final FunctionalActionElement actionElement : actions) {
+        for (final FunctionalMultiActionElement actionElement : actions) {
             if (actionElement.getFunctionalActionKind() == FunctionalActionKind.PROP) {
                 final DomElement actionDomElement = actionElement.render();
                 actionDomElement.attr("slot", "property-action");
