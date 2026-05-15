@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.centre.api.impl;
 import static java.util.Arrays.asList;
 import static java.util.Optional.of;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -125,22 +124,32 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
     }
 
     @Override
-    public IResultSetBuilderAlsoDynamicProps<T> withAction(final EntityActionConfig actionConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> withAction(final EntityActionConfig actionConfig) {
         if (actionConfig == null) {
             throw new CentreConfigException("Property action configuration should not be null.");
         }
 
-        resultSetProp.setPropActions(List.of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig)))));
+        resultSetProp.getPropActions().add(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig))));
         return this;
     }
 
     @Override
-    public IResultSetBuilderAlsoDynamicProps<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier) {
+    public IResultSetBuilderDynamicPropsAction<T> withMultiAction(final EntityMultiActionConfig multiActionConfig) {
+        if (multiActionConfig == null) {
+            throw new CentreConfigException("Property action configuration should not be null.");
+        }
+
+        resultSetProp.getPropActions().add(multiActionConfig);
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilderDynamicPropsAction<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier) {
         if (actionConfigSupplier == null) {
             throw new CentreConfigException("Property action configuration supplier should not be null.");
         }
 
-        resultSetProp.setPropActions(List.of(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier))));
+        resultSetProp.getPropActions().add(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier)));
         return this;
     }
 
