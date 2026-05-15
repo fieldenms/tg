@@ -37,6 +37,30 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 /// - `createIndicesSchema` — generates DDL for creation of all unique and non-unique indices.
 /// - `createFkSchema` — generates DDL for creation of all foreign keys; it is expected that all referenced tables are present when this DDL is executed.
 ///
+/// ## Default `id` column takes precedence over an override
+///
+/// The `_ID` column is always generated from `AbstractEntity.id` via [ColumnDefinitionExtractor#extractIdProperty].
+/// A subclass MAY redeclare `id` with `@IsProperty` (to expose it on a master/centre, use it as a `@CompositeKeyMember`, etc.).
+/// When such a redeclaration is present, an accompanying `@MapTo` is REQUIRED to carry exactly the value `"_ID"`;
+/// any other value — or the empty default `""`, which would map to `"ID_"` — is rejected with a [DbSchemaException].
+/// The override's `@MapTo("_ID")` is treated as a no-op confirming the default column name; the override does NOT
+/// contribute to the column definition emitted by this class.
+///
+/// As a consequence, the following annotations on an overridden `id` are **dismissed from DDL generation**:
+///
+/// - `@CompositeKeyMember(N)` — does not contribute to the unique composite index. The PK on `_ID` already enforces
+/// uniqueness, so the index would be redundant. When `id` is the only composite key member, the composite index is
+/// suppressed entirely (see [#createIndicesSchema]) to avoid an empty `CREATE UNIQUE INDEX … ON T()`.
+/// - `@Optional` — does not relax the column's `NOT NULL` constraint; `_ID` is always `NOT NULL` because it is the PK.
+/// - `@Required` — already the default for `_ID`; redundant.
+/// - `@Unique` — does not produce a separate unique index. The PK already enforces uniqueness.
+/// - `@PersistentType` — does not change the column's SQL type; `_ID` is always emitted with the default `Long`-to-SQL mapping.
+/// - `@IsProperty(length, scale, precision)` — not applied. These attributes are not meaningful for the `Long`-typed `id`.
+/// - `@MapTo(defaultValue = ...)` — not applied. A `DEFAULT` clause on a PK column is not generated.
+///
+/// In short, the override is a model-level declaration only (visible to TG reflection, fetch providers, metamodels,
+/// validators, etc.); the DDL is governed exclusively by `AbstractEntity.id`.
+///
 public class TableDdl {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -62,6 +86,9 @@ public class TableDdl {
     private static Map<String, ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         final var columns = ImmutableMap.<String, ColumnDefinition> builder();
 
+        // The `id`, `key` and `version` columns are always sourced from the AbstractEntity-level declarations.
+        // For `id` this is intentional even when a subclass redeclares it — see the class javadoc on
+        // "Default `id` column takes precedence over an override".
         columns.put(ID, columnDefinitionExtractor.extractIdProperty(entityType));
 
         columnDefinitionExtractor.extractSimpleKeyProperty(entityType).ifPresent(colDef -> columns.put(KEY, colDef));
@@ -88,8 +115,17 @@ public class TableDdl {
         return KEY.equals(propField.getName()) || isIdProperty(propField, entityType);
     }
 
-    /// Determines whether [MapTo] and [IsProperty] `propField` represents overridden `id` property.
-    /// Validates [MapTo] definition on that field.
+    /// Determines whether a [MapTo] + [IsProperty]-annotated `propField` represents a subclass redeclaration of `id`,
+    /// and validates the `@MapTo` value on that field.
+    ///
+    /// The default `id` column wins (see the class javadoc): the override may exist for model-level reasons
+    /// (e.g. exposing `id` on a centre/master or marking it as `@CompositeKeyMember`), but it must agree with the
+    /// default column name `"_ID"`. Any other `@MapTo` value — including the empty default which would map to
+    /// `"ID_"` — is rejected with a [DbSchemaException]. When the override is valid, this method returns `true`
+    /// so the surrounding iteration skips re-emitting the column.
+    ///
+    /// Annotations on the override other than `@MapTo("_ID")` itself are silently dismissed for DDL purposes;
+    /// the class javadoc lists which ones and explains why each dismissal is safe.
     ///
     private static boolean isIdProperty(final Field propField, final Class<? extends AbstractEntity<?>> entityType) {
         final var isIdProperty = ID.equals(propField.getName());
@@ -156,15 +192,28 @@ public class TableDdl {
 
     /// Generates DDL statements for all unique and non-unique indices, including those representing a business key.
     ///
+    /// For composite-key entities a unique index over all `@CompositeKeyMember` columns is emitted, but only when
+    /// at least one such column is present in this table. This guard matters when the only declared composite key
+    /// member is the overridden `id` property: its `@CompositeKeyMember` is dismissed (see the class javadoc),
+    /// so emitting the index would produce an empty column list — invalid SQL. The PK on `_ID` already enforces
+    /// uniqueness in that scenario, so skipping the redundant composite index is safe.
+    ///
     public List<String> createIndicesSchema(final Dialect dialect) {
         final Map<Boolean, List<ColumnDefinition>> uniqueAndNot = columnDefinitions().stream().collect(Collectors.partitioningBy(col -> col.unique));
         final List<String> result = new LinkedList<>();
-        if (isCompositeEntity(entityType)) {
+        if (isCompositeEntity(entityType) && hasCompositeKeyMembers()) {
             result.add(createUniqueCompositeIndicesSchema(columnDefinitions().stream(), dialect));
         }
         result.addAll(createUniqueIndicesSchema(uniqueAndNot.get(true).stream(), dialect));
         result.addAll(createNonUniqueIndicesSchema(uniqueAndNot.get(false).stream(), dialect));
         return result;
+    }
+
+    /// Returns `true` if any column in this table carries a `@CompositeKeyMember` ordering — that is,
+    /// if there is at least one column to include in the unique composite index.
+    ///
+    private boolean hasCompositeKeyMembers() {
+        return columnDefinitions().stream().anyMatch(col -> col.compositeKeyMemberOrder.isPresent());
     }
 
     private String createUniqueCompositeIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
