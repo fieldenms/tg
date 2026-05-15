@@ -7,6 +7,7 @@ import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
@@ -40,6 +41,13 @@ public class TableDdl {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private static final String ERR_ID_OVERRIDE_INCORRECT_MAP_TO =
+        "Property [id] in entity type [%%s] is annotated with @MapTo%s. When [id] overrides, only @MapTo(\"_ID\") is permitted (matching the default ID column).";
+    private static final String ERR_ID_OVERRIDE_NON_DEFAULT_MAP_TO_COLUMN_NAME =
+        ERR_ID_OVERRIDE_INCORRECT_MAP_TO.formatted("(\"%s\")");
+    private static final String ERR_ID_OVERRIDE_MAP_TO_EMPTY_COLUMN_NAME =
+        ERR_ID_OVERRIDE_INCORRECT_MAP_TO.formatted(" without a value (would default to \"ID_\")");
+
     public final Class<? extends AbstractEntity<?>> entityType;
     /** Maps a property path to its column definition. */
     private final Map<String, ColumnDefinition> columns;
@@ -61,7 +69,7 @@ public class TableDdl {
         columns.put(VERSION, columnDefinitionExtractor.extractVersionProperty(entityType));
 
         for (final Field propField : findRealProperties(entityType, MapTo.class)) {
-            if (!shouldIgnore(propField)) {
+            if (!shouldIgnore(propField, entityType)) {
                 final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propField.getName());
                 final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, entityType, propField.getName());
                 final PersistentType persistedType = getPropertyAnnotation(PersistentType.class, entityType, propField.getName());
@@ -75,8 +83,31 @@ public class TableDdl {
         return columns.buildOrThrow();
     }
 
-    private static boolean shouldIgnore(final Field propField) {
-        return KEY.equals(propField.getName());
+    private static boolean shouldIgnore(final Field propField, final Class<? extends AbstractEntity<?>> entityType) {
+        // Ignore `key` and `id` `@IsProperty` fields as they are defined specially.
+        return KEY.equals(propField.getName()) || isIdProperty(propField, entityType);
+    }
+
+    /// Determines whether [MapTo] and [IsProperty] `propField` represents overridden `id` property.
+    /// Validates [MapTo] definition on that field.
+    ///
+    private static boolean isIdProperty(final Field propField, final Class<? extends AbstractEntity<?>> entityType) {
+        final var isIdProperty = ID.equals(propField.getName());
+        if (isIdProperty) {
+            // `findRealProperties(MapTo.class)` filters fields that have both `@IsProperty` and `@MapTo`.
+            // So `@MapTo` is guaranteed to be present here.
+            // The id column is always generated as `_ID` by `extractIdProperty`.
+            // So an override is only acceptable when it matches that column name exactly.
+            final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, ID);
+            final String value = mapTo.value();
+            if (value.isEmpty()) {
+                throw new DbSchemaException(ERR_ID_OVERRIDE_MAP_TO_EMPTY_COLUMN_NAME.formatted(entityType.getSimpleName()));
+            }
+            if (!"_ID".equals(value)) {
+                throw new DbSchemaException(ERR_ID_OVERRIDE_NON_DEFAULT_MAP_TO_COLUMN_NAME.formatted(entityType.getSimpleName(), value));
+            }
+        }
+        return isIdProperty;
     }
 
     public String getTableName() {
