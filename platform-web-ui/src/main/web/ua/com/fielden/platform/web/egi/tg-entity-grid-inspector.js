@@ -413,8 +413,13 @@ const template = html`
                 <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
                     <!--Primary action stub header goes here-->
                 </div>
+                <!--
+                  mutable-data on both header dom-repeat tags (fixedHeadersTemplate and scrollableHeadersTemplate below) opts out of Polymer's default immutable-data dirty-checking on items.
+                  Required because the centre-side dom-repeat over dynamicColumns mutates columnTitle (and other fields) in place on existing <tg-property-column> elements, which Polymer's default dirty-checking would otherwise miss when these templates re-render.
+                  Performance impact is negligible — header column counts are small (tens).
+                -->
                 <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
-                    <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
+                    <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]" mutable-data>
                         <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                             <div class="table-header-column-content">
                                 <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
@@ -428,7 +433,7 @@ const template = html`
                         </div>
                     </template>
                 </div>
-                <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]">
+                <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]" mutable-data>
                     <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                         <div class="table-header-column-content">
                             <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
@@ -461,6 +466,12 @@ const template = html`
                     <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
                         <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
                     </div>
+                    <!--
+                      Body-row dom-repeat tags below do NOT need mutable-data.
+                      The staleness-prone fields (property, keyProperty, valueProperty) are read inside <tg-egi-cell> via observers that re-fire on egiEntity change — picking up fresh column metadata at that point (the ordering fix in _postRun ensures dynamicColumns is applied before allRetrievedEntities triggers egi-model rebuild).
+                      Other deep-path bindings that do appear here (e.g. column.width, column.customActions) are on properties that are either static or updated via Polymer's set() (e.g. column resizing), so they propagate through path notification regardless of mutable-data.
+                      If a deep-path binding on a property mutated by the centre-side dynamicColumns dom-repeat (e.g. [[column.columnTitle]]) is ever added here, mutable-data would be required on both body-row templates.
+                    -->
                     <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
                             <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
