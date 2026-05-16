@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -54,6 +55,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
  * The implementation of the {@link ICriteriaGenerator} that generates {@link EntityQueryCriteria} with criteria properties.
@@ -149,7 +151,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final Class<?> managedType)
     {
         final String newTypeName = generateCriteriaTypeName(CentreEntityQueryCriteriaToEnhance.class, linkedMapOf(t2(PROPERTIES, properties)), managedType);
-        final var titleAndDesc = getEntityTitleAndDesc(root);
+        final var titleAndDesc = entityTitleAndDescForCriteria(root);
         try {
             return (Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>)
                 modifiedClass(newTypeName, CentreEntityQueryCriteriaToEnhance.class, typeMaker -> typeMaker
@@ -165,6 +167,22 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             LOGGER.error(critGenEx.getMessage(), critGenEx);
             throw critGenEx;
         }
+    }
+
+    /// Resolves the entity title and description to be used on a generated criteria entity type for the given `root`.
+    ///
+    /// The title follows [TitlesDescsGetter#getEntityTitleAndDesc], but for synthetic-based-on-persistent entity types
+    /// the trailing ` Ext` suffix is removed. Such synthetic wrappers conventionally carry an ` Ext` suffix in their title,
+    /// which is not desirable in validation messages produced for criteria properties — the underlying persistent type’s
+    /// title reads more naturally there.
+    ///
+    private static Pair<String, String> entityTitleAndDescForCriteria(final Class<? extends AbstractEntity<?>> root) {
+        final var titleAndDesc = getEntityTitleAndDesc(root);
+        final var title = titleAndDesc.getKey();
+        if (isSyntheticBasedOnPersistentEntityType(root) && title.endsWith(" Ext")) {
+            return pair(title.substring(0, title.length() - " Ext".length()), titleAndDesc.getValue());
+        }
+        return titleAndDesc;
     }
 
     /**
