@@ -353,6 +353,21 @@
                 correctlyApproximatesFromLocal(done, 't', todayDate.format('DD/MM/YYYY HH:mm'), todayDate.utc().format('YYYY-MM-DD HH:mm'), todayDate.valueOf());
             });
         });
+
+        suite('@TimeOnly UTC representation for', function () {
+            // Worked before changes for issue #2737 -- time with millis renders via 'LTS' (HH:mm:ss.SSS).
+            test('[1473057204015] to [06:33:24.015]', function () {
+                assert.strictEqual(_millisDateRepresentation(1473057204015, 'UTC', 'TIME'), '06:33:24.015');
+            });
+            // Fixed in #2737 -- time with seconds but no millis renders via 'HH:mm:ss'.
+            test('[1473057204000] to [06:33:24]', function () {
+                assert.strictEqual(_millisDateRepresentation(1473057204000, 'UTC', 'TIME'), '06:33:24');
+            });
+            // Fixed in #2737 -- time with no seconds and no millis renders via 'LT' (HH:mm).
+            test('[1473057180000] to [06:33]', function () {
+                assert.strictEqual(_millisDateRepresentation(1473057180000, 'UTC', 'TIME'), '06:33');
+            });
+        });
     </script>
 </body>
 </html>
