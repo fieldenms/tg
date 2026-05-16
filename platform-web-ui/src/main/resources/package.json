@@ -77,13 +77,10 @@
     "wct-browser-legacy": "1.0.2"
   },
   "overrides": {
+    "//": "Do NOT nest overrides under a package that appears as $<name> elsewhere (npm/cli#5914 + #5730). Hoist such sub-rules to the root instead.",
     "@toast-ui/editor": {
       "dompurify": "^3.3.3",
       "@types/trusted-types": "../_EXCLUDED_"
-    },
-    "mocha": {
-      "serialize-javascript": "$serialize-javascript",
-      "glob": "$glob"
     },
     "wct-browser-legacy": {
       "@polymer/sinonjs": "../_EXCLUDED_",
@@ -95,6 +92,8 @@
       "sinon": "$sinon",
       "sinon-chai": "$sinon-chai",
       "stacky": "../_EXCLUDED_"
-    }
+    },
+    "serialize-javascript": "$serialize-javascript",
+    "glob": "$glob"
   }
 }
