@@ -1051,9 +1051,9 @@ Polymer({
 
     hasAction: function (entity, column) {
         const entityIdx = this.findEntityIndex(entity);
-        const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
+        const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
         return entity && (
-            (column.customActions && column.customActions.length > 0 && column.customActions[actionIdx])
+            (column.customActions && column.customActions.length > 0 && groupIndices && groupIndices.length > 0)
             || this.isHyperlinkProp(entity, column) === true
             || this.getAttachmentIfPossible(entity, column)
             || this.hasDefaultAction(entity, column)
@@ -1345,11 +1345,14 @@ Polymer({
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         const entityIndex = this.findEntityIndex(entity);
-        const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
+        // groupIndices[g] is the sub-action index chosen by the runtime selector of property-action group g on this column.
+        // Cell tap always runs the first group's selected sub-action; other groups are reachable through the overflow dropdown.
+        const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
+        const firstGroupSubActionIndex = groupIndices && groupIndices.length > 0 ? groupIndices[0] : -1;
         if (clickedLink) {
             const targetAttr = clickedLink.getAttribute("target");
             checkLinkAndOpen(clickedLink.getAttribute("href"), targetAttr ? targetAttr : "_self");
-        } else if (!column.runAction(this._currentEntity(entity), actionIndex)) {
+        } else if (!column.runAction(this._currentEntity(entity), firstGroupSubActionIndex)) {
             if (this.isHyperlinkProp(entity, column) === false) {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
@@ -2113,9 +2116,11 @@ Polymer({
         try {
             let tooltip = this.getValueTooltip(entity, column);
             const entityIdx = this.findEntityIndex(entity);
-            const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
+            // groupIndices is a list of sub-action indices, one per property-action group on the column.
+            // The tooltip surfaces one fragment per group, each describing the group's currently-selected sub-action.
+            const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
             const columnDescPart = this.getDescTooltip(entity, column);
-            const actionDescPart = this.getActionTooltip(entity, column, actions[actionIdx]);
+            const actionDescPart = this._getActionsTooltip(entity, column, actions, groupIndices);
             tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
             tooltip += (actionDescPart && tooltip && "<br><br>") + actionDescPart;
             return tooltip;
@@ -2150,16 +2155,56 @@ Polymer({
         return "";
     },
 
+    /**
+     * Builds the action portion of an EGI cell tooltip.
+     * Collects one inner fragment per property-action group on the column (each `withAction` / `withMultiAction` call produces one group), calling `getActionTooltip` for the runtime-selected sub-action of each.
+     * When no property-action group yields a tooltip, falls back to the attachment tooltip (downloadable attachment present) or the column's default-action tooltip.
+     * Aggregated fragments are wrapped in a single `<div>` labelled `With action:` (one fragment) or `With actions:` (more than one), with fragments separated by `<br><br>` — mirrors the `tg-entity-editor` layout.
+     *
+     * `actions[g]` is the property-action group element at column index `g`; its `actions` property holds the slotted `tg-ui-action` originals for the group's sub-actions.
+     * `groupIndices[g]` is the sub-action index chosen for group `g` by its runtime selector (computed server-side per entity).
+     */
+    _getActionsTooltip: function (entity, column, actions, groupIndices) {
+        const innerTooltips = [];
+        if (actions && actions.length > 0 && groupIndices && groupIndices.length > 0) {
+            for (let g = 0; g < actions.length; g++) {
+                const group = actions[g];
+                const actionTooltip = this.getActionTooltip(entity, column, group && group.actions && group.actions[groupIndices[g]]);
+                if (actionTooltip) {
+                    innerTooltips.push(actionTooltip);
+                }
+            }
+        }
+        if (innerTooltips.length === 0) {
+            if (this.getAttachmentIfPossible(entity, column)) {
+                innerTooltips.push(this._generateActionTooltip({
+                    shortDesc: 'Download',
+                    longDesc: 'Click to download attachment.'
+                }));
+            } else if (!this.isHyperlinkProp(entity, column) && this.hasDefaultAction(entity, column)) {
+                innerTooltips.push(this._generateActionTooltip(this.hasDefaultAction(entity, column)));
+            }
+        }
+        const filtered = innerTooltips.filter(t => !!t);
+        if (filtered.length === 0) {
+            return "";
+        }
+        return `<div style='display:flex;'>
+            <div style='margin-right:10px;'>${filtered.length > 1 ? "With actions:" : "With action:"}</div>
+            <div style='flex-grow:1;'>${filtered.join("<br><br>")}</div>
+            </div>`;
+    },
+
+    /**
+     * Returns the inner tooltip fragment for a single sub-action — short/long descriptions only, with no outer wrapper and no `With action(s):` label.
+     * Composition into the final tooltip is the responsibility of `_getActionsTooltip`.
+     *
+     * This is the standard override point for substituting a column- or entity-specific tooltip; `entity` and `column` are provided so overrides can branch on row / column context.
+     * Overrides typically delegate to `_generateActionTooltip` against a different action element.
+     */
     getActionTooltip: function (entity, column, action) {
         if (action && (action.shortDesc || action.longDesc)) {
             return this._generateActionTooltip(action);
-        } else if (this.getAttachmentIfPossible(entity, column)) {
-            return this._generateActionTooltip({
-                shortDesc: 'Download',
-                longDesc: 'Click to download attachment.'
-            });
-        } else if (!this.isHyperlinkProp(entity, column) && this.hasDefaultAction(entity, column)) {
-            return this._generateActionTooltip(this.hasDefaultAction(entity, column));
         }
         return "";
     },
@@ -2189,12 +2234,7 @@ Polymer({
         } else {
             longDesc = action.longDesc ? "<b>" + action.longDesc + "</b>" : "";
         }
-        const tooltip  = shortDesc + longDesc;
-        
-        return tooltip && `<div style='display:flex;'>
-            <div style='margin-right:10px;'>With action:</div>
-            <div style='flex-grow:1;'>${tooltip}</div> 
-            </div>`
+        return shortDesc + longDesc;
     },
 
     _getTotalTooltip: function (summary) {

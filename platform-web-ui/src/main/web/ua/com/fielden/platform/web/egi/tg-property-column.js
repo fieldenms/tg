@@ -50,17 +50,22 @@ Polymer({
         this.customActions = [...this.$.action_selector.assignedNodes()];
     },
 
-    /** 
-     * Executes a custom action and returns true if the action was provided. 
-     * Otherwise, simply returns false to indicate that there was no custom action to be executed. 
-     * the passed in currentEntity is a function that returns choosen entity. 
+    /**
+     * Runs the first property-action group on this column at the supplied sub-action index and returns true if there was an action to run.
+     * Returns false when this column has no property-action group.
+     * `currentEntity` is a function that returns the chosen entity.
+     * `subActionIndex` identifies the sub-action within the first group to run; for a plain `withAction` group this is always 0, for a `withMultiAction` group it is provided by the runtime selector.
+     * Other groups (when several `withAction` / `withMultiAction` calls are chained on the same column) are reached through the EGI cell's overflow dropdown, which dispatches directly on the group element rather than going through this method.
      */
-    runAction: function (currentEntity, actionIndex) {
-        const actionToRun = this.customActions[actionIndex]; 
-        if (actionToRun) {
-            actionToRun.currentEntity = currentEntity;
-            actionToRun._run();
-            return true;
+    runAction: function (currentEntity, subActionIndex) {
+        const firstGroup = this.customActions[0];
+        if (firstGroup) {
+            const subAction = firstGroup.actions && firstGroup.actions[subActionIndex];
+            if (subAction) {
+                subAction.currentEntity = currentEntity;
+                subAction._run();
+                return true;
+            }
         }
         return false;
     },
