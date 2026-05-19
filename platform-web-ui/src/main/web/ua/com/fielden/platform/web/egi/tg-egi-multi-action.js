@@ -25,10 +25,11 @@ const template = html`
     <template is="dom-repeat" items="[[actions]]" as="action" index-as="actionIndex">
         <tg-ui-action
             class="action"
-            hidden="[[_isHidden(actionIndex, currentIndex)]]" 
-            show-dialog="[[action.showDialog]]" 
-            toaster="[[action.toaster]]" 
+            hidden="[[_isHidden(actionIndex, currentIndex)]]"
+            show-dialog="[[action.showDialog]]"
+            toaster="[[action.toaster]]"
             current-entity="[[currentEntity]]"
+            chosen-property="[[action.chosenProperty]]"
             short-desc="[[action.shortDesc]]"
             long-desc="[[action.longDesc]]"
             icon="[[action.icon]]"

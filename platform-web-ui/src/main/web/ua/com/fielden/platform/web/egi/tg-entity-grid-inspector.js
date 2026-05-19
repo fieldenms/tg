@@ -15,7 +15,7 @@ import '/resources/images/tg-icons.js';
 
 import '/resources/egi/tg-egi-multi-action.js';
 import '/resources/egi/tg-secondary-action-button.js';
-import '/resources/egi/tg-secondary-action-dropdown.js';
+import '/resources/egi/tg-action-dropdown.js';
 import {EGI_CELL_PADDING, EGI_CELL_PADDING_TEMPLATE} from '/resources/egi/tg-egi-cell.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 
@@ -393,6 +393,7 @@ const template = html`
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
+    <slot id="secondary_action_selector" name="secondary-action" hidden></slot>
     <slot id="default_property_action" name="defaultPropertyAction" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
@@ -470,7 +471,7 @@ const template = html`
                         <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                     </template>
                     <div class="action-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
-                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
+                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDownForSecondaryActions]]"></tg-secondary-action-button>
                     </div>
                 </div>
             </template>
@@ -528,10 +529,9 @@ const template = html`
         </div>
         <!-- table lock layer -->
         <div class="lock-layer" lock$="[[lock]]"></div>
-        <!-- secondary action dropdown that will be used by each secondary aciton -->
-        <tg-secondary-action-dropdown id="secondaryActionDropDown" is-single="{{_isSingleSecondaryAction}}" is-present="{{_isSecondaryActionPresent}}" secondary-actions="{{_secondaryActions}}">
-            <slot id="secondary_action_selector" slot="actions" name="secondary-action"></slot>
-        </tg-secondary-action-dropdown>
+        <!-- Shared action dropdown used by both secondary actions (row-level) and property actions (cell-level). -->
+        <!-- The dropdown starts empty; the EGI borrows the relevant action group elements into it via openForActions(...) on each open and they are returned on close. -->
+        <tg-action-dropdown id="actionDropDown"></tg-action-dropdown>
     </div>`;
 
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
@@ -836,7 +836,7 @@ Polymer({
         //Default action for property columns. It is invoked only if there were no other action specified for specific property column.
         _defaultPropertyAction: Object,
         //The callback to open drop down for secondary action.
-        _openDropDown: Function,
+        _openDropDownForSecondaryActions: Function,
 
         //Double tap related
         _tapOnce: Boolean
@@ -884,6 +884,12 @@ Polymer({
         //Initialising the primary action.
         this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
+        //Initialising secondary actions (slotted directly under the EGI; captured once at ready, mirroring primaryAction).
+        this._secondaryActions = this.$.secondary_action_selector.assignedNodes()
+            .filter(n => n.nodeType === Node.ELEMENT_NODE);
+        this._isSingleSecondaryAction = this._secondaryActions.length === 1;
+        this._isSecondaryActionPresent = this._secondaryActions.length > 0;
+
         //Initialising the default property action
         this._defaultPropertyAction = this.$.default_property_action.assignedNodes()[0];
 
@@ -895,9 +901,17 @@ Polymer({
             this._columnDomChanged(info.addedNodes, info.removedNodes);
         });
 
-        //Init secondary action drop down trigger
-        this._openDropDown = function (currentEntity, currentIndices, currentAction) {
-            this.$.secondaryActionDropDown.open(currentEntity, currentIndices, currentAction);
+        //Trigger used by `tg-secondary-action-button` to open the shared dropdown — borrows the slotted secondary-action group elements into the dropdown for the open state and returns them on close.
+        this._openDropDownForSecondaryActions = function (currentEntity, currentIndices, currentAction) {
+            this.$.actionDropDown.open(this._secondaryActions, currentEntity, currentIndices, currentAction);
+        }.bind(this);
+
+        //Trigger used by the EGI cell's overflow button to open the shared dropdown with the clicked column's property-action groups.
+        //Resolves the row's per-group sub-action indices from `propertyActionIndices`, then hands the column's `customActions` to the dropdown for the open state.
+        this._openDropDownForPropertyActions = function (entity, column, positionTarget) {
+            const entityIndex = this.findEntityIndex(entity);
+            const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
+            this.$.actionDropDown.open(column.customActions, this._currentEntity(entity), groupIndices, positionTarget);
         }.bind(this);
 
         //Initiate entity master for inline editing

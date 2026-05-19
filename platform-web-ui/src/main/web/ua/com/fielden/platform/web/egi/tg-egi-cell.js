@@ -4,6 +4,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -117,11 +118,19 @@ const template = html`
             font-family: courier, monospace;
             padding: 0 3px;
         }
+        .overflow-button {
+            height: 1.6rem;
+            width: 1.6rem;
+            padding: 2px;
+            flex: 0 0 auto;
+            margin-left: 4px;
+        }
     </style>
     <div class="cell-background" style$="[[_backgroundRendHints]]" modified$="[[_modified]]"></div>
     <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" icon="[[_value]]"></iron-icon>
     <a class="value-container" hidden$="[[!_isHyperlinkProp(_hostComponent, _entity, column)]]" href$="[[_value]]" target="_blank" style$="[[_foregroundRendHints]]">[[_value]]</a>
-    <div class="value-container" word-wrap$="[[column.wordWrap]]" hidden$="[[!_isNotBooleanOrHyperlinkProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" inner-h-t-m-l="[[_value]]"></div>`;
+    <div class="value-container" word-wrap$="[[column.wordWrap]]" hidden$="[[!_isNotBooleanOrHyperlinkProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" inner-h-t-m-l="[[_value]]"></div>
+    <paper-icon-button id="dropdownAction" class="overflow-button" icon="more-vert" hidden$="[[!_hasOverflow(column)]]" on-tap="_openOverflow"></paper-icon-button>`;
 
 Polymer({
 
@@ -321,6 +330,25 @@ Polymer({
     //Utility methods
 
     _isProperty: function (column) {
-        return column && typeof column.property !== 'undefined' && column.property !== null; 
+        return column && typeof column.property !== 'undefined' && column.property !== null;
+    },
+
+    /**
+     * Returns true when the column has more than one property-action group — in that case the cell shows a triple-dot overflow button next to the value.
+     * Cell tap still runs the first group's currently-selected sub-action; the overflow button exposes the rest via the shared dropdown.
+     */
+    _hasOverflow: function (column) {
+        return column && column.customActions && column.customActions.length > 1;
+    },
+
+    /**
+     * Opens the shared EGI dropdown with this column's property-action groups, positioned next to the overflow button.
+     * Stops event propagation so the click does not also fire the cell-tap (which would re-run the first action).
+     */
+    _openOverflow: function (e) {
+        e.stopPropagation();
+        if (this._hostComponent && this._entity && this.column) {
+            this._hostComponent._openDropDownForPropertyActions(this._entity, this.column, this.$.dropdownAction);
+        }
     }
 });
