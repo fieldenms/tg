@@ -70,13 +70,9 @@ public class TgGeneratedEntityWebUiConfig {
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
                 .withGenerator(TgGeneratedEntity.class, TgGeneratedEntityGenerator.class)
-                // Smoke test for issue #2733: two property-action groups on the same column.
-                // Cell tap runs the first group (Edit); a triple-dot overflow button reveals both.
                 .addProp("entityKey").order(1).asc().width(100)
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching TgGeneratedEntity.")
-                    .withAction(standardEditAction)
-                    .withAction(standardDeleteAction)
-                .also()
+                    .withAction(standardEditAction).also()
                 .addProp("desc").minWidth(400).also()
                 .addProp("createdBy").minWidth(60)
                 .addPrimaryAction(standardEditAction)

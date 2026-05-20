@@ -41,6 +41,8 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder;
+import ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
@@ -1416,14 +1418,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
                 .beginTopActionsGroup("group 1")
                 .addGroupAction(action(EntityNewAction.class).
-                    withContext(context().withSelectionCrit().build()).
-                    icon("add-circle-outline").
-                    shortDesc("Add new").
-                    longDesc("Start coninuous creatio of entities").
-                    shortcut("alt+n").
-                    build())
+                        withContext(context().withSelectionCrit().build()).
+                        icon("add-circle-outline").
+                        shortDesc("Add new").
+                        longDesc("Start coninuous creatio of entities").
+                        shortcut("alt+n").
+                        build())
                 .addGroupAction(action(EntityNewAction.class).
-                        withContext(context().withSelectionCrit().withComputation((a1,a2) -> "WITH_KEY4").build()).
+                        withContext(context().withSelectionCrit().withComputation((a1, a2) -> "WITH_KEY4").build()).
                         icon("add-circle-outline").
                         shortDesc("Add new").
                         longDesc("Start coninuous creatio of entities WITH_KEY4").
@@ -1448,7 +1450,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addGroupAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction())
                 .addGroupAction(action(NewEntityAction.class).
                         withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
-                        icon("add-circle").
+                                icon("add-circle").
                         shortDesc("Add new").
                         longDesc("Start coninuous creatio of entities").
                         withNoParentCentreRefresh().
@@ -1456,23 +1458,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addGroupAction(ReferenceHierarchyWebUiConfig.mkAction())
                 .endTopActionsGroup().also().beginTopActionsGroup("group 2");
 
-
         if (isComposite) {
-//            actionConf = actionConf.addGroupAction(
-//                    action(TgCentreInvokerWithCentreContext.class)
-//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                            .icon("assignment-ind")
-//                            .shortDesc("Function 4 (TgCentreInvokerWithCentreContext)")
-//                            .longDesc("Functional context-dependent action 4 (TgCentreInvokerWithCentreContext)")
-//                            .prefDimForView(mkDim("'80%'", "'400px'"))
-//                            .withNoParentCentreRefresh()
-//                            .build()
-//                    ).endTopActionsGroup().also().beginTopActionsGroup("group 3");
+            //            actionConf = actionConf.addGroupAction(
+            //                    action(TgCentreInvokerWithCentreContext.class)
+            //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+            //                            .icon("assignment-ind")
+            //                            .shortDesc("Function 4 (TgCentreInvokerWithCentreContext)")
+            //                            .longDesc("Functional context-dependent action 4 (TgCentreInvokerWithCentreContext)")
+            //                            .prefDimForView(mkDim("'80%'", "'400px'"))
+            //                            .withNoParentCentreRefresh()
+            //                            .build()
+            //                    ).endTopActionsGroup().also().beginTopActionsGroup("group 3");
 
         }
 
-        @SuppressWarnings("unchecked")
-        final IAlsoCrit<TgPersistentEntityWithProperties> afterAddCritConf = actionConf
+        @SuppressWarnings("unchecked") final IAlsoCrit<TgPersistentEntityWithProperties> afterAddCritConf = actionConf
                 .addGroupAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
@@ -1513,8 +1513,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withContext(context().withSelectionCrit().withSelectedEntities()
                                         .extendWithParentCentreContext(
                                                 context().withSelectionCrit().withSelectedEntities()
-                                                .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
-                                                        context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
+                                                        .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
+                                                                context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
                                         .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
                                                 context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
                                 .postActionSuccess(new FileSaverPostAction())
@@ -1590,179 +1590,179 @@ public class WebUiConfig extends AbstractWebUiConfig {
         if (critOnlySingleValidation) {
             layoutConfig = afterAddCritConf
                     //////////////////////////////////////////CRIT-ONLY SINGLE PROPERTIES (SELECTION CRITERIA VALIDATION / DEFINING #979) //////////////////////////////////////////
-                  .also().addCrit("cosStaticallyRequired")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosStaticallyReadonly")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosEmptyValueProhibited")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                      .withDefaultValueAssigner(CosCritAssigner.class)
-                  .also().addCrit("cosConcreteValueProhibited")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                      .withDefaultValueAssigner(CosCritAssigner.class)
-                  .also().addCrit("cosStaticallyRequiredWithDefaultValue")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                      .withDefaultValueAssigner(CosCritAssigner.class)
-                  .also().addCrit("cosStaticallyReadonlyWithDefaultValue")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                      .withDefaultValueAssigner(CosCritAssigner.class)
-                  .also().addCrit("cosWithValidator")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithDependency")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithWarner")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosStaticallyRequiredWithNonEmptyDefaultValue")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                      .withDefaultValueAssigner(CosCritAssigner.class)
+                    .also().addCrit("cosStaticallyRequired")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosStaticallyReadonly")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosEmptyValueProhibited")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
+                    .also().addCrit("cosConcreteValueProhibited")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
+                    .also().addCrit("cosStaticallyRequiredWithDefaultValue")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
+                    .also().addCrit("cosStaticallyReadonlyWithDefaultValue")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
+                    .also().addCrit("cosWithValidator")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithDependency")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithWarner")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosStaticallyRequiredWithNonEmptyDefaultValue")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
 
-                  .also().addCrit("cosWithACE1Child1")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithACE1Child2")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithACE1")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithACE1WithDefaultValueChild1")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithACE1WithDefaultValueChild2")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithACE1WithDefaultValue")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                      .withDefaultValueAssigner(CosCritAssigner.class)
+                    .also().addCrit("cosWithACE1Child1")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithACE1Child2")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithACE1")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithACE1WithDefaultValueChild1")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithACE1WithDefaultValueChild2")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithACE1WithDefaultValue")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
 
-                  .also().addCrit("cosWithACE2Child1")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithACE2Child2")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithACE2")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithACE2WithDefaultValueChild1")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithACE2WithDefaultValueChild2")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                  .also().addCrit("cosWithACE2WithDefaultValue")
-                      .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                      .withDefaultValueAssigner(CosCritAssigner.class)
+                    .also().addCrit("cosWithACE2Child1")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithACE2Child2")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithACE2")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithACE2WithDefaultValueChild1")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithACE2WithDefaultValueChild2")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .also().addCrit("cosWithACE2WithDefaultValue")
+                    .asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                    .withDefaultValueAssigner(CosCritAssigner.class)
 
-                  .setLayoutFor(Device.DESKTOP, Optional.empty(),
-                          //                        ("[['center-justified', 'start', mrLast]]")
-                          ("[['center-justified', 'start', mr, mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mr, mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mr, mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]" +
-                                  "]")
-                                  .replace("mrLast", centreMrLast).replace("mr", centreMr)
-                  )
-                  .setLayoutFor(Device.TABLET, Optional.empty(),
-                          ("[['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]," +
-                                  "['center-justified', 'start', mr, mrLast]]")
-                                  .replace("mrLast", centreMrLast).replace("mr", centreMr)
-                  )
-                  .setLayoutFor(Device.MOBILE, Optional.empty(),
-                          ("[['center-justified', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]," +
-                                  "['center-justified', 'start', mrLast]]")
-                                  .replace("mrLast", centreMrLast).replace("mr", centreMr)
-                  );
+                    .setLayoutFor(Device.DESKTOP, Optional.empty(),
+                            //                        ("[['center-justified', 'start', mrLast]]")
+                            ("[['center-justified', 'start', mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]" +
+                                    "]")
+                                    .replace("mrLast", centreMrLast).replace("mr", centreMr)
+                    )
+                    .setLayoutFor(Device.TABLET, Optional.empty(),
+                            ("[['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]]")
+                                    .replace("mrLast", centreMrLast).replace("mr", centreMr)
+                    )
+                    .setLayoutFor(Device.MOBILE, Optional.empty(),
+                            ("[['center-justified', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]]")
+                                    .replace("mrLast", centreMrLast).replace("mr", centreMr)
+                    );
         } else {
             layoutConfig = afterAddCritConf
-                .setLayoutFor(Device.DESKTOP, Optional.empty(),
-                        //                        ("[['center-justified', 'start', mrLast]]")
-                        ("[['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mrLast]" +
-                                "]")
-                                .replace("mrLast", centreMrLast).replace("mr", centreMr)
-                )
-                .setLayoutFor(Device.TABLET, Optional.empty(),
-                        ("[['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]]")
-                                .replace("mrLast", centreMrLast).replace("mr", centreMr)
-                )
-                .setLayoutFor(Device.MOBILE, Optional.empty(),
-                        ("[['center-justified', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]]")
-                                .replace("mrLast", centreMrLast).replace("mr", centreMr)
-                );
+                    .setLayoutFor(Device.DESKTOP, Optional.empty(),
+                            //                        ("[['center-justified', 'start', mrLast]]")
+                            ("[['center-justified', 'start', mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mr, mrLast]," +
+                                    "['center-justified', 'start', mrLast]" +
+                                    "]")
+                                    .replace("mrLast", centreMrLast).replace("mr", centreMr)
+                    )
+                    .setLayoutFor(Device.TABLET, Optional.empty(),
+                            ("[['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]," +
+                                    "['center-justified', 'start', mr, mrLast]]")
+                                    .replace("mrLast", centreMrLast).replace("mr", centreMr)
+                    )
+                    .setLayoutFor(Device.MOBILE, Optional.empty(),
+                            ("[['center-justified', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]," +
+                                    "['center-justified', 'start', mrLast]]")
+                                    .replace("mrLast", centreMrLast).replace("mr", centreMr)
+                    );
         }
         //.hideCheckboxes()
         //.notScrollable()
@@ -1773,16 +1773,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .withFixedHeader()
                         .withFixedSummary()
                         .done())
-        //.lockScrollingForInsertionPoints()
-        //.draggable()
-        //.retrieveAll()
-        .setPageCapacity(20)
-        //.setHeight("100%")
-        //.setVisibleRowsCount(10)
-        .fitToHeight()
-        .addProp("this")
-            .order(2).asc()
-            .width(60);
+                //.lockScrollingForInsertionPoints()
+                //.draggable()
+                //.retrieveAll()
+                .setPageCapacity(20)
+                //.setHeight("100%")
+                //.setVisibleRowsCount(10)
+                .fitToHeight()
+                .addProp("this")
+                .order(2).asc()
+                .width(60);
 
         final IWithSummary<TgPersistentEntityWithProperties> afterSummary;
         if (withCalculatedAndCustomProperties) {
@@ -1791,6 +1791,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
             afterSummary = afterMinWidthConf;
         }
 
+        Function<String, EntityActionConfig> createDummyAction = colour -> EntityActionBuilder.action(TgDummyAction.class)
+                .withContext(EntityCentreContextSelector.context().withSelectedEntities().build())
+                .icon("accessibility")
+                .withStyle("color: " + colour)
+                .shortDesc("Dummy")
+                .longDesc(format("Dummy action with color: %s, simply prints its result into console.", colour))
+                .build();
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
                 withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
                         .preAction(new EntityNavigationPreAction("Cool entity"))
@@ -1800,108 +1807,116 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .longDesc("Opens master for editing this entity")
                         .withNoParentCentreRefresh()
                         .build())
+                // Issue #2733 demo: additional property-action groups on the same column.
+                // Cell tap runs the first group (Edit); the triple-dot overflow button reveals all three groups.
+                .withAction(action(TgStatusActivationFunctionalEntity.class)
+                        .withContext(context().withCurrentEntity().build())
+                        .icon("assignment-turned-in")
+                        .shortDesc("Change status to DR")
+                        .longDesc("Change status to Defect Radio.")
+                        .build())
+                .withMultiAction(multiAction(PrimaryActionSelector.class)
+                        .addAction(createDummyAction.apply("green"))
+                        .addAction(createDummyAction.apply("orange"))
+                        .addAction(createDummyAction.apply("red"))
+                        .build())
                 .also()
                 .addEditableProp("desc").withWordWrap()
-                    .withAction(
+                .withAction(
                         action(TgPersistentEntityWithProperties.class)
-                        .withContext(context().withCurrentEntity().build())
-                        .shortDesc("Edit (simple master)")
-                        .longDesc("Opens TgPersistentEntityWithProperties master for editing. No wrapping master (e.g. EntityEditAction / EntityNavigationMaster) is used around it.")
-                        .withNoParentCentreRefresh()
-                        .build()
-                    )
+                                .withContext(context().withCurrentEntity().build())
+                                .shortDesc("Edit (simple master)")
+                                .longDesc("Opens TgPersistentEntityWithProperties master for editing. No wrapping master (e.g. EntityEditAction / EntityNavigationMaster) is used around it.")
+                                .withNoParentCentreRefresh()
+                                .build()
+                )
                 .also();
         if (withCalculatedAndCustomProperties) {
             beforeAddProp = beforeAddProp.addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
                     withAction(action(TgStatusActivationFunctionalEntity.class).
-                    withContext(context().withCurrentEntity().build()).
-                    icon("assignment-turned-in").
-                    shortDesc("Change Status to DR").
-                    longDesc("Change Status to DR").
-                    build())
-            .also()
-            .addProp(mkProp("IS", "In Service", String.class)).width(26).
+                            withContext(context().withCurrentEntity().build()).
+                            icon("assignment-turned-in").
+                            shortDesc("Change Status to DR").
+                            longDesc("Change Status to DR").
+                            build())
+                    .also()
+                    .addProp(mkProp("IS", "In Service", String.class)).width(26).
                     withAction(action(TgISStatusActivationFunctionalEntity.class).
-                    withContext(context().withCurrentEntity().build()).
-                    icon("assignment-turned-in").
-                    shortDesc("Change Status to IS").
-                    longDesc("Change Status to IS").
-                    build())
-            .also()
-            .addProp(mkProp("IR", "In Repair", String.class)).width(26).
+                            withContext(context().withCurrentEntity().build()).
+                            icon("assignment-turned-in").
+                            shortDesc("Change Status to IS").
+                            longDesc("Change Status to IS").
+                            build())
+                    .also()
+                    .addProp(mkProp("IR", "In Repair", String.class)).width(26).
                     withAction(action(TgIRStatusActivationFunctionalEntity.class).
-                    withContext(context().withCurrentEntity().build()).
-                    icon("assignment-turned-in").
-                    shortDesc("Change Status to IR").
-                    longDesc("Change Status to IR").
-                    build())
-            .also()
-            .addProp(mkProp("ON", "On Road Defect Station", String.class)).width(26).
+                            withContext(context().withCurrentEntity().build()).
+                            icon("assignment-turned-in").
+                            shortDesc("Change Status to IR").
+                            longDesc("Change Status to IR").
+                            build())
+                    .also()
+                    .addProp(mkProp("ON", "On Road Defect Station", String.class)).width(26).
                     withAction(action(TgONStatusActivationFunctionalEntity.class).
-                    withContext(context().withCurrentEntity().build()).
-                    icon("assignment-turned-in").
-                    shortDesc("Change Status to ON").
-                    longDesc("Change Status to ON").
-                    build())
-            .also()
-            .addProp(mkProp("SR", "Defect Smash Repair", String.class)).width(26).
+                            withContext(context().withCurrentEntity().build()).
+                            icon("assignment-turned-in").
+                            shortDesc("Change Status to ON").
+                            longDesc("Change Status to ON").
+                            build())
+                    .also()
+                    .addProp(mkProp("SR", "Defect Smash Repair", String.class)).width(26).
                     withAction(action(TgSRStatusActivationFunctionalEntity.class).
-                    withContext(context().withCurrentEntity().build()).
-                    icon("assignment-turned-in").
-                    shortDesc("Change Status to SR").
-                    longDesc("Change Status to SR").
-                    build())
+                            withContext(context().withCurrentEntity().build()).
+                            icon("assignment-turned-in").
+                            shortDesc("Change Status to SR").
+                            longDesc("Change Status to SR").
+                            build())
                     .also();
         }
         final IWithSummary<TgPersistentEntityWithProperties> beforeSummaryConf = beforeAddProp.addEditableProp("integerProp")
-            .minWidth(42)
-            .withTooltip("desc");
+                .minWidth(42)
+                .withTooltip("desc");
 
-       final IWithTooltip<TgPersistentEntityWithProperties> beforeSummaryConfForBigDecimalProp = (withCalculatedAndCustomProperties ? beforeSummaryConf.withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property") : beforeSummaryConf)
-            .also()
-            .addEditableProp("requiredValidatedProp")
+        final IWithTooltip<TgPersistentEntityWithProperties> beforeSummaryConfForBigDecimalProp = (withCalculatedAndCustomProperties ?
+                beforeSummaryConf.withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property") :
+                beforeSummaryConf)
+                .also()
+                .addEditableProp("requiredValidatedProp")
                 .minWidth(42)
                 .also()
-            .addEditableProp("bigDecimalProp")
+                .addEditableProp("bigDecimalProp")
                 .minWidth(68)
                 .also()
-            .addProp("moneyProp")
+                .addProp("moneyProp")
                 .minWidth(100);
 
-        final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
-            .withContext(context().withSelectedEntities().build())
-            .icon("accessibility")
-            .withStyle("color: " + colour)
-            .shortDesc("Dummy")
-            .longDesc("Dummy action, simply prints its result into console.")
-            .build();
         final Function<String, EntityActionConfig> createFunctionalAction3 = colour -> action(TgFunctionalEntityWithCentreContext.class).
-            withContext(context().withSelectedEntities().build()).
-            icon("assignment-turned-in").
-            withStyle("color: " + colour).
-            shortDesc("Function 3").
-            longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
-            build();
+                withContext(context().withSelectedEntities().build()).
+                icon("assignment-turned-in").
+                withStyle("color: " + colour).
+                shortDesc("Function 3").
+                longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
+                build();
         final Function<String, EntityActionConfig> createFunctionalAction4 = colour -> action(TgFunctionalEntityWithCentreContext.class).
-            withContext(context().withSelectionCrit().withSelectedEntities().build()).
-            icon("attachment").
-            withStyle("color: " + colour).
-            shortDesc("Function 4").
-            longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
-            build();
+                withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                icon("attachment").
+                withStyle("color: " + colour).
+                shortDesc("Function 4").
+                longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
+                build();
         final IAlsoSecondaryAction<TgPersistentEntityWithProperties> beforeRenderingCustomiserConfiguration = (withCalculatedAndCustomProperties ?
-                            beforeSummaryConfForBigDecimalProp
-                                .withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
-                                .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
-                                .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property") :
-                                beforeSummaryConfForBigDecimalProp)
+                beforeSummaryConfForBigDecimalProp
+                        .withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
+                        .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
+                        .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property") :
+                beforeSummaryConfForBigDecimalProp)
                 .withMultiAction(multiAction(CompositePropActionSelector.class)
                         .addAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class, (entity, context) -> t2(TgPersistentEntityWithProperties.class, context.getCurrEntity().getId())))
                         .addAction(EDIT_ACTION.mkAction(TgPersistentCompositeEntity.class, (entity, context) -> t2(TgPersistentCompositeEntity.class, context.getCurrEntity().get("compositeProp.id"))))
                         .build())
                 .also()
                 .addEditableProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class).minWidth(40)
-                    .withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
+                .withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
                         //.preAction(new EntityNavigationPreAction("Cool entity"))
                         .icon("editor:mode-edit")
                         .withStyle("color: green")
@@ -1949,7 +1964,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
                                 + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
                                 + "[['flex', 'select:property=stringProp']]"
-                                        + "]")
+                                + "]")
                 //                .also()
                 //                .addProp("status")
 
@@ -1958,18 +1973,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
                 .addPrimaryAction(multiAction(PrimaryActionSelector.class)
-                    .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:green")))
-                    .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:orange")))
-                    .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:red")))
-                    .build()
+                        .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:green")))
+                        .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:orange")))
+                        .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:red")))
+                        .build()
                 )
-//                .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
-//                        .icon("editor:mode-edit")
-//                        .withStyle("color: green")
-//                        .shortDesc("Edit entity")
-//                        .longDesc("Opens master for editing this entity")
-//                        .withNoParentCentreRefresh()
-//                        .build())
+                //                .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
+                //                        .icon("editor:mode-edit")
+                //                        .withStyle("color: green")
+                //                        .shortDesc("Edit entity")
+                //                        .longDesc("Opens master for editing this entity")
+                //                        .withNoParentCentreRefresh()
+                //                        .build())
                 //                .addPrimaryAction(
                 //                        EntityActionConfig.createMasterInvocationActionConfig()
                 //EntityActionConfig.createMasterInDialogInvocationActionConfig()
@@ -1981,34 +1996,36 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                                build()
 
                 //) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
-                        .also()
+                .also()
                 /*.addSecondaryAction(
                         EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 ).also()*/
                 .addSecondaryAction(
-                    multiAction(PrimaryActionSelector.class)
-                    .addAction(createDummyAction.apply("green"))
-                    .addAction(createDummyAction.apply("orange"))
-                    .addAction(createDummyAction.apply("red"))
-                    .build()
+                        multiAction(PrimaryActionSelector.class)
+                                .addAction(createDummyAction.apply("green"))
+                                .addAction(createDummyAction.apply("orange"))
+                                .addAction(createDummyAction.apply("red"))
+                                .build()
                 )
                 .also()
                 .addSecondaryAction(
-                    multiAction(PrimaryActionSelector.class)
-                    .addAction(createFunctionalAction3.apply("orange"))
-                    .addAction(createFunctionalAction3.apply("red"))
-                    .addAction(createFunctionalAction3.apply("green"))
-                    .build()
+                        multiAction(PrimaryActionSelector.class)
+                                .addAction(createFunctionalAction3.apply("orange"))
+                                .addAction(createFunctionalAction3.apply("red"))
+                                .addAction(createFunctionalAction3.apply("green"))
+                                .build()
                 )
                 .also()
                 .addSecondaryAction(
-                    multiAction(PrimaryActionSelector.class)
-                    .addAction(createFunctionalAction4.apply("red"))
-                    .addAction(createFunctionalAction4.apply("green"))
-                    .addAction(createFunctionalAction4.apply("orange"))
-                    .build()
+                        multiAction(PrimaryActionSelector.class)
+                                .addAction(createFunctionalAction4.apply("red"))
+                                .addAction(createFunctionalAction4.apply("green"))
+                                .addAction(createFunctionalAction4.apply("orange"))
+                                .build()
                 );
-                final IQueryEnhancerSetter<TgPersistentEntityWithProperties> beforeEnhancerConfiguration = (withCalculatedAndCustomProperties ? beforeRenderingCustomiserConfiguration.setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class) : beforeRenderingCustomiserConfiguration)
+        final IQueryEnhancerSetter<TgPersistentEntityWithProperties> beforeEnhancerConfiguration = (withCalculatedAndCustomProperties ?
+                beforeRenderingCustomiserConfiguration.setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class) :
+                beforeRenderingCustomiserConfiguration)
                 .setRenderingCustomiser(TestRenderingCustomiser.class);
 
         final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
@@ -2033,69 +2050,69 @@ public class WebUiConfig extends AbstractWebUiConfig {
         //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
         if (isComposite) {
-//            return scl.addInsertionPoint(
-//                    action(TgCentreInvokerWithCentreContext.class)
-//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                            .icon("assignment-ind")
-//                            .shortDesc("Right Insertion Point")
-//                            .longDesc("Functional context-dependent Insertion Point")
-//                            .prefDimForView(mkDim("''", "'500px'"))
-//                            .withNoParentCentreRefresh()
-//                            .build(),
-//                    InsertionPoints.RIGHT).noResizing()
-////                    .addInsertionPoint(
-////                            action(TgCentreInvokerWithCentreContext.class)
-////                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
-////                                    .icon("assignment-ind")
-////                                    .shortDesc("Insertion Point")
-////                                    .longDesc("Functional context-dependent Insertion Point")
-////                                    .prefDimForView(mkDim("''", "'500px'"))
-////                                    .withNoParentCentreRefresh()
-////                                    .build(),
-////                            InsertionPoints.RIGHT)
-//                    .addInsertionPoint(
-//                            action(TgCentreInvokerWithCentreContext.class)
-//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                            .icon("assignment-ind")
-//                            .shortDesc("Left1 Insertion Point")
-//                            .longDesc("Functional context-dependent Insertion Point")
-//                            .prefDimForView(mkDim("'350px'", "'500px'"))
-//                            .withNoParentCentreRefresh()
-//                            .build(),
-//                    InsertionPoints.LEFT)
-//                    .addInsertionPoint(
-//                            action(TgCentreInvokerWithCentreContext.class)
-//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                            .icon("assignment-ind")
-//                            .shortDesc("Left2 Insertion Point")
-//                            .longDesc("Functional context-dependent Insertion Point")
-//                            .prefDimForView(mkDim("'350px'", "'500px'"))
-//                            .withNoParentCentreRefresh()
-//                            .build(),
-//                    InsertionPoints.LEFT)
-//                    .addInsertionPoint(
-//                            action(TgCentreInvokerWithCentreContext.class)
-//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                            .icon("assignment-ind")
-//                            .shortDesc("Top Insertion Point")
-//                            .longDesc("Functional context-dependent Insertion Point")
-//                            .prefDimForView(mkDim("'350px'", "'500px'"))
-//                            .withNoParentCentreRefresh()
-//                            .build(),
-//                    InsertionPoints.TOP)
-//                    .addInsertionPoint(
-//                            action(TgCentreInvokerWithCentreContext.class)
-//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                            .icon("assignment-ind")
-//                            .shortDesc("Bottom Insertion Point")
-//                            .longDesc("Functional context-dependent Insertion Point")
-//                            .prefDimForView(mkDim("'350px'", "'500px'"))
-//                            .withNoParentCentreRefresh()
-//                            .build(),
-//                    InsertionPoints.BOTTOM)
-//                    .withLeftSplitterPosition(40)
-//                    .withRightSplitterPosition(30)
-//                    .build();
+            //            return scl.addInsertionPoint(
+            //                    action(TgCentreInvokerWithCentreContext.class)
+            //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+            //                            .icon("assignment-ind")
+            //                            .shortDesc("Right Insertion Point")
+            //                            .longDesc("Functional context-dependent Insertion Point")
+            //                            .prefDimForView(mkDim("''", "'500px'"))
+            //                            .withNoParentCentreRefresh()
+            //                            .build(),
+            //                    InsertionPoints.RIGHT).noResizing()
+            ////                    .addInsertionPoint(
+            ////                            action(TgCentreInvokerWithCentreContext.class)
+            ////                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
+            ////                                    .icon("assignment-ind")
+            ////                                    .shortDesc("Insertion Point")
+            ////                                    .longDesc("Functional context-dependent Insertion Point")
+            ////                                    .prefDimForView(mkDim("''", "'500px'"))
+            ////                                    .withNoParentCentreRefresh()
+            ////                                    .build(),
+            ////                            InsertionPoints.RIGHT)
+            //                    .addInsertionPoint(
+            //                            action(TgCentreInvokerWithCentreContext.class)
+            //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+            //                            .icon("assignment-ind")
+            //                            .shortDesc("Left1 Insertion Point")
+            //                            .longDesc("Functional context-dependent Insertion Point")
+            //                            .prefDimForView(mkDim("'350px'", "'500px'"))
+            //                            .withNoParentCentreRefresh()
+            //                            .build(),
+            //                    InsertionPoints.LEFT)
+            //                    .addInsertionPoint(
+            //                            action(TgCentreInvokerWithCentreContext.class)
+            //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+            //                            .icon("assignment-ind")
+            //                            .shortDesc("Left2 Insertion Point")
+            //                            .longDesc("Functional context-dependent Insertion Point")
+            //                            .prefDimForView(mkDim("'350px'", "'500px'"))
+            //                            .withNoParentCentreRefresh()
+            //                            .build(),
+            //                    InsertionPoints.LEFT)
+            //                    .addInsertionPoint(
+            //                            action(TgCentreInvokerWithCentreContext.class)
+            //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+            //                            .icon("assignment-ind")
+            //                            .shortDesc("Top Insertion Point")
+            //                            .longDesc("Functional context-dependent Insertion Point")
+            //                            .prefDimForView(mkDim("'350px'", "'500px'"))
+            //                            .withNoParentCentreRefresh()
+            //                            .build(),
+            //                    InsertionPoints.TOP)
+            //                    .addInsertionPoint(
+            //                            action(TgCentreInvokerWithCentreContext.class)
+            //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+            //                            .icon("assignment-ind")
+            //                            .shortDesc("Bottom Insertion Point")
+            //                            .longDesc("Functional context-dependent Insertion Point")
+            //                            .prefDimForView(mkDim("'350px'", "'500px'"))
+            //                            .withNoParentCentreRefresh()
+            //                            .build(),
+            //                    InsertionPoints.BOTTOM)
+            //                    .withLeftSplitterPosition(40)
+            //                    .withRightSplitterPosition(30)
+            //                    .build();
         }
         return scl.build();
     }
