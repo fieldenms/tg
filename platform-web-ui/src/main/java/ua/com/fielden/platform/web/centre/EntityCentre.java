@@ -903,7 +903,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
                 final List<FunctionalMultiActionElement> actions = new ArrayList<>();
                 for (final EntityMultiActionConfig multiActionConfig : resultProp.getPropActions()) {
-                    actions.add(new FunctionalMultiActionElement(multiActionConfig, actionIndex.get(), resultPropName));
+                    actions.add(new FunctionalMultiActionElement(multiActionConfig, actionIndex.get(), FunctionalActionKind.PROP));
                     actionIndex.addAndGet(multiActionConfig.actions().size());
                 }
 
