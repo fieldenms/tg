@@ -263,6 +263,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final boolean wordWrap;
         public final boolean isFlexible;
 
+        /// Property-action groups configured for this column, in DSL declaration order.
+        /// Each entry corresponds to one `withAction(...)` / `withMultiAction(...)` / `withActionSupplier(...)` call on the column; plain `withAction(...)` is normalised into a `SingleActionSelector`-wrapped multi-action so the list type is uniform.
+        /// The first entry is the action invoked on cell tap; the remainder are reachable via the EGI cell's overflow dropdown when the list has more than one entry.
+        ///
         private List<EntityMultiActionConfig> propActions = new ArrayList<>();
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final boolean presentByDefault, final int width, final boolean wordWrap, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final List<EntityMultiActionConfig> propActions) {

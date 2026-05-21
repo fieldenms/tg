@@ -10,6 +10,16 @@ import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionCon
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder;
 import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 
+/// DSL contract for associating one or more property actions with a dynamic-column group added via `addProps(...)`.
+///
+/// Mirrors [IResultSetBuilder5WithPropAction] for static columns:
+/// `withAction(...)`, `withMultiAction(...)` and `withActionSupplier(...)` can each be called multiple times on the same dynamic-column group, each call appending a new action group in declaration order.
+/// The methods are also mixable on the same column.
+/// Cell tap activates the first group's currently-selected sub-action; columns with more than one group additionally expose a triple-dot overflow button that opens a dropdown listing all groups.
+///
+/// Note: for dynamic columns the action's `chosen-property` is bound to the dynamic per-cell value (`[[item.GROUP_PROP_VALUE]]`, the column's group key), not to a property name on the row entity.
+/// Action producers that rely on a property path will not resolve to an entity through this binding; such producers typically fall back to using the row entity itself.
+///
 public interface IResultSetBuilderDynamicPropsAction<T extends AbstractEntity<?>> extends IResultSetBuilderAlsoDynamicProps<T>{
 
     /// Adds an instance of [EntityActionConfig] to the dynamic property definition.

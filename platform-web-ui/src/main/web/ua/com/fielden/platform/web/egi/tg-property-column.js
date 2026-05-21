@@ -80,8 +80,6 @@ Polymer({
 
     /**
      * Returns the property name of collectional entity or property name of simple property value.
-     * 
-     * @returns 
      */
     getActualProperty: function () {
         return this.collectionalProperty || this.property;

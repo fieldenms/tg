@@ -14,7 +14,14 @@ import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.*;
 
-/// The implementation for all result set columns (dom element).
+/// Server-side representation of an EGI result-set column — renders into a `tg-property-column` element.
+/// Each `addProp(...)` / `addProps(...)` call on the Entity Centre DSL produces one instance.
+///
+/// A column carries an ordered list of property-action groups ([FunctionalMultiActionElement]), one per `withAction(...)` / `withMultiAction(...)` / `withActionSupplier(...)` call on that property.
+/// The column also owns the `chosen-property` decision for its property actions and sets it on the slotted `tg-ui-action` children of each group at render time — using the column's `propertyName` for static columns and the `[[item.GROUP_PROP_VALUE]]` per-cell binding for dynamic columns; this keeps [FunctionalMultiActionElement] agnostic of the column type.
+///
+/// At runtime the client treats the column as the source of truth for its actions (`column.customActions`); cell tap routes through the column's `runAction(...)` to invoke the first group's currently-selected sub-action.
+/// When the column has more than one action group the cell additionally renders a triple-dot overflow button that opens the shared EGI dropdown (`tg-action-dropdown`) listing all groups.
 ///
 public class PropertyColumnElement implements IRenderable, IImportable {
     //The minimal column width. It is used only when specified width is greater than minimal.

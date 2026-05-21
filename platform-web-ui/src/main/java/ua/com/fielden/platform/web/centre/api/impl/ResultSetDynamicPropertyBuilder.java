@@ -38,16 +38,12 @@ import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayo
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
-/**
- * This class implements the DSL for configuring dynamic properties and their actions. It intersects with most of the functionality in {@link ResultSetBuilder}, but it had to be created, because {@link IResultSetBuilderDynamicPropsAction} and {@link IResultSetBuilderAlsoDynamicProps}
- * can not be implemented by {@link ResultSetBuilder} due to the fact that methods {@link IResultSetBuilderDynamicPropsAction#withAction(EntityActionConfig)} and {@link IResultSetBuilderDynamicPropsAction#withActionSupplier(Supplier)} have the same signature as methods declared in {@link IResultSetBuilder5WithPropAction}, implemented by {@link ResultSetBuilder}.
- * <p>
- * However, to improve the reuse, all common with {@link ResultSetBuilder} methods are implemented by means of delegation to an instance of {@link ResultSetBuilder}.
- *
- * @author TG Team
- *
- * @param <T>
- */
+/// Implements the DSL for configuring dynamic-column properties and their actions on an entity centre.
+/// Intersects with most of the functionality in [ResultSetBuilder], but is a separate class because [IResultSetBuilderDynamicPropsAction] and [IResultSetBuilderAlsoDynamicProps] cannot be implemented by [ResultSetBuilder] — the methods `withAction(EntityActionConfig)` / `withActionSupplier(Supplier)` declared by [IResultSetBuilderDynamicPropsAction] share signatures with [IResultSetBuilder5WithPropAction] which [ResultSetBuilder] already implements.
+///
+/// All methods that overlap with [ResultSetBuilder] are implemented here by delegation to an instance of [ResultSetBuilder] to keep behaviour aligned.
+/// Per-column property actions accumulate into [ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp#propActions] in DSL declaration order; repeated calls to `withAction`, `withMultiAction`, and `withActionSupplier` append new action groups to that list.
+///
 public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicPropsAction<T>, IResultSetBuilderAlsoDynamicProps<T>, IInsertionPointWithConfig<T> {
 
     private final ResultSetBuilder<T> builder;
