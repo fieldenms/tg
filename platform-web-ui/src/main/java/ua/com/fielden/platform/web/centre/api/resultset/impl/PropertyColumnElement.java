@@ -210,12 +210,10 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         // The column is the natural single point of truth here — all sub-actions of all groups on a given column share the same chosen-property — so we set it here rather than at the per-element level.
         final String chosenPropertyValue = isDynamic ? format("[[item.%s]]", DYN_COL_GROUP_PROP_VALUE) : propertyName;
         for (final FunctionalMultiActionElement actionElement : actions) {
-            if (actionElement.getFunctionalActionKind() == FunctionalActionKind.PROP) {
-                final DomElement actionDomElement = actionElement.render();
-                actionDomElement.attr("slot", "property-action");
-                actionDomElement.children().forEach(action -> action.attr("chosen-property", chosenPropertyValue));
-                columnElement.add(actionDomElement);
-            }
+            final DomElement actionDomElement = actionElement.render();
+            actionDomElement.attr("slot", "property-action");
+            actionDomElement.children().forEach(action -> action.attr("chosen-property", chosenPropertyValue));
+            columnElement.add(actionDomElement);
         }
         summary.forEach(summary -> columnElement.add(summary.render()));
         return columnElement;

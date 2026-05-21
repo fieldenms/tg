@@ -26,7 +26,6 @@ public class FunctionalMultiActionElement implements IRenderable, IImportable {
 
     private final String widgetName;
     private final String widgetPath;
-    private final FunctionalActionKind actionKind;
 
     private final List<FunctionalActionElement> actionElements = new ArrayList<>();
 
@@ -36,16 +35,11 @@ public class FunctionalMultiActionElement implements IRenderable, IImportable {
     public FunctionalMultiActionElement(final EntityMultiActionConfig entityMultiActionConfig, final int numberOfAction, final FunctionalActionKind actionKind) {
         this.widgetPath = "egi/tg-egi-multi-action";
         this.widgetName = AbstractCriterionWidget.extractNameFrom(this.widgetPath);
-        this.actionKind = actionKind;
 
         for (int configIndex = 0; configIndex < entityMultiActionConfig.actions().size(); configIndex++) {
             final EntityActionConfig entityActionConfig = entityMultiActionConfig.actions().get(configIndex);
             actionElements.add(new FunctionalActionElement(entityActionConfig, numberOfAction + configIndex, actionKind));
         }
-    }
-
-    public FunctionalActionKind getFunctionalActionKind() {
-        return actionKind;
     }
 
     @Override
