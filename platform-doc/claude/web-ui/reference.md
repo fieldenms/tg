@@ -108,9 +108,27 @@ builder.register(master);
 
 **Standard actions:** `MasterActions.SAVE` (ctrl+s), `MasterActions.REFRESH` (ctrl+x), `MasterActions.VALIDATE`, `MasterActions.EDIT`, `MasterActions.VIEW`, `MasterActions.DELETE`, `MasterActions.NEW`
 
-### Layout Subheaders
+### Layout — direct builder
 
-For masters with many properties, use `LayoutBuilder` with `.subheader()` to group properties semantically:
+The `LayoutComposer.mkGrid*` helpers (`mkGridForMasterFitWidth`, `mkGridForCentre`, `mkGridForMaster`) produce a uniform N×M grid; `mkVarGrid*` lets each row pick its own column count but still constrains every cell to the same shape.
+For anything beyond that — **skipped cells, variable-height rows (e.g. for `asMultilineText` / `asRichText`), subheaders, or mixed cell sizes within a row** — reach for `LayoutBuilder.cell(...)` directly.
+A practical rule: if any property is multiline (and you want the editor to grow with the master's height), or any row needs a skipped slot, a per-row gap/padding override, or a subheader between groups, the helpers won't fit and you should switch to the builder.
+
+**Variable-height row for a multiline editor.**
+Tag the row carrying the multiline editor with `FLEXIBLE_ROW` so it expands to fill remaining vertical space; the surrounding `FLEXIBLE_LAYOUT_WITH_PADDING` makes the master itself stretch to its dimensions.
+`skip(CELL_LAYOUT)` leaves a blank slot in an otherwise-3-cell row.
+
+```java
+final var layout = cell(
+        cell(cell(CELL_LAYOUT).repeat(3).withGapBetweenCells(MARGIN))
+        .cell(cell(CELL_LAYOUT).repeat(3).withGapBetweenCells(MARGIN))
+        .cell(cell(CELL_LAYOUT).repeat(2).skip(CELL_LAYOUT).withGapBetweenCells(MARGIN))
+        .cell(cell(CELL_LAYOUT), FLEXIBLE_ROW)            // multiline editor row
+    , FLEXIBLE_LAYOUT_WITH_PADDING).toString();
+```
+
+**Subheaders.**
+For masters with many properties, use `.subheader(title, SUBHEADER_LAYOUT)` to group them semantically:
 
 ```java
 final String layout = cell(
@@ -123,6 +141,8 @@ final String layout = cell(
         .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN), ROW_LAYOUT).repeat(2),
     PADDING_LAYOUT).toString();
 ```
+
+All constants (`CELL_LAYOUT`, `MARGIN`, `ROW_LAYOUT`, `PADDING_LAYOUT`, `SUBHEADER_LAYOUT`, `FLEXIBLE_ROW`, `FLEXIBLE_LAYOUT_WITH_PADDING`) live on `LayoutComposer`; `cell(...)` is `LayoutBuilder.cell` (`ua.com.fielden.platform.web.layout.api.impl`).
 
 ## Master With Centre
 

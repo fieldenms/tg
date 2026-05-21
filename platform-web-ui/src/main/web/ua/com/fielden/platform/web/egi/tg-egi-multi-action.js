@@ -25,10 +25,11 @@ const template = html`
     <template is="dom-repeat" items="[[actions]]" as="action" index-as="actionIndex">
         <tg-ui-action
             class="action"
-            hidden="[[_isHidden(actionIndex, currentIndex)]]" 
-            show-dialog="[[action.showDialog]]" 
-            toaster="[[action.toaster]]" 
+            hidden="[[_isHidden(actionIndex, currentIndex)]]"
+            show-dialog="[[action.showDialog]]"
+            toaster="[[action.toaster]]"
             current-entity="[[currentEntity]]"
+            chosen-property="[[action.chosenProperty]]"
             short-desc="[[action.shortDesc]]"
             long-desc="[[action.longDesc]]"
             icon="[[action.icon]]"
@@ -64,7 +65,10 @@ export class TgEgiMultiAction extends PolymerElement {
                 type: Number,
                 value: 0
             },
-            //List of actions to select from.
+            // List of actions to select from.
+            // Each entry is a slot-assigned light-DOM tg-ui-action element (server-rendered with one per sub-action of the group).
+            // The dom-repeat above reads Polymer properties off these elements (action.chosenProperty, action.shortDesc, action.icon, ...) and mirrors them onto a parallel visible tg-ui-action in shadow DOM; Polymer's attribute-to-property auto-binding is what surfaces the server-set attributes as those JS properties.
+            // For property-action groups the originating chosen-property attribute is set per sub-action by PropertyColumnElement.renderColumnElement() — from the column's property name for static columns, or from a per-cell binding expression for dynamic columns.
             actions: {
                 type: Array
             },

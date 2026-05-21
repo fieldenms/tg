@@ -22,6 +22,13 @@ Compound.openNew(OpenAction.class, "add-circle-outline", ENTITY_TITLE, "Add new 
 
 `.asSinglelineText()`, `.asMultilineText()`, `.asRichText()`, `.asAutocompleter()`, `.asDateTimePicker()` / `.asDatePicker()` / `.asTimePicker()`, `.asDecimal()` / `.asSpinner()` / `.asMoney()`, `.asCheckbox()`, `.asColour()`, `.asHyperlink()`, `.asCollectionalRepresentor()` / `.asCollectionalEditor()`, `.asFile()`
 
+## Layouts
+
+- Uniform N×M grid → `LayoutComposer.mkGridForMasterFitWidth(rows, cols)` / `mkGridForCentre(rows, cols)`.
+- Per-row variable column count (still uniform cells) → `mkVarGridForCentre(numColsRow1, numColsRow2, ...)` / `mkVarGridForMasterFitWidth(...)`.
+- Anything else — multiline editor needing a flexible-height row, skipped cells (`skip(CELL_LAYOUT)`), subheaders, mixed cell sizes — use `LayoutBuilder.cell(...)` directly.
+  See `web-ui/reference.md` § *Layout — direct builder*.
+
 ## Master Actions
 
 `MasterActions.SAVE` (ctrl+s), `MasterActions.REFRESH` (ctrl+x), `MasterActions.VALIDATE`, `MasterActions.EDIT`, `MasterActions.VIEW`, `MasterActions.DELETE`, `MasterActions.NEW`
