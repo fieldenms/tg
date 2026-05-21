@@ -2183,19 +2183,23 @@ Polymer({
 
     /**
      * Builds the action portion of an EGI cell tooltip.
-     * Collects one inner fragment per property-action group on the column (each `withAction` / `withMultiAction` call produces one group), calling `getActionTooltip` for the runtime-selected sub-action of each.
-     * When no property-action group yields a tooltip, falls back to the attachment tooltip (downloadable attachment present) or the column's default-action tooltip.
-     * Aggregated fragments are wrapped in a single `<div>` labelled `With action:` (one fragment) or `With actions:` (more than one), with fragments separated by `<br><br>` — mirrors the `tg-entity-editor` layout.
-     *
-     * `actions[g]` is the property-action group element at column index `g`; its `actions` property holds the slotted `tg-ui-action` originals for the group's sub-actions.
-     * `groupIndices[g]` is the sub-action index chosen for group `g` by its runtime selector (computed server-side per entity).
+     * Composes inner fragments in order: 
+     *  (1) deprecated `getActionTooltip(entity, column)` hook for subclassed EGIs that resolve a tooltip from row / column state; 
+     *  (2) per-group fan-out — one inner fragment per configured property-action group via `_generateActionTooltip` for its runtime-selected sub-action (`actions[g]` is the group element, `groupIndices[g]` its server-chosen sub-action index); 
+     *  (3) attachment / default-action fallback when nothing else produced a fragment.
+     * Collected fragments are wrapped in a single `<div>` labelled `With action:` (one) or `With actions:` (more than one), separated by `<br><br>` — mirrors the `tg-entity-editor` layout.
      */
     _getActionsTooltip: function (entity, column, actions, groupIndices) {
         const innerTooltips = [];
+        const customActionTooltip = this.getActionTooltip(entity, column);
+        if (customActionTooltip) {
+            innerTooltips.push(customActionTooltip);
+        }
         if (actions && actions.length > 0 && groupIndices && groupIndices.length > 0) {
             for (let g = 0; g < actions.length; g++) {
-                const group = actions[g];
-                const actionTooltip = this.getActionTooltip(entity, column, group && group.actions && group.actions[groupIndices[g]]);
+                const group = actions[g]; 
+                const action = group && group.actions && group.actions[groupIndices[g]];
+                const actionTooltip = (action.shortDesc || action.longDesc) && this._generateActionTooltip(action);
                 if (actionTooltip) {
                     innerTooltips.push(actionTooltip);
                 }
@@ -2222,16 +2226,11 @@ Polymer({
     },
 
     /**
-     * Returns the inner tooltip fragment for a single sub-action — short/long descriptions only, with no outer wrapper and no `With action(s):` label.
-     * Composition into the final tooltip is the responsibility of `_getActionsTooltip`.
-     *
-     * This is the standard override point for substituting a column- or entity-specific tooltip; `entity` and `column` are provided so overrides can branch on row / column context.
-     * Overrides typically delegate to `_generateActionTooltip` against a different action element.
+     * Deprecated subclass hook for contributing a custom inner tooltip fragment from row / column state.
+     * Called once per cell by `_getActionsTooltip` and prepended to the per-group fragments when non-empty.
+     * Retained only for backward compatibility with subclassed EGIs that override it; do not override in new code — configure property actions via the DSL instead.
      */
-    getActionTooltip: function (entity, column, action) {
-        if (action && (action.shortDesc || action.longDesc)) {
-            return this._generateActionTooltip(action);
-        }
+    getActionTooltip: function (entity, column) {
         return "";
     },
     
