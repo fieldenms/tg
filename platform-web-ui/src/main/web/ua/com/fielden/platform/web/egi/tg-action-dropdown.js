@@ -24,6 +24,7 @@ const template = html`
             @apply --layout-vertical;
         }
     </style>
+    <!-- on-up rather than on-tap for the inside-click close: child tg-ui-action elements call stopPropagation on the tap event when they run, so an on-tap listener here never fires and the dropdown stays open after the action. The lower-level up event still bubbles. -->
     <iron-dropdown class="action-dropdown" id="dropdown" always-on-top style="color:black" on-up="_closeDropdown" on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <div slot="dropdown-content" class="dropdown-content">
             <div class="button-container">

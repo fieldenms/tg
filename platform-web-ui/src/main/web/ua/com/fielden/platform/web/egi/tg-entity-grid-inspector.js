@@ -541,7 +541,8 @@ const template = html`
         <!-- table lock layer -->
         <div class="lock-layer" lock$="[[lock]]"></div>
         <!-- Shared action dropdown used by both secondary actions (row-level) and property actions (cell-level). -->
-        <!-- The dropdown starts empty; the EGI borrows the relevant action group elements into it via openForActions(...) on each open and they are returned on close. -->
+        <!-- The dropdown starts empty; on each open() the EGI hands it the relevant action group elements, which become and remain its light-DOM children until the next open() replaces them. -->
+        <!-- The EGI keeps its own references (_secondaryActions, column.customActions) so subsequent opens and cell taps continue to work regardless of where the elements live in the DOM tree. -->
         <tg-action-dropdown id="actionDropDown"></tg-action-dropdown>
     </div>`;
 

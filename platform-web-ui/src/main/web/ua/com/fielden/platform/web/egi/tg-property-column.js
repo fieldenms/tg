@@ -51,11 +51,9 @@ Polymer({
     },
 
     /**
-     * Runs the first property-action group on this column at the supplied sub-action index and returns true if there was an action to run.
-     * Returns false when this column has no property-action group.
-     * `currentEntity` is a function that returns the chosen entity.
-     * `subActionIndex` identifies the sub-action within the first group to run; for a plain `withAction` group this is always 0, for a `withMultiAction` group it is provided by the runtime selector.
-     * Other groups (when several `withAction` / `withMultiAction` calls are chained on the same column) are reached through the EGI cell's overflow dropdown, which dispatches directly on the group element rather than going through this method.
+     * Cell-tap entry point: runs the first property-action group on this column at the supplied sub-action index. Returns true if a sub-action was run, false when the column has no group or the index is out of range.
+     * Subsequent groups (when several withAction / withMultiAction calls are chained on the same column) are reached only through the EGI cell's overflow dropdown, which dispatches on the group element directly and never calls this method.
+     * subActionIndex is 0 for a plain withAction, or the index chosen by the runtime selector for a withMultiAction. currentEntity is a function returning the chosen entity.
      */
     runAction: function (currentEntity, subActionIndex) {
         const firstGroup = this.customActions[0];
