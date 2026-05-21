@@ -130,7 +130,7 @@ const template = html`
     <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" icon="[[_value]]"></iron-icon>
     <a class="value-container" hidden$="[[!_isHyperlinkProp(_hostComponent, _entity, column)]]" href$="[[_value]]" target="_blank" style$="[[_foregroundRendHints]]">[[_value]]</a>
     <div class="value-container" word-wrap$="[[column.wordWrap]]" hidden$="[[!_isNotBooleanOrHyperlinkProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" inner-h-t-m-l="[[_value]]"></div>
-    <paper-icon-button id="dropdownAction" class="overflow-button" icon="more-vert" hidden$="[[!_hasOverflow(column)]]" on-tap="_openOverflow"></paper-icon-button>`;
+    <paper-icon-button id="dropdownAction" class="overflow-button" icon="more-vert" hidden$="[[!_hasOverflow(column)]]" on-tap="_openOverflow" tooltip-text="Opens list of available actions"></paper-icon-button>`;
 
 Polymer({
 
