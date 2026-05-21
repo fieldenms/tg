@@ -17,6 +17,9 @@ import java.util.function.Supplier;
 /// The methods are also mixable: a plain `withAction(a)`, a context-selected `withMultiAction(s, [b, c])` and another `withActionSupplier(sup)` can be chained on the same property to produce three groups.
 /// The return type is self-recursive so further DSL calls (`withAction`, `withMultiAction`, `withActionSupplier`, or the inherited `also()`) remain available after each call.
 ///
+/// Note: for static columns the action's `chosen-property` is the column's property name on the row entity, so action producers that resolve a sub-entity from this property path (e.g. to open the referenced entity instead of the row itself) work as expected.
+/// For the dynamic-column counterpart, where `chosen-property` is a per-cell binding rather than a row property name, see [IResultSetBuilderDynamicPropsAction].
+///
 public interface IResultSetBuilder5WithPropAction<T extends AbstractEntity<?>> extends IAlsoProp<T> {
 
     /// Appends a plain [EntityActionConfig] as a new property-action group on the current column.
