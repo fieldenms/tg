@@ -205,10 +205,16 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     private DomElement renderColumnElement () {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
-        // Set `chosen-property` on each multi-action group — the column is the single point of truth, all sub-actions of all groups on a given column share the same value.
-        // Dynamic columns use the per-cell group-prop-value binding (resolved in the column's template); static columns use the column's own property name.
-        // `tg-egi-multi-action` propagates this onto both its rendered shadow `tg-ui-action` buttons (dropdown path) and its slotted `tg-ui-action` light-DOM children (cell-tap path).
-        // Setting on the group rather than on each slotted child is essential for dynamic columns: when the outer dom-repeat shifts items on refresh, only a direct property of the group element fires Polymer's binding effects in its inner template — a per-child attribute change on a slotted node does not, leaving the shadow buttons with a stale `chosen-property`.
+        // Set `chosen-property` on each multi-action group — the column is the single point of truth.
+        // All sub-actions of all groups on a given column share the same value.
+        // Dynamic columns use the per-cell group-prop-value binding (resolved in the column's template).
+        // Static columns use the column's own property name.
+        // `tg-egi-multi-action` propagates this onto both:
+        //   1. Its rendered shadow `tg-ui-action` buttons (dropdown path)
+        //   2. Its slotted `tg-ui-action` light-DOM children (cell-tap path).
+        // Setting on the group rather than on each slotted child is essential for dynamic columns.
+        // This is because when the outer `dom-repeat` shifts items on refresh, only a direct property of the group element fires binding effects.
+        // A per-child attribute change on a slotted node does not, leaving the Shadow DOM buttons with a stale `chosen-property`.
         final String chosenPropertyValue = isDynamic ? format("[[item.%s]]", DYN_COL_GROUP_PROP_VALUE) : propertyName;
         for (final FunctionalMultiActionElement actionElement : actions) {
             final DomElement actionDomElement = actionElement.render();
