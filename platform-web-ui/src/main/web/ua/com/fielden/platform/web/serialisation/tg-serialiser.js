@@ -95,9 +95,12 @@ export const TgSerialiser = Polymer({
                 return deserialisedObject;
             },
             copyProperties = function (deserialisedObject, obj) {
-                const exceptionalNames = ['@pdString', '@_i', '@_pp', '@id', '@instanceTypes', '@instanceType', '@resultType', '@id_ref']; // reserved names that can not represent metaProperty name
                 for (let property in obj) {
-                    if (property[0] === "@" && exceptionalNames.indexOf(property) === -1 && obj[property] !== null && typeof obj[property] === 'object' && !Array.isArray(obj[property])) { // starts with @, non-null object value (perhaps empty)
+                    // Determine whether 'property' represents entity instance meta-property.
+                    // By convention, all instance meta-property names end with '@' symbol.
+                    // This prevents meta-property clashes with real props of names [id id_ref pdString _i _pp].
+                    // Only non-null object values (not arrays) can represent meta-property (object can be empty).
+                    if (property[property.length - 1] === '@' && obj[property] !== null && typeof obj[property] === 'object' && !Array.isArray(obj[property])) {
                         deserialisedObject[property] = deserialiseMetaProperty(obj[property]);
                     } else if (property === "@instanceTypes" && Array.isArray(obj[property])) {
                         console.log("!!!New Types!!!", obj[property]);

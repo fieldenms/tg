@@ -2156,7 +2156,9 @@ Polymer({
     },
 
     getValueTooltip: function (entity, column) {
-        const validationResult = this.getRealEntity(entity, column).prop(this.getRealProperty(column)).validationResult();
+        const realProperty = this.getRealProperty(column);
+        // entity-itself columns (e.g., a key-only column) have no real property, so there is no per-property validation result to consult.
+        const validationResult = realProperty === '' ? null : this.getRealEntity(entity, column).prop(realProperty).validationResult();
         if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
             const messages = resultMessages(validationResult);
             return messages.extended && ("<b>" + messages.extended + "</b>");
