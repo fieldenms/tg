@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder.multiAction;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
@@ -16,11 +17,16 @@ import java.util.Optional;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.CustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.impl.helpers.DynamicColumnBuilderForTest;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.FunctionalEntity;
+import ua.com.fielden.platform.web.centre.api.impl.helpers.PropertyActionSelectorForTest;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.ResultSetRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
@@ -90,11 +96,11 @@ public class EntityCentreBuilderResultSetTest {
                 .build();
 
         assertEquals(2, config.getResultSetProperties().get().size());
-        assertTrue(config.getResultSetProperties().get().get(0).getPropAction().isPresent());
-        assertTrue(config.getResultSetProperties().get().get(0).getPropAction().get().actions().get(0).longDesc.isPresent());
-        assertTrue(config.getResultSetProperties().get().get(1).getPropAction().isPresent());
-        assertTrue(config.getResultSetProperties().get().get(1).getPropAction().get().actions().get(0).longDesc.isPresent());
-        assertEquals("Changes vehicle status", config.getResultSetProperties().get().get(1).getPropAction().get().actions().get(0).longDesc.get());
+        assertEquals(1, config.getResultSetProperties().get().get(0).getPropActions().size());
+        assertTrue(config.getResultSetProperties().get().get(0).getPropActions().get(0).actions().get(0).longDesc.isPresent());
+        assertEquals(1, config.getResultSetProperties().get().get(1).getPropActions().size());
+        assertTrue(config.getResultSetProperties().get().get(1).getPropActions().get(0).actions().get(0).longDesc.isPresent());
+        assertEquals("Changes vehicle status", config.getResultSetProperties().get().get(1).getPropActions().get(0).actions().get(0).longDesc.get());
     }
 
     @Test(expected = EntityCentreConfigurationException.class)
@@ -105,6 +111,121 @@ public class EntityCentreBuilderResultSetTest {
     @Test(expected = EntityCentreConfigurationException.class)
     public void adding_null_as_property_action_should_be_prevented() {
         centreFor(TgWorkOrder.class).addProp("key").withAction(null).build();
+    }
+
+    @Test
+    public void multiple_withAction_calls_on_a_property_accumulate_in_declaration_order() {
+        final EntityActionConfig a1 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("first").build();
+        final EntityActionConfig a2 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("second").build();
+        final EntityActionConfig a3 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("third").build();
+
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("key")
+                    .withAction(a1)
+                    .withAction(a2)
+                    .withAction(a3)
+                .build();
+
+        final var propActions = config.getResultSetProperties().get().get(0).getPropActions();
+        assertEquals(3, propActions.size());
+        assertEquals(SingleActionSelector.class, propActions.get(0).actionSelectorClass());
+        assertEquals(SingleActionSelector.class, propActions.get(1).actionSelectorClass());
+        assertEquals(SingleActionSelector.class, propActions.get(2).actionSelectorClass());
+        assertEquals("first", propActions.get(0).actions().get(0).longDesc.get());
+        assertEquals("second", propActions.get(1).actions().get(0).longDesc.get());
+        assertEquals("third", propActions.get(2).actions().get(0).longDesc.get());
+    }
+
+    @Test
+    public void withAction_and_withMultiAction_calls_can_be_mixed_on_the_same_property() {
+        final EntityActionConfig a1 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("plain-1").build();
+        final EntityActionConfig m1 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("multi-sub-1").build();
+        final EntityActionConfig m2 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("multi-sub-2").build();
+        final EntityActionConfig a2 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("plain-2").build();
+        final EntityMultiActionConfig multi = multiAction(PropertyActionSelectorForTest.class).addAction(m1).addAction(m2).build();
+
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("key")
+                    .withAction(a1)
+                    .withMultiAction(multi)
+                    .withAction(a2)
+                .build();
+
+        final var propActions = config.getResultSetProperties().get().get(0).getPropActions();
+        assertEquals(3, propActions.size());
+        assertEquals(SingleActionSelector.class, propActions.get(0).actionSelectorClass());
+        assertEquals(PropertyActionSelectorForTest.class, propActions.get(1).actionSelectorClass());
+        assertEquals(SingleActionSelector.class, propActions.get(2).actionSelectorClass());
+        assertEquals("plain-1", propActions.get(0).actions().get(0).longDesc.get());
+        assertEquals(2, propActions.get(1).actions().size());
+        assertEquals("multi-sub-1", propActions.get(1).actions().get(0).longDesc.get());
+        assertEquals("multi-sub-2", propActions.get(1).actions().get(1).longDesc.get());
+        assertEquals("plain-2", propActions.get(2).actions().get(0).longDesc.get());
+    }
+
+    @Test
+    public void withActionSupplier_appends_alongside_other_property_action_calls() {
+        final EntityActionConfig direct = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("direct").build();
+        final EntityActionConfig supplied = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("supplied").build();
+
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("key")
+                    .withAction(direct)
+                    .withActionSupplier(() -> Optional.of(supplied))
+                .build();
+
+        final var propActions = config.getResultSetProperties().get().get(0).getPropActions();
+        assertEquals(2, propActions.size());
+        assertEquals("direct", propActions.get(0).actions().get(0).longDesc.get());
+        assertEquals("supplied", propActions.get(1).actions().get(0).longDesc.get());
+    }
+
+    @Test
+    public void property_actions_added_to_one_property_do_not_leak_into_the_next() {
+        final EntityActionConfig forKey1 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("k1").build();
+        final EntityActionConfig forKey2 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("k2").build();
+        final EntityActionConfig forDesc = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("d1").build();
+
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("key").withAction(forKey1).withAction(forKey2)
+                .also()
+                .addProp("desc").withAction(forDesc)
+                .build();
+
+        final var keyActions = config.getResultSetProperties().get().get(0).getPropActions();
+        final var descActions = config.getResultSetProperties().get().get(1).getPropActions();
+        assertEquals(2, keyActions.size());
+        assertEquals("k1", keyActions.get(0).actions().get(0).longDesc.get());
+        assertEquals("k2", keyActions.get(1).actions().get(0).longDesc.get());
+        assertEquals(1, descActions.size());
+        assertEquals("d1", descActions.get(0).actions().get(0).longDesc.get());
+    }
+
+    @Test
+    public void dynamic_column_property_actions_accumulate_and_can_mix_plain_and_multi_action() {
+        final EntityActionConfig a1 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("dyn-plain-1").build();
+        final EntityActionConfig m1 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("dyn-multi-1").build();
+        final EntityActionConfig m2 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("dyn-multi-2").build();
+        final EntityActionConfig a2 = action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).longDesc("dyn-plain-2").build();
+        final EntityMultiActionConfig multi = multiAction(PropertyActionSelectorForTest.class).addAction(m1).addAction(m2).build();
+
+        final EntityCentreConfig<TgVehicle> config = centreFor(TgVehicle.class)
+                .addProps("fuelUsages", DynamicColumnBuilderForTest.class, (entity, ctx) -> {}, context().withCurrentEntity().build())
+                    .withAction(a1)
+                    .withMultiAction(multi)
+                    .withAction(a2)
+                .build();
+
+        final var propActions = config.getResultSetProperties().get().get(0).getPropActions();
+        assertEquals(3, propActions.size());
+        assertEquals(SingleActionSelector.class, propActions.get(0).actionSelectorClass());
+        assertEquals(PropertyActionSelectorForTest.class, propActions.get(1).actionSelectorClass());
+        assertEquals(SingleActionSelector.class, propActions.get(2).actionSelectorClass());
+        assertEquals("dyn-plain-1", propActions.get(0).actions().get(0).longDesc.get());
+        assertEquals(2, propActions.get(1).actions().size());
+        assertEquals("dyn-multi-1", propActions.get(1).actions().get(0).longDesc.get());
+        assertEquals("dyn-multi-2", propActions.get(1).actions().get(1).longDesc.get());
+        assertEquals("dyn-plain-2", propActions.get(2).actions().get(0).longDesc.get());
     }
 
     @Test

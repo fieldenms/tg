@@ -50,17 +50,20 @@ Polymer({
         this.customActions = [...this.$.action_selector.assignedNodes()];
     },
 
-    /** 
-     * Executes a custom action and returns true if the action was provided. 
-     * Otherwise, simply returns false to indicate that there was no custom action to be executed. 
-     * the passed in currentEntity is a function that returns choosen entity. 
+    /**
+     * Cell-tap entry point: runs the first property-action group on this column at the supplied sub-action index. Returns true if a sub-action was run, false when the column has no group or the index is out of range.
+     * Subsequent groups (when several withAction / withMultiAction calls are chained on the same column) are reached only through the EGI cell's overflow dropdown, which dispatches on the group element directly and never calls this method.
+     * subActionIndex is 0 for a plain withAction, or the index chosen by the runtime selector for a withMultiAction. currentEntity is a function returning the chosen entity.
      */
-    runAction: function (currentEntity, actionIndex) {
-        const actionToRun = this.customActions[actionIndex]; 
-        if (actionToRun) {
-            actionToRun.currentEntity = currentEntity;
-            actionToRun._run();
-            return true;
+    runAction: function (currentEntity, subActionIndex) {
+        const firstGroup = this.customActions[0];
+        if (firstGroup) {
+            const subAction = firstGroup.actions && firstGroup.actions[subActionIndex];
+            if (subAction) {
+                subAction.currentEntity = currentEntity;
+                subAction._run();
+                return true;
+            }
         }
         return false;
     },
@@ -75,8 +78,6 @@ Polymer({
 
     /**
      * Returns the property name of collectional entity or property name of simple property value.
-     * 
-     * @returns 
      */
     getActualProperty: function () {
         return this.collectionalProperty || this.property;

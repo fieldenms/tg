@@ -1805,6 +1805,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
             afterSummary = afterMinWidthConf;
         }
 
+        final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
+            .withContext(context().withSelectedEntities().build())
+            .icon("accessibility")
+            .withStyle("color: " + colour)
+            .shortDesc("Dummy")
+            .longDesc(format("Dummy action with color: %s, simply prints its result into console.", colour))
+            .build();
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
                 withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
                         .preAction(new EntityNavigationPreAction("Cool entity"))
@@ -1813,6 +1820,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .shortDesc("Edit entity")
                         .longDesc("Opens master for editing this entity")
                         .withNoParentCentreRefresh()
+                        .build())
+                // Issue #2733 demo: additional property-action groups on the same column.
+                // Cell tap runs the first group (Edit); the triple-dot overflow button reveals all three groups.
+                .withAction(action(TgStatusActivationFunctionalEntity.class)
+                        .withContext(context().withCurrentEntity().build())
+                        .icon("assignment-turned-in")
+                        .shortDesc("Change status to DR")
+                        .longDesc("Change status to Defect Radio.")
+                        .build())
+                .withMultiAction(multiAction(PrimaryActionSelector.class)
+                        .addAction(createDummyAction.apply("green"))
+                        .addAction(createDummyAction.apply("orange"))
+                        .addAction(createDummyAction.apply("red"))
                         .build())
                 .also()
                 .addEditableProp("desc").withWordWrap()
@@ -1882,13 +1902,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .addProp("moneyProp")
                 .minWidth(100);
 
-        final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
-            .withContext(context().withSelectedEntities().build())
-            .icon("accessibility")
-            .withStyle("color: " + colour)
-            .shortDesc("Dummy")
-            .longDesc("Dummy action, simply prints its result into console.")
-            .build();
         final Function<String, EntityActionConfig> createFunctionalAction3 = colour -> action(TgFunctionalEntityWithCentreContext.class).
             withContext(context().withSelectedEntities().build()).
             icon("assignment-turned-in").
