@@ -29,7 +29,7 @@ const template = html`
             show-dialog="[[action.showDialog]]"
             toaster="[[action.toaster]]"
             current-entity="[[currentEntity]]"
-            chosen-property="[[action.chosenProperty]]"
+            chosen-property="[[chosenProperty]]"
             short-desc="[[action.shortDesc]]"
             long-desc="[[action.longDesc]]"
             icon="[[action.icon]]"
@@ -67,8 +67,7 @@ export class TgEgiMultiAction extends PolymerElement {
             },
             // List of actions to select from.
             // Each entry is a slot-assigned light-DOM tg-ui-action element (server-rendered with one per sub-action of the group).
-            // The dom-repeat above reads Polymer properties off these elements (action.chosenProperty, action.shortDesc, action.icon, ...) and mirrors them onto a parallel visible tg-ui-action in shadow DOM; Polymer's attribute-to-property auto-binding is what surfaces the server-set attributes as those JS properties.
-            // For property-action groups the originating chosen-property attribute is set per sub-action by PropertyColumnElement.renderColumnElement() — from the column's property name for static columns, or from a per-cell binding expression for dynamic columns.
+            // The dom-repeat above reads Polymer properties off these elements (action.shortDesc, action.icon, ...) and mirrors them onto a parallel visible tg-ui-action in shadow DOM; Polymer's attribute-to-property auto-binding is what surfaces the server-set attributes as those JS properties.
             actions: {
                 type: Array
             },
@@ -79,12 +78,32 @@ export class TgEgiMultiAction extends PolymerElement {
                     return () => null;
                 }
             },
+            // Column-level `chosen-property` for the whole group.
+            // Set as an attribute by `PropertyColumnElement.renderColumnElement()` — a literal property name for static columns, or a per-item binding expression for dynamic columns (resolved in the centre's dom-repeat over `dynamicColumns`).
+            // Bound directly into each rendered shadow `tg-ui-action` via `chosen-property="[[chosenProperty]]"` so changes from the outer dom-repeat (e.g. when a new dynamic column is inserted on auto-refresh) propagate through Polymer's normal property-effect flow.
+            // The observer also pushes the value onto the slotted light-DOM `tg-ui-action` children so the cell-tap path — which calls `_run()` directly on a slotted node via `tg-property-column.runAction` — sees the same up-to-date value.
+            chosenProperty: {
+                type: String,
+                observer: '_chosenPropertyChanged'
+            }
         };
     }
 
     ready () {
         super.ready();
         this.actions = this.actions || this.$.actions_selector.assignedNodes({flatten: true});
+        // chosenProperty may have been set from the attribute before `ready` ran — the observer fired at that point but `this.actions` was undefined, so apply the current value to the slotted children now.
+        this._applyChosenPropertyToSlottedActions(this.chosenProperty);
+    }
+
+    _chosenPropertyChanged (newValue) {
+        this._applyChosenPropertyToSlottedActions(newValue);
+    }
+
+    _applyChosenPropertyToSlottedActions (chosenProperty) {
+        if (this.actions) {
+            this.actions.forEach(action => action.chosenProperty = chosenProperty);
+        }
     }
 
     _isHidden (actionIndex, currentIndex) {

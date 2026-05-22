@@ -205,14 +205,15 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     private DomElement renderColumnElement () {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
-        // Each slotted multi-action group needs `chosen-property` set on its inner `tg-ui-action` children so the dom-repeat inside `tg-egi-multi-action` can bind it into the rendered buttons.
+        // Set `chosen-property` on each multi-action group — the column is the single point of truth, all sub-actions of all groups on a given column share the same value.
         // Dynamic columns use the per-cell group-prop-value binding (resolved in the column's template); static columns use the column's own property name.
-        // The column is the natural single point of truth here — all sub-actions of all groups on a given column share the same chosen-property — so we set it here rather than at the per-element level.
+        // `tg-egi-multi-action` propagates this onto both its rendered shadow `tg-ui-action` buttons (dropdown path) and its slotted `tg-ui-action` light-DOM children (cell-tap path).
+        // Setting on the group rather than on each slotted child is essential for dynamic columns: when the outer dom-repeat shifts items on refresh, only a direct property of the group element fires Polymer's binding effects in its inner template — a per-child attribute change on a slotted node does not, leaving the shadow buttons with a stale `chosen-property`.
         final String chosenPropertyValue = isDynamic ? format("[[item.%s]]", DYN_COL_GROUP_PROP_VALUE) : propertyName;
         for (final FunctionalMultiActionElement actionElement : actions) {
             final DomElement actionDomElement = actionElement.render();
             actionDomElement.attr("slot", "property-action");
-            actionDomElement.children().forEach(action -> action.attr("chosen-property", chosenPropertyValue));
+            actionDomElement.attr("chosen-property", chosenPropertyValue);
             columnElement.add(actionDomElement);
         }
         summary.forEach(summary -> columnElement.add(summary.render()));
