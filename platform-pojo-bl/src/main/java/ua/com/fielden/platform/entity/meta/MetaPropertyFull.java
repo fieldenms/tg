@@ -953,9 +953,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     ///
     /// - `AbstractFunctionalEntityForCollectionModification.key`.
     /// - `AbstractEntity.id` — an `@IsProperty`-overridden `id` with `@CompositeKeyMember` (no `@Optional`)
-    ///   is `requiredByDefinition=true`, but the `id` column is auto-assigned by the database on save
-    ///   and is never edited from the UI or set in model code. Relaxing it is safe (and is what
-    ///   [AbstractEntity#initProperty] and [EntityJsonDeserialiser#deserialiseMetaProperty] both want to do).
+    ///   is `requiredByDefinition=true`, but the `id` column is auto-assigned by the database on save and is never edited from the UI or set in model code.
+    ///   Relaxing it is safe (and is what [AbstractEntity#initProperty] and [EntityJsonDeserialiser#deserialiseMetaProperty] both need to do).
     ///
     private boolean requirednessExceptionRule() {
         return AbstractEntity.KEY.equals(name) && AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(entity.getType())
