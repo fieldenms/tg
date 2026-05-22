@@ -42,7 +42,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
-import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -1062,7 +1061,11 @@ public class DynamicQueryBuilder {
     /// Removes ".key" part from propertyName.
     ///
     public static String getPropertyNameWithoutKeyPart(final String propertyName) {
-        return KEY.equals(propertyName) ? ID : substringBeforeLast(propertyName, ".key");
+        return KEY.equals(propertyName) ? ID : replaceLast(propertyName, ".key");
+    }
+
+    private static String replaceLast(final String s, final String what) {
+        return s.endsWith(what) ? s.substring(0, s.lastIndexOf(what)) : s;
     }
 
 }
