@@ -189,6 +189,46 @@ On each setter call:
 All three steps run synchronously inside the setter call — no `save()` is required to fire validators or definers.
 A definer's own setter calls are observed too: definer-initiated mutations re-enter the same interception chain and are **not** silent.
 
+**No-op short-circuit.**
+`ObservableMutatorInterceptor` checks `equalsEx(currValue, newValue)` first and skips the entire chain when they match.
+So `setX(null)` on an entity whose current `X` is already null fires neither the validator nor the `@AfterChange` definer.
+Tests that try to provoke a validator on the loaded value must change the value first to clear, then re-set the value of interest.
+
+### DB load is a separate path
+
+DB load does **not** go through `ObservableMutatorInterceptor`.
+`EntityFromContainerInstantiator.instantiateFully` calls `entity.beginInitialising()` and writes every property's value directly to the underlying field via reflection — bypassing setters, validators, and the per-call `@AfterChange` firing.
+After all entities have been instantiated, `EntityFetcher` calls `DefinersExecutor.execute(...)`, which DFS-walks the loaded object graph and invokes each property's `@AfterChange` handler with the loaded value, then calls `endInitialising()` per entity.
+
+Two practical consequences:
+- **Validators do not fire at DB load.** Use a definer that calls `metaProp.setDomainValidationResult(...)` to surface a load-time message (warning, info, error) on a property.
+- **All sibling properties are populated by the time any definer fires at load.** There is no per-declaration-order race; chained reads via the dot-path are safe in a load-time definer (subject to fetch model coverage and proxy handling — see *Chained reads in definers* below).
+
+### Chained reads in definers
+
+When a definer dereferences across entity boundaries, prefer the dot-path idiom over manual chained getters: it is null-safe and concise.
+
+```java
+final var path = MyEntity_.refA().refB().refC().leafProp();
+if (Reflector.isPropertyProxied(entity, path)) {
+    // chain not fully fetched — defer to a safe default
+    return;
+}
+final LeafType leaf = entity.get(path);   // null-safe traversal — null if any intermediate is null
+```
+
+How the two helpers behave:
+- `AbstractEntity.get(CharSequence)` accepts a metamodel reference (it implements `CharSequence`) and walks the dot-path via `DynamicPropertyAccess.lastPropOwner` — returning **null** if any intermediate value is null. No NPE risk on partial chains.
+- `Reflector.isPropertyProxied(entity, path)` walks the same path checking each link's `proxiedPropertyNames()` and returns `true` if **any** link is proxied.
+- Without the proxy pre-check, `entity.get(path)` itself throws `StrictProxyException` on the first proxied link — `entity.get` calls `Reflector.isPropertyProxied` internally and throws.
+
+**Why the proxy guard matters even when DB load works.**
+DB load honours the master's fetch provider, so the chain is typically present at form-load time.
+Cross-cutting save flows (cascade saves from another DAO, programmatic `EntityFactory` chains, definer-triggered setter calls on related entities) routinely pass thinly-fetched references whose nested entities are proxies; a definer that ignores this will throw `StrictProxyException` during those flows and break unrelated callers.
+When "defer to a safe default" isn't acceptable, re-fetch with a sufficient fetch model: `Reflector.isPropertyProxied(entity, path) ? co.findByEntityAndFetch(adequateFetch, entity) : entity` — heavier per call but guarantees the data is present.
+
+For single-property checks (no dot-path), `entity.getPropertyIfNotProxy(MyEntity_.someProp())` returns `Optional<MetaProperty>` and yields `empty` if the property is proxied — a tidy alternative to the explicit `proxiedPropertyNames` check.
+
 **`@BeforeChange(@Handler(ValidatorClass.class))`** — Validators (integrity constraints):
 - Implements `IBeforeChangeEventHandler<T>`
 - Returns `Result.failure()` / `Result.warning()` / `Result.informative()` / successful `Result`
@@ -209,6 +249,31 @@ A definer's own setter calls are observed too: definer-initiated mutations re-en
 - **Executes during database retrieval too** (unlike validators)
 - Check `entity.isInitialising()` to distinguish DB load from user mutation
 - Cannot reject values; runs after successful validation
+
+#### When NOT to use a definer
+
+Don't use a definer when any of the following hold:
+- The computation is heavy (e.g. uses EQL) and depends on **multiple properties whose values must be settled together**.
+  A definer fires on each individual setter call, so it sees inconsistent intermediate states and each change performs heavy computations.
+  However, in case of light computations, definers for inter-dependent properties make sense.
+  Example: an order's `subtotal` that depends on `quantity`, `unitPrice`, `discountRate`, and `taxRate` — putting it in a definer attached to all of those properties means it computes from a partially-updated entity on every edit step, which is okay because these are local computations.
+- The computation is **expensive** (DB joins, range walks, EQL queries against other entities) and only needs to settle once per save.
+  A definer would re-run on every setter call along the way.
+- You only want the value persisted; **intermediate property mutations during edit should not re-trigger** the computation.
+
+In these cases, compute the value in the DAO's `save()` method, immediately before delegating to `super.save(entity)`:
+
+```java
+@Override
+@SessionRequired
+public Order save(final Order entity) {
+    entity.setSubtotal(computeSubtotal(entity));
+    return super.save(entity);
+}
+```
+
+In many situations it is worth defining the destination property `@Readonly` so the master form doesn't expose it as user-editable.
+The setter call inside `save()` still re-enters the validator/definer chain, so any guards on the `@Readonly` property must allow programmatic mutation (or use `setDomainValidationResult` / a flag-aware validator) — see *MetaProperty*.
 
 **Validation Result Types:** Failure (rejects value), Warning (accepts + warning), Informative (accepts + info), Success (accepts silently)
 
@@ -447,6 +512,160 @@ Key characteristics:
 A common use of synthetic entities is to host crit-only filters that would otherwise pollute a persistent entity.
 The wrapper typically inherits from the persistent entity and yields over it (`select(PersistentEntity.class).yieldAll().modelAsEntity(ReEntity.class)`), then adds `@CritOnly` properties with the declarative stem pattern (see *Declarative correlated filters* above).
 This is the preferred remedy when a persistent entity otherwise carries `@CritOnly` properties — **except** for generative entities, which have their own pattern (see below).
+
+## Synthetic Grouping Property Entities
+
+A **synthetic grouping property entity** is a non-persistent entity that presents a fixed, enum-backed set of options — typically grouping dimensions or distribution modes — for use as `@CritOnly(SINGLE)` selectors on report centres.
+
+A plain Java `enum` cannot fill this role: `@CritOnly` autocompleters require an `AbstractEntity` subtype, and `EntityExistsValidator` validates references by running EQL queries against the property type.
+The grouping property pattern wraps the enum in a non-persistent entity whose `models_` field synthesises one constant-yield query per enum value, so both the autocompleter and the validator have something to talk to while the enum remains the single source of truth.
+
+### Anatomy
+
+```java
+@KeyType(String.class)
+@KeyTitle("Grouping Property")
+@SupportsEntityExistsValidation
+@EntityTitle("Report Grouping Property")
+@CompanionObject(MyGroupingPropertyCo.class)
+public class MyGroupingProperty extends AbstractEntity<String> {
+
+    protected static final List<EntityResultQueryModel<MyGroupingProperty>> models_ = models();
+
+    public enum GroupingProperty {
+        OPTION_A(1L, "Option A"),
+        OPTION_B(2L, "Option B");
+
+        public final long id;
+        public final String key;
+
+        GroupingProperty(final long id, final String key) {
+            this.id = id;
+            this.key = key;
+        }
+
+        public MyGroupingProperty asEntity() {
+            final MyGroupingProperty v = new MyGroupingProperty();
+            v.setId(id);
+            v.setKey(key);
+            return v;
+        }
+
+        public static GroupingProperty fromValue(final MyGroupingProperty property) {
+            return findByKey(property.getKey())
+                    .orElseThrow(() -> new MyModuleException("Value [%s] is not supported.".formatted(property.getKey())));
+        }
+
+        public static Optional<GroupingProperty> findByKey(final String key) {
+            return Arrays.stream(values()).filter(v -> v.key.equals(key)).findFirst();
+        }
+    }
+
+    @Override
+    public Long getId() {
+        return GroupingProperty.fromValue(this).id;
+    }
+
+    private static List<EntityResultQueryModel<MyGroupingProperty>> models() {
+        return Stream.of(GroupingProperty.values())
+                .map(gp -> select().yield().val(gp.id).as(ID).yield().val(gp.key).as(KEY).modelAsEntity(MyGroupingProperty.class))
+                .toList();
+    }
+}
+```
+
+The non-obvious points:
+- **No `@DomainEntity` or `@WithMetaModel`.** Nothing on the entity is worth `prop()`-ing into — the enum is the API.
+- **`getId()` is overridden** to derive the id from the enum so it always matches `models_` regardless of how the instance was constructed.
+- **`asEntity()` exists for the value matcher**, which materialises every option as a detached entity instance.
+- **`fromValue()` throws an application-specific exception** (e.g. `AnalysesModuleException`) when the key is unknown — substitute a real type from your domain.
+
+### Driving query construction (metadata-driven extension)
+
+When the grouping property must do more than be a label — selecting which property a report groups by, or which criterion to apply — extend the same enum with metadata fields naming the relevant property paths.
+A typical set is three paths: the `@CritOnly` *criterion* on the report entity, the *group key*, and the *group description*.
+A generator or query enhancer reads them at runtime to build the EQL.
+
+The diff against the *Anatomy* example is confined to the enum: three new fields, three new constructor parameters typed `CharSequence`, and updated value declarations that pass the metadata paths (or `null` for options handled by a separate code branch, such as date-truncated time buckets).
+
+```java
+public enum GroupingProperty {
+    OPTION_A(1L, "Option A",
+             MyReport_.optionACrit(),  MySource_.target().key(),    MySource_.target().desc()),
+    OPTION_B(2L, "Option B",
+             MyReport_.optionBCrit(),  MySource_.workshop().key(),  MySource_.workshop().desc()),
+    DAY  (3L, "Day",   null, null, null),  // time-bucket options are computed via date truncation
+    MONTH(4L, "Month", null, null, null);  // and read by a separate code branch
+
+    public final long id;
+    public final String key;
+    public final String groupCrit, groupKey, groupDesc;
+
+    GroupingProperty(final long id, final String key,
+                     final CharSequence groupCrit, final CharSequence groupKey, final CharSequence groupDesc) {
+        this.id = id;
+        this.key = key;
+        this.groupCrit = groupCrit == null ? null : groupCrit.toString();
+        this.groupKey  = groupKey  == null ? null : groupKey.toString();
+        this.groupDesc = groupDesc == null ? null : groupDesc.toString();
+    }
+    // asEntity(), fromValue(), findByKey() — unchanged.
+}
+```
+
+The constructor accepts `CharSequence` so callers can pass either a metamodel reference (`Entity_.foo().bar().key()`) or a plain `String`; the field is stored as `String` because downstream EQL builders consume property paths as strings.
+
+### Companion, DAO, and value matcher
+
+A vanilla `IEntityDao<T>` companion and `CommonEntityDao<T>` DAO are sufficient — no overrides.
+`EntityExistsValidator` runs the standard EQL query for the entity type, and for a synthetic with `models_` that yields exactly the valid `(id, key)` rows.
+
+The value matcher ignores the search string and returns every option:
+
+```java
+public class MyGroupingPropertyMatcher extends AbstractSearchEntityByKeyWithCentreContext<MyGroupingProperty> {
+    private static final List<MyGroupingProperty> options =
+            Stream.of(GroupingProperty.values()).map(GroupingProperty::asEntity).toList();
+
+    public MyGroupingPropertyMatcher() { super(null); }
+
+    @Override
+    public List<MyGroupingProperty> findMatches(final String searchString) { return options; }
+
+    @Override
+    public List<MyGroupingProperty> findMatchesWithModel(final String searchString, final int dataPage) {
+        return findMatches(searchString);
+    }
+}
+```
+
+### Integration with report entities
+
+The grouping property is hosted as a `@CritOnly(SINGLE)` field on a report or generative entity, and the matcher is wired up on the criterion builder:
+
+```java
+@IsProperty @CritOnly(SINGLE)
+@Title("Group By")
+private MyGroupingProperty groupingProperty;
+```
+
+```java
+.addCrit(MyReport_.groupingProperty()).asSingle().autocompleter(MyGroupingProperty.class)
+    .withMatcher(MyGroupingPropertyMatcher.class)
+```
+
+### Comparison with other synthetic entity shapes
+
+Both the regular synthetic / report shape and the grouping property shape are synthetic entities; either may use `model_` (single query) or `models_` (list of queries).
+The distinguishing line is *what kind of data they present*, not the field shape:
+
+| | Synthetic / report | Synthetic grouping property |
+|---|---|---|
+| Source of rows | Computed from existing tables | Hard-coded enum values, one constant-yield query per option |
+| Class-level annotations | `@DomainEntity` (+ optionally `@WithMetaModel`) | `@SupportsEntityExistsValidation`; no `@DomainEntity` |
+| Typical use | Report data, `Re*` and `Syn*` wrappers | `@CritOnly(SINGLE)` selectors |
+
+Grouping property entities pair naturally with **generative entities** below — the latter typically host them as `@CritOnly(SINGLE)` selection criteria that drive the data generator.
 
 ## Generative Entities
 

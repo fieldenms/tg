@@ -18,6 +18,25 @@ TG uses domain-centric authorization: security tokens are classes whose names en
 
 Generally only `SAVE` is used. `SAVE_NEW` / `SAVE_MODIFIED` are for the rare cases where create and update need separate permissions.
 
+## Standard token set for a new persistent entity
+
+Every new persistent entity needs the canonical CRUD token set, wired in three places: token classes, the application's release SQL, and (where applicable) `@Authorise` annotations.
+
+| Token | Always | Notes |
+|---|---|---|
+| `Entity_CanSave_Token` | Yes | Save / update |
+| `Entity_CanDelete_Token` | If deletable | Skip for activatable entities where deactivation replaces deletion |
+| `Entity_CanRead_Token` | Yes | Reading rows |
+| `Entity_CanReadModel_Token` | Yes | Reading the data model (centre and GraphQL metadata) |
+
+For action entities, replace this set with `Entity_CanExecute_Token`.
+For masters, see *Master-open token enforcement* and *Compound master menu item access* below.
+
+Wire each new token into the release SQL (insert into `SECURITYROLEASSOCIATION_`) so it is granted to the appropriate roles (typically `ADMIN` at minimum).
+
+**PR-review checkpoint — easy to miss:** `CanRead` / `CanReadModel` are *silent* gaps; there is no `@Authorise` annotation whose absence would flag them.
+When a PR introduces a new persistent entity, explicitly confirm both tokens exist as classes *and* are granted in the SQL script.
+
 ## Master-open token enforcement
 
 There are two parallel enforcement paths depending on which open action fires:
