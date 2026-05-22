@@ -5,6 +5,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
+import ua.com.fielden.platform.eql.dbschema.test_entities.Entity_WithIdOverrideAsCompositeKey;
 import ua.com.fielden.platform.eql.dbschema.test_entities.Entity_WithIdOverrideMapToEmpty;
 import ua.com.fielden.platform.eql.dbschema.test_entities.Entity_WithIdOverrideMapToUnderscoreId;
 import ua.com.fielden.platform.eql.dbschema.test_entities.Entity_WithIdOverrideMapToWrong;
@@ -47,6 +48,16 @@ public class TableDdlIdOverrideTest {
             .isInstanceOf(DbSchemaException.class)
             .hasMessageContaining("@MapTo without a value")
             .hasMessageContaining("only @MapTo(\"_ID\") is permitted");
+    }
+
+    @Test
+    public void overriding_id_as_the_sole_composite_key_member_emits_no_composite_index() {
+        final var ddl = new TableDdl(extractor, Entity_WithIdOverrideAsCompositeKey.class);
+        // The overridden `id`'s `@CompositeKeyMember` is dismissed, so no column feeds the composite unique index.
+        // It must be skipped entirely rather than emitted over an empty column list, e.g. `... ON T()` (invalid SQL).
+        final var indices = ddl.createIndicesSchema(dialect);
+        assertThat(indices).noneMatch(sql -> sql.contains("KUI_")); // `KUI_` prefixes the composite-key unique index
+        assertThat(indices).noneMatch(sql -> sql.contains("()"));   // no index is generated over an empty column list
     }
 
 }

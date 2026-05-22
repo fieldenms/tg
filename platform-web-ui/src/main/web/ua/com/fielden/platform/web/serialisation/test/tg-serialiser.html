@@ -33,7 +33,7 @@
                 document.body.appendChild(_serialiser);
                 // `_serialiser` is now fully initialised and can be removed immediately.
                 // Flickering can neither be observed nor expected here, as this should happen in the same microtask.
-                document.body.appendChild(_serialiser);
+                document.body.removeChild(_serialiser);
 		      	reflector = _serialiser.reflector();
 		    });
 		
