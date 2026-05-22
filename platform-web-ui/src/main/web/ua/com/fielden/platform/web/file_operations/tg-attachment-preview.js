@@ -16,6 +16,7 @@ const MSG_ATTACHMENT_LINK_IS_NOT_TRUSTED = "This link points to an untrusted sit
 const MSG_ATTACHMENT_LINK_CANNOT_BE_VIEWED = "This link can’t be previewed. Open it to view the content.";
 const MSG_ATTACHMENT_CANNOT_BE_VIEWED = "This file can’t be previewed. Download it to see the content.";
 const MSG_ATTACHMENT_PDF_CANNOT_BE_PREVIEWED_INLINE = "Inline preview isn’t supported for PDFs in this browser. Open it to view the content.";
+const MSG_ATTACHMENT_PDF_CANNOT_BE_PREVIEWED_IN_INSTALLED_APP = "Inline preview isn’t supported for PDFs in this installed app. Download it to view the content.";
 
 /** Defines types of attachment to preview. */
 const ATTACHMENT_KIND = {
@@ -111,12 +112,12 @@ const template = html`
         <object id="pdfViewer" data$="[[_attachmentUri]]" type="application/pdf" on-error="_resourceLoadError"></object>
     </template>
     <div id="altView" hidden$="[[!_isAltVisible(_effectiveKind, _attachmentUri)]]">
-        <span id="message">[[_getAltViewText(_linkCheckRes, _wasConfirmed, _kind, _isPdfPreviewAvailable)]]</span>
-        <paper-button raised roll="button" on-tap="_downloadOrOpenAttachment" tooltip-text$="[[_getButtonTooltip(_linkCheckRes, _kind, _isPdfPreviewAvailable)]]" disabled$="[[_working]]">
-            <span style="margin: 0 8px 0 8px">[[_getButtonText(_linkCheckRes, _kind, _isPdfPreviewAvailable)]]</span>
+        <span id="message">[[_getAltViewText(_linkCheckRes, _wasConfirmed, _kind, _isPdfPreviewAvailable, _isInstalledMobileApp)]]</span>
+        <paper-button raised roll="button" on-tap="_downloadOrOpenAttachment" tooltip-text$="[[_getButtonTooltip(_linkCheckRes, _kind, _isPdfPreviewAvailable, _isInstalledMobileApp)]]" disabled$="[[_working]]">
+            <span style="margin: 0 8px 0 8px">[[_getButtonText(_linkCheckRes, _kind, _isPdfPreviewAvailable, _isInstalledMobileApp)]]</span>
             <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
         </paper-button>
-    </div>`; 
+    </div>`;
 
 /**
  * A preview element for attachments.
@@ -215,6 +216,20 @@ class TgAttachmentPreview extends PolymerElement {
             _isPdfPreviewAvailable: {
                 type: Boolean,
                 value: !(isMobileApp() || isIPhoneOs() || isIPadOs() || isMacSafari())
+            },
+
+            /**
+             * Whether the element is running inside a mobile installed PWA (Android standalone-display PWA, or iOS Add-to-Home-Screen).
+             * In that environment `window.open(url, "_blank")` on a same-origin URL is captured by the PWA's WebView and replaces
+             * the current page with the target — for a PDF, that means the user loses the SPA. The alt view therefore switches the
+             * action button from OPEN to DOWNLOAD so the file is fetched via the existing XHR-blob download path (which is a
+             * download, not a navigation) and the PWA window stays intact. Desktop installed PWAs aren't subject to the trap, so
+             * the check intentionally combines standalone-display with a mobile-device test.
+             */
+            _isInstalledMobileApp: {
+                type: Boolean,
+                value: (window.matchMedia('(display-mode: standalone)').matches || !!window.navigator.standalone)
+                        && (isMobileApp() || isIPhoneOs() || isIPadOs())
             },
 
             /** Indicates that the link should auto-open if the inline render attempt fails after a fresh confirmation. */
@@ -329,20 +344,29 @@ class TgAttachmentPreview extends PolymerElement {
         }
     }
 
-    /** Alt-view button label: OPEN when there is a link to follow or a PDF that can't be previewed inline; DOWNLOAD otherwise. */
-    _getButtonText(_linkCheckRes, _kind, _isPdfPreviewAvailable) {
-        if (_linkCheckRes || (_kind === ATTACHMENT_KIND.PDF && !_isPdfPreviewAvailable)) {
-            return "OPEN";
+    /**
+     * Whether the alt-view button should be OPEN rather than DOWNLOAD.
+     * OPEN when there is a hyperlink to follow, or when the attachment is a PDF that can't be previewed inline AND
+     * we are NOT inside a mobile installed PWA (where `window.open(_blank)` would replace the PWA window — see [#_isInstalledMobileApp]).
+     */
+    _isOpenAction(_linkCheckRes, _kind, _isPdfPreviewAvailable, _isInstalledMobileApp) {
+        if (_linkCheckRes) {
+            return true;
         }
-        return "DOWNLOAD";
+        if (_kind === ATTACHMENT_KIND.PDF && !_isPdfPreviewAvailable) {
+            return !_isInstalledMobileApp;
+        }
+        return false;
+    }
+
+    /** Alt-view button label: OPEN when {@link _isOpenAction}; DOWNLOAD otherwise. */
+    _getButtonText(_linkCheckRes, _kind, _isPdfPreviewAvailable, _isInstalledMobileApp) {
+        return this._isOpenAction(_linkCheckRes, _kind, _isPdfPreviewAvailable, _isInstalledMobileApp) ? "OPEN" : "DOWNLOAD";
     }
 
     /** Alt-view button tooltip; mirrors the OPEN/DOWNLOAD branching of {@link _getButtonText}. */
-    _getButtonTooltip(_linkCheckRes, _kind, _isPdfPreviewAvailable) {
-        if (_linkCheckRes || (_kind === ATTACHMENT_KIND.PDF && !_isPdfPreviewAvailable)) {
-            return "Opens the attachment.";
-        }
-        return "Downloads the attachment.";
+    _getButtonTooltip(_linkCheckRes, _kind, _isPdfPreviewAvailable, _isInstalledMobileApp) {
+        return this._isOpenAction(_linkCheckRes, _kind, _isPdfPreviewAvailable, _isInstalledMobileApp) ? "Opens the attachment." : "Downloads the attachment.";
     }
 
     /** Whether the `<img>` preview should be visible: requires IMAGE effective kind, confirmed state, and a bound URI. */
@@ -371,10 +395,11 @@ class TgAttachmentPreview extends PolymerElement {
      * Alt-view message text, selected by attachment state:
      *  - untrusted hyperlink → trust warning;
      *  - trusted hyperlink with no viable renderer → "link can't be previewed";
-     *  - PDF file on a browser without inline PDF support → "inline preview isn't supported";
-     *  - any other non-previewable file → "download to view".
+     *  - PDF file on a browser without inline PDF support, on a mobile installed PWA → "download to view" variant;
+     *  - PDF file on a browser without inline PDF support, anywhere else → "open to view" variant;
+     *  - any other non-previewable file → generic "download to view".
      */
-    _getAltViewText(_linkCheckRes, _wasConfirmed, _kind, _isPdfPreviewAvailable) {
+    _getAltViewText(_linkCheckRes, _wasConfirmed, _kind, _isPdfPreviewAvailable, _isInstalledMobileApp) {
         if (_linkCheckRes) {
             if (!_wasConfirmed) {
                 return MSG_ATTACHMENT_LINK_IS_NOT_TRUSTED;
@@ -382,7 +407,9 @@ class TgAttachmentPreview extends PolymerElement {
             return MSG_ATTACHMENT_LINK_CANNOT_BE_VIEWED;
         }
         if (_kind === ATTACHMENT_KIND.PDF && !_isPdfPreviewAvailable) {
-            return MSG_ATTACHMENT_PDF_CANNOT_BE_PREVIEWED_INLINE;
+            return _isInstalledMobileApp
+                ? MSG_ATTACHMENT_PDF_CANNOT_BE_PREVIEWED_IN_INSTALLED_APP
+                : MSG_ATTACHMENT_PDF_CANNOT_BE_PREVIEWED_INLINE;
         }
         return MSG_ATTACHMENT_CANNOT_BE_VIEWED;
     }
@@ -393,7 +420,7 @@ class TgAttachmentPreview extends PolymerElement {
     _downloadOrOpenAttachment(e) {
         // If the button represents the OPEN state, there would be a link check result.
         // Tapping the OPEN button should open the link, but with security verification.
-        if (this._linkCheckRes || (this._kind === ATTACHMENT_KIND.PDF && !this._isPdfPreviewAvailable)) {
+        if (this._isOpenAction(this._linkCheckRes, this._kind, this._isPdfPreviewAvailable, this._isInstalledMobileApp)) {
             if (this._wasConfirmed) {
                 // Either the inline render failed, or the URL gave no hint about the resource type.
                 // Open the link instead.
