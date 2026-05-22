@@ -73,6 +73,9 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      */
     private static final String PROPERTIES = "properties";
 
+    /// Conventional title suffix of synthetic-based-on-persistent entity types, stripped from generated criteria entity titles (see [#entityTitleAndDescForCriteria]).
+    private static final String EXT_SUFFIX = " Ext";
+
     private final EntityFactory entityFactory;
 
     private final ICompanionObjectFinder coFinder;
@@ -172,15 +175,17 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     /// Resolves the entity title and description to be used on a generated criteria entity type for the given `root`.
     ///
     /// The title follows [TitlesDescsGetter#getEntityTitleAndDesc], but for synthetic-based-on-persistent entity types
-    /// the trailing ` Ext` suffix is removed. Such synthetic wrappers conventionally carry an ` Ext` suffix in their title,
+    /// the trailing [#EXT_SUFFIX] is removed. Such synthetic wrappers conventionally carry an ` Ext` suffix in their title,
     /// which is not desirable in validation messages produced for criteria properties — the underlying persistent type’s
     /// title reads more naturally there.
     ///
-    private static Pair<String, String> entityTitleAndDescForCriteria(final Class<? extends AbstractEntity<?>> root) {
+    /// Package-private to enable direct unit testing (mirrors [#generateCriteriaType]).
+    ///
+    static Pair<String, String> entityTitleAndDescForCriteria(final Class<? extends AbstractEntity<?>> root) {
         final var titleAndDesc = getEntityTitleAndDesc(root);
         final var title = titleAndDesc.getKey();
-        if (isSyntheticBasedOnPersistentEntityType(root) && title.endsWith(" Ext")) {
-            return pair(title.substring(0, title.length() - " Ext".length()), titleAndDesc.getValue());
+        if (isSyntheticBasedOnPersistentEntityType(root) && title.endsWith(EXT_SUFFIX)) {
+            return pair(title.substring(0, title.length() - EXT_SUFFIX.length()), titleAndDesc.getValue());
         }
         return titleAndDesc;
     }
