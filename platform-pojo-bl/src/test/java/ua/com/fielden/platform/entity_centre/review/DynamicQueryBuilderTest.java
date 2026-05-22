@@ -1,26 +1,8 @@
 package ua.com.fielden.platform.entity_centre.review;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getEmptyValue;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
@@ -29,7 +11,20 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryPro
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.UnsupportedTypeException;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.types.Money;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getEmptyValue;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 /**
  * A test for {@link DynamicQueryBuilder}.

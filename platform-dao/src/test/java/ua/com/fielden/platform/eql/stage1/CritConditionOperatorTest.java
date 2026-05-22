@@ -1,24 +1,6 @@
 package ua.com.fielden.platform.eql.stage1;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildCondition;
-import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createNotInitialisedQueryProperty;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
-
-import java.util.Map;
-import java.util.Optional;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
@@ -28,17 +10,38 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryPro
 import ua.com.fielden.platform.eql.meta.EqlStage1TestCase;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
+import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.utils.IDates;
 
-public class CritConditionOperatorTest extends EqlStage1TestCase {
-    private static final IWhere0<TeVehicle> select_veh_where = select(VEHICLE).where();
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-    private static final String critProp = "fuelTypeCrit";
-    private static final String persistedProp = "lastFuelUsage.fuelType.key";
-    private static final String persistedPropInCollection = "fuelType.key";
-    private static final String D = "D";
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildCondition;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createNotInitialisedQueryProperty;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+
+public class CritConditionOperatorTest extends EqlStage1TestCase {
+
+    private static final String
+            critProp = "fuelTypeCrit",
+            persistedProp = "lastFuelUsage.fuelType.key",
+            persistedPropInCollection = "fuelType.key",
+            D = "D";
+    private static final IWhere0<TeVehicle> select_veh_where = select(VEHICLE).where();
     private static final ICompoundCondition0<TgFuelUsage> modelStart = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID);
     private static final IDates dates = new DatesForTesting();
 
@@ -206,11 +209,54 @@ public class CritConditionOperatorTest extends EqlStage1TestCase {
                 conditions(select_veh_where.critCondition(modelStart, persistedPropInCollection, critProp)));
     }
 
-    //////////////////////////////////////////////////////
-    ///////////////// helper functions ///////////////////
-    //////////////////////////////////////////////////////
+    @Test
+    public void single_critCondition_on_union_typed_property_and_union_typed_crit() {
+        final var locationCrit = createNotInitialisedQueryProperty(TgBogie.class, TgBogie.LOCATION_CRIT);
+        locationCrit.setValue(List.of("x"));
+        assertModelsEquals(
+                conditions(select(TgBogie.class).where().condition(
+                        cond()
+                        .prop(TgBogie.LOCATION).isNotNull()
+                        .and().condition(cond().prop(path(TgBogie.LOCATION, KEY)).in().values("x").model())
+                        .model())),
+                conditions(select(TgBogie.class).where().critCondition(TgBogie.LOCATION, TgBogie.LOCATION_CRIT),
+                           getParams(TgBogie.LOCATION_CRIT, locationCrit)));
+    }
+
+    @Test
+    public void single_critCondition_on_key_of_union_typed_property_and_union_typed_crit() {
+        final var locationCrit = createNotInitialisedQueryProperty(TgBogie.class, TgBogie.LOCATION_CRIT);
+        locationCrit.setValue(List.of("x"));
+        assertModelsEquals(
+                conditions(select(TgBogie.class).where().condition(
+                        cond()
+                        .prop(TgBogie.LOCATION).isNotNull()
+                        .and().condition(cond().prop(path(TgBogie.LOCATION, KEY)).in().values("x").model())
+                        .model())),
+                conditions(select(TgBogie.class).where().critCondition(TgBogie.LOCATION + "." + KEY, TgBogie.LOCATION_CRIT),
+                           getParams(TgBogie.LOCATION_CRIT, locationCrit)));
+    }
+
+    @Test
+    public void single_critCondition_on_key_and_union_typed_crit() {
+        final var locationCrit = createNotInitialisedQueryProperty(TgBogie.class, TgBogie.LOCATION_CRIT);
+        locationCrit.setValue(List.of("x"));
+        assertModelsEquals(
+                conditions(select(TgWorkshop.class).where().condition(
+                        cond()
+                        .prop(ID).isNotNull()
+                        .and().condition(cond().prop(KEY).in().values("x").model())
+                        .model())),
+                conditions(select(TgWorkshop.class).where().critCondition(KEY, TgBogie.LOCATION_CRIT),
+                           getParams(TgBogie.LOCATION_CRIT, locationCrit)));
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Helpers
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
     private static Map<String, Object> getParams(final String critPropName, final QueryProperty queryProperty) {
-        return mapOf(t2(DynamicQueryBuilder.QueryProperty.queryPropertyParamName(critProp), queryProperty));
+        return mapOf(t2(queryPropertyParamName(critPropName), queryProperty));
     }
 
     private static QueryProperty getQueryProperty(final Optional<String> value, final boolean negated, final boolean missing) {
@@ -221,20 +267,28 @@ public class CritConditionOperatorTest extends EqlStage1TestCase {
         return queryProperty;
     }
     
-    /** A helper function to remove confusion that has to do with passing {@code false} as the last argument value for calls to {@link DynamicQueryBuilder#buildCondition(QueryProperty, String, boolean)}. */
-    public static <ET extends AbstractEntity<?>> ConditionModel dqbBuildCondition(final QueryProperty property, final String propertyName, final IDates dates) {
+    /// A helper function to remove confusion that has to do with passing `false` as the last argument value for calls to [DynamicQueryBuilder#buildCondition(QueryProperty, String, boolean, IDates)].
+    ///
+    private static <ET extends AbstractEntity<?>> ConditionModel dqbBuildCondition(final QueryProperty property, final String propertyName, final IDates dates) {
         return buildCondition(property, propertyName, false, dates);
     }
 
-    protected static Conditions1 conditions(final ICompoundCondition0<?> condition) {
+    private static Conditions1 conditions(final ICompoundCondition0<?> condition) {
         return resultQry(condition.model()).whereConditions;
     }
 
-    protected static Conditions1 conditions(final ICompoundCondition0<?> condition, final Map<String, Object> paramValues) {
+    private static Conditions1 conditions(final ICompoundCondition0<?> condition, final Map<String, Object> paramValues) {
         return resultQry(condition.model(), paramValues).whereConditions;
     }
    
-    protected static void assertModelsEquals(final Conditions1 exp, final Conditions1 act) {
-        assertEquals(("Condition models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
+    private static void assertModelsEquals(final Conditions1 exp, final Conditions1 act) {
+        assertEquals(exp, act);
     }
+
+    /// Joins property paths.
+    ///
+    private static String path(final CharSequence... xs) {
+        return String.join(".", xs);
+    }
+
 }

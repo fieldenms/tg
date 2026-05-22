@@ -72,7 +72,7 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     }
 
     @Override
-    public IAlsoProp<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier) {
+    public IResultSetBuilder5WithPropAction<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier) {
         return builder.withActionSupplier(actionConfigSupplier);
     }
 
@@ -142,12 +142,12 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     }
 
     @Override
-    public IAlsoProp<T> withAction(final EntityActionConfig actionConfig) {
+    public IResultSetBuilder5WithPropAction<T> withAction(final EntityActionConfig actionConfig) {
         return builder.withAction(actionConfig);
     }
 
     @Override
-    public IAlsoProp<T> withMultiAction(final EntityMultiActionConfig multiActionConfig) {
+    public IResultSetBuilder5WithPropAction<T> withMultiAction(final EntityMultiActionConfig multiActionConfig) {
         return builder.withMultiAction(multiActionConfig);
     }
 

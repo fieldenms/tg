@@ -1,9 +1,8 @@
 /**
  * @module LRUCache
  */
-export type Perf = {
-    now: () => number;
-};
+import type { Perf } from './perf.js';
+export type { Perf } from './perf.js';
 declare const TYPE: unique symbol;
 export type PosInt = number & {
     [TYPE]: 'Positive Integer';
