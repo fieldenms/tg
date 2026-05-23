@@ -6,6 +6,7 @@ import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
@@ -1149,7 +1151,7 @@ public class CentreUpdater {
      */
     public static Map<String, Object> extendDiffsWithNonIntrusiveDifferences(final Map<String, Object> diff, final IAddToResultTickManager secondTick, final IAddToResultTickManager defaultSecondTick, final Class<AbstractEntity<?>> root) {
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
-        
+
         // extract widths that are changed and add them to the diff
         for (final String property : secondTick.checkedProperties(root)) {
             final int widthVal = secondTick.getWidth(root, property);
@@ -1161,6 +1163,25 @@ public class CentreUpdater {
                 diff(property, propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
             }
         }
+
+        // extract dynamic-column widths / grow factors and add them to the diff
+        // Dynamic columns are emitted at request time by an IDynamicColumnBuilder, identified by their group-key value.
+        // Their keys never appear in checkedProperties(root), so they are processed separately.
+        // Any value present in the dynamic maps is considered an override (the "default" is computed by the dynamic builder at emission time and is not available here).
+        // Defensive filter: skip keys that *do* appear in checkedProperties to avoid colliding with the static branch above on the rare case of name reuse.
+        final Set<String> checkedRootProps = new HashSet<>(secondTick.checkedProperties(root));
+        final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> dynamicWidthsAndGrowFactors = secondTick.getDynamicWidthsAndGrowFactors();
+        final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> defaultDynamicWidthsAndGrowFactors = defaultSecondTick.getDynamicWidthsAndGrowFactors();
+        dynamicWidthsAndGrowFactors._1.forEach((key, widthVal) -> {
+            if (root.equals(key.getKey()) && !checkedRootProps.contains(key.getValue()) && !equalsEx(widthVal, defaultDynamicWidthsAndGrowFactors._1.get(key))) {
+                diff(key.getValue(), propertiesDiff).put(WIDTH.name(), widthVal);
+            }
+        });
+        dynamicWidthsAndGrowFactors._2.forEach((key, growFactorVal) -> {
+            if (root.equals(key.getKey()) && !checkedRootProps.contains(key.getValue()) && !equalsEx(growFactorVal, defaultDynamicWidthsAndGrowFactors._2.get(key))) {
+                diff(key.getValue(), propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
+            }
+        });
         
         // determine whether usedProperties have been changed (as a whole) and add them to the diff if true
         final List<String> visibilityAndOrderPropertiesVal = secondTick.usedProperties(root);
@@ -1270,9 +1291,20 @@ public class CentreUpdater {
             processValue(diff, AUTOCOMPLETE_ACTIVE_ONLY.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAutocompleteActiveOnly(root, property, (Boolean) value), property);
             
             final boolean resultSetContains = targetCentre.getSecondTick().checkedProperties(root).contains(property);
-            
-            processValue(diff, WIDTH.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value), property);
-            processValue(diff, GROW_FACTOR.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value), property);
+
+            if (resultSetContains) {
+                processValue(diff, WIDTH.name(), true, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value), property);
+                processValue(diff, GROW_FACTOR.name(), true, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value), property);
+            } else {
+                // Property is not "checked" — could be a dynamic column (emitted at request time by an IDynamicColumnBuilder) or a removed property.
+                // Route WIDTH / GROW_FACTOR to the dynamic maps; if the key is truly stale (the centre has no dynamic slots, or this key never reappears), it will be evicted later by a dedicated sweep (see #2023).
+                if (diff.containsKey(WIDTH.name())) {
+                    targetCentre.getSecondTick().setDynamicWidth(root, property, (int) diff.get(WIDTH.name()));
+                }
+                if (diff.containsKey(GROW_FACTOR.name())) {
+                    targetCentre.getSecondTick().setDynamicGrowFactor(root, property, (int) diff.get(GROW_FACTOR.name()));
+                }
+            }
         }
         
         // process EGI column visibility / order

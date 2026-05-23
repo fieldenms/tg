@@ -773,6 +773,38 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
 
         @Override
+        public IAddToResultTickManager setDynamicWidth(final Class<?> root, final String property, final int width) {
+            base().setDynamicWidth(enhancer().getManagedType(root), property, width);
+            return this;
+        }
+
+        @Override
+        public Optional<Integer> getDynamicWidth(final Class<?> root, final String property) {
+            return base().getDynamicWidth(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public IAddToResultTickManager setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor) {
+            base().setDynamicGrowFactor(enhancer().getManagedType(root), property, growFactor);
+            return this;
+        }
+
+        @Override
+        public Optional<Integer> getDynamicGrowFactor(final Class<?> root, final String property) {
+            return base().getDynamicGrowFactor(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> getDynamicWidthsAndGrowFactors() {
+            return base().getDynamicWidthsAndGrowFactors();
+        }
+
+        @Override
+        public void setDynamicWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors) {
+            base().setDynamicWidthsAndGrowFactors(widthsAndGrowFactors);
+        }
+
+        @Override
         public int getPageCapacity() {
             return base().getPageCapacity();
         }

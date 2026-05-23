@@ -371,7 +371,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     //---------------------------- CUSTOM OBJECTS [END] ----------------------------//
 
     private static Map<String, Map<String, Integer>> createColumnWidths(final IAddToResultTickManager secondTick, final Class<?> root) {
-        return secondTick.checkedProperties(root)
+        final Map<String, Map<String, Integer>> result = secondTick.checkedProperties(root)
                .stream()
                .map(property -> Pair.pair(
                        property,
@@ -379,7 +379,21 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                        "newWidth", secondTick.getWidth(root, property),
                        "newGrowFactor", secondTick.getGrowFactor(root, property)
                )))
-               .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+               .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (a, b) -> b, LinkedHashMap::new));
+        // Include dynamic-column overrides (keyed by group-key value, e.g. dateGroupKey for RosterCalendar). The client uses these to re-apply persisted widths to dynamic columns after re-running.
+        secondTick.getDynamicWidthsAndGrowFactors()._1.forEach((key, width) -> {
+            if (root.equals(key.getKey())) {
+                final int growFactor = secondTick.getDynamicGrowFactor(root, key.getValue()).orElse(0);
+                result.put(key.getValue(), Map.of("newWidth", width, "newGrowFactor", growFactor));
+            }
+        });
+        secondTick.getDynamicWidthsAndGrowFactors()._2.forEach((key, growFactor) -> {
+            if (root.equals(key.getKey()) && !result.containsKey(key.getValue())) {
+                final int width = secondTick.getDynamicWidth(root, key.getValue()).orElse(0);
+                result.put(key.getValue(), Map.of("newWidth", width, "newGrowFactor", growFactor));
+            }
+        });
+        return result;
     }
 
     /// Creates the holder of meta-values (missingValue, not, exclusive etc.) for criteria of concrete `miType`.
@@ -572,6 +586,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
             freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
+            freshCentre.getSecondTick().setDynamicWidthsAndGrowFactors(previouslyRunCentre.getSecondTick().getDynamicWidthsAndGrowFactors());
             commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, webUiConfig, companionFinder);
         });
         // performs deletion of current owned configuration

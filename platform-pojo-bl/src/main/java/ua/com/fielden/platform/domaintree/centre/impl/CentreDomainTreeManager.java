@@ -680,6 +680,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     public static class AddToResultTickManager extends TickManager implements IAddToResultTickManager {
         private final EnhancementPropertiesMap<Integer> propertiesWidths;
         private final EnhancementPropertiesMap<Integer> propertiesGrowFactors;
+        /// Width overrides for *dynamic* columns (emitted at request time by an `IDynamicColumnBuilder`, keyed by the column's group-key value).
+        /// Bypasses the "checked properties" contract because dynamic column keys never appear in [#checkedProperties(Class)].
+        ///
+        private final EnhancementPropertiesMap<Integer> dynamicPropertiesWidths;
+        private final EnhancementPropertiesMap<Integer> dynamicPropertiesGrowFactors;
         private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
         private int pageCapacity;
         private int maxPageCapacity;
@@ -694,6 +699,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             super();
             propertiesWidths = createPropertiesMap();
             propertiesGrowFactors = createPropertiesMap();
+            dynamicPropertiesWidths = createPropertiesMap();
+            dynamicPropertiesGrowFactors = createPropertiesMap();
             rootsListsOfOrderings = createRootsMap();
         }
 
@@ -801,6 +808,41 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         @Override
+        public IAddToResultTickManager setDynamicWidth(final Class<?> root, final String property, final int width) {
+            dynamicPropertiesWidths.put(key(root, property), width);
+            return this;
+        }
+
+        @Override
+        public Optional<Integer> getDynamicWidth(final Class<?> root, final String property) {
+            return dynamicPropertiesWidths.containsKey(key(root, property)) ? Optional.of(dynamicPropertiesWidths.get(key(root, property))) : Optional.empty();
+        }
+
+        @Override
+        public IAddToResultTickManager setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor) {
+            dynamicPropertiesGrowFactors.put(key(root, property), growFactor);
+            return this;
+        }
+
+        @Override
+        public Optional<Integer> getDynamicGrowFactor(final Class<?> root, final String property) {
+            return dynamicPropertiesGrowFactors.containsKey(key(root, property)) ? Optional.of(dynamicPropertiesGrowFactors.get(key(root, property))) : Optional.empty();
+        }
+
+        @Override
+        public T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> getDynamicWidthsAndGrowFactors() {
+            return t2(dynamicPropertiesWidths, dynamicPropertiesGrowFactors);
+        }
+
+        @Override
+        public void setDynamicWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors) {
+            dynamicPropertiesWidths.clear();
+            dynamicPropertiesWidths.putAll(widthsAndGrowFactors._1);
+            dynamicPropertiesGrowFactors.clear();
+            dynamicPropertiesGrowFactors.putAll(widthsAndGrowFactors._2);
+        }
+
+        @Override
         public int getPageCapacity() {
             return pageCapacity;
         }
@@ -846,7 +888,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         @Override
         public int hashCode() {
-            return 31 * super.hashCode() + Objects.hash(propertiesGrowFactors, propertiesWidths, rootsListsOfOrderings, pageCapacity, maxPageCapacity, visibleRowsCount, numberOfHeaderLines);
+            return 31 * super.hashCode() + Objects.hash(propertiesGrowFactors, propertiesWidths, dynamicPropertiesWidths, dynamicPropertiesGrowFactors, rootsListsOfOrderings, pageCapacity, maxPageCapacity, visibleRowsCount, numberOfHeaderLines);
         }
 
         @Override
@@ -856,6 +898,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     final AddToResultTickManager other = (AddToResultTickManager) obj;
                     return Objects.equals(propertiesGrowFactors, other.propertiesGrowFactors) &&
                             Objects.equals(propertiesWidths, other.propertiesWidths) &&
+                            Objects.equals(dynamicPropertiesWidths, other.dynamicPropertiesWidths) &&
+                            Objects.equals(dynamicPropertiesGrowFactors, other.dynamicPropertiesGrowFactors) &&
                             Objects.equals(rootsListsOfOrderings, other.rootsListsOfOrderings) &&
                             pageCapacity == other.pageCapacity &&
                             maxPageCapacity == other.maxPageCapacity &&

@@ -11,6 +11,7 @@ import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -73,6 +74,9 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP_VALUE;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROW_FACTOR;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_WIDTH;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
@@ -671,7 +675,7 @@ public class CriteriaResource extends AbstractWebResource {
                         device(),
                         sharingModel);
 
-                pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext));
+                pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext, previouslyRunCentre.getSecondTick(), centre.getEntityType()));
 
                 Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
                         centre,
@@ -816,12 +820,29 @@ public class CriteriaResource extends AbstractWebResource {
         return resList;
     }
 
-    private Map<String, List<Map<String, Object>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
+    private Map<String, List<Map<String, Object>>> createDynamicProperties(
+            final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
+            final IAddToResultTickManager secondTick,
+            final Class<? extends AbstractEntity<?>> root)
+    {
         final Map<String, List<Map<String, Object>>> dynamicColumns = new LinkedHashMap<>();
         resPropsWithContext.forEach(resPropWithContext -> {
             centre.getDynamicColumnBuilderFor(resPropWithContext.getKey())
                     .flatMap(dynColumnBuilder -> dynColumnBuilder.getColumnsConfig(resPropWithContext.getValue()))
-                    .ifPresent(config -> dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", config.build()));
+                    .ifPresent(config -> {
+                        final List<Map<String, Object>> built = config.build();
+                        // Override default width / growFactor for each dynamic column from previously persisted values, if any.
+                        // The per-column key is the group-property value (e.g. dateGroupKey for RosterCalendar) — see DynamicColumn.DYN_COL_GROUP_PROP_VALUE.
+                        built.forEach(col -> {
+                            final Object groupPropValue = col.get(DYN_COL_GROUP_PROP_VALUE);
+                            if (groupPropValue instanceof CharSequence) {
+                                final String key = groupPropValue.toString();
+                                secondTick.getDynamicWidth(root, key).ifPresent(w -> col.put(DYN_COL_WIDTH, w));
+                                secondTick.getDynamicGrowFactor(root, key).ifPresent(g -> col.put(DYN_COL_GROW_FACTOR, g));
+                            }
+                        });
+                        dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", built);
+                    });
         });
         return dynamicColumns;
     }

@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This interface defines how domain tree can be managed for <b>entity centres</b>. <br>
@@ -811,14 +812,41 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         
         /**
          * Sets column widths and grow factors to facilitate full overriding of that information; need to get information using {@link #getWidthsAndGrowFactors()} method.
-         * 
+         *
          * @param widthsAndGrowFactors
          */
         void setWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
-        
+
+        /// Sets a `width` for a *dynamic* column (one emitted at request time by an `IDynamicColumnBuilder`, identified by its group-key value).
+        /// Unlike [#setWidth(Class, String, int)], this method bypasses the "checked properties" contract:
+        /// dynamic column keys never appear in [#checkedProperties(Class)] and would otherwise trigger a `DomainTreeException` in strict mode.
+        ///
+        IAddToResultTickManager setDynamicWidth(final Class<?> root, final String property, final int width);
+
+        /// Returns a `width` for a *dynamic* column, or empty if no override has been persisted for `property`.
+        /// Callers should fall back to the default emitted by the [IDynamicColumnBuilder] when empty.
+        ///
+        Optional<Integer> getDynamicWidth(final Class<?> root, final String property);
+
+        /// Sets a `growFactor` for a *dynamic* column. See [#setDynamicWidth(Class, String, int)] for the bypass rationale.
+        ///
+        IAddToResultTickManager setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor);
+
+        /// Returns a `growFactor` for a *dynamic* column, or empty if no override has been persisted for `property`.
+        ///
+        Optional<Integer> getDynamicGrowFactor(final Class<?> root, final String property);
+
+        /// Returns dynamic column widths and grow factors to facilitate exact copy through [#setDynamicWidthsAndGrowFactors(T2)] method.
+        ///
+        T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> getDynamicWidthsAndGrowFactors();
+
+        /// Sets dynamic column widths and grow factors to facilitate full overriding of that information; need to get information using [#getDynamicWidthsAndGrowFactors()] method.
+        ///
+        void setDynamicWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
+
         /**
          * Gets result-set page capacity.
-         * 
+         *
          * @return
          */
         int getPageCapacity();
