@@ -2,6 +2,7 @@ package ua.com.fielden.platform.attachment;
 
 import jakarta.annotation.Nullable;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 /// Represents the kind of preview available for an [attachment][Attachment].
@@ -28,8 +29,13 @@ public enum PreviewKind {
     ///
     HYPERLINK;
 
+    /// Resolves the kind whose [Enum#name] matches `name`, or empty for `null` and unrecognised values.
+    /// Tolerates unknown names rather than throwing so stale or malformed payloads degrade to "no preview" instead of crashing the master.
+    ///
     public static Optional<PreviewKind> of(final @Nullable String name) {
-        return name == null ? Optional.empty() : Optional.of(PreviewKind.valueOf(name));
+        return name == null
+                ? Optional.empty()
+                : Arrays.stream(values()).filter(k -> k.name().equals(name)).findFirst();
     }
 
     /// Resolves the preview kind for a file MIME type (e.g. `image/png` → `IMAGE`, `application/pdf` → `PDF`).
