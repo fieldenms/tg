@@ -78,10 +78,13 @@ Topic-specific gotchas live in each directory's `quick-reference.md`.
    Check `entity.isInitialising()` to distinguish.
    It is `true` from `beginInitialising()` until `endInitialising()` (called per-entity at the end of `DefinersExecutor.explore`).
 6. **Definer mutations are not silent**: Setting a property from a definer triggers the full validation chain via `ObservableMutatorInterceptor`.
-7. **`isDirty()` before side effects**: In DAO `save()`, check property dirtiness before cascading updates.
-8. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
-9. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
-10. **GraphQL API**: Read-only queries only.
+7. **`@Observable` self-invocation IS intercepted (unlike Spring AOP).**
+   Guice intercepts `@Observable` via Byte Buddy *subclass* proxies, so `this.setX(...)` from inside an entity goes through `ObservableMutatorInterceptor` just like an external call — validators, definers, and `MetaProperty.setAssigned` all fire.
+   The enum-on-String idiom relies on this: a public `setKind(Kind)` calling `this.setKind(kind.name())` against a protected `@Observable` String setter is fully observed (e.g. `AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave.setLeaveReason`).
+8. **`isDirty()` before side effects**: In DAO `save()`, check property dirtiness before cascading updates.
+9. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
+10. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
+11. **GraphQL API**: Read-only queries only.
     Fields are uncapitalized entity names.
     Token: `GraphiQL_CanExecute_Token`.
 
