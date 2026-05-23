@@ -660,7 +660,9 @@ Polymer({
             const uuid = this._centreConfigInfo()?.[selectedSubmodulePart]?.configUuid;
             // If `uuid` is missing, but Entity Centre named configuration was loaded, let's adjust `selectedSubmodule` accordingly.
             // To narrow down the possible impact, don't adjust in the case where `?...` part is present.
-            if (!parts[1] && uuid && !selectedSubmodulePart.includes('/' + uuid)) {
+            // The `_uriRewriteInProgress` guard prevents this recovery from misfiring while we are ourselves the source of the URI change.
+            // E.g. New/Duplicate actions, where `_updateURI` strips the UUID before `centreConfigInfo` has caught up to the new state.
+            if (!parts[1] && uuid && !selectedSubmodulePart.includes('/' + uuid) && !this._uriRewriteInProgress) {
                 // Manually rewrite history not to contain link without UUID, but only resultant link with UUID.
                 this._updateURI({ detail: { newConfigUuid: uuid, configUuid: '' } });
                 // Do the actual adjustment.
@@ -838,6 +840,10 @@ Polymer({
     
     /**
      * Updates browser URI (uuid part) from configUuid 'before-change' event.
+     *
+     * The `_uriRewriteInProgress` flag is raised for the duration of this call so that observers re-fired by `location-changed`.
+     * This can tell that the URI was just rewritten by us — and skip any "recover from external URI change" logic.
+     * This mirrors the `loadCentreFreezed` pattern in `tg-selection-criteria-behavior._setInfoFrom`.
      */
     _updateURI: function (event) {
         const configUuid = event.detail.configUuid;
@@ -847,12 +853,17 @@ Polymer({
         const hrefNoParamsNoSlashNoUuid = configUuid === '' ? hrefNoParamsNoSlash : hrefNoParamsNoSlash.substring(0, hrefNoParamsNoSlash.lastIndexOf(configUuid) - 1 /* slash also needs removal */);
         const hrefReplacedUuid = hrefNoParamsNoSlashNoUuid + (newConfigUuid === '' ? '' : '/' + newConfigUuid);
         if (hrefReplacedUuid !== window.location.href) { // when configuration is loaded through some action then potentially new URI will be formed matching new loaded configuration;
-            window.history.replaceState(window.history.state, '', hrefReplacedUuid); // in that case need to replace current history entry with new URI;
-            window.dispatchEvent(new CustomEvent('location-changed', {
-                detail: {
-                    avoidStateAdjusting: true
-                }
-            })); // in tg-app-template 'location-changed' listener no state changes should occur (everything was done here); however 'location-changed' event must be dispatched for 'app-location' to process it; it ensures ability to manually edit URI to the value before rewriting so that this editing triggers page change
+            this._uriRewriteInProgress = true;
+            try {
+                window.history.replaceState(window.history.state, '', hrefReplacedUuid); // in that case need to replace current history entry with new URI;
+                window.dispatchEvent(new CustomEvent('location-changed', {
+                    detail: {
+                        avoidStateAdjusting: true
+                    }
+                })); // in tg-app-template 'location-changed' listener no state changes should occur (everything was done here); however 'location-changed' event must be dispatched for 'app-location' to process it; it ensures ability to manually edit URI to the value before rewriting so that this editing triggers page change
+            } finally {
+                delete this._uriRewriteInProgress;
+            }
         } // if the URI hasn't been changed then URI is already matching to new loaded configuration and history transition has been recorded earlier (e.g. when manually changing URI in address bar)
     },
     
