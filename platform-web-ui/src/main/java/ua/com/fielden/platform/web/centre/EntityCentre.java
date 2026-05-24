@@ -795,14 +795,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             .map(multiActionConfig -> injector.getInstance(multiActionConfig.actionSelectorClass()));
     }
 
-    /// Creates and returns instance of multi-action selector in case of property multi-action specified in Centre DSL.
-    /// Returns map between property names and property action selector.
+    /// Creates and returns instances of multi-action selectors for property multi-actions specified in Centre DSL.
+    /// Each property may have several multi-action groups (any mix of plain actions and context-selected multi-actions chained on the same column).
+    /// Returns a map between property names and the ordered list of selectors — one selector per multi-action group.
+    /// A property is excluded from the result if it has no groups, or if all of its groups have empty action lists.
     ///
-    public Map<String, ? extends IEntityMultiActionSelector> createPropertyActionSelectors() {
+    public Map<String, List<IEntityMultiActionSelector>> createPropertyActionSelectors() {
         return dslDefaultConfig.getResultSetProperties().map(resultProps -> {
             return resultProps.stream()
-                    .filter(resultProp -> resultProp.getPropAction().isPresent() && (resultProp.getPropAction().get().actions().size() > 0))
-                    .map(resultProp -> t2(derivePropName(resultProp), injector.getInstance(resultProp.getPropAction().get().actionSelectorClass())))
+                    .filter(resultProp -> resultProp.getPropActions().stream().anyMatch(ma -> ma.actions().size() > 0))
+                    .map(resultProp -> t2(derivePropName(resultProp),
+                            resultProp.getPropActions().stream()
+                                .map(ma -> (IEntityMultiActionSelector) injector.getInstance(ma.actionSelectorClass()))
+                                .collect(toList())))
                     .collect(toMap(tt -> tt._1, tt -> tt._2));
         }).orElse(new HashMap<>());
     }
@@ -896,11 +901,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
                 final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
 
-                final List<FunctionalActionElement> actions =
-                        resultProp.getPropAction()
-                        .map(multiAction -> multiAction.actions()).orElse(new ArrayList<>()).stream()
-                        .map(actionConfig -> new FunctionalActionElement(actionConfig, actionIndex.getAndIncrement(), resultPropName))
-                        .collect(toList());
+                final List<FunctionalMultiActionElement> actions = new ArrayList<>();
+                for (final EntityMultiActionConfig multiActionConfig : resultProp.getPropActions()) {
+                    actions.add(new FunctionalMultiActionElement(multiActionConfig, actionIndex.get(), FunctionalActionKind.PROP));
+                    actionIndex.addAndGet(multiActionConfig.actions().size());
+                }
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
                         resultProp.widget,
@@ -938,7 +943,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
             column.getActions().forEach(action -> {
                 importPaths.add(action.importPath());
-                propActionsObject.append(prefix + createActionObject(action));
+                propActionsObject.append(prefix + action.createActionObject(importPaths));
             });
             egiColumns.add(column.render());
             column.renderWidget().ifPresent(widget -> egiEditors.add(widget));

@@ -189,6 +189,46 @@ On each setter call:
 All three steps run synchronously inside the setter call — no `save()` is required to fire validators or definers.
 A definer's own setter calls are observed too: definer-initiated mutations re-enter the same interception chain and are **not** silent.
 
+**No-op short-circuit.**
+`ObservableMutatorInterceptor` checks `equalsEx(currValue, newValue)` first and skips the entire chain when they match.
+So `setX(null)` on an entity whose current `X` is already null fires neither the validator nor the `@AfterChange` definer.
+Tests that try to provoke a validator on the loaded value must change the value first to clear, then re-set the value of interest.
+
+### DB load is a separate path
+
+DB load does **not** go through `ObservableMutatorInterceptor`.
+`EntityFromContainerInstantiator.instantiateFully` calls `entity.beginInitialising()` and writes every property's value directly to the underlying field via reflection — bypassing setters, validators, and the per-call `@AfterChange` firing.
+After all entities have been instantiated, `EntityFetcher` calls `DefinersExecutor.execute(...)`, which DFS-walks the loaded object graph and invokes each property's `@AfterChange` handler with the loaded value, then calls `endInitialising()` per entity.
+
+Two practical consequences:
+- **Validators do not fire at DB load.** Use a definer that calls `metaProp.setDomainValidationResult(...)` to surface a load-time message (warning, info, error) on a property.
+- **All sibling properties are populated by the time any definer fires at load.** There is no per-declaration-order race; chained reads via the dot-path are safe in a load-time definer (subject to fetch model coverage and proxy handling — see *Chained reads in definers* below).
+
+### Chained reads in definers
+
+When a definer dereferences across entity boundaries, prefer the dot-path idiom over manual chained getters: it is null-safe and concise.
+
+```java
+final var path = MyEntity_.refA().refB().refC().leafProp();
+if (Reflector.isPropertyProxied(entity, path)) {
+    // chain not fully fetched — defer to a safe default
+    return;
+}
+final LeafType leaf = entity.get(path);   // null-safe traversal — null if any intermediate is null
+```
+
+How the two helpers behave:
+- `AbstractEntity.get(CharSequence)` accepts a metamodel reference (it implements `CharSequence`) and walks the dot-path via `DynamicPropertyAccess.lastPropOwner` — returning **null** if any intermediate value is null. No NPE risk on partial chains.
+- `Reflector.isPropertyProxied(entity, path)` walks the same path checking each link's `proxiedPropertyNames()` and returns `true` if **any** link is proxied.
+- Without the proxy pre-check, `entity.get(path)` itself throws `StrictProxyException` on the first proxied link — `entity.get` calls `Reflector.isPropertyProxied` internally and throws.
+
+**Why the proxy guard matters even when DB load works.**
+DB load honours the master's fetch provider, so the chain is typically present at form-load time.
+Cross-cutting save flows (cascade saves from another DAO, programmatic `EntityFactory` chains, definer-triggered setter calls on related entities) routinely pass thinly-fetched references whose nested entities are proxies; a definer that ignores this will throw `StrictProxyException` during those flows and break unrelated callers.
+When "defer to a safe default" isn't acceptable, re-fetch with a sufficient fetch model: `Reflector.isPropertyProxied(entity, path) ? co.findByEntityAndFetch(adequateFetch, entity) : entity` — heavier per call but guarantees the data is present.
+
+For single-property checks (no dot-path), `entity.getPropertyIfNotProxy(MyEntity_.someProp())` returns `Optional<MetaProperty>` and yields `empty` if the property is proxied — a tidy alternative to the explicit `proxiedPropertyNames` check.
+
 **`@BeforeChange(@Handler(ValidatorClass.class))`** — Validators (integrity constraints):
 - Implements `IBeforeChangeEventHandler<T>`
 - Returns `Result.failure()` / `Result.warning()` / `Result.informative()` / successful `Result`
@@ -209,6 +249,31 @@ A definer's own setter calls are observed too: definer-initiated mutations re-en
 - **Executes during database retrieval too** (unlike validators)
 - Check `entity.isInitialising()` to distinguish DB load from user mutation
 - Cannot reject values; runs after successful validation
+
+#### When NOT to use a definer
+
+Don't use a definer when any of the following hold:
+- The computation is heavy (e.g. uses EQL) and depends on **multiple properties whose values must be settled together**.
+  A definer fires on each individual setter call, so it sees inconsistent intermediate states and each change performs heavy computations.
+  However, in case of light computations, definers for inter-dependent properties make sense.
+  Example: an order's `subtotal` that depends on `quantity`, `unitPrice`, `discountRate`, and `taxRate` — putting it in a definer attached to all of those properties means it computes from a partially-updated entity on every edit step, which is okay because these are local computations.
+- The computation is **expensive** (DB joins, range walks, EQL queries against other entities) and only needs to settle once per save.
+  A definer would re-run on every setter call along the way.
+- You only want the value persisted; **intermediate property mutations during edit should not re-trigger** the computation.
+
+In these cases, compute the value in the DAO's `save()` method, immediately before delegating to `super.save(entity)`:
+
+```java
+@Override
+@SessionRequired
+public Order save(final Order entity) {
+    entity.setSubtotal(computeSubtotal(entity));
+    return super.save(entity);
+}
+```
+
+In many situations it is worth defining the destination property `@Readonly` so the master form doesn't expose it as user-editable.
+The setter call inside `save()` still re-enters the validator/definer chain, so any guards on the `@Readonly` property must allow programmatic mutation (or use `setDomainValidationResult` / a flag-aware validator) — see *MetaProperty*.
 
 **Validation Result Types:** Failure (rejects value), Warning (accepts + warning), Informative (accepts + info), Success (accepts silently)
 
