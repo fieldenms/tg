@@ -3353,8 +3353,8 @@ class MouseDown {
         this.target = targetDesc && targetDesc.nodeDOM.nodeType == 1 ? targetDesc.nodeDOM : null;
         let { selection } = view.state;
         if (event.button == 0 &&
-            targetNode.type.spec.draggable && targetNode.type.spec.selectable !== false ||
-            selection instanceof NodeSelection && selection.from <= targetPos && selection.to > targetPos)
+            (targetNode.type.spec.draggable && targetNode.type.spec.selectable !== false ||
+                selection instanceof NodeSelection && selection.from <= targetPos && selection.to > targetPos))
             this.mightDrag = {
                 node: targetNode,
                 pos: targetPos,
@@ -3703,8 +3703,9 @@ class Dragging {
 }
 const dragCopyModifier = mac ? "altKey" : "ctrlKey";
 function dragMoves(view, event) {
-    let moves = view.someProp("dragCopies", test => !test(event));
-    return moves != null ? moves : !event[dragCopyModifier];
+    let copy;
+    view.someProp("dragCopies", test => { copy = copy || test(event); });
+    return copy != null ? !copy : !event[dragCopyModifier];
 }
 handlers.dragstart = (view, _event) => {
     let event = _event;
@@ -3731,7 +3732,7 @@ handlers.dragstart = (view, _event) => {
     if (!event.dataTransfer.files.length || !chrome || chrome_version > 120)
         event.dataTransfer.clearData();
     event.dataTransfer.setData(brokenClipboardAPI ? "Text" : "text/html", dom.innerHTML);
-    // See https://github.com/ProseMirror/prosemirror/issues/1156
+    // See https://code.haverbeke.berlin/prosemirror/prosemirror/issues/1156
     event.dataTransfer.effectAllowed = "copyMove";
     if (!brokenClipboardAPI)
         event.dataTransfer.setData("text/plain", text);
@@ -4730,8 +4731,13 @@ class DOMObserver {
             for (let node of added)
                 if (node.nodeName == "BR" && node.parentNode) {
                     let after = node.nextSibling;
-                    if (after && after.nodeType == 1 && after.contentEditable == "false")
-                        node.parentNode.removeChild(node);
+                    while (after && after.nodeType == 1) {
+                        if (after.contentEditable == "false") {
+                            node.parentNode.removeChild(node);
+                            break;
+                        }
+                        after = after.firstChild;
+                    }
                 }
         }
         else if (gecko && added.length) {
@@ -5351,7 +5357,7 @@ class EditorView {
         this.pluginViews = [];
         /**
         Holds `true` when a hack node is needed in Firefox to prevent the
-        [space is eaten issue](https://github.com/ProseMirror/prosemirror/issues/651)
+        [space is eaten issue](https://code.haverbeke.berlin/prosemirror/prosemirror/issues/651)
         @internal
         */
         this.requiresGeckoHackNode = false;
@@ -5569,12 +5575,12 @@ class EditorView {
     }
     updateDraggedNode(dragging, prev) {
         let sel = dragging.node, found = -1;
-        if (this.state.doc.nodeAt(sel.from) == sel.node) {
+        if (sel.from < this.state.doc.content.size && this.state.doc.nodeAt(sel.from) == sel.node) {
             found = sel.from;
         }
         else {
             let movedPos = sel.from + (this.state.doc.content.size - prev.doc.content.size);
-            let moved = movedPos > 0 && this.state.doc.nodeAt(movedPos);
+            let moved = movedPos > 0 && movedPos < this.state.doc.content.size && this.state.doc.nodeAt(movedPos);
             if (moved == sel.node)
                 found = movedPos;
         }

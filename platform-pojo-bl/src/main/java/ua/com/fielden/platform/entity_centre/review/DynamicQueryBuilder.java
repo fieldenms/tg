@@ -51,7 +51,6 @@ import static ua.com.fielden.platform.entity_centre.mnemonics.DateMnemonicUtils.
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.*;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.CollectionUtil.partitionBy;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
@@ -813,15 +812,16 @@ public class DynamicQueryBuilder {
         return compoundCondition == null ? collectionBegin : compoundCondition.or();
     }
 
-    /// Enhances "where" with concrete property condition defined by "key" parameter taking into account condition negation and **null** values treatment.
+    /// Builds condition for a criterion in application to another property.
+    /// This method takes into account negation and interpretation of null values.
     ///
-    /// @param isNegated -- indicates whether appropriate condition should be negated
+    /// @param property  a criterion corresponding to a crit-only property
+    /// @param propertyName  a property against which the criterion is applied
+    /// @param isNegated  whether the condition should be negated
     ///
     public static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final String propertyName, final boolean isNegated, final IDates dates) {
         final boolean orNull = Boolean.TRUE.equals(property.getOrNull());
         final boolean not = Boolean.TRUE.equals(property.getNot());
-        // IMPORTANT : in order not to make extra joins properties like "alias.key", "alias.property1.key" and so on will be enhanced by
-        // conditions like "alias is [not] null", "alias.property1 is [not] null" and so on (respectively).
         final IStandAloneConditionComparisonOperator<ET> sc = EntityQueryUtils.<ET> cond().prop(getPropertyNameWithoutKeyPart(propertyName));
         // indicates whether a condition should be negated
         final boolean negate = not ^ isNegated;
@@ -841,11 +841,6 @@ public class DynamicQueryBuilder {
 
     /// More specific use of the previous method [#buildCondition(QueryProperty,String,boolean,IDates)].
     ///
-    /// @param property
-    /// @param isNegated
-    /// @param dates
-    ///
-    /// @return
     private static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final boolean isNegated, final IDates dates) {
         if (property.isCritOnlyWithModel()) {
             return cond().critCondition(property.critOnlyModel, property.propertyUnderCondition, property.propertyName).model();
@@ -853,8 +848,11 @@ public class DynamicQueryBuilder {
         return buildCondition(property, property.getConditionBuildingName(), isNegated, dates);
     }
 
-    /// Builds an atomic condition for `propertyName` based on its definition `property`. This could be "is True", ">= and <", "like", etc.
+    /// Builds an atomic condition for a criterion in application to another property.
     /// This method handles all three kinds of criteria – single, range and multi.
+    ///
+    /// @param property  a criterion corresponding to a crit-only property
+    /// @param propertyName  a property against which the criterion is applied
     ///
     @SuppressWarnings("unchecked")
     private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName, final IDates dates) {
@@ -890,7 +888,7 @@ public class DynamicQueryBuilder {
         } else if (isEntityType(property.getType())) {
             return isPropertyDescriptor(property.getType())
                     ? propertyDescriptorLike(propertyName, (List<String>) property.getValue(), (Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, property.getEntityClass(), property.getPropertyName()).value())
-                    : propertyLike(propertyName, (List<String>) property.getValue(), baseEntityType((Class<AbstractEntity<?>>) property.getType()));
+                    : propertyLike(propertyName, (List<String>) property.getValue());
         } else {
             throw new UnsupportedTypeException(property.getType());
         }
@@ -926,38 +924,32 @@ public class DynamicQueryBuilder {
 
     /// Generates a condition for an entity-typed property using values specified for a criterion.
     ///
-    /// @param prop  property path that ends with an entity-typed property or with `key`
-    /// @param propType  type of the criterion property
+    /// @param prop  a property against which the crit-condition is applied;
+    ///              this property path must end with an entity-typed property or with `key`.
+    /// @param searchValues  actual search values specified for the criterion property
     ///
-    private static ConditionModel propertyLike(final String prop, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
+    private static ConditionModel propertyLike(final String prop, final List<String> searchValues) {
         return partitionBy(searchValues, str -> str.contains("*"))
                 .map((wildVals, exactVals) -> {
-                    final var propWithoutKey = getPropertyNameWithoutKeyPart(prop);
-                    // TODO After #2452, adding ".id" for union-typed properties will no longer be necessary.
-                    final var propId = propWithoutKey + (isUnionEntityType(propType) ? ".id" : "");
+                    // Apply the condition against property `key`.
+                    final var propKey = KEY.equals(prop) ? KEY : (prop.endsWith(".key") ? prop : prop + "." + KEY);
                     // Exact and wilcard search values.
                     if (!exactVals.isEmpty() && !wildVals.isEmpty()) {
                         return cond()
-                                // Condition for exact search values.
-                                .prop(propId).in().model(select(propType).where().prop(KEY).in().values(exactVals).model())
+                                // Exact search values.
+                                .prop(propKey).in().values(exactVals)
                                 .or()
-                                // Condition for wildcard search values.
-                                .prop(propId).in().model(select(propType).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals)).model())
+                                // Wildcard search values.
+                                .prop(propKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals))
                                 .model();
                     }
                     // Only exact search values.
                     else if (!exactVals.isEmpty()) {
-                        return cond()
-                                .prop(propId).in().model(select(propType).where().prop(KEY).in().values(exactVals).model())
-                                .model();
+                        return cond().prop(propKey).in().values(exactVals).model();
                     }
                     // Only wildcards.
                     else {
-                        return cond()
-                                .prop(propId)
-                                .in()
-                                .model(select(propType).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals)).model())
-                                .model();
+                        return cond().prop(propKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals)).model();
                     }
                 });
     }
@@ -1069,10 +1061,11 @@ public class DynamicQueryBuilder {
     /// Removes ".key" part from propertyName.
     ///
     public static String getPropertyNameWithoutKeyPart(final String propertyName) {
-        return KEY.equals(propertyName) ? ID : replaceLast(propertyName, ".key", "");
+        return KEY.equals(propertyName) ? ID : replaceLast(propertyName, ".key");
     }
 
-    private static String replaceLast(final String s, final String what, final String byWhat) {
+    private static String replaceLast(final String s, final String what) {
         return s.endsWith(what) ? s.substring(0, s.lastIndexOf(what)) : s;
     }
+
 }

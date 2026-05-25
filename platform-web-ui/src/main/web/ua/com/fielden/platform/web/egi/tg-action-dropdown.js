@@ -7,8 +7,10 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/utils/flattened-nodes-observer.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
+import { _removeAllLightDOMChildrenFrom } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -22,19 +24,28 @@ const template = html`
             @apply --layout-vertical;
         }
     </style>
-    <iron-dropdown class="secondary-action-dropdown" id="dropdown" always-on-top style="color:black" on-tap="_closeDropdown" on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
+    <!-- on-up rather than on-tap for the inside-click close: child tg-ui-action elements call stopPropagation on the tap event when they run, so an on-tap listener here never fires and the dropdown stays open after the action. The lower-level up event still bubbles. -->
+    <iron-dropdown class="action-dropdown" id="dropdown" always-on-top style="color:black" on-up="_closeDropdown" on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <div slot="dropdown-content" class="dropdown-content">
             <div class="button-container">
-                <slot id="actions_selector" name="actions"></slot>
+                <slot id="actions_selector"></slot>
             </div>
         </div>
     </iron-dropdown>`;
 
+/**
+ * Generic dropdown that opens at a target element and shows a list of multi-action group elements supplied imperatively on each open.
+ * Used both for EGI row-level secondary actions and for EGI cell-level property-action overflow.
+ *
+ * `open(actions, currentEntity, currentIndices, positionTarget)` swaps the dropdown's light-DOM children to the supplied `actions`, propagates `currentEntity` to each child, sets each child's `currentIndex` from the matching position in `currentIndices`, then positions itself next to `positionTarget` and opens.
+ * Children become and remain direct light-DOM children of this dropdown until the next `open()` replaces them; they are not returned to their original parent on close.
+ * This is intentional — owners such as `tg-property-column` keep their own JS references to the action elements (e.g. `customActions`) and continue to use them (e.g. for cell tap) regardless of where the elements live in the DOM tree.
+ */
 Polymer({
 
     _template: template,
 
-    is: "tg-secondary-action-dropdown",
+    is: "tg-action-dropdown",
 
     properties: {
         /**
@@ -71,40 +82,43 @@ Polymer({
         currentIndices: {
             type: Array,
             observer: "_currentIndicesChanged"
-        },
-
-        isSingle: {
-            type: Boolean,
-            readOnly: true,
-            notify: true
-        },
-
-        isPresent: {
-            type: Boolean,
-            readOnly: true,
-            notify: true
-        },
-
-        secondaryActions: {
-            type: Array,
-            readOnly: true,
-            notify: true
         }
     },
 
     behaviors: [ TgFocusRestorationBehavior ],
 
     ready: function () {
-        const actions = this.$.actions_selector.assignedNodes({flatten: true});
-        this._setIsSingle(actions.length === 1);
-        this._setIsPresent(actions.length > 0);
-        this._setSecondaryActions(actions);
+        // Observe the actions slot so the latest `currentEntity` and `currentIndices` are re-applied to any newly-slotted children.
+        // Necessary because `appendChild` in `open()` reassigns the slot asynchronously — the synchronous setter calls inside `open()` see the previous (about-to-be-removed) set, and this observer firing later catches the new set.
+        new FlattenedNodesObserver(this.$.actions_selector, () => this._refreshActions());
     },
 
-    open: function(currentEntity, chosenEntity, currentIndices, currentAction) {
+    /**
+     * Re-applies `currentEntity` and `currentIndices` to whatever is currently slotted, after an asynchronous slot reassignment.
+     */
+    _refreshActions: function () {
+        this._currentEntityChanged(this.currentEntity);
+        this._currentIndicesChanged(this.currentIndices);
+        this._chosenEntityChanged(this.chosenEntity);
+    },
+
+    /**
+     * Opens the dropdown for the supplied multi-action group elements.
+     * Existing light-DOM children are removed; each element of `actions` is appended in order.
+     * `currentEntity` and `currentIndices` are then propagated to the new children (synchronously to the still-old set in case the browser keeps it, and again asynchronously to the new set via the slot observer).
+     */
+    open: function(actions, currentEntity, chosenEntity, currentIndices, currentAction) {
         this.currentEntity = currentEntity;
         this.chosenEntity = chosenEntity;
         this.currentIndices = currentIndices;
+        // Remove old actions and add new actions into light dom.
+        _removeAllLightDOMChildrenFrom(this);
+        actions.forEach(action => {
+            // Server-rendered elements typically carry a `slot` attribute matching their original owner's named slot (e.g. `property-action` or `secondary-action`).
+            // The dropdown exposes only an unnamed default slot, so strip the named-slot attribute so the element is actually assigned and rendered.
+            action.removeAttribute('slot');
+            this.appendChild(action);
+        });
         this.$.dropdown.positionTarget = currentAction;
         this.$.dropdown.open();
     },
@@ -113,7 +127,7 @@ Polymer({
         this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.currentEntity = newValue);
     },
 
-    _chosenEntityChanged: function (newValue) {
+     _chosenEntityChanged: function (newValue) {
         this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.chosenEntity = newValue);
     },
 
