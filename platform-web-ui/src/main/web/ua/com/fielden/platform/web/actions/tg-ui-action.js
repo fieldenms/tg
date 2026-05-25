@@ -12,7 +12,6 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { tearDownEvent, getFirstEntityType, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
-import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
@@ -463,7 +462,6 @@ Polymer({
     created: function () {
         const self = this;
         this._reflector = new TgReflector();
-        this._serialiser = new TgSerialiser();
 
         /**
          * Runs dynamic action with the specified mandatory context. Both 'currentEntity' and 'chosenProperty' must be specified.

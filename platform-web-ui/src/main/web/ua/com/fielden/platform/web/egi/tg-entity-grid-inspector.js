@@ -15,7 +15,7 @@ import '/resources/images/tg-icons.js';
 
 import '/resources/egi/tg-egi-multi-action.js';
 import '/resources/egi/tg-secondary-action-button.js';
-import '/resources/egi/tg-secondary-action-dropdown.js';
+import '/resources/egi/tg-action-dropdown.js';
 import {EGI_CELL_PADDING, EGI_CELL_PADDING_TEMPLATE} from '/resources/egi/tg-egi-cell.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 
@@ -393,6 +393,7 @@ const template = html`
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
+    <slot id="secondary_action_selector" name="secondary-action" hidden></slot>
     <slot id="default_property_action" name="defaultPropertyAction" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
@@ -481,7 +482,7 @@ const template = html`
                         <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                     </template>
                     <div class="action-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
-                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
+                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDownForSecondaryActions]]"></tg-secondary-action-button>
                     </div>
                 </div>
             </template>
@@ -539,10 +540,10 @@ const template = html`
         </div>
         <!-- table lock layer -->
         <div class="lock-layer" lock$="[[lock]]"></div>
-        <!-- secondary action dropdown that will be used by each secondary aciton -->
-        <tg-secondary-action-dropdown id="secondaryActionDropDown" is-single="{{_isSingleSecondaryAction}}" is-present="{{_isSecondaryActionPresent}}" secondary-actions="{{_secondaryActions}}">
-            <slot id="secondary_action_selector" slot="actions" name="secondary-action"></slot>
-        </tg-secondary-action-dropdown>
+        <!-- Shared action dropdown used by both secondary actions (row-level) and property actions (cell-level). -->
+        <!-- The dropdown starts empty; on each open() the EGI hands it the relevant action group elements, which become and remain its light-DOM children until the next open() replaces them. -->
+        <!-- The EGI keeps its own references (_secondaryActions, column.customActions) so subsequent opens and cell taps continue to work regardless of where the elements live in the DOM tree. -->
+        <tg-action-dropdown id="actionDropDown"></tg-action-dropdown>
     </div>`;
 
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
@@ -847,7 +848,7 @@ Polymer({
         //Default action for property columns. It is invoked only if there were no other action specified for specific property column.
         _defaultPropertyAction: Object,
         //The callback to open drop down for secondary action.
-        _openDropDown: Function,
+        _openDropDownForSecondaryActions: Function,
 
         //Double tap related
         _tapOnce: Boolean
@@ -895,6 +896,12 @@ Polymer({
         //Initialising the primary action.
         this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
+        //Initialising secondary actions (slotted directly under the EGI; captured once at ready, mirroring primaryAction).
+        this._secondaryActions = this.$.secondary_action_selector.assignedNodes()
+            .filter(n => n.nodeType === Node.ELEMENT_NODE);
+        this._isSingleSecondaryAction = this._secondaryActions.length === 1;
+        this._isSecondaryActionPresent = this._secondaryActions.length > 0;
+
         //Initialising the default property action
         this._defaultPropertyAction = this.$.default_property_action.assignedNodes()[0];
 
@@ -906,9 +913,17 @@ Polymer({
             this._columnDomChanged(info.addedNodes, info.removedNodes);
         });
 
-        //Init secondary action drop down trigger
-        this._openDropDown = function (currentEntity, currentIndices, currentAction) {
-            this.$.secondaryActionDropDown.open(currentEntity, currentIndices, currentAction);
+        //Trigger used by `tg-secondary-action-button` to open the shared dropdown — borrows the slotted secondary-action group elements into the dropdown for the open state and returns them on close.
+        this._openDropDownForSecondaryActions = function (currentEntity, currentIndices, currentAction) {
+            this.$.actionDropDown.open(this._secondaryActions, currentEntity, currentIndices, currentAction);
+        }.bind(this);
+
+        //Trigger used by the EGI cell's overflow button to open the shared dropdown with the clicked column's property-action groups.
+        //Resolves the row's per-group sub-action indices from `propertyActionIndices`, then hands the column's `customActions` to the dropdown for the open state.
+        this._openDropDownForPropertyActions = function (entity, column, positionTarget) {
+            const entityIndex = this.findEntityIndex(entity);
+            const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
+            this.$.actionDropDown.open(column.customActions, this._currentEntity(entity), groupIndices, positionTarget);
         }.bind(this);
 
         //Initiate entity master for inline editing
@@ -1062,9 +1077,9 @@ Polymer({
 
     hasAction: function (entity, column) {
         const entityIdx = this.findEntityIndex(entity);
-        const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
+        const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
         return entity && (
-            (column.customActions && column.customActions.length > 0 && column.customActions[actionIdx])
+            (column.customActions && column.customActions.length > 0 && groupIndices && groupIndices.length > 0)
             || this.isHyperlinkProp(entity, column) === true
             || this.getAttachmentIfPossible(entity, column)
             || this.hasDefaultAction(entity, column)
@@ -1356,11 +1371,14 @@ Polymer({
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         const entityIndex = this.findEntityIndex(entity);
-        const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
+        // groupIndices[g] is the sub-action index chosen by the runtime selector of property-action group g on this column.
+        // Cell tap always runs the first group's selected sub-action; other groups are reachable through the overflow dropdown.
+        const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
+        const firstGroupSubActionIndex = groupIndices && groupIndices.length > 0 ? groupIndices[0] : -1;
         if (clickedLink) {
             const targetAttr = clickedLink.getAttribute("target");
             checkLinkAndOpen(clickedLink.getAttribute("href"), targetAttr ? targetAttr : "_self");
-        } else if (!column.runAction(this._currentEntity(entity), actionIndex)) {
+        } else if (!column.runAction(this._currentEntity(entity), firstGroupSubActionIndex)) {
             if (this.isHyperlinkProp(entity, column) === false) {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
@@ -2124,9 +2142,11 @@ Polymer({
         try {
             let tooltip = this.getValueTooltip(entity, column);
             const entityIdx = this.findEntityIndex(entity);
-            const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
+            // groupIndices is a list of sub-action indices, one per property-action group on the column.
+            // The tooltip surfaces one fragment per group, each describing the group's currently-selected sub-action.
+            const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
             const columnDescPart = this.getDescTooltip(entity, column);
-            const actionDescPart = this.getActionTooltip(entity, column, actions[actionIdx]);
+            const actionDescPart = this._getActionsTooltip(entity, column, actions, groupIndices);
             tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
             tooltip += (actionDescPart && tooltip && "<br><br>") + actionDescPart;
             return tooltip;
@@ -2136,7 +2156,9 @@ Polymer({
     },
 
     getValueTooltip: function (entity, column) {
-        const validationResult = this.getRealEntity(entity, column).prop(this.getRealProperty(column)).validationResult();
+        const realProperty = this.getRealProperty(column);
+        // entity-itself columns (e.g., a key-only column) have no real property, so there is no per-property validation result to consult.
+        const validationResult = realProperty === '' ? null : this.getRealEntity(entity, column).prop(realProperty).validationResult();
         if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
             const messages = resultMessages(validationResult);
             return messages.extended && ("<b>" + messages.extended + "</b>");
@@ -2161,17 +2183,56 @@ Polymer({
         return "";
     },
 
-    getActionTooltip: function (entity, column, action) {
-        if (action && (action.shortDesc || action.longDesc)) {
-            return this._generateActionTooltip(action);
-        } else if (this.getAttachmentIfPossible(entity, column)) {
-            return this._generateActionTooltip({
-                shortDesc: 'Download',
-                longDesc: 'Click to download attachment.'
-            });
-        } else if (!this.isHyperlinkProp(entity, column) && this.hasDefaultAction(entity, column)) {
-            return this._generateActionTooltip(this.hasDefaultAction(entity, column));
+    /**
+     * Builds the action portion of an EGI cell tooltip.
+     * Composes inner fragments in order: 
+     *  (1) deprecated `getActionTooltip(entity, column)` hook for subclassed EGIs that resolve a tooltip from row / column state; 
+     *  (2) per-group fan-out — one inner fragment per configured property-action group via `_generateActionTooltip` for its runtime-selected sub-action (`actions[g]` is the group element, `groupIndices[g]` its server-chosen sub-action index); 
+     *  (3) attachment / default-action fallback when nothing else produced a fragment.
+     * Collected fragments are wrapped in a single `<div>` labelled `With action:` (one) or `With actions:` (more than one), separated by `<br><br>` — mirrors the `tg-entity-editor` layout.
+     */
+    _getActionsTooltip: function (entity, column, actions, groupIndices) {
+        const innerTooltips = [];
+        const customActionTooltip = this.getActionTooltip(entity, column);
+        if (customActionTooltip) {
+            innerTooltips.push(customActionTooltip);
         }
+        if (actions && actions.length > 0 && groupIndices && groupIndices.length > 0) {
+            for (let g = 0; g < actions.length; g++) {
+                const group = actions[g]; 
+                const action = group && group.actions && group.actions[groupIndices[g]];
+                const actionTooltip = (action.shortDesc || action.longDesc) && this._generateActionTooltip(action);
+                if (actionTooltip) {
+                    innerTooltips.push(actionTooltip);
+                }
+            }
+        }
+        if (innerTooltips.length === 0) {
+            if (this.getAttachmentIfPossible(entity, column)) {
+                innerTooltips.push(this._generateActionTooltip({
+                    shortDesc: 'Download',
+                    longDesc: 'Click to download attachment.'
+                }));
+            } else if (!this.isHyperlinkProp(entity, column) && this.hasDefaultAction(entity, column)) {
+                innerTooltips.push(this._generateActionTooltip(this.hasDefaultAction(entity, column)));
+            }
+        }
+        const filtered = innerTooltips.filter(t => !!t);
+        if (filtered.length === 0) {
+            return "";
+        }
+        return `<div style='display:flex;'>
+            <div style='margin-right:10px;'>${filtered.length > 1 ? "With actions:" : "With action:"}</div>
+            <div style='flex-grow:1;'>${filtered.join("<br><br>")}</div>
+            </div>`;
+    },
+
+    /**
+     * Deprecated subclass hook for contributing a custom inner tooltip fragment from row / column state.
+     * Called once per cell by `_getActionsTooltip` and prepended to the per-group fragments when non-empty.
+     * Retained only for backward compatibility with subclassed EGIs that override it; do not override in new code — configure property actions via the DSL instead.
+     */
+    getActionTooltip: function (entity, column) {
         return "";
     },
     
@@ -2200,12 +2261,7 @@ Polymer({
         } else {
             longDesc = action.longDesc ? "<b>" + action.longDesc + "</b>" : "";
         }
-        const tooltip  = shortDesc + longDesc;
-        
-        return tooltip && `<div style='display:flex;'>
-            <div style='margin-right:10px;'>With action:</div>
-            <div style='flex-grow:1;'>${tooltip}</div> 
-            </div>`
+        return shortDesc + longDesc;
     },
 
     _getTotalTooltip: function (summary) {
