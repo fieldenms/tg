@@ -191,6 +191,7 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
         const config = {
             initialView: 'dayGridMonth',
             headerToolbar: false,
+            locale: this._appConfig.locale,
             datesSet: (dataInfo) => {
                 this.calendarTitle = dataInfo.view.title;
             },
