@@ -337,9 +337,9 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
                     if (!startVal && !endVal) {
                         _calendar.addEvent({ ...common, start: FAR_PAST, end: FAR_FUTURE, allDay: true });
                     } else if (!startVal) {
-                        _calendar.addEvent({ ...common, start: FAR_PAST, end: moment(endVal).toDate(), allDay: true });
+                        _calendar.addEvent({ ...common, start: FAR_PAST, end: endVal, allDay: true });
                     } else if (!endVal) {
-                        _calendar.addEvent({ ...common, start: moment(startVal).toDate(), end: FAR_FUTURE, allDay: true });
+                        _calendar.addEvent({ ...common, start: startVal, end: FAR_FUTURE, allDay: true });
                     } else {
                         _calendar.addEvent({ ...common, start: startVal, end: endVal });
                     }
