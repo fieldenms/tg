@@ -287,9 +287,21 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
 
     _changeView(e) {
         if (this._calendar) {
-            this._calendar.changeView(this.viewTypes[e.detail].valueToSet);
+            const newView = this.viewTypes[e.detail].valueToSet;
+            this._calendar.changeView(newView);
+            this.currentView = newView;
         }
         tearDownEvent(e);
+    }
+
+    _currentViewChanged(newView, oldView) {
+        if (oldView !== undefined && this._calendar) {
+            const wasMonth = oldView === 'dayGridMonth';
+            const isMonth = newView === 'dayGridMonth';
+            if (wasMonth !== isMonth) {
+                this._updateEventSource(this.entities, this.eventKeyProperty, this.eventDescProperty, this.eventFromProperty, this.eventToProperty, this._calendar);
+            }
+        }
     }
 
     _showLegend() {
@@ -300,23 +312,77 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
      * Updates calendar data; moves it to the date of the chronologically first event (if any); re-renders calendar.
      */
     _updateEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar) {
+        // Sentinels for open-ended events. Far enough outside any plausible calendar view to behave like ±infinity.
+        const FAR_PAST = moment('1900-01-01').toDate();
+        const FAR_FUTURE = moment('2200-01-01').toDate();
         if (allDefined(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty) && _calendar) {
             _calendar.getEvents().forEach(event => event.remove());
             let startTime = Infinity;
+            // Month view shows a single continuous bar per entity; time-grid views split into timed + allDay segments.
+            const isMonth = this.currentView === 'dayGridMonth';
             entities.forEach(entity => {
                 if (startTime > entity.get(eventFromProperty)) {
                     startTime = entity.get(eventFromProperty);
                 }
                 const eventColor = this.colorProperty ? entity.get(this.colorProperty) : undefined;
-                _calendar.addEvent({
-                    extendedProps: {
-                        entity: entity
-                    },
+                const startVal = entity.get(eventFromProperty);
+                const endVal = entity.get(eventToProperty);
+                const common = {
+                    extendedProps: { entity: entity },
                     title: entity.get(eventKeyProperty) + (eventDescProperty && entity.get(eventDescProperty) ? " - "+ entity.get(eventDescProperty) : ""),
-                    start: entity.get(eventFromProperty),
-                    end: entity.get(eventToProperty),
                     backgroundColor: eventColor ? '#' + eventColor["hashlessUppercasedColourValue"]  : "#3788d8",
-                });
+                    groupId: 'evt-' + entity.get('id')
+                };
+                if (isMonth) {
+                    if (!startVal && !endVal) {
+                        _calendar.addEvent({ ...common, start: FAR_PAST, end: FAR_FUTURE, allDay: true });
+                    } else if (!startVal) {
+                        _calendar.addEvent({ ...common, start: FAR_PAST, end: moment(endVal).toDate(), allDay: true });
+                    } else if (!endVal) {
+                        _calendar.addEvent({ ...common, start: moment(startVal).toDate(), end: FAR_FUTURE, allDay: true });
+                    } else {
+                        _calendar.addEvent({ ...common, start: startVal, end: endVal });
+                    }
+                } else if (!startVal && !endVal) {
+                    _calendar.addEvent({ ...common, start: FAR_PAST, end: FAR_FUTURE, allDay: true });
+                } else if (!startVal) {
+                    const end = moment(endVal);
+                    const endDayStart = end.clone().startOf('day');
+                    _calendar.addEvent({ ...common, start: FAR_PAST, end: endDayStart.toDate(), allDay: true });
+                    if (endDayStart.isBefore(end)) {
+                        _calendar.addEvent({ ...common, start: endDayStart.toDate(), end: end.toDate() });
+                    }
+                } else if (!endVal) {
+                    const start = moment(startVal);
+                    const allDayStart = start.clone().startOf('day');
+                    if (allDayStart.isBefore(start)) {
+                        allDayStart.add(1, 'day');
+                    }
+                    if (start.isBefore(allDayStart)) {
+                        _calendar.addEvent({ ...common, start: start.toDate(), end: allDayStart.toDate() });
+                    }
+                    _calendar.addEvent({ ...common, start: allDayStart.toDate(), end: FAR_FUTURE, allDay: true });
+                } else {
+                    const start = moment(startVal);
+                    const end = moment(endVal);
+                    const fullDayStart = start.clone().startOf('day');
+                    if (fullDayStart.isBefore(start)) {
+                        fullDayStart.add(1, 'day');
+                    }
+                    const fullDayEnd = end.clone().startOf('day');
+                    if (!fullDayStart.isBefore(fullDayEnd)) {
+                        _calendar.addEvent({ ...common, start: startVal, end: endVal });
+                    } else {
+                        if (start.isBefore(fullDayStart)) {
+                            _calendar.addEvent({ ...common, start: start.toDate(), end: fullDayStart.toDate() });
+                        }
+                        // allDay events use exclusive end semantics in FullCalendar.
+                        _calendar.addEvent({ ...common, start: fullDayStart.toDate(), end: fullDayEnd.toDate(), allDay: true });
+                        if (fullDayEnd.isBefore(end)) {
+                            _calendar.addEvent({ ...common, start: fullDayEnd.toDate(), end: end.toDate() });
+                        }
+                    }
+                }
                 if (this.dataChangeReason !== RunActions.refresh && startTime && startTime < Infinity) {
                     _calendar.gotoDate(startTime);
                 }
