@@ -844,6 +844,28 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         ///
         void setDynamicWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
 
+        /// Records `lastSeenMillis` for a *dynamic* column (property).
+        /// Used by the eviction sweep to detect entries, whose corresponding dynamic column has not been emitted for long enough.
+        ///
+        IAddToResultTickManager setDynamicLastSeen(final Class<?> root, final String property, final long lastSeenMillis);
+
+        /// Returns the last-seen milliseconds for a *dynamic* column (property), or empty if no millis have been recorded.
+        ///
+        Optional<Long> getDynamicLastSeen(final Class<?> root, final String property);
+
+        /// Returns the underlying map of dynamic last-seen millis to facilitate exact copying.
+        ///
+        EnhancementPropertiesMap<Long> getDynamicLastSeenMap();
+
+        /// Overwrites the map of dynamic last-seen millis.
+        ///
+        void setDynamicLastSeenMap(final EnhancementPropertiesMap<Long> lastSeenMap);
+
+        /// Removes width, growFactor and last-seen entries for a *dynamic* column (property).
+        /// Used by the eviction sweep to discard stale entries.
+        ///
+        void removeDynamicEntry(final Class<?> root, final String property);
+
         /**
          * Gets result-set page capacity.
          *

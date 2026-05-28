@@ -805,6 +805,32 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
 
         @Override
+        public IAddToResultTickManager setDynamicLastSeen(final Class<?> root, final String property, final long lastSeenMillis) {
+            base().setDynamicLastSeen(enhancer().getManagedType(root), property, lastSeenMillis);
+            return this;
+        }
+
+        @Override
+        public Optional<Long> getDynamicLastSeen(final Class<?> root, final String property) {
+            return base().getDynamicLastSeen(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public EnhancementPropertiesMap<Long> getDynamicLastSeenMap() {
+            return base().getDynamicLastSeenMap();
+        }
+
+        @Override
+        public void setDynamicLastSeenMap(final EnhancementPropertiesMap<Long> lastSeenMap) {
+            base().setDynamicLastSeenMap(lastSeenMap);
+        }
+
+        @Override
+        public void removeDynamicEntry(final Class<?> root, final String property) {
+            base().removeDynamicEntry(enhancer().getManagedType(root), property);
+        }
+
+        @Override
         public int getPageCapacity() {
             return base().getPageCapacity();
         }

@@ -680,11 +680,16 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     public static class AddToResultTickManager extends TickManager implements IAddToResultTickManager {
         private final EnhancementPropertiesMap<Integer> propertiesWidths;
         private final EnhancementPropertiesMap<Integer> propertiesGrowFactors;
-        /// Width overrides for *dynamic* columns (emitted at request time by an `IDynamicColumnBuilder`, keyed by the column's group-key value).
+        /// Width overrides for *dynamic* columns (properties).
+        /// Emitted at centre Run / Refresh time by an `IDynamicColumnBuilder`, keyed by the column's group-key value.
         /// Bypasses the "checked properties" contract because dynamic column keys never appear in [#checkedProperties(Class)].
         ///
         private final EnhancementPropertiesMap<Integer> dynamicPropertiesWidths;
         private final EnhancementPropertiesMap<Integer> dynamicPropertiesGrowFactors;
+        /// Per-key date millis, recorded for *dynamic* columns (properties).
+        /// Needed for eviction of *dynamic* column (property) widths, unused for a long time.
+        ///
+        private final EnhancementPropertiesMap<Long> dynamicPropertiesLastSeen;
         private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
         private int pageCapacity;
         private int maxPageCapacity;
@@ -701,6 +706,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             propertiesGrowFactors = createPropertiesMap();
             dynamicPropertiesWidths = createPropertiesMap();
             dynamicPropertiesGrowFactors = createPropertiesMap();
+            dynamicPropertiesLastSeen = createPropertiesMap();
             rootsListsOfOrderings = createRootsMap();
         }
 
@@ -843,6 +849,35 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         @Override
+        public IAddToResultTickManager setDynamicLastSeen(final Class<?> root, final String property, final long lastSeenMillis) {
+            dynamicPropertiesLastSeen.put(key(root, property), lastSeenMillis);
+            return this;
+        }
+
+        @Override
+        public Optional<Long> getDynamicLastSeen(final Class<?> root, final String property) {
+            return dynamicPropertiesLastSeen.containsKey(key(root, property)) ? Optional.of(dynamicPropertiesLastSeen.get(key(root, property))) : Optional.empty();
+        }
+
+        @Override
+        public EnhancementPropertiesMap<Long> getDynamicLastSeenMap() {
+            return dynamicPropertiesLastSeen;
+        }
+
+        @Override
+        public void setDynamicLastSeenMap(final EnhancementPropertiesMap<Long> lastSeenMap) {
+            dynamicPropertiesLastSeen.clear();
+            dynamicPropertiesLastSeen.putAll(lastSeenMap);
+        }
+
+        @Override
+        public void removeDynamicEntry(final Class<?> root, final String property) {
+            dynamicPropertiesWidths.remove(key(root, property));
+            dynamicPropertiesGrowFactors.remove(key(root, property));
+            dynamicPropertiesLastSeen.remove(key(root, property));
+        }
+
+        @Override
         public int getPageCapacity() {
             return pageCapacity;
         }
@@ -888,7 +923,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         @Override
         public int hashCode() {
-            return 31 * super.hashCode() + Objects.hash(propertiesGrowFactors, propertiesWidths, dynamicPropertiesWidths, dynamicPropertiesGrowFactors, rootsListsOfOrderings, pageCapacity, maxPageCapacity, visibleRowsCount, numberOfHeaderLines);
+            return 31 * super.hashCode() + Objects.hash(propertiesGrowFactors, propertiesWidths, dynamicPropertiesWidths, dynamicPropertiesGrowFactors, dynamicPropertiesLastSeen, rootsListsOfOrderings, pageCapacity, maxPageCapacity, visibleRowsCount, numberOfHeaderLines);
         }
 
         @Override
@@ -900,6 +935,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                             Objects.equals(propertiesWidths, other.propertiesWidths) &&
                             Objects.equals(dynamicPropertiesWidths, other.dynamicPropertiesWidths) &&
                             Objects.equals(dynamicPropertiesGrowFactors, other.dynamicPropertiesGrowFactors) &&
+                            Objects.equals(dynamicPropertiesLastSeen, other.dynamicPropertiesLastSeen) &&
                             Objects.equals(rootsListsOfOrderings, other.rootsListsOfOrderings) &&
                             pageCapacity == other.pageCapacity &&
                             maxPageCapacity == other.maxPageCapacity &&

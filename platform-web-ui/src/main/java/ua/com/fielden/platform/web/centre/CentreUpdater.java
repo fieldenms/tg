@@ -95,7 +95,7 @@ public class CentreUpdater {
      *
      */
     enum MetaValueType {
-        VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, WIDTH, GROW_FACTOR, AUTOCOMPLETE_ACTIVE_ONLY
+        VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, WIDTH, GROW_FACTOR, AUTOCOMPLETE_ACTIVE_ONLY, DYNAMIC_LAST_SEEN
     }
     
     /**
@@ -1164,7 +1164,7 @@ public class CentreUpdater {
             }
         }
 
-        // extract dynamic-column widths / grow factors and add them to the diff
+        // extract dynamic-column widths / grow factors / last-seen millis and add them to the diff
         // Dynamic columns are emitted at request time by an IDynamicColumnBuilder, identified by their group-key value.
         // Their keys never appear in checkedProperties(root), so they are processed separately.
         // Any value present in the dynamic maps is considered an override (the "default" is computed by the dynamic builder at emission time and is not available here).
@@ -1180,6 +1180,13 @@ public class CentreUpdater {
         dynamicWidthsAndGrowFactors._2.forEach((key, growFactorVal) -> {
             if (root.equals(key.getKey()) && !checkedRootProps.contains(key.getValue()) && !equalsEx(growFactorVal, defaultDynamicWidthsAndGrowFactors._2.get(key))) {
                 diff(key.getValue(), propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
+            }
+        });
+        final var dynamicLastSeen = secondTick.getDynamicLastSeenMap();
+        final var defaultDynamicLastSeen = defaultSecondTick.getDynamicLastSeenMap();
+        dynamicLastSeen.forEach((key, lastSeenVal) -> {
+            if (root.equals(key.getKey()) && !checkedRootProps.contains(key.getValue()) && !equalsEx(lastSeenVal, defaultDynamicLastSeen.get(key))) {
+                diff(key.getValue(), propertiesDiff).put(DYNAMIC_LAST_SEEN.name(), lastSeenVal);
             }
         });
         
@@ -1297,12 +1304,15 @@ public class CentreUpdater {
                 processValue(diff, GROW_FACTOR.name(), true, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value), property);
             } else {
                 // Property is not "checked" — could be a dynamic column (emitted at request time by an IDynamicColumnBuilder) or a removed property.
-                // Route WIDTH / GROW_FACTOR to the dynamic maps; if the key is truly stale (the centre has no dynamic slots, or this key never reappears), it will be evicted later by a dedicated sweep (see #2023).
+                // Route WIDTH / GROW_FACTOR / DYNAMIC_LAST_SEEN to the dynamic maps; if the key is truly stale, the eviction sweep in CriteriaResource.createDynamicProperties will discard it once it has been unused for over 30 days.
                 if (diff.containsKey(WIDTH.name())) {
                     targetCentre.getSecondTick().setDynamicWidth(root, property, (int) diff.get(WIDTH.name()));
                 }
                 if (diff.containsKey(GROW_FACTOR.name())) {
                     targetCentre.getSecondTick().setDynamicGrowFactor(root, property, (int) diff.get(GROW_FACTOR.name()));
+                }
+                if (diff.containsKey(DYNAMIC_LAST_SEEN.name())) {
+                    targetCentre.getSecondTick().setDynamicLastSeen(root, property, ((Number) diff.get(DYNAMIC_LAST_SEEN.name())).longValue());
                 }
             }
         }

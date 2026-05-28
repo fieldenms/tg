@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -58,9 +60,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Optional.*;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toSet;
+import static org.joda.time.Days.daysBetween;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -74,14 +80,12 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP_VALUE;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROW_FACTOR;
-import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_WIDTH;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.*;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
@@ -117,6 +121,12 @@ public class CriteriaResource extends AbstractWebResource {
     /// Hypothetically, this approach provides a better user experience.
     ///
     private static final long RUNNING_LOCK_TIMEOUT = 10;
+
+    /// Number of days after which an unused persisted dynamic-column entry is discarded.
+    /// The threshold is evaluated using full days in the server's default time zone.
+    /// See [#refreshAndEvictDynamicEntries(IAddToResultTickManager, Class, EnhancedCentreEntityQueryCriteria, Set)].
+    ///
+    private static final int DYNAMIC_ENTRY_EVICTION_DAYS = 30;
 
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
@@ -675,7 +685,7 @@ public class CriteriaResource extends AbstractWebResource {
                         device(),
                         sharingModel);
 
-                pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext, previouslyRunCentre.getSecondTick(), centre.getEntityType()));
+                pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext, previouslyRunCentre.getSecondTick(), centre.getEntityType(), previouslyRunCriteriaEntity));
 
                 Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
                         centre,
@@ -823,9 +833,12 @@ public class CriteriaResource extends AbstractWebResource {
     private Map<String, List<Map<String, Object>>> createDynamicProperties(
             final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
             final IAddToResultTickManager secondTick,
-            final Class<? extends AbstractEntity<?>> root)
+            final Class<? extends AbstractEntity<?>> root,
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity)
     {
         final Map<String, List<Map<String, Object>>> dynamicColumns = new LinkedHashMap<>();
+        // Keys of dynamic columns whose width / growFactor was actually overridden by user and are present in result-set.
+        final Set<String> usedDynamicKeys = new HashSet<>();
         resPropsWithContext.forEach(resPropWithContext -> {
             centre.getDynamicColumnBuilderFor(resPropWithContext.getKey())
                     .flatMap(dynColumnBuilder -> dynColumnBuilder.getColumnsConfig(resPropWithContext.getValue()))
@@ -837,14 +850,78 @@ public class CriteriaResource extends AbstractWebResource {
                             final Object groupPropValue = col.get(DYN_COL_GROUP_PROP_VALUE);
                             if (groupPropValue instanceof CharSequence) {
                                 final String key = groupPropValue.toString();
-                                secondTick.getDynamicWidth(root, key).ifPresent(w -> col.put(DYN_COL_WIDTH, w));
-                                secondTick.getDynamicGrowFactor(root, key).ifPresent(g -> col.put(DYN_COL_GROW_FACTOR, g));
+                                final Optional<Integer> wOverride = secondTick.getDynamicWidth(root, key);
+                                final Optional<Integer> gOverride = secondTick.getDynamicGrowFactor(root, key);
+                                wOverride.ifPresent(w -> col.put(DYN_COL_WIDTH, w));
+                                gOverride.ifPresent(g -> col.put(DYN_COL_GROW_FACTOR, g));
+                                if (wOverride.isPresent() || gOverride.isPresent()) {
+                                    usedDynamicKeys.add(key);
+                                }
                             }
                         });
                         dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", built);
                     });
         });
+        // Maintenance sweep: a single point at which we KNOW which dynamic columns are present and which are persisted overrides.
+        // Triggered when at least one dynamic column was actually emitted in this run (regardless of any persisted overrides).
+        // This is necessary to evict orphan entries — keys whose corresponding columns are no longer emitted.
+        // Because their non-emission means they would never reach `usedDynamicKeys`.
+        // Performance: `dynamicColumns` is empty when dynamic builder produced no output (or none is configured).
+        // So for centres without any dynamic columns this method has identical cost to before.
+        if (!dynamicColumns.isEmpty()) {
+            refreshAndEvictDynamicEntries(secondTick, root, criteriaEntity, usedDynamicKeys);
+        }
         return dynamicColumns;
+    }
+
+    /// Refreshes the `lastSeen` millis for every dynamic column key used in the current emission.
+    /// Discards any other persisted entries (width / growFactor / lastSeen), that have not been used for longer than [#DYNAMIC_ENTRY_EVICTION_DAYS] days.
+    ///
+    /// The bump is performed on every emission, that uses a dynamic width override.
+    /// An actively used key should never age out simply because no eviction happened to fire at the same time.
+    /// Eviction also covers the "orphan override" case — a persisted entry whose corresponding column is no longer emitted.
+    /// Day arithmetic uses Joda `Days.daysBetween` in [DateTimeZone#getDefault] time-zone.
+    ///
+    private static void refreshAndEvictDynamicEntries(
+            final IAddToResultTickManager secondTick,
+            final Class<? extends AbstractEntity<?>> root,
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
+            final Set<String> usedDynamicKeys)
+    {
+        final var nowMillis = currentTimeMillis();
+        final var now = new DateTime(nowMillis);
+        final var widthsAndGrowFactors = secondTick.getDynamicWidthsAndGrowFactors();
+
+        // Union of persisted dynamic keys.
+        // A key may appear in only one of the three maps if previously partially evicted - we still collect it.
+        final Set<String> persistedKeys = Stream.<Map<Pair<Class<?>, String>, ?>>of(
+            widthsAndGrowFactors._1,
+            widthsAndGrowFactors._2,
+            secondTick.getDynamicLastSeenMap()
+        )
+            .flatMap(m -> m.keySet().stream())
+            .filter(k -> root.equals(k.getKey()))
+            .map(Pair::getValue)
+            .collect(toCollection(LinkedHashSet::new));
+
+        // A missing lastSeen is treated as a sentinel meaning "never recorded" and is left alone.
+        // Only entries with an actual stale millis are evicted.
+        final Set<String> staleKeys = persistedKeys.stream()
+            .filter(key -> !usedDynamicKeys.contains(key))
+            .filter(key -> secondTick.getDynamicLastSeen(root, key)
+                .map(ls -> daysBetween(new DateTime(ls), now).getDays() > DYNAMIC_ENTRY_EVICTION_DAYS)
+                .orElse(false)
+            )
+            .collect(toSet());
+
+        // Persist only when there is something to do: either a key to bump or a key to remove.
+        // Scanning above is purely in-memory, so if there is "nothing to do" - means no persistent storage actions.
+        if (!staleKeys.isEmpty() || !usedDynamicKeys.isEmpty()) {
+            criteriaEntity.adjustColumnWidths(centreManager -> {
+                staleKeys.forEach(key -> centreManager.getSecondTick().removeDynamicEntry(root, key));
+                usedDynamicKeys.forEach(key -> centreManager.getSecondTick().setDynamicLastSeen(root, key, nowMillis));
+            });
+        }
     }
 
     /// The resultant custom object contains key result information, such as:

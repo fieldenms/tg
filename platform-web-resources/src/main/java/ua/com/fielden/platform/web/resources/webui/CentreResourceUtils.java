@@ -588,6 +588,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
             freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
             freshCentre.getSecondTick().setDynamicWidthsAndGrowFactors(previouslyRunCentre.getSecondTick().getDynamicWidthsAndGrowFactors());
+            freshCentre.getSecondTick().setDynamicLastSeenMap(previouslyRunCentre.getSecondTick().getDynamicLastSeenMap());
             commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, webUiConfig, companionFinder);
         });
         // performs deletion of current owned configuration
