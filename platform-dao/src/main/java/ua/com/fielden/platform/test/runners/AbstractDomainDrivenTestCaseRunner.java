@@ -12,16 +12,15 @@ import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test.DbCreator;
-import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
-import ua.com.fielden.platform.test.WithDbVersion;
+import ua.com.fielden.platform.test.*;
 import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 
 import java.lang.reflect.Constructor;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Function;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Reflector.assignStatic;
@@ -29,13 +28,18 @@ import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 
 /// The domain test case runner responsible for instantiating and initializing domain test cases.
 ///
+/// * Supports [WithDbVersion].
+///
+/// * Supports [RequireTimezone].
+///
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
     private static final String
             INFO_TEST_IGNORED_DUE_TO_DB_VERSION = "Test [%s] is ignored because it requires one of databases %s while the current one is [%s].",
             ERR_INVALID_TYPE = "Test case [%s] should extend [%s].",
             ERR_MISSING_DB_CREATOR = "DbCreator type was not provided, but is required.",
-            ERR_FAILED_TO_CREATE_TEST_CONFIGURATION = "Could not create test configuration.";
+            ERR_FAILED_TO_CREATE_TEST_CONFIGURATION = "Could not create test configuration.",
+            INFO_TEST_IGNORED_DUE_TO_TIMEZONE = "Test [%s] is ignored because it requires timezone [%s] while the actual is [%s].";
 
     public final Logger logger = getLogger(getClass());
 
@@ -221,7 +225,39 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             return true;
         }
 
+        if (!hasRequiredTimezone(child)) {
+            return true;
+        }
+
         return false;
+    }
+
+    private boolean hasRequiredTimezone(final FrameworkMethod child) {
+        final var atRequireTimezone = child.getAnnotation(RequireTimezone.class);
+        if (atRequireTimezone == null) {
+            return true;
+        }
+
+        final ZoneId zoneId;
+        try {
+            zoneId = ZoneId.of(atRequireTimezone.value());
+        } catch (final Exception e) {
+            logger.warn(() -> format("Unrecognised timezone [%s] specified in @%s for [%s]. This test will be ignored. Timezone parsing error is attached as the cause.",
+                                     atRequireTimezone.value(), RequireTimezone.class.getSimpleName(),
+                                     "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName())),
+                        e);
+            return false;
+        }
+
+        if (!TimeZone.getTimeZone(zoneId).equals(TimeZone.getDefault())) {
+            logger.info(() -> INFO_TEST_IGNORED_DUE_TO_TIMEZONE.formatted(
+                    "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName()),
+                    atRequireTimezone.value(),
+                    TimeZone.getDefault()));
+            return false;
+        }
+
+        return true;
     }
 
     /// A helper function to instantiate a test case configuration as specified in `props` under the property `"config.domain"`.
