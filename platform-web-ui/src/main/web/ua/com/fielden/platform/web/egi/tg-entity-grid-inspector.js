@@ -1250,18 +1250,15 @@ Polymer({
     /**
      * Adjusts widths for columns based on current widths values, which could be altered by dragging column right border.
      *
-     * Static columns are keyed in `columnWidths` by their declared property name; dynamic columns (emitted by an IDynamicColumnBuilder) are keyed by their group-key value (e.g. dateGroupKey for RosterCalendar).
-     * Entries for unknown / stale dynamic keys (the set of emitted dynamic columns changes between runs) are silently skipped.
+     * `columnWidths` is keyed only by static (DSL-checked) property names; dynamic columns receive their persisted width / growFactor
+     * directly from each `dynamicColumns.*Columns` entry via the `[[item.width]]` / `[[item.growFactor]]` bindings, so they are skipped here.
      */
     adjustColumnWidths: function (columnWidths) {
-        this.columns.forEach((column, columnIndex) => {
-            const cw = columnWidths[column.property];
-            if (cw) {
-                this.set("columns." + columnIndex + ".growFactor", cw.newGrowFactor);
-                this.set("columns." + columnIndex + ".width", cw.newWidth);
-                this._updateTotalRowGrowFactor(columnIndex, cw.newGrowFactor);
-                this._updateTotalRowWidth(columnIndex, cw.newWidth);
-            }
+        this.columns.filter(column => !column.collectionalProperty).forEach((column, columnIndex) => {
+            this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
+            this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
+            this._updateTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
+            this._updateTotalRowWidth(columnIndex, columnWidths[column.property].newWidth);
         });
         this.fixedColumns.filter(column => !column.collectionalProperty).forEach((column, columnIndex) => {
             this.set("fixedColumns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
