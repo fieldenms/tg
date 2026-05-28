@@ -150,6 +150,7 @@ public class StandardMastersWebUiConfig {
                 .addProp("lastUpdatedDate").asDateTimePicker().also()
                 .addProp("createdBy").asAutocompleter().also()
                 .addProp("createdDate").asDateTimePicker().also()
+                // asInteger() renders with a thousands separator (e.g., 83.553), which we do not want.
                 .addProp("entityId").asSinglelineText().also()
                 .addProp("entityVersion").asInteger()
                 .also()
