@@ -1263,14 +1263,11 @@ Polymer({
                 this._updateTotalRowWidth(columnIndex, cw.newWidth);
             }
         });
-        this.fixedColumns.forEach((column, columnIndex) => {
-            const cw = columnWidths[column.property];
-            if (cw) {
-                this.set("fixedColumns." + columnIndex + ".growFactor", cw.newGrowFactor);
-                this.set("fixedColumns." + columnIndex + ".width", cw.newWidth);
-                this._updateFixedTotalRowGrowFactor(columnIndex, cw.newGrowFactor);
-                this._updateFixedTotalRowWidth(columnIndex, cw.newWidth);
-            }
+        this.fixedColumns.filter(column => !column.collectionalProperty).forEach((column, columnIndex) => {
+            this.set("fixedColumns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
+            this.set("fixedColumns." + columnIndex + ".width", columnWidths[column.property].newWidth);
+            this._updateFixedTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
+            this._updateFixedTotalRowWidth(columnIndex, columnWidths[column.property].newWidth);
         });
         this._updateTableSizeAsync();
     },
