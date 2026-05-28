@@ -7,6 +7,10 @@ import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.widgets.*;
@@ -26,6 +30,9 @@ import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.S
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.Date;
 import java.util.Optional;
 
 import static java.lang.String.format;
@@ -40,6 +47,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
             Property [%s.%s] with type [%s] cannot be used for autocompletion. \
             Please use asAutocompleter(entityType), or asAutocompleter() for an entity-typed property.""";
     private static final String ERR_INVALID_DATEPICKER_CHOICE = "Invalid editor choice for property [%s.%s] due to annotation @%s.";
+    private static final String ERR_INVALID_EDITOR_TYPE_FOR_PROPERTY_TYPE = "Invalid editor type [%s] for property [%s.%s : %s].";
 
     public final SimpleMasterBuilder<T> smBuilder;
     public final String propertyName;
@@ -102,12 +110,14 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public ICollectionalRepresentorConfig<T> asCollectionalRepresentor() {
+        assertPropertyTypeAssignableFrom(Collection.class, "Collectional Representor");
         widget = new CollectionalRepresentorWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new CollectionalRepresentorConfig<>((CollectionalRepresentorWidget) widget, smBuilder);
     }
 
     @Override
     public ICollectionalEditorConfig<T> asCollectionalEditor() {
+        assertPropertyTypeAssignableFrom(Collection.class, "Collectional Editor");
         widget = new CollectionalEditorWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new CollectionalEditorConfig<>((CollectionalEditorWidget) widget, smBuilder);
     }
@@ -120,6 +130,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IRichTextConfig<T> asRichText() {
+        assertPropertyTypeAssignableFrom(RichText.class, "Rich Text");
         widget = new RichTextWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), smBuilder.getEntityType(), propertyName);
         return new RichTextConfig<>((RichTextWidget)widget, smBuilder);
     }
@@ -136,6 +147,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IDateTimePickerConfig<T> asDateTimePicker() {
+        assertPropertyTypeAssignableFrom(Date.class, "Datetime");
         final String timePortion = getTimePortionToDisplay(smBuilder.getEntityType(), propertyName);
         if (timePortion == null) {
             widget = new DateTimePickerWidget(
@@ -153,6 +165,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IDatePickerConfig<T> asDatePicker() {
+        assertPropertyTypeAssignableFrom(Date.class, "Date");
         final String DATE_ONLY = "DATE";
         if (DATE_ONLY.equals(getTimePortionToDisplay(smBuilder.getEntityType(), propertyName))) {
             widget = new DateTimePickerWidget(
@@ -169,6 +182,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public ITimePickerConfig<T> asTimePicker() {
+        assertPropertyTypeAssignableFrom(Date.class, "Time");
         final String TIME_ONLY = "TIME";
         if (TIME_ONLY.equals(getTimePortionToDisplay(smBuilder.getEntityType(), propertyName))) {
             widget = new DateTimePickerWidget(
@@ -185,6 +199,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IDecimalConfig<T> asDecimal() {
+        assertPropertyTypeAssignableFrom(BigDecimal.class, "Decimal");
         widget = new DecimalWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new DecimalConfig<>((DecimalWidget) widget, smBuilder);
     }
@@ -197,17 +212,20 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public ISpinnerConfig<T> asInteger() {
+        assertPropertyTypeAssignableFrom(Number.class, "Integer");
         return asSpinner();
     }
 
     @Override
     public IMoneyConfig<T> asMoney() {
+        assertPropertyTypeAssignableFrom(Money.class, "Money");
         widget = new MoneyWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new MoneyConfig<>((MoneyWidget) widget, smBuilder);
     }
 
     @Override
     public ICheckboxConfig<T> asCheckbox() {
+        assertPropertyTypeAssignableFrom(boolean.class, "Checkbox");
         widget = new CheckboxWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new CheckboxConfig<>((CheckboxWidget) widget, smBuilder);
     }
@@ -224,12 +242,14 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IColourConfig<T> asColour() {
+        assertPropertyTypeAssignableFrom(Colour.class, "Colour");
         widget = new ColourWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new ColourConfig<>((ColourWidget) widget, smBuilder);
     }
 
     @Override
     public IHyperlinkConfig<T> asHyperlink() {
+        assertPropertyTypeAssignableFrom(Hyperlink.class, "Hyperlink");
         widget = new HyperlinkWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new HyperlinkConfig<>((HyperlinkWidget) widget, smBuilder);
     }
@@ -237,4 +257,14 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
     public AbstractWidget widget() {
         return widget;
     }
+
+    private void assertPropertyTypeAssignableFrom(final Class<?> expectedPropType, final String editorName) {
+        final var propType = PropertyTypeDeterminator.determinePropertyType(smBuilder.getEntityType(), propertyName, true, false);
+        if (!expectedPropType.isAssignableFrom(propType)) {
+            throw new EntityMasterConfigurationException(format(
+                    ERR_INVALID_EDITOR_TYPE_FOR_PROPERTY_TYPE,
+                    editorName, smBuilder.getEntityType().getSimpleName(), propertyName, propType.getTypeName()));
+        }
+    }
+
 }

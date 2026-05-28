@@ -53,10 +53,12 @@ public class PropertyTypeDeterminator {
      *
      * @param type  type that should contain property/method defined by the dot-expression (e.g. {@code Vehicle} contains {@code "status.isGeneratePmWo()"})
      * @param dotExpr methods / properties joined by {@code "."} (e.g. {@code "vehicle.getKey().getStatus().generatePmWo.getWorkOrder().key"})
+     * @param determineKeyType  true => then a correct "key"/"getKey()" class is returned, otherwise {@link Comparable} is returned.
+     * @param determineElementType  true => then a correct element type of collectional property is returned, otherwise a type of collection (list, set, etc.) is returned.
      *
      * @return  property type / method return type
      */
-    public static Class<?> determinePropertyType(final Class<?> type, final CharSequence dotExpr) {
+    public static Class<?> determinePropertyType(final Class<?> type, final CharSequence dotExpr, final boolean determineKeyType, final boolean determineElementType) {
         if (type == null || StringUtils.isEmpty(dotExpr)) {
             throw new ReflectionException(ERR_TYPE_AND_PROP_REQUIRED);
         }
@@ -68,10 +70,14 @@ public class PropertyTypeDeterminator {
         final String[] propertiesOrFunctions = splitPropPathToArray(dotExpr);
         Class<?> result = type;
         for (final String propertyOrFunction : propertiesOrFunctions) {
-            result = determineClass(result, propertyOrFunction, true, true);
+            result = determineClass(result, propertyOrFunction, determineKeyType, determineElementType);
         }
         
         return result == null ? null : stripIfNeeded(result);
+    }
+
+    public static Class<?> determinePropertyType(final Class<?> type, final CharSequence dotExpr) {
+        return determinePropertyType(type, dotExpr, true, true);
     }
 
     /**
