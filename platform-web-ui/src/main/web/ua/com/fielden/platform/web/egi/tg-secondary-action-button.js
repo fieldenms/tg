@@ -20,7 +20,7 @@ const template = html`
         }
     </style>
     <template is="dom-if" if="[[isSingle]]">
-        <tg-egi-multi-action class="action" actions="[[actions.0.actions]]" current-entity="[[currentEntity]]" current-index="[[currentIndices.0]]"></tg-egi-multi-action>
+        <tg-egi-multi-action class="action" actions="[[actions.0.actions]]" current-entity="[[currentEntity]]" chosen-entity="[[chosenEntity]]" current-index="[[currentIndices.0]]"></tg-egi-multi-action>
     </template>
     <template is="dom-if" if="[[!isSingle]]">
         <paper-icon-button id="dropDownButton" icon="more-vert" on-tap="_showDropdown" tooltip-text="Opens list of available actions"></paper-icon-button>
@@ -48,9 +48,20 @@ Polymer({
         },
 
         /**
+         * The 'chosenEntity' function returns the entity behind the column's chosenProperty.
+         * For secondary actions (which run at the row level, not a specific column) this typically resolves to the row entity itself.
+         */
+        chosenEntity: {
+            type: Function,
+            value: function () {
+                return () => null;
+            }
+        },
+
+        /**
          * Current indices of secondary actions. If it is single secondary action then this array has only one index, otherwise there will
          * be as many indices as numbere of secondary actions.
-         */ 
+         */
         currentIndices: {
             type: Array
         },
@@ -68,6 +79,6 @@ Polymer({
 
     _showDropdown: function (e, detail) {
         this.persistActiveElement();
-        this.dropdownTrigger(this.currentEntity, this.currentIndices, this);
+        this.dropdownTrigger(this.currentEntity, this.chosenEntity, this.currentIndices, this);
     }
 });

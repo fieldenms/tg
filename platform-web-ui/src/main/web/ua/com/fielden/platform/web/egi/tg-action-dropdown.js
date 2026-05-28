@@ -66,6 +66,19 @@ Polymer({
             observer: "_currentEntityChanged"
         },
 
+        /**
+         * Returns the entity behind chosenProperty for the column that triggered the action.
+         * For secondary actions (row-level) this typically resolves to the row entity itself.
+         * Function changes every time after another secondary action is pressed; the observer forwards it onto slotted action items.
+         */
+        chosenEntity: {
+            type: Function,
+            value: function () {
+                return () => null;
+            },
+            observer: "_chosenEntityChanged"
+        },
+
         currentIndices: {
             type: Array,
             observer: "_currentIndicesChanged"
@@ -86,6 +99,7 @@ Polymer({
     _refreshActions: function () {
         this._currentEntityChanged(this.currentEntity);
         this._currentIndicesChanged(this.currentIndices);
+        this._chosenEntityChanged(this.chosenEntity);
     },
 
     /**
@@ -93,8 +107,9 @@ Polymer({
      * Existing light-DOM children are removed; each element of `actions` is appended in order.
      * `currentEntity` and `currentIndices` are then propagated to the new children (synchronously to the still-old set in case the browser keeps it, and again asynchronously to the new set via the slot observer).
      */
-    open: function(actions, currentEntity, currentIndices, currentAction) {
+    open: function(actions, currentEntity, chosenEntity, currentIndices, currentAction) {
         this.currentEntity = currentEntity;
+        this.chosenEntity = chosenEntity;
         this.currentIndices = currentIndices;
         // Remove old actions and add new actions into light dom.
         _removeAllLightDOMChildrenFrom(this);
@@ -110,6 +125,10 @@ Polymer({
 
     _currentEntityChanged: function (newValue) {
         this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.currentEntity = newValue);
+    },
+
+     _chosenEntityChanged: function (newValue) {
+        this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.chosenEntity = newValue);
     },
 
     _currentIndicesChanged: function (newValue) {

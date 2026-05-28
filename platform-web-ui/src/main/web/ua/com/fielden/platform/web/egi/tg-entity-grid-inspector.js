@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages, getFirstEntityTypeAndProperty } from '/resources/reflection/tg-polymer-utils.js';
 import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 const EGI_BOTTOM_MARGIN = "15px";
@@ -465,7 +465,7 @@ const template = html`
                         <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                     </div>
                     <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
-                        <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
+                        <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" chosen-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
                     </div>
                     <!--
                       Body-row dom-repeat tags below do NOT need mutable-data.
@@ -482,7 +482,7 @@ const template = html`
                         <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                     </template>
                     <div class="action-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
-                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDownForSecondaryActions]]"></tg-secondary-action-button>
+                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" chosen-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDownForSecondaryActions]]"></tg-secondary-action-button>
                     </div>
                 </div>
             </template>
@@ -914,8 +914,8 @@ Polymer({
         });
 
         //Trigger used by `tg-secondary-action-button` to open the shared dropdown — borrows the slotted secondary-action group elements into the dropdown for the open state and returns them on close.
-        this._openDropDownForSecondaryActions = function (currentEntity, currentIndices, currentAction) {
-            this.$.actionDropDown.open(this._secondaryActions, currentEntity, currentIndices, currentAction);
+        this._openDropDownForSecondaryActions = function (currentEntity, chosenEntity, currentIndices, currentAction) {
+            this.$.actionDropDown.open(this._secondaryActions, currentEntity, chosenEntity, currentIndices, currentAction);
         }.bind(this);
 
         //Trigger used by the EGI cell's overflow button to open the shared dropdown with the clicked column's property-action groups.
@@ -923,7 +923,7 @@ Polymer({
         this._openDropDownForPropertyActions = function (entity, column, positionTarget) {
             const entityIndex = this.findEntityIndex(entity);
             const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
-            this.$.actionDropDown.open(column.customActions, this._currentEntity(entity), groupIndices, positionTarget);
+            this.$.actionDropDown.open(column.customActions, this._currentEntity(entity), this._chosenEntity(entity, column), groupIndices, positionTarget);
         }.bind(this);
 
         //Initiate entity master for inline editing
@@ -1387,7 +1387,7 @@ Polymer({
         if (clickedLink) {
             const targetAttr = clickedLink.getAttribute("target");
             checkLinkAndOpen(clickedLink.getAttribute("href"), targetAttr ? targetAttr : "_self");
-        } else if (!column.runAction(this._currentEntity(entity), firstGroupSubActionIndex)) {
+        } else if (!column.runAction(this._currentEntity(entity), this._chosenEntity(entity, column), firstGroupSubActionIndex)) {
             if (this.isHyperlinkProp(entity, column) === false) {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
@@ -1395,7 +1395,7 @@ Polymer({
                         // No action needed; errors are gracefully handled within the downloadAttachment function.
                     });
                 } else if (this.hasDefaultAction(entity, column)) {
-                    column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
+                    column.runDefaultAction(this._currentEntity(entity), this._chosenEntity(entity, column), this._defaultPropertyAction);
                 }
             }
         }
@@ -2139,11 +2139,72 @@ Polymer({
 
     _currentEntity: function (entity) {
         const egi = this;
-        // Return old fashion javascript function (not arrow function). This function will be called by 
+        // Return old fashion javascript function (not arrow function). This function will be called by
         // action therefore this of the function will be the action (in case of arrow function this would be the EGI).
         return function () {
             //this - is the action that calls this function.
             return this.supportsNavigation && egi.editingEntity ? egi.editingEntity : entity;
+        };
+    },
+
+    /**
+     * Resolves the entity behind `column.property` for a row, mirroring `_currentEntity` in shape.
+     *
+     * The returned function is invoked from the action (so `this` refers to the action). The resolution covers four shapes:
+     *   1. entity-typed leaf -> the value at the leaf, or null when the cell is empty
+     *   2. union-typed leaf  -> the active member instance, or null when the union has no active member
+     *   3. simple-typed leaf -> the entity that holds the leaf, determined by `getFirstEntityTypeAndProperty`:
+     *        - for a top-level simple property (e.g. `desc`, or the row-itself "this" column where `column.property` is empty) the holder is the row entity (via the `Entity.prototype.get('')` short-circuit),
+     *        - for a dotted path (e.g. `vehicle.make.name`) the holder is the entity at the deepest entity-typed prefix (`vehicle.make`), or null when that prefix is empty,
+     *        - when the holder prefix itself is a union, it is unwrapped to its active member (or null when there is no active member).
+     *        Non-common simple properties on a union are always addressed via a dot-notated path that names the specific member
+     *        (e.g. `unionProp.engineer.specificProp`), so the prefix already lands on the member entity directly.
+     *   4. dynamic column    -> the collection item from `column.collectionalProperty` whose key matches `column.property`
+     *
+     * Returns null whenever the resolved holder is empty — null entity-typed leaf (1), union with no active member (2),
+     * or dotted simple leaf whose entity-typed prefix is null (3). The resolver does not walk further up the property path
+     * when the immediate entity-typed prefix is empty; the caller's action producer is expected to handle the null case.
+     */
+    _chosenEntity: function (entity, column) {
+        const egi = this;
+        return function () {
+            // Reuse `_currentEntity` to derive the row entity, applying the same navigation-aware fallback to `egi.editingEntity`.
+            // Two binding details matter:
+            //   - `egi._currentEntity(...)` (not `this._currentEntity(...)`): inside this returned function `this` is the action, which has no `_currentEntity` method, so we go through the captured `egi`.
+            //   - `.call(this)`: `_currentEntity`'s inner function reads `this.supportsNavigation` from the action; we must invoke it with the action as `this` (i.e. our outer `this`), otherwise `supportsNavigation` would be undefined and the navigation branch would never fire.
+            const referenceEntity = egi._currentEntity(entity).call(this);
+            if (!referenceEntity || !column) {
+                return null;
+            }
+            // Case 4: dynamic column.
+            if (column.collectionalProperty) {
+                return egi.getCollectionalItem(referenceEntity, column);
+            }
+
+            const [, propName] = getFirstEntityTypeAndProperty(referenceEntity, column.property);
+            const propValue = referenceEntity.get(propName);
+
+            if (propValue) {
+                const propType = typeOf(propValue);
+                if (propType && propType.isUnionEntity()) {
+                    return propValue._activeEntity() || null;
+                }
+                return propValue;
+            }
+
+            return null;
+
+            // Returns the TG entity-type metadata for `v`, or `null` if `v` is not an entity-shaped value.
+            function typeOf (v) {
+                try {
+                    if (v && v.constructor && v.constructor.prototype && typeof v.constructor.prototype.type === 'function') {
+                        return v.constructor.prototype.type.call(v);
+                    }
+                } catch (e) {
+                    // not an entity — fall through.
+                }
+                return null;
+            }
         };
     },
 
