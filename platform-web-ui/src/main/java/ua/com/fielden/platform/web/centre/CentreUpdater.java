@@ -1299,21 +1299,25 @@ public class CentreUpdater {
             
             final boolean resultSetContains = targetCentre.getSecondTick().checkedProperties(root).contains(property);
 
-            if (resultSetContains) {
-                processValue(diff, WIDTH.name(), true, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value), property);
-                processValue(diff, GROW_FACTOR.name(), true, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value), property);
-            } else {
-                // Property is not "checked" — could be a dynamic column (emitted at request time by an IDynamicColumnBuilder) or a removed property.
-                // Route WIDTH / GROW_FACTOR / DYNAMIC_LAST_SEEN to the dynamic maps; if the key is truly stale, the eviction sweep in CriteriaResource.createDynamicProperties will discard it once it has been unused for over 30 days.
+            if (resultSetContains || !diff.containsKey(DYNAMIC_LAST_SEEN.name())) {
+                // Static path (resultSetContains == true) or genuinely-disappeared / legacy entry.
+                // `processValue` applies when `resultSetContains` is true and warns-and-drops when false.
+                // This preserves upstream warn-and-drop semantics for the latter so the diff self-cleans on the next commit.
+                processValue(diff, WIDTH.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value), property);
+                processValue(diff, GROW_FACTOR.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value), property);
+            }
+            else {
+                // The presence of DYNAMIC_LAST_SEEN marks this entry as a *dynamic column* override.
+                // The producer always writes lastSeen alongside any dynamic width/growFactor resize.
+                // Route WIDTH / GROW_FACTOR / DYNAMIC_LAST_SEEN to the dynamic maps.
+                // If the key has become orphan or stale, the eviction sweep in `CriteriaResource.createDynamicProperties` will discard it.
                 if (diff.containsKey(WIDTH.name())) {
                     targetCentre.getSecondTick().setDynamicWidth(root, property, (int) diff.get(WIDTH.name()));
                 }
                 if (diff.containsKey(GROW_FACTOR.name())) {
                     targetCentre.getSecondTick().setDynamicGrowFactor(root, property, (int) diff.get(GROW_FACTOR.name()));
                 }
-                if (diff.containsKey(DYNAMIC_LAST_SEEN.name())) {
-                    targetCentre.getSecondTick().setDynamicLastSeen(root, property, ((Number) diff.get(DYNAMIC_LAST_SEEN.name())).longValue());
-                }
+                targetCentre.getSecondTick().setDynamicLastSeen(root, property, ((Number) diff.get(DYNAMIC_LAST_SEEN.name())).longValue());
             }
         }
         
