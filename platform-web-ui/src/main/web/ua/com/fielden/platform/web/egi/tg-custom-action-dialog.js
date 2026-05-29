@@ -1083,8 +1083,12 @@ Polymer({
                 element.$.menu.route = undefined;
             }
         });
-        this.close();
-        this._removeFromDom();
+        if (this.opened) {
+            this.close();
+        }
+        if (this.parentElement) {
+            this._removeFromDom();
+        }
     },
 
     _handleCloseEvent: function(data, envelope) {
