@@ -6,7 +6,6 @@ import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -20,7 +19,6 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
@@ -1166,7 +1164,7 @@ public class CentreUpdater {
             }
         }
 
-        // extract dynamic-column widths / grow factors / last-seen millis and add them to the diff
+        // Extract dynamic-column widths / grow factors / last-seen millis and add them to the diff.
         // Dynamic columns are emitted at request time by an IDynamicColumnBuilder, identified by their group-key value.
         // Their keys never appear in checkedProperties(root), so they are processed separately.
         // Any value present in the dynamic maps is considered an override.
@@ -1174,29 +1172,13 @@ public class CentreUpdater {
         // Defensive filter: skip keys that *do* appear in checkedProperties.
         // Avoids colliding with the static branch above on the rare case of name reuse.
         final var checkedRootProps = new HashSet<>(secondTick.checkedProperties(root));
-        final var dynamicWidthsAndGrowFactors = secondTick.getDynamicWidthsAndGrowFactors();
-        final var defaultDynamicWidthsAndGrowFactors = defaultSecondTick.getDynamicWidthsAndGrowFactors();
-        dynamicWidthsAndGrowFactors._1.forEach((key, widthVal) -> {
-            if (root.equals(key.getKey())
-                && !checkedRootProps.contains(key.getValue())
-                && !equalsEx(widthVal, defaultDynamicWidthsAndGrowFactors._1.get(key))) {
-                diff(key.getValue(), propertiesDiff).put(WIDTH.name(), widthVal);
-            }
-        });
-        dynamicWidthsAndGrowFactors._2.forEach((key, growFactorVal) -> {
-            if (root.equals(key.getKey())
-                && !checkedRootProps.contains(key.getValue())
-                && !equalsEx(growFactorVal, defaultDynamicWidthsAndGrowFactors._2.get(key))) {
-                diff(key.getValue(), propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
-            }
-        });
-        final var dynamicLastSeen = secondTick.getDynamicLastSeenMap();
-        final var defaultDynamicLastSeen = defaultSecondTick.getDynamicLastSeenMap();
-        dynamicLastSeen.forEach((key, lastSeenVal) -> {
-            if (root.equals(key.getKey()) && !checkedRootProps.contains(key.getValue()) && !equalsEx(lastSeenVal, defaultDynamicLastSeen.get(key))) {
-                diff(key.getValue(), propertiesDiff).put(DYNAMIC_LAST_SEEN.name(), lastSeenVal);
-            }
-        });
+        final var widthsAndGrowFactors = secondTick.getDynamicWidthsAndGrowFactors();
+        final var defaultWidthsAndGrowFactors = defaultSecondTick.getDynamicWidthsAndGrowFactors();
+        final var lastSeen = secondTick.getDynamicLastSeenMap();
+        final var defaultLastSeen = defaultSecondTick.getDynamicLastSeenMap();
+        diffDynamic(widthsAndGrowFactors._1, defaultWidthsAndGrowFactors._1, WIDTH.name(), root, checkedRootProps, propertiesDiff);
+        diffDynamic(widthsAndGrowFactors._2, defaultWidthsAndGrowFactors._2, GROW_FACTOR.name(), root, checkedRootProps, propertiesDiff);
+        diffDynamic(lastSeen, defaultLastSeen, DYNAMIC_LAST_SEEN.name(), root, checkedRootProps, propertiesDiff);
         
         // determine whether usedProperties have been changed (as a whole) and add them to the diff if true
         final List<String> visibilityAndOrderPropertiesVal = secondTick.usedProperties(root);
@@ -1272,6 +1254,30 @@ public class CentreUpdater {
                 warnPropRemovalFrom(removedFrom, valueKind, diff, property);
             }
         }
+    }
+
+    /// Iterates `source` (a dynamic-column map) and appends an entry to `propertiesDiff` under `diffName`.
+    /// Done for every key whose value differs from `defaultSource`.
+    /// Skips keys whose root class is not `root` or whose property name appears in `checkedRootProps`.
+    /// Used by [#extendDiffsWithNonIntrusiveDifferences(Map, IAddToResultTickManager, IAddToResultTickManager, Class)].
+    ///
+    private static <V> void diffDynamic(
+        final Map<Pair<Class<?>, String>, V> source,
+        final Map<Pair<Class<?>, String>, V> defaultSource,
+        final String diffName,
+        final Class<AbstractEntity<?>> root,
+        final Set<String> checkedRootProps,
+        final Map<String, Map<String, Object>> propertiesDiff
+    ) {
+        source.forEach((key, value) -> {
+            if (
+                root.equals(key.getKey())
+                && !checkedRootProps.contains(key.getValue())
+                && !equalsEx(value, defaultSource.get(key))
+            ) {
+                diff(key.getValue(), propertiesDiff).put(diffName, value);
+            }
+        });
     }
     
     /**

@@ -817,7 +817,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          */
         void setWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
 
-        /// Sets a `width` for a *dynamic* column.
+        /// Sets a `width` for a *dynamic* column (property).
         /// A dynamic column is emitted at request time by an `IDynamicColumnBuilder` and identified by its group-key value.
         /// Unlike [#setWidth(Class, String, int)], this method bypasses the "checked properties" contract.
         /// Dynamic column keys never appear in [#checkedProperties(Class)].
@@ -825,16 +825,17 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         ///
         void setDynamicWidth(final Class<?> root, final String property, final int width);
 
-        /// Returns a `width` for a *dynamic* column, or empty if no override has been persisted for `property`.
+        /// Returns a `width` for a *dynamic* column (property), or empty if no override has been persisted for `property`.
         /// Callers should fall back to the default emitted by the `IDynamicColumnBuilder` when empty.
         ///
         Optional<Integer> getDynamicWidth(final Class<?> root, final String property);
 
-        /// Sets a `growFactor` for a *dynamic* column. See [#setDynamicWidth(Class, String, int)] for the bypass rationale.
+        /// Sets a `growFactor` for a *dynamic* column (property).
+        /// See [#setDynamicWidth(Class, String, int)] for the bypass rationale.
         ///
         void setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor);
 
-        /// Returns a `growFactor` for a *dynamic* column, or empty if no override has been persisted for `property`.
+        /// Returns a `growFactor` for a *dynamic* column (property), or empty if no override has been persisted for `property`.
         ///
         Optional<Integer> getDynamicGrowFactor(final Class<?> root, final String property);
 

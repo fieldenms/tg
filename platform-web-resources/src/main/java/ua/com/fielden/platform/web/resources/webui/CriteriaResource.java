@@ -836,11 +836,11 @@ public class CriteriaResource extends AbstractWebResource {
     }
 
     private Map<String, List<Map<String, Object>>> createDynamicProperties(
-            final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
-            final IAddToResultTickManager secondTick,
-            final Class<? extends AbstractEntity<?>> root,
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity)
-    {
+        final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
+        final IAddToResultTickManager secondTick,
+        final Class<? extends AbstractEntity<?>> root,
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity
+    ) {
         final Map<String, List<Map<String, Object>>> dynamicColumns = new LinkedHashMap<>();
         // Keys of dynamic columns whose width / growFactor was actually overridden by user and are present in result-set.
         final Set<String> usedDynamicKeys = new HashSet<>();
@@ -850,8 +850,7 @@ public class CriteriaResource extends AbstractWebResource {
                     .ifPresent(config -> {
                         final List<Map<String, Object>> built = config.build();
                         // Override default width / growFactor for each dynamic column from previously persisted values, if any.
-                        // The per-column key is the group-property value (e.g. dateGroupKey for RosterCalendar).
-                        // See DynamicColumn.DYN_COL_GROUP_PROP_VALUE.
+                        // The per-column key is the group-property value - see DynamicColumn.DYN_COL_GROUP_PROP_VALUE.
                         built.forEach(col -> {
                             final Object groupPropValue = col.get(DYN_COL_GROUP_PROP_VALUE);
                             if (groupPropValue instanceof CharSequence) {
@@ -890,11 +889,11 @@ public class CriteriaResource extends AbstractWebResource {
     /// Day arithmetic uses Joda `Days.daysBetween` in [DateTimeZone#getDefault] time-zone.
     ///
     private static void refreshAndEvictDynamicEntries(
-            final IAddToResultTickManager secondTick,
-            final Class<? extends AbstractEntity<?>> root,
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
-            final Set<String> usedDynamicKeys)
-    {
+        final IAddToResultTickManager secondTick,
+        final Class<? extends AbstractEntity<?>> root,
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
+        final Set<String> usedDynamicKeys
+    ) {
         final var nowMillis = currentTimeMillis();
         final var now = new DateTime(nowMillis);
         final var widthsAndGrowFactors = secondTick.getDynamicWidthsAndGrowFactors();
