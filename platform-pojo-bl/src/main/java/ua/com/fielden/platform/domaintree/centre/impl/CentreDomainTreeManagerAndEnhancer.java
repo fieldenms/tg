@@ -773,9 +773,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
 
         @Override
-        public IAddToResultTickManager setDynamicWidth(final Class<?> root, final String property, final int width) {
+        public void setDynamicWidth(final Class<?> root, final String property, final int width) {
             base().setDynamicWidth(enhancer().getManagedType(root), property, width);
-            return this;
         }
 
         @Override
@@ -784,9 +783,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
 
         @Override
-        public IAddToResultTickManager setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor) {
+        public void setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor) {
             base().setDynamicGrowFactor(enhancer().getManagedType(root), property, growFactor);
-            return this;
         }
 
         @Override
@@ -807,9 +805,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
 
         @Override
-        public IAddToResultTickManager setDynamicLastSeen(final Class<?> root, final String property, final long lastSeenMillis) {
+        public void setDynamicLastSeen(final Class<?> root, final String property, final long lastSeenMillis) {
             base().setDynamicLastSeen(enhancer().getManagedType(root), property, lastSeenMillis);
-            return this;
         }
 
         @Override

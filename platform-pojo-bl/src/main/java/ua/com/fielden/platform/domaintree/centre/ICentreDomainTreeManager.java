@@ -823,7 +823,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /// Dynamic column keys never appear in [#checkedProperties(Class)].
         /// They would otherwise trigger a `DomainTreeException` in strict mode.
         ///
-        IAddToResultTickManager setDynamicWidth(final Class<?> root, final String property, final int width);
+        void setDynamicWidth(final Class<?> root, final String property, final int width);
 
         /// Returns a `width` for a *dynamic* column, or empty if no override has been persisted for `property`.
         /// Callers should fall back to the default emitted by the `IDynamicColumnBuilder` when empty.
@@ -832,7 +832,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
         /// Sets a `growFactor` for a *dynamic* column. See [#setDynamicWidth(Class, String, int)] for the bypass rationale.
         ///
-        IAddToResultTickManager setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor);
+        void setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor);
 
         /// Returns a `growFactor` for a *dynamic* column, or empty if no override has been persisted for `property`.
         ///
@@ -853,7 +853,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /// Records `lastSeenMillis` for a *dynamic* column (property).
         /// Used by the eviction sweep to detect entries, whose corresponding dynamic column has not been emitted for long enough.
         ///
-        IAddToResultTickManager setDynamicLastSeen(final Class<?> root, final String property, final long lastSeenMillis);
+        void setDynamicLastSeen(final Class<?> root, final String property, final long lastSeenMillis);
 
         /// Returns the last-seen milliseconds for a *dynamic* column (property), or empty if no millis have been recorded.
         ///

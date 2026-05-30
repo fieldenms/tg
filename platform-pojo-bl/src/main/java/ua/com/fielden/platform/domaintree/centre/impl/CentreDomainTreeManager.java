@@ -686,9 +686,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         /// Bypasses the "checked properties" contract because dynamic column keys never appear in [#checkedProperties(Class)].
         ///
         private final EnhancementPropertiesMap<Integer> dynamicPropertiesWidths;
+        /// Grow factor overrides for *dynamic* columns (properties).
+        /// Emitted at centre Run / Refresh time by an `IDynamicColumnBuilder`, keyed by the column's group-key value.
+        /// Bypasses the "checked properties" contract because dynamic column keys never appear in [#checkedProperties(Class)].
+        ///
         private final EnhancementPropertiesMap<Integer> dynamicPropertiesGrowFactors;
         /// Per-key date millis, recorded for *dynamic* columns (properties).
-        /// Needed for eviction of *dynamic* column (property) widths, unused for a long time.
+        /// Needed for eviction of *dynamic* column (property) widths / grow factors, unused for a long time.
         ///
         private final EnhancementPropertiesMap<Long> dynamicPropertiesLastSeen;
         private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
@@ -815,9 +819,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         @Override
-        public IAddToResultTickManager setDynamicWidth(final Class<?> root, final String property, final int width) {
+        public void setDynamicWidth(final Class<?> root, final String property, final int width) {
             dynamicPropertiesWidths.put(key(root, property), width);
-            return this;
         }
 
         @Override
@@ -826,9 +829,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         @Override
-        public IAddToResultTickManager setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor) {
+        public void setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor) {
             dynamicPropertiesGrowFactors.put(key(root, property), growFactor);
-            return this;
         }
 
         @Override
@@ -852,9 +854,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         @Override
-        public IAddToResultTickManager setDynamicLastSeen(final Class<?> root, final String property, final long lastSeenMillis) {
+        public void setDynamicLastSeen(final Class<?> root, final String property, final long lastSeenMillis) {
             dynamicPropertiesLastSeen.put(key(root, property), lastSeenMillis);
-            return this;
         }
 
         @Override
