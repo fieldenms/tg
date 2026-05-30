@@ -31,7 +31,6 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js';
 import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
-import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 

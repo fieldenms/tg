@@ -7,7 +7,6 @@ import "/resources/polymer/@polymer/paper-styles/shadow.js";
 
 import '/resources/element_loader/tg-element-loader.js';
 import { TgReflector } from '/app/tg-reflector.js';
-import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -282,4 +281,5 @@ Polymer({
         }
         return true;
     }
+
 });

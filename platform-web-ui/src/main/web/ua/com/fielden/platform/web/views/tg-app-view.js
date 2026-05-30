@@ -12,7 +12,6 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
 import { TgAppAnimationBehavior } from '/resources/views/tg-app-animation-behavior.js'; 
-import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 const template = html`
     <style>

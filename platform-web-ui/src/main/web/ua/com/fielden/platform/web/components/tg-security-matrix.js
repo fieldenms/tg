@@ -500,7 +500,6 @@ Polymer({
         return this._masterDom()._ajaxSaver();
     },
 
-
     /**
      * The validator component.
      */
