@@ -22,6 +22,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.areDifferent;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -821,7 +822,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         @Override
         public Optional<Integer> getDynamicWidth(final Class<?> root, final String property) {
-            return dynamicPropertiesWidths.containsKey(key(root, property)) ? Optional.of(dynamicPropertiesWidths.get(key(root, property))) : Optional.empty();
+            return ofNullable(dynamicPropertiesWidths.get(key(root, property)));
         }
 
         @Override
@@ -832,7 +833,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         @Override
         public Optional<Integer> getDynamicGrowFactor(final Class<?> root, final String property) {
-            return dynamicPropertiesGrowFactors.containsKey(key(root, property)) ? Optional.of(dynamicPropertiesGrowFactors.get(key(root, property))) : Optional.empty();
+            return ofNullable(dynamicPropertiesGrowFactors.get(key(root, property)));
         }
 
         @Override
@@ -841,7 +842,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         @Override
-        public void setDynamicWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors) {
+        public void setDynamicWidthsAndGrowFactors(
+            final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors
+        ) {
             dynamicPropertiesWidths.clear();
             dynamicPropertiesWidths.putAll(widthsAndGrowFactors._1);
             dynamicPropertiesGrowFactors.clear();
@@ -856,7 +859,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         @Override
         public Optional<Long> getDynamicLastSeen(final Class<?> root, final String property) {
-            return dynamicPropertiesLastSeen.containsKey(key(root, property)) ? Optional.of(dynamicPropertiesLastSeen.get(key(root, property))) : Optional.empty();
+            return ofNullable(dynamicPropertiesLastSeen.get(key(root, property)));
         }
 
         @Override
@@ -923,7 +926,18 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         @Override
         public int hashCode() {
-            return 31 * super.hashCode() + Objects.hash(propertiesGrowFactors, propertiesWidths, dynamicPropertiesWidths, dynamicPropertiesGrowFactors, dynamicPropertiesLastSeen, rootsListsOfOrderings, pageCapacity, maxPageCapacity, visibleRowsCount, numberOfHeaderLines);
+            return 31 * super.hashCode() + Objects.hash(
+                propertiesGrowFactors,
+                propertiesWidths,
+                dynamicPropertiesWidths,
+                dynamicPropertiesGrowFactors,
+                dynamicPropertiesLastSeen,
+                rootsListsOfOrderings,
+                pageCapacity,
+                maxPageCapacity,
+                visibleRowsCount,
+                numberOfHeaderLines
+            );
         }
 
         @Override

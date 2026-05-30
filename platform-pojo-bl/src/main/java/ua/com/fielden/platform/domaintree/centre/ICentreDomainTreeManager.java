@@ -817,14 +817,16 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          */
         void setWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
 
-        /// Sets a `width` for a *dynamic* column (one emitted at request time by an `IDynamicColumnBuilder`, identified by its group-key value).
-        /// Unlike [#setWidth(Class, String, int)], this method bypasses the "checked properties" contract:
-        /// dynamic column keys never appear in [#checkedProperties(Class)] and would otherwise trigger a `DomainTreeException` in strict mode.
+        /// Sets a `width` for a *dynamic* column.
+        /// A dynamic column is emitted at request time by an `IDynamicColumnBuilder` and identified by its group-key value.
+        /// Unlike [#setWidth(Class, String, int)], this method bypasses the "checked properties" contract.
+        /// Dynamic column keys never appear in [#checkedProperties(Class)].
+        /// They would otherwise trigger a `DomainTreeException` in strict mode.
         ///
         IAddToResultTickManager setDynamicWidth(final Class<?> root, final String property, final int width);
 
         /// Returns a `width` for a *dynamic* column, or empty if no override has been persisted for `property`.
-        /// Callers should fall back to the default emitted by the [IDynamicColumnBuilder] when empty.
+        /// Callers should fall back to the default emitted by the `IDynamicColumnBuilder` when empty.
         ///
         Optional<Integer> getDynamicWidth(final Class<?> root, final String property);
 
@@ -836,13 +838,17 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         ///
         Optional<Integer> getDynamicGrowFactor(final Class<?> root, final String property);
 
-        /// Returns dynamic column widths and grow factors to facilitate exact copy through [#setDynamicWidthsAndGrowFactors(T2)] method.
+        /// Returns dynamic column widths and grow factors.
+        /// Facilitates exact copy through [#setDynamicWidthsAndGrowFactors(T2)].
         ///
         T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> getDynamicWidthsAndGrowFactors();
 
-        /// Sets dynamic column widths and grow factors to facilitate full overriding of that information; need to get information using [#getDynamicWidthsAndGrowFactors()] method.
+        /// Sets dynamic column widths and grow factors to facilitate full overriding of that information.
+        /// Use [#getDynamicWidthsAndGrowFactors()] to capture the current state first.
         ///
-        void setDynamicWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
+        void setDynamicWidthsAndGrowFactors(
+            final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors
+        );
 
         /// Records `lastSeenMillis` for a *dynamic* column (property).
         /// Used by the eviction sweep to detect entries, whose corresponding dynamic column has not been emitted for long enough.

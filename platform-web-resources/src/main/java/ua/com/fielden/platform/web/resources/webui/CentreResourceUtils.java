@@ -391,7 +391,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     private static Map<String, Map<String, Integer>> createColumnWidths(final IAddToResultTickManager secondTick, final Class<?> root) {
-        // Only static (checked) properties are emitted: dynamic-column overrides are baked into each `dynamicColumns.*Columns` entry by `CriteriaResource.createDynamicProperties` and reach the client via the per-column `[[item.width]]` / `[[item.growFactor]]` bindings, so they don't need a second pass through this payload.
+        // Only static (checked) properties are emitted.
+        // Dynamic-column overrides are baked into each `dynamicColumns.*Columns` entry.
+        // See `CriteriaResource.createDynamicProperties` for that.
+        // They reach the client via the per-column `[[item.width]]` / `[[item.growFactor]]` bindings.
+        // So they don't need a second pass through this payload.
         return secondTick.checkedProperties(root)
                .stream()
                .map(property -> Pair.pair(

@@ -35,7 +35,8 @@ public class CentreColumnWidthConfigUpdaterProducer extends DefaultEntityProduce
                 final long nowMillis = currentTimeMillis();
                 columnParameters.entrySet().forEach(entry -> {
                     // A property is "checked" iff it was declared via .addProp(...) on the centre DSL.
-                    // Dynamic columns (emitted at request time by an IDynamicColumnBuilder) never appear in checkedProperties, so they are routed to the dynamic maps.
+                    // Dynamic columns are emitted at request time by an IDynamicColumnBuilder.
+                    // They never appear in checkedProperties, so they are routed to the dynamic maps.
                     final boolean isDynamic = !centreManager.getSecondTick().checkedProperties(root).contains(entry.getKey());
                     if (entry.getValue().containsKey("width")) {
                         if (isDynamic) {
@@ -51,7 +52,8 @@ public class CentreColumnWidthConfigUpdaterProducer extends DefaultEntityProduce
                             centreManager.getSecondTick().setGrowFactor(root, entry.getKey(), entry.getValue().get("growFactor"));
                         }
                     }
-                    // Initialise last-seen millis for dynamic columns, so the eviction sweep has a starting value from the first resize.
+                    // Initialise last-seen millis for dynamic columns.
+                    // Gives the eviction sweep a starting value from the first resize.
                     if (isDynamic) {
                         centreManager.getSecondTick().setDynamicLastSeen(root, entry.getKey(), nowMillis);
                     }

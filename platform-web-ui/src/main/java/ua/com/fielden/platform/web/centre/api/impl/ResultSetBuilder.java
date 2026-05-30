@@ -221,7 +221,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     /// Sets the natural width and leaves the column **flexible** (`isFlexible = true`).
-    /// `EntityCentre.calculateGrowFactors` will later assign a per-column `growFactor` proportional to its width across flexible columns.
+    /// `EntityCentre.calculateGrowFactors` will later assign a per-column `growFactor`.
+    /// The factor is proportional to the column's width across the set of flexible columns.
     /// So, the column may grow to absorb leftover horizontal space.
     /// (`minWidth` here is the user-supplied *natural width* for the flexible case — it is **not** the resize floor.
     /// That is `PropertyColumnElement.resizeFloor(width)`.).

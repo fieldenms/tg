@@ -27,9 +27,11 @@ import static ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColu
 /// - [#width(int)] → rigid (`growFactor = 0`); the column never grows beyond its natural width.
 /// - [#minWidth(int)] → flexible (`growFactor` left at the default `1`); the column may grow to absorb leftover horizontal space.
 ///
-/// At render time the CSS `min-width` of the cell is set from the natural width (see `tg-entity-grid-inspector._calcColumnHeaderStyle`).
+/// At render time the CSS `min-width` of the cell is set from the natural width.
+/// See `tg-entity-grid-inspector._calcColumnHeaderStyle`.
 /// So a column cannot be squeezed below its natural width by flex layout.
-/// The separate "column min-width" attribute — [#DYN_COL_MIN_WIDTH] from [#getResizeFloor()] — is **only** the *drag-resize floor*.
+/// The separate "column min-width" attribute is **only** the *drag-resize floor*.
+/// It is emitted under [#DYN_COL_MIN_WIDTH] from [#getResizeFloor()].
 /// It is capped at [PropertyColumnElement#MIN_COLUMN_WIDTH] (16px).
 /// It is consumed solely by the JS resize handler (`_trackColumnSize`) to bound the new width when the user drags a column edge.
 ///
@@ -52,7 +54,8 @@ public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColum
 
     private String title;
     private Optional<String> desc = Optional.empty();
-    /// The column's natural width. Used both as the CSS `min-width` (preventing flex shrink) and as the starting `width` of the cell.
+    /// The column's natural width.
+    /// Used both as the CSS `min-width` (preventing flex shrink) and as the starting `width` of the cell.
     /// Written by [#width(int)] (rigid) and by [#minWidth(int)] (flexible) — both setters target the same field.
     ///
     private int width = DEFAULT_COLUMN_WIDTH;
@@ -92,7 +95,8 @@ public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColum
 
     /// Sets the natural width and leaves the column **flexible** (`growFactor` stays at its default `1`).
     /// The column will render at `minWidth` pixels and may grow to absorb leftover horizontal space.
-    /// Once the user manually resizes such a column, its `growFactor` is set to `0`, persisting the column as rigid from that point on.
+    /// Once the user manually resizes such a column, its `growFactor` is set to `0`.
+    /// That persists the column as rigid from that point on.
     /// `minWidth` here is the user-supplied *natural width* for the flexible case — it is **not** the drag-resize floor.
     /// That is always [PropertyColumnElement#MIN_COLUMN_WIDTH] for any reasonable width.
     ///

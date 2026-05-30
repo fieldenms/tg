@@ -6,7 +6,8 @@ package ua.com.fielden.platform.web.centre.api.dynamic_columns;
 /// - [#width(int)] → rigid; the column stays at `width` pixels regardless of EGI size.
 /// - [#minWidth(int)] → flexible; the column starts at `width` pixels and may grow to absorb leftover space.
 ///
-/// In neither case does this setter affect the drag-resize floor — the user can manually resize to roughly `MIN_COLUMN_WIDTH` (16 px).
+/// In neither case does this setter affect the drag-resize floor.
+/// The user can manually resize to roughly `MIN_COLUMN_WIDTH` (16 px).
 /// The naming `minWidth` reflects the user's intent ("at least this wide, then flex") rather than a CSS constraint.
 ///
 /// Mirrors `ResultSetBuilder.width(int)` / `ResultSetBuilder.minWidth(int)` for static columns.

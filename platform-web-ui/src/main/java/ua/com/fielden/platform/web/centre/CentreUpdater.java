@@ -95,7 +95,9 @@ public class CentreUpdater {
      *
      */
     enum MetaValueType {
-        VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, WIDTH, GROW_FACTOR, AUTOCOMPLETE_ACTIVE_ONLY, DYNAMIC_LAST_SEEN
+        VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP,
+        DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, WIDTH, GROW_FACTOR,
+        AUTOCOMPLETE_ACTIVE_ONLY, DYNAMIC_LAST_SEEN
     }
     
     /**
@@ -1167,18 +1169,24 @@ public class CentreUpdater {
         // extract dynamic-column widths / grow factors / last-seen millis and add them to the diff
         // Dynamic columns are emitted at request time by an IDynamicColumnBuilder, identified by their group-key value.
         // Their keys never appear in checkedProperties(root), so they are processed separately.
-        // Any value present in the dynamic maps is considered an override (the "default" is computed by the dynamic builder at emission time and is not available here).
-        // Defensive filter: skip keys that *do* appear in checkedProperties to avoid colliding with the static branch above on the rare case of name reuse.
-        final Set<String> checkedRootProps = new HashSet<>(secondTick.checkedProperties(root));
-        final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> dynamicWidthsAndGrowFactors = secondTick.getDynamicWidthsAndGrowFactors();
-        final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> defaultDynamicWidthsAndGrowFactors = defaultSecondTick.getDynamicWidthsAndGrowFactors();
+        // Any value present in the dynamic maps is considered an override.
+        // The "default" is computed by the dynamic builder at emission time and is not available here.
+        // Defensive filter: skip keys that *do* appear in checkedProperties.
+        // Avoids colliding with the static branch above on the rare case of name reuse.
+        final var checkedRootProps = new HashSet<>(secondTick.checkedProperties(root));
+        final var dynamicWidthsAndGrowFactors = secondTick.getDynamicWidthsAndGrowFactors();
+        final var defaultDynamicWidthsAndGrowFactors = defaultSecondTick.getDynamicWidthsAndGrowFactors();
         dynamicWidthsAndGrowFactors._1.forEach((key, widthVal) -> {
-            if (root.equals(key.getKey()) && !checkedRootProps.contains(key.getValue()) && !equalsEx(widthVal, defaultDynamicWidthsAndGrowFactors._1.get(key))) {
+            if (root.equals(key.getKey())
+                && !checkedRootProps.contains(key.getValue())
+                && !equalsEx(widthVal, defaultDynamicWidthsAndGrowFactors._1.get(key))) {
                 diff(key.getValue(), propertiesDiff).put(WIDTH.name(), widthVal);
             }
         });
         dynamicWidthsAndGrowFactors._2.forEach((key, growFactorVal) -> {
-            if (root.equals(key.getKey()) && !checkedRootProps.contains(key.getValue()) && !equalsEx(growFactorVal, defaultDynamicWidthsAndGrowFactors._2.get(key))) {
+            if (root.equals(key.getKey())
+                && !checkedRootProps.contains(key.getValue())
+                && !equalsEx(growFactorVal, defaultDynamicWidthsAndGrowFactors._2.get(key))) {
                 diff(key.getValue(), propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
             }
         });
@@ -1310,7 +1318,8 @@ public class CentreUpdater {
                 // The presence of DYNAMIC_LAST_SEEN marks this entry as a *dynamic column* override.
                 // The producer always writes lastSeen alongside any dynamic width/growFactor resize.
                 // Route WIDTH / GROW_FACTOR / DYNAMIC_LAST_SEEN to the dynamic maps.
-                // If the key has become orphan or stale, the eviction sweep in `CriteriaResource.createDynamicProperties` will discard it.
+                // If the key is orphan or stale, the eviction sweep discards it.
+                // See `CriteriaResource.refreshAndEvictDynamicEntries`.
                 if (diff.containsKey(WIDTH.name())) {
                     targetCentre.getSecondTick().setDynamicWidth(root, property, (int) diff.get(WIDTH.name()));
                 }

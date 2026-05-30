@@ -685,7 +685,12 @@ public class CriteriaResource extends AbstractWebResource {
                         device(),
                         sharingModel);
 
-                pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext, previouslyRunCentre.getSecondTick(), centre.getEntityType(), previouslyRunCriteriaEntity));
+                pair.getKey().put("dynamicColumns", createDynamicProperties(
+                    resPropsWithContext,
+                    previouslyRunCentre.getSecondTick(),
+                    centre.getEntityType(),
+                    previouslyRunCriteriaEntity
+                ));
 
                 Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
                         centre,
@@ -845,7 +850,8 @@ public class CriteriaResource extends AbstractWebResource {
                     .ifPresent(config -> {
                         final List<Map<String, Object>> built = config.build();
                         // Override default width / growFactor for each dynamic column from previously persisted values, if any.
-                        // The per-column key is the group-property value (e.g. dateGroupKey for RosterCalendar) — see DynamicColumn.DYN_COL_GROUP_PROP_VALUE.
+                        // The per-column key is the group-property value (e.g. dateGroupKey for RosterCalendar).
+                        // See DynamicColumn.DYN_COL_GROUP_PROP_VALUE.
                         built.forEach(col -> {
                             final Object groupPropValue = col.get(DYN_COL_GROUP_PROP_VALUE);
                             if (groupPropValue instanceof CharSequence) {
@@ -875,7 +881,8 @@ public class CriteriaResource extends AbstractWebResource {
     }
 
     /// Refreshes the `lastSeen` millis for every dynamic column key used in the current emission.
-    /// Discards any other persisted entries (width / growFactor / lastSeen), that have not been used for longer than [#DYNAMIC_ENTRY_EVICTION_DAYS] days.
+    /// Discards any other persisted entries (width / growFactor / lastSeen) that have not been used recently.
+    /// "Recently" means within [#DYNAMIC_ENTRY_EVICTION_DAYS] days.
     ///
     /// The bump is performed on every emission, that uses a dynamic width override.
     /// An actively used key should never age out simply because no eviction happened to fire at the same time.
