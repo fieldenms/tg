@@ -1250,8 +1250,9 @@ Polymer({
     /**
      * Adjusts widths for columns based on current widths values, which could be altered by dragging column right border.
      *
-     * `columnWidths` is keyed only by static (DSL-checked) property names; dynamic columns receive their persisted width / growFactor
-     * directly from each `dynamicColumns.*Columns` entry via the `[[item.width]]` / `[[item.growFactor]]` bindings, so they are skipped here.
+     * `columnWidths` is keyed only by static (DSL-checked) property names.
+     * Dynamic columns receive their persisted width / growFactor directly from each `dynamicColumns.*Columns` entry.
+     * This is done via the `[[item.width]]` / `[[item.growFactor]]` bindings, so dynamic columns are skipped here.
      */
     adjustColumnWidths: function (columnWidths) {
         this.columns.filter(column => !column.collectionalProperty).forEach((column, columnIndex) => {
