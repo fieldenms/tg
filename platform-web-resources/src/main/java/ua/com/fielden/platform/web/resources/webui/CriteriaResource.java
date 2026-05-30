@@ -916,8 +916,10 @@ public class CriteriaResource extends AbstractWebResource {
 
         // Persist only when there is something to do: either a key to bump or a key to remove.
         // Scanning above is purely in-memory, so if there is "nothing to do" - means no persistent storage actions.
+        // The persist uses `adjustCentreSilently`, which writes to PREVIOUSLY_RUN, FRESH, and SAVED.
+        // Neither the refresh indicator nor the SAVE button picks up this housekeeping mutation.
         if (!staleKeys.isEmpty() || !usedDynamicKeys.isEmpty()) {
-            criteriaEntity.adjustColumnWidths(centreManager -> {
+            criteriaEntity.adjustCentreSilently(centreManager -> {
                 staleKeys.forEach(key -> centreManager.getSecondTick().removeDynamicEntry(root, key));
                 usedDynamicKeys.forEach(key -> centreManager.getSecondTick().setDynamicLastSeen(root, key, nowMillis));
             });
