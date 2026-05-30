@@ -874,7 +874,14 @@ public class CriteriaResource extends AbstractWebResource {
         // Performance: `dynamicColumns` is empty when dynamic builder produced no output (or none is configured).
         // So for centres without any dynamic columns this method has identical cost to before.
         if (!dynamicColumns.isEmpty()) {
-            refreshAndEvictDynamicEntries(secondTick, root, criteriaEntity, usedDynamicKeys);
+            refreshAndEvictDynamicEntries(
+                secondTick,
+                root,
+                tickConsumer -> criteriaEntity.adjustCentreSilently(
+                        centreManager -> tickConsumer.accept(centreManager.getSecondTick())
+                ),
+                usedDynamicKeys
+            );
         }
         return dynamicColumns;
     }
@@ -888,10 +895,15 @@ public class CriteriaResource extends AbstractWebResource {
     /// Eviction also covers the "orphan override" case — a persisted entry whose corresponding column is no longer emitted.
     /// Day arithmetic uses Joda `Days.daysBetween` in [DateTimeZone#getDefault] time-zone.
     ///
-    private static void refreshAndEvictDynamicEntries(
+    /// `silentTickAdjuster` receives a `Consumer<IAddToResultTickManager>` to apply silently across surrogate centres.
+    /// Production wires it to `criteriaEntity::adjustCentreSilently` (so the mutation lands on `FRESH`, `PREVIOUSLY_RUN` and `SAVED`).
+    /// Tests can pass a lambda that captures invocations and/or applies the mutation directly to a single tick.
+    /// Package-private for testability.
+    ///
+    static void refreshAndEvictDynamicEntries(
         final IAddToResultTickManager secondTick,
         final Class<? extends AbstractEntity<?>> root,
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
+        final Consumer<Consumer<IAddToResultTickManager>> silentTickAdjuster,
         final Set<String> usedDynamicKeys
     ) {
         final var nowMillis = currentTimeMillis();
@@ -922,12 +934,10 @@ public class CriteriaResource extends AbstractWebResource {
 
         // Persist only when there is something to do: either a key to bump or a key to remove.
         // Scanning above is purely in-memory, so if there is "nothing to do" - means no persistent storage actions.
-        // The persist uses `adjustCentreSilently`, which writes to PREVIOUSLY_RUN, FRESH, and SAVED.
-        // Neither the refresh indicator nor the SAVE button picks up this housekeeping mutation.
         if (!staleKeys.isEmpty() || !usedDynamicKeys.isEmpty()) {
-            criteriaEntity.adjustCentreSilently(centreManager -> {
-                staleKeys.forEach(key -> centreManager.getSecondTick().removeDynamicEntry(root, key));
-                usedDynamicKeys.forEach(key -> centreManager.getSecondTick().setDynamicLastSeen(root, key, nowMillis));
+            silentTickAdjuster.accept(tick -> {
+                staleKeys.forEach(key -> tick.removeDynamicEntry(root, key));
+                usedDynamicKeys.forEach(key -> tick.setDynamicLastSeen(root, key, nowMillis));
             });
         }
     }
