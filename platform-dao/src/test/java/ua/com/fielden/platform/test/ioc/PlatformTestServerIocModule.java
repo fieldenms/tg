@@ -9,6 +9,7 @@ import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -71,6 +72,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(Ticker.class).to(TickerForSessionCache.class);
         bind(IDates.class).to(DatesForTesting.class);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
+        bind(IApplicationSettings.class).to(ApplicationSettingsForTesting.class);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
 
@@ -148,6 +150,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(IEntityTwo.class).to(EntityTwoDao.class);
         bind(EntityThreeCo.class).to(EntityThreeDao.class);
         bind(IUnionEntity.class).to(UnionEntityDao.class);
+        bind(TgNoopActionCo.class).to(TgNoopActionDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);

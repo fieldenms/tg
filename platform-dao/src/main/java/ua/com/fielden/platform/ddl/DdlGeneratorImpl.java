@@ -37,7 +37,7 @@ class DdlGeneratorImpl implements IDdlGenerator {
 
     @Override
     public List<String> generateDatabaseDdl(final Dialect dialect, final boolean withFk) {
-        return generateDatabaseDdl_(dialect, withFk, entityTypes.get().stream());
+        return generatePhasedDatabaseDdl_(dialect, withFk, entityTypes.get().stream()).flattenWithMarkers();
     }
 
     @Override
@@ -47,12 +47,12 @@ class DdlGeneratorImpl implements IDdlGenerator {
             final Class<? extends AbstractEntity<?>> type,
             final Class<? extends AbstractEntity<?>>... types)
     {
-        return generateDatabaseDdl_(dialect, withFk, Stream.concat(Stream.of(type), Arrays.stream(types)));
+        return generatePhasedDatabaseDdl_(dialect, withFk, Stream.concat(Stream.of(type), Arrays.stream(types))).flattenWithMarkers();
     }
 
     @Override
     public List<String> generateDatabaseDdl(final Dialect dialect, final Collection<Class<? extends AbstractEntity<?>>> types) {
-        return generateDatabaseDdl_(dialect, true, types.stream());
+        return generatePhasedDatabaseDdl_(dialect, true, types.stream()).flattenWithMarkers();
     }
 
     @Override
@@ -61,25 +61,42 @@ class DdlGeneratorImpl implements IDdlGenerator {
             final boolean withFk,
             final Collection<Class<? extends AbstractEntity<?>>> types)
     {
-        return generateDatabaseDdl_(dialect, withFk, types.stream());
+        return generatePhasedDatabaseDdl_(dialect, withFk, types.stream()).flattenWithMarkers();
     }
 
-    private List<String> generateDatabaseDdl_(final Dialect dialect, final boolean withFk, final Stream<? extends Class<? extends AbstractEntity<?>>> types) {
+    @Override
+    public PhasedDdl generatePhasedDatabaseDdl(final Dialect dialect, final boolean withFk) {
+        return generatePhasedDatabaseDdl_(dialect, withFk, entityTypes.get().stream());
+    }
+
+    @Override
+    public PhasedDdl generatePhasedDatabaseDdl(
+            final Dialect dialect,
+            final boolean withFk,
+            final Collection<Class<? extends AbstractEntity<?>>> types)
+    {
+        return generatePhasedDatabaseDdl_(dialect, withFk, types.stream());
+    }
+
+    private PhasedDdl generatePhasedDatabaseDdl_(final Dialect dialect, final boolean withFk, final Stream<? extends Class<? extends AbstractEntity<?>>> types) {
         final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibernateTypeMappings, dialect);
 
         final Set<String> ddlTables = new LinkedHashSet<>();
+        final Set<String> ddlIndices = new LinkedHashSet<>();
         final Set<String> ddlFKs = new LinkedHashSet<>();
         types.filter(EntityUtils::isPersistentEntityType).forEach(entityType -> {
             final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
             ddlTables.add(tableDefinition.createTableSchema(dialect));
             ddlTables.add(tableDefinition.createPkSchema(dialect));
-            ddlTables.addAll(tableDefinition.createIndicesSchema(dialect));
+            ddlIndices.addAll(tableDefinition.createIndicesSchema(dialect));
             if (withFk) {
                 ddlFKs.addAll(tableDefinition.createFkSchema(dialect));
             }
         });
 
-        return Stream.concat(ddlTables.stream(), ddlFKs.stream())
-                .collect(toImmutableList());
+        return new PhasedDdl(
+                ddlTables.stream().collect(toImmutableList()),
+                ddlIndices.stream().collect(toImmutableList()),
+                ddlFKs.stream().collect(toImmutableList()));
     }
 }

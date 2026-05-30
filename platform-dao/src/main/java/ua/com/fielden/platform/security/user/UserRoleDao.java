@@ -6,15 +6,18 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
@@ -51,14 +54,14 @@ public class UserRoleDao extends CommonEntityDao<UserRole> implements UserRoleCo
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
         return getAllEntities(from(model).with(orderBy).model());
     }
-    
+
     @Override
     @SessionRequired
     @Authorise(UserRole_CanSave_Token.class)
-    public UserRole save(final UserRole entity) {
-        return super.save(entity);
+    public Either<Long, UserRole> save(final UserRole entity, final Optional<fetch<UserRole>> maybeFetch) {
+        return super.save(entity, maybeFetch);
     }
-    
+
     @Override
     @SessionRequired
     @Authorise(UserRole_CanDelete_Token.class)

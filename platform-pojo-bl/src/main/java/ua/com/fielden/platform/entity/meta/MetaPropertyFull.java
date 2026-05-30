@@ -18,6 +18,7 @@ import ua.com.fielden.platform.error.Informative;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -948,13 +949,16 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         }
     }
 
-    /**
-     * Entities of type {@link AbstractFunctionalEntityForCollectionModification} need to be able to relax requiredness for their keys.
-     *
-     * @return
-     */
+    /// Cases where requiredness may be relaxed even though the property is required by definition.
+    ///
+    /// - `AbstractFunctionalEntityForCollectionModification.key`.
+    /// - `AbstractEntity.id` — an `@IsProperty`-overridden `id` with `@CompositeKeyMember` (no `@Optional`)
+    ///   is `requiredByDefinition=true`, but the `id` column is auto-assigned by the database on save and is never edited from the UI or set in model code.
+    ///   Relaxing it is safe (and is what [AbstractEntity#initProperty] and [EntityJsonDeserialiser#deserialiseMetaProperty] both need to do).
+    ///
     private boolean requirednessExceptionRule() {
-        return AbstractEntity.KEY.equals(name) && AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(entity.getType());
+        return AbstractEntity.KEY.equals(name) && AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(entity.getType())
+            || AbstractEntity.ID.equals(name);
     }
 
     @Override

@@ -916,12 +916,13 @@ const TgEntityCentreBehaviorImpl = {
                 }
                 const pageCapacity = result.resultConfig.pageCapacity;
                 this.$.selection_criteria.pageCapacity = pageCapacity;
+                // Must be assigned before allRetrievedEntities so that the dom-repeat over dynamicColumns propagates fresh property / keyProperty / valueProperty to <tg-property-column> elements before tg-egi-cell instances recompute their values from column metadata.
+                this.dynamicColumns = result.dynamicColumns;
                 this.allRenderingHints = result.renderingHints;
                 this.allPrimaryActionIndices = result.primaryActionIndices;
                 this.allSecondaryActionIndices = result.secondaryActionIndices;
                 this.allPropertyActionIndices = result.propertyActionIndices;
                 this.allRetrievedEntities = result.resultEntities;
-                this.dynamicColumns = result.dynamicColumns;
                 this.selectionCriteriaEntity = result.criteriaEntity;
                 this.$.egi.adjustColumnWidths(result.columnWidths);
                 this.$.egi.visibleRowsCount = result.resultConfig.visibleRowsCount;

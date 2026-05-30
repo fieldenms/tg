@@ -79,6 +79,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreContext.CHOSENENTITY_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.CHANGED;
@@ -911,6 +912,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             if (config.withMasterEntity) {
                 context.setMasterEntity(restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, critGenerator, entityFactory, centreContextHolder, 0, device, sharingModel));
             }
+            if (config.withChosenEntity) {
+                context.setChosenEntity(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains(CHOSENENTITY_PROPERTY_NAME) ? centreContextHolder.getChosenEntity() : null);
+            }
             if (config.withComputation()) {
                 context.setComputation(config.computation.get());
             }
@@ -941,6 +945,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
             final Optional<EntityActionConfig> config,
             final String chosenProperty,
+            final AbstractEntity<?> chosenEntity,
             final Map<String, Object> customObject,
             final AbstractEntity<?> instanceBasedContinuation
     ) {
@@ -952,6 +957,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             context.setComputation(config.get().context.get().computation.get());
         }
         context.setChosenProperty(chosenProperty);
+        context.setChosenEntity(chosenEntity);
         context.setCustomObject(customObject);
         context.setInstanceBasedContinuation(instanceBasedContinuation);
         return context;

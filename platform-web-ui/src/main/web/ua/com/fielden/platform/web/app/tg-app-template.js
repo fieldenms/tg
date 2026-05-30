@@ -260,8 +260,27 @@ Polymer({
     listeners: {
         "main-menu": "_showMainMenu",
         "menu-item-selected": "_showView",
+        "tg-menu-search-item-selected": "_onMenuSearchItemSelected",
         "menu-search-list-closed": "_restoreLastFocusedElement",
         "tg-module-menu-closed": "_restoreLastFocusedElement"
+    },
+
+    /**
+     * Listener for `tg-menu-search-item-selected` fired by `tg-menu-search-input` during an F3 global search transition.
+     * Records the F3-target menu path on `tg-app-template`.
+     * `tg-view-with-menu._updatePage` reaches `tg-app-template` via `getParentAnd`.
+     * It uses the recorded path to verify that the URI change it is currently processing corresponds to this F3 navigation.
+     * Only after that verification does it trigger the named-configuration recovery branch.
+     *
+     * The path is recorded so that a value left over from an F3-to-current-page no-op cannot be wrongly consumed by an unrelated later URI change.
+     * Such no-ops happen when `set('_route.path', sameValue)` does not propagate and `_updatePage` therefore never runs.
+     * In that case the path comparison in `_updatePage` simply does not match, and the staleness self-heals on the next `_updatePage`.
+     *
+     * The state is held here — on the single `tg-app-template` instance — rather than on a `tg-view-with-menu` instance.
+     * An F3 search can transition between modules, and the destination's `tg-view-with-menu` is not the one whose subtree hosted the originating event.
+     */
+    _onMenuSearchItemSelected: function (event) {
+        this._pendingMenuSearchPath = event.detail;
     },
 
     _searchMenu: function (event) {

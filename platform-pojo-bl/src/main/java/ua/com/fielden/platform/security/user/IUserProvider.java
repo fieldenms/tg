@@ -2,12 +2,8 @@ package ua.com.fielden.platform.security.user;
 
 import java.util.Optional;
 
-/**
- * An abstraction for accessing a logged in application user.
- * 
- * @author TG Team
- * 
- */
+/// An abstraction for identifying the current application user in the scope of the running thread.
+///
 public interface IUserProvider {
 
     User getUser();

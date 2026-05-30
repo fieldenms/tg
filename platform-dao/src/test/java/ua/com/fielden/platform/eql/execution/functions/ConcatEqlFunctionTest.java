@@ -79,7 +79,7 @@ public class ConcatEqlFunctionTest extends AbstractEqlExecutionTestCase {
     @Test
     public void works_when_the_function_result_is_used_within_other_query_expressions_and_conditions() {
         final var qry = select(TeNamedValuesVector.class).yield().caseWhen().concat().val("a").with().val("bc").end().eq().val("abc").then().val(1).end().as(RESULT).modelAsAggregate();
-        assertEquals(valueOf(1), retrieveResult(qry));
+        assertEquals(1, retrieveResult(qry));
     }
 
 
@@ -94,11 +94,43 @@ public class ConcatEqlFunctionTest extends AbstractEqlExecutionTestCase {
     }
 
     @Test
+    public void works_with_min_integer_value() {
+        final var qry = select().yield().concat().
+                val(Integer.MIN_VALUE).
+                end().as(RESULT).modelAsAggregate();
+        assertEquals(Integer.toString(Integer.MIN_VALUE), retrieveResult(qry));
+    }
+
+    @Test
+    public void works_with_max_integer_value() {
+        final var qry = select().yield().concat().
+                val(Integer.MAX_VALUE).
+                end().as(RESULT).modelAsAggregate();
+        assertEquals(Integer.toString(Integer.MAX_VALUE), retrieveResult(qry));
+    }
+
+    @Test
     public void works_with_long_value() {
         final var qry = select().yield().concat().
-                val(100l).
+                val(100L).
                 end().as(RESULT).modelAsAggregate();
         assertEquals("100", retrieveResult(qry));
+    }
+
+    @Test
+    public void works_with_min_long_value() {
+        final var qry = select().yield().concat().
+                val(Long.MIN_VALUE).
+                end().as(RESULT).modelAsAggregate();
+        assertEquals(Long.toString(Long.MIN_VALUE), retrieveResult(qry));
+    }
+
+    @Test
+    public void works_with_max_long_value() {
+        final var qry = select().yield().concat().
+                val(Long.MAX_VALUE).
+                end().as(RESULT).modelAsAggregate();
+        assertEquals(Long.toString(Long.MAX_VALUE), retrieveResult(qry));
     }
 
     @Test
@@ -301,7 +333,7 @@ public class ConcatEqlFunctionTest extends AbstractEqlExecutionTestCase {
         assertEquals("31/10/2018 01:22:59.999", retrieveResult(qry));
     }
 
-    private static final Date dateWithMilliseconds(final String dateTime) {
+    private static Date dateWithMilliseconds(final String dateTime) {
         try {
             return FORMATTER_WITH_MILLISECONDS.parse(dateTime);
         } catch (ParseException e) {

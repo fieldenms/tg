@@ -8,8 +8,8 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
-import '/resources/editors/tg-entity-editor-result.js'
-import '/resources/serialisation/tg-serialiser.js'
+import '/resources/editors/tg-entity-editor-result.js';
+import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
@@ -74,8 +74,7 @@ const additionalTemplate = html`
             --tg-editor-default-input-layer-display: flex;
         }
     </style>
-    <iron-ajax id="ajaxSearcher" headers="[[_headers]]" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" reject-with-request on-error="_processSearcherError"></iron-ajax>
-    <tg-serialiser id="serialiser"></tg-serialiser>`;
+    <iron-ajax id="ajaxSearcher" headers="[[_headers]]" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" reject-with-request on-error="_processSearcherError"></iron-ajax>`;
 const customLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]"
            disabled$="[[_disabled]]" 
@@ -558,6 +557,7 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], 
 
     constructor () {
         super();
+        this._serialiser = new TgSerialiser();
         this._hasLayer = true;
         this._blurEventHandler = (function (e) {
             this._outFocus(e);
@@ -830,7 +830,7 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], 
                     contextHolder.customObject[AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY] = activeOnlyChanged;
                 }
             }
-            const serialisedSearchQuery = this.$.serialiser.serialise(contextHolder);
+            const serialisedSearchQuery = this._serialiser.serialise(contextHolder);
             this._ignoreInputText = ignoreInputText === true; // capture ignoreInputText for its use in _loadMore
             this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
             this.$.ajaxSearcher.generateRequest();
