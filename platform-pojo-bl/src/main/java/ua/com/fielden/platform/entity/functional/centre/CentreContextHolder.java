@@ -58,6 +58,10 @@ public class CentreContextHolder extends AbstractEntity<String> {
     @Title(value = "Instance-based Continuation", desc = "A custom instance of instance-based continuation in the context to facilitate direct usage in continuation Entity Master.")
     private AbstractEntity<?> instanceBasedContinuation;
 
+    @IsProperty
+    @Title(value = "Chosen Entity", desc = "The entity behind chosenProperty as resolved on the client when withChosenEntity() was opted in.")
+    private AbstractEntity<?> chosenEntity;
+
     @Observable
     public CentreContextHolder setInstanceBasedContinuation(final AbstractEntity<?> value) {
         this.instanceBasedContinuation = value;
@@ -66,6 +70,16 @@ public class CentreContextHolder extends AbstractEntity<String> {
 
     public AbstractEntity<?> getInstanceBasedContinuation() {
         return instanceBasedContinuation;
+    }
+
+    @Observable
+    public CentreContextHolder setChosenEntity(final AbstractEntity<?> chosenEntity) {
+        this.chosenEntity = chosenEntity;
+        return this;
+    }
+
+    public AbstractEntity<?> getChosenEntity() {
+        return chosenEntity;
     }
 
     @Observable

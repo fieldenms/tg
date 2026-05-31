@@ -711,7 +711,8 @@ class ReplaceStep extends Step {
         return new ReplaceStep(this.from, this.from + this.slice.size, doc.slice(this.from, this.to));
     }
     map(mapping) {
-        let from = mapping.mapResult(this.from, 1), to = mapping.mapResult(this.to, -1);
+        let to = mapping.mapResult(this.to, -1);
+        let from = this.from == this.to && ReplaceStep.MAP_BIAS < 0 ? to : mapping.mapResult(this.from, 1);
         if (from.deletedAcross && to.deletedAcross)
             return null;
         return new ReplaceStep(from.pos, Math.max(from.pos, to.pos), this.slice, this.structure);
@@ -750,6 +751,15 @@ class ReplaceStep extends Step {
         return new ReplaceStep(json.from, json.to, Slice.fromJSON(schema, json.slice), !!json.structure);
     }
 }
+/**
+By default, for backwards compatibility, an inserting step
+mapped over an insertion at that same position fill move after
+the inserted content. In a collaborative editing situation, that
+can make redone insertions appear in unexpected places. You can
+set this to -1 to make such mapping keep the step before the
+insertion instead.
+*/
+ReplaceStep.MAP_BIAS = 1;
 Step.jsonID("replace", ReplaceStep);
 /**
 Replace a part of the document with a slice of content, but
@@ -1706,6 +1716,26 @@ function replaceRangeWith(tr, from, to, node) {
 }
 function deleteRange(tr, from, to) {
     let $from = tr.doc.resolve(from), $to = tr.doc.resolve(to);
+    // When the deleted range spans from the start of one textblock to
+    // the start of another one, move out of the start of both blocks.
+    if ($from.parent.isTextblock && $to.parent.isTextblock && $from.start() != $to.start() &&
+        $from.parentOffset == 0 && $to.parentOffset == 0) {
+        let shared = $from.sharedDepth(to), isolated = false;
+        for (let d = $from.depth; d > shared; d--)
+            if ($from.node(d).type.spec.isolating)
+                isolated = true;
+        for (let d = $to.depth; d > shared; d--)
+            if ($to.node(d).type.spec.isolating)
+                isolated = true;
+        if (!isolated) {
+            for (let d = $from.depth; d > 0 && from == $from.start(d); d--)
+                from = $from.before(d);
+            for (let d = $to.depth; d > 0 && to == $to.start(d); d--)
+                to = $to.before(d);
+            $from = tr.doc.resolve(from);
+            $to = tr.doc.resolve(to);
+        }
+    }
     let covered = coveredDepths($from, $to);
     for (let i = 0; i < covered.length; i++) {
         let depth = covered[i], last = i == covered.length - 1;
