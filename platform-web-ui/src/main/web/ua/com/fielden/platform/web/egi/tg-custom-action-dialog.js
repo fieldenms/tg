@@ -30,7 +30,7 @@ import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-
 import { TgBackButtonBehavior } from '/resources/views/tg-back-button-behavior.js'
 import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { UnreportableError, ExpectedError } from '/resources/components/tg-global-error-handler.js';
+import { UnreportableError, ExpectedError, UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
 import { createDialog } from '/resources/egi/tg-dialog-util.js';
@@ -987,6 +987,9 @@ Polymer({
         return this._closeChildren().then(obj => {
             if (this._lastElement.classList.contains('canLeave')) {
                 return this._lastElement.canLeave().catch(reason => {
+                    if (reason instanceof UnexpectedCustomError) {
+                        throw reason;
+                    }
                     // the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
                     // for example, when closing a master for a functional entity, the reason states the need to save changes,
                     // while it is also possible and safe to simple cancel them
