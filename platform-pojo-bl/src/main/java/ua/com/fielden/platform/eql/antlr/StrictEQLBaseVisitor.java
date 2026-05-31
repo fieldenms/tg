@@ -140,7 +140,7 @@ public abstract class StrictEQLBaseVisitor<T> extends AbstractParseTreeVisitor<T
     }
 
     @Override
-    public T visitComparisonOperand_Single(final EQLParser.ComparisonOperand_SingleContext ctx) {
+    public T visitComparisonOperand_Expr(final EQLParser.ComparisonOperand_ExprContext ctx) {
         return defaultVisit();
     }
 
@@ -156,11 +156,6 @@ public abstract class StrictEQLBaseVisitor<T> extends AbstractParseTreeVisitor<T
 
     @Override
     public T visitQuantifiedOperand(final EQLParser.QuantifiedOperandContext ctx) {
-        return defaultVisit();
-    }
-
-    @Override
-    public T visitExprBody(final EQLParser.ExprBodyContext ctx) {
         return defaultVisit();
     }
 
@@ -250,7 +245,12 @@ public abstract class StrictEQLBaseVisitor<T> extends AbstractParseTreeVisitor<T
     }
 
     @Override
-    public T visitExpr(final EQLParser.ExprContext ctx) {
+    public T visitExprCompound(final EQLParser.ExprCompoundContext ctx) {
+        return defaultVisit();
+    }
+
+    @Override
+    public T visitExpr_SingleOperand(final EQLParser.Expr_SingleOperandContext ctx) {
         return defaultVisit();
     }
 
@@ -390,7 +390,7 @@ public abstract class StrictEQLBaseVisitor<T> extends AbstractParseTreeVisitor<T
     }
 
     @Override
-    public T visitOrderByOperand_Single(final EQLParser.OrderByOperand_SingleContext ctx) {
+    public T visitOrderByOperand_Expr(final EQLParser.OrderByOperand_ExprContext ctx) {
         return defaultVisit();
     }
 
@@ -430,7 +430,7 @@ public abstract class StrictEQLBaseVisitor<T> extends AbstractParseTreeVisitor<T
     }
 
     @Override
-    public T visitYieldOperandConcatOfOrderByOperand_Single(final EQLParser.YieldOperandConcatOfOrderByOperand_SingleContext ctx) {
+    public T visitYieldOperandConcatOfOrderByOperand_Expr(final EQLParser.YieldOperandConcatOfOrderByOperand_ExprContext ctx) {
         return defaultVisit();
     }
 

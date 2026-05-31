@@ -61,4 +61,25 @@ public interface IDdlGenerator {
     ///
     List<String> generateDatabaseDdl(Dialect dialect, boolean withFk, Collection<Class<? extends AbstractEntity<?>>> types);
 
+    /// Returns DDL for the application schema, partitioned into phases that should be applied as separate execution batches.
+    ///
+    /// Use this in preference to [#generateDatabaseDdl(Dialect, boolean)] when the caller controls execution
+    /// and can submit each phase as its own JDBC batch.
+    /// This avoids name-resolution races on dialects (notably MS SQL Server with filtered indices)
+    /// where statements within a single submitted batch may be parsed before the metadata effects of preceding statements are visible.
+    ///
+    /// @param withFk controls whether foreign keys will be created;
+    ///               specify `false` to skip foreign keys.
+    ///
+    PhasedDdl generatePhasedDatabaseDdl(Dialect dialect, boolean withFk);
+
+    /// Returns DDL for the specified entity types, partitioned into phases that should be applied as separate execution batches.
+    ///
+    /// @param withFk controls whether foreign keys will be created;
+    ///               specify `false` to skip foreign keys.
+    ///
+    PhasedDdl generatePhasedDatabaseDdl(Dialect dialect,
+                                        boolean withFk,
+                                        Collection<Class<? extends AbstractEntity<?>>> types);
+
 }

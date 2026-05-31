@@ -34,7 +34,8 @@ mvn test -Dmaven.javadoc.skip=true -Dfork.count=4 -DdatabaseUri.prefix=//localho
 # Args: release-version, next-snapshot, db-uri-prefix, fork-count, base-branch
 ```
 Release follows Git Flow: create release branch → set version → merge to master → tag → build & deploy → merge back → set next SNAPSHOT → push.
-Includes automatic rollback on failure. Requires Maven deploy credentials and Git push privileges.
+Includes automatic rollback on failure.
+Requires Maven deploy credentials and Git push privileges.
 
 ## Module Structure
 
@@ -55,56 +56,111 @@ The platform targets **Java 25**:
 
 LaTeX documentation in `platform-doc/`.
 
-## Detailed Reference Guides
+## Critical Design Gotchas
 
-- Entity hierarchy, annotations, validators/definers, union entities, producers, companions, MetaProperty, calculated properties, metamodels: @platform-doc/claude/entity-model.md
-- EQL query construction, operators, functions, fetch models, QueryExecutionModel: @platform-doc/claude/eql-reference.md
-- EQL internal design — how to add new functions, operators, and language features: @platform-doc/claude/eql-design.md
-- Entity Centre, Entity Master, Compound Master, actions, query enhancers, SSE: @platform-doc/claude/web-ui.md
-- Testing patterns, assertions, indirect testing, security tokens, authorization: @platform-doc/claude/testing-and-security.md
+These apply regardless of topic.
+Topic-specific gotchas live in each directory's `quick-reference.md`.
 
-## Key Non-Obvious Design Decisions
-
-These are things that cannot be easily derived from reading the code:
-
-1. **`co()` vs `co$()`**: `co()` returns uninstrumented (read-only) entities; `co$()` returns instrumented entities with change tracking and validation. Using the wrong one causes subtle bugs.
-
-2. **`isInitialising()` in definers**: Definers execute both during DB retrieval and user mutations. Always check `entity.isInitialising()` to distinguish phases.
-
-3. **Definer mutations are not silent**: When a definer sets a property via its setter, it goes through `ObservableMutatorInterceptor` and triggers the full validation chain.
-
-4. **`isDirty()` before side effects**: In DAO `save()` methods, check property dirtiness before triggering cascading updates to avoid unnecessary work.
-
-5. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
-
-6. **Indirect testing pattern**: Business logic in `pojo-bl` is tested through DAO integration tests, not unit tests. This is intentional — don't expect unit tests in `pojo-bl`.
-
-7. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
-
-8. **Compound master fetch providers**: Menu item entities receive their key from the root entity's companion fetch provider, not their own.
-
-9. **DeleteOperations patterns**:
-   - Pessimistic locking with `UPGRADE` lock mode for activatable entities
-   - Deliberately catches only `PersistenceException` for referential integrity violations
-   - `case null, default -> null` in switch expressions is conventional TG shorthand
-
-10. **GraphQL API**: Read-only queries only. Fields are uncapitalized entity names. Token: `GraphiQL_CanExecute_Token`.
-
-11. **Contiguous entity IDs**: All entities across all tables share a single ID sequence — IDs are globally unique, never colliding across entity types. This enables using a union entity's `.id()` as a single scalar key for `groupBy`, `yield`, and JOIN conditions without type-discriminator columns. EQL compiles `.id()` on a union to `CASE WHEN member1 IS NOT NULL THEN member1 WHEN member2 IS NOT NULL THEN member2 ... END` (not `COALESCE`). See `eql-reference.md` for examples.
-
-12. **`@Calculated` properties expand in SQL**: When a `@Calculated` property (e.g., `cost = hours * rate`) is used in aggregations like `sumOf().prop(cost)`, EQL expands it to `SUM(hours * rate)` in the generated SQL. The calculated property has no physical column — database covering indexes must target the expression's operand columns.
+1. **`co()` vs `co$()`**: `co()` returns uninstrumented (read-only) entities; `co$()` returns instrumented with change tracking.
+   Using the wrong one causes subtle bugs.
+2. **Definers fire on successful property change AND once per property post-load — never during the load itself.**
+   On user mutation: the `@AfterChange` handler runs synchronously after the setter, after validators have accepted the new value.
+   On DB load: TG sets all property values first via *direct field writes* (bypassing setters/validators/definers), then `DefinersExecutor` walks the object graph and invokes each property's `@AfterChange` handler.
+   Consequence: all sibling properties have their loaded values by the time any definer fires — so it is safe to read them and there is no per-declaration-order race.
+3. **Validators do NOT fire at DB load.**
+   `@BeforeChange` handlers are wired through `ObservableMutatorInterceptor`, which only intercepts setter method calls.
+   Load uses direct field writes, so no validator runs.
+   To surface a load-time message on a property (warning, info, error), use a definer that calls `metaProp.setDomainValidationResult(...)`.
+4. **No-op setters short-circuit both validators and definers.**
+   `ObservableMutatorInterceptor` skips validation and the `@AfterChange` handler when `equalsEx(currValue, newValue)` returns true.
+   So `setX(null)` on an entity whose current `X` is already null fires neither — relevant when writing tests that try to provoke a validator on the loaded value (set a different value first to clear, then re-set the value you want to provoke).
+5. **`isInitialising()` in definers**: Definers execute during DB retrieval AND user mutations.
+   Check `entity.isInitialising()` to distinguish.
+   It is `true` from `beginInitialising()` until `endInitialising()` (called per-entity at the end of `DefinersExecutor.explore`).
+6. **Definer mutations are not silent**: Setting a property from a definer triggers the full validation chain via `ObservableMutatorInterceptor`.
+7. **`@Observable` self-invocation IS intercepted (unlike Spring AOP).**
+   Guice intercepts `@Observable` via Byte Buddy *subclass* proxies, so `this.setX(...)` from inside an entity goes through `ObservableMutatorInterceptor` just like an external call — validators, definers, and `MetaProperty.setAssigned` all fire.
+   The enum-on-String idiom relies on this: a public `setKind(Kind)` calling `this.setKind(kind.name())` against a protected `@Observable` String setter is fully observed (e.g. `AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave.setLeaveReason`).
+8. **`isDirty()` before side effects**: In DAO `save()`, check property dirtiness before cascading updates.
+9. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
+10. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
+11. **GraphQL API**: Read-only queries only.
+    Fields are uncapitalized entity names.
+    Token: `GraphiQL_CanExecute_Token`.
 
 ## Conventions
 
 **Naming:** Entities = singular nouns (`Vehicle`), Companions = `{Entity}Co`, DAOs = `{Entity}Dao`
 
 **Always use metamodel references** (`Entity_.property()`) instead of string literals in EQL, fetch models, and UI configurations.
+Metamodel references implement `CharSequence`, so APIs typed for `CharSequence` (or with a `PropertyMetaModel` overload) accept `Entity_.property()` directly — there is no need to fall back to a `String`.
 
-**Property declaration:** `@IsProperty` + `@Title` + `@MapTo` (for persistent) + `@Observable` on setter. Validators chain in declaration order.
+**Property declaration:** `@IsProperty` + `@Title` + `@MapTo` (for persistent) + `@Observable` on setter.
+Validators chain in declaration order.
+
+**Title strings — no backticks, no straight quotes.**
+The platform serialises `@Title` / `@EntityTitle` / `@KeyTitle` values (`value` and `desc`) into generated JavaScript as string literals; embedded `` ` `` or `"` characters break that JS at parse time.
+If you need quotation marks or an apostrophe, use the Unicode equivalents — U+2019 `’` for apostrophe, U+201C `“` and U+201D `”` for double quotes — they survive serialisation cleanly.
+This rule covers only `@Title`/`@EntityTitle`/`@KeyTitle` annotation values; surrounding Javadoc is unrestricted (Markdown backticks remain the right tool there).
+
+**Title constants — opt in when a title is referenced elsewhere.**
+The dominant style in the codebase is inline string titles (`@Title(value = "Bowser ID", desc = "...")`); ~97% of `@Title` annotations follow it.
+Switch to a `public static final String <PROPERTY>_TITLE = "Title Text";` constant **only when the title appears in more than one place** — typically when another property's `desc` references it (`desc = "... resolved from " + X_TITLE + "."`), or when another file needs the title via static import.
+The constant pays off by removing the drift risk between the title string and its references; for single-use titles it's pure boilerplate.
+Group related title constants under a single `public static final String` line per the *Grouped constants* convention below.
+Example: `MeterReading.TOTAL_READING_TITLE` is declared on the entity because it is statically imported into `Equipment` (and other files) that reference it.
 
 **Code documentation:**
 - Each sentence on its own line (better diffs)
 - End sentences with a full stop
 - Use Markdown for Javadoc (not HTML tags)
+- Use Markdown backticks (`` ` ``) for inline code, identifiers, and literals; in new code do **not** use the `{@code …}` Javadoc tag (predates Markdown support, is now noise — more characters, breaks Markdown rendering of the surrounding text). Same for paths and shell snippets. Legacy `{@code}` is still widespread; touch it opportunistically rather than mass-rewriting.
 
-**Use `StandardActions` and `Compound` helpers** for common centre/master actions instead of building custom actions.
+**String formatting:** in new code, prefer the `String#formatted` instance method over `String.format(…)`.
+Reads as the format string operating on its arguments (`"foo [%s]".formatted(x)`) and avoids the `java.lang.String.format` import.
+Legacy `String.format` calls are still common; touch them opportunistically but don't churn unrelated code.
+
+**Lazy logging:** when a log call requires string formatting, pass a `Supplier` lambda so the formatting cost is paid only when the level is enabled:
+```java
+LOGGER.info(() -> "…".formatted(args));
+LOGGER.error(() -> "…".formatted(args), ex);
+```
+Constants (`LOGGER.info("static text")`) and parameterised SLF4J/Log4j-style calls (`LOGGER.warn("template [{}]", arg)` — already lazy) do not need a lambda.
+When the same formatted message is also needed by surrounding code (e.g. as a response body), format eagerly into a local and pass it to the logger.
+
+**`@Singleton` for stateless / immutable injectables:** default to `@Singleton` (from `jakarta.inject.Singleton` — the in-project convention) for any Guice-injected class whose state is set once at construction and never mutated.
+Settings holders (e.g. `WebApiSettings`), stateless services, and IoC-bound utilities all qualify.
+Without `@Singleton`, Guice creates a fresh instance per injection point — wasteful, and conceptually wrong for "global app config" or shared infrastructure.
+Do **not** apply `@Singleton` to classes that hold per-request / per-thread state, or that are explicitly intended to be re-instantiated.
+
+**Grouped constants:** when several `static final` fields of the same type form a logical *set of alternatives* — alternative error messages produced by the same validator, alternative warnings from the same definer, parallel format-string templates — declare them under a single `public static final <Type>` line, separated by commas:
+```java
+public static final String
+    ERR_NO_ROSTERED_DAYS = "Cannot activate: the profile must have at least one rostered day (with Shift Start assigned).",
+    ERR_GAPS_IN_DAY_NUMBERS = "Cannot activate: there are gaps in Day numbers. Day count is [%s] but the highest Day number is [%s].";
+```
+Common cases: validator error messages, named query aliases, related token strings.
+
+**Use `StandardActions` and `Compound` helpers** for common centre/master actions.
+
+**SQL migration scripts** for new persistent entities (in TG-based applications):
+- Use `GenDdl` to generate DDL.
+  Table names: uppercased entity class + `_`.
+  Column names: uppercased property + `_`.
+- `boolean` → `char(1) NOT NULL` (`'Y'`/`'N'`).
+  Entity references → `bigint` (FK to `_ID`).
+
+## Reference Topics
+
+Each topic directory under `platform-doc/claude/` has a `quick-reference.md` for common lookups and detailed files for full reference.
+Read the quick reference first; read the detailed file only when you need depth.
+Cross-links from a quick-reference should prefer another quick-reference; from a detailed reference, point to wherever the content lives.
+
+| Directory | Quick reference | Detailed reference |
+|---|---|---|
+| `entity-model/` | Hierarchy, annotations, property patterns, companions, calculated/synthetic, metamodel | `reference.md` — composite keys, activatable, validators/definers, union entities, producers, ISaveWithFetch, MetaProperty, declarative filters, generative entities |
+| `eql/` | Query construction, operators, functions, fetch models | `reference.md` — JOIN patterns, pivot, CASE WHEN, critCondition, QEM. `design.md` — EQL internals, adding new functions |
+| `web-ui/` | Standard actions, criterion/editor types, centre/master options | `reference.md` — full builder APIs, action config, query enhancers, insertion points, rendering customisers |
+| `testing/` | Fetch patterns, indirect testing, test data caching | `reference.md` — DynamicQueryBuilder testing, test clock, web resource testing |
+| `security/` | Token templates, `@Authorise` usage | `reference.md` — `@Authorise` + AOP infrastructure, authorization scopes (DAO/Producer/Property/Action), runtime-generated audit tokens |
+| `auditing/` | @Audited basics, generated types, test config | `reference.md` — full type hierarchy, versioning, runtime plumbing, GenAudit, Web UI |
