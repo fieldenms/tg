@@ -23,32 +23,29 @@ export function _millis(fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.S
     return moment(fullDateString, 'DD/MM/YYYY HH:mm:ss.SSS', true).valueOf();
 };
 
-/**
- * Calculates 'timeZone' for fixed-tz properties (annotated with @PersistentType(userType = IUtcDateTimeType.class)).
- * Returns empty value for regular date properties.
- *
- * @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `timeZone()`.
- */
+/// Calculates 'timeZone' for fixed-tz properties (annotated with @PersistentType(userType = IUtcDateTimeType.class)).
+/// Returns empty value for regular date properties.
+///
+/// @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `timeZone()`
+///
 function _fixedTimeZone(prop) {
     return prop?.timeZone?.();
 };
 
-/**
- * Calculates format for concrete 'prop' based on its 'timeZone()' and 'name'.
- *
- * @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `timeZone()`.
- */
+/// Calculates format for concrete 'prop' based on its 'timeZone()' and 'name'.
+///
+/// @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `timeZone()`
+///
 export function _timeZoneFormat(prop, name) {
     const timeZone = _fixedTimeZone(prop);
     return timeZone ? timeZoneFormats[timeZone][name] : moment.localeData().longDateFormat(name);
 };
 
-/**
- * Converts 'dateMillis' to String-based date representation according to property configuration in 'prop' object.
- *
- * @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `timeZone()` / `datePortion` / `isDependentTimeZoneMode`.
- * @param portionToDisplay {String} -- "DATE", "TIME" or empty for full date+time representation; this option is taken from 'prop' if not specified
- */
+/// Converts 'dateMillis' to String-based date representation according to property configuration in 'prop' object.
+///
+/// @param prop {Object, likely EntityTypeProp} -- optional meta-property object (`timeZone()` / `datePortion` / `isDependentTimeZoneMode`)
+/// @param portionToDisplay {String} -- "DATE", "TIME" or empty for full date+time representation (taken from 'prop' if not specified)
+///
 export function _millisDateRepresentation(dateMillis, prop, portionToDisplay) {
     // Create proper 'timeFormat' function based on the 'timeZone' and whether milliseconds / seconds are present.
     const millisecondsExist = dateMillis % 1000 !== 0;
@@ -66,12 +63,12 @@ export function _millisDateRepresentation(dateMillis, prop, portionToDisplay) {
     return _momentTz(dateMillis, prop).format(timeZone ? timeZoneFormats[timeZone][format] : format);
 };
 
-/**
- * In case of independent time-zone mode, enforces real client time-zone for properties with @DependentTimeZoneMode.
- * Returns server time-zone back after `momentComputation()` is completed - for normal operation of all other properties.
- *
- * @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `isDependentTimeZoneMode`.
- */
+/// In case of independent time-zone mode, enforces real client time-zone for properties with @DependentTimeZoneMode.
+/// Returns server time-zone back after `momentComputation()` is completed.
+/// This is needed for normal operation of all other properties.
+///
+/// @param prop {Object, likely EntityTypeProp} -- optional meta-property object (`isDependentTimeZoneMode`)
+///
 function _enforceDependentTimeZoneModeFor(momentComputation, prop) {
     if (window.TG_APP?.timeZone && prop?.isDependentTimeZoneMode?.()) {
         try {
@@ -87,14 +84,13 @@ function _enforceDependentTimeZoneModeFor(momentComputation, prop) {
     }
 };
 
-/**
- * Performs timeZone-aware momentjs computation.
- *
- * @params -- first parameters need to be specified as for standard moment(...) function
- * @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `timeZone()` / `isDependentTimeZoneMode`.
- *                                 May contain a timeZone, in which momentjs computation will be done.
- *                                 In case of empty timeZone, local timeZone will be used, i.e. simple moment(...) function invoked.
- */
+/// Performs timeZone-aware momentjs computation.
+///
+/// @params -- first parameters need to be specified as for standard moment(...) function
+/// @param prop {Object, likely EntityTypeProp} -- optional meta-property object (`timeZone()` / `isDependentTimeZoneMode`)
+///     May contain a timeZone, in which momentjs computation will be done.
+///     In case of empty timeZone, local timeZone will be used, i.e. simple moment(...) function invoked.
+///
 export function _momentTz(input) {
     // Drop last argument and save into 'args'.
     const args = Array.prototype.slice.call(arguments, 0, -1);
@@ -106,7 +102,8 @@ export function _momentTz(input) {
         args.push(timeZone);
         return moment.tz.apply(null, args);
     }
-    // Otherwise, perform computation in default timezone. Take into account @DependentTimeZoneMode properties.
+    // Otherwise, perform computation in default timezone.
+    // Also, take into account @DependentTimeZoneMode properties.
     return _enforceDependentTimeZoneModeFor(() => moment.apply(null, args), prop);
 };
 
