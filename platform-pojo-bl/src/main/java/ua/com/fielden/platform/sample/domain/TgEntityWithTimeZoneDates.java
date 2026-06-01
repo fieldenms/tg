@@ -4,6 +4,7 @@ import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.DependentTimeZoneMode;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -48,6 +49,19 @@ public class TgEntityWithTimeZoneDates extends AbstractPersistentEntity<String> 
     @DependentTimeZoneMode
     private Date datePropDependent;
 
+    @IsProperty
+    @MapTo
+    @Title("Date Only Prop")
+    @DateOnly
+    private Date dateOnlyProp;
+
+    @IsProperty
+    @MapTo
+    @Title("Date Only Prop UTC")
+    @PersistentType(userType = IUtcDateTimeType.class)
+    @DateOnly
+    private Date dateOnlyPropUtc;
+
     @Observable
     public TgEntityWithTimeZoneDates setDatePropDependent(final Date datePropDependent) {
         this.datePropDependent = datePropDependent;
@@ -76,5 +90,25 @@ public class TgEntityWithTimeZoneDates extends AbstractPersistentEntity<String> 
 
     public Date getDateProp() {
         return dateProp;
+    }
+
+    @Observable
+    public TgEntityWithTimeZoneDates setDateOnlyProp(final Date dateOnlyProp) {
+        this.dateOnlyProp = dateOnlyProp;
+        return this;
+    }
+
+    public Date getDateOnlyProp() {
+        return dateOnlyProp;
+    }
+
+    @Observable
+    public TgEntityWithTimeZoneDates setDateOnlyPropUtc(final Date dateOnlyPropUtc) {
+        this.dateOnlyPropUtc = dateOnlyPropUtc;
+        return this;
+    }
+
+    public Date getDateOnlyPropUtc() {
+        return dateOnlyPropUtc;
     }
 }

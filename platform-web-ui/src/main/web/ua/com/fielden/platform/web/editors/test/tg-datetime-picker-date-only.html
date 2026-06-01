@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>tg-datetime-picker tests for @DateOnly properties</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
+</head>
+
+<body>
+    <test-fixture id="MasterFixture">
+        <template>
+            <tg-TgEntityWithTimeZoneDates-master
+                id="master"
+                entity-type="ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates"
+                entity-id="new"
+                current-state="EDIT">
+            </tg-TgEntityWithTimeZoneDates-master>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+        import moment from '/resources/polymer/lib/moment-lib.js';
+        import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates';
+
+        suite('@DateOnly trims the time portion on the \'n\' approximation', function () {
+            let master;
+
+            setup(function () {
+                master = fixture('MasterFixture');
+            });
+
+            // Enter 'n' into the @DateOnly editor and assert the committed value is trimmed to the start of the day.
+            // The displayed value hides the time anyway, so the decisive check is on `_acceptedValue` (the committed millis).
+            // `expectedStartOfDay` is today at 00:00 in the property's time-zone.
+            // `fakeProp` mirrors the property so the expected text is computed the same way as the editor computes it.
+            const trimsTimePortionOnNow = function (done, editorId, propName, expectedStartOfDay, fakeProp) {
+                const ed = master.$[editorId];
+                const expectedMillis = expectedStartOfDay.valueOf();
+                const expectedText = _millisDateRepresentation(expectedMillis, fakeProp);
+
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    assert.strictEqual(ed._acceptedValue, expectedMillis, '_acceptedValue must be the start of the day, with the time portion trimmed.');
+                    assert.strictEqual(ed._editingValue, expectedText, '_editingValue must show the date only.');
+                    assert.strictEqual(ed._commValue, expectedText, '_commValue must show the date only.');
+                    assert.strictEqual(validatedEntity.get(propName), expectedMillis, 'Entity value must equal the trimmed millis.');
+                    assert.strictEqual(bindingEntity.get(propName), expectedMillis, 'Binding value must equal the trimmed millis.');
+                    done();
+                };
+
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    assert.strictEqual(ed._editingValue, '', '_editingValue must be empty on start.');
+                    assert.strictEqual(entity.get(propName), null, 'Property must be empty on start.');
+
+                    ed._editingValue = 'n';
+                    ed.commit();
+                    assert.strictEqual(ed._editingValue, expectedText, '_editingValue must already be approximated to the date only.');
+                    assert.strictEqual(ed._commValue, expectedText, '_commValue must show the date only.');
+                    assert.strictEqual(ed._acceptedValue, expectedMillis, '_acceptedValue must be the start of the day, with the time portion trimmed.');
+                    assert.strictEqual(ed._editorValidationMsg, null, 'Editor must not have an error.');
+                };
+
+                master.retrieve();
+            };
+
+            // The essential case -- a @DateOnly property.
+            test('[n] trims the time for a @DateOnly property', function (done) {
+                trimsTimePortionOnNow(done, 'editor_4_dateOnlyProp', 'dateOnlyProp', moment().startOf('day'), { datePortion: () => 'DATE' });
+            });
+
+            // The additional case -- a @PersistentType(UTC) @DateOnly property, where "today" and the trim happen in UTC.
+            test('[n] trims the time for a @PersistentType(UTC) @DateOnly property', function (done) {
+                trimsTimePortionOnNow(done, 'editor_4_dateOnlyPropUtc', 'dateOnlyPropUtc', moment.tz('UTC').startOf('day'), { timeZone: () => 'UTC', datePortion: () => 'DATE' });
+            });
+        });
+    </script>
+</body>
+</html>

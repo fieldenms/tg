@@ -77,12 +77,14 @@ public class TgEntityWithTimeZoneDatesWebUiConfig {
         return entityCentre;
     }
     private EntityMaster<TgEntityWithTimeZoneDates> createMaster(final Injector injector) {
-        final String layout = LayoutComposer.mkGridForMaster(960, 1, 3);
+        final String layout = LayoutComposer.mkGridForMaster(960, 1, 5);
 
         final IMaster<TgEntityWithTimeZoneDates> masterConfig = new SimpleMasterBuilder<TgEntityWithTimeZoneDates>().forEntity(TgEntityWithTimeZoneDates.class)
                 .addProp("dateProp").asDateTimePicker().also()
                 .addProp("datePropUtc").asDateTimePicker().also()
                 .addProp("datePropDependent").asDateTimePicker().also()
+                .addProp("dateOnlyProp").asDatePicker().also()
+                .addProp("dateOnlyPropUtc").asDatePicker().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkActionLayoutForMaster())
