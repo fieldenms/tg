@@ -14,7 +14,7 @@ import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import moment from '/resources/polymer/lib/moment-lib.js'; // used for moment.localeData() and moment.monthsShort().
-import { _momentTz } from '/resources/reflection/tg-date-utils.js';
+import { _momentTz, now } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
     <style>
@@ -105,12 +105,13 @@ template.setAttribute('strip-whitespace', '');
         is: "tg-calendar",
 
         properties: {
-            /**
-             * Holds an instance of `tg-reflector.EntityTypeProp` corresponding to the property being edited.
-             * Must be used as the last parameter for `_momentTz(...)` invocations.
-             *
-             * It is used for moment conversions for a) fixed time-zone properties b) props with enforced dependent time-zone mode.
-             */
+            /// Holds an instance of `tg-reflector.EntityTypeProp` corresponding to the property being edited.
+            /// Must be used as the last parameter for `_momentTz(...)` invocations, or passed to `now(...)`.
+            ///
+            /// It is used for moment conversions for:
+            /// - fixed time-zone properties;
+            /// - properties with enforced dependent time-zone mode.
+            ///
             prop: {
                 type: Object
             },
@@ -164,7 +165,10 @@ template.setAttribute('strip-whitespace', '');
         },
 
         attached: function () {
-            const todayDate = _momentTz(this.prop).startOf('minute');
+            // Use `now(prop)`, not `_momentTz(prop)`, so the default moment resolves in the user's real time-zone.
+            // This matters in independent time-zone mode.
+            // The `@DateOnly` trim is immaterial here: time fields are set externally to zero in `tg-datetime-picker.domBind`.
+            const todayDate = now(this.prop).startOf('minute');
             this.selectedDate = this.selectedDate || todayDate.valueOf();
             this.selectedHour = (typeof this.selectedHour !== 'undefined' && this.selectedHour !== null) ? this.selectedHour : todayDate.hour();
             this.selectedMinute = (typeof this.selectedMinute !== 'undefined' && this.selectedMinute !== null) ? this.selectedMinute : todayDate.minutes();

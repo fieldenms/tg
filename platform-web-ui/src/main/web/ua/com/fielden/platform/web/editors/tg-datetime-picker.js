@@ -84,12 +84,13 @@ export class TgDatetimePicker extends TgEditor {
 
     static get properties () {
         return {
-            /**
-             * Holds an instance of `tg-reflector.EntityTypeProp` corresponding to the property being edited.
-             * Must be used as the last parameter for `_momentTz(...)` invocations.
-             *
-             * It is used for moment conversions for a) fixed time-zone properties b) props with enforced dependent time-zone mode.
-             */
+            /// Holds an instance of `tg-reflector.EntityTypeProp` corresponding to the property being edited.
+            /// Must be used as the last parameter for `_momentTz(...)` invocations, or passed to `now(...)`.
+            ///
+            /// It is used for moment conversions for:
+            /// - fixed time-zone properties;
+            /// - properties with enforced dependent time-zone mode.
+            ///
             prop: {
                 type: Object,
                 value: null
@@ -511,7 +512,9 @@ export class TgDatetimePicker extends TgEditor {
                     return strWithoutSpaces;
                 } else {
                     const insertionPoint = firstSeparatorIndex + numberOfDigitsAfterLastSeparator + 1;
-                    const currYearStr = _momentTz(this.prop).format('YYYY');
+                    // Use `now(prop)`, not `_momentTz(prop)`, so the inserted year matches the user's real time-zone.
+                    // This matters across a New-Year boundary in independent time-zone mode.
+                    const currYearStr = now(this.prop).format('YYYY');
                     return yearsOnEnding // years are only supported on beginning and ending of datePortionFormat (not in the middle, like MM-YYYY-DD)
                         ? strWithoutSpaces.slice(0, insertionPoint) + separator + currYearStr + ' ' + strWithoutSpaces.slice(insertionPoint)
                         : currYearStr + separator + strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint)

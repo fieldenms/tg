@@ -4,7 +4,7 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 import '/app/tg-app-config.js';
 
-import {_momentTz} from '/resources/reflection/tg-date-utils.js'
+import { _momentTz, now } from '/resources/reflection/tg-date-utils.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -145,12 +145,13 @@ const template = html`
         is: "tg-month-selector",
 
         properties: {
-            /**
-             * Holds an instance of `tg-reflector.EntityTypeProp` corresponding to the property being edited.
-             * Must be used as the last parameter for `_momentTz(...)` invocations.
-             *
-             * It is used for moment conversions for a) fixed time-zone properties b) props with enforced dependent time-zone mode.
-             */
+            /// Holds an instance of `tg-reflector.EntityTypeProp` corresponding to the property being edited.
+            /// Must be used as the last parameter for `_momentTz(...)` invocations, or passed to `now(...)`.
+            ///
+            /// It is used for moment conversions for:
+            /// - fixed time-zone properties;
+            /// - properties with enforced dependent time-zone mode.
+            ///
             prop: {
                 type: Object
             },
@@ -178,7 +179,9 @@ const template = html`
         },
 
         ready: function () {
-            const today = _momentTz(this.prop);
+            // Use `now(prop)`, not `_momentTz(prop)`, so the current day resolves in the user's real time-zone.
+            // This keeps the `today-date` correct near midnight in independent time-zone mode.
+            const today = now(this.prop);
             this.todayDay = today.date();
             this.todayMonth = today.month();
             this.todayYear = today.year();
@@ -199,9 +202,11 @@ const template = html`
          * @param {Number} newFirstDayOfWeek - changed first day of week
          */
         _firstDayOfWeekChanged: function (newFirstDayOfWeek) {
-            const momentToShow = this.selectedDate ? 
+            // When no date is selected, fall back to `now(prop)` rather than `_momentTz(prop)`.
+            // This defaults the calendar to the current month in the user's real time-zone (independent tz mode).
+            const momentToShow = this.selectedDate ?
                     _momentTz(this.selectedDate, this.prop) :
-                    _momentTz(this.prop);
+                    now(this.prop);
             this._adjustMonth(momentToShow, newFirstDayOfWeek);
         },
 
