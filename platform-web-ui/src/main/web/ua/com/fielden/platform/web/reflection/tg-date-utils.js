@@ -114,12 +114,11 @@ export function _timeZoneHeader () {
     return {"Time-Zone": moment.tz.guess(true)};
 };
 
-/**
- * Trims Moment JS 'dateTime' instance's time portion in case where `prop.isDate()` is true.
- * Does nothing otherwise.
- *
- * @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `isDate`.
- */
+/// Trims Moment JS 'dateTime' instance's time portion in case where `prop.isDate()` is true.
+/// Does nothing otherwise.
+///
+/// @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `isDate`.
+///
 function _trimDateOnlyTimePortion(dateTime, prop) {
     if (dateTime && prop?.isDate?.()) {
         return dateTime.startOf('day');
@@ -127,11 +126,10 @@ function _trimDateOnlyTimePortion(dateTime, prop) {
     return dateTime;
 };
 
-/**
- * Returns time-zone mode-specific 'now' moment.
- *
- * @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `isDependentTimeZoneMode`.
- */
+/// Returns time-zone mode-specific 'now' moment.
+///
+/// @param prop {Object, likely EntityTypeProp} -- optional meta-property object, optionally containing `isDependentTimeZoneMode`.
+///
 export function now(prop) {
     // In concrete time-zone (e.g. UTC) just use standard method _momentTz for creating 'now' in that time-zone.
     if (_fixedTimeZone(prop)) {
