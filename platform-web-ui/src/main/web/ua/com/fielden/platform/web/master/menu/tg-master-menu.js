@@ -17,6 +17,7 @@ import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 /* TG ELEMENTS */
+import { UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
 import { scrollContainerIfPointNearTheEdge, getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
@@ -835,9 +836,14 @@ Polymer({
                         currentSection._showBlockingPane();
                     }
                 }).catch(cannotLeaveReason => {
-                    const cannotLeaveMessage = cannotLeaveReason.message || cannotLeaveReason.msg || cannotLeaveReason;
+                    // Reset route before any further rethrow or error handling.
                     this.route = this.sectionRoute;
-                    this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage, !!cannotLeaveReason.message);
+                    if (cannotLeaveReason instanceof UnexpectedCustomError) {
+                        throw cannotLeaveReason;
+                    } else {
+                        const cannotLeaveMessage = cannotLeaveReason.message || cannotLeaveReason.msg || cannotLeaveReason;
+                        this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage, !!cannotLeaveReason.message);
+                    }
                 }).finally(() => {
                     this.fire('tg-master-menu-route-change-completed', this.route);
                 });
