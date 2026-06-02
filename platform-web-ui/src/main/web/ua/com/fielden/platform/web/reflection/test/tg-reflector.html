@@ -81,7 +81,7 @@
             test('Entity.toString: Date key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
                 entity.key = 0;
-                assert.strictEqual(entity.toString(), _millisDateRepresentation(entity.key, null, null));
+                assert.strictEqual(entity.toString(), _millisDateRepresentation(entity.key, null));
                 done();
             });
             
@@ -160,7 +160,7 @@
             test('tg_convert simple entity: Date key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
                 entity.key = 0;
-                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.key, null, null));
+                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.key, null));
                 done();
             });
             
@@ -275,7 +275,7 @@
                 entity.hyperlinkKey = null;
                 entity.entityKey = null;
                 entity.selfKey = null;
-                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.dateKey, null, null));
+                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.dateKey, null));
                 done();
             });
             
@@ -405,7 +405,7 @@
                 entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.entityKey.key = 'KEY2';
                 entity.selfKey = null;
-                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null, null) + ':1500:16000000000:1700.1234:1700:FFCC80:https://www.example.com:KEY2');
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null) + ':1500:16000000000:1700.1234:1700:FFCC80:https://www.example.com:KEY2');
                 done();
             });
             
@@ -422,7 +422,7 @@
                 entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.entityKey.key = 'KEY2';
                 entity.selfKey = null;
-                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null, null) + ':16000000000:FFCC80:KEY2');
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null) + ':16000000000:FFCC80:KEY2');
                 done();
             });
             
@@ -770,7 +770,7 @@
             test('tg_toString standard: Date converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.dateKey = 0;
-                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey'), _millisDateRepresentation(entity.dateKey, null, null));
+                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey'), _millisDateRepresentation(entity.dateKey, null));
                 done();
             });
             
@@ -1032,7 +1032,7 @@
             test('tg_toString for display: Date converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.dateKey = 0;
-                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey', { display: true }), _millisDateRepresentation(entity.dateKey, null, null));
+                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey', { display: true }), _millisDateRepresentation(entity.dateKey, null));
                 done();
             });
             

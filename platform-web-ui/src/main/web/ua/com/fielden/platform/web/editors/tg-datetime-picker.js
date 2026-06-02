@@ -14,7 +14,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 import moment from '/resources/polymer/lib/moment-lib.js'; // used for moment.localeData(). ...
-import { _momentTz, timeZoneFormats, now } from '/resources/reflection/tg-date-utils.js';
+import { _momentTz, _timeZoneFormat, now } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js'
 
 const AFTER = 'AFTER';
@@ -85,11 +85,13 @@ export class TgDatetimePicker extends TgEditor {
     static get properties () {
         return {
             /**
-             * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods.
-             * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
+             * Holds an instance of `tg-reflector.EntityTypeProp` corresponding to the property being edited.
+             * Must be used as the last parameter for `_momentTz(...)` invocations.
+             *
+             * It is used for moment conversions for a) fixed time-zone properties b) props with enforced dependent time-zone mode.
              */
-            timeZone: {
-                type: String,
+            prop: {
+                type: Object,
                 value: null
             },
     
@@ -227,7 +229,7 @@ export class TgDatetimePicker extends TgEditor {
 
         domBind._acceptDateBind = function () {
             self._isAcceptingDateFromPicker = true;
-            const acceptedMoment = _momentTz(this.$.datePicker.selectedDate, self.timeZone)
+            const acceptedMoment = _momentTz(this.$.datePicker.selectedDate, self.prop)
                 .hour(this.$.datePicker.selectedHour)
                 .minute(this.$.datePicker.selectedMinute)
                 .seconds(this.$.datePicker.seconds)
@@ -281,12 +283,12 @@ export class TgDatetimePicker extends TgEditor {
             }.bind(domBind));
         }.bind(domBind);
 
-        domBind.timeZone = self.timeZone;
+        domBind.prop = self.prop;
 
         const dialogTemplate = document.createElement('template');
         dialogTemplate.innerHTML =
             '<paper-dialog id="dateDialog" class="date-picker layout vertical" modal always-on-top entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_dialogOpened">' +
-            '<tg-calendar id="datePicker" pick-time time-zone="[[timeZone]]"></tg-calendar>' +
+            '<tg-calendar id="datePicker" pick-time prop="[[prop]]"></tg-calendar>' +
             '<div class="buttons">' +
             '<paper-button dialog-dismiss affirmative>Cancel</paper-button>' +
             '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +
@@ -334,7 +336,7 @@ export class TgDatetimePicker extends TgEditor {
                     return this.convertToString(this._validMoment.valueOf());
                 }
                 // determine current date portion format for this editor ...
-                const datePortionFormat = this.timeZone ? timeZoneFormats[this.timeZone]['L'] : moment.localeData().longDateFormat('L');
+                const datePortionFormat = _timeZoneFormat(this.prop, 'L');
                 // ... and its separator;
                 const separator = datePortionFormat.includes('/') ? '/' : datePortionFormat.includes('-') ? '-' : null;
                 // validate separator and ...
@@ -364,7 +366,7 @@ export class TgDatetimePicker extends TgEditor {
                             let adjustedMoment = validMoment;
                             if (indexOfY > -1 && format.indexOf('Y', indexOfY + 1) === -1) { // only one Y in the format
                                 const strWithDoubleDigitYear = this._convertToDoubleDigitYear(stringValue, indexOfY === 0 ? 0 : this._findSecondSeparatorIndex(stringValue, separator) + 1);
-                                adjustedMoment = _momentTz(strWithDoubleDigitYear, format.replace('Y', 'YY'), true, this.timeZone);
+                                adjustedMoment = _momentTz(strWithDoubleDigitYear, format.replace('Y', 'YY'), true, this.prop);
                             }
                             if (datePortionFormats.indexOf(format) !== -1 && this.timePortionToBecomeEndOfDay === true) {
                                 adjustedMoment.add(1, 'days').subtract(1, 'milliseconds'); // even though original validMoment can be mutated here, it will not be used anywhere else; so it is safe to do this mutation
@@ -421,10 +423,7 @@ export class TgDatetimePicker extends TgEditor {
 
     _tryLiterals (editingValue) {
         const upperCasedValue = editingValue[0].toUpperCase();
-        // In concrete time-zone (e.g. UTC) just use standard method _momentTz for creating 'now' in that time-zone.
-        // Otherwise use standard now() function.
-        const convertedMoment = this.timeZone ? _momentTz(this.timeZone) : now();
-
+        const convertedMoment = now(this.prop);
         if ('T' === upperCasedValue) {
             const todayMoment = convertedMoment.startOf("day");
             return this.timePortionToBecomeEndOfDay === true ? todayMoment.add(1, 'days').subtract(1, 'milliseconds') : todayMoment;
@@ -445,7 +444,7 @@ export class TgDatetimePicker extends TgEditor {
             return null;
         } else {
             const firstFormat = formats[0];
-            let tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
+            let tryingMoment = _momentTz(stringValue, firstFormat, true, this.prop);
             if (tryingMoment.isValid()) {
                 if (adjustValidMoment) {
                     return adjustValidMoment(stringValue, tryingMoment, firstFormat);
@@ -512,7 +511,7 @@ export class TgDatetimePicker extends TgEditor {
                     return strWithoutSpaces;
                 } else {
                     const insertionPoint = firstSeparatorIndex + numberOfDigitsAfterLastSeparator + 1;
-                    const currYearStr = _momentTz(this.timeZone).format('YYYY');
+                    const currYearStr = _momentTz(this.prop).format('YYYY');
                     return yearsOnEnding // years are only supported on beginning and ending of datePortionFormat (not in the middle, like MM-YYYY-DD)
                         ? strWithoutSpaces.slice(0, insertionPoint) + separator + currYearStr + ' ' + strWithoutSpaces.slice(insertionPoint)
                         : currYearStr + separator + strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint)
@@ -522,6 +521,20 @@ export class TgDatetimePicker extends TgEditor {
             return strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint);
         }
     }
+
+    /**
+     * An overridden 'entity' observer to provide 'EntityTypeProp' computed instance once the entity has been provided.
+     * That instance will be bound uni-directionally to child `tg-calendar` and `tg-month-selector` elements.
+     * Initialises also 'datePortion' property.
+     */
+    _entityChanged (newValue, oldValue) {
+        if (this.reflector().isEntity(newValue)) {
+            this.prop = newValue.type().prop(this.propertyName);
+            this.datePortion = this.prop?.datePortion?.();
+        }
+        super._entityChanged (newValue, oldValue);
+    }
+
 }
 
 customElements.define('tg-datetime-picker', TgDatetimePicker);

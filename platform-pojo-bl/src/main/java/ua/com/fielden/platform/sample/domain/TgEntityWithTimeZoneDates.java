@@ -4,6 +4,7 @@ import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.DependentTimeZoneMode;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -40,6 +41,22 @@ public class TgEntityWithTimeZoneDates extends AbstractPersistentEntity<String> 
     @PersistentType(userType = IUtcDateTimeType.class)
     @AfterChange(UtcDatesToLocalDefiner.class)
     private Date datePropUtc;
+
+    @IsProperty
+    @MapTo
+    @Title("Date Prop Dependent")
+    @DependentTimeZoneMode
+    private Date datePropDependent;
+
+    @Observable
+    public TgEntityWithTimeZoneDates setDatePropDependent(final Date datePropDependent) {
+        this.datePropDependent = datePropDependent;
+        return this;
+    }
+
+    public Date getDatePropDependent() {
+        return datePropDependent;
+    }
 
     @Observable
     public TgEntityWithTimeZoneDates setDatePropUtc(final Date datePropUtc) {
