@@ -31,7 +31,6 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js';
 import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
-import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
@@ -504,22 +503,6 @@ Polymer({
     
     getSelectedPage: function () {
         return this._selectedPage;
-    },
-
-    canLeave: async function (leaveReason = LeaveReason.CLOSED) {
-        const items = this.shadowRoot.querySelectorAll("tg-menu-item-view");
-        const changedViews = [];
-        for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-            try {
-                await items[itemIndex].canLeave(leaveReason);
-            } catch (e) {
-                changedViews.push(items[itemIndex].submoduleId);
-            }
-        }
-        if (changedViews.length > 0) {
-            throw changedViews;
-        }
-        return true;
     },
 
     searchMenu: function (event) {
