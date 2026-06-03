@@ -348,23 +348,23 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
     @Test
     public void fetch_TgFuelUsage() {
         assertRetrievalModel(TgFuelUsage.class, ALL)
-                .containsExactly(ID, VERSION, "vehicle", "date", "qty", "pricePerLitre", "previousPricePerLitre", "halfPricePerLitre", "fuelType")
+                .containsExactly(ID, VERSION, "vehicle", "date", "location", "qty", "pricePerLitre", "previousPricePerLitre", "halfPricePerLitre", "fuelType")
                 .subModel("vehicle", a -> a.equalsModel(DEFAULT))
                 .subModel("fuelType", a -> a.equalsModel(DEFAULT));
         assertRetrievalModel(TgFuelUsage.class, DEFAULT)
-                .containsExactly(ID, VERSION, "vehicle", "date", "qty", "pricePerLitre", "previousPricePerLitre", "halfPricePerLitre", "fuelType")
+                .containsExactly(ID, VERSION, "vehicle", "date", "location", "qty", "pricePerLitre", "previousPricePerLitre", "halfPricePerLitre", "fuelType")
                 .subModel("vehicle", a -> a.equalsModel(DEFAULT))
                 .subModel("fuelType", a -> a.equalsModel(ID_ONLY));
         assertRetrievalModel(TgFuelUsage.class, KEY_AND_DESC)
                 .containsExactly(ID, VERSION, "vehicle", "date")
-                .proxiesExactly("qty", "pricePerLitre", "previousPricePerLitre", "halfPricePerLitre", "fuelType")
+                .proxiesExactly("location", "qty", "pricePerLitre", "previousPricePerLitre", "halfPricePerLitre", "fuelType")
                 .subModel("vehicle", a -> a.equalsModel(DEFAULT));
         assertRetrievalModel(TgFuelUsage.class, ID_AND_VERSION, f -> f.with("vehicle", "qty"))
                 .containsExactly(ID, VERSION, "vehicle", "qty")
-                .proxiesExactly("date", "pricePerLitre", "previousPricePerLitre", "halfPricePerLitre", "fuelType")
+                .proxiesExactly("location", "date", "pricePerLitre", "previousPricePerLitre", "halfPricePerLitre", "fuelType")
                 .subModel("vehicle", a -> a.equalsModel(DEFAULT));
         assertRetrievalModel(TgFuelUsage.class, DEFAULT, f -> f.without("vehicle", "qty"))
-                .containsExactly(ID, VERSION, "date", "pricePerLitre", "previousPricePerLitre", "halfPricePerLitre", "fuelType")
+                .containsExactly(ID, VERSION, "date", "location", "pricePerLitre", "previousPricePerLitre", "halfPricePerLitre", "fuelType")
                 .proxiesExactly("vehicle", "qty");
     }
 

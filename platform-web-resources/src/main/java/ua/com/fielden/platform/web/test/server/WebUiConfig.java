@@ -200,6 +200,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final TgEntityWithRichTextPropWebUiConfig tgEntityWithRichTextConfig = TgEntityWithRichTextPropWebUiConfig.register(injector(),configApp());
         final TgEntityWithRichTextRefWebUiConfig tgEntityWithRichRefConfig = TgEntityWithRichTextRefWebUiConfig.register(injector(),configApp());
         final var tgNoteConfig = TgNoteWebUiConfig.register(injector(), configApp());
+        final var tgFuelUsageConfig = TgFuelUsageWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
 
@@ -1114,7 +1115,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .detailIcon("menu-detailed:fuel")
                 .bgColor("#FFE680")
                 .captionBgColor("#FFD42A")
-                .view(null)
+                .menu()
+                /*  */.addMenuItem("Fuel Usage").description("Fuel Usage Centre").centre(tgFuelUsageConfig.centre).done()
+                    .done()
                 .done()
                 .addModule("Organisational")
                 .description("Organisational")

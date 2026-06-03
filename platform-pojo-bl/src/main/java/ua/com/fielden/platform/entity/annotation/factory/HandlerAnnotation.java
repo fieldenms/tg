@@ -161,7 +161,7 @@ public class HandlerAnnotation {
             }
 
             @Override
-            public Class<? extends IBeforeChangeEventHandler<?>> value() {
+            public Class<? extends IBeforeChangeEventHandler> value() {
                 return handler.value();
             }
 
