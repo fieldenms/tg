@@ -1259,8 +1259,10 @@ Polymer({
     },
 
     _removeFromDom: function () {
-        document.body.removeChild(this);
-        this.$.elementLoader.offloadDom();
+        if (this.parentElement) {
+            document.body.removeChild(this);
+            this.$.elementLoader.offloadDom();
+        }
     },
     
     _customiseAction: function (newAction) {
