@@ -390,7 +390,7 @@ Polymer({
                         // Bind fully restored entity after initial loading of empty produced instance.
                         action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
                             master.addEventListener('data-loaded-and-focused', event => {
-                                event.detail._postRetrievedDefault(deserialisedResult.instance);
+                                event.detail?._postRetrievedDefault?.(deserialisedResult.instance);
                             }, { once: true });
                         };
 
