@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadataUtils;
 import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
+import ua.com.fielden.platform.utils.DbUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -132,17 +133,20 @@ public abstract class DbCreator {
 
         Optional<Exception> raisedEx = Optional.empty();
 
-        if (!dataScripts.isEmpty()) {
-            // Apply the data population script.
-            logger.debug("Executing data population script.");
-            config.getInstance(TransactionalExecution.class).execStrict(conn -> batchExecSql(new ArrayList<>(dataScripts), conn, BATCH_SIZE));
-        } else {
+        // For the first test in the test class: initial population of test data.
+        if (dataScripts.isEmpty()) {
             try {
                 if (testCase.useSavedDataPopulationScript()) {
                     config.getInstance(TransactionalExecution.class).execStrict(conn -> restoreDataFromFile(testCaseType, conn));
+                    // After populating data from a script, the ID sequence remains unchanged, so we have to restart it ourselves.
+                    // This is to prevent ID conflicts with populateDomain() which may save new entities.
+                    testCase.setIdSeed(AbstractDomainDrivenTestCase.ID_HEADROOM + config.getInstance(DbUtils.class).maxEntityId());
+                    testCase.resetIdGenerator();
                 }
-                // Need to call populateDomain, which might have some initialization even if the actual data saving does not need to occur.
+                // Call populateDomain regardless of using a data population script -- populateDomain may contain extra initialisation.
                 testCase.populateDomain();
+                testCase.setIdSeed(AbstractDomainDrivenTestCase.ID_HEADROOM + config.getInstance(DbUtils.class).maxEntityId());
+                // No need to resetIdGenerator here, each test class has a @Before method that will do this.
             } catch (final Exception ex) {
                 raisedEx = Optional.of(ex);
             }
@@ -155,6 +159,12 @@ public abstract class DbCreator {
                     throw new DomainDrivenTestException("Could not record data population script.", ex);
                 }
             }
+        }
+        // After the first test in the test class: repopulation of test data.
+        else {
+            // Apply the data population script.
+            logger.debug("Executing data population script.");
+            config.getInstance(TransactionalExecution.class).execStrict(conn -> batchExecSql(new ArrayList<>(dataScripts), conn, BATCH_SIZE));
         }
 
         if (raisedEx.isPresent()) {

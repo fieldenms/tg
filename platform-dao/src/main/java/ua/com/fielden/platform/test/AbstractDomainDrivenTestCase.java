@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test;
 
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
 import org.joda.time.DateTime;
@@ -50,6 +51,16 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
             ERR_INVALID_NUMBER_OF_KEY_VALUES = "Number of key values is %s but should be %s.",
             ERR_MISSING_SESSION = "Session is missing, most likely, due to missing @SessionRequired annotation.";
 
+    /// An offset for the ID sequence when it is being reset to prevent overlaps between test data population and intermediate
+    /// data in test cases.
+    /// It serves as extra headroom for unusual circumstances (e.g., manually adding statements to a data population script).
+    ///
+    public static final int ID_HEADROOM = 1_000_000;
+
+    /// A fallback value for the ID seed used to restart the ID sequence before each test method.
+    ///
+    public static final long DEFAULT_ID_SEED = 10_000_000L;
+
     private static final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateFormat DATE_TIME_FORMAT_WITHOUT_SECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private static final DateFormat DATE_TIME_FORMAT_WITHOUT_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -60,6 +71,15 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     private static ICompanionObjectFinder coFinder;
     private static EntityFactory factory;
     private static Function<Class<?>, Object> instantiator;
+
+    /// This map stores ID seeds for all test classes.
+    /// Each test class is assigned an ID seed after its own dataset is populated, which occurs before the first test method is executed.
+    /// Before each test method, the ID sequence is restarted with the ID seed of the corresponding test class to prevent
+    /// ID conflicts between entities in the dataset and any intermediate entities persisted within a test method.
+    ///
+    /// No synchronisation is required as TG supports only synchronous execution of tests within one JVM.
+    ///
+    private static final Map<Class<?>, Long> idSeedMap = new HashMap<>();
 
     private DbCreator dbCreator;
     private Session session;
@@ -76,11 +96,21 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Before
     public final void beforeTest() throws Exception {
         dbCreator.populateOrRestoreData(this);
+        resetIdGenerator();
     }
 
     @SessionRequired
     protected void resetIdGenerator() {
-        DbUtils.resetSequenceGenerator(ID_SEQUENCE_NAME, 1000000, this.getSession());
+        final var seed = idSeedMap.getOrDefault(this.getClass(), DEFAULT_ID_SEED);
+        DbUtils.resetSequenceGenerator(ID_SEQUENCE_NAME, seed.intValue(), this.getSession());
+    }
+
+    protected void setIdSeed(final long value) {
+        idSeedMap.put(this.getClass(), value);
+    }
+
+    protected @Nullable Long getIdSeed() {
+        return idSeedMap.get(this.getClass());
     }
 
     @After
