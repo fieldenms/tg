@@ -26,6 +26,12 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         return PlatformTestDomainTypes.entityTypes;
     }
 
+    @Override
+    public void prePopulateDomain() {}
+
+    @Override
+    public void afterPrePopulation() {}
+
     /// Initialises a test user.
     /// Needs to be invoked in descendant classes.
     ///

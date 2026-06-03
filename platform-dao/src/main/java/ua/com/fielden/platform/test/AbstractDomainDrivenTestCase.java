@@ -93,6 +93,43 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     ///
     protected abstract List<Class<? extends AbstractEntity<?>>> domainEntityTypes();
 
+    /// Controls caching of data produced by methods annotated with `@EnsureData`.
+    ///
+    public boolean skipCaching() {
+        return useSavedDataPopulationScript() || saveDataPopulationScriptToFile();
+    }
+
+    /// Builds the JVM-wide pre-population dataset for tests in Cached Mode.
+    ///
+    /// Invoked once per JVM, before any test in Cached Mode runs, by the test framework when:
+    /// - the current test class is in Cached Mode ([#skipCaching] returns `false`), AND
+    /// - pre-population has not yet occurred in this JVM, AND
+    /// - `loadDataScriptFromFile` is `false` (i.e., scripts are being generated, not loaded from disk).
+    ///
+    /// If `loadDataScriptFromFile` is `true`, this method is never called, and previously created scripts are used instead.
+    ///
+    /// Implementations should call all methods annotated with `@EnsureData`.
+    /// Each such call is intercepted by the `@EnsureData` interceptor and recorded as an SQL script.
+    /// Calling all such methods in this single procedure ensures that the IDs assigned to entities
+    /// across different methods do not conflict, since they all draw from the ID sequence in one
+    /// continuous run.
+    ///
+    /// After this method returns:
+    /// - The framework captures the ID seed from the populated state.
+    /// - The seed is persisted to disk as a sequence-restart script for a future JVM run with `loadDataScriptFromFile = true`.
+    /// - The database is truncated; only the in-memory `@EnsureData` scripts remain, ready to be replayed by subsequent test classes.
+    ///
+    /// This method will be called with non-strict model verification active ([AbstractEntity#useNonStrictModelVerification]).
+    ///
+    public abstract void prePopulateDomain();
+
+    /// Invoked by the test framework after [#prePopulateDomain] completes, but **before** the database is truncated.
+    ///
+    /// Implementations should release any state accumulated during pre-population that must be reset for the upcoming test methods.
+    /// The typical use case is invoking the cleanup routine registered by the `@EnsureData` interceptor.
+    ///
+    public abstract void afterPrePopulation();
+
     @Before
     public final void beforeTest() throws Exception {
         dbCreator.populateOrRestoreData(this);
