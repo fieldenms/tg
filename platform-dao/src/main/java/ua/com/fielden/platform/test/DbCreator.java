@@ -17,9 +17,11 @@ import ua.com.fielden.platform.utils.DbUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
@@ -68,10 +70,20 @@ import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
 ///   For this option to be effective, test data must have been previously saved to a file.
 ///
 public abstract class DbCreator {
+
     public static final String baseDir = "./src/test/resources/db";
     public static final String ddlScriptFileName = format("%s/create-db-ddl.script", DbCreator.baseDir);
 
     public static final int BATCH_SIZE = 1000;
+
+    public static String prePopulationScriptPath(final String name) {
+        return format("%s/prePopulate-%s.script", DbCreator.baseDir, name);
+    }
+
+    private static boolean isPrePopulationScript(final Path path) {
+        final var filename = path.getFileName().toString();
+        return filename.startsWith("prePopulate-") && filename.endsWith(".script");
+    }
 
     private static boolean PRE_POPULATED = false;
 
@@ -206,7 +218,35 @@ public abstract class DbCreator {
             // Pre-population occurs only once per JVM (controlled by PRE_POPULATED).
             if (!PRE_POPULATED) {
                 if (!loadDataScriptFromFile) {
-                    logger.info(() -> "%s: Creating all pre-population scripts.".formatted(testCaseName));
+                    logger.info(() -> "Creating all pre-population scripts.");
+
+                    // Delete all existing pre-population scripts.
+                    if (java.nio.file.Files.exists(Path.of(baseDir))) {
+                        logger.info(() -> "Deleting existing pre-population scripts.");
+                        try (final Stream<Path> paths = java.nio.file.Files.list(Path.of(baseDir))) {
+                            final var delCount = paths.filter(DbCreator::isPrePopulationScript)
+                                    .filter(p -> {
+                                        try {
+                                            return java.nio.file.Files.deleteIfExists(p);
+                                        } catch (final IOException ex) {
+                                            logger.warn(() -> "Could not delete pre-population script [%s]. This may affect test results.".formatted(p), ex);
+                                            return false;
+                                        }
+                                    }).count();
+                            logger.info(() -> "Deleted %s pre-population scripts.".formatted(delCount));
+                        } catch (final IOException ex) {
+                            logger.warn(() -> "Could not list existing pre-population scripts. This may affect test results.", ex);
+                        }
+                    }
+
+                    // Delete the ID seed script.
+                    try {
+                        if (java.nio.file.Files.deleteIfExists(Path.of(idSequenceScriptPath()))) {
+                            logger.info(() -> "Deleted [%s].".formatted(idSequenceScriptPath()));
+                        }
+                    } catch (final IOException ex) {
+                        logger.warn(() -> "Could not delete [%s].".formatted(idSequenceScriptPath()), ex);
+                    }
 
                     // let's use non-strict mode for scripting
                     try {
