@@ -61,6 +61,28 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     ///
     public static final long DEFAULT_ID_SEED = 10_000_000L;
 
+    /// A system property (type: boolean) that enables test data pre-population scripts to be loaded from disk.
+    /// When `true`, initial pre-population for Cached Mode tests ([#prePopulateDomain]) is skipped in favour of
+    /// scripts created by a prior Cached Mode test run.
+    ///
+    public static final String LOAD_DATA_SCRIPT_FROM_FILE = "loadDataScriptFromFile";
+
+    /// A system property (type: boolean) that enables test data pre-population scripts to be persisted to disk.
+    /// When `true`, the scripts created during initial pre-population for Cached Mode tests ([#prePopulateDomain])
+    /// and a DDL script are all persisted to disk.
+    /// Those scripts can later be used by enabling [#LOAD_DATA_SCRIPT_FROM_FILE] and [#LOAD_DDL_SCRIPT_FROM_FILE].
+    ///
+    public static final String SAVE_SCRIPTS_TO_FILE = "saveScriptsToFile";
+
+    /// A system property (type: boolean) that enables a DDL script to be loaded from disk.
+    /// If `true`, but a DDL script does not exist, the DDL will be generated ad-hoc.
+    ///
+    public static final String LOAD_DDL_SCRIPT_FROM_FILE = "loadDdlScriptFromFile";
+
+    /// A system property that specifies a URI to the database that will be used for testing.
+    ///
+    public static final String DATABASE_URI = "databaseUri";
+
     private static final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateFormat DATE_TIME_FORMAT_WITHOUT_SECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private static final DateFormat DATE_TIME_FORMAT_WITHOUT_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

@@ -26,6 +26,7 @@ import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.test.AbstractDomainDrivenTestCase.DEFAULT_ID_SEED;
+import static ua.com.fielden.platform.test.AbstractDomainDrivenTestCase.LOAD_DATA_SCRIPT_FROM_FILE;
 import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
 
 /// Abstracts the logic for creating the initial test-case database
@@ -194,7 +195,7 @@ public abstract class DbCreator {
     }
 
     private void runPrePopulation(final AbstractDomainDrivenTestCase testCase) {
-        final var loadDataScriptFromFile = Boolean.getBoolean("loadDataScriptFromFile");
+        final var loadDataScriptFromFile = Boolean.getBoolean(LOAD_DATA_SCRIPT_FROM_FILE);
         final var dbUtils = config.getInstance(DbUtils.class);
         final var dbVersionProvider = config.getInstance(IDbVersionProvider.class);
         final var testCaseName = PropertyTypeDeterminator.stripIfNeeded(testCase.getClass()).getSimpleName();
@@ -240,7 +241,7 @@ public abstract class DbCreator {
                     // loadDataScriptFromFile = true means that a prior Cached Mode test run performed pre-population.
                     // Load the seed ID from a script created by that test run.
 
-                    logger.info(() -> format("%s: Skipping pre-population, [loadDataScriptFromFile = %s]. Loading the seed ID.", testCaseName, loadDataScriptFromFile));
+                    logger.info(() -> format("%s: Skipping pre-population, [%s = %s]. Loading the seed ID.", testCaseName, LOAD_DATA_SCRIPT_FROM_FILE, loadDataScriptFromFile));
 
                     final var idSequenceScript = new File(idSequenceScriptPath());
                     if (idSequenceScript.exists()) {
@@ -253,10 +254,10 @@ public abstract class DbCreator {
                         PRE_POPULATED_ID_SEED = config.getInstance(TransactionalExecution.class).execWithSession($ -> DbUtils.nextIdValue(ID_SEQUENCE_NAME, $.getSession()));
                     }
                     else {
-                        logger.warn(() -> format("%s does not exist, but [loadDataScriptFromFile = %s]."
+                        logger.warn(() -> format("%s does not exist, but [%s = %s]."
                                                  + " This may result in entity ID conflicts during test data population."
-                                                 + " It is recommended to regenerate all scripts by running all tests with [loadDataScriptFromFile = false].",
-                                                 idSequenceScriptPath(), loadDataScriptFromFile));
+                                                 + " It is recommended to regenerate all scripts by running all tests with [%s = false].",
+                                                 idSequenceScriptPath(), LOAD_DATA_SCRIPT_FROM_FILE, loadDataScriptFromFile, LOAD_DATA_SCRIPT_FROM_FILE));
                         PRE_POPULATED_ID_SEED = DEFAULT_ID_SEED;
                     }
                 }
