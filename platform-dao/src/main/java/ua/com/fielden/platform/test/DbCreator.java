@@ -27,8 +27,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
-import static ua.com.fielden.platform.test.AbstractDomainDrivenTestCase.DEFAULT_ID_SEED;
-import static ua.com.fielden.platform.test.AbstractDomainDrivenTestCase.LOAD_DATA_SCRIPT_FROM_FILE;
+import static ua.com.fielden.platform.test.AbstractDomainDrivenTestCase.*;
 import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
 
 /// Abstracts the logic for creating the initial test-case database
@@ -208,6 +207,7 @@ public abstract class DbCreator {
 
     private void runPrePopulation(final AbstractDomainDrivenTestCase testCase) {
         final var loadDataScriptFromFile = Boolean.getBoolean(LOAD_DATA_SCRIPT_FROM_FILE);
+        final var saveScriptsToFile = Boolean.getBoolean(SAVE_SCRIPTS_TO_FILE);
         final var dbUtils = config.getInstance(DbUtils.class);
         final var dbVersionProvider = config.getInstance(IDbVersionProvider.class);
         final var testCaseName = PropertyTypeDeterminator.stripIfNeeded(testCase.getClass()).getSimpleName();
@@ -258,9 +258,11 @@ public abstract class DbCreator {
                     }
 
                     PRE_POPULATED_ID_SEED = AbstractDomainDrivenTestCase.ID_HEADROOM + dbUtils.maxEntityId();
-                    saveScriptToFile(List.of(dbUtils.sqlRestartSequence(dbVersionProvider.dbVersion(), ID_SEQUENCE_NAME, PRE_POPULATED_ID_SEED)),
-                                     idSequenceScriptPath());
-                    logger.info(() -> "%s: Created %s with ID=%s.".formatted(testCaseName, idSequenceScriptPath(), PRE_POPULATED_ID_SEED));
+                    if (saveScriptsToFile) {
+                        saveScriptToFile(List.of(dbUtils.sqlRestartSequence(dbVersionProvider.dbVersion(), ID_SEQUENCE_NAME, PRE_POPULATED_ID_SEED)),
+                                         idSequenceScriptPath());
+                        logger.info(() -> "%s: Created %s with ID=%s.".formatted(testCaseName, idSequenceScriptPath(), PRE_POPULATED_ID_SEED));
+                    }
 
                     logger.info(() -> "%s: Completed creating all pre-population scripts. Clearing the DB.".formatted(testCaseName));
 
