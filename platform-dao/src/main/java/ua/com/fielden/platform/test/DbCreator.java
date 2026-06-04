@@ -214,11 +214,12 @@ public abstract class DbCreator {
 
         // Cached Mode: pre-populate or load from file.
         if (!testCase.skipCaching()) {
-            logger.info(() -> "%s: Cached Mode is active.".formatted(testCaseName));
+            logger.info(() -> format("%s: Cached Mode is active. [%s = %s], [%s = %s]",
+                                     testCaseName, LOAD_DATA_SCRIPT_FROM_FILE, loadDataScriptFromFile, SAVE_SCRIPTS_TO_FILE, saveScriptsToFile));
             // Pre-population occurs only once per JVM (controlled by PRE_POPULATED).
             if (!PRE_POPULATED) {
                 if (!loadDataScriptFromFile) {
-                    logger.info(() -> "Creating all pre-population scripts.");
+                    logger.info(() -> "Performing initial pre-population.");
 
                     // Delete all existing pre-population scripts.
                     if (java.nio.file.Files.exists(Path.of(baseDir))) {
@@ -261,10 +262,10 @@ public abstract class DbCreator {
                     if (saveScriptsToFile) {
                         saveScriptToFile(List.of(dbUtils.sqlRestartSequence(dbVersionProvider.dbVersion(), ID_SEQUENCE_NAME, PRE_POPULATED_ID_SEED)),
                                          idSequenceScriptPath());
-                        logger.info(() -> "%s: Created %s with ID=%s.".formatted(testCaseName, idSequenceScriptPath(), PRE_POPULATED_ID_SEED));
+                        logger.info(() -> "Created %s with ID=%s.".formatted(idSequenceScriptPath(), PRE_POPULATED_ID_SEED));
                     }
 
-                    logger.info(() -> "%s: Completed creating all pre-population scripts. Clearing the DB.".formatted(testCaseName));
+                    logger.info(() -> "Completed creating all pre-population scripts. Clearing the DB.");
 
                     // After pre-population clear the DB for the upcoming test case.
                     try {
@@ -274,7 +275,7 @@ public abstract class DbCreator {
                             batchExecSql(script, conn, DbCreator.BATCH_SIZE);
                         });
                     } catch (final Exception ex) {
-                        final String msg = "%s: Failed to clear the DB after pre-population.".formatted(testCaseName);
+                        final String msg = "Failed to clear the DB after pre-population.";
                         logger.fatal(msg, ex);
                         throw new DomainDrivenTestException(msg, ex);
                     }
@@ -283,7 +284,7 @@ public abstract class DbCreator {
                     // loadDataScriptFromFile = true means that a prior Cached Mode test run performed pre-population.
                     // Load the seed ID from a script created by that test run.
 
-                    logger.info(() -> format("%s: Skipping pre-population, [%s = %s]. Loading the seed ID.", testCaseName, LOAD_DATA_SCRIPT_FROM_FILE, loadDataScriptFromFile));
+                    logger.info(() -> "Skipping pre-population. Loading the seed ID.");
 
                     final var idSequenceScript = new File(idSequenceScriptPath());
                     if (idSequenceScript.exists()) {
