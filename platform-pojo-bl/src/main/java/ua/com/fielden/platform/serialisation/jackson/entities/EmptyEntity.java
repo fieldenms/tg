@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Entity class used for testing.
@@ -16,4 +17,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 @EntityTitle(value = "Empty entity", desc = "The entity without any properties for testing")
 public class EmptyEntity extends AbstractEntity<String> {
 
+    @Override
+    @Observable
+    public EmptyEntity setDesc(String desc) {
+        return super.setDesc(desc);
+    }
 }

@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.findAnnotationMirror;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isSameType;
 
 /**
  * Performs verification of a domain model with respect to the {@link KeyType} annotation.
@@ -149,7 +151,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
             @Override
             public Optional<ViolatingElement> verify(final EntityElement entity) {
-                final Optional<? extends AnnotationMirror> maybeKeyTypeAnnotMirror = entityFinder.findAnnotationMirror(entity, AT_KEY_TYPE_CLASS);
+                final Optional<? extends AnnotationMirror> maybeKeyTypeAnnotMirror = findAnnotationMirror(entity, AT_KEY_TYPE_CLASS);
                 if (maybeKeyTypeAnnotMirror.isEmpty()) {
                     return Optional.empty();
                 }
@@ -226,7 +228,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
             @Override
             public Optional<ViolatingElement> verify(final EntityElement entity) {
-                final Optional<? extends AnnotationMirror> maybeEntityKeyTypeAnnotMirror = entityFinder.findAnnotationMirror(entity, AT_KEY_TYPE_CLASS);
+                final Optional<? extends AnnotationMirror> maybeEntityKeyTypeAnnotMirror = findAnnotationMirror(entity, AT_KEY_TYPE_CLASS);
                 if (maybeEntityKeyTypeAnnotMirror.isEmpty()) {
                     return Optional.empty();
                 }
@@ -306,7 +308,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
                 // keyProp might have an unresolved type but we still let this verifier run because declaration of property
                 // key along with @KeyType(NoKey.class) is incorrect regardless of its type
-                if (elementFinder.isSameType(keyType, NoKey.class)) {
+                if (isSameType(keyType, NoKey.class)) {
                     return Optional.of(new ViolatingElement(keyProp.element(), Kind.ERROR,
                             ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY));
                 } else {

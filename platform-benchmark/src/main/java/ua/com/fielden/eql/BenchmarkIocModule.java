@@ -17,10 +17,13 @@ import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
+import ua.com.fielden.platform.web.annotations.AppUri;
 
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+
+import static java.lang.String.format;
 
 class BenchmarkIocModule extends BasicWebServerIocModule  {
 
@@ -48,6 +51,7 @@ class BenchmarkIocModule extends BasicWebServerIocModule  {
         bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hashing key, which is used to hash session data for a test server.");
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(2); // five minutes
+        bindConstant().annotatedWith(AppUri.class).to(format("https://%s:%s%s", getProps().get("web.domain"), getProps().get("port"), getProps().get("web.path")));
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
     }

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.rangeClosed;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
@@ -394,6 +395,18 @@ public class OrderByTest extends AbstractDaoTestCase {
 
         final var expected = allEntities();
         final var actual = co$(TgPersonName.class).getAllEntities(from(query).model());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void an_order_by_list_may_contain_properties_from_the_query_source_that_are_not_yielded() {
+        final var query = select(TgPersonName.class)
+                .orderBy().prop("key").asc()
+                .yield().prop("id").as("x")
+                .modelAsAggregate();
+
+        final var expected = allEntities().stream().map(AbstractEntity::getId).collect(toSet());
+        final var actual = co(EntityAggregates.class).getAllEntities(from(query).model()).stream().map(agg -> agg.get("x")).collect(toSet());
         assertEquals(expected, actual);
     }
 

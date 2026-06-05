@@ -1,30 +1,21 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.security.user.User;
 
-/**
- * Master entity object.
- *
- * @author Developers
- *
- */
+/// Master entity object.
+///
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(ITgSubSystem.class)
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
-public class TgSubSystem extends AbstractEntity<String> {
+public class TgSubSystem extends AbstractPersistentEntity<String> {
+
+    @IsProperty
+    @MapTo
+    private String key;
 
     @IsProperty
     @MapTo
@@ -85,6 +76,16 @@ public class TgSubSystem extends AbstractEntity<String> {
 
     public TgCategory getFirstCategory() {
         return firstCategory;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    @Observable
+    public TgSubSystem setKey(final String key) {
+        this.key = key;
+        return this;
     }
 
 }

@@ -10,6 +10,7 @@ import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.TgAppActionsResource;
 import ua.com.fielden.platform.web.vulcanizer.exceptions.VulcanisationException;
 
 import java.io.*;
@@ -146,6 +147,7 @@ public class VulcanizingUtility {
             LOGGER.info(format("\tGenerating checksums..."));
             final List<String> allExternalResources = listOf(
                 "/app/tg-app-index.html",
+                "/resources/app/tg-app-resource-loader.js",
                 "/resources/startup-resources-vulcanized.js",
                 "/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js",
                 "/resources/polymer/web-animations-js/web-animations-next-lite.min.js",
@@ -329,6 +331,7 @@ public class VulcanizingUtility {
         }
         downloadSource("app", "tg-app-config.js", webResourceLoader);
         downloadSource("app", "tg-app.js", webResourceLoader);
+        downloadSource("app", TgAppActionsResource.JS_FILE_NAME, webResourceLoader);
         LOGGER.info("\t\t\tDownloading generated resource 'application-startup-resources.js'...");
         downloadSource("app", "application-startup-resources.js", webResourceLoader);
         LOGGER.info("\tDownloaded generated resources.");

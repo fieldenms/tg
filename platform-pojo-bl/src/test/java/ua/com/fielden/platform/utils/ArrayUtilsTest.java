@@ -4,8 +4,7 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.utils.ArrayUtils.contains;
-import static ua.com.fielden.platform.utils.ArrayUtils.getLast;
+import static ua.com.fielden.platform.utils.ArrayUtils.*;
 
 public class ArrayUtilsTest {
 
@@ -49,6 +48,16 @@ public class ArrayUtilsTest {
         assertTrue(contains(new Object[]{"a", null}, "a"));
         assertTrue(contains(new Object[]{"a", null}, null));
         assertTrue(contains(new Object[]{"a", "b", "a"}, "a"));
+    }
+
+    @Test
+    public void findIndex_returns_index_of_the_first_element_that_satisfies_predicate() {
+        assertEquals(1, findIndex(new Integer[]{ 1, 2 }, x -> x > 1));
+        assertEquals(1, findIndex(new Integer[]{ 1, 2, 3 }, x -> x > 1));
+        assertEquals(0, findIndex(new Integer[]{ 2 }, x -> x > 1));
+        assertEquals(-1, findIndex(new Integer[]{ 1 }, x -> x > 1));
+        assertEquals(-1, findIndex(new Integer[]{}, x -> x > 1));
+        assertEquals(-1, findIndex(new Integer[]{ -1, -2, -3 }, x -> x > 1));
     }
 
 }

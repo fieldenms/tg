@@ -272,7 +272,7 @@ class Fragment {
     position in this fragment. The result object will be reused
     (overwritten) the next time the function is called. @internal
     */
-    findIndex(pos, round = -1) {
+    findIndex(pos) {
         if (pos == 0)
             return retIndex(0, pos);
         if (pos == this.size)
@@ -282,7 +282,7 @@ class Fragment {
         for (let i = 0, curPos = 0;; i++) {
             let cur = this.child(i), end = curPos + cur.nodeSize;
             if (end >= pos) {
-                if (end == pos || round > 0)
+                if (end == pos)
                     return retIndex(i + 1, end);
                 return retIndex(i, curPos);
             }
@@ -311,7 +311,7 @@ class Fragment {
             return Fragment.empty;
         if (!Array.isArray(value))
             throw new RangeError("Invalid input for Fragment.fromJSON");
-        return new Fragment(value.map(schema.nodeFromJSON));
+        return Fragment.fromArray(value.map(schema.nodeFromJSON));
     }
     /**
     Build a fragment from an array of nodes. Ensures that adjacent
@@ -545,17 +545,6 @@ given an invalid replacement.
 */
 class ReplaceError extends Error {
 }
-/*
-ReplaceError = function(this: any, message: string) {
-  let err = Error.call(this, message)
-  ;(err as any).__proto__ = ReplaceError.prototype
-  return err
-} as any
-
-ReplaceError.prototype = Object.create(Error.prototype)
-ReplaceError.prototype.constructor = ReplaceError
-ReplaceError.prototype.name = "ReplaceError"
-*/
 /**
 A slice represents a piece cut out of a larger document. It
 stores not only a fragment, but also the depth up to which nodes on
@@ -601,7 +590,7 @@ class Slice {
     @internal
     */
     insertAt(pos, fragment) {
-        let content = insertInto(this.content, pos + this.openStart, fragment);
+        let content = insertInto(this.content, pos + this.openStart, fragment, this.openStart + 1, this.openEnd + 1);
         return content && new Slice(content, this.openStart, this.openEnd);
     }
     /**
@@ -675,14 +664,14 @@ function removeRange(content, from, to) {
         throw new RangeError("Removing non-flat range");
     return content.replaceChild(index, child.copy(removeRange(child.content, from - offset - 1, to - offset - 1)));
 }
-function insertInto(content, dist, insert, parent) {
+function insertInto(content, dist, insert, openStart, openEnd, parent) {
     let { index, offset } = content.findIndex(dist), child = content.maybeChild(index);
     if (offset == dist || child.isText) {
-        if (parent && !parent.canReplace(index, index, insert))
+        if (parent && openStart <= 0 && openEnd <= 0 && !parent.canReplace(index, index, insert))
             return null;
         return content.cut(0, dist).append(insert).append(content.cut(dist));
     }
-    let inner = insertInto(child.content, dist - offset - 1, insert);
+    let inner = insertInto(child.content, dist - offset - 1, insert, index == 0 ? openStart - 1 : 0, index == content.childCount - 1 ? openEnd - 1 : 0, child);
     return inner && content.replaceChild(index, child.copy(inner));
 }
 function replace($from, $to, slice) {
@@ -1212,10 +1201,11 @@ class Node {
     */
     forEach(f) { this.content.forEach(f); }
     /**
-    Invoke a callback for all descendant nodes recursively between
+    Invoke a callback for all descendant nodes recursively overlapping
     the given two positions that are relative to start of this
-    node's content. The callback is invoked with the node, its
-    position relative to the original node (method receiver),
+    node's content. This includes all ancestors of the nodes
+    containing the two positions. The callback is invoked with the
+    node, its position relative to the original node (method receiver),
     its parent node, and its child index. When the callback returns
     false for a given node, that node's children will not be
     recursed over. The last parameter can be used to specify a
@@ -1245,7 +1235,7 @@ class Node {
     `blockSeparator` is given, it will be inserted to separate text
     from different block nodes. If `leafText` is given, it'll be
     inserted for every non-text leaf node encountered, otherwise
-    [`leafText`](https://prosemirror.net/docs/ref/#model.NodeSpec^leafText) will be used.
+    [`leafText`](https://prosemirror.net/docs/ref/#model.NodeSpec.leafText) will be used.
     */
     textBetween(from, to, blockSeparator, leafText) {
         return this.content.textBetween(from, to, blockSeparator, leafText);
@@ -2455,8 +2445,8 @@ class Schema {
             let type = this.marks[prop], excl = type.spec.excludes;
             type.excluded = excl == null ? [type] : excl == "" ? [] : gatherMarks(this, excl.split(" "));
         }
-        this.nodeFromJSON = this.nodeFromJSON.bind(this);
-        this.markFromJSON = this.markFromJSON.bind(this);
+        this.nodeFromJSON = json => Node.fromJSON(this, json);
+        this.markFromJSON = json => Mark.fromJSON(this, json);
         this.topNodeType = this.nodes[this.spec.topNode || "doc"];
         this.cached.wrappings = Object.create(null);
     }
@@ -2490,20 +2480,6 @@ class Schema {
         if (typeof type == "string")
             type = this.marks[type];
         return type.create(attrs);
-    }
-    /**
-    Deserialize a node from its JSON representation. This method is
-    bound.
-    */
-    nodeFromJSON(json) {
-        return Node.fromJSON(this, json);
-    }
-    /**
-    Deserialize a mark from its JSON representation. This method is
-    bound.
-    */
-    markFromJSON(json) {
-        return Mark.fromJSON(this, json);
     }
     /**
     @internal
@@ -2687,7 +2663,7 @@ class DOMParser {
     /**
     Construct a DOM parser using the parsing rules listed in a
     schema's [node specs](https://prosemirror.net/docs/ref/#model.NodeSpec.parseDOM), reordered by
-    [priority](https://prosemirror.net/docs/ref/#model.ParseRule.priority).
+    [priority](https://prosemirror.net/docs/ref/#model.GenericParseRule.priority).
     */
     static fromSchema(schema) {
         return schema.cached.domParser ||
@@ -2809,6 +2785,7 @@ class ParseContext {
         let value = dom.nodeValue;
         let top = this.top, preserveWS = (top.options & OPT_PRESERVE_WS_FULL) ? "full"
             : this.localPreserveWS || (top.options & OPT_PRESERVE_WS) > 0;
+        let { schema } = this.parser;
         if (preserveWS === "full" ||
             top.inlineContext(dom) ||
             /[^ \t\r\n\u000c]/.test(value)) {
@@ -2826,14 +2803,24 @@ class ParseContext {
                         value = value.slice(1);
                 }
             }
-            else if (preserveWS !== "full") {
-                value = value.replace(/\r?\n|\r/g, " ");
-            }
-            else {
+            else if (preserveWS === "full") {
                 value = value.replace(/\r\n?/g, "\n");
             }
+            else if (schema.linebreakReplacement && /[\r\n]/.test(value) && this.top.findWrapping(schema.linebreakReplacement.create())) {
+                let lines = value.split(/\r?\n|\r/);
+                for (let i = 0; i < lines.length; i++) {
+                    if (i)
+                        this.insertNode(schema.linebreakReplacement.create(), marks, true);
+                    if (lines[i])
+                        this.insertNode(schema.text(lines[i]), marks, !/\S/.test(lines[i]));
+                }
+                value = "";
+            }
+            else {
+                value = value.replace(/\r?\n|\r/g, " ");
+            }
             if (value)
-                this.insertNode(this.parser.schema.text(value), marks);
+                this.insertNode(schema.text(value), marks, !/\S/.test(value));
             this.findInText(dom);
         }
         else {
@@ -2897,7 +2884,7 @@ class ParseContext {
     ignoreFallback(dom, marks) {
         // Ignored BR nodes should at least create an inline context
         if (dom.nodeName == "BR" && (!this.top.type || !this.top.type.inlineContent))
-            this.findPlace(this.parser.schema.text("-"), marks);
+            this.findPlace(this.parser.schema.text("-"), marks, true);
     }
     // Run any style parser associated with the node's styles. Either
     // return an updated array of marks, or null to indicate some of the
@@ -2945,7 +2932,7 @@ class ParseContext {
                     marks = inner;
                 }
             }
-            else if (!this.insertNode(nodeType.create(rule.attrs), marks)) {
+            else if (!this.insertNode(nodeType.create(rule.attrs), marks, dom.nodeName == "BR")) {
                 this.leafFallback(dom, marks);
             }
         }
@@ -2962,7 +2949,7 @@ class ParseContext {
         }
         else if (rule.getContent) {
             this.findInside(dom);
-            rule.getContent(dom, this.parser.schema).forEach(node => this.insertNode(node, marks));
+            rule.getContent(dom, this.parser.schema).forEach(node => this.insertNode(node, marks, false));
         }
         else {
             let contentDOM = dom;
@@ -2993,19 +2980,22 @@ class ParseContext {
     // Try to find a way to fit the given node type into the current
     // context. May add intermediate wrappers and/or leave non-solid
     // nodes that we're in.
-    findPlace(node, marks) {
+    findPlace(node, marks, cautious) {
         let route, sync;
-        for (let depth = this.open; depth >= 0; depth--) {
+        for (let depth = this.open, penalty = 0; depth >= 0; depth--) {
             let cx = this.nodes[depth];
             let found = cx.findWrapping(node);
-            if (found && (!route || route.length > found.length)) {
+            if (found && (!route || route.length > found.length + penalty)) {
                 route = found;
                 sync = cx;
                 if (!found.length)
                     break;
             }
-            if (cx.solid)
-                break;
+            if (cx.solid) {
+                if (cautious)
+                    break;
+                penalty += 2;
+            }
         }
         if (!route)
             return null;
@@ -3015,13 +3005,13 @@ class ParseContext {
         return marks;
     }
     // Try to insert the given node, adjusting the context when needed.
-    insertNode(node, marks) {
+    insertNode(node, marks, cautious) {
         if (node.isInline && this.needsBlock && !this.top.type) {
             let block = this.textblockFromContext();
             if (block)
                 marks = this.enterInner(block, null, marks);
         }
-        let innerMarks = this.findPlace(node, marks);
+        let innerMarks = this.findPlace(node, marks, cautious);
         if (innerMarks) {
             this.closeExtra();
             let top = this.top;
@@ -3039,7 +3029,7 @@ class ParseContext {
     // Try to start a node of the given type, adjusting the context when
     // necessary.
     enter(type, attrs, marks, preserveWS) {
-        let innerMarks = this.findPlace(type.create(attrs), marks);
+        let innerMarks = this.findPlace(type.create(attrs), marks, false);
         if (innerMarks)
             innerMarks = this.enterInner(type, attrs, marks, true, preserveWS);
         return innerMarks;
@@ -3303,6 +3293,8 @@ class DOMSerializer {
     @internal
     */
     serializeNodeInner(node, options) {
+        if (node.isText)
+            return doc(options).createTextNode(node.text);
         let { dom, contentDOM } = renderSpec(doc(options), this.nodes[node.type.name](node), null, node.attrs);
         if (contentDOM) {
             if (node.isLeaf)
@@ -3337,6 +3329,9 @@ class DOMSerializer {
         return toDOM && renderSpec(doc(options), toDOM(mark, inline), null, mark.attrs);
     }
     static renderSpec(doc, structure, xmlNS = null, blockArraysIn) {
+        // Kludge for backwards-compatibility with accidental original behavious
+        if (typeof structure == "string")
+            return { dom: doc.createTextNode(structure) };
         return renderSpec(doc, structure, xmlNS, blockArraysIn);
     }
     /**
@@ -3408,11 +3403,9 @@ function suspiciousAttributesInner(attrs) {
     return result;
 }
 function renderSpec(doc, structure, xmlNS, blockArraysIn) {
-    if (typeof structure == "string")
-        return { dom: doc.createTextNode(structure) };
-    if (structure.nodeType != null)
+    if (structure.nodeType == 3)
         return { dom: structure };
-    if (structure.dom && structure.dom.nodeType != null)
+    if (structure.dom && structure.dom.nodeType == 3)
         return structure;
     let tagName = structure[0], suspicious;
     if (typeof tagName != "string")
@@ -3435,6 +3428,8 @@ function renderSpec(doc, structure, xmlNS, blockArraysIn) {
                 let space = name.indexOf(" ");
                 if (space > 0)
                     dom.setAttributeNS(name.slice(0, space), name.slice(space + 1), attrs[name]);
+                else if (name == "style" && dom.style)
+                    dom.style.cssText = attrs[name];
                 else
                     dom.setAttribute(name, attrs[name]);
             }
@@ -3445,6 +3440,9 @@ function renderSpec(doc, structure, xmlNS, blockArraysIn) {
             if (i < structure.length - 1 || i > start)
                 throw new RangeError("Content hole must be the only child of its parent node");
             return { dom, contentDOM: dom };
+        }
+        else if (typeof child == "string") {
+            dom.appendChild(doc.createTextNode(child));
         }
         else {
             let { dom: inner, contentDOM: innerContent } = renderSpec(doc, child, xmlNS, blockArraysIn);

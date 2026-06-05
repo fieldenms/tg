@@ -304,8 +304,8 @@ final class MigrationUtils {
             if (id == null && values.size() == 1 && values.getFirst() != null) {
                 LOGGER.warn(() -> "Could not find ID for [%s] with key [%s]".formatted(type.getSimpleName(), values.getFirst()));
             }
-            if (id == null && values.size() > 1 && values.stream().allMatch(Objects::isNull)) {
-                LOGGER.warn(() -> "Could not find ID for [%s] with key values %s".formatted(type.getSimpleName(), CollectionUtil.toString(values, "[%s]"::formatted, ", ")));
+            if (id == null && values.size() > 1 && values.stream().anyMatch(Objects::nonNull)) {
+                LOGGER.warn(() -> "Could not find ID for [%s] with key values: %s".formatted(type.getSimpleName(), CollectionUtil.toString(values, "[%s]"::formatted, ", ")));
             }
 
             return id;

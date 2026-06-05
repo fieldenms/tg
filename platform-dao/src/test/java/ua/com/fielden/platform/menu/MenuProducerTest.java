@@ -16,12 +16,8 @@ import java.util.Set;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
-/**
- * A test case for menu invisibility logic.
- * 
- * @author TG Team
- *
- */
+/// A test case for menu invisibility logic.
+///
 public class MenuProducerTest extends AbstractDaoTestCase {
 
     private final IMenuRetriever menuRetriever = new IMenuRetriever() {
@@ -69,7 +65,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
                         "module2/module2group2/module2group2item2",
                         "module2/module2group2/module2group2item3")));
 
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), "", "183");
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);
@@ -142,7 +138,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
     private void checkMenuVisibilityForUser(final String user, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(user));
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), "", "183");
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);
@@ -187,7 +183,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         up.setUser(co(User.class).findByKey("USER_2"));
 
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), "", "183");
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);
@@ -267,7 +263,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
     private void assertMenuInvisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey("USER_1"));
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), "", "183");
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);
@@ -302,7 +298,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
     private void assertMenuVisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(userName));
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class), "", "183");
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);
@@ -327,5 +323,4 @@ public class MenuProducerTest extends AbstractDaoTestCase {
         save(new_(User.class, "USER_4").setBase(false).setActive(true).setEmail("user4@mail").setBasedOnUser(user2));
         save(new_(User.class, "USER_5").setBase(false).setActive(false).setEmail("user5@mail").setBasedOnUser(user2));
     }
-
 }

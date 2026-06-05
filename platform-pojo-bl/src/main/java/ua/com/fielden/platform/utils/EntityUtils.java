@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.inject.Inject;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.processors.minheritance.SpecifiedBy;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -34,9 +36,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
-import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -55,10 +55,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
+import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -67,7 +65,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 public class EntityUtils {
-    private static final Logger logger = getLogger(EntityUtils.class);
+    private static final Logger logger = getLogger();
 
     private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
     private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
@@ -75,22 +73,25 @@ public class EntityUtils {
 
     public static final String ERR_PERSISTENT_NATURE_OF_ENTITY_TYPE = "Could not determine persistent nature of entity type [%s].";
 
-    /** Private default constructor to prevent instantiation. */
+    @Inject
+    private static IDates dates;
+
+    /// Private default constructor to prevent instantiation.
+    ///
     private EntityUtils() {
     }
 
-    /**
-     * dd/MM/yyyy format instance
-     */
+    /// dd/MM/yyyy format.
+    ///
+    /// **DEPRECATED:** Use [IDates#dateFormat()] instead.
+    ///
+    @Deprecated(forRemoval = true, since = "2.2.0")
     public static final String dateWithoutTimeFormat = "dd/MM/yyyy";
 
-    /**
-     * Convenient method for value to {@link String} conversion
-     *
-     * @param value
-     * @param valueType
-     * @return
-     */
+    /// Convenient method for value to [String] conversion.
+    ///
+    /// Returns an empty string if `value` is `null`.
+    ///
     public static String toString(final Object value, final Class<?> valueType) {
         if (value == null) {
             return "";
@@ -99,9 +100,10 @@ public class EntityUtils {
             return NumberFormat.getInstance().format(value);
         } else if (Number.class.isAssignableFrom(valueType) || valueType == double.class) {
             return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
-        } else if (Date.class.isAssignableFrom(valueType) || DateTime.class.isAssignableFrom(valueType)) {
-            final Date date = Date.class.isAssignableFrom(valueType) ? (Date) value : ((DateTime) value).toDate();
-            return new SimpleDateFormat(dateWithoutTimeFormat).format(date) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
+        } else if (value instanceof Date date) {
+            return dates.toString(date);
+        } else if (value instanceof DateTime dateTime) {
+            return dates.toString(dateTime.toDate());
         } else if (Money.class.isAssignableFrom(valueType)) {
             return value instanceof Number ? new Money(value.toString()).toString() : value.toString();
         } else if (valueType == BigDecimalWithTwoPlaces.class) {
@@ -113,12 +115,8 @@ public class EntityUtils {
         }
     }
 
-    /**
-     * Invokes method {@link #toString(Object, Class)} with the second argument being assigned as value's class.
-     *
-     * @param value
-     * @return
-     */
+    /// Invokes method [#toString(Object,Class)] with the second argument being assigned as value's class.
+    ///
     public static String toString(final Object value) {
         if (value == null) {
             return "";
@@ -126,12 +124,8 @@ public class EntityUtils {
         return toString(value, value.getClass());
     }
 
-    /**
-     * Converts {@link Number} to {@link BigDecimal} with the specified {@code scale}.
-     *
-     * @param number
-     * @return
-     */
+    /// Converts [Number] to [BigDecimal] with the specified `scale`.
+    ///
     public static BigDecimal toDecimal(final Number number, final int scale) {
         if (number instanceof final BigDecimal decimal) {
             return decimal.scale() == scale ? decimal : decimal.setScale(scale, RoundingMode.HALF_UP);
@@ -139,38 +133,23 @@ public class EntityUtils {
         return new BigDecimal(number.toString(), new MathContext(scale, RoundingMode.HALF_UP));
     }
 
-    /**
-     * The same as {@link #toDecimal(Number, int)}, but with scale set to 2.
-     *
-     * @param number
-     * @return
-     */
+    /// The same as [#toDecimal(Number,int)], but with scale set to 2.
+    ///
     public static BigDecimal toDecimal(final Number number) {
         return toDecimal(number, 2);
     }
 
-    /**
-     * This is a convenient function to get the first non-null value, similar as the COALESCE function in SQL.
-     * Throws exception {@link NoSuchElementException} if there was no non-null elements.
-     *
-     * @param value
-     * @param alternative
-     * @param otherAlternatives
-     * @return
-     */
+    /// This is a convenient function to get the first non-null value, similar as the COALESCE function in SQL.
+    /// Throws exception [NoSuchElementException] if there was no non-null elements.
+    ///
     public static <A> A coalesce(final A value, final A alternative, final A... otherAlternatives) {
         return concat(of(value, alternative), otherAlternatives != null ? stream(otherAlternatives) : empty())
                 .filter(v -> v != null)
                 .findFirst().get();
     }
 
-    /**
-     * Null-safe comparator.
-     *
-     * @param c1
-     * @param c2
-     * @return
-     */
+    /// Null-safe comparator.
+    ///
     public static <T> int safeCompare(final Comparable<T> c1, final T c2) {
         if (c1 == null && c2 == null) {
             return 0;
@@ -183,13 +162,8 @@ public class EntityUtils {
         }
     }
 
-    /**
-     * Null-safe equals based on the {@link AbstractEntity}'s id property. If id property is not present in both entities then default equals for entities will be called.
-     *
-     * @param entity1
-     * @param entity2
-     * @return
-     */
+    /// Null-safe equals based on the [AbstractEntity]'s id property. If id property is not present in both entities then default equals for entities will be called.
+    ///
     public static boolean areEqual(final AbstractEntity<?> entity1, final AbstractEntity<?> entity2) {
         if (entity1 != null && entity2 != null) {
             if (entity1.getId() == null && entity2.getId() == null) {
@@ -201,28 +175,18 @@ public class EntityUtils {
         return entity1 == entity2;
     }
 
-    /**
-     * A convenient method to safely compare entity values even if they are <code>null</code>.
-     * <p>
-     * The <code>null</code> value is considered to be smaller than a non-null value.
-     *
-     * @param o1
-     * @param o2
-     * @return
-     */
+    /// A convenient method to safely compare entity values even if they are `null`.
+    ///
+    /// The `null` value is considered to be smaller than a non-null value.
+    ///
     @SuppressWarnings("rawtypes")
     public static <T extends AbstractEntity<K>, K extends Comparable> int compare(final T o1, final T o2) {
         return safeCompare(o1, o2);
     }
 
 
-    /**
-     * Returns value that indicates whether entity is among entities. The equality comparison is based on {@link #areEqual(AbstractEntity, AbstractEntity)} method
-     *
-     * @param entities
-     * @param entity
-     * @return
-     */
+    /// Returns value that indicates whether entity is among entities. The equality comparison is based on [#areEqual(AbstractEntity,AbstractEntity)] method
+    ///
     public static <T extends AbstractEntity<?>> boolean containsById(final List<T> entities, final T entity) {
         for (final AbstractEntity<?> e : entities) {
             if (areEqual(e, entity)) {
@@ -246,29 +210,6 @@ public class EntityUtils {
             }
         }
         return -1;
-    }
-
-    /**
-     * Formats passeed value according to its type.
-     *
-     * @param value
-     * @param valueType
-     * @return
-     */
-    public static String formatTooltip(final Object value, final Class<?> valueType) {
-        if (value == null) {
-            return "";
-        }
-        if (valueType == Integer.class) {
-            return NumberFormat.getInstance().format(value);
-        } else if (Number.class.isAssignableFrom(valueType)) {
-            return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
-        } else if (valueType == Date.class || valueType == DateTime.class) {
-            final Object convertedValue = value instanceof DateTime ? ((DateTime) value).toDate() : value;
-            return new SimpleDateFormat(dateWithoutTimeFormat).format(convertedValue) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(convertedValue);
-        } else {
-            return value.toString();
-        }
     }
 
     /**
@@ -602,18 +543,35 @@ public class EntityUtils {
      * @return
      */
     public static boolean isEntityType(final Class<?> type) {
-        return type == null ? false : AbstractEntity.class.isAssignableFrom(type);
+        return type != null && AbstractEntity.class.isAssignableFrom(type);
     }
 
+    /// Indicates whether type represents [IContinuationData]-typed values.
+    ///
+    public static boolean isContinuationData(final Class<?> type) {
+        return type != null && IContinuationData.class.isAssignableFrom(type);
+    }
 
     /// Indicates whether type represents [ActivatableAbstractEntity]-typed values.
-    /// Only persistent entities can be considered activatable.
+    /// Or [AbstractUnionEntity]-typed values with at least one [ActivatableAbstractEntity]-typed property.
     ///
-    /// @return
-    public static boolean isActivatableEntityType(final Class<?> type) {
-        return type != null && ActivatableAbstractEntity.class.isAssignableFrom(type) && isPersistentEntityType(type);
+    public static boolean isActivatableEntityOrUnionType(final Class<?> type) {
+        return isActivatableEntityType(type)
+               || isUnionEntityType(type)
+                  && unionProperties((Class<? extends AbstractUnionEntity>) type).stream().map(Field::getType).anyMatch(EntityUtils::isActivatableEntityType);
     }
 
+    /// Indicates whether type represents [ActivatableAbstractEntity]-typed values.
+    ///
+    public static boolean isActivatableEntityType(final Class<?> type) {
+        return type != null && ActivatableAbstractEntity.class.isAssignableFrom(type);
+    }
+
+    /// Indicates whether type represents persistent [ActivatableAbstractEntity]-typed values.
+    ///
+    public static boolean isActivatablePersistentEntityType(final Class<?> type) {
+        return isActivatableEntityType(type) && isPersistentEntityType(type);
+    }
 
     /**
      * Indicates whether type represents an integer value, which could be either {@link Integer} or {@link Long}.
@@ -637,12 +595,8 @@ public class EntityUtils {
         return DynamicEntityKey.class.isAssignableFrom(type);
     }
 
-    /**
-     * Determines if entity type represents one-2-one entity (e.g. VehicleFinancialDetails for Vehicle).
-     *
-     * @param entityType
-     * @return
-     */
+    /// Determines if entity type represents one-2-one entity (e.g. VehicleFinancialDetails for Vehicle).
+    ///
     public static boolean isOneToOne(@Nullable final Class<? extends AbstractEntity<?>> entityType) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityType);
         return isPersistentEntityType(keyType);
@@ -679,15 +633,10 @@ public class EntityUtils {
         }
     }
 
+    /// Determines whether an entity type is persistent and has version information, such as created/updated by, created/updated date, version number.
     ///
-    /// Determines whether the provided entity type represents a persistent entity and has versioning information like created/updated, version, etc.
-    /// This type should extend [AbstractPersistentEntity].
-    ///
-    /// @param type
-    /// @return
-    ///
-    public static boolean isPersistentWithAuditData(@Nullable final Class<?> type) {
-        return isPersistentEntityType(type) && AbstractPersistentEntity.class.isAssignableFrom(type);
+    public static boolean isPersistentWithVersionData(@Nullable final Class<?> type) {
+        return type != null && AbstractPersistentEntity.class.isAssignableFrom(type) && isPersistentEntityType(type);
     }
 
     /**
@@ -814,11 +763,8 @@ public class EntityUtils {
         return Optional.empty();
     }
 
-    /**
-     * Determines whether the provided entity type models a union-type.
-     *
-     * @return
-     */
+    /// Determines whether the provided entity type models a union-type.
+    ///
     public static boolean isUnionEntityType(final Class<?> type) {
         return type != null && AbstractUnionEntity.class.isAssignableFrom(type);
     }
@@ -840,6 +786,10 @@ public class EntityUtils {
             logger.error(msg, ex);
             throw new ReflectionException(msg, ex);
         }
+    }
+
+    public static boolean isGeneratedMultiInheritanceEntityType(final Class<?> type) {
+        return isAnnotationPresent(type, SpecifiedBy.class);
     }
 
     /**
@@ -1006,7 +956,7 @@ public class EntityUtils {
     }
 
     /**
-     * {@link #laxSplitPropPathToArray(CharSequence)} and wrap the result into an unmodifiable list.
+     * {@link #splitPropPathToArray(CharSequence)} and wrap the result into an unmodifiable list.
      */
     public static List<String> splitPropPath(final CharSequence path) {
         return unmodifiableListOf(splitPropPathToArray(path));
@@ -1155,6 +1105,21 @@ public class EntityUtils {
         return baseTypeForSyntheticEntity.isPresent()
                ? baseTypeForSyntheticEntity
                : maybeSingleKeyMemberOfEntityType(type).map(t2 -> t2._1);
+    }
+
+    /// Given a generated multi-inheritance type, returns the specification type that was used to generate it.
+    /// [SpecifiedBy] is used to locate the specification type.
+    /// It is an error if [SpecifiedBy] is not present on the given type.
+    ///
+    @SuppressWarnings("unchecked")
+    public static Class<? extends AbstractEntity<?>> specTypeFor(final Class<? extends AbstractEntity<?>> multiInheritanceType) {
+        final var atSpecifiedBy = getAnnotationForClass(SpecifiedBy.class, multiInheritanceType);
+        if (atSpecifiedBy == null) {
+            throw new IllegalArgumentException(format(
+                    "[%s] is missing annotation @%s or is not a generated multi-inheritance type.",
+                    multiInheritanceType.getCanonicalName(), SpecifiedBy.class.getSimpleName()));
+        }
+        return (Class<? extends AbstractEntity<?>>) atSpecifiedBy.value();
     }
 
     public static class BigDecimalWithTwoPlaces {
@@ -1311,23 +1276,24 @@ public class EntityUtils {
         }
     }
 
-    ///
     /// The same as [#copy], but with variable arity for property names.
     ///
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final CharSequence... skipProperties) {
+    public static <T extends AbstractEntity> T copy(final AbstractEntity<?> fromEntity, final T toEntity, final CharSequence... skipProperties) {
         copy_(fromEntity, toEntity, Stream.of(skipProperties).map(CharSequence::toString).collect(Collectors.toSet()));
+        return toEntity;
     }
 
-    ///
-    /// The most generic and most straightforward function to copy properties from instance `fromEntity` to `toEntity``,
+    /// The most generic and most straightforward function to copy properties from instance `fromEntity` to `toEntity`,
     /// with the ability to skip the specified properties from being copied.
     ///
     /// @param fromEntity  An instance that is the source from which property values are copied from.
     /// @param toEntity   A destination that is an instance where the property values are copied to.
     /// @param skipProperties  A sequence of property names, which may include ID and VERSION.
+    /// @return  `toEntity` is returned for convenience.
     ///
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
+    public static <T extends AbstractEntity> T copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
         copy_(fromEntity, toEntity, skipProperties.stream().map(CharSequence::toString).collect(Collectors.toSet()));
+        return toEntity;
     }
 
     private static <T extends AbstractEntity> void copy_(final AbstractEntity<?> fromEntity, final T toEntity, final Set<String> skipProperties) {
@@ -1534,24 +1500,34 @@ public class EntityUtils {
         return result;
     }
 
-    /**
-     * A convenient method checking whether entity values should be enlisted in descending (key) order.
-     *
-     * @param type
-     * @return
-     */
+    /// A convenient method checking whether entity values should be enlisted in descending (key) order.
+    ///
     public static boolean isNaturalOrderDescending(final Class<? extends AbstractEntity<?>> type) {
-        return AnnotationReflector.getAnnotation(type, KeyType.class).descendingOrder();
+        return AnnotationReflector.getAnnotationOptionally(type, KeyType.class).map(KeyType::descendingOrder).orElse(false);
     }
 
-    /**
-     * Returns true if propertyName in entityType has {@link DateOnly} annotation.
-     *
-     * @param entityType
-     * @param propertyName
-     * @return
-     */
+    /// Determines if `propertyName` in `entityType` is a [DateOnly] property.
+    ///
     public static boolean isDateOnly(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
         return isAnnotationPresent(findFieldByName(entityType, propertyName), DateOnly.class);
     }
+
+    /// Determines if [MetaProperty] `mp` represents a [DateOnly] property.
+    ///
+    public static boolean isDateOnly(final MetaProperty<Date> mp) {
+        return isAnnotationPresent(findFieldByName(mp.getEntity().getType(), mp.getName()), DateOnly.class);
+    }
+
+    /// Determines if `propertyName` in `entityType` is a [TimeOnly] property.
+    ///
+    public static boolean isTimeOnly(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
+        return isAnnotationPresent(findFieldByName(entityType, propertyName), TimeOnly.class);
+    }
+
+    /// Determines if [MetaProperty] `mp` represents a [TimeOnly] property.
+    ///
+    public static boolean isTimeOnly(final MetaProperty<Date> mp) {
+        return isAnnotationPresent(findFieldByName(mp.getEntity().getType(), mp.getName()), TimeOnly.class);
+    }
+
 }

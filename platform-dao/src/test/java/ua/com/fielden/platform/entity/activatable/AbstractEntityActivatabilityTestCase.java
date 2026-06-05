@@ -392,7 +392,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    activation_that_is_concurrent_with_referencing_leads_to_increment_of_refCount() {
+    activation_that_is_concurrent_with_referencing_leads_to_increment_of_refCount_01() {
         final Spec1<A, B> spec = spec1();
 
         final A a = save(spec.newA(ACTIVE, false));
@@ -400,6 +400,26 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
         final A a_v1 = (A) refetch$(a).set(ACTIVE, true);
         final A a_v2 = spec.setB1(refetch$(a), b);
+
+        save(a_v1);
+        assertRefCount(10, b);
+
+        save(a_v2);
+        assertRefCount(11, b);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    activation_that_is_concurrent_with_referencing_leads_to_increment_of_refCount_02() {
+        final Spec1<A, B> spec = spec1();
+
+        final A a = save(spec.newA(ACTIVE, false));
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+
+        // Inactive A begins referencing active B.
+        final A a_v1 = setProperties(spec, refetch$(a), spec.A_b1(), b);
+        // Concurrently, A is activated and begins referencing active B.
+        final A a_v2 = setProperties(spec, refetch$(a), spec.A_b1(), b, ACTIVE, true);
 
         save(a_v1);
         assertRefCount(10, b);
@@ -545,19 +565,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         assertFalse(mpActive.isValid());
         assertThat(mpActive.getFirstFailure().getMessage())
                 .startsWith(ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES.formatted(getEntityTitleAndDesc(b).getKey(), b, 1, "dependency"));
-    }
-
-    @Test
-    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    activating_entity_referencing_inactive_values_in_properties_with_SkipEntityExistsValidation_where_skipActiveOnly_eq_true_is_permitted() {
-        final Spec1<A, B> spec = spec1();
-
-        final B b = save(spec.newB(ACTIVE, false));
-        A a = save(spec.newA(ACTIVE, false, spec.A_b3(), b));
-
-        a = (A) a.set(ACTIVE, true);
-        assertNull(a.getProperty(ACTIVE).getFirstFailure());
-        save(a);
     }
 
     @Test

@@ -1,30 +1,9 @@
 package ua.com.fielden.platform.serialisation;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Currency;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.junit.Ignore;
-import org.junit.Test;
-
 import com.google.inject.Injector;
 import com.google.inject.Module;
-
+import org.junit.Ignore;
+import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -39,39 +18,19 @@ import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
-import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
-import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
-import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
-import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
-import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
-import ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBigDecimal;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBoolean;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithCompositeKey;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDate;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDefiner;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEntities;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMetaProperty;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMoney;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorphicAEProp;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorphicProp;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSameEntity;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithString;
-import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
-import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
-import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
-import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
+import ua.com.fielden.platform.serialisation.api.impl.*;
+import ua.com.fielden.platform.serialisation.jackson.entities.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
+
+import java.math.BigDecimal;
+import java.util.*;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.error.Result.*;
+import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
 
 /**
  * Unit tests to ensure correct {@link AbstractEntity} descendants serialisation / deserialisation using JACKSON engine.
@@ -312,7 +271,7 @@ public class EntitySerialisationWithJacksonTest {
         entities.add(entity1);
         entities.add(entity2);
 
-        final Result result = new Result(entities, "All cool.");
+        final Result result = successful(entities);
         final Result restoredResult = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(result), Result.class);
 
         final List<EntityWithInteger> restoredEntities = (List<EntityWithInteger>) restoredResult.getInstance();
@@ -338,7 +297,7 @@ public class EntitySerialisationWithJacksonTest {
         final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
         final List<EntityWithInteger> entities = Arrays.asList(entity1, entity2);
 
-        final Result result = new Result(entities, "All cool.");
+        final Result result = successful(entities);
         final Result restoredResult = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(result), Result.class);
 
         final List<EntityWithInteger> restoredEntities = (List<EntityWithInteger>) restoredResult.getInstance();
@@ -1217,7 +1176,7 @@ public class EntitySerialisationWithJacksonTest {
     public void successful_result_with_entity_should_be_restored() {
         final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(Integer.valueOf(23));
-        final Result result = new Result(entity, "All cool.");
+        final Result result = successful(entity);
         final Result restoredResult = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(result), Result.class);
 
         assertNotNull("Restored result could not be null.", restoredResult);
@@ -1236,7 +1195,7 @@ public class EntitySerialisationWithJacksonTest {
     public void unsuccessful_result_with_entity_and_exception_should_be_restored() {
         final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(Integer.valueOf(23));
-        final Result result = new Result(entity, new Exception("exception message"));
+        final Result result = failure(entity, "exception message");
         final Result restoredResult = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(result), Result.class);
 
         assertNotNull("Restored result could not be null", restoredResult);
@@ -1249,7 +1208,7 @@ public class EntitySerialisationWithJacksonTest {
     public void successful_warning_with_entity_should_be_restored() {
         final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(Integer.valueOf(23));
-        final Warning warning = new Warning(entity, "warning message");
+        final Warning warning = warning(entity, "warning message");
         final Result restoredWarning = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(warning), Result.class);
 
         assertNotNull("Restored warning could not be null", restoredWarning);
@@ -1267,7 +1226,7 @@ public class EntitySerialisationWithJacksonTest {
     public void successful_informative_with_entity_should_be_restored() {
         final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(Integer.valueOf(23));
-        final Informative informative = new Informative(entity, "information message");
+        final Informative informative = informative(entity, "information message");
         final Result restoredInformative = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(informative), Result.class);
 
         assertNotNull("Restored informative could not be null", restoredInformative);

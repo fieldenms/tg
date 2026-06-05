@@ -9,6 +9,9 @@ import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
+import ua.com.fielden.platform.audit.AuditingMode;
+import ua.com.fielden.platform.audit.IAuditTypeFinder;
+import ua.com.fielden.platform.audit.ISynAuditEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -40,8 +43,10 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.Lazy;
 
 import javax.persistence.OptimisticLockException;
 import java.util.*;
@@ -49,7 +54,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -58,42 +62,47 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
+import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.model.IFillModel.emptyFillModel;
 import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
-import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableReference;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 import static ua.com.fielden.platform.utils.MiscUtilities.optional;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
-/**
- * The default implementation of contract {@link IEntityActuator} to save/update persistent entities.
- * 
- * @author TG Team
- *
- * @param <T>
- */
+/// The default implementation of contract [IEntityActuator] to save/update persistent entities.
+///
 public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements IEntityActuator<T> {
 
-    public static final String ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES = "Could not resolve conflicting changes.";
-    public static final String ERR_OPTIMISTIC_LOCK = "%s [%s] was updated or deleted by another user. Please try saving again.";
-    public static final String ERR_CONFLICTING_CONCURRENT_CHANGE = "There was a conflicting change by another user. Please try saving again.";
-    public static final String ERR_ALREADY_EXISTS = "%s [%s] already exists.";
+    public static final String
+            ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES = "Could not resolve conflicting changes.",
+            ERR_OPTIMISTIC_LOCK = "%s [%s] was updated or deleted by another user. Please try saving again.",
+            ERR_CONFLICTING_CONCURRENT_CHANGE = "There was a conflicting change by another user. Please try saving again.",
+            ERR_ALREADY_EXISTS = "%s [%s] already exists.",
+            ERR_NOW_CONSTANT_MISSING_VALUE = "The now() constant has not been assigned!",
+            ERR_NO_VALUE_FOR_AUTO_ASSIGNABLE_PROP = "Property %s@%s is marked as assignable before save, but no value could be determined.",
+            ERR_NO_CURRENT_USER = "The current user is not defined.",
+            ERR_NULL_OR_NON_PERSISTENT_ENTITY = "Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.",
+            ERR_UNINSTRUMENTED_ENTITY = "Uninstrumented entity of type [%s] cannot be saved.",
+            ERR_PROXIED_VERSION = "Entity of type [%s] with unfetched [version] cannot be saved. Use at least fetchOnly (ID_AND_VERSION) when fetching entities intended for saving.";
 
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;
@@ -106,12 +115,14 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final IEntityFetcher entityFetcher;
     private final IUserProvider userProvider;
     private final Supplier<DateTime> now;
-    
+
     private final BiConsumer<T, Set<String>> processAfterSaveEvent;
     private final Consumer<MetaProperty<?>> assignBeforeSave;
 
     private final FindEntityById<T> findById;
     private final Function<EntityResultQueryModel<T>, Boolean> entityExists;
+    private final boolean audited;
+    private final Lazy<Auditor<T>> lazyAuditor;
 
     private Boolean targetEntityTypeHasValidateOverridden;
     
@@ -133,7 +144,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final IUserProvider userProvider,
             final IUniversalConstants universalConstants,
             final ICompanionObjectFinder coFinder,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final IAuditTypeFinder auditTypeFinder,
+            final AuditingMode auditingMode)
     {
         this.session = session;
         this.transactionGuid = transactionGuid;
@@ -150,6 +163,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.now = universalConstants::now;
         this.coFinder = coFinder;
         this.domainMetadata = domainMetadata;
+        this.audited = auditingMode == AuditingMode.ENABLED && isAudited(entityType);
+        this.lazyAuditor = lazySupplier(() -> makeAuditor(entityType, audited, auditTypeFinder, coFinder));
     }
 
     @ImplementedBy(FactoryImpl.class)
@@ -166,19 +181,21 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final Logger logger);
     }
     
-    /**
-     * Saves the provided entity. This method checks entity version and throws StaleObjectStateException if the provided entity is stale. There is no in-memory referential
-     * integrity guarantee -- the returned instance is always a different instance. However, from the perspective of data loading, it is guaranteed that the object graph of the
-     * returned instance contains the object graph of the passed in entity as its subgraph (i.e. it can be wider, but not narrower).
-     * <p>
-     * New or already persisted entity instances should not be reused after successful saving.
-     * There is no guarantee as to what properties may or may not get mutated as part of the saving logic.
-     * For example, saving new entities does not result in assigning their {@code ID} values to the passed in instances.
-     * Instead, the returned instances should be used.
-     * The future direction is complete immutability where setting any property value would not modify that entity, but return a new instance with the new property value assigned. 
-     * <p>
-     * This method must be invoked in the context of an open DB session and supports saving only of persistent entities. Otherwise, an exception is thrown. 
-     */
+    /// Saves the provided entity.
+    /// This method checks entity version and throws StaleObjectStateException if the provided entity is stale.
+    /// There is no in-memory referential integrity guarantee — the returned instance is always a different instance.
+    /// However, from the perspective of data loading, it is guaranteed that the object graph of the returned instance contains the object graph of the passed in entity as its subgraph
+    /// (i.e. it can be wider, but not narrower).
+    ///
+    /// New or already persisted entity instances should not be reused after successful saving.
+    /// There is no guarantee as to what properties may or may not get mutated as part of the saving logic.
+    /// For example, saving new entities does not result in assigning their `ID` values to the passed in instances.
+    /// Instead, the returned instances should be used.
+    /// The future direction is complete immutability where setting any property value would not modify that entity, but return a new instance with the new property value assigned.
+    ///
+    /// This method must be invoked in the context of an open DB session and supports saving only of persistent entities.
+    /// Otherwise, an exception is thrown.
+    ///
     @Override
     public T save(final T entity) {
         return coreSave(entity, false, empty())._2;
@@ -186,9 +203,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
     public T2<Long, T> coreSave(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch) {
         if (entity == null || !entity.isPersistent()) {
-            throw new EntityCompanionException(format("Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.", entityType.getName()));
+            throw new EntityCompanionException(ERR_NULL_OR_NON_PERSISTENT_ENTITY.formatted(entityType.getName()));
         } else if (!entity.isInstrumented()) {
-            throw new EntityCompanionException(format("Uninstrumented entity of type [%s] cannot be saved.", entityType.getName()));
+            throw new EntityCompanionException(ERR_UNINSTRUMENTED_ENTITY.formatted(entityType.getName()));
+        } else if (entity.isPersisted() && entity.proxiedPropertyNames().contains(AbstractEntity.VERSION)) {
+            throw new EntityCompanionException(ERR_PROXIED_VERSION.formatted(entityType.getName()));
         } else if (!entity.isDirty()) {
             final Result isValid = validateEntity(entity);
             if (isValid.isSuccessful()) {
@@ -205,7 +224,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     }
                     else {
                         final var fillModelBld = new FillModelBuilder(domainMetadata);
-                        plainProps.stream().forEach(dmp -> {
+                        plainProps.forEach(dmp -> {
                             final var value = entity.get(dmp.name());
                             if (value != null) {
                                 fillModelBld.set(dmp.name(), value);
@@ -235,7 +254,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return propName;
         }).collect(toSet());
 
-        final T2<Long, T> savedEntityAndId;
+        final T3<Long, Long, T> savedResult;
         // let's try to save entity
         try {
             // firstly validate the entity
@@ -247,19 +266,56 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                savedEntityAndId = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
+                savedResult = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
             } else { // so, this is a modified entity
-                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
+                savedResult = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
 
-        final T savedEntity = savedEntityAndId._2;
-        // this call never throws any exceptions
+        final Long savedId = savedResult._1;
+        final Long savedVersion = savedResult._2;
+        final T savedEntity = savedResult._3;
+
+        // This call never throws any exceptions.
+        //
+        // NOTE: `savedEntity` will be a Hibernate proxy if refetching is skipped.
+        //       This may be confusing if "after-save" logic expects an entity instantiated in the usual way (via EntityFactory).
         processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
-        return savedEntityAndId;
+        // Auditing: version is obtained directly from Hibernate (via savedResult), not from the refetched entity whose fetch model may not include version.
+        lazyAuditor.get().audit(savedId, savedVersion, transactionGuid.get(), dirtyPropNames);
+
+        return t2(savedId, savedEntity);
+    }
+
+    /// Performs the auditing function if auditing is enabled and the entity type is audited.
+    /// Otherwise, has no effect.
+    ///
+    /// The benefit of this abstraction over plain code statements is performance: the initialisation phase will occur only once.
+    ///
+    @FunctionalInterface
+    private interface Auditor<E extends AbstractEntity<?>> {
+
+        void audit(final Long auditEntityId, final Long auditEntityVersion, final String transactionGuid, Collection<String> dirtyProperties);
+
+    }
+
+    private static <E extends AbstractEntity<?>> Auditor<E> makeAuditor(
+            final Class<E> entityType,
+            final boolean audited,
+            final IAuditTypeFinder auditTypeFinder,
+            final ICompanionObjectFinder coFinder)
+    {
+        if (audited) {
+            // Performance benefit: the companion is created only once.
+            final ISynAuditEntityDao<E> coSynAudit = coFinder.find(auditTypeFinder.navigate(entityType).synAuditEntityType());
+            return coSynAudit::audit;
+        }
+        else {
+            return (auditedEntityId, auditedEntityVersion, transactionGuid, dirtyProperties) -> {};
+        }
     }
 
     /**
@@ -326,7 +382,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param entityMetadata  entity domain metadata
      * @param session  the current database session
      */
-    private T2<Long, T> saveModifiedEntity(
+    private T3<Long, Long, T> saveModifiedEntity(
             final T entity,
             final boolean skipRefetching,
             final Optional<fetch<T>> maybeFetch,
@@ -410,9 +466,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
 
         // update entity
+        final Long savedVersion;
         try {
             session.update(persistedEntity);
             session.flush();
+            savedVersion = persistedEntity.getVersion();
         } catch (final OptimisticLockException ex) {
             // optimistic locking exception may occur during concurrent saving
             // let's present a more user-friendly message and log the error
@@ -429,7 +487,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             }
         }
 
-        return t2(persistedEntity.getId(),
+        return t3(persistedEntity.getId(), savedVersion,
                   entityFetchOption.map(fetch -> findById.find(persistedEntity.getId(), fetch, fillModel.get())).orElse(persistedEntity));
     }
 
@@ -452,12 +510,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 co.save(deactivatable);
             }
         }
-    }
-
-    /// This predicate identifies whether the specified property needs to be processed as an activatable reference.
-    ///
-    private boolean shouldProcessAsActivatable(final MetaProperty<?> prop) {
-        return isActivatablePersistentProperty(prop.getEntity().getType(), prop.getName()) && !isSpecialActivatableToBeSkipped(prop) && !isDeactivatableDependencyBackref(prop);
     }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
@@ -517,7 +569,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param fillModel  will be applied only in the presence of a fetch model
      * @param session  the current database session
      */
-    private T2<Long, T> saveNewEntity(
+    private T3<Long, Long, T> saveNewEntity(
             final T entity,
             final boolean skipRefetching,
             final Optional<fetch<T>> maybeFetch,
@@ -531,9 +583,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // Process transactional assignments.
         if (entity instanceof AbstractPersistentEntity) {
-            assignCreationInfo((AbstractPersistentEntity<?>) entity);
+            assignCreationInfoForNew((AbstractPersistentEntity<?>) entity);
         }
-        assignPropertiesBeforeSave(entity);
+        assignPropsBeforeSaveForNew(entity);
 
         // Reconstruct entity fetch model for future retrieval at the end of the method call.
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
@@ -546,18 +598,20 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // In the case of one-2-one association, the value of ID is derived from its key's ID and does not need to be generated.
         final boolean isOne2OneAssociation = AbstractEntity.class.isAssignableFrom(entity.getKeyType());
         final Long newEntityId = isOne2OneAssociation ? ((AbstractEntity<?>) entity.getKey()).getId() : nextIdValue(ID_SEQUENCE_NAME, session);
+        final Long savedVersion;
         try {
             final var entityToSave = isOne2OneAssociation ? entity : entity.set(ID, newEntityId);
             session.save(entityToSave);
             session.flush(); // force saving to DB
+            savedVersion = entityToSave.getVersion();
             session.clear();
         } finally {
             // Reset the value of ID to null for the passed-in entity to avoid any possible confusion stemming from the fact that `entity` became persisted.
             // This is relevant for all entities, including one-2-one associations.
             entity.set(ID, null);
         }
-        
-        return t2(newEntityId,
+
+        return t3(newEntityId, savedVersion,
                   entityFetchOption.map(fetch -> findById.find(newEntityId, fetch, fillModel.get())).orElse(entity));
     }
 
@@ -609,42 +663,44 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         if (persistedEntity != null && entity.getProperty(ACTIVE).isDirty() && entity.isActive() != persistedEntity.isActive()) {
             instructionsForNonDirty = entity.getProperties().values()
                     .stream()
-                    .filter(mp -> (mp.isProxy() || !mp.isDirty()) && shouldProcessAsActivatable(mp))
+                    .filter(mp -> mp.isProxy() || !mp.isDirty())
                     .<RefCountInstruction>map(mp -> {
                         final var propName = mp.getName();
-                        // If the property is proxied, its value will be retrieved lazily by Hibernate.
-                        final var activatableValue = extractActivatable(persistedEntity.get(propName));
-                        if (activatableValue != null) {
-                            final var persistedActivatableValue = (ActivatableAbstractEntity<?>) session.load(activatableValue.getType(), activatableValue.getId(), UPGRADE);
-                            persistedActivatableValue.setIgnoreEditableState(true);
-                            // Update `refCount` if the referenced entity is active and is not a self-reference.
-                            if (!areEqual(entity, persistedActivatableValue)) {
-                                // If the entity being saved is active and references an inactive entity, then we have an erroneous situation
-                                // and should prevent the activation of the entity being saved.
-                                if (entity.isActive()) {
-                                    if (!persistedActivatableValue.isActive()) {
-                                        session.detach(persistedActivatableValue);
-                                        // This property may be proxied, thus we cannot use `mkInactiveReferenceFailure`.
-                                        throw new EntityCompanionException(ERR_INACTIVE_REFERENCES.formatted(
-                                                getTitleAndDesc(propName, entityType).getKey(),
-                                                getEntityTitleAndDesc(entityType).getKey(),
-                                                entity,
-                                                getEntityTitleAndDesc(persistedActivatableValue).getKey(),
-                                                persistedActivatableValue));
+                        if (isActivatableReference(entityType, propName, persistedEntity.get(propName), coFinder)) {
+                            // If the property is proxied, its value will be retrieved lazily by Hibernate.
+                            final var activatableValue = extractActivatable(persistedEntity.get(propName));
+                            if (activatableValue != null) {
+                                final var persistedActivatableValue = (ActivatableAbstractEntity<?>) session.load(activatableValue.getType(), activatableValue.getId(), UPGRADE);
+                                persistedActivatableValue.setIgnoreEditableState(true);
+                                // Update `refCount` if the referenced entity is active and is not a self-reference.
+                                if (!areEqual(entity, persistedActivatableValue)) {
+                                    // If the entity being saved is active and references an inactive entity, then we have an erroneous situation
+                                    // and should prevent the activation of the entity being saved.
+                                    if (entity.isActive()) {
+                                        if (!persistedActivatableValue.isActive()) {
+                                            session.detach(persistedActivatableValue);
+                                            // This property may be proxied, thus we cannot use `mkInactiveReferenceFailure`.
+                                            throw new EntityCompanionException(ERR_INACTIVE_REFERENCES.formatted(
+                                                    getTitleAndDesc(propName, entityType).getKey(),
+                                                    getEntityTitleAndDesc(entityType).getKey(),
+                                                    entity,
+                                                    getEntityTitleAndDesc(persistedActivatableValue).getKey(),
+                                                    persistedActivatableValue));
+                                        }
+                                        else {
+                                            return new RefCountInstruction.Inc(persistedActivatableValue);
+                                        }
+                                    }
+                                    else if (persistedActivatableValue.isActive()) {
+                                        return new RefCountInstruction.Dec(persistedActivatableValue);
                                     }
                                     else {
-                                        return new RefCountInstruction.Inc(persistedActivatableValue);
+                                        session.detach(persistedActivatableValue);
                                     }
-                                }
-                                else if (persistedActivatableValue.isActive()) {
-                                    return new RefCountInstruction.Dec(persistedActivatableValue);
                                 }
                                 else {
                                     session.detach(persistedActivatableValue);
                                 }
-                            }
-                            else {
-                                session.detach(persistedActivatableValue);
                             }
                         }
                         return null;
@@ -655,58 +711,70 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             instructionsForNonDirty = Stream.of();
         }
 
+        // If the persisted version of `entity` is active, then any active entity it references must have had its `refCount` incremented.
+        // Otherwise, the persisted version of `entity` is inactive and any active entity it references must have either had
+        // its `refCount` decremented or its `refCount` was not changed at all (if it was referenced after deactivation of `entity`).
+
+        final var wasConcurrentlyModified = persistedEntity != null && persistedEntity.getVersion() > entity.getVersion();
+        final var willBeActive = (persistedEntity == null || entity.getProperty(ACTIVE).isDirty()) ? entity.isActive() : persistedEntity.isActive();
+
         final Stream<RefCountInstruction> instructionsForDirty = entity.getDirtyProperties()
                 .stream()
-                .filter(this::shouldProcessAsActivatable)
-                // If the current and persisted property values are the same, nothing needs to be done.
-                // At this stage, these values can only be the same iff a non-conflicting concurrent modification occurred.
-                // In such case, recalculation of `refCount` for the referenced entity has already been performed, and double-dipping should be avoided.
-                .filter(prop -> !(persistedEntity != null && equalsEx(prop.getValue(), persistedEntity.get(prop.getName()))))
+                .filter(prop -> isEntityType(prop.getType()))
                 .map(prop -> (MetaProperty<AbstractEntity<?>>) prop)
                 .mapMulti((prop, sink) -> {
-                    // If `entity` is persisted, the original value of `prop`, if not null, was dereferenced, and its `refCount` must be decremented.
-                    // Original property value should not be null, otherwise property would not become dirty by assigning null.
-                    // `refCount` is decremented if and only if:
-                    // * `persistedEntity` is active (otherwise, a concurrent update deactivated it and took care of decrementing `refCount`);
-                    // * and the persisted version of the original value is active;
-                    // * and the original value is not equal to the entity being saved (is not a self-reference).
-                    final var originalActivatableValue = extractActivatable(prop.getOriginalValue());
-                    if (persistedEntity != null && originalActivatableValue != null) {
-                        final var persistedOriginalValue = (ActivatableAbstractEntity<?>) session.load(originalActivatableValue.getType(), originalActivatableValue.getId(), UPGRADE);
-                        if (persistedEntity.isActive() && persistedOriginalValue.isActive() && !areEqual(entity, persistedOriginalValue)) {
-                            sink.accept(new RefCountInstruction.Dec(originalActivatableValue));
+                    // Process the original property value, which makes sense only for persisted entities.
+                    // `refCount` must be decremented if it was incremented previously AND was not decremented by a concurrent modification.
+                    if (persistedEntity != null
+                        && prop.getOriginalValue() != null
+                        && (wasConcurrentlyModified
+                            // In case of a concurrent modification, we decrement `refCount` iff `persistedEntity` is still active
+                            // and references the original value.
+                            ? (persistedEntity.isActive() && prop.getOriginalValue().equals(persistedEntity.get(prop.getName())))
+                            // Proceed if `refCount` for the original value was incremented previously.
+                            : persistedEntity.isActive())
+                        && isActivatableReference(entityType, prop.getName(), prop.getOriginalValue(), coFinder))
+                    {
+                        // `refCount` is decremented iff:
+                        // * the persisted version of the original value is active;
+                        // * AND the original value is not a self-reference to `entity`.
+                        final var originalActivatableValue = extractActivatable(prop.getOriginalValue());
+                        if (originalActivatableValue != null) {
+                            final var persistedOriginalValue = (ActivatableAbstractEntity<?>) session.load(originalActivatableValue.getType(), originalActivatableValue.getId(), UPGRADE);
+                            if (persistedOriginalValue.isActive() && !areEqual(entity, persistedOriginalValue)) {
+                                sink.accept(new RefCountInstruction.Dec(originalActivatableValue));
+                            }
                         }
                     }
 
-                    final var activatableValue = extractActivatable(prop.getValue());
-                    // `entity` began referencing `activatableValue`.
-                    if (activatableValue != null) {
-                        // The use of `UPGRADE` is not strictly required for safe concurrent updates to `refCount`.
-                        // However, with `UPGRADE`, `session.load()` acquires a pessimistic lock on the record,
-                        // blocking other transactions from modifying it until the current transaction completes (commit or rollback).
-                        // This guarantees that `session.load()` returns the most up-to-date persisted state.
-                        //
-                        // Without `UPGRADE`, multiple transactions can call `session.load()` concurrently without blocking.
-                        // In this case, the first transaction to commit successfully updates the persistent state,
-                        // while any concurrent transaction attempting to commit a conflicting change will fail with a `StaleObjectException`.
-                        //
-                        // Summary:
-                        // * With `UPGRADE`: safe concurrent updates with blocking (pessimistic locking).
-                        // * Without `UPGRADE`: safe concurrent updates without blocking (optimistic locking), but with a risk of rollback on conflict.
-                        //
-                        // We prefer using `UPGRADE` in this context to reduce the likelihood of rollbacks in potentially complex transactions caused by concurrent updates to `refCount`.
-                        final var persistedActivatableValue = (ActivatableAbstractEntity<?>) session.load(activatableValue.getType(), activatableValue.getId(), UPGRADE);
+                    // For the new value, `refCount` must be incremented if the result of saving `entity` is an active entity
+                    // AND the new value's `refCount` was not incremented already by a concurrent assignment.
+                    if (willBeActive
+                        && prop.getValue() != null
+                        && (!wasConcurrentlyModified || !(persistedEntity.isActive() && prop.getValue().equals(persistedEntity.get(prop.getName()))))
+                        && isActivatableReference(entityType, prop.getName(), prop.getValue(), coFinder))
+                    {
+                        final var activatableValue = extractActivatable(prop.getValue());
+                        // `entity` began referencing `activatableValue`.
+                        if (activatableValue != null) {
+                            // The use of `UPGRADE` is not strictly required for safe concurrent updates to `refCount`.
+                            // However, with `UPGRADE`, `session.load()` acquires a pessimistic lock on the record,
+                            // blocking other transactions from modifying it until the current transaction completes (commit or rollback).
+                            // This guarantees that `session.load()` returns the most up-to-date persisted state.
+                            //
+                            // Without `UPGRADE`, multiple transactions can call `session.load()` concurrently without blocking.
+                            // In this case, the first transaction to commit successfully updates the persistent state,
+                            // while any concurrent transaction attempting to commit a conflicting change will fail with a `StaleObjectException`.
+                            //
+                            // Summary:
+                            // * With `UPGRADE`: safe concurrent updates with blocking (pessimistic locking).
+                            // * Without `UPGRADE`: safe concurrent updates without blocking (optimistic locking), but with a risk of rollback on conflict.
+                            //
+                            // We prefer using `UPGRADE` in this context to reduce the likelihood of rollbacks in potentially complex transactions caused by concurrent updates to `refCount`.
+                            final var persistedActivatableValue = (ActivatableAbstractEntity<?>) session.load(activatableValue.getType(), activatableValue.getId(), UPGRADE);
 
-                        // The newly referenced activatable `activatableValue` needs to have its `refCount` incremented if:
-                        // * `entity` is active and was not concurrently deactivated OR `entity` is inactive and was concurrently activated;
-                        // * and `activatableValue` is not a self-reference to `entity`;
-                        // * and the persisted version of `activatableValue` is active.
-                        //   If `activatableValue` is concurrently deactivated, then we are in error -- active `entity` cannot reference inactive `activatableValue`.
-                        if (!areEqual(entity, persistedActivatableValue)) {
-                            if (persistedEntity == null || entity.getVersion() >= persistedEntity.getVersion()
-                                    ? entity.isActive()
-                                    : persistedEntity.isActive())
-                            {
+                            // Ignore self-references.
+                            if (!areEqual(entity, persistedActivatableValue)) {
                                 if (!persistedActivatableValue.isActive()) {
                                     session.detach(persistedActivatableValue);
                                     throw mkInactiveReferenceFailure(prop, persistedActivatableValue);
@@ -721,6 +789,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         return Stream.concat(instructionsForNonDirty, instructionsForDirty);
     }
+
 
     /// Instruction that operates on `refCount`.
     ///
@@ -765,68 +834,84 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         return result;
     }
 
-    private void assignCreationInfo(final AbstractPersistentEntity<?> entity) {
-        // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes
-        // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
-        // thus, a check for VIRTUAL_USER as a current user 
-        if (!User.system_users.VIRTUAL_USER.name().equals(currUserOrException().getKey())) {
-            entity.set(AbstractPersistentEntity.CREATED_BY, currUserOrException());
+    /// Assigns properties `entity.createdBy`, `entity.createdDate`, and `entity.createdTransactionGuid` for a new entity.
+    ///
+    /// @param entity an instance to be modified.
+    ///
+    public <A extends AbstractPersistentEntity<?>> PersistentEntitySaver<T> assignCreationInfoForNew(final A entity) {
+        // If `entity` has been already persisted, the creation info should not change.
+        if (entity.isPersisted()) {
+            return this;
         }
-        
+
+        // Unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes.
+        // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities.
+        // Thus, need to check if the current user is VIRTUAL_USER to skip the assignment.
+        if (!User.system_users.VIRTUAL_USER.name().equals(currUserOrThrow().getKey())) {
+            entity.set(AbstractPersistentEntity.CREATED_BY, currUserOrThrow());
+        }
+
         entity.set(AbstractPersistentEntity.CREATED_DATE, now.get().toDate());
         entity.set(AbstractPersistentEntity.CREATED_TRANSACTION_GUID, transactionGuid.get());
+        return this;
     }
 
+    /// Assigns properties `entity.lastUpdatedBy`, `entity.lastUpdatedDate`, and `entity.lastUpdatedTransactionGuid` for a persisted entity.
+    /// Specifically skips assignment if `entity` is activatable and there only modified property is `refCount`.
+    ///
     private void assignLastModificationInfo(final AbstractPersistentEntity<?> entity, final AbstractPersistentEntity<?> persistentEntity) {
-        // if the entity is activatable and the only dirty property is refCount than there is no need to update the last-updated-by info
+        // If `entity` is activatable and the only dirty property is `refCount` then there is no need to update the last-updated-by info.
         if (entity instanceof ActivatableAbstractEntity) {
             final List<MetaProperty<?>> dirty = entity.getDirtyProperties();
-            if (dirty.size() == 1 && ActivatableAbstractEntity.REF_COUNT.equals(dirty.get(0).getName())) {
+            if (dirty.size() == 1 && ActivatableAbstractEntity.REF_COUNT.equals(dirty.getFirst().getName())) {
                 return;
             }
         }
-        // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes.
+
+        // Unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes.
         // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities.
-        // thus, a check for VIRTUAL_USER as a current user.
-        if (!User.system_users.VIRTUAL_USER.name().equals(currUserOrException().getKey())) {
-            persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_BY, currUserOrException());
+        // Thus, need to check if the current user is VIRTUAL_USER to skip the assignment.
+        if (!User.system_users.VIRTUAL_USER.name().equals(currUserOrThrow().getKey())) {
+            persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_BY, currUserOrThrow());
             persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_DATE, now.get().toDate());
             persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID, transactionGuid.get());
         }
     }
 
-    /**
-     * Returns the current user if defined. Otherwise, it throws an exception.
-     * @return
-     */
-    private User currUserOrException() {
+    /// Returns the current user if defined. Otherwise, it throws an exception.
+    ///
+    public User currUserOrThrow() {
         final User currUser = userProvider.getUser();
         if (currUser == null) {
-            final String msg = "The current user is not defined.";
-            logger.error(msg);
-            throw new EntityCompanionException(msg);
+            throw new EntityCompanionException(ERR_NO_CURRENT_USER);
         }
         return currUser;
     }
-    /**
-     * Assigns values to all properties marked for assignment before save. This method should be used only during the saving of new entities.
-     *
-     * @param entity
-     */
-    private void assignPropertiesBeforeSave(final T entity) {
+
+    /// Assigns values to all properties marked for assignment before save.
+    /// This method should be used only during the saving of new entities.
+    ///
+    /// @param entity an instance to be modified.
+    ///
+    public PersistentEntitySaver<T> assignPropsBeforeSaveForNew(final T entity) {
+        // If `entity` has been already persisted, the creation info should not change.
+        if (entity.isPersisted()) {
+            return this;
+        }
+
         final List<MetaProperty<?>> props = entity.getProperties().values().stream().
-                filter(MetaProperty::shouldAssignBeforeSave).collect(Collectors.toList());
+                filter(MetaProperty::shouldAssignBeforeSave).toList();
         if (!props.isEmpty()) {
             final DateTime rightNow = now.get();
             if (rightNow == null) {
-                throw new EntityCompanionException("The now() constant has not been assigned!");
+                throw new EntityCompanionException(ERR_NOW_CONSTANT_MISSING_VALUE);
             }
 
             for (final MetaProperty<?> prop : props) {
                 final Object value = prop.getValue();
                 if (value == null) {
                     if (User.class.isAssignableFrom(prop.getType())) {
-                        prop.setValue(currUserOrException());
+                        prop.setValue(currUserOrThrow());
                     } else if (Date.class.isAssignableFrom(prop.getType())) {
                         prop.setValue(rightNow.toDate());
                     } else if (DateTime.class.isAssignableFrom(prop.getType())) {
@@ -836,11 +921,12 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     }
 
                     if (prop.getValue() == null) {
-                        throw new EntityCompanionException("Property %s@%s is marked as assignable before save, but no value could be determined.".formatted(prop.getName(), entity.getType().getName()));
+                        throw new EntityCompanionException(ERR_NO_VALUE_FOR_AUTO_ASSIGNABLE_PROP.formatted(prop.getName(), entity.getType().getName()));
                     }
                 }
             }
         }
+        return this;
     }
 
     // This factory must be implemented by hand since com.google.inject.assistedinject.FactoryModuleBuilder
@@ -852,6 +938,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         private final IUniversalConstants universalConstants;
         private final ICompanionObjectFinder coFinder;
         private final IDomainMetadata domainMetadata;
+        private final IAuditTypeFinder auditTypeFinder;
+        private final AuditingMode auditingMode;
 
         @Inject
         FactoryImpl(final IDbVersionProvider dbVersionProvider,
@@ -859,13 +947,18 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     final IUserProvider userProvider,
                     final IUniversalConstants universalConstants,
                     final ICompanionObjectFinder coFinder,
-                    final IDomainMetadata domainMetadata) {
+                    final IDomainMetadata domainMetadata,
+                    final IAuditTypeFinder auditTypeFinder,
+                    final AuditingMode auditingMode)
+        {
             this.dbVersionProvider = dbVersionProvider;
             this.entityFetcher = entityFetcher;
             this.userProvider = userProvider;
             this.universalConstants = universalConstants;
             this.coFinder = coFinder;
             this.domainMetadata = domainMetadata;
+            this.auditTypeFinder = auditTypeFinder;
+            this.auditingMode = auditingMode;
         }
 
         public <E extends AbstractEntity<?>> PersistentEntitySaver<E> create(
@@ -882,7 +975,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return new PersistentEntitySaver<>(session, transactionGuid, entityType, keyType, processAfterSaveEvent,
                                                assignBeforeSave, findById, entityExists, logger,
                                                dbVersionProvider, entityFetcher, userProvider, universalConstants,
-                                               coFinder, domainMetadata);
+                                               coFinder, domainMetadata, auditTypeFinder, auditingMode);
         }
     }
 

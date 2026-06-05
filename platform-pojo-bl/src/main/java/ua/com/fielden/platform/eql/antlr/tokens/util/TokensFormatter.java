@@ -8,10 +8,6 @@ public interface TokensFormatter {
 
     String format(final Collection<? extends Token> tokens);
 
-    default String format(final ListTokenSource tokenSource) {
-        return format(tokenSource.tokens());
-    }
-
     String formatLiteral(final Object object);
 
     static TokensFormatter getInstance() {

@@ -1,5 +1,5 @@
-import { T as Theme, B as BaseComponent, Y as setRef, Z as Interaction, _ as getElSeg, $ as elementClosest, a0 as EventImpl, a1 as listenBySelector, a2 as listenToHoverBySelector, a3 as PureComponent, z as memoize, a5 as getUniqueDomId, a6 as parseInteractionSettings, a7 as interactionSettingsStore, D as DelayedRunner, a8 as getNow, V as ViewContextType, a9 as CalendarImpl, aa as flushSync, ad as ensureElHasStyles, i as isArraysEqual, ae as applyStyleProp, g as guid, v as hashValuesToArray, A as memoizeObjArg, F as Emitter, G as getInitialDate, H as rangeContainsMarker, I as createEmptyEventStore, J as reduceCurrentDate, K as reduceEventStore, L as rezoneEventStoreDates, M as mergeRawOptions, N as BASE_OPTION_REFINERS, O as CALENDAR_LISTENER_REFINERS, P as CALENDAR_OPTION_REFINERS, Q as COMPLEX_OPTION_COMPARATORS, e as BASE_OPTION_DEFAULTS, R as VIEW_OPTION_REFINERS, S as DateEnv, a as mapHash, a4 as buildViewContext, ac as RenderId, ab as CalendarRoot, m as mergeProps, c as greatestDurationDenominator, d as createDuration, f as arrayToHash, h as filterHash, j as buildEventSourceRefiners, p as parseEventSource, k as formatWithOrdinals, u as unpromisify, l as buildRangeApiWithTimeZone, n as identity, r as requestJson, s as subtractDurations, o as intersectRanges, q as startOfDay, t as addDays, w as buildEventApis, x as createFormatter, y as diffWholeDays, E as isPropsEqual, U as DateProfileGenerator, W as createEventUi, X as parseBusinessHours, C as ContentContainer, b as buildViewClassNames } from './internal-common.js';
-export { ag as JsonRequestError } from './internal-common.js';
+import { T as Theme, B as BaseComponent, W as setRef, X as Interaction, Y as getElSeg, Z as elementClosest, _ as EventImpl, $ as listenBySelector, a0 as listenToHoverBySelector, a1 as PureComponent, z as memoize, a3 as getUniqueDomId, a4 as parseInteractionSettings, a5 as interactionSettingsStore, D as DelayedRunner, a6 as NowTimer, V as ViewContextType, a7 as CalendarImpl, a8 as flushSync, ab as ensureElHasStyles, i as isArraysEqual, ac as applyStyleProp, g as guid, v as hashValuesToArray, A as memoizeObjArg, F as Emitter, G as rangeContainsMarker, H as createEmptyEventStore, I as reduceEventStore, J as rezoneEventStoreDates, K as mergeRawOptions, L as BASE_OPTION_REFINERS, M as CALENDAR_LISTENER_REFINERS, N as CALENDAR_OPTION_REFINERS, O as COMPLEX_OPTION_COMPARATORS, e as BASE_OPTION_DEFAULTS, P as VIEW_OPTION_REFINERS, Q as DateEnv, a as mapHash, a2 as buildViewContext, aa as RenderId, a9 as CalendarRoot, m as mergeProps, c as greatestDurationDenominator, d as createDuration, f as arrayToHash, h as filterHash, j as buildEventSourceRefiners, p as parseEventSource, k as formatWithOrdinals, u as unpromisify, l as buildRangeApiWithTimeZone, n as identity, r as requestJson, s as subtractDurations, o as intersectRanges, q as startOfDay, t as addDays, w as buildEventApis, x as createFormatter, y as diffWholeDays, E as isPropsEqual, R as DateProfileGenerator, S as createEventUi, U as parseBusinessHours, C as ContentContainer, b as buildViewClassNames } from './internal-common.js';
+export { ae as JsonRequestError } from './internal-common.js';
 import { createElement as y, createRef as d, Fragment as _, render as D } from '../../preact/dist/preact.module.js';
 import '../../preact/compat/dist/compat.module.js';
 
@@ -457,6 +457,25 @@ function reduceViewType(viewType, action) {
             viewType = action.viewType;
     }
     return viewType;
+}
+
+function reduceCurrentDate(currentDate, action) {
+    switch (action.type) {
+        case 'CHANGE_DATE':
+            return action.dateMarker;
+        default:
+            return currentDate;
+    }
+}
+// should be initialized once and stay constant
+// this will change too
+function getInitialDate(options, dateEnv, nowManager) {
+    let initialDateInput = options.initialDate;
+    // compute the initial ambig-timezone date
+    if (initialDateInput != null) {
+        return dateEnv.createMarker(initialDateInput);
+    }
+    return nowManager.getDateMarker();
 }
 
 function reduceDynamicOptionOverrides(dynamicOptionOverrides, action) {
@@ -968,6 +987,7 @@ let recurring = {
                 endTime: refined.endTime || null,
                 startRecur: refined.startRecur ? dateEnv.createMarker(refined.startRecur) : null,
                 endRecur: refined.endRecur ? dateEnv.createMarker(refined.endRecur) : null,
+                dateEnv,
             };
             let duration;
             if (refined.duration) {
@@ -987,7 +1007,7 @@ let recurring = {
     expand(typeData, framingRange, dateEnv) {
         let clippedFramingRange = intersectRanges(framingRange, { start: typeData.startRecur, end: typeData.endRecur });
         if (clippedFramingRange) {
-            return expandRanges(typeData.daysOfWeek, typeData.startTime, clippedFramingRange, dateEnv);
+            return expandRanges(typeData.daysOfWeek, typeData.startTime, typeData.dateEnv, dateEnv, clippedFramingRange);
         }
         return [];
     },
@@ -997,22 +1017,33 @@ const simpleRecurringEventsPlugin = createPlugin({
     recurringTypes: [recurring],
     eventRefiners: SIMPLE_RECURRING_REFINERS,
 });
-function expandRanges(daysOfWeek, startTime, framingRange, dateEnv) {
+function expandRanges(daysOfWeek, startTime, eventDateEnv, calendarDateEnv, framingRange) {
     let dowHash = daysOfWeek ? arrayToHash(daysOfWeek) : null;
     let dayMarker = startOfDay(framingRange.start);
     let endMarker = framingRange.end;
     let instanceStarts = [];
+    // https://github.com/fullcalendar/fullcalendar/issues/7934
+    if (startTime) {
+        if (startTime.milliseconds < 0) {
+            // possible for next-day to have negative business hours that go into current day
+            endMarker = addDays(endMarker, 1);
+        }
+        else if (startTime.milliseconds >= 1000 * 60 * 60 * 24) {
+            // possible for prev-day to have >24hr business hours that go into current day
+            dayMarker = addDays(dayMarker, -1);
+        }
+    }
     while (dayMarker < endMarker) {
         let instanceStart;
         // if everyday, or this particular day-of-week
         if (!dowHash || dowHash[dayMarker.getUTCDay()]) {
             if (startTime) {
-                instanceStart = dateEnv.add(dayMarker, startTime);
+                instanceStart = calendarDateEnv.add(dayMarker, startTime);
             }
             else {
                 instanceStart = dayMarker;
             }
-            instanceStarts.push(instanceStart);
+            instanceStarts.push(calendarDateEnv.createMarker(eventDateEnv.toDate(instanceStart)));
         }
         dayMarker = addDays(dayMarker, 1);
     }
@@ -1177,6 +1208,49 @@ function buildTitleFormat(dateProfile) {
     return { year: 'numeric', month: 'long', day: 'numeric' };
 }
 
+/*
+TODO: test switching timezones when NO timezone plugin
+*/
+class CalendarNowManager {
+    constructor() {
+        this.resetListeners = new Set();
+    }
+    handleInput(dateEnv, // will change if timezone setup changed
+    nowInput) {
+        const oldDateEnv = this.dateEnv;
+        if (dateEnv !== oldDateEnv) {
+            if (typeof nowInput === 'function') {
+                this.nowFn = nowInput;
+            }
+            else if (!oldDateEnv) { // first time?
+                this.nowAnchorDate = dateEnv.toDate(nowInput
+                    ? dateEnv.createMarker(nowInput)
+                    : dateEnv.createNowMarker());
+                this.nowAnchorQueried = Date.now();
+            }
+            this.dateEnv = dateEnv;
+            // not first time? fire reset handlers
+            if (oldDateEnv) {
+                for (const resetListener of this.resetListeners.values()) {
+                    resetListener();
+                }
+            }
+        }
+    }
+    getDateMarker() {
+        return this.nowAnchorDate
+            ? this.dateEnv.timestampToMarker(this.nowAnchorDate.valueOf() +
+                (Date.now() - this.nowAnchorQueried))
+            : this.dateEnv.createMarker(this.nowFn());
+    }
+    addResetListener(handler) {
+        this.resetListeners.add(handler);
+    }
+    removeResetListener(handler) {
+        this.resetListeners.delete(handler);
+    }
+}
+
 // in future refactor, do the redux-style function(state=initial) for initial-state
 // also, whatever is happening in constructor, have it happen in action queue too
 class CalendarDataManager {
@@ -1196,6 +1270,7 @@ class CalendarDataManager {
         this.buildEventUiBases = memoize(buildEventUiBases);
         this.parseContextBusinessHours = memoizeObjArg(parseContextBusinessHours);
         this.buildTitle = memoize(buildTitle);
+        this.nowManager = new CalendarNowManager();
         this.emitter = new Emitter();
         this.actionRunner = new TaskRunner(this._handleAction.bind(this), this.updateData.bind(this));
         this.currentCalendarOptionsInput = {};
@@ -1211,6 +1286,7 @@ class CalendarDataManager {
         };
         this.props = props;
         this.actionRunner.pause();
+        this.nowManager = new CalendarNowManager();
         let dynamicOptionOverrides = {};
         let optionsData = this.computeOptionsData(props.optionOverrides, dynamicOptionOverrides, props.calendarApi);
         let currentViewType = optionsData.calendarOptions.initialView || optionsData.pluginHooks.initialView;
@@ -1220,12 +1296,8 @@ class CalendarDataManager {
         props.calendarApi.currentDataManager = this;
         this.emitter.setThisContext(props.calendarApi);
         this.emitter.setOptions(currentViewData.options);
-        let currentDate = getInitialDate(optionsData.calendarOptions, optionsData.dateEnv);
-        let dateProfile = currentViewData.dateProfileGenerator.build(currentDate);
-        if (!rangeContainsMarker(dateProfile.activeRange, currentDate)) {
-            currentDate = dateProfile.currentRange.start;
-        }
         let calendarContext = {
+            nowManager: this.nowManager,
             dateEnv: optionsData.dateEnv,
             options: optionsData.calendarOptions,
             pluginHooks: optionsData.pluginHooks,
@@ -1234,6 +1306,11 @@ class CalendarDataManager {
             emitter: this.emitter,
             getCurrentData: this.getCurrentData,
         };
+        let currentDate = getInitialDate(optionsData.calendarOptions, optionsData.dateEnv, this.nowManager);
+        let dateProfile = currentViewData.dateProfileGenerator.build(currentDate);
+        if (!rangeContainsMarker(dateProfile.activeRange, currentDate)) {
+            currentDate = dateProfile.currentRange.start;
+        }
         // needs to be after setThisContext
         for (let callback of optionsData.pluginHooks.contextInit) {
             callback(calendarContext);
@@ -1294,6 +1371,7 @@ class CalendarDataManager {
         emitter.setThisContext(props.calendarApi);
         emitter.setOptions(currentViewData.options);
         let calendarContext = {
+            nowManager: this.nowManager,
             dateEnv: optionsData.dateEnv,
             options: optionsData.calendarOptions,
             pluginHooks: optionsData.pluginHooks,
@@ -1361,7 +1439,7 @@ class CalendarDataManager {
         let oldData = this.data;
         let optionsData = this.computeOptionsData(props.optionOverrides, state.dynamicOptionOverrides, props.calendarApi);
         let currentViewData = this.computeCurrentViewData(state.currentViewType, optionsData, props.optionOverrides, state.dynamicOptionOverrides);
-        let data = this.data = Object.assign(Object.assign(Object.assign({ viewTitle: this.buildTitle(state.dateProfile, currentViewData.options, optionsData.dateEnv), calendarApi: props.calendarApi, dispatch: this.dispatch, emitter: this.emitter, getCurrentData: this.getCurrentData }, optionsData), currentViewData), state);
+        let data = this.data = Object.assign(Object.assign(Object.assign({ nowManager: this.nowManager, viewTitle: this.buildTitle(state.dateProfile, currentViewData.options, optionsData.dateEnv), calendarApi: props.calendarApi, dispatch: this.dispatch, emitter: this.emitter, getCurrentData: this.getCurrentData }, optionsData), currentViewData), state);
         let changeHandlers = optionsData.pluginHooks.optionChangeHandlers;
         let oldCalendarOptions = oldData && oldData.calendarOptions;
         let newCalendarOptions = optionsData.calendarOptions;
@@ -1469,8 +1547,10 @@ class CalendarDataManager {
         }
         let { refinedOptions, extra } = this.processRawViewOptions(viewSpec, optionsData.pluginHooks, optionsData.localeDefaults, optionOverrides, dynamicOptionOverrides);
         warnUnknownOptions(extra);
+        this.nowManager.handleInput(optionsData.dateEnv, refinedOptions.now);
         let dateProfileGenerator = this.buildDateProfileGenerator({
             dateProfileGeneratorClass: viewSpec.optionDefaults.dateProfileGeneratorClass,
+            nowManager: this.nowManager,
             duration: viewSpec.duration,
             durationUnit: viewSpec.durationUnit,
             usesMinMaxTime: viewSpec.optionDefaults.usesMinMaxTime,
@@ -1484,7 +1564,6 @@ class CalendarDataManager {
             dateIncrement: refinedOptions.dateIncrement,
             hiddenDays: refinedOptions.hiddenDays,
             weekends: refinedOptions.weekends,
-            nowInput: refinedOptions.now,
             validRangeInput: refinedOptions.validRange,
             visibleRangeInput: refinedOptions.visibleRange,
             fixedWeekCount: refinedOptions.fixedWeekCount,
@@ -1888,8 +1967,6 @@ class CalendarContent extends PureComponent {
     render() {
         let { props } = this;
         let { toolbarConfig, options } = props;
-        let toolbarProps = this.buildToolbarProps(props.viewSpec, props.dateProfile, props.dateProfileGenerator, props.currentDate, getNow(props.options.now, props.dateEnv), // TODO: use NowTimer????
-        props.viewTitle);
         let viewVGrow = false;
         let viewHeight = '';
         let viewAspectRatio;
@@ -1905,16 +1982,20 @@ class CalendarContent extends PureComponent {
         else {
             viewAspectRatio = Math.max(options.aspectRatio, 0.5); // prevent from getting too tall
         }
-        let viewContext = this.buildViewContext(props.viewSpec, props.viewApi, props.options, props.dateProfileGenerator, props.dateEnv, props.theme, props.pluginHooks, props.dispatch, props.getCurrentData, props.emitter, props.calendarApi, this.registerInteractiveComponent, this.unregisterInteractiveComponent);
+        let viewContext = this.buildViewContext(props.viewSpec, props.viewApi, props.options, props.dateProfileGenerator, props.dateEnv, props.nowManager, props.theme, props.pluginHooks, props.dispatch, props.getCurrentData, props.emitter, props.calendarApi, this.registerInteractiveComponent, this.unregisterInteractiveComponent);
         let viewLabelId = (toolbarConfig.header && toolbarConfig.header.hasTitle)
             ? this.state.viewLabelId
             : undefined;
         return (y(ViewContextType.Provider, { value: viewContext },
-            toolbarConfig.header && (y(Toolbar, Object.assign({ ref: this.headerRef, extraClassName: "fc-header-toolbar", model: toolbarConfig.header, titleId: viewLabelId }, toolbarProps))),
-            y(ViewHarness, { liquid: viewVGrow, height: viewHeight, aspectRatio: viewAspectRatio, labeledById: viewLabelId },
-                this.renderView(props),
-                this.buildAppendContent()),
-            toolbarConfig.footer && (y(Toolbar, Object.assign({ ref: this.footerRef, extraClassName: "fc-footer-toolbar", model: toolbarConfig.footer, titleId: "" }, toolbarProps)))));
+            y(NowTimer, { unit: "day" }, (nowDate) => {
+                let toolbarProps = this.buildToolbarProps(props.viewSpec, props.dateProfile, props.dateProfileGenerator, props.currentDate, nowDate, props.viewTitle);
+                return (y(_, null,
+                    toolbarConfig.header && (y(Toolbar, Object.assign({ ref: this.headerRef, extraClassName: "fc-header-toolbar", model: toolbarConfig.header, titleId: viewLabelId }, toolbarProps))),
+                    y(ViewHarness, { liquid: viewVGrow, height: viewHeight, aspectRatio: viewAspectRatio, labeledById: viewLabelId },
+                        this.renderView(props),
+                        this.buildAppendContent()),
+                    toolbarConfig.footer && (y(Toolbar, Object.assign({ ref: this.footerRef, extraClassName: "fc-footer-toolbar", model: toolbarConfig.footer, titleId: "" }, toolbarProps)))));
+            })));
     }
     componentDidMount() {
         let { props } = this;

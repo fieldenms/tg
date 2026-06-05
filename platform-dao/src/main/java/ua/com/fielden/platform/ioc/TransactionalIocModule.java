@@ -8,23 +8,25 @@ import com.google.inject.name.Names;
 import jakarta.inject.Singleton;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import ua.com.fielden.platform.audit.SynAuditModelInitService;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
-import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.minheritance.SynModelInitService;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.SecurityTokenType;
 
 import java.util.Properties;
 
@@ -55,6 +57,8 @@ public abstract class TransactionalIocModule extends EntityIocModule {
         super.configure();
 
         bind(HibernateTypeMappings.class).toProvider(PlatformHibernateTypeMappings.Provider.class).in(SINGLETON);
+        requestStaticInjection(SecurityTokenType.class);
+
         bind(IIdOnlyProxiedEntityTypeCache.class).to(IdOnlyProxiedEntityTypeCache.class);
 
         // bind SessionRequired interceptor
@@ -66,6 +70,10 @@ public abstract class TransactionalIocModule extends EntityIocModule {
         bind(IDbVersionProvider.class).toInstance(constantDbVersion(HibernateConfigurationFactory.determineDbVersion(props)));
 
         install(new FactoryModuleBuilder().build(EntityBatchDeleteByQueryModelOperation.Factory.class));
+
+        // Start the services for generating and assigning the EQL models to the generated synthetic entities.
+        requestStaticInjection(SynAuditModelInitService.class);
+        requestStaticInjection(SynModelInitService.class);
     }
 
     @Provides

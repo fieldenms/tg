@@ -1,10 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.sundries;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
-import ua.com.fielden.platform.eql.stage2.ITransformableFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -14,7 +12,6 @@ import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
@@ -72,22 +69,16 @@ public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) impl
 
     public Set<Prop2> collectProps() {
         return orderBys.stream()
-                .map(OrderBy2::operand)
-                .filter(Objects::nonNull)
-                .map(ITransformableFromStage2To3::collectProps)
+                .map(OrderBy2::collectProps)
                 .flatMap(Set::stream)
                 .collect(toImmutableSet());
     }
     
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        return orderBys.isEmpty()
-                ? ImmutableSet.of()
-                : orderBys.stream()
-                        .map(OrderBy2::operand)
-                        .filter(Objects::nonNull)
-                        .map(ITransformableFromStage2To3::collectEntityTypes)
-                        .flatMap(Set::stream)
-                        .collect(toImmutableSet());
+        return orderBys.stream()
+                .map(OrderBy2::collectEntityTypes)
+                .flatMap(Set::stream)
+                .collect(toImmutableSet());
     }
 
     @Override

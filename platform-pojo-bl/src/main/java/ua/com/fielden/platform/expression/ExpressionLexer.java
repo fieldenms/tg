@@ -52,6 +52,8 @@ import ua.com.fielden.platform.expression.lexer.mult.MultTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.name.NameTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.not_eq.NotEqualTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.null_.NullTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.bool.true_.TrueTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.bool.false_.FalseTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.or.OrTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.plus.PlusTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.rparen.RparenTokenAutomata;
@@ -83,6 +85,8 @@ public class ExpressionLexer {
             new WhenTokenAutomata(), new ThenTokenAutomata(), new ElseTokenAutomata(), new EndTokenAutomata(),
             ////////////////////////////////////////////////////
             new NullTokenAutomata(), // should go before the name token
+            new TrueTokenAutomata(), // should go before the name token
+            new FalseTokenAutomata(), // should go before the name token
             new NowTokenAutomata(), // should go before the name token
             new SelfTokenAutomata(), // should go before the name token
             new NameTokenAutomata(),//
@@ -156,8 +160,8 @@ public class ExpressionLexer {
                 }
                 return new Token(tokenLexer.lexemeCat, tokenText, prevPosition, curPosition); // prevPosition + tokenLexer.getCharsRecognised()
             } catch (final SequenceRecognitionFailed e) {
-                if (tokenLexer.getPretendantSequence().toString().length() > lastPretendant.length()) {
-                    lastPretendant = tokenLexer.getPretendantSequence().toString();
+                if (tokenLexer.getPretendantSequence().length() > lastPretendant.length()) {
+                    lastPretendant = tokenLexer.getPretendantSequence();
                     error = e;
                 }
             } finally {

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
@@ -193,6 +194,11 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
     @Override
     public IRenderable render() {
         return renderable;
+    }
+
+    @Override
+    public Stream<EntityActionConfig> streamActionConfigs() {
+        return actions.stream();
     }
 
     @Override

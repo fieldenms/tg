@@ -1,24 +1,16 @@
 package ua.com.fielden.web.domain_driven.authetication;
 
-import static java.lang.String.format;
-
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import org.restlet.Application;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
 
-/**
- * This is a web application specific to testing of {@link AbstractWebResourceGuard};
- *
- * @author TG Team
- *
- */
+/// This is a web application specific to testing of [AbstractWebResourceGuard].
+///
 class WebResourceGuardTestWebApplication extends Application {
 
     private final Injector injector;

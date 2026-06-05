@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
@@ -13,15 +14,16 @@ import ua.com.fielden.platform.utils.ToString.IFormat;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.utils.ImmutableSetUtils.insert;
-import static ua.com.fielden.platform.utils.ImmutableSetUtils.union;
+import static ua.com.fielden.platform.utils.ImmutableSetUtils.*;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
 
 /// Represents an entity graph that describes the shape of an entity to be fetched.
@@ -46,45 +48,44 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
     ///
     public enum FetchCategory {
 
-        /// * Includes [#ALL].
-        /// * Includes calculated properties.
+        /// A superset of [#ALL] with the following additions:
+        /// * Includes all calculated properties.
         ///
         ALL_INCL_CALC,
 
-        /// * Includes [#DEFAULT].
-        /// * Each entity-typed property is included using [#DEFAULT].
+        /// A superset of [#DEFAULT] with the following additions:
+        /// * Entity-typed properties are included using [#DEFAULT].
         ///
         ALL,
 
-        /// Includes [#KEY_AND_DESC].
-        /// All other properties that satisfy the following rules are included.
-        /// *  Collectional properties are excluded.
-        /// *  Non-retrievable properties are excluded.
-        /// *  Each calculated property is excluded unless it has a component type.
-        /// *  `desc` is always included if it belongs to the entity type.
-        /// *  Each persistent entity-typed property is included as [#ID_ONLY].
+        /// A superset of [#KEY_AND_DESC] with the following additions:
+        /// * All retrievable properties, except calculated ones, are included.
+        /// * Entity-typed properties are included using [#ID_ONLY].
+        /// * If the root entity type is a union, all union members are included using [#DEFAULT].
         ///
         DEFAULT,
 
-        /// * Includes [#ID_AND_VERSION] if the entity type is persistent;
+        /// A superset of [#ID_AND_VERSION] with the following additions:
         /// * `key` is included.
-        ///   If a key is composite, all key members are included.
+        ///   If the key is composite, all key members are included.
         ///   If a key member is union-typed, all union members are included using [#DEFAULT].
-        /// * `desc` is included if it belongs to the entity type.
+        /// * `desc` is included iff it is defined for the entity type.
         ///
         KEY_AND_DESC,
 
-        /// A slightly broader fetch model than [#ID_ONLY].
-        /// *  `id` is included if it belongs to the entity type;
-        /// *  `version` is included if the entity type is persistent;
-        /// *  `refCount` and `active` are included entities extending [ua.com.fielden.platform.entity.ActivatableAbstractEntity],
-        ///    as they are generally required when saving changes;
-        /// *  the group of "last updated" properties is included for entities extending [ua.com.fielden.platform.entity.AbstractPersistentEntity],
-        ///    as they are generally required when saving changes (unlike the "created" group of properties).
+        /// A superset of [#ID_ONLY] with the following additions:
+        /// * `version` is included iff the entity type is persistent.
+        /// * `refCount` and `active` are included for [activatable entities][ua.com.fielden.platform.entity.ActivatableAbstractEntity],
+        ///   as they are generally required when saving changes.
+        /// * The group of "last updated" properties is included for entities extending [AbstractPersistentEntity],
+        ///   as they are generally required when saving changes (unlike the "created" group of properties).
         ///
         ID_AND_VERSION,
 
-        /// Sole property `id` is included.
+        /// Sole property `id` is included iff it is defined for the entity type.
+        /// Property `id` is defined for all persistent and union entity types.
+        /// For synthetic entity types, `id` is defined if it is explicitly yielded or is calculated (one-2-one synthetic entity type).
+        /// More on `id`s for synthetic entities can be found [here](https://github.com/fieldenms/tg/wiki/Synthetic-entities#entity-ids).
         ///
         ID_ONLY,
 
@@ -408,19 +409,39 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
         return ID_ONLY;
     }
 
-    public fetch<?> unionWith(final fetch<?> second) {
-        if (second == null || second == this) {
+    /// Returns a new fetch model that is a union of `this` and `that`.
+    /// The result covers everything that either model covers:
+    /// * Fetch category is the wider of the two.
+    /// * Instrumented if either side is instrumented.
+    /// * Included properties and sub-models are merged (sub-models are merged recursively).
+    /// * Excluded properties are *intersected* — only properties excluded by both models remain excluded,
+    ///   so that neither side loses a property it depends on.
+    ///
+    /// Returns `this` if `that` is the same instance.
+    ///
+    /// @param that  must not be null; use [#unionWith(Optional)] for nullable fetch models
+    ///
+    public fetch<T> unionWith(final fetch<?> that) {
+        requireNonNull(that, "that");
+        if (that == this) {
             return this;
         }
 
         return new fetch<>(entityType,
-                           getMergedFetchCategory(second),
-                           (isInstrumented() || second.isInstrumented()),
-                           ImmutableMapUtils.union((k, fetch1, fetch2) -> fetch1.unionWith(fetch2),
-                                                   includedPropsWithModels,
-                                                   second.includedPropsWithModels),
-                           union(includedProps, second.includedProps),
-                           union(excludedProps, second.excludedProps));
+                           getMergedFetchCategory(that),
+                           (isInstrumented() || that.isInstrumented()),
+                           ImmutableMapUtils.union((_, fetch1, fetch2) -> fetch1.unionWith(fetch2),
+                                                   this.includedPropsWithModels,
+                                                   that.includedPropsWithModels),
+                           union(this.includedProps, that.includedProps),
+                           intersection(this.excludedProps, that.excludedProps));
+    }
+
+    /// A convenience overload of [#unionWith(fetch)] that accepts an optional fetch model.
+    /// Returns `this` if `maybeThat` is empty.
+    ///
+    public fetch<T> unionWith(final Optional<? extends fetch<?>> maybeThat) {
+        return maybeThat.map(this::unionWith).orElse(this);
     }
 
 }

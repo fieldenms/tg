@@ -80,7 +80,7 @@ public class EntityContainerEnhancer {
                                      final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
                                      enhancePropertyWithLinkToParent(session, entities, propName, propFetchModel, linkPropName, paramValues);
                                  } catch (final Exception e) {
-                                     if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.isPersistent() || EntityUtils.isOneToOne(em.javaType()))) {
+                                     if (propMetadataUtils.isPropEntityType(pm.type(), em -> em.isPersistent() || em.isSynthetic() || EntityUtils.isOneToOne(em.javaType()))) {
                                          enhanceProperty(session, entities, propName, propFetchModel, paramValues);
                                      } else {
                                          // logger.debug(format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));
@@ -153,10 +153,12 @@ public class EntityContainerEnhancer {
         if (isUnionEntityType(propType)) {
             for (final var entity : entities) {
                 final var unionContainer = entity.getEntities().get(propName);
-                for (final var memberContainer : unionContainer.getEntities().values()) {
-                    final var memberProxyType = idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(memberContainer.getResultType());
-                    if (memberProxyType != null) {
-                        memberContainer.setProxiedResultType((Class) memberProxyType);
+                if (unionContainer != null) {
+                    for (final var memberContainer : unionContainer.getEntities().values()) {
+                        final var memberProxyType = idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(memberContainer.getResultType());
+                        if (memberProxyType != null) {
+                            memberContainer.setProxiedResultType((Class) memberProxyType);
+                        }
                     }
                 }
             }

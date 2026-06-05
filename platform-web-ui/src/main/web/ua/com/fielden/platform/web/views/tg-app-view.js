@@ -148,18 +148,6 @@ Polymer({
         this.$.view._selectMenu(subroute);
     },
 
-    canLeave: function() {
-        const viewThatWasChanged = this.$.view.canLeave();
-        const viewsDesc = [];
-        if (Array.isArray(viewThatWasChanged)) {
-            viewThatWasChanged.forEach(function (element) {
-                viewsDesc.push(this.menuItem.key + " \u2192 " +  element);
-            }.bind(this));
-            return viewsDesc;
-        }
-        return viewThatWasChanged;
-    },
-
     _calcStyleForItem: function (menuItem) {
         return "background-color: " + menuItem.bgColor + ";";
     },

@@ -174,4 +174,9 @@ public class MasterInfo extends AbstractEntity<String> {
         return relativePropertyName;
     }
 
+    @Override
+    @Observable
+    public MasterInfo setDesc(String desc) {
+        return super.setDesc(desc);
+    }
 }

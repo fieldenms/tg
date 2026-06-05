@@ -15,7 +15,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 import moment from '/resources/polymer/lib/moment-lib.js'; // used for moment.localeData(). ...
 import { _momentTz, timeZoneFormats, now } from '/resources/reflection/tg-date-utils.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
+import { tearDownEvent, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js'
 
 const AFTER = 'AFTER';
 const BEFORE = 'BEFORE';
@@ -70,10 +70,10 @@ const customInputTemplate = html`
             on-focus="_onFocus"
             on-blur="_outFocus"
             disabled$="[[_disabled]]"
-            tooltip-text$="[[_getTooltip(_editingValue)]]"
+            tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]"
             autocomplete="off"/>
     </iron-input>`;
-const customIconButtonsTemplate = html`<paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>`;
+const customIconButtonsTemplate = html`<paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" tabindex="-1" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgDatetimePicker extends TgEditor {
@@ -218,8 +218,10 @@ export class TgDatetimePicker extends TgEditor {
             document.body.removeChild(dialog);
             document.body.removeChild(this);
 
-            //Setting focus on input.
-            self.decoratedInput().focus();
+            // Setting focus on input -- non-touch devices only.
+            if (!isTouchEnabled()) {
+                self.decoratedInput().focus();
+            }
             self._isCalendarOpen = false;
         }.bind(domBind);
 

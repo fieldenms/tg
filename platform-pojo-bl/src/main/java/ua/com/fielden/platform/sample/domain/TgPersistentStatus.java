@@ -1,11 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.*;
 
 /**
  * Master entity object.
@@ -20,4 +16,11 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 @DescTitle(value = "Desc", desc = "Some desc description")
 public class TgPersistentStatus extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
+
+    @Override
+    @Observable
+    public TgPersistentStatus setDesc(String desc) {
+        return super.setDesc(desc);
+    }
+
 }

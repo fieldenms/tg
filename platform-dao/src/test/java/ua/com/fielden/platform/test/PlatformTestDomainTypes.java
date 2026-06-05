@@ -133,6 +133,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgEntityWithTimeZoneDates.class);
         add(EntityOne.class);
         add(EntityTwo.class);
+        add(EntityThree.class);
         add(UnionEntity.class);
         add(TgUnion.class);
         add(TgUnionType1.class);
@@ -146,11 +147,15 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgInventory.class);
         add(TgInventoryBin.class);
         add(TgInventoryIssue.class);
+        add(AuditedEntity.class);
         add(UnionEntityDetails.class);
         add(Union.class);
         add(Member1.class);
+        add(MemberDetails.class);
         add(Member2.class);
         add(Member3.class);
+        add(Member4.class);
+        add(Member5.class);
         add(ActivatableUnionOwner.class);
         add(UnionOwner.class);
         add(TestExists_Union.class);

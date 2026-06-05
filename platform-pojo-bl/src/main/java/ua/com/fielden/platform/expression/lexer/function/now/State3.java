@@ -27,11 +27,4 @@ public class State3 extends AbstractState {
         }
     }
 
-    public static void main(final String[] args) {
-        System.out.println(String.valueOf('b').matches("[^\\p{L}^\\d]"));
-        System.out.println(String.valueOf('1').matches("[^\\p{L}^\\d]"));
-        System.out.println(String.valueOf('.').matches("[^\\p{L}^\\d^.]"));
-        System.out.println(String.valueOf(' ').matches("[^\\p{L}^\\d^.]"));
-    }
-
 }

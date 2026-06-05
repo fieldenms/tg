@@ -270,7 +270,7 @@ public enum DbVersion {
         return "_VERSION";
     }
     
-    private static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
+    public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
     public String idSequenceName() {
         return ID_SEQUENCE_NAME;
     }

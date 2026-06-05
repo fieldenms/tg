@@ -1,21 +1,19 @@
 package ua.com.fielden.platform.expression;
 
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-
-import java.math.BigDecimal;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1;
-import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.types.Money;
+
+import java.math.BigDecimal;
+
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 public class ExpressionText2ModelConverter4CaseWhenTest {
     
@@ -156,6 +154,54 @@ public class ExpressionText2ModelConverter4CaseWhenTest {
                 .expr(SUM_of_intProperty).div()
                 .expr(caseWhen)
                 .model();
+        assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void model_generation_for_CASE_with_true_literal_is_supported() throws RecognitionException, SemanticException {
+        final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
+        "CASE WHEN boolProperty = true THEN \"True\" ELSE \"False\" END");
+        final AstNode root = ev.convert();
+        assertEquals("Incorrect expression type", String.class, root.getType());
+
+        final ExpressionModel prop = expr().prop("boolProperty").model();
+        final ConditionModel cond = cond().expr(prop).eq().val(true).model();
+        final ExpressionModel model = expr().caseWhen().condition(cond)
+                .then().expr(expr().val("True").model())
+                .otherwise().expr(expr().val("False").model())
+                .end().model();
+        assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void model_generation_for_CASE_with_false_literal_is_supported() throws RecognitionException, SemanticException {
+        final var ev = new ExpressionText2ModelConverter(EntityLevel1.class,
+        "CASE WHEN boolProperty = false THEN \"False\" ELSE \"True\" END");
+        final AstNode root = ev.convert();
+        assertEquals("Incorrect expression type", String.class, root.getType());
+
+        final ExpressionModel prop = expr().prop("boolProperty").model();
+        final ConditionModel cond = cond().expr(prop).eq().val(false).model();
+        final ExpressionModel model = expr().caseWhen().condition(cond)
+                .then().expr(expr().val("False").model())
+                .otherwise().expr(expr().val("True").model())
+                .end().model();
+        assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void model_generation_for_CASE_with_boolean_inequality_is_supported() throws RecognitionException, SemanticException {
+        final var ev = new ExpressionText2ModelConverter(EntityLevel1.class,
+        "CASE WHEN boolProperty <> false THEN \"Not False\" ELSE \"False\" END");
+        final AstNode root = ev.convert();
+        assertEquals("Incorrect expression type", String.class, root.getType());
+
+        final ExpressionModel prop = expr().prop("boolProperty").model();
+        final ConditionModel cond = cond().expr(prop).ne().val(false).model();
+        final ExpressionModel model = expr().caseWhen().condition(cond)
+                .then().expr(expr().val("Not False").model())
+                .otherwise().expr(expr().val("False").model())
+                .end().model();
         assertEquals("Incorrect model.", model, root.getModel());
     }
 

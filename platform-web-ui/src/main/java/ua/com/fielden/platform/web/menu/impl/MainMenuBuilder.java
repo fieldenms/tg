@@ -13,6 +13,8 @@ import ua.com.fielden.platform.web.menu.layout.IMenuLayoutConfig0;
 import ua.com.fielden.platform.web.menu.layout.impl.LayoutConfig;
 import ua.com.fielden.platform.web.menu.module.impl.ModuleConfig;
 
+import java.util.stream.Stream;
+
 /**
  * An implementation of {@link IMainMenuBuilderWithLayout} contract, which serves both as the main menu builder and the representation of the final main menu configuration.
  *
@@ -33,6 +35,11 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout {
     public IModuleConfig addModule(final String title) {
         final IModuleConfig moduleConfig = new ModuleConfig(this, mainMenu.addModule(title));
         return moduleConfig;
+    }
+
+    @Override
+    public Stream<EntityActionConfig> streamActionConfigs() {
+        return mainMenu.streamActionConfigs();
     }
 
     @Override

@@ -60,7 +60,10 @@ public enum EgTokenCategory implements ILexemeCategory {
     HOURS(45),
     MINUTES(46),
     SECONDS(47),
-    NOW(42);
+    NOW(42),
+    ////////////// boolean literals ////////////////////////
+    TRUE(51),
+    FALSE(52);
 
     public final int index;
 

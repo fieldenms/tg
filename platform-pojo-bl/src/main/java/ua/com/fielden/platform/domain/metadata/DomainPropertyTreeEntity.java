@@ -1,17 +1,9 @@
 package ua.com.fielden.platform.domain.metadata;
 
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 
-/**
- * The entity that represents the property row in domain explorer tree.
- *
- * @author TG Team
- *
- */
+/// The entity that represents the property row in domain explorer tree.
+///
 @KeyTitle(value = "Property Title", desc = "The property title")
 @DescTitle(value = "Property Description", desc = "The property description")
 public class DomainPropertyTreeEntity extends DomainTreeEntity {
@@ -70,6 +62,13 @@ public class DomainPropertyTreeEntity extends DomainTreeEntity {
 
     public boolean getIsKey() {
         return isKey;
+    }
+
+    @Override
+    @Observable
+    public DomainPropertyTreeEntity setDesc(String desc) {
+        super.setDesc(desc);
+        return this;
     }
 
 }

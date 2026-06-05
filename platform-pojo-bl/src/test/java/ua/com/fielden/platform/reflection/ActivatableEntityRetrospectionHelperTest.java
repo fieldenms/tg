@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.reflection;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.activatable.test_entities.UnionOwner;
+import ua.com.fielden.platform.entity.activatable.test_entities.UnionWithoutActivatableOwner;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.reflection.test_entities.ActionEntity;
 import ua.com.fielden.platform.reflection.test_entities.EntityWithPropertiesOfActivatableTypes;
+import ua.com.fielden.platform.reflection.test_entities.UnionWithoutActivatableActionOwner;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -96,6 +97,8 @@ public class ActivatableEntityRetrospectionHelperTest {
     public void isActivatableProperty_is_true_for_persistent_union_typed_properties_in_persistent_entities() {
         assertTrue(isPersistentEntityType(UnionOwner.class));
         assertTrue(isUnionEntityType(determinePropertyType(UnionOwner.class, "union")));
+        // One out of 5 union members is not activatable here.
+        // At least one member should be activatable for union to be considered activatable.
         assertTrue(isActivatableProperty(UnionOwner.class, "union"));
     }
 
@@ -104,7 +107,24 @@ public class ActivatableEntityRetrospectionHelperTest {
         assertFalse(isPersistentEntityType(ActionEntity.class));
         assertFalse(isSyntheticEntityType(ActionEntity.class));
         assertTrue(isUnionEntityType(determinePropertyType(ActionEntity.class, "union")));
+        // One out of 5 union members is not activatable here.
+        // At least one member should be activatable for union to be considered activatable.
         assertTrue(isActivatableProperty(ActionEntity.class, "union"));
+    }
+
+    @Test
+    public void isActivatableProperty_is_false_for_persistent_union_typed_properties_in_persistent_entities_if_union_has_no_activatable_property() {
+        assertTrue(isPersistentEntityType(UnionWithoutActivatableOwner.class));
+        assertTrue(isUnionEntityType(determinePropertyType(UnionWithoutActivatableOwner.class, "union")));
+        assertFalse(isActivatableProperty(UnionWithoutActivatableOwner.class, "union"));
+    }
+
+    @Test
+    public void isActivatableProperty_is_false_for_persistent_union_typed_properties_in_action_entities_if_union_has_no_activatable_property() {
+        assertFalse(isPersistentEntityType(UnionWithoutActivatableActionOwner.class));
+        assertFalse(isSyntheticEntityType(UnionWithoutActivatableActionOwner.class));
+        assertTrue(isUnionEntityType(determinePropertyType(UnionWithoutActivatableActionOwner.class, "union")));
+        assertFalse(isActivatableProperty(UnionWithoutActivatableActionOwner.class, "union"));
     }
 
 }

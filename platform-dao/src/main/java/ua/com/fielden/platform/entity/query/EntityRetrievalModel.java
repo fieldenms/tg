@@ -5,6 +5,7 @@ import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EntityRetrievalModelException;
@@ -36,8 +37,9 @@ import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
-import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
+import static ua.com.fielden.platform.reflection.Finder.commonPropertiesForUnion;
+import static ua.com.fielden.platform.reflection.Finder.unionProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.ImmutableListUtils.prepend;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
@@ -155,11 +157,11 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         final var builder = new Builder(originalFetch.getEntityType(), domainMetadata, qsip, stack);
 
         switch (originalFetch.getFetchCategory()) {
-            case ALL_INCL_CALC -> builder.includeAllFirstLevelPropsInclCalc();
-            case ALL -> builder.includeAllFirstLevelProps();
-            case DEFAULT -> builder.includeAllFirstLevelPrimPropsAndKey();
-            case KEY_AND_DESC -> builder.includeKeyAndDescOnly();
-            case ID_AND_VERSION -> builder.includeIdAndVersionOnly();
+            case ALL_INCL_CALC -> builder.includeAllInclCalc();
+            case ALL -> builder.includeAll();
+            case DEFAULT -> builder.includeDefault();
+            case KEY_AND_DESC -> builder.includeKeyAndDesc();
+            case ID_AND_VERSION -> builder.includeIdAndVersion();
             case ID_ONLY -> builder.includeIdOnly();
             case NONE -> {}
         }
@@ -368,6 +370,14 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                                 else if (KEY.equals(propMetadata.name()) && !propMetadata.isPersistent()) {
                                     return false;
                                 }
+                                // Do not proxy common properties and `desc` in union entities.
+                                // Instead, illegal access to proxied properties should be detected when the underlying properties of the union members themselves are accessed.
+                                else if (entityMetadata.isUnion()
+                                         && (DESC.equals(propMetadata.name())
+                                             || commonPropertiesForUnion((Class<? extends AbstractUnionEntity>) entityMetadata.javaType()).contains(propMetadata.name())))
+                                {
+                                    return false;
+                                }
                                 else return true;
                             })
                             .orElse(TRUE))
@@ -380,17 +390,12 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeAllUnionEntityKeyMembers() {
-            entityMetadata.properties().stream()
-                    .filter(pm -> propMetadataUtils.isPropEntityType(pm.type(), EntityMetadata::isPersistent))
-                    .forEach(pm -> with(pm.name()));
+            final var unionType = entityMetadata.asUnion().orElseThrow().javaType();
+            unionProperties(unionType).forEach(prop -> with(prop.getName()));
         }
 
-        private void includeAllFirstLevelPrimPropsAndKey() {
-            // Always include `desc`.
-            // This category should be a superset of KEY_AND_DESC.
-            if (entityMetadata.hasProperty(DESC)) {
-                primProps.add(DESC);
-            }
+        private void includeDefault() {
+            includeKeyAndDesc();
 
             forEachProperty((prop, optPropMetadata) -> {
                 // Exclude all calculated properties except for components (legacy EQL2 behaviour).
@@ -399,11 +404,9 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 else {
                     // Recursive key structures are not supported, and will lead to non-termination (see #2452).
 
-                    // Explore further if property is a union member or a key member.
+                    // Explore further only if property is a union member.
                     final boolean exploreEntities = optPropMetadata
-                            .map(propMetadata -> entityMetadata.isUnion() && propMetadata.type().isEntity()
-                                                 || KEY.equals(propMetadata.name())
-                                                 || propMetadata.has(KEY_MEMBER))
+                            .map(propMetadata -> entityMetadata.isUnion() && propMetadata.type().isEntity())
                             .orElse(TRUE);
 
                     with(prop.name, !exploreEntities);
@@ -419,22 +422,18 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             }
         }
 
-        private void includeKeyAndDescOnly() {
-            includeIdAndVersionOnly();
+        private void includeKeyAndDesc() {
+            includeIdAndVersion();
 
             with(KEY, false);
 
             if (entityMetadata.hasProperty(DESC)) {
-                primProps.add(DESC);
+                with(DESC);
             }
         }
 
-        private void includeAllFirstLevelProps() {
-            // Always include `desc`.
-            // This category should be a superset of KEY_AND_DESC.
-            if (entityMetadata.hasProperty(DESC)) {
-                primProps.add(DESC);
-            }
+        private void includeAll() {
+            includeKeyAndDesc();
 
             forEachProperty((prop, optPropMetadata) -> {
                 // Exclude all calculated properties except for components (legacy EQL2 behaviour).
@@ -446,20 +445,19 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             });
         }
 
-        private void includeAllFirstLevelPropsInclCalc() {
+        private void includeAllInclCalc() {
             forEachProperty((prop, optPropMetadata) -> with(prop.name));
         }
 
         private void includeIdOnly() {
-            primProps.add(ID);
+            if (querySourceInfo.hasProp(ID)) {
+                with(ID);
+            }
         }
 
-        private void includeIdAndVersionOnly() {
-            // NOTE: Shouldn't this category produce a superset of ID_ONLY?
-            //       It does not always include ID, unlike ID_ONLY.
-            if (querySourceInfo.hasProp(ID)) {
-                primProps.add(ID);
-            }
+        private void includeIdAndVersion() {
+            includeIdOnly();
+
             if (entityMetadata.isPersistent()) {
                 primProps.add(VERSION);
                 if (isActivatableEntityType(entityType)) {
@@ -478,13 +476,24 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
         private void with(final String propName, final boolean skipEntities) {
             getPropMetadata(propName).ifPresentOrElse(pm -> {
+                if (ID.equals(propName) && entityMetadata.isUnion()) {
+                    primProps.add(propName);
+                    // Active union property must be present to access ID of a union.
+                    domainMetadata.entityMetadataUtils().unionMembers(entityMetadata.asUnion().orElseThrow()).forEach(unionMember -> {
+                        with(unionMember.name(), fetchIdOnly(unionMember.type().asEntity().orElseThrow().javaType()));
+                    });
+                }
                 if (pm.type().isCompositeKey()) {
                     // Do not include the key itself.
                     // See the documentation of this class.
                     includeAllCompositeKeyMembers();
-                } else if (propName.equals(KEY) && entityMetadata.isUnion()) {
+                } else if (entityMetadata.isUnion() && propName.equals(KEY)) {
                     primProps.add(KEY);
                     includeAllUnionEntityKeyMembers();
+                } else if (entityMetadata.isUnion() && propName.equals(DESC)) {
+                    includeCommonUnionProperty(DESC, Optional.empty());
+                } else if (entityMetadata.isUnion() && commonPropertiesForUnion(entityMetadata.asUnion().orElseThrow().javaType()).contains(propName)) {
+                    includeCommonUnionProperty(propName, pm.type().asEntity().map(it -> skipEntities ? fetchIdOnly(it.javaType()) : EntityQueryUtils.fetch(it.javaType())));
                 } else {
                     final var propType = unwrap(pm.type());
                     // Treat PropertyDescriptor as primitive, it does not make sense to fetch its sub-properties.
@@ -514,12 +523,36 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             }, () -> primProps.add(propName)); // if PropertyMetadata is missing and this is considered legal -- add it as primitive property
         }
 
-        private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-            final var stackElement = new StackElement(propName, fetchModel);
+       /// Includes common union property `commonPropName` by adding it to the retrieval model of each union member.
+       /// This property will not be directly included in this retrieval model, but only indirectly -- through union members.
+       ///
+       /// @param maybeFetch a fetch model for `commonPropName`
+       ///
+       ///
+       private void includeCommonUnionProperty(final String commonPropName, final Optional<fetch<?>> maybeFetch) {
+           final var unionType = entityMetadata.asUnion().orElseThrow().javaType();
+           unionProperties(unionType)
+                   .stream()
+                   .map(prop -> entityMetadata.property(prop.getName()))
+                   .forEach(memberPropMetadata -> {
+                       final var memberType = memberPropMetadata.type().asEntity().orElseThrow().javaType();
+                       // Ignore common properties that may not be so common.
+                       // E.g., `desc` may exist only in some union members, but we still want to process it as common for uniformity.
+                       domainMetadata.forPropertyOpt(memberType, commonPropName).ifPresent(commonPropMetadata -> {
+                           // Use id-only fetch for the union member.
+                           // If anything else needs to be retrieved, it will be added by other methods and combined into one model.
+                           final var memberPropFetch = maybeFetch.<fetch>map(it -> fetchIdOnly(memberType).with(commonPropName, it))
+                                                                 .orElseGet(() -> fetchIdOnly(memberType).with(commonPropName));
+                           with(memberPropMetadata.name(), memberPropFetch);
+                       });
+                   });
+       }
 
+       private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
             // If a cycle is detected, override `fetchModel` with an ID_ONLY one.
             // This is a form of partial support for cycles.
             if (stack.stream().anyMatch(elt -> elt.fetch().equals(fetchModel))) {
+                final var stackElement = new StackElement(propName, fetchModel);
                 LOGGER.warn(() -> format(WARN_GRAPH_CYCLE,
                                          StreamUtils.prepend(stackElement, stack.stream())
                                                  .map(elt -> format("%s: (%s, %s)",
@@ -527,7 +560,16 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                                                                     elt.fetch().getEntityType().getSimpleName(),
                                                                     elt.fetch().getFetchCategory()))
                                                  .collect(joining("\n"))));
-                with(propName, new fetch<>(fetchModel.getEntityType(), ID_ONLY));
+
+                final var fetchIdOnly = new fetch<>(fetchModel.getEntityType(), ID_ONLY);
+                // An ID_ONLY fetch model should never result in a cycle as it does not add depth.
+                // Still, let's be defensive.
+                if (fetchModel.equals(fetchIdOnly)) {
+                    entityProps.put(propName, new EntityRetrievalModel<>(fetchIdOnly, domainMetadata, qsip, false, prepend(stackElement, stack)));
+                }
+                else {
+                    with(propName, fetchIdOnly);
+                }
                 return;
             }
 
@@ -552,9 +594,14 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
             final var existingFetch = entityProps.get(propName);
             final var finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
-            final var model = new EntityRetrievalModel<>(finalFetch, domainMetadata, qsip, false, prepend(stackElement, stack));
 
-            entityProps.put(propName, model);
+            if (entityMetadata.isUnion() && commonPropertiesForUnion(entityMetadata.asUnion().orElseThrow().javaType()).contains(propName)) {
+                includeCommonUnionProperty(propName, Optional.of(finalFetch));
+            }
+            else {
+                final var model = new EntityRetrievalModel<>(finalFetch, domainMetadata, qsip, false, prepend(new StackElement(propName, finalFetch), stack));
+                entityProps.put(propName, model);
+            }
         }
 
         private void without(final String propName) {

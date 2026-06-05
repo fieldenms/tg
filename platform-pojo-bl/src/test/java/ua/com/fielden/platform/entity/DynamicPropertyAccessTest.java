@@ -4,6 +4,8 @@ import com.google.inject.Injector;
 import org.junit.Test;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.IAuthorisationModel;
@@ -13,8 +15,8 @@ import ua.com.fielden.platform.test_entities.*;
 
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.*;
 
 public class DynamicPropertyAccessTest {
 
@@ -284,6 +286,25 @@ public class DynamicPropertyAccessTest {
         assertEquals("Dynamic property setting invokes a setter.", 1, entity.getSetterWitness());
         assertEquals("New Value", entity.get("key"));
         assertEquals("New Value", entity.getKey());
+    }
+
+    @Test
+    public void access_to_common_property_of_union_entity_fails_if_underlying_property_of_active_entity_is_proxied() {
+        final TgWagonSlot wagonSlot = factory.newEntity(EntityProxyContainer.proxy(TgWagonSlot.class, "fuelType"));
+        final var location = factory.newEntity(TgBogieLocation.class).setWagonSlot(wagonSlot);
+        assertFalse(location.proxiedPropertyNames().contains("fuelType"));
+        assertTrue(location.getWagonSlot().proxiedPropertyNames().contains("fuelType"));
+        assertThatThrownBy(() -> location.get("wagonSlot.fuelType")).isInstanceOf(StrictProxyException.class);
+    }
+
+    @Test
+    public void access_to_property_desc_of_union_entity_fails_if_underlying_property_of_active_entity_is_proxied() {
+        final TgWagonSlot wagonSlot = factory.newEntity(EntityProxyContainer.proxy(TgWagonSlot.class, "desc"));
+        final var location = factory.newEntity(TgBogieLocation.class).setWagonSlot(wagonSlot);
+        assertFalse(location.proxiedPropertyNames().contains("desc"));
+        assertTrue(location.getWagonSlot().proxiedPropertyNames().contains("desc"));
+        assertThatThrownBy(() -> location.get("wagonSlot.desc")).isInstanceOf(StrictProxyException.class);
+        assertThatThrownBy(location::getDesc).isInstanceOf(StrictProxyException.class);
     }
 
 }

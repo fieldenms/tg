@@ -1,30 +1,20 @@
 package ua.com.fielden.platform.sample.domain;
 
+import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
-import com.google.inject.Inject;
-
-import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-
-/** 
- * DAO implementation for companion object {@link ITgSystem}.
- * 
- * @author Developers
- *
- */
+/// DAO implementation for companion object [ITgSystem].
+///
 @EntityType(TgSystem.class)
 public class TgSystemDao extends CommonEntityDao<TgSystem> implements ITgSystem {
-    
-    @Inject
-    public TgSystemDao(final IFilter filter) {
-        super(filter);
-    }
     
     @Override
     public void delete(TgSystem entity) {
@@ -70,5 +60,11 @@ public class TgSystemDao extends CommonEntityDao<TgSystem> implements ITgSystem 
     public <E extends AbstractEntity<?>> int batchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
         return defaultBatchDeleteByPropertyValues(propName, propEntities);
     }
-    
+
+    @Override
+    @SessionRequired
+    public int batchInsert(Stream<TgSystem> newEntities, int batchSize) {
+        return defaultBatchInsert(newEntities, batchSize);
+    }
+
 }

@@ -110,7 +110,7 @@ const template = html`
         <iron-icon class="main-icon" icon="icons:arrow-drop-down" on-tap="_showViews" dropdown-opened$="[[dropDownOpened]]" tooltip-text$="[[dropdownButtonTooltipText]]"></iron-icon>
     </paper-button>
     <iron-dropdown id="dropdown" horizontal-align="left" vertical-align="[[verticalAlign]]" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
-        <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
+        <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView" on-iron-activate="_activateView">
             <template is="dom-repeat" items="[[views]]" as="view">
                 <paper-item class="view-item" view-index$="[[view.index]]" tooltip-text$="[[view.desc]]">
                     <iron-icon hidden$="[[!view.icon]]" icon="[[view.icon]]" style$="[[view.iconStyle]]"></iron-icon>
@@ -223,7 +223,7 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
 
     _runActionOrShowView(e) {
         if (this.fragmented && this._currentView) {
-            this.dispatchEvent(new CustomEvent('tg-centre-view-change',  { bubbles: true, composed: true, detail: this._currentView.index }));
+            this._dispatchActivateEvent(this._currentView.index);
         } else {
             this._showViews(e);
         }
@@ -250,14 +250,29 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
 
     _changeView(e) {
         const selectedViewIndex = +e.detail.item.getAttribute("view-index");
-        this.$.dropdown.close();
         if (this.viewIndex !== selectedViewIndex) {
             if (this.changeCurrentViewOnSelect) {
                 this.viewIndex = selectedViewIndex;
             }
-            this.dispatchEvent(new CustomEvent('tg-centre-view-change',  { bubbles: true, composed: true, detail: selectedViewIndex }));
+            this._dispatchChangeEvent(selectedViewIndex);
         }
     }
+
+    _activateView(e) {
+        const selectedViewIndex = +e.detail.item.getAttribute("view-index");
+        this.$.dropdown.close();
+        if (selectedViewIndex >= 0) {
+            this._dispatchActivateEvent(selectedViewIndex);
+        }
+    }
+
+    _dispatchChangeEvent(index) {
+        this.dispatchEvent(new CustomEvent('tg-switch-action-change',  { bubbles: true, composed: true, detail: index }));
+    }
+
+    _dispatchActivateEvent(index) {
+        this.dispatchEvent(new CustomEvent('tg-switch-action-activate',  { bubbles: true, composed: true, detail: index }));
+    } 
 }
 
 customElements.define('tg-dropdown-switch', TgDropdownSwitch);

@@ -8,7 +8,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Application;
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
+import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 import org.restlet.security.Authenticator;
@@ -22,15 +25,11 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
 
-/**
- * Represents a web application that is running on the server.
- * It is responsible for request routing and serving web resources.
- * <p>
- * This abstract implementation should be extend in concrete TG-based web applications to registers domain specific entity centres, entity masters and other views.
- *
- * @author TG Team
- *
- */
+/// Represents a web application that is running on the server.
+/// It is responsible for request routing and serving web resources.
+///
+/// This abstract implementation should be extended in concrete TG-based web applications to registers domain specific entity centres, entity masters and other views.
+///
 public abstract class AbstractWebUiResources extends Application {
     protected final Injector injector;
 
@@ -41,20 +40,13 @@ public abstract class AbstractWebUiResources extends Application {
     protected final IDeviceProvider deviceProvider;
     protected final IDates dates;
 
-    /**
-     * Creates an instance of {@link AbstractWebUiResources} with custom application name, description, author, owner and resource paths.
-     *
-     * @param context
-     * @param injector
-     * @param appName
-     *            - meaningful application name.
-     * @param desc
-     *            - short description for this application.
-     * @param owner
-     *            - the application owner.
-     * @param author
-     *            - the application author
-     */
+    /// Creates an instance of [AbstractWebUiResources] with custom application name, description, author, owner and resource paths.
+    ///
+    /// @param appName meaningful application name.
+    /// @param desc short description for this application.
+    /// @param owner the application owner.
+    /// @param author the application author
+    ///
     public AbstractWebUiResources(
             final Context context,
             final Injector injector,
@@ -83,20 +75,14 @@ public abstract class AbstractWebUiResources extends Application {
         setAuthor(author);
     }
 
-    /**
-     * An insertion point for registering a domain specific web resources. The provided router is guarded, making all domain web resources automatically secure.
-     *
-     * @param router
-     * @param webApp2
-     */
+    /// An insertion point for registering a domain specific web resources. The provided router is guarded, making all domain web resources automatically secure.
+    ///
     protected void registerDomainWebResources(final Router router, final IWebUiConfig webApp) {
         // The implementation is empty to ensure backward compatibility with existing projects.
     }
 
-    /**
-     * Creates the application router and configures it with default web resources.
-     *
-     */
+    /// Creates the application router and configures it with default web resources.
+    ///
     @Override
     public final Restlet createInboundRoot() {
         // Create router and web application for registering resources.
@@ -104,10 +90,13 @@ public abstract class AbstractWebUiResources extends Application {
 
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
+        // Attach application configuration resource.
+        guardedRouter.attach("/app/configuration", new ApplicationConfigurationResourceFactory(webApp, injector));
         // Attach main application resource.
         guardedRouter.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
         guardedRouter.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider, dates));
+        guardedRouter.attach("/app/tg-app-actions.js", new TgAppActionsResourceFactory(webResourceLoader, deviceProvider, dates));
         // type meta info resource
         guardedRouter.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(webResourceLoader, deviceProvider, dates));
@@ -126,6 +115,8 @@ public abstract class AbstractWebUiResources extends Application {
 
         // Registering autocompletion resources:
         attachAutocompletionResources(guardedRouter, webApp);
+
+        guardedRouter.attach("/tiny/{%s}".formatted(TinyHyperlinkResourceFactory.HASH), new TinyHyperlinkResourceFactory(webApp, injector));
 
         if (injector.getInstance(Key.get(boolean.class, Names.named("web.api")))) { // in case where Web API has been turned-on in application.properties ...
             // ... register GraphiQL resources
@@ -153,15 +144,26 @@ public abstract class AbstractWebUiResources extends Application {
 
         mainRouter.attach(guard);
 
-        return mainRouter;
+        // Jetty/Restlet reuse worker threads across requests, and the current user is held in a thread-local (see `IUserProvider`).
+        // Wrap the whole application chain so that the current user is always cleared once a request has been fully handled — including when handling throws.
+        // This prevents a pooled thread from carrying a previous request's user into any subsequent work that reads the thread's ambient user.
+        // The user is established deep in the chain (during authentication by the guard) and cleared here, at the top, on the same thread that handled the request.
+        final Filter userCleanupFilter = new Filter(getContext(), mainRouter) {
+            @Override
+            protected int doHandle(final Request request, final Response response) {
+                try {
+                    return super.doHandle(request, response);
+                } finally {
+                    userProvider.clearUser();
+                }
+            }
+        };
+
+        return userCleanupFilter;
     }
 
-    /**
-     * Attaches all resources relevant to entity masters (entity resource, entity validation resource, UI resources etc.).
-     *
-     * @param router
-     * @param masters
-     */
+    /// Attaches all resources relevant to entity masters (entity resource, entity validation resource, UI resources etc.).
+    ///
     private void attachMasterResources(final Router router, final IWebUiConfig webUiConfig, final RestServerUtil restUtil) {
         logger.info("\t\tEntity master resources attaching...");
         router.attach("/entity/{entityType}/{entity-id}", new EntityResourceFactory(webUiConfig, injector));
@@ -174,23 +176,15 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/custom_view/{viewName}", new CustomViewResourceFactory(webResourceLoader, restUtil, deviceProvider, dates));
     }
 
-    /**
-     * Attaches all resources relevant to autocompletion.
-     *
-     * @param router
-     * @param webUiConfig
-     */
+    /// Attaches all resources relevant to autocompletion.
+    ///
     private void attachAutocompletionResources(final Router router, final IWebUiConfig webUiConfig) {
         logger.info("\t\tAutocompletion resources attaching...");
         router.attach("/autocompletion/{type}/{property}", new EntityAutocompletionResourceFactory(webUiConfig, injector));
     }
 
-    /**
-     * Configures router for entity centre resources.
-     *
-     * @param router
-     * @param webUiConfig
-     */
+    /// Configures router for entity centre resources.
+    ///
     private void attachCentreResources(final Router router, final IWebUiConfig webUiConfig, final RestServerUtil restUtil) {
         logger.info("\t\tCentre resources attaching...");
         router.attach("/criteria/{mitype}/{saveAsName}", new CriteriaResourceFactory(webUiConfig, injector));
@@ -198,11 +192,8 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(webResourceLoader, restUtil, deviceProvider, dates));
     }
 
-    /**
-     * Configures router for file resources needed for web browser client.
-     *
-     * @param router
-     */
+    /// Configures router for file resources needed for web browser client.
+    ///
     private void attachResources(final Router router) {
         logger.info("\t\tResources attaching for following resource paths:" + "\n\t\t|" + StringUtils.join(webApp.resourcePaths(), "|\n\t\t|") + "|\n");
         router.attach("/resources/", new FileResourceFactory(webResourceLoader, webApp.resourcePaths(), deviceProvider, dates), Template.MODE_STARTS_WITH);

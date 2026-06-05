@@ -1,22 +1,14 @@
 package ua.com.fielden.platform.entity;
 
-import java.util.*;
+import ua.com.fielden.platform.entity.annotation.*;
 
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 
-/**
- * The entity that is used more like a transport for security tokens to the client
- *
- * @author TG Team
- *
- */
+/// The entity that is used more like a transport for security tokens to the client
+///
 @KeyType(String.class)
 @KeyTitle("Security token")
 @CompanionObject(SecurityTokenTreeNodeEntityCo.class)
@@ -33,7 +25,7 @@ public class SecurityTokenTreeNodeEntity extends AbstractEntity<String> {
 
     @IsProperty(SecurityTokenTreeNodeEntity.class)
     @Title(value = "Children", desc = "Desc")
-    private final Set<SecurityTokenTreeNodeEntity> children = new TreeSet<>();
+    private final Set<SecurityTokenTreeNodeEntity> children = new LinkedHashSet<>();
 
     @Observable
     public SecurityTokenTreeNodeEntity setTitle(final String title) {

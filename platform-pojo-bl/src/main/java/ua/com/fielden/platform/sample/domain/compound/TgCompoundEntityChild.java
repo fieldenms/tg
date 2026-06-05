@@ -1,23 +1,12 @@
 package ua.com.fielden.platform.sample.domain.compound;
 
-import java.util.Date;
-
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.DisplayDescription;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.util.Date;
 
 /** 
  * One-2-Many entity object.
@@ -68,5 +57,11 @@ public class TgCompoundEntityChild extends AbstractPersistentEntity<DynamicEntit
     public TgCompoundEntity getTgCompoundEntity() {
         return tgCompoundEntity;
     }
-    
+
+    @Override
+    @Observable
+    public TgCompoundEntityChild setDesc(String desc) {
+        return super.setDesc(desc);
+    }
+
 }

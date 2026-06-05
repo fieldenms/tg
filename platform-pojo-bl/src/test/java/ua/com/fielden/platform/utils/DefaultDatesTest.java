@@ -1,22 +1,17 @@
 package ua.com.fielden.platform.utils;
 
-import static java.lang.Math.abs;
-import static org.joda.time.DateTimeZone.forID;
-import static org.joda.time.DateTimeZone.getDefault;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.joda.time.DateTime;
+import org.junit.Test;
+import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import org.joda.time.DateTime;
-import org.junit.Test;
-
-import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
+import static java.lang.Math.abs;
+import static org.joda.time.DateTimeZone.forID;
+import static org.joda.time.DateTimeZone.getDefault;
+import static org.junit.Assert.*;
 
 public class DefaultDatesTest {
     private final Date date = new Date(0L);
@@ -288,14 +283,53 @@ public class DefaultDatesTest {
         assertEquals(dates.toString(new DateTime(date, forID(testingTimeZoneId))), dates.toString(date));
     }
 
-    private final Long MILLIS_DIFF_THRESHOULD = 1000L; // 1 second precision when comparing "nows" is good enough in this case
+    @Test
+    public void date_toStringTimeOnly_excludes_date() {
+        final IDates dates = getDefaultDates(false);
+        final var date = new DateTime("2025-11-23T22:05").toDate();
+        assertEquals("22:05", dates.toStringAsTimeOnly(date));
+    }
+
+    @Test
+    public void date_toStringTimeOnly_includes_seconds_and_millis_if_either_seconds_or_millis_are_present() {
+        final IDates dates = getDefaultDates(false);
+
+        final var dateWithSeconds = new DateTime("2025-11-23T22:05:19").toDate();
+        assertEquals("22:05:19.000", dates.toStringAsTimeOnly(dateWithSeconds));
+        final var dateWithMillis = new DateTime("2025-11-23T22:05:00.900").toDate();
+        assertEquals("22:05:00.900", dates.toStringAsTimeOnly(dateWithMillis));
+    }
+
+    @Test
+    public void date_toStringDateOnly_excludes_time() {
+        final IDates dates = getDefaultDates(false);
+        final var date = new DateTime("2025-11-23T22:05:19").toDate();
+        assertEquals("23/11/2025", dates.toStringAsDateOnly(date));
+    }
+
+    @Test
+    public void date_toString_includes_both_date_and_time_where_time_contains_seconds_and_millis_if_either_seconds_or_millis_are_present() {
+        final IDates dates = getDefaultDates(false);
+
+        final var dateWithMinutes = new DateTime("2025-11-23T22:05").toDate();
+        assertEquals("23/11/2025 22:05", dates.toString(dateWithMinutes));
+
+        final var dateWithSeconds = new DateTime("2025-11-23T22:05:19").toDate();
+        assertEquals("23/11/2025 22:05:19.000", dates.toString(dateWithSeconds));
+
+        final var dateWithMillis = new DateTime("2025-11-23T22:05:00.900").toDate();
+        assertEquals("23/11/2025 22:05:00.900", dates.toString(dateWithMillis));
+    }
+
+
+    private final Long MILLIS_DIFF_THRESHOLD = 1000L; // 1 second precision when comparing "now" values is good enough in this case
 
     @Test
     public void now_moment_is_in_default_time_zone_in_independent_mode_with_empty_request_time_zone() {
         final DefaultDates dates = getDefaultDates(true);
         assertFalse(dates.requestTimeZone().isPresent());
 
-        assertTrue(abs(new DateTime(getDefault()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOULD);
+        assertTrue(abs(new DateTime(getDefault()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOLD);
     }
 
     @Test
@@ -307,7 +341,7 @@ public class DefaultDatesTest {
         assertTrue(dates.requestTimeZone().isPresent());
         assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
 
-        assertTrue(abs(new DateTime(dates.requestTimeZone().get()).withZoneRetainFields(getDefault()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOULD);
+        assertTrue(abs(new DateTime(dates.requestTimeZone().get()).withZoneRetainFields(getDefault()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOLD);
     }
 
     @Test
@@ -315,7 +349,7 @@ public class DefaultDatesTest {
         final DefaultDates dates = getDefaultDates(false);
         assertFalse(dates.requestTimeZone().isPresent());
 
-        assertTrue(abs(new DateTime(getDefault()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOULD);
+        assertTrue(abs(new DateTime(getDefault()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOLD);
     }
 
     @Test
@@ -326,7 +360,7 @@ public class DefaultDatesTest {
         assertTrue(dates.requestTimeZone().isPresent());
         assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
 
-        assertTrue(abs(new DateTime(dates.requestTimeZone().get()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOULD);
+        assertTrue(abs(new DateTime(dates.requestTimeZone().get()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOLD);
     }
 
     @Test

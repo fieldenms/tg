@@ -1,19 +1,13 @@
 package ua.com.fielden.platform.ref_hierarchy;
 
-import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Stream.of;
+import ua.com.fielden.platform.entity.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyActions;
-import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel;
+import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.of;
 
 /**
  * The base entity for all reference hierarchy tree entries.
@@ -66,6 +60,12 @@ public class ReferenceHierarchyEntry extends AbstractTreeEntry<String> {
 
     public ReferenceHierarchyLevel getHierarchyLevel() {
         return ReferenceHierarchyLevel.valueOf(this.level);
+    }
+
+    @Override
+    @Observable
+    public ReferenceHierarchyEntry setDesc(String desc) {
+        return super.setDesc(desc);
     }
 
 }

@@ -1,23 +1,17 @@
 package ua.com.fielden.platform.entity.query;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-
-import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.exceptions.EntityContainerInstantiationException;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
 public class EntityFromContainerInstantiator {
     private final EntityFactory entFactory;
@@ -47,8 +41,6 @@ public class EntityFromContainerInstantiator {
     public <R extends AbstractEntity<?>> R instantiateFully(final EntityContainer<R> entityContainer, final R justAddedEntity) {
         justAddedEntity.beginInitialising();
 
-        final boolean unionEntity = isUnionEntityType(entityContainer.getResultType());
-
         for (final Map.Entry<String, Object> primPropEntry : entityContainer.getPrimitives().entrySet()) {
             if (!justAddedEntity.proxiedPropertyNames().contains(primPropEntry.getKey()) && !ID.equals(primPropEntry.getKey())) {
                 setPropertyValue(justAddedEntity, primPropEntry.getKey(), primPropEntry.getValue(), entityContainer.getResultType());
@@ -67,8 +59,9 @@ public class EntityFromContainerInstantiator {
 
                 final Object propValue = determinePropValue(justAddedEntity, key, entityEntry.getValue());
                 setPropertyValue(justAddedEntity, key, propValue, entityContainer.getResultType());
-                if (unionEntity && propValue != null /*&& lightweight*/) {
-                    // FIXME ((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey());
+
+                if (justAddedEntity instanceof AbstractUnionEntity union && propValue != null) {
+                    union.ensureUnion(key);
                 }
             }
         }

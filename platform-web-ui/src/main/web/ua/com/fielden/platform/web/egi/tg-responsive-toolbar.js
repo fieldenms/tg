@@ -26,7 +26,7 @@ const template = html`
             @apply --layout-horizontal;
         }
         .grid-toolbar-content ::slotted(.group) {
-            margin-left: 30px;
+            margin-left: 16px;
             @apply --layout-horizontal;
         }
         :host {

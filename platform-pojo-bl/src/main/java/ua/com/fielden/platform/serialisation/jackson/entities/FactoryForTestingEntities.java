@@ -1,37 +1,28 @@
 package ua.com.fielden.platform.serialisation.jackson.entities;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.error.Result.warning;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
-import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Currency;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
+
+import java.math.BigDecimal;
+import java.util.*;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.error.Result.*;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
 
 /**
  * The factory for testing entities for serialisation integration test and EntitySerialisationWithJacksonTest.
@@ -84,8 +75,8 @@ public class FactoryForTestingEntities {
         final T entity = factory.newEntity(type, id);
 
         entity.beginInitialising();
-        entity.set(AbstractEntity.KEY, key);
-        entity.setDesc(desc);
+        entity.set(KEY, key);
+        entity.set(DESC, desc);
 
         return entity;
     }
@@ -103,8 +94,8 @@ public class FactoryForTestingEntities {
         final T entity = EntityFactory.newPlainEntity(type, id);
 
         entity.beginInitialising();
-        entity.set(AbstractEntity.KEY, key);
-        entity.setDesc(desc);
+        entity.set(KEY, key);
+        entity.set(DESC, desc);
         entity.endInitialising();
 
         return entity;
@@ -115,10 +106,10 @@ public class FactoryForTestingEntities {
 
         entity.resetMetaValue();
 
-        assertFalse("Incorrect key dirtiness.", entity.getProperty(AbstractEntity.KEY).isDirty());
-        assertFalse("Incorrect desc dirtiness.", entity.getProperty(AbstractEntity.DESC).isDirty());
-        assertFalse("Incorrect key ChangedFromOriginal.", entity.getProperty(AbstractEntity.KEY).isChangedFromOriginal());
-        assertFalse("Incorrect desc ChangedFromOriginal.", entity.getProperty(AbstractEntity.DESC).isChangedFromOriginal());
+        assertFalse("Incorrect key dirtiness.", entity.getProperty(KEY).isDirty());
+        assertFalse("Incorrect desc dirtiness.", entity.getProperty(DESC).isDirty());
+        assertFalse("Incorrect key ChangedFromOriginal.", entity.getProperty(KEY).isChangedFromOriginal());
+        assertFalse("Incorrect desc ChangedFromOriginal.", entity.getProperty(DESC).isChangedFromOriginal());
 
         final Optional<MetaProperty<?>> op = entity.getPropertyOptionally("prop");
         if (op.isPresent() && !op.get().isProxy() && !op.get().isCollectional()) {
@@ -142,14 +133,14 @@ public class FactoryForTestingEntities {
         final T entity = factory.newEntity(type, null);
 
         entity.beginInitialising();
-        entity.set(AbstractEntity.KEY, key);
-        entity.setDesc(desc);
+        entity.set(KEY, key);
+        entity.set(DESC, desc);
         entity.endInitialising();
 
-        assertTrue("Incorrect key dirtiness.", entity.getProperty(AbstractEntity.KEY).isDirty());
-        assertTrue("Incorrect desc dirtiness.", entity.getProperty(AbstractEntity.DESC).isDirty());
-        assertTrue("Incorrect key ChangedFromOriginal.", entity.getProperty(AbstractEntity.KEY).isChangedFromOriginal());
-        assertTrue("Incorrect desc ChangedFromOriginal.", entity.getProperty(AbstractEntity.DESC).isChangedFromOriginal());
+        assertTrue("Incorrect key dirtiness.", entity.getProperty(KEY).isDirty());
+        assertTrue("Incorrect desc dirtiness.", entity.getProperty(DESC).isDirty());
+        assertTrue("Incorrect key ChangedFromOriginal.", entity.getProperty(KEY).isChangedFromOriginal());
+        assertTrue("Incorrect desc ChangedFromOriginal.", entity.getProperty(DESC).isChangedFromOriginal());
 
         return entity;
     }
@@ -329,7 +320,7 @@ public class FactoryForTestingEntities {
     public EntityWithString createEntityWithStringAndFailure() {
         final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
         entity.setProp("okay");
-        entity.getProperty("prop").setRequiredValidationResult(new Result(entity, new Exception("Exception.")));
+        entity.getProperty("prop").setRequiredValidationResult(failure(entity, "Exception."));
         return finalise(entity);
     }
 

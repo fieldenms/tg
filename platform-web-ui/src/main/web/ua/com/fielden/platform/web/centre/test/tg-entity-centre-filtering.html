@@ -10,6 +10,7 @@
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
 </head>
 
 <body>
@@ -88,7 +89,7 @@
                     }.bind(autocompleter);
                     
                     autocompleter._editingValue = 'FILTERED';
-                    autocompleter._searchOnTap();
+                    autocompleter._shortSearchTap();
                 };
 
                 centre.retrieve();

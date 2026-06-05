@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.validation;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -123,7 +124,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         }
 
         final IEntityDao unionMemberCo = coFinder.find(unionMemberValue.getType());
-        final Optional<Result> existenceCheckResult = unionMemberValue instanceof ActivatableAbstractEntity<?> activatableUnionMemberValue && isActivatableUnionMember(entity, property, unionEntity, unionCo)
+        final Optional<Result> existenceCheckResult = unionMemberValue instanceof ActivatableAbstractEntity<?> activatableUnionMemberValue && isActivatableUnionMember(entity, property, unionEntity)
                 ? checkExistenceForActivatable(entity, activatableUnionMemberValue, unionMemberCo)
                 : checkExistenceWithoutActive(entity, unionMemberValue, unionMemberCo);
 
@@ -172,11 +173,10 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     private static <U extends AbstractUnionEntity> boolean isActivatableUnionMember(
             final AbstractEntity<?> entity,
             final CharSequence property,
-            final U union,
-            final IEntityDao<U> unionCo)
+            final U union)
     {
         return isActivatableProperty(entity.getType(), property)
-               || isActivatableProperty(union.getType(), instrument(union, unionCo).activePropertyName());
+               || isActivatableProperty(union.getType(), union.activePropertyName());
     }
 
     private <V extends AbstractEntity<?>> Optional<Result> checkExistenceWithoutActive(
@@ -233,17 +233,10 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     ///
     /// This method is a utility to perform instrumentation for uninstrumented values.
     ///
-    /// TODO Instrumentation will no longer be necessary after #2466.
-    ///
-    private static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityDao<U> co) {
-        final U instrumentedUnion;
-        if (unionEntity.isInstrumented()) {
-            instrumentedUnion = unionEntity;
-        }
-        else {
-            copy(unionEntity, instrumentedUnion = co.new_(), ID, VERSION);
-        }
-        return instrumentedUnion;
+    private static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityInstantiator<U> instantiator) {
+        return unionEntity.isInstrumented()
+                ? unionEntity
+                : copy(unionEntity, instantiator.new_(), ID, VERSION);
     }
 
 }

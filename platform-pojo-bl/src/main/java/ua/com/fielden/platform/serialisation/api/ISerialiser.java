@@ -2,8 +2,6 @@ package ua.com.fielden.platform.serialisation.api;
 
 import java.io.InputStream;
 
-import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
-
 /**
  * API for serialising and deserialising entities, queries and other TG objects. There are multiple {@link SerialiserEngines} to be used for serialisation / deserialisation.
  *
@@ -53,5 +51,4 @@ public interface ISerialiser extends ISerialiserEngine {
      */
     ISerialiserEngine getEngine(final SerialiserEngines serialiserEngine);
 
-    ISerialiser initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache);
 }

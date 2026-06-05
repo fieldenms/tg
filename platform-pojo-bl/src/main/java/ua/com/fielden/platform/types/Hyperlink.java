@@ -25,6 +25,9 @@ import ua.com.fielden.platform.types.exceptions.ValueObjectException;
  *
  */
 public class Hyperlink {
+
+    public static final String VALUE = "value";
+
     // http://, https://, ftp://, ftps:// and mailto:
     // file:// protocol should not be permitted due to restrictions of modern web browsers to open local resources
 

@@ -9,6 +9,7 @@ import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -28,26 +29,28 @@ import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
+import ua.com.fielden.platform.security.provider.SecurityTestIocModule;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.test.entities.*;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.annotations.AppUri;
 
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Serve IoC module for platform related testing.
- *
- * @author TG Team
- *
- */
+import static java.lang.String.format;
+
+/// Serve IoC module for platform related testing.
+///
 public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
     private static final Logger LOGGER = LogManager.getLogger(PlatformTestServerIocModule.class);
+
+    private final Properties props;
 
     public PlatformTestServerIocModule(
             final IApplicationDomainProvider applicationDomainProvider,
@@ -55,6 +58,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
             final Properties props)
     {
         super(applicationDomainProvider, domainEntityTypes, props);
+        this.props = props;
     }
 
     @Override
@@ -68,8 +72,13 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(Ticker.class).to(TickerForSessionCache.class);
         bind(IDates.class).to(DatesForTesting.class);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
+        bind(IApplicationSettings.class).to(ApplicationSettingsForTesting.class);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
+
+        install(new SecurityTestIocModule());
+
+        bindConstant().annotatedWith(AppUri.class).to(format("https://%s:%s%s", getProps().get("web.domain"), getProps().get("port"), getProps().get("web.path")));
     }
 
     @Override
@@ -99,6 +108,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(ITgCategory.class).to(TgCategoryDao.class);
         bind(ITgCategoryAttachment.class).to(TgCategoryAttachmentDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
+        bind(AuditedEntityCo.class).to(AuditedEntityDao.class);
         bind(TgReVehicleWithHighPriceCo.class).to(TgReVehicleWithHighPriceDao.class);
         bind(TeNamedValuesVectorCo.class).to(TeNamedValuesVectorDao.class);
         bind(TeProductPriceCo.class).to(TeProductPriceDao.class);
@@ -138,7 +148,9 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgEntityWithManyPropTypesCo.class).to(TgEntityWithManyPropTypesDao.class);
         bind(IEntityOne.class).to(EntityOneDao.class);
         bind(IEntityTwo.class).to(EntityTwoDao.class);
+        bind(EntityThreeCo.class).to(EntityThreeDao.class);
         bind(IUnionEntity.class).to(UnionEntityDao.class);
+        bind(TgNoopActionCo.class).to(TgNoopActionDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
@@ -186,8 +198,11 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
         bind(UnionCo.class).to(UnionDao.class);
         bind(Member1Co.class).to(Member1Dao.class);
+        bind(MemberDetailsCo.class).to(MemberDetailsDao.class);
         bind(Member2Co.class).to(Member2Dao.class);
         bind(Member3Co.class).to(Member3Dao.class);
+        bind(Member4Co.class).to(Member4Dao.class);
+        bind(Member5Co.class).to(Member5Dao.class);
         bind(ActivatableUnionOwnerCo.class).to(ActivatableUnionOwnerDao.class);
         bind(UnionOwnerCo.class).to(UnionOwnerDao.class);
 

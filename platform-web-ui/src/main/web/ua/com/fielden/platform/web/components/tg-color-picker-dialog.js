@@ -9,7 +9,7 @@ import '/resources/editors/tg-colour-picker.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent, createDummyBindingEntity } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, createStubBindingEntity } from '/resources/reflection/tg-polymer-utils.js';
 
 
 const template = html`
@@ -75,7 +75,7 @@ export class TgColorPickerDialog extends mixinBehaviors([TgTooltipBehavior], Pol
     constructor() {
         super();
         this._reflector = new TgReflector();
-        this._entity = createDummyBindingEntity(
+        this._entity = createStubBindingEntity('ColorPickerDialogEntity',
             {'colorProp': {value: {hashlessUppercasedColourValue: ''}, editable: true}},
             (name) => {
                 return {

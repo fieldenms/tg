@@ -22,27 +22,18 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
 
     public AttachmentPreviewEntityMaster() {
 
-        //Generating image element
+        //Generating attachment preview element
 
-        final DomElement img = new DomElement("img")
+        final DomElement attachmentPreview = new DomElement("tg-attachment-preview")
                 .clazz("relative")
-                .attr("src$", "[[_getImageUri(_currBindingEntity)]]")
-                .attr("hidden$", "[[!_isImageVisisble(_currBindingEntity)]]")
-                .style("width:100%", "height:100%", "object-fit:contain");
-        final DomElement altImage = new DomElement("div")
-                .clazz("fit", "layout horizontal center-center")
-                .style("font-size: 18px", "color: #bdbdbd", "background-color: white")
-                .add(new InnerTextElement("[[_getAltImageText(_currBindingEntity)]]"));
-        final DomElement container = new DomElement("div")
-                .attr("slot", "property-editors")
-                .clazz("relative")
-                .style("width:100%", "height:100%","padding:8px","box-sizing:border-box")
-                .add(altImage, img);
+                .attr("id", "attachmentPreview")
+                .attr("entity", "[[_currEntity]]")
+                .style("width:100%", "height:100%");
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, "")
+                .replace(IMPORTS, "import '/resources/file_operations/tg-attachment-preview.js'")
                 .replace(ENTITY_TYPE, flattenedNameOf(AttachmentPreviewEntityAction.class))
-                .replace("<!--@tg-entity-master-content-->", container.toString())
+                .replace("<!--@tg-entity-master-content-->", attachmentPreview.toString())
                 .replace("//@ready-callback", generateReadyCallback())
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
@@ -57,29 +48,9 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
     }
 
     private String generateReadyCallback() {
-        return  "self._isNecessaryForConversion = function (propertyName) { \n"
-                + "    return ['attachmentUri'].indexOf(propertyName) >= 0; \n"
-                + "}; \n"
-                + "self._getImageUri = function (entity) {\n"
-                + "    const newEntity = entity ? entity['@@origin'] : null;\n"
-                + "    if (newEntity && newEntity.attachmentUri) {\n"
-                + "        return newEntity.attachmentUri;\n"
-                + "    }\n"
-                + "}.bind(self);\n"
-                + "self._isImageVisisble = function (entity) {\n"
-                + "    const newEntity = entity ? entity['@@origin'] : null;\n"
-                + "    if (newEntity && !newEntity.attachmentUri) {\n"
-                + "        return false;\n"
-                + "    }\n"
-                + "    return true;\n"
-                + "}.bind(self);\n"
-                + "self._getAltImageText = function (entity) {\n"
-                + "    const newEntity = entity ? entity['@@origin'] : null;\n"
-                + "    if (newEntity && !newEntity.attachmentUri) {\n"
-                + "        return 'Preview is not available for this file. Please download it instead.';\n"
-                + "    }\n"
-                + "    return '';\n"
-                + "}.bind(self);\n";
+        return  """
+                self.$.attachmentPreview.downloadAttachment = self.mkDownloadAttachmentFunction();
+                """;
     }
 
     @Override

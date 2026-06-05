@@ -42,6 +42,8 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
         case STRING:
         case DATE_CONST:
         case DATE:
+        case TRUE:
+        case FALSE:
             node.setModel(createLiteralModel(node));
             break;
         case NOW:
@@ -339,9 +341,6 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
      * @return
      */
     private ExpressionModel createLiteralModel(final AstNode node) {
-        if (node.getToken().category == EgTokenCategory.DATE_CONST) {
-            return expr().val(node.getValue()).model();
-        }
         return expr().val(node.getValue()).model();
     }
 

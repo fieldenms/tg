@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.exceptions.PropertyIndexerException;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -223,6 +224,10 @@ public class PropertyIndexerImpl implements IPropertyIndexer {
         final var activeEntity = entity.activeEntity();
         if (activeEntity == null) {
             return null;
+        }
+
+        if (activeEntity.proxiedPropertyNames().contains(prop)) {
+            throw new StrictProxyException(ERR_CANNOT_GET_VALUE_FOR_PROXIED_PROPERTY.formatted(prop, activeEntity.getType().getTypeName()));
         }
 
         // active entity might be enhanced, but getters are keyed on canonical entity types

@@ -33,6 +33,7 @@ import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.action.post.BindSavedPropertyPostActionError;
 import ua.com.fielden.platform.web.action.post.BindSavedPropertyPostActionSuccess;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
+import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -498,7 +499,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .addAction(dummyAction("color: yellow"))
                             .addAction(dummyAction("color: red")).build())
                 .also()
-//                .addProp("stringProp").asSinglelineText().skipValidation()
+//                .addProp("stringProp").asAutocompleter(TgPersistentCompositeEntity.class)/*.withMatcher(CompositeEntityValueMatcher.class)*/
 //                    .withAction(
 //                        action(TgDummyAction.class)
 //                        .withContext(context().withMasterEntity().build())
@@ -802,6 +803,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<>(TgEntityForColourMaster.class, masterConfigForColour, injector());
 
+        // Master for an entity with `id` redeclared as `@IsProperty`. The master deliberately does not expose `id`.
+        // Used to verify entity-master retrieval works for entities with `@IsProperty` on `id` (issue #2726).
+        final String overriddenIdMasterActionBar = format("['horizontal', 'padding: 20px', 'wrap', 'justify-content: center', [%s], [%s]]", MASTER_ACTION_SPECIFICATION, MASTER_ACTION_SPECIFICATION);
+        final String overriddenIdMasterLayout = "['padding:20px', ['justified', ['flex', 'min-width:200px']]]";
+        final IMaster<TgEntityWithIsPropertyOverriddenId> masterConfigForOverriddenId = new SimpleMasterBuilder<TgEntityWithIsPropertyOverriddenId>()
+                .forEntity(TgEntityWithIsPropertyOverriddenId.class)
+                .addProp("key").asSinglelineText().also()
+                .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancels current changes if any or refresh the data.")
+                .addAction(MasterActions.SAVE)
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), overriddenIdMasterActionBar)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), overriddenIdMasterLayout)
+                .done();
+        final EntityMaster<TgEntityWithIsPropertyOverriddenId> overriddenIdMaster = new EntityMaster<>(TgEntityWithIsPropertyOverriddenId.class, masterConfigForOverriddenId, injector());
 
         final EntityMaster<AttachmentsUploadAction> attachmentsUploadActionMaster = StandardMastersWebUiConfig
                 .createAttachmentsUploadMaster(injector(), mkDim(400, Unit.PX, 400, Unit.PX), 10240,
@@ -832,10 +846,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgSelectedEntitiesExampleActionProducer.class,
                     injector())).
             addMaster(userWebUiConfig.master).
-            addMaster(userWebUiConfig.rolesUpdater).
             addMaster(userRoleWebUiConfig.master).
-            addMaster(userRoleWebUiConfig.tokensUpdater).
             addMaster(clourMaster).//
+            addMaster(overriddenIdMaster).
 
                 addMaster(new EntityMaster<>(
                         TgFunctionalEntityWithCentreContext.class,
@@ -1536,7 +1549,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
                 //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
                 .also()
-                .addCrit("stringProp").asMulti().text()
+                .addCrit("stringProp").asMulti().autocompleter(TgPersistentCompositeEntity.class)
                 //*    */.setDefaultValue(multi().string().not().setValues("DE*", "ED*").canHaveNoValue().value())
                 .also()
                 .addCrit("integerProp").asRange().integer()
@@ -1547,7 +1560,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .lightDesc()
                 //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
                 .also()
-                .addCrit("bigDecimalProp").asRange().decimal()
+                .addCrit("moneyProp").asRange().decimal()
                 //*    */.setDefaultValue(range().decimal().not().setFromValueExclusive(new BigDecimal(3).setScale(5) /* TODO scale does not give appropriate effect on centres -- the prop becomes 'changed by other user' -- investigate generated crit property */).setToValueExclusive(new BigDecimal(4).setScale(5)).canHaveNoValue().value())
                 .also()
                 .addCrit("booleanProp").asMulti().bool()
@@ -1780,7 +1793,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         .setPageCapacity(20)
         //.setHeight("100%")
         //.setVisibleRowsCount(10)
-        //.fitToHeight()
+        .fitToHeight()
         .addProp("this")
             .order(2).asc()
             .width(60);
@@ -1792,17 +1805,37 @@ public class WebUiConfig extends AbstractWebUiConfig {
             afterSummary = afterMinWidthConf;
         }
 
+        final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
+            .withContext(context().withSelectedEntities().build())
+            .icon("accessibility")
+            .withStyle("color: " + colour)
+            .shortDesc("Dummy")
+            .longDesc(format("Dummy action with color: %s, simply prints its result into console.", colour))
+            .build();
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
                 withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
-                        //.preAction(new EntityNavigationPreAction("Cool entity"))
+                        .preAction(new EntityNavigationPreAction("Cool entity"))
                         .icon("editor:mode-edit")
                         .withStyle("color: green")
                         .shortDesc("Edit entity")
                         .longDesc("Opens master for editing this entity")
                         .withNoParentCentreRefresh()
                         .build())
+                // Issue #2733 demo: additional property-action groups on the same column.
+                // Cell tap runs the first group (Edit); the triple-dot overflow button reveals all three groups.
+                .withAction(action(TgStatusActivationFunctionalEntity.class)
+                        .withContext(context().withCurrentEntity().build())
+                        .icon("assignment-turned-in")
+                        .shortDesc("Change status to DR")
+                        .longDesc("Change status to Defect Radio.")
+                        .build())
+                .withMultiAction(multiAction(PrimaryActionSelector.class)
+                        .addAction(createDummyAction.apply("green"))
+                        .addAction(createDummyAction.apply("orange"))
+                        .addAction(createDummyAction.apply("red"))
+                        .build())
                 .also()
-                .addEditableProp("desc")
+                .addEditableProp("desc").withWordWrap()
                     .withAction(
                         action(TgPersistentEntityWithProperties.class)
                         .withContext(context().withCurrentEntity().build())
@@ -1864,15 +1897,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .minWidth(42)
                 .also()
             .addEditableProp("bigDecimalProp")
-                .minWidth(68);
+                .minWidth(68)
+                .also()
+            .addProp("moneyProp")
+                .minWidth(100);
 
-        final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
-            .withContext(context().withSelectedEntities().build())
-            .icon("accessibility")
-            .withStyle("color: " + colour)
-            .shortDesc("Dummy")
-            .longDesc("Dummy action, simply prints its result into console.")
-            .build();
         final Function<String, EntityActionConfig> createFunctionalAction3 = colour -> action(TgFunctionalEntityWithCentreContext.class).
             withContext(context().withSelectedEntities().build()).
             icon("assignment-turned-in").
@@ -1914,7 +1943,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("compositeProp").minWidth(110)
                 .also()
-                .addProp("stringProp").minWidth(50).also()
+                .addEditableProp("stringProp").asAutocompleter(TgPersistentCompositeEntity.class).minWidth(50).withWordWrap().also()
                 .addEditableProp("colourProp").width(40).also()
                 .addProp("numberOfAttachments").width(100).also()
                 .addEditableProp("hyperlinkProp").minWidth(500)

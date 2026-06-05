@@ -129,7 +129,7 @@ final class ConditionVisitor extends AbstractEqlVisitor<ICondition1<?>> {
     }
 
     private Conditions1 compileConditionModel(final ConditionModel model) {
-        return new EqlCompiler(transformer).compile(model.getTokenSource(), EqlCompilationResult.StandaloneCondition.class).model();
+        return new EqlCompiler(transformer).compile(model.tokens(), EqlCompilationResult.StandaloneCondition.class).model();
     }
 
     private ExistencePredicate1 makeExistencePredicate(final boolean negated, final QueryModel model) {

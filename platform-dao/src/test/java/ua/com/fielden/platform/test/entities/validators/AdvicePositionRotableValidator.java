@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.test.entities.validators;
 
-import java.lang.annotation.Annotation;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.test.domain.entities.AdvicePosition;
 import ua.com.fielden.platform.test.domain.entities.Rotable;
+
+import java.lang.annotation.Annotation;
+import java.util.Set;
+
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 
 /**
  * Domain validator for property <code>rotable</code> of {@link AdvicePosition}.
@@ -22,11 +25,11 @@ public class AdvicePositionRotableValidator implements IBeforeChangeEventHandler
         final AdvicePosition pos = (AdvicePosition) property.getEntity();
         if (!newValue.equals(property.getValue())) {
             if (pos.getAdvice().rotables().contains(newValue)) {
-                return new Result(pos, new IllegalArgumentException("The same rotable cannot be used twice."));
+                return failure("The same rotable cannot be used twice.");
             }
         }
 
-        return new Result(pos, "Rotable property value is correct.");
+        return successful();
     }
 
 }

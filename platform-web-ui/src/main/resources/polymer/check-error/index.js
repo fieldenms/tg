@@ -1,10 +1,8 @@
 function isErrorInstance(obj) {
-  // eslint-disable-next-line prefer-reflect
   return obj instanceof Error || Object.prototype.toString.call(obj) === '[object Error]';
 }
 
 function isRegExp(obj) {
-  // eslint-disable-next-line prefer-reflect
   return Object.prototype.toString.call(obj) === '[object RegExp]';
 }
 
@@ -70,10 +68,13 @@ function compatibleConstructor(thrown, errorLike) {
 
 function compatibleMessage(thrown, errMatcher) {
   const comparisonString = typeof thrown === 'string' ? thrown : thrown.message;
+  if (comparisonString === undefined) {
+    return false;
+  }
   if (isRegExp(errMatcher)) {
     return errMatcher.test(comparisonString);
   } else if (typeof errMatcher === 'string') {
-    return comparisonString.indexOf(errMatcher) !== -1; // eslint-disable-line no-magic-numbers
+    return comparisonString.indexOf(errMatcher) !== -1;
   }
 
   return false;
@@ -100,7 +101,7 @@ function getConstructorName(errorLike) {
     // of the error just in case it's a poorly-constructed error. Please see chaijs/chai/issues/45 to know more.
     constructorName = errorLike.name;
     if (constructorName === '') {
-      const newConstructorName = (new errorLike().name); // eslint-disable-line new-cap
+      const newConstructorName = (new errorLike().name);
       constructorName = newConstructorName || constructorName;
     }
   }

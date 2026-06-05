@@ -52,35 +52,6 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     @Title("User name")
     private String userName;
 
-    @IsProperty(String.class)
-    @Title(value = "Site Allow List", desc = "Site white list that user can visit without confirmation.")
-    private final Set<String> siteAllowlist = new HashSet<>();
-
-    @IsProperty
-    @Title(value = "Allowed Site Expiry (Days)", desc = "Defines how long an allowed site remains trusted before requiring re-confirmation.")
-    private Integer daysUntilSitePermissionExpires;
-
-    public Integer getDaysUntilSitePermissionExpires() {
-        return daysUntilSitePermissionExpires;
-    }
-
-    @Observable
-    public Menu setDaysUntilSitePermissionExpires(final Integer daysUntilSitePermissionExpires) {
-        this.daysUntilSitePermissionExpires = daysUntilSitePermissionExpires;
-        return this;
-    }
-    
-    @Observable
-    protected Menu setSiteAllowlist(final Set<String> siteAllowlist) {
-        this.siteAllowlist.clear();
-        this.siteAllowlist.addAll(siteAllowlist);
-        return this;
-    }
-
-    public Set<String> getSiteAllowlist() {
-        return unmodifiableSet(siteAllowlist);
-    }
-
     @Observable
     public Menu setUserName(final String userName) {
         this.userName = userName;

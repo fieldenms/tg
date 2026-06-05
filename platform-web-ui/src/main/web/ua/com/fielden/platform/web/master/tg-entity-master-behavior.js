@@ -1,14 +1,26 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
-import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, getParentAnd, isIPhoneOs, isIPadOs, isMacSafari } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
-import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
+import { enhanceStateRestoration, UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
+
+export const LeaveReason = {
+    CLOSED: "CLOSED",
+    NAVIGATED: "NAVIGATED"
+}
+
+const CanLeaveOptions  = {
+    YES_NO: [{name: "Yes", confirm: true}, {name: "No"}],
+    YES_NO_CANCEL: [{name: "Yes", confirm: true}, {name: "No", confirm: true}, {name: "Cancel"}],
+}
 
 /**
  * Returns enabled invalid input if there is one.
@@ -54,9 +66,9 @@ const findFirstInputToFocus = (preferredOnly, editors) => {
                firstPreferredInput ? { inputToFocus: firstPreferredInput, preferred: true } :
                null
            ) :
-           firstInvalidInput ? { inputToFocus: firstInvalidInput, preferred: firstInvalidInput === firstPreferredInput } :
+           firstInvalidInput ? { inputToFocus: firstInvalidInput, preferred: firstInvalidInput === firstPreferredInput, invalid: true } :
            firstPreferredInput ? { inputToFocus: firstPreferredInput, preferred: true } :
-           firstInput ? { inputToFocus: firstInput, preferred: false } :
+           firstInput ? { inputToFocus: firstInput } :
            null;
 };
 
@@ -96,27 +108,112 @@ const _isElementInViewport = function (el) {
 };
 
 /**
- * Triggers focusing of invalid / preferred / first enabled input, if there is any (or preferred enabled input for 'preferredOnly' === true).
+ * Focuses 'inputToFocus' taking into account that it can already be focused.
+ */
+const focusInput = function (inputToFocus) {
+    inputToFocus.focus();
+    // '.focus()' scrolls to view.
+    // However, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused).
+    // Hence we scroll it manually.
+    if (!_isElementInViewport(inputToFocus)) {
+        // Possible behavior: 'auto' -- no animation; block: 'start' (vertical alignment); inline: 'nearest' (horisontal alignment).
+        inputToFocus.scrollIntoView();
+    }
+};
+
+/**
+ * Triggers focusing of invalid / preferred / first enabled input, if there is any.
+ * (or preferred enabled input for 'preferredOnly' === true).
+ *
+ * Triggers focusing of previously focused input for persisted entities, if there is any.
+ * Otherwise, focuses the first available element before the first enabled input.
  * 
  * If preferred input is getting focus, the contents of the input gets selected.
  * 
  * @param preferredOnly -- consider only preferred inputs (independent from invalid)
+ * @param manuallyFocusedInput -- previous manually focused input to be focused only in the absence of invalid / preferred one
  * @param orElseFocus -- function for focusing in case if there is no enabled input to focus
  */
-export const focusEnabledInputIfAny = function (preferredOnly, orElseFocus) {
-    const inputToFocus = findFirstInputToFocus(preferredOnly, this.getEditors());
+export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedInput, _updateManuallyFocusedInputWith, orElseFocus) {
+    const editors = this.getEditors();
+
+    if (_updateManuallyFocusedInputWith) {
+        // Provide editors with ability to update `manuallyFocusedInput` of the master.
+        for (const editor of editors) {
+            if (!editor._updateManuallyFocusedInputWith) {
+                editor._updateManuallyFocusedInputWith = _updateManuallyFocusedInputWith;
+            }
+        }
+
+        // Provide CANCEL/SAVE and other tg-actions with ability to preserve `manuallyFocusedInput`.
+        const buttons = this.$ && this.$.masterDom && this.$.masterDom.querySelectorAll('tg-action');
+        if (buttons) {
+            buttons.forEach(button => {
+                if (!button.pointerDownListener) {
+                    button.addEventListener('pointerdown', button.pointerDownListener = () => this.previousManuallyFocusedInput = this.manuallyFocusedInput);
+                    button.addEventListener('pointerup', () => _updateManuallyFocusedInputWith(this.previousManuallyFocusedInput));
+                }
+            });
+        }
+    }
+
+    const inputToFocus = findFirstInputToFocus(preferredOnly, editors);
     if (inputToFocus) {
-        inputToFocus.inputToFocus.focus();
-        if (!_isElementInViewport(inputToFocus.inputToFocus)) { // .focus() scrolls to view; however, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused); hence we scroll it manually
-            inputToFocus.inputToFocus.scrollIntoView(); // behavior: 'auto' -- no animation; block: 'start' (vertical alignment); inline: 'nearest' (horisontal alignment);
+        // Enforce focusing of invalid / preferred input regardless of any conditions.
+        // If found input is not invalid / preferred, skip focusing for new entities.
+        if (inputToFocus.invalid || inputToFocus.preferred || this._currBindingEntity && this.shouldFocusEnabledInput()) {
+            // For the case where new intended input is different from non-empty `manuallyFocusedInput`,
+            //   update `manuallyFocusedInput` with that new input.
+            // New input is likely to be edited further (invalid / preferred).
+            // Even if new input is the first editable input for the case of non-persisted entity,
+            //   `manuallyFocusedInput` can still be updated by it.
+            // Store `manuallyFocusedInput` before changing the focus.
+            let previousManuallyFocusedInput = manuallyFocusedInput;
+            if (_updateManuallyFocusedInputWith && manuallyFocusedInput && inputToFocus.inputToFocus !== manuallyFocusedInput) {
+                _updateManuallyFocusedInputWith(inputToFocus.inputToFocus);
+                previousManuallyFocusedInput = inputToFocus.inputToFocus;
+            }
+            // Actually perform focusing.
+            focusInput(inputToFocus.inputToFocus);
+            // Restore `manuallyFocusedInput`.
+            if (_updateManuallyFocusedInputWith) {
+                _updateManuallyFocusedInputWith(previousManuallyFocusedInput);
+            }
+            // Perform selection for preferred input.
+            if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
+                inputToFocus.inputToFocus.select();
+            }
+        } else {
+            // If manuallyFocusedInput is present, focus it.
+            // If it is disabled (<input> / <textarea>), fallback to focus element before first enabled input ('else' branch).
+            if (_updateManuallyFocusedInputWith && manuallyFocusedInput && !manuallyFocusedInput.disabled) {
+                focusInput(manuallyFocusedInput);
+            }
+            // Otherwise, take the first significant parent node, namely `tg-custom-action-dialog`, if it is present.
+            // Skip insertion points, because they will likely only have non-persisted instances in a master.
+            else if (this._cachedParentNode) {
+                // Get all focusable elements of the taken parent node.
+                const parentFocusableElements = this._getCurrentFocusableElements.bind(this._cachedParentNode)();
+                // Find an index of inputToFocus in that focusable elements list.
+                const inputToFocusIndex = parentFocusableElements.indexOf(inputToFocus.inputToFocus);
+                // If there is such an element in that list and it is not a first element (unlikely) then...
+                if (inputToFocusIndex > 0) {
+                    // ...focus previous focusable element.
+                    // This is to make Tab action immediately focusing inputToFocus, if actioned by user.
+                    parentFocusableElements[inputToFocusIndex - 1].focus();
+                }
+            }
+            else if (orElseFocus) {
+                orElseFocus();
+            }
         }
-        if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
-            inputToFocus.inputToFocus.select();
-        }
-    } else if (orElseFocus) {
+    }
+    else if (orElseFocus) {
         orElseFocus();
     }
 };
+
+const INSTANCEBASEDCONTINUATION_PROPERTY_NAME = 'instanceBasedContinuation';
 
 const TgEntityMasterBehaviorImpl = {
     properties: {
@@ -419,6 +516,15 @@ const TgEntityMasterBehaviorImpl = {
             }
         },
 
+        /**
+         * A custom instance of downstream instance-based continuation to facilitate direct usage in continuation Entity Master.
+         * This is contrary to type-based continuations where `NeedMoreData` is thrown using type.
+         * Please note, that `instanceBasedContinuation` still goes through its producer (for additional API flexibility).
+         */
+        instanceBasedContinuation: {
+            type: String
+        },
+
         focusViewBound: {
             type: Function
         },
@@ -498,6 +604,14 @@ const TgEntityMasterBehaviorImpl = {
             this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
             this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
 
+            // Provide last instance-based continuation to the context to be able to:
+            //  - retrieve continuation on its Entity Master for the first time;
+            //  - use it in deep contexts for downstream actions (property / entity / continuation),
+            //    which are always initialised through deep contextual restoration (disregardOriginallyProducedEntities = true).
+            if (this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME]) {
+                contextHolder[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME];
+            }
+
             return contextHolder;
         }).bind(self);
 
@@ -571,6 +685,8 @@ const TgEntityMasterBehaviorImpl = {
                         const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                         this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
                         return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), this.savingContext, this._continuations);
+                        // No need to provide the last instance-based continuation to the context,
+                        // because master-with-master/menu/centre should never throw a continuation (only embedded one may throw it).
                     }).bind(this);
                 }
             }
@@ -650,12 +766,12 @@ const TgEntityMasterBehaviorImpl = {
                         entityType: continuationType.fullClassName(), currentState: 'EDIT', centreUuid: self.uuid
                     };
 
-                    // newly created continuation action should be enhanced to be able to enable parent master view after action completion (when isActionInProgress becomes false)
-                    const oldIsActionInProgressChanged = action.isActionInProgressChanged.bind(action);
+                    // newly created continuation action should be enhanced to be able to enable parent master view after action completion (when restoreActionState is invoked)
+                    const oldRestoreActionState = action.restoreActionState.bind(action);
                     const _self = this;
-                    action.isActionInProgressChanged = (function (newValue, oldValue) {
-                        oldIsActionInProgressChanged(newValue, oldValue);
-                        if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
+                    action.restoreActionState = (function () {
+                        oldRestoreActionState();
+                        if (!action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
                             const saveButton = self.$._saveAction;
                             if (saveButton) {
                                 saveButton.cancelContinuation();
@@ -665,11 +781,24 @@ const TgEntityMasterBehaviorImpl = {
                         }
                     }).bind(action);
                 }
+                // Initialise `this.instanceBasedContinuation` for the context creator.
+                // `_exceptionOccurred.ex.instance` will be empty (null) in case of type-based continuations.
+                //
+                // This instanceBasedContinuation lives up until the next successful save completion.
+                // Surely, it would be better to end its lifecycle as soon as continuation master exists.
+                // However, it is only used for:
+                //   - initial continuation retrieval
+                //   - downstream property / entity / continuation actions under continuation.
+                // Other operations (validation / autocompletion / saving) uses originallyProducedEntity instead.
+                // That's why it is not harmful to leave the state up until the next successful save or when other continuation occurs.
+                this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = _exceptionOccurred.ex.instance;
                 action._run();
             } else if (_exceptionOccurred !== null) {
                 this._postSavedDefaultPostExceptionHandler();
+                this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = null;
             } else {
                 this.restoreAfterSave();
+                this[INSTANCEBASEDCONTINUATION_PROPERTY_NAME] = null;
             }
 
             return potentiallySavedOrNewEntity.isValidWithoutException();
@@ -781,6 +910,22 @@ const TgEntityMasterBehaviorImpl = {
             return this._savingPromise;
         }).bind(self);
 
+        self._createCanLeavePromise = () => {
+            const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+            return this._runCanLeave(this._reset(holder));
+        };
+
+        self.remoteCanLeave = () => {
+
+            return new Promise((resolve, reject) => {
+                this.debounce('invoke-canLeave', function () {
+                    // Cancel the 'invoke-canLeave' debouncer, if there is an active one.
+                    this.cancelDebouncer('invoke-canLeave');
+                    return resolve(this._createCanLeavePromise());
+                }, 50);
+            });
+        };
+
         /**
          * In case where main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
          * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
@@ -851,8 +996,10 @@ const TgEntityMasterBehaviorImpl = {
         self.addEventListener('binding-entity-appeared', function (event) {
             const target = event.composedPath()[0];
             if (target === this) {
-                //Need to reset scrolltop for entitity master's scrolling panel to prevent initial scrolling on macOS and iOS
-                this.$.masterDom.$.scrollableContainer.$.scrollablePanel.scrollTop = 0;
+                // Need to reset scrolltop for entity master's scrolling panel to prevent initial scrolling on macOS and iOS.
+                if (isIPhoneOs() || isIPadOs() || isMacSafari()) {
+                    this.$.masterDom.$.scrollableContainer.$.scrollablePanel.scrollTop = 0;
+                }
                 this.focusView();
                 if (!this._hasEmbededView()) {
                     this.async(function () {
@@ -887,6 +1034,9 @@ const TgEntityMasterBehaviorImpl = {
         self.titleAction.setAttribute("id", "titleAction");
         self.titleAction.setAttribute('title-action', '');
         self.shadowRoot.appendChild(self.titleAction);
+
+        self._storeFocus = self._storeFocus.bind(self);
+        self._restoreFocus = self._restoreFocus.bind(self);
     }, // end of ready callback
 
     attached: function () {
@@ -894,16 +1044,39 @@ const TgEntityMasterBehaviorImpl = {
         this.tgOpenMasterAction.attrs.centreUuid = this.uuid;
         this.titleAction.attrs.centreUuid = this.uuid;
         this._resetState(); // existing state may cause problems for cached masters: for example previous entity was new and valid and next one invalid -- blocks closing of dialog with error
-        this._cachedParentNode = this.parentNode;
-        this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
+        if (this._cacheParentNode()) {
+            this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on dialog where this master is.
+        }
+    },
+
+    /**
+     * Caches parent node (dialog). Every master do that by default, except EGI master.
+     * Returns cached parent node (dialog), if any.
+     */
+    _cacheParentNode: function () {
+        return (this._cachedParentNode = getParentAnd(this.parentElement, element => element.matches('tg-custom-action-dialog')));
     },
 
     detached: function () {
         while (this._subscriptions.length !== 0) {
             this._subscriptions.pop().unsubscribe();
         }
-        this.fire('tg-entity-master-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
-        delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
+        if (this._cachedParentNode) {
+            this.fire('tg-entity-master-detached', this, { node: this._cachedParentNode }); // start event bubbling on dialog from which this entity master has already been detached
+        }
+        this._removeParentNodeFromCache();
+        // Remove manuallyFocusedInput on master detach.
+        // This would cover master dialog closing or replacing dialog's master with different master.
+        this._updateManuallyFocusedInputWith(null);
+    },
+
+    /**
+     * Removes parent node (dialog) from cache. Every master do that by default, except EGI master.
+     */
+    _removeParentNodeFromCache: function () {
+        if (this._cachedParentNode) {
+            delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of dialog from memory
+        }
     },
 
     /**
@@ -953,6 +1126,7 @@ const TgEntityMasterBehaviorImpl = {
         return true;
     },
 
+    // FIXME: Rename to _hasEmbeddedView, which affects both Java and JS code.
     _hasEmbededView: function () {
         return false;
     },
@@ -995,8 +1169,70 @@ const TgEntityMasterBehaviorImpl = {
             } else {
                 this.fire("tg-last-item-focused", { forward: forward, event: e });
             }
-
         }
+    },
+
+    /**
+     * Updates `manuallyFocusedInput` based on next manually focused `elementToFocus`.
+     * We only consider real editor internal inputs and skip property actions or other elements.
+     * Skipped elements would trigger `manuallyFocusedInput` clearing and would cause focusing of first element before first input.
+     */
+    _updateManuallyFocusedInputWith: function (elementToFocus) {
+        // Only update `manuallyFocusedInput` state for non-touch devices.
+        //   Even though touch devices should not use this state, this may change in future and we want to avoid regressions.
+        // Also, allow `manuallyFocusedInput` updating only in EDIT state of the master.
+        //   This is to avoid loosing this state during possible 'retrieve/validate' transitions, when all editors become disabled (VIEW).
+        //   Typically such loosing does not occur.
+        //   But on slow systems _focusFirstInput may occur earlier than retrieval, for example, of menu item action in compound masters.
+        if (!isTouchEnabled() && this.currentState === 'EDIT') {
+            // Please note, that tg-multiline-text-editor is special and its <text-area> does not have 'custom-input' class.
+            // Only, <iron-autogrow-text-area> above has it.
+            this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
+        }
+    },
+
+    /**
+     * A custom condition of whether non-erroneous/preferred first enabled input should be focused on CANCEL/SAVE.
+     */
+    shouldFocusEnabledInput: function () {
+        return !this._currBindingEntity.isPersisted();
+    },
+
+    /**
+     * Stores the focus of internal embedded master (simple / compound) for later restoration.
+     * Returns true if storing has actually happened.
+     */
+    _storeFocus: function () {
+        return this._manage(this, master => master.previousManuallyFocusedInput = master.manuallyFocusedInput);
+    },
+
+    /**
+     * Restores the focus of internal embedded master (simple / compound) from previously stored value.
+     */
+    _restoreFocus: function () {
+        return this._manage(this, master => master._updateManuallyFocusedInputWith(master.previousManuallyFocusedInput));
+    },
+
+    /**
+     * Applies an `action` against internal embedded master (simple / compound) taken from `master`.
+     */
+    _manage: function (master, action) {
+        let menu = null, currentSection = null, masterWithMaster = null;
+        if (
+            master.masterWithMaster && (masterWithMaster = master.$.loader.loadedElement)
+            || master.$ && (menu = master.$.menu) && menu.sectionRoute !== undefined && (currentSection = menu.currentSection()) && (masterWithMaster = menu.isMasterWithMaster(currentSection))
+        ) {
+            action(masterWithMaster);
+            return true;
+        }
+        return false;
+    },
+
+    /**
+     * Checks whether `focusableElement` is actually an editable part of some `tg-editor`.
+     */
+    _isEditorElement(focusableElement) {
+        return focusableElement && focusableElement.classList.contains('custom-input');
     },
 
     /**
@@ -1005,7 +1241,7 @@ const TgEntityMasterBehaviorImpl = {
      * In case of preferred input focusing, the contents of the input gets selected.
      */
     _focusFirstInput: function () {
-        focusEnabledInputIfAny.bind(this)(false, () => {
+        focusEnabledInputIfAny.bind(this)(false, this.manuallyFocusedInput, this._updateManuallyFocusedInputWith.bind(this), () => {
             if (this.offsetParent !== null) {
                 // Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
                 //  it's ancestors to focus their first best element.
@@ -1051,7 +1287,7 @@ const TgEntityMasterBehaviorImpl = {
                     // Desktop app specific: focus first input when opening dialog.
                     // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
                     // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor).
-                    if (!isMobileApp()) {
+                    if (!isTouchEnabled()) {
                         this._focusFirstInput();
                     } else {
                         this._focusPreferredInput();
@@ -1208,6 +1444,13 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     /**
+     * The core-ajax component for custom canLeave logic.
+     */
+    _canLeaveAjax: function () {
+        throw "_canLeaveAjax: not implemented";
+    },
+
+    /**
      * The function for binding property title -- entity.type().prop(property).title(). The argument 'entity' will be changed in future. Polymer will listen to that change.
      * The function for binding property desc -- entity.type().prop(property).desc(). The argument 'entity' will be changed in future. Polymer will listen to that change.
      */
@@ -1262,34 +1505,81 @@ const TgEntityMasterBehaviorImpl = {
         return this._ajaxSaver().generateRequest().completes;
     },
 
+    _runCanLeave: function (modifiedPropertiesHolder) {
+        const idNumber = modifiedPropertiesHolder.id;
+        const originallyProducedEntity = this._reflector()._validateOriginallyProducedEntity(this._originallyProducedEntity, idNumber);
+        this._canLeaveAjax().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(originallyProducedEntity, modifiedPropertiesHolder)));
+        return this._canLeaveAjax().generateRequest().completes;
+    },
+
     /**
      * Method implementing .canLeave contract as disignated in classList.
      * It is used to identify whether master can be "left/closed" without any adverse effect on the data it represents (i.e. there was no unsaved changes).
      */
-    canLeave: function () {
+    canLeave: async function (leaveReason = LeaveReason.CLOSED) {
         // check all the child nodes with canLeave contract if they can be left...
         const nodesWithCanLeave = queryElements(this, '.canLeave');
         if (nodesWithCanLeave.length > 0) {
             for (let index = 0; index < nodesWithCanLeave.length; index++) {
-                const reason = nodesWithCanLeave[index].canLeave();
-                if (reason) {
-                    return reason;
-                }
+                await nodesWithCanLeave[index].canLeave(leaveReason);
             }
         }
 
         if (this._currBindingEntity && this.classList.contains('canLeave')) {
-            // The master should remain open in case where there are some modifications and the entity is persisted.
-            // Refer to _bindingEntityModified property of tg-entity-binder-behavior for more information.
+            // The master should prevent navigation away if there are unsaved modifications 
+            // and the entity has already been persisted.
+            // Refer to the _bindingEntityModified property of tg-entity-binder-behavior for more information.
             if (((this._editedPropsExist || this._bindingEntityModified) && this._currBindingEntity.isPersisted()) ||
                 (this._currBindingEntity.type().isPersistent() && !this._currBindingEntity.isPersisted())) {
-                return {
-                    isNew: undefined, // this could be not persistent entity (new) or persistent persisted entity (not new)
-                    msg: "Please save or cancel your changes."
-                };
+                    throw {msg: "Please save or cancel changes."};
             }
         }
-        return undefined;
+
+        if (this._reflector().findTypeByName(this.entityType).isCustomisableCanLeave()) {
+            return this.customCanLeave(leaveReason);
+        }
+
+        return true;
+    },
+
+    customCanLeave: function (leaveReason = LeaveReason.CLOSED) {
+        this._currBindingEntity["leaveReason"] = leaveReason;
+        return this.remoteCanLeave().then(obj => {
+            if (obj.xhr.status === 200 && obj.response) {
+                // Indicates successful execution of the request with a response received.
+                // Timeout errors may still result in status 200 with e.detail.response === null.
+                // A 504 error is also possible, but it is handled in the else clause.
+                const deserialisedResult = this._serialiser().deserialise(obj.response);
+                if (this._reflector().isError(deserialisedResult) || this._reflector().isWarning(deserialisedResult)) {
+                    throw new UnexpectedCustomError(resultMessages(deserialisedResult).short);
+                } else {
+                    const savedEntity = deserialisedResult.instance && deserialisedResult.instance[0];
+                    if (savedEntity.canLeave) {
+                        return true;
+                    } else {
+                        return this.confirm(savedEntity.cannotLeaveReason, CanLeaveOptions[savedEntity.canLeaveOptions]).catch(e => {
+                            throw {msg: savedEntity.leaveInstructions, imperative: true};
+                        });
+                    }
+                }
+            } else { // Handle non-200 or empty responses (e.g., Jetty timeout may return empty 200 response).
+                throw new UnexpectedCustomError("Most likely due to networking issues the request could not be dispatched to server. Please try again later.");
+            }
+        }).catch(e => {
+            if (e.request && e.error) {
+                processResponseError(e.request, e.error, this._reflector(), this._serialiser(), _ => { // _ result or message to be dismissed
+                        if (e.request && e.request.xhr && e.request.xhr.status === 404 && e.request.xhr.response) {
+                            const deserialisedResult = this._serialiser().deserialise(e.request.xhr.response);
+                            if (this._reflector().isError(deserialisedResult)) {
+                                // Override standard >=400 toast message `Service Error (404).` by custom one from server.
+                                this.toaster && this.toaster.openToastForErrorResult(deserialisedResult, true);
+                            }
+                        }
+                    }, this.toaster);
+            }
+            throw e;
+        });
+        
     },
 
     //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
@@ -1373,10 +1663,17 @@ const TgEntityMasterBehaviorImpl = {
         }));
     },
 
-    confirm: function (message, buttons) {
-        if (this.$ && this.$.masterDom && this.$.masterDom.confirm) {
-            return this.$.masterDom.confirm(message, buttons);
+    closeConfirmationDialog: function () {
+        if (this.$ && this.$.masterDom && this.$.masterDom.closeConfirmationDialog) {
+            return this.$.masterDom.closeConfirmationDialog();
         }
+    },
+
+    confirm: function (message, buttons, options) {
+        if (this.$ && this.$.masterDom && this.$.masterDom.confirm) {
+            return this.$.masterDom.confirm(message, buttons, options);
+        }
+        return Promise.reject({msg: 'Confirmation dialog is not available.'});
     },
 };
 

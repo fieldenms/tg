@@ -22,6 +22,7 @@ export default {
         'node_modules/lib/fullcalendar-lib.js',
         'node_modules/lib/moment-lib.js',
         'node_modules/lib/toastui-editor-lib.js',
+        'node_modules/lib/html5-qrcode-lib.js',
 
         // Polymer import files, that we are using through function imports, are listed here.
         // They can not be added to 'build-polymer.js' because we would need to somehow use those functions there for them to be not tree-shaken.

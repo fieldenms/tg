@@ -1,16 +1,16 @@
 package ua.com.fielden.platform.entity.activatable;
 
+import org.junit.Test;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.activatable.test_entities.ActivatableUnionOwner;
-import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
-import ua.com.fielden.platform.entity.activatable.test_entities.Member2;
-import ua.com.fielden.platform.entity.activatable.test_entities.Union;
+import ua.com.fielden.platform.entity.activatable.test_entities.*;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataUtils;
+
+import static org.junit.Assert.assertFalse;
 
 public class ActivatableEntityDeletionAndRefCountUnionTest extends AbstractActivatableEntityDeletionAndRefCountTestCase {
 
@@ -157,6 +157,84 @@ public class ActivatableEntityDeletionAndRefCountUnionTest extends AbstractActiv
     protected void delete(final AbstractEntity<?> entity) {
         final var co$ = (IEntityDao<AbstractEntity<?>>) co$(entity.getType());
         co$.delete(entity);
+    }
+
+    @Test
+    public void deletion_of_active_A_that_references_active_B_via_union_does_not_affect_refCount_of_B_if_skipActiveOnly_is_true_on_both_levels() {
+        final var b = save(new_(Member2.class, "M2").setActive(true).setRefCount(10));
+        final var a = save(new_(ActivatableUnionOwner.class, "O1").setActive(true).setUnion2(new_(Union.class).setMember2(b)));
+
+        assertRefCount(10, b);
+
+        delete(a);
+
+        assertFalse(co$(ActivatableUnionOwner.class).entityExists(a));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public void deletion_of_active_A_that_references_active_B_via_union_does_not_affect_refCount_of_B_if_SkipActivatableTracking_is_present_on_both_levels() {
+        final var b = save(new_(Member4.class, "M4").setActive(true).setRefCount(10));
+        final var a = save(new_(ActivatableUnionOwner.class, "O1").setActive(true).setUnion4(new_(Union.class).setMember4(b)));
+
+        assertRefCount(10, b);
+
+        delete(a);
+
+        assertFalse(co$(ActivatableUnionOwner.class).entityExists(a));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public void deletion_of_active_A_that_references_active_B_via_union_decrements_refCount_of_B_if_skipActiveOnly_is_true_only_for_the_union_typed_property() {
+        final var b = save(new_(Member1.class, "M1").setActive(true).setRefCount(10));
+        final var a = save(new_(ActivatableUnionOwner.class, "O1").setActive(true).setUnion2(new_(Union.class).setMember1(b)));
+
+        assertRefCount(11, b);
+
+        delete(a);
+
+        assertFalse(co$(ActivatableUnionOwner.class).entityExists(a));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public void deletion_of_active_A_that_references_active_B_via_union_decrements_refCount_of_B_if_skipActiveOnly_is_true_only_for_the_union_member_property() {
+        final var b = save(new_(Member2.class, "M2").setActive(true).setRefCount(10));
+        final var a = save(new_(ActivatableUnionOwner.class, "O1").setActive(true).setUnion(new_(Union.class).setMember2(b)));
+
+        assertRefCount(11, b);
+
+        delete(a);
+
+        assertFalse(co$(ActivatableUnionOwner.class).entityExists(a));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public void deletion_of_active_A_that_references_active_B_via_union_decrements_refCount_of_B_if_SkipActivatableTracking_is_present_only_for_the_union_typed_property() {
+        final var b = save(new_(Member1.class, "M1").setActive(true).setRefCount(10));
+        final var a = save(new_(ActivatableUnionOwner.class, "O1").setActive(true).setUnion4(new_(Union.class).setMember1(b)));
+
+        assertRefCount(11, b);
+
+        delete(a);
+
+        assertFalse(co$(ActivatableUnionOwner.class).entityExists(a));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public void deletion_of_active_A_that_references_active_B_via_union_decrements_refCount_of_B_if_SkipActivatableTracking_is_present_only_for_the_union_member_property() {
+        final var b = save(new_(Member4.class, "M4").setActive(true).setRefCount(10));
+        final var a = save(new_(ActivatableUnionOwner.class, "O1").setActive(true).setUnion(new_(Union.class).setMember4(b)));
+
+        assertRefCount(11, b);
+
+        delete(a);
+
+        assertFalse(co$(ActivatableUnionOwner.class).entityExists(a));
+        assertRefCount(10, b);
     }
 
 }

@@ -1,19 +1,11 @@
 package ua.com.fielden.platform.security.provider;
 
-import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
-import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.longDesc;
-import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.security.ISecurityToken;
+
+import java.util.*;
+
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.*;
 
 /// A node in a tree-like structure for representing security tokens in a hierarchical order.
 /// Natural ordering is based on token's short description.

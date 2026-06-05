@@ -11,12 +11,8 @@ import ua.com.fielden.platform.test.PlatformDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test_config.ITestContext;
 import ua.com.fielden.platform.test_config.SqlServerDbCreator;
 
-/**
- * A test case runner for domain-driven unit tests extending {@link AbstractDomainDrivenTestCase} that can use SQL Server 2012 and up as their database back-end.
- * 
- * @author TG Team
- *
- */
+/// A test case runner for domain-driven unit tests extending [AbstractDomainDrivenTestCase] that can use SQL Server 2012 and up as their database back-end.
+///
 public class SqlServerDomainDrivenTestCaseRunner extends AbstractDomainDrivenTestCaseRunner {
 
     public SqlServerDomainDrivenTestCaseRunner(final Class<?> klass) throws Exception {
@@ -27,10 +23,9 @@ public class SqlServerDomainDrivenTestCaseRunner extends AbstractDomainDrivenTes
         super(klass, SqlServerDbCreator.class, Optional.of(config));
     }
 
-    /**
-     * Produces a set of properties for DB connectivity based on the provided <code>dbUri</code>.
-     * The URI for SQL Server looks like <code>//192.168.1.142:1433;database=JUNIT_TEST_DB_1</code>.
-     */
+    /// Produces a set of properties for DB connectivity based on the provided `dbUri`.
+    /// The URI for SQL Server looks like `//192.168.1.142:1433;database=JUNIT_TEST_DB_1`.
+    ///
     @Override
     protected Properties mkDbProps(final String dbUri) {
         return new SqlServerTestContext().mkDbProps(dbUri);
@@ -43,7 +38,7 @@ public class SqlServerDomainDrivenTestCaseRunner extends AbstractDomainDrivenTes
             final Properties props = new Properties();
             props.setProperty("config.domain", PlatformDomainDrivenTestCaseConfiguration.class.getName());
             props.setProperty("hibernate.dialect", "org.hibernate.dialect.SQLServer2012Dialect");
-            props.setProperty("hibernate.connection.url", format("jdbc:sqlserver:%s;queryTimeout=30", dbUri));
+            props.setProperty("hibernate.connection.url", format(dbUri.contains("queryTimeout") ? "jdbc:sqlserver:%s" : "jdbc:sqlserver:%s;queryTimeout=30", dbUri));
             props.setProperty("hibernate.connection.driver_class", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
             props.setProperty("hibernate.connection.username", "junit");
             props.setProperty("hibernate.connection.password", "junit");

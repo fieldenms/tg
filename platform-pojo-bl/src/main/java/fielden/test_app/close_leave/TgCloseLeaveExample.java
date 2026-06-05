@@ -1,13 +1,7 @@
 package fielden.test_app.close_leave;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.DisplayDescription;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
+import ua.com.fielden.platform.entity.annotation.*;
 
 /** 
  * Entity to represent Close / Leave behaviour example (and unit test basis) for standalone / compound entity masters.
@@ -23,5 +17,11 @@ import ua.com.fielden.platform.entity.annotation.DescRequired;
 @DisplayDescription
 @DescRequired
 public class TgCloseLeaveExample extends AbstractPersistentEntity<String> {
-    
+
+    @Override
+    @Observable
+    public TgCloseLeaveExample setDesc(String desc) {
+        return super.setDesc(desc);
+    }
+
 }

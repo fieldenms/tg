@@ -143,8 +143,13 @@ public interface IDomainTreeEnhancer extends IRootTyped {
     public class IncorrectCalcPropertyException extends Result {
         private static final long serialVersionUID = 435410515344805056L;
 
-        public IncorrectCalcPropertyException(final String s) {
-            super(null, new Exception(s));
+        public IncorrectCalcPropertyException(final String msg) {
+            this(msg, null);
+        }
+
+        public IncorrectCalcPropertyException(final String msg, final Exception cause) {
+            // The created Exception will capture a stack trace, hence no need to do the same for Result.
+            super(null, new Exception(msg, cause), false);
         }
     }
 

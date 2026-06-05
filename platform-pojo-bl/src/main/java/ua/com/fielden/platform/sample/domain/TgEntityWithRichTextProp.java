@@ -41,4 +41,11 @@ public class TgEntityWithRichTextProp extends AbstractPersistentEntity<String> {
         this.richTextProp = richTextProp;
         return this;
     }
+
+    @Override
+    @Observable
+    public TgEntityWithRichTextProp setDesc(String desc) {
+        return super.setDesc(desc);
+    }
+
 }

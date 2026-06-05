@@ -18,7 +18,7 @@ public final class ExistsToken extends AbstractParameterisedEqlToken {
     }
 
     public String parametersText() {
-        return " %s ".formatted(getInstance().format(model.getTokenSource()));
+        return " %s ".formatted(getInstance().format(model.tokens()));
     }
 
     @Override

@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.entity;
 
-/**
- * Runtime exceptional situation describing incorrect use of context decomposition API inside producer implementation.
- * 
- * @author TG Team
- *
- */
-public class EntityProducingException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
+import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
+
+/// Runtime exceptional situation describing incorrect use of context decomposition API inside producer implementation.
+///
+public class EntityProducingException extends AbstractPlatformRuntimeException {
 
     public EntityProducingException(final String msg) {
         super(msg);

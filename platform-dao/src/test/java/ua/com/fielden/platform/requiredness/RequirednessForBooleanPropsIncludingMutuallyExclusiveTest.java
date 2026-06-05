@@ -14,15 +14,12 @@ import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamic
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-/**
- * A test case for entity validation and error recovery related to requiredness of boolean properties.
- * It also covers a special case of mutually exclusive boolean properties, which is a practical use case.
- * <p>
- * Term "mebp" is used in test names. It stand for "mutually exclusive boolean properties".
- *
- * @author TG Team
- *
- */
+/// A test case for entity validation and error recovery related to requiredness of boolean properties.
+/// It also covers a special case of mutually exclusive boolean properties, which is a practical use case.
+///
+/// Term "mebp" is used in test names.
+/// It stands for "mutually exclusive boolean properties".
+///
 public class RequirednessForBooleanPropsIncludingMutuallyExclusiveTest extends AbstractDaoTestCase {
 
     /**

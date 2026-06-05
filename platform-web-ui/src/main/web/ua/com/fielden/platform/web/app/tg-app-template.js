@@ -6,10 +6,9 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 import '/resources/polymer/@polymer/app-route/app-location.js';
 import '/resources/polymer/@polymer/app-route/app-route.js';
 
-import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
-// this import is required to ensure the SSE initialisation upon loading of a web client
-import '/app/tg-app-config.js';
+import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
 import '/resources/views/tg-app-menu.js';
 import '/resources/views/tg-app-view.js';
@@ -17,6 +16,7 @@ import '/resources/master/tg-entity-master.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/tg-message-panel.js';
 import '/resources/components/tg-global-error-handler.js';
+import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -26,12 +26,16 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
+import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-handler-behaviour.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
-import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
-import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+
+import * as appActions from '/app/tg-app-actions.js';
 
 let screenWidth = window.screen.availWidth;
 let screenHeight = window.screen.availHeight;
@@ -43,19 +47,17 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <tg-app-config id="appConfig"></tg-app-config>
     <tg-global-error-handler id="errorHandler" toaster="[[toaster]]"></tg-global-error-handler>
     <app-location id="location" no-decode dwell-time="-1" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></app-location>
     <app-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></app-route>
     <tg-message-panel></tg-message-panel>
+    <iron-ajax id="entityReconstructor" headers="[[_headers]]" method="GET" handle-as="json" reject-with-request></iron-ajax>
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]" idea-uri="[[ideaUri]]">
                 <paper-icon-button id="helpAction" slot="helpAction" icon="icons:help-outline" tabindex="1"
-                    on-mousedown="_helpMouseDownEventHandler" 
-                    on-touchstart="_helpMouseDownEventHandler" 
-                    on-mouseup="_helpMouseUpEventHandler" 
-                    on-touchend="_helpMouseUpEventHandler" 
+                    on-tg-long-tap="_longHelpTapHandler"
+                    on-tg-short-tap="_shortHelpTapHandler"
                     tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link.">
                 </paper-icon-button>
             </tg-app-menu>
@@ -214,7 +216,7 @@ Polymer({
             observer: "_selectedSubmoduleChanged"
         },
 
-        //action related properties.
+        // Action related properties.
         _attrs: Object,
         _saveIdentifier: Number,
         _visibleMenuItems: Array,
@@ -232,12 +234,22 @@ Polymer({
          */
         currentHistoryState: {
             type: Object
+        },
+
+        /**
+         * Additional headers for every 'iron-ajax' client-side requests.
+         * These only contain our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able to compute 'Now' moment properly.
+         */
+        _headers: {
+            type: String,
+            value: _timeZoneHeader
         }
     },
 
     observers: ['_routeChanged(_route.path)'],
 
-    behaviors: [TgEntityMasterBehavior, TgViewWithHelpBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
+    behaviors: [TgEntityMasterBehavior, TgLongTapHandlerBehaviour, TgViewWithHelpBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
     
     keyBindings: {
         'f3': '_searchMenu',
@@ -248,12 +260,33 @@ Polymer({
     listeners: {
         "main-menu": "_showMainMenu",
         "menu-item-selected": "_showView",
+        "tg-menu-search-item-selected": "_onMenuSearchItemSelected",
         "menu-search-list-closed": "_restoreLastFocusedElement",
         "tg-module-menu-closed": "_restoreLastFocusedElement"
     },
 
+    /**
+     * Listener for `tg-menu-search-item-selected` fired by `tg-menu-search-input` during an F3 global search transition.
+     * Records the F3-target menu path on `tg-app-template`.
+     * `tg-view-with-menu._updatePage` reaches `tg-app-template` via `getParentAnd`.
+     * It uses the recorded path to verify that the URI change it is currently processing corresponds to this F3 navigation.
+     * Only after that verification does it trigger the named-configuration recovery branch.
+     *
+     * The path is recorded so that a value left over from an F3-to-current-page no-op cannot be wrongly consumed by an unrelated later URI change.
+     * Such no-ops happen when `set('_route.path', sameValue)` does not propagate and `_updatePage` therefore never runs.
+     * In that case the path comparison in `_updatePage` simply does not match, and the staleness self-heals on the next `_updatePage`.
+     *
+     * The state is held here — on the single `tg-app-template` instance — rather than on a `tg-view-with-menu` instance.
+     * An F3 search can transition between modules, and the destination's `tg-view-with-menu` is not the one whose subtree hosted the originating event.
+     */
+    _onMenuSearchItemSelected: function (event) {
+        this._pendingMenuSearchPath = event.detail;
+    },
+
     _searchMenu: function (event) {
-        const selectedElement = this.shadowRoot.querySelector("[name='" + this.$.pages.selected + "']");
+        // Wrap the selected page title in quotes in the query selector,
+        // as it may contain whitespace or special characters.
+        const selectedElement = this.shadowRoot.querySelector(`[name='${this.$.pages.selected}']`);
         if (selectedElement && selectedElement.searchMenu) {
             this.persistActiveElement();
             selectedElement.searchMenu();
@@ -262,7 +295,9 @@ Polymer({
     },
     
     _openModuleMenu: function (event) {
-        const selectedElement = this.shadowRoot.querySelector("[name='" + this.$.pages.selected + "']");
+        // Wrap the selected page title in quotes in the query selector,
+        // as it may contain whitespace or special characters.
+        const selectedElement = this.shadowRoot.querySelector(`[name='${this.$.pages.selected}']`);
         if (selectedElement && selectedElement.openModuleMenu) {
             this.persistActiveElement();
             selectedElement.openModuleMenu();
@@ -274,27 +309,142 @@ Polymer({
         if (this.tgOpenMasterAction.isActionInProgress || this.disableNextHistoryChange) {
             return;
         }
-        const entityInfo = this._selectedSubmodule.substring(1).split('/');
-        const typeOf = (name) => this._reflector().findTypeByName(name);
-        const mainTypeName = entityInfo[0];
-        const idStr = entityInfo[1];
-        const menuItemTypeName = entityInfo[2];
-        if (entityInfo.length !== 2 && entityInfo.length !== 3) {
-            this._openToastForError('URI error.', `The URI [${this._selectedSubmodule}] for master is incorrect. It should contain entity type and id [and optional type of compound menu item] separated with '/'.`, true);
-        } else if (!typeOf(mainTypeName) || menuItemTypeName && !typeOf(menuItemTypeName)) {
-            this._openToastForError('Entity type error.', `[${mainTypeName}]${menuItemTypeName ? ` or [${menuItemTypeName}]` : ''} entity type is not registered. Please make sure that entity type is correct.`, true);
-        } else if (isNaN(Number(idStr))) {
-            this._openToastForError('Master entity ID error.', `The entity ID [${idStr}] for master is not integer number.`, true);
-        } else {
-            const entity = this._reflector().newEntity(mainTypeName);
-            entity['id'] = parseInt(idStr);
-            if (menuItemTypeName) {
-                this.tgOpenMasterAction.modifyFunctionalEntity = (bindingEntity) => {
-                    bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
-                    delete this.tgOpenMasterAction.modifyFunctionalEntity;
-                };
+        const prefix = this._subroute.prefix;
+        const suffix = this._subroute.path.substring(1).split('/');
+        if (prefix === '/tiny') {
+            const hash = suffix[0];
+            if (hash) {
+                this.$.entityReconstructor.url = `/tiny/${hash}`;
+                this.$.entityReconstructor.generateRequest().completes.then(ironRequest => {
+                    const deserialisedResult = this._serialiser().deserialise(ironRequest.response);
+                    const customObject = deserialisedResult.instance[1];
+                    const sharedUri = customObject['@@sharedUri'];
+
+                    // Any tiny link should be rewritten to some form that wouldn't allow user to go by to that '/tiny/...' link.
+                    // If that link represents some other link (e.g. '/master/...'), let's rewrite to that other link.
+                    // It would be consistent for opening such other links directly.
+                    // Otherwise, rewrite to the main menu link because Entity Master for NEW instances are opened there.
+                    const rewrittenUri = sharedUri || this._urlForMainMenu();
+
+                    // First, enforce correct current history entry with the same state, but new URI.
+                    window.history.replaceState(this.currentHistoryState, '', rewrittenUri);
+                    // Then perform transition using <app-location> 'location-changed' event (see element docs).
+                    // `window.location.replace()` is not suitable because it messes up the `window.history.state` in our case
+                    // (see `_routeChanged` observer with `if (!window.history.state) {...` branch).
+                    window.dispatchEvent(new CustomEvent('location-changed', {
+                        detail: {
+                            // The state was manually rewritten above -- prevent automatic rewrite.
+                            avoidStateAdjusting: true
+                        }
+                    }));
+
+                    if (!sharedUri) {
+                        const actionIdentifier = customObject['@@actionIdentifier'];
+                        const actionObject = appActions.actions(this)[actionIdentifier];
+                        if (!actionObject) {
+                            throw new Error(`Action object [${actionIdentifier}] was not found.`);
+                        }
+
+                        const action = document.createElement('tg-ui-action');
+                        for (const name of [
+                            'shortDesc', 'longDesc', 'componentUri', 'elementName',
+                            'preAction', 'postActionSuccess', 'postActionError',
+                            'requireSelectionCriteria', 'requireSelectedEntities', 'requireMasterEntity'
+                        ]) {
+                            action[name] = actionObject[name];
+                        }
+                        action.attrs = {};
+                        for (const name of ['entityType', 'currentState', 'prefDim', 'actionIdentifier']) {
+                            // prefDim may be undefined.
+                            if (typeof actionObject.attrs[name] !== 'undefined') {
+                                action.attrs[name] = actionObject.attrs[name];
+                            }
+                        }
+
+                        // refs #2128 Use predictable parent `tg-app-template` master uuid for dialog closing (and other postal events).
+                        // Even though some arbitrary `centreUuid` value would also work, it is better to maintain hierarchy exactly as for other actions.
+                        // Changing of the parent `tg-app-template` master would work as expected then.
+                        action.attrs.centreUuid = this.uuid;
+                        action.showDialog = this._showDialog;
+
+                        // Also use toaster from parent `tg-app-template` master.
+                        action.toaster = this.toaster;
+
+                        // Provide correct context for the action to be opened.
+                        const savingInfoHolder = this._serialiser().deserialise(JSON.parse(customObject.savingInfoHolder));
+                        action.createContextHolder = () => {
+                            const typeName = action.componentUri.substring(action.componentUri.lastIndexOf('/') + 1);
+                            const type = this._reflector().getType(typeName);
+                            if (type && type._simpleClassName() === 'EntityNewAction') {
+                                return savingInfoHolder.centreContextHolder
+                                    .masterEntity.centreContextHolder;
+                            }
+                            else if (type && type.compoundOpenerType()) {
+                                return savingInfoHolder.centreContextHolder
+                                    .masterEntity.centreContextHolder
+                                    .masterEntity.centreContextHolder;
+                            }
+                            return savingInfoHolder.centreContextHolder;
+                        };
+
+                        // Bind fully restored entity after initial loading of empty produced instance.
+                        action.modifyFunctionalEntity = (_currBindingEntity, master, action) => {
+                            master.addEventListener('data-loaded-and-focused', event => {
+                                event.detail?._postRetrievedDefault?.(deserialisedResult.instance);
+                            }, { once: true });
+                        };
+
+                        // Add to the DOM to fully initialise Polymer element.
+                        // This is needed for correct functioning of observers, particularly `isActionInProgressObserver`.
+                        // See `ConfirmationPreAction.build` for more details on `withProgress: true` option observer logic.
+                        document.body.appendChild(action);
+                        // `action` is now fully initialised and can be removed immediately.
+                        // Flickering can neither be observed nor expected here, as this should happen in the same microtask.
+                        document.body.removeChild(action);
+
+                        action._run();
+                    }
+                }, e => processResponseError(e.request, e.error, this._reflector(), this._serialiser(), _ => { // _ result or message to be dismissed
+                    if (e.request && e.request.xhr && e.request.xhr.status === 404 && e.request.xhr.response) {
+                        const deserialisedResult = this._serialiser().deserialise(e.request.xhr.response);
+                        if (this._reflector().isError(deserialisedResult)) {
+                            // Override standard >=400 toast message `Service Error (404).` by custom one from server.
+                            this.toaster && this.toaster.openToastForErrorResult(deserialisedResult, true);
+                        }
+                    }
+                }, this.toaster));
             }
-            this.tgOpenMasterAction._runDynamicAction(() => entity, null);
+            else {
+                this._openToastForError('URI error.', `The URI [${this._route.path}] is invalid.`, true);
+            }
+        }
+        else if (prefix === '/master') {
+            if (suffix.length === 2 || suffix.length === 3) {
+                const typeOf = (name) => this._reflector().findTypeByName(name);
+                const mainTypeName = suffix[0];
+                const idStr = suffix[1];
+                const menuItemTypeName = suffix[2];
+                if (!typeOf(mainTypeName) || menuItemTypeName && !typeOf(menuItemTypeName)) {
+                    this._openToastForError('Entity type error.', `[${mainTypeName}]${menuItemTypeName ? ` or [${menuItemTypeName}]` : ''} entity type is not registered. Please make sure that entity type is correct.`, true);
+                } else if (isNaN(Number(idStr))) {
+                    this._openToastForError('Master entity ID error.', `The entity ID [${idStr}] for master is not integer number.`, true);
+                } else {
+                    const entity = this._reflector().newEntity(mainTypeName);
+                    entity['id'] = parseInt(idStr);
+                    if (menuItemTypeName) {
+                        this.tgOpenMasterAction.modifyFunctionalEntity = (bindingEntity) => {
+                            bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
+                            delete this.tgOpenMasterAction.modifyFunctionalEntity;
+                        };
+                    }
+                    this.tgOpenMasterAction._runDynamicAction(() => entity, null);
+                }}
+            else {
+                this._openToastForError('URI error.', `The URI [${this._subroute.path}] for master is incorrect. It should contain entity type and id [and optional type of compound menu item] separated with '/'.`, true);
+            }
+        }
+        else {
+            this._openToastForError('URI error.', `The URI [${this._route.path}] is invalid.`, true);
         }
     },
     
@@ -324,14 +474,15 @@ Polymer({
                 if (!this.disableNextHistoryChange) {
                     if (historySteps > 0) { // moving back
                         if (historySteps > 1) { // 'multiple back' action
-                            if (!this._closeAllDialogs()) { // try to close all dialogs and, if not closed, go forward to remain history not changed
-                                window.history.go(historySteps);
-                            } else { // otherwise the history changes already occurred and just change the page
-                                this._changePage();
-                            }
+                            this._closeAllDialogs().then(obj => {// Attempts to close all dialogs.
+                                this._changePage(); // If it resolves, just change the page because the history change has already occurred.
+                            }).catch (e => {
+                                window.history.go(historySteps); // If it rejects, then go forward to keep the history unchanged.
+                            });
                         } else { // 'single back' action
-                            window.history.forward(); // to remain history not changed
-                            this._closeDialog(currentOverlay);
+                            this._closeDialog(currentOverlay).finally(() => {// Attempts to close all dialogs.
+                                window.history.forward(); // to remain history not changed
+                            });
                         }
                     } else { // moving forward ('multiple forward' action or 'forward' action)
                         window.history.go(historySteps); // to remain history not changed
@@ -349,7 +500,7 @@ Polymer({
     _loadApplicationInfrastructureIntoHistory: function () {
         if (this._route.path) {
             const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
-            const urlForMenu = new URL("/#/menu", window.location.protocol + '//' + window.location.host).href;
+            const urlForMenu = this._urlForMainMenu();
             const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
             window.history.replaceState({currIndex: 0}, '', urlForRoot);
             window.history.pushState({currIndex: 1}, '', urlForMenu);
@@ -358,7 +509,14 @@ Polymer({
             this._routeChanged();
         }
     },
-    
+
+    /// Returns a `String` URL for main menu view of the application.
+    /// Main menu view is suitable for opening Entity Master links, both "tiny" and '/master/...' ones for persisted entities.
+    ///
+    _urlForMainMenu: function () {
+        return new URL('/#/menu', window.location.protocol + '//' + window.location.host).href;
+    },
+
     /**
      * Actually changes the page; if the page is about to change to 'root' page (for e.g. https://tgdev.com:8091), then it moves forward to corresponding menu,
      * which should definitely exist (https://tgdev.com:8091/#/menu).
@@ -375,20 +533,24 @@ Polymer({
      * In case where 'multiple back' occurs then all dialogs will be closed (if able) and multiple history back action will be performed.
      *
      * This method skips all overlays and insertion points elements that should 'skipHistoryAction'.
+     * Returns a promise that resolves if all dialogs and insertion points are closed successfully; otherwise, it is rejected.
      */
     _closeAllDialogs: function () {
-        return this._closeDialogsInTheList(this._manager._overlays) && this._closeDialogsInTheList(InsertionPointManager._insertionPoints);
+        return this._closeDialogsInTheList(this._manager._overlays).then(obj => {
+            return this._closeDialogsInTheList(InsertionPointManager._insertionPoints);
+        });
     },
 
-    _closeDialogsInTheList : function (overlays) {
+    /**
+     * Tries to close all dialogs in the given list. Returns a promise that resolves when all dialogs are closed successfully or rejects when the first promise is rejected.
+     * 
+     * @param {Array} overlays - list of all the dialogs to close.
+     * @returns 
+     */
+    _closeDialogsInTheList : async function (overlays) {
         for (let i = overlays.length - 1; i >= 0; i--) {
             if (!skipHistoryAction(overlays[i])) {
-                this._closeDialog(overlays[i]);
-            }
-        }
-        for (let i = overlays.length - 1; i >= 0; i--) {
-            if (overlays[i].opened && !skipHistoryAction(overlays[i])) {
-                return false;
+                await this._closeDialog(overlays[i]);
             }
         }
         return true;
@@ -396,12 +558,14 @@ Polymer({
     
     /**
      * Performs dialog/insertion-point closing through custom method 'closeDialog' (or in the simplest case just uses iron-overlay-behavior's 'close' method).
+     * Returns a promise that resolves if the dialog is closed successfully; otherwise, it is rejected.
      */
     _closeDialog: function (dialog) {
         if (dialog.closeDialog) {
-            dialog.closeDialog();
+            return dialog.closeDialog();
         } else {
             dialog.close();
+            return Promise.resolve(true);
         }
     },
     
@@ -445,31 +609,50 @@ Polymer({
         }
     },
 
-    /**
-     * Selects the specified view. If the view is opened in different module then play transition animation between modules.
-     * 
-     * @param {String} selected 
-     */
+    /// Perform transition to a path (new or the same).
+    ///
+    /// The transition logic should be no different whether it occurs with animation (module menu <=> module menu item <=>
+    ///   <=> main menu) or without animation (main menu <=> tiny link master <=> persisted link master).
+    ///
+    /// Please note, that some links (/tiny/...) are getting rewritten and will not be left in a history.
+    /// And it does not mean that transitions to that links are prohibited, it just means that further user transitions
+    ///   to previously transitioned such links through Back / Forward buttons will not occur.
+    ///
+    _performTransition: function (selected, getCurrentlySelectedElement) {
+        // Is transition targeted to some Entity Master link?
+        if (['master', 'tiny'].includes(selected)) {
+            // Perform transition.
+            this._selectedSubmodule = this._subroute.path;
+            // Open an Entity Master conforming to that transition.
+            this._tgOpenMasterAction();
+        }
+        // If transitioned to the same item? (e.g. on mobile during Entity Master closing through Back button we use 'formward()' call)
+        else if (this._selectedSubmodule === this._subroute.path) {
+            const currentlySelectedElement = getCurrentlySelectedElement();
+            // Activate it.
+            if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
+                currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
+            }
+        } else {
+            // Perform regular transition.
+            this._selectedSubmodule = this._subroute.path;
+        }
+    },
+
+    /// Selects the specified view.
+    /// If the view is opened in different module then play transition animation between modules.
+    ///
     _setSelected: function (selected) {
         if (this.menuConfig) {
             const moduleToSelect = findModule(selected, this.menuConfig);
             const currentlySelected = this.$.pages.selected;
             const currentlySelectedElement = currentlySelected && this.shadowRoot.querySelector("[name='" + currentlySelected + "']");
-            //If module to select is the same as currently selected then just open selected menu item (e.i open entity centre or master)
+            // If module to select is the same as currently selected then just open selected menu item (i.e. open entity centre or master).
             if (currentlySelected === moduleToSelect) {
-                if (selected === 'master') {
-                    this._selectedSubmodule = this._subroute.path;
-                    this._tgOpenMasterAction();
-                } else if (this._selectedSubmodule === this._subroute.path) {
-                    if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
-                        currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
-                    }
-                } else {
-                    this._selectedSubmodule = this._subroute.path;
-                }
+                this._performTransition(selected, () => currentlySelectedElement);
                 return;
             }
-            //Otherwise configure exit animation on currently selected module and entry animation on module to select
+            // Otherwise, configure exit animation on currently selected module and entry animation on module to select.
             const elementToSelect = moduleToSelect && this.shadowRoot.querySelector("[name='" + moduleToSelect + "']");
             if (currentlySelectedElement) {
                 currentlySelectedElement.configureExitAnimation(moduleToSelect);
@@ -483,7 +666,7 @@ Polymer({
                 return;
             }
         }
-        //Play the transition animation. The view will be selected on animation finish event handler
+        // Play the transition animation. The view will be selected on animation finish event handler.
         this.selectAfterRender = selected;
     },
     
@@ -492,26 +675,13 @@ Polymer({
         return e.returnValue;
     },
 
-    /**
-     * Animation finish event handler. This handler opens master or centre if module transition occurred because of user action.
-     * 
-     * @param {Event} e 
-     * @param {Object} detail 
-     * @param {Object} source 
-     */
+     /// Animation finish event handler.
+     /// This handler opens master or centre if module transition occurred because of user action.
+     ///
     _animationFinished: function (e, detail, source) {
-        if (e.target === this.$.pages){
+        if (e.target === this.$.pages) {
             this._selectedModule = this._routeData.moduleName;
-            if (this._routeData.moduleName === 'master') {
-                this._selectedSubmodule = this._subroute.path;
-                this._tgOpenMasterAction();
-            } else if (this._selectedSubmodule === this._subroute.path) {
-                if (detail.toPage.selectSubroute) {
-                    detail.toPage.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
-                }
-            } else {
-                this._selectedSubmodule = this._subroute.path;
-            }
+            this._performTransition(this._routeData.moduleName, () => detail.toPage);
         }
     },
 
@@ -597,8 +767,6 @@ Polymer({
         this.entityType = "ua.com.fielden.platform.menu.Menu";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
-            this.$.appConfig.setSiteAllowlist(entity.siteAllowlist.map(site => new RegExp(site)));
-            this.$.appConfig.setDaysUntilSitePermissionExpires(entity.daysUntilSitePermissionExpires);
             entity.menu.forEach(menuItem => {
                 menuItem.actions.forEach(action => {
                     action._showDialog = this._showDialog;
@@ -622,6 +790,11 @@ Polymer({
             // selection happens by id, but for all for safety reasons; for example, for web tests these elements do not exist
             document.querySelectorAll("#splash-background").forEach(bg => bg.style.display = 'none'); // background
             document.querySelectorAll("#splash-text").forEach(txt => txt.style.display = 'none'); // text
+            // Show toaster if application configuration is stale or default, which means that configuration failed to load.
+            if (window.TG_APP.isStale) {
+                this.toaster && this.toaster.openToastForError('Configuration load error', `${window.TG_APP.errorMsg}`, true)
+            } 
+
         }.bind(this);
         this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
         this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
@@ -640,7 +813,7 @@ Polymer({
         //Add iron-resize event listener
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
         
-        //Add URI (location) change event handler to set history state. 
+        // Add URI (location) change event handler to set history state.
         window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
 
         //Add resize listener that checks whether screen resolution changed

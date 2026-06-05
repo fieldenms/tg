@@ -1,45 +1,32 @@
 package ua.com.fielden.platform.web.centre.api.actions.impl;
 
-import static java.util.Arrays.asList;
-
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.inject.Injector;
-
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.tiny.IActionIdentifier;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder0;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder0WithViews;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder1;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder2;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder3;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder4;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder4IconStyle;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder5;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder6;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7a;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder8;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder8a;
-import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder9;
+import ua.com.fielden.platform.web.centre.api.actions.*;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.compound.Compound;
 
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+
+import static java.util.Arrays.asList;
+
 public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder0WithViews<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder4IconStyle<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
     private Injector injector;
     private IWebUiBuilder builder;
     private Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity;
+    private String actionIdentifier;
     private CentreContextConfig context;
     private String icon;
     private String iconStyle;
@@ -92,6 +79,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     public EntityActionConfig build() {
         return EntityActionConfig.createActionConfig(
             functionalEntity,
+            actionIdentifier,
             context,
             icon,
             iconStyle,
@@ -233,4 +221,20 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
         excludeInsertionPoints.addAll(asList(otherInsertionPoints));
         return this;
     }
+
+    @Override
+    public IEntityActionBuilder0b<T> withTinyHyperlink(final IActionIdentifier actionIdentifier) {
+        if (actionIdentifier == null || actionIdentifier.toString().isBlank()) {
+            throw new InvalidArgumentException("[actionIdentifier] must be not null and not blank.");
+        }
+
+        this.actionIdentifier = actionIdentifier.toString();
+        return this;
+    }
+
+    @Override
+    public IEntityActionBuilder0b<T> withTinyHyperlink(final Optional<IActionIdentifier> maybeActionIdentifier) {
+        return maybeActionIdentifier.map(this::withTinyHyperlink).orElse(this);
+    }
+
 }

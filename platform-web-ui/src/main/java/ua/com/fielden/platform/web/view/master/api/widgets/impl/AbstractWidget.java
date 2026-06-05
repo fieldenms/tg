@@ -1,12 +1,5 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.impl;
 
-import static java.util.Optional.of;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -15,17 +8,20 @@ import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 
-/**
- * The base implementation box for generic information for all widgets.
- *
- * The information includes <code>entityType</code> type with <code>propertyName</code> (the other derivatives will be domain-driven <code>title</code>, <code>description</code>
- * etc.).
- *
- * All widget implementations should be based on this one and should be extended by widget-specific configuration data.
- *
- * @author TG Team
- *
- */
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
+/// The base implementation box for generic information for all widgets.
+///
+/// The information includes `entityType` type with `propertyName` (the other derivatives will be domain-driven `title`, `description`
+/// etc.).
+///
+/// All widget implementations should be based on this one and should be extended by widget-specific configuration data.
+///
 public abstract class AbstractWidget implements IRenderable, IImportable {
     private final String propertyName;
     private final String title;
@@ -36,12 +32,8 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
     private boolean skipValidation = false;
     private boolean debug = false;
 
-    /**
-     * Creates {@link AbstractWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
-     *
-     * @param entityType
-     * @param propertyName
-     */
+    /// Creates [AbstractWidget] from `entityType` type and `propertyName` and the name&path of widget.
+    ///
     public AbstractWidget(final String widgetPath, final Pair<String, String> titleDesc, final String propertyName) {
         this.widgetName = extractNameFrom(widgetPath);
         this.widgetPath = widgetPath;
@@ -51,38 +43,26 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         this.desc = titleDesc.getValue();
     }
 
-    /**
-     * The name of the property to which this editor will be bound.
-     *
-     * @return
-     */
+    /// The name of the property to which this editor will be bound.
+    ///
     public String propertyName() {
         return propertyName;
     }
 
-    /**
-     * The title of the property to which this editor will be bound.
-     *
-     * @return
-     */
+    /// The title of the property to which this editor will be bound.
+    ///
     protected String title() {
         return title;
     }
 
-    /**
-     * The description of the property to which this editor will be bound.
-     *
-     * @return
-     */
+    /// The description of the property to which this editor will be bound.
+    ///
     protected String desc() {
         return desc;
     }
 
-    /**
-     * Creates an attributes that will be used for widget component generation (generic attributes).
-     *
-     * @return
-     */
+    /// Creates an attributes that will be used for widget component generation (generic attributes).
+    ///
     private Map<String, Object> createAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
         if (isDebug()) {
@@ -102,13 +82,10 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         return attrs;
     }
 
-    /**
-     * Creates an attributes that will be used for widget component generation.
-     * <p>
-     * Please, implement this method in descendants (for concrete widgets) to extend the attributes set by widget-specific attributes.
-     *
-     * @return
-     */
+    /// Creates an attributes that will be used for widget component generation.
+    ///
+    /// Please, implement this method in descendants (for concrete widgets) to extend the attributes set by widget-specific attributes.
+    ///
     protected Map<String, Object> createCustomAttributes() {
         return new LinkedHashMap<>();
     };
@@ -130,12 +107,8 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         return action;
     }
 
-    /**
-     * Extracts widget name from its path.
-     *
-     * @param path
-     * @return
-     */
+    /// Extracts widget name from its path.
+    ///
     public static String extractNameFrom(final String path) {
         final int lastSlashInd = path.lastIndexOf('/');
         if (lastSlashInd < 0) {

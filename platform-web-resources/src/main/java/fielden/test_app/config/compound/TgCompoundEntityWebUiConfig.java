@@ -1,19 +1,6 @@
 package fielden.test_app.config.compound;
 
-import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
-import static ua.com.fielden.platform.web.test.server.config.StandardActions.actionAddDesc;
-import static ua.com.fielden.platform.web.test.server.config.StandardActions.actionEditDesc;
-import static ua.com.fielden.platform.web.test.server.config.StandardScrollingConfigs.standardEmbeddedScrollingConfig;
-import static ua.com.fielden.platform.web.test.server.config.StandardScrollingConfigs.standardStandaloneScrollingConfig;
-
-import java.util.Optional;
-
 import com.google.inject.Injector;
-
 import fielden.test_app.main.menu.compound.MiTgCompoundEntity;
 import fielden.test_app.main.menu.compound.MiTgCompoundEntityMaster_TgCompoundEntityChild;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
@@ -48,6 +35,18 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.compound.Compound;
 import ua.com.fielden.platform.web.view.master.api.compound.impl.CompoundMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+
+import java.util.Optional;
+
+import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
+import static ua.com.fielden.platform.web.test.server.config.StandardActions.actionAddDesc;
+import static ua.com.fielden.platform.web.test.server.config.StandardActions.actionEditDesc;
+import static ua.com.fielden.platform.web.test.server.config.StandardScrollingConfigs.standardEmbeddedScrollingConfig;
+import static ua.com.fielden.platform.web.test.server.config.StandardScrollingConfigs.standardStandaloneScrollingConfig;
 
 /**
  * {@link TgCompoundEntity} Web UI configuration.

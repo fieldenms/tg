@@ -165,11 +165,11 @@ public class GraphQLService implements IWebApi {
                     .toSpecification();
             final var errors = errors(result);
             if (!errors.isEmpty()) {
-                LOGGER.error(ERR_EXECUTING_QUERY.formatted(input, errors));
+                LOGGER.error(() -> ERR_EXECUTING_QUERY.formatted(input, errors));
             }
             return result;
         } catch (final Throwable throwable) {
-            LOGGER.error(ERR_EXECUTING_QUERY_WITH_EX.formatted(input), throwable);
+            LOGGER.error(() -> ERR_EXECUTING_QUERY_WITH_EX.formatted(input), throwable);
             throw throwable;
         }
     }

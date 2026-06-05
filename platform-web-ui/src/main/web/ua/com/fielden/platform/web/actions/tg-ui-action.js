@@ -12,7 +12,6 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { tearDownEvent, getFirstEntityType, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
-import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
@@ -63,6 +62,8 @@ const template = html`
     </paper-button>
     <paper-spinner id="spinner" active="[[isActionInProgress]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
+
+const SHARE_ACTION_SIMPLE_NAME = 'ShareAction';
 
 /**
  * Returns 'true' in case where obj is not defined (aka 'null', 'undefined' or not undefined), 'false' otherwise. 
@@ -176,7 +177,16 @@ Polymer({
         },
 
         /**
-         * Defines hierarchycal structure of contexts related to the view where this action is. This related contexts are contexts for insertion points on entity centre. 
+         * Determines whether the chosen entity (the entity behind chosenProperty) is required to be sent inside the centre context.
+         *
+         * 'true' / 'false' string. 'false' (or absent) means the slot will be proxied after server-side deserialisation.
+         */
+        requireChosenEntity: {
+            type: String
+        },
+
+        /**
+         * Defines hierarchycal structure of contexts related to the view where this action is. This related contexts are contexts for insertion points on entity centre.
          */
         relatedContexts: {
             type: Array
@@ -318,6 +328,23 @@ Polymer({
             }
         },
 
+        /**
+         * The 'chosenEntity' should resolve to the entity behind 'chosenProperty' for the column that triggered the action.
+         * For an entity-typed leaf this is the value of that property; for a union-typed leaf this is the active member instance
+         * (or null when the union has no active member);
+         * for a simple-typed leaf this is the entity that holds that property — the row entity for a top-level property,
+         * or the entity at the deepest entity-typed prefix of the dotted path (e.g. for 'vehicle.make.name' it is the entity at 'vehicle.make'),
+         * with the holder unwrapped to its active member when it is itself a union (e.g. for a common simple property accessed as 'unionProp.commonProp');
+         * for a dynamic column this is the collection item whose key matches the column property.
+         * Defaults to a function returning null, populated only when the action's context configuration opts in via withChosenEntity().
+         */
+        chosenEntity: {
+            type: Function,
+            value: function () {
+                return () => null;
+            }
+        },
+
         /** Indicates of the action is currently in progress.
          * The action becomes in progress on before retrieval and stops being in progress on post save (successful or otherwise).
          */
@@ -350,7 +377,7 @@ Polymer({
         dynamicAction : {
             type: Boolean,
             reflectToAttribute: true,
-            value: false,
+            value: false
         },
 
         /**
@@ -461,16 +488,17 @@ Polymer({
     created: function () {
         const self = this;
         this._reflector = new TgReflector();
-        this._serialiser = new TgSerialiser();
 
         /**
          * Runs dynamic action with the specified mandatory context. Both 'currentEntity' and 'chosenProperty' must be specified.
          * 'chosenProperty' can be null -- in this case dynamic action runs for 'currentEntity' itself.
+         * 'chosenEntity' is optional and only meaningful when the action's context configuration opts in via withChosenEntity().
          */
-        self._runDynamicAction = function (currentEntity, chosenProperty) {
+        self._runDynamicAction = function (currentEntity, chosenProperty, chosenEntity) {
             this.requireSelectedEntities = 'ONE';
             this.currentEntity = currentEntity;
             this.chosenProperty = chosenProperty;
+            this.chosenEntity = chosenEntity || (() => null);
             this.rootEntityType = null;
 
             this._run();
@@ -483,6 +511,7 @@ Polymer({
             this.requireSelectedEntities = 'NONE';
             this.currentEntity = () => null;
             this.chosenProperty = null;
+            this.chosenEntity = () => null;
             this.rootEntityType = rootEntityType;
 
             this._run();
@@ -520,16 +549,20 @@ Polymer({
 
             self.persistActiveElement();
 
-            if (this.dynamicAction && (this.rootEntityType || this.currentEntity())) {
-                const currentEntityType = this.rootEntityType ? this._reflector.getType(this.rootEntityType) : getFirstEntityType(this.currentEntity(), this.chosenProperty); // currentEntityType is never empty due to either this.rootEntityType not empty or this.currentEntity() not empty
+            let isNewDynamicAction = false;
+            // If root entity type is present then it should be used for entity master.
+            const dynamicActionType = (isNewDynamicAction = this._getNewDynamicActionType())
+                // Otherwise, get the type from `this.currentEntity()` and chosen property.
+                || this._getEditDynamicActionType();
+            if (dynamicActionType) {
                 if (!this.elementName) { // element name for dynamic action is not specified at first run
                     this._originalShortDesc = this.shortDesc; // it means that shortDesc wasn't changed yet
                 }
                 this.isActionInProgress = true;
                 try {
-                    const masterInfo = this.rootEntityType ? currentEntityType.newEntityMaster() : currentEntityType.entityMaster();
+                    const masterInfo = isNewDynamicAction ? dynamicActionType.newEntityMaster() : dynamicActionType.entityMaster();
                     if (!masterInfo) {
-                        const masterErrorMessage = `Could not find master for entity type: ${currentEntityType.notEnhancedFullClassName()}.`;
+                        const masterErrorMessage = `Could not find master for entity type: ${dynamicActionType.notEnhancedFullClassName()}.`;
                         this.toaster && this.toaster.openToastForError('Entity Master Error', masterErrorMessage, true);
                         throw { msg: masterErrorMessage };
                     }
@@ -549,9 +582,26 @@ Polymer({
             tearDownEvent(event);
         }).bind(self);
 
+        /**
+         * Returns the type for the Entity Master to be opened in dynamic NEW action case.
+         */
+        self._getNewDynamicActionType = (function () {
+            return this.dynamicAction && this.rootEntityType && this._reflector.getType(this.rootEntityType);
+        }).bind(self);
+
+        /**
+         * Returns the type for the Entity Master to be opened in dynamic EDIT action case.
+         */
+        self._getEditDynamicActionType = (function () {
+            return !this._getNewDynamicActionType() && this.dynamicAction && this.currentEntity() && getFirstEntityType(this.currentEntity(), this.chosenProperty);
+        }).bind(self);
+
         self._onExecuted = (function (e, master, source) {
             //self constatnt is created to have a reference on action in functions created for entity master like postRetrieved, postSaved etc.
             const self = this;
+
+            // Set master for this action.
+            self._masterReferenceForTesting = master;
 
             // spinner requiredness assignment should be before action's progress changes as it is used in its observer
             // the spinner is required only if the action has no UI part
@@ -659,9 +709,6 @@ Polymer({
                         self.modifyFunctionalEntity(master._currBindingEntity, master, self);
                     }
 
-                    // Set master for this action.
-                    self._masterReferenceForTesting = master;
-
                     if (master.saveOnActivation === true) {
                         return master.save(); // saving promise
                     }
@@ -710,21 +757,78 @@ Polymer({
         // creates the context and
         const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.actionKind, self.numberOfAction, self.relatedContexts, self.parentCentreContext);
         // enhances it with the information of 'currentEntity()' (primary / secondary actions) and
-        if (self.currentEntity()) {
-            self._enhanceContextWithCurrentEntity(context, self.currentEntity(), self.requireSelectedEntities);
+        const currentEntity = self.currentEntity();
+        if (currentEntity) {
+            self._enhanceContextWithCurrentEntity(context, currentEntity, self.requireSelectedEntities);
         }
         // enhances it with information of what 'property' was chosen (property result-set actions)
         if (self.chosenProperty !== null) {
-            self._enhanceContextWithChosenProperty(context, self.chosenProperty);
+            self._enhanceContextWithChosenProperty(context,
+                // In case of dynamic EDIT action, determine chosen property type and, if union, extend with union active property.
+                //   Please note, that actual union active property type is already assigned into this action for its attributes.
+                //   See `tg-polymer-utils.getFirstEntityTypeAndProperty` for more details.
+                self._getEditDynamicActionType() && self._extendUnionChosenProperty(currentEntity, self.chosenProperty)
+                // Otherwise, if non-dynamic, or non-EDIT, or non-union leaf value, -- use `self.chosenProperty` as usual.
+                || self.chosenProperty
+            );
+        }
+        // enhances it with the resolved 'chosenEntity()' when the action opted in via withChosenEntity()
+        if (self.requireChosenEntity === 'true') {
+            const chosenEntity = self.chosenEntity && self.chosenEntity();
+            if (chosenEntity) {
+                self._enhanceContextWithChosenEntity(context, chosenEntity);
+            }
         }
         if (self.rootEntityType) {
-            this._reflector.setCustomProperty(context, '@@rootEntityType', self.rootEntityType);
+            self._reflector.setCustomProperty(context, '@@rootEntityType', self.rootEntityType);
+        }
+        // Determine whether the action represents special Share action for functional / new entities.
+        if (self.elementName === `tg-${SHARE_ACTION_SIMPLE_NAME}-master`) {
+            // Get a dialog, that induced creation of the action (no support for insertion points for now).
+            const dialog = self._dialog;
+            // Get dialog's last executed action. This action will represent the top most Entity Master:
+            //   1. WorkOrderCopyAction
+            //     -> returns <tg-ui-action> for WorkOrderCopyAction
+            //   2. EntityNewAction with Priority
+            //     -> returns <tg-ui-action> for EntityNewAction
+            //   3. OpenWorkOrderMasterAction with WorkOrderMaster_OpenMain_MenuItem with WorkOrder
+            //     -> returns <tg-ui-action> for OpenWorkOrderMasterAction
+            if (dialog && dialog._lastAction && dialog._lastAction.attrs && dialog._lastAction.attrs.actionIdentifier) {
+                // Put action identifier for that action into custom object of the context.
+                self._reflector.setCustomProperty(context, '@@actionIdentifier', dialog._lastAction.attrs.actionIdentifier);
+            }
+            if (self._sharedUri) {
+                self._reflector.setCustomProperty(context, '@@sharedUri', self._sharedUri);
+            }
         }
         return context;
     },
 
+    /**
+     * Concatenates `chosenProperty` with active property, if leaf value (`currentEntity.get(chosenProperty)`) is union.
+     * Returns nothing otherwise.
+     */
+    _extendUnionChosenProperty: function (currentEntity, chosenProperty) {
+        // Be carefull with undefined `chosenProperty`, which was not as per design (`null` is expected for empty value).
+        // Undefined `chosenProperty` was actually used for locators.
+        if (typeof chosenProperty !== 'undefined') {
+            const entity = currentEntity.get(chosenProperty);
+            const entityType = entity && entity.constructor.prototype.type && entity.constructor.prototype.type.call(entity);
+            if (entityType && entityType.isUnionEntity()) {
+                const activeProp = entity._activeProperty();
+                if (activeProp) {
+                    return (chosenProperty ? chosenProperty + '.' : '') + activeProp;
+                }
+            }
+        } // Otherwise, it returns nothing (undefined).
+    },
+
     _enhanceContextWithChosenProperty: function (context, chosenProperty) {
         context["chosenProperty"] = chosenProperty;
+    },
+
+    _enhanceContextWithChosenEntity: function (context, chosenEntity) {
+        context["chosenEntity"] = chosenEntity;
     },
 
     _enhanceContextWithCurrentEntity: function (context, currentEntity, requireSelectedEntities) {

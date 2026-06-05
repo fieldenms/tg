@@ -3,6 +3,9 @@ package ua.com.fielden.platform.types;
 import ua.com.fielden.platform.types.exceptions.ValueObjectException;
 
 public class Colour {
+
+    public static final String HASHLESS_UPPERCASED_COLOUR_VALUE = "hashlessUppercasedColourValue";
+
     public final String hashlessUppercasedColourValue;
 
     public static final Colour BLACK = new Colour("000000");

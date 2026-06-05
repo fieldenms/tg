@@ -1,18 +1,11 @@
 package ua.com.fielden.platform.web.factories.webui;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Function;
-
+import com.google.inject.Injector;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.MediaType;
 import org.restlet.data.Method;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -24,12 +17,13 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.FileProcessingResource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 
-/**
- * Factory to instantiate {@link FileProcessingResource}.
- *
- * @author TG Team
- *
- */
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Function;
+
+/// Factory to instantiate [FileProcessingResource].
+///
 public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStream<?>> extends Restlet {
     protected final Injector injector;
     protected final Class<T> entityType;
@@ -52,7 +46,8 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
             final IDates dates,
             final long fileSizeLimitKb,
             final MediaType type, // at least one type is required
-            final MediaType... types) {
+            final MediaType... types)
+    {
         this.eseRegister = eseRegister;
         this.injector = injector;
         this.userProvider = injector.getInstance(IUserProvider.class);

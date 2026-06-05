@@ -66,8 +66,7 @@ class GenRefCountSqlImpl implements IGenRefCountSql {
         final var entityDependencyMap = entityDependencyMap(entityTypes);
 
         entityTypes.stream()
-                .filter(EntityUtils::isPersistentEntityType)
-                .filter(EntityUtils::isActivatableEntityType)
+                .filter(EntityUtils::isActivatablePersistentEntityType)
                 .sorted(comparing(Class::getSimpleName))
                 .forEach(entityType -> {
                     sqls.add("UPDATE %s SET %s = 0".formatted(tableName(entityType), columnName(entityType, REF_COUNT)));

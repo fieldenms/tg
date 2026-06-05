@@ -15,7 +15,7 @@ final class StandaloneOrderBy_OrderingItemCloseable //
 
     @Override
     public OrderingModel model() {
-        return new OrderingModel(builder.model().getTokenSource());
+        return new OrderingModel(builder.model().getTokens());
     }
 
         @Override

@@ -21,6 +21,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.resources.test.AbstractWebResourceWithDaoTestCase;
 import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
 import ua.com.fielden.platform.web.test.TestWebApplication;
 
@@ -31,7 +32,7 @@ import static org.junit.Assert.*;
 
 /// A test case to ensure correct HTTP responses (HTTP codes and cookies) to requests for accessing guarded web resources.
 ///
-public class WebResourceGuardTestCase extends AbstractDaoTestCase {
+public class WebResourceGuardTestCase extends AbstractWebResourceWithDaoTestCase {
 
     private final UserSessionDao coSession = co$(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);

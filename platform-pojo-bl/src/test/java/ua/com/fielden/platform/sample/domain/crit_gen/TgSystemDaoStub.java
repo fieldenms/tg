@@ -106,6 +106,11 @@ public class TgSystemDaoStub implements ITgSystem {
     }
 
     @Override
+    public Optional<TgSystem> getEntityOptional(final QueryExecutionModel<TgSystem, ?> model) {
+        return Optional.empty();
+    }
+
+    @Override
     public int count(final EntityResultQueryModel<TgSystem> model, final Map<String, Object> paramValues) {
         return 0;
     }

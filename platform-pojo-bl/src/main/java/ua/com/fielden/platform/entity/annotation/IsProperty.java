@@ -180,9 +180,9 @@ public @interface IsProperty {
      *  <li>{@code #i} – the i-th key member (this must be the starting token in a template);
      *  <li>{@code i.j} – the j-th key member in the i-th key member (the i-th key member must be a composite entity).
      *      Arbitrary depth of key members is supported (e.g., {@code i.*.z}, where {@code *} may be replaced with any number of key members).
-     *  <li>{@code t} – title of a preceeding key member
+     *  <li>{@code t} – title of a preceding key member
      *      (e.g., {@code #1t} represents the title of the 1st key member, {@code #1.2t} - title of the 2nd key member in the 1st key member);
-     *  <li>{@code v} – value of a preceeding key member
+     *  <li>{@code v} – value of a preceding key member
      *      (e.g., {@code #1v} represents the value of the 1st key member, {@code #1.2v} - value of the 2nd key member in the 1st key member);
      *  <li>{@code s} – an optional key member separator (mutually exclusive with {@code t}).
      * </ol>

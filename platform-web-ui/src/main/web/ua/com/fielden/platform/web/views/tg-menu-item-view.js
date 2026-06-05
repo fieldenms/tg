@@ -280,13 +280,6 @@ Polymer({
             return elementToLoad.wasLoaded;
         }
         return true;
-    },
-
-    canLeave: function () {
-        const elementToLoad = this.shadowRoot.querySelector("#elementToLoad");
-        if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.canLeave === 'function') {
-            return elementToLoad.loadedElement.canLeave();
-        }
-        return undefined;
     }
+
 });

@@ -119,6 +119,11 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     }
 
     @Override
+    public Optional<SecondLevelEntity> getEntityOptional(final QueryExecutionModel<SecondLevelEntity, ?> model) {
+        return Optional.empty();
+    }
+
+    @Override
     public int count(final EntityResultQueryModel<SecondLevelEntity> model, final Map<String, Object> paramValues) {
         // TODO Auto-generated method stub
         return 0;
