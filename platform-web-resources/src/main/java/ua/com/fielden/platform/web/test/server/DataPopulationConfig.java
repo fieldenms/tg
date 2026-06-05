@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -15,13 +16,9 @@ import java.util.Properties;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 import static ua.com.fielden.platform.utils.MiscUtilities.propertiesUnionLeft;
 
-/**
- * Provides Web UI Testing Server specific implementation of {@link IDomainDrivenTestCaseConfiguration}
- * to be used for creation and population of the target development database.
- *
- * @author TG Team
- */
-public final class DataPopulationConfig implements IDomainDrivenTestCaseConfiguration {
+/// Provides Web UI Testing Server specific implementation of [IDomainDrivenTestCaseConfiguration] to be used for creation and population of the target development database.
+///
+public class DataPopulationConfig implements IDomainDrivenTestCaseConfiguration {
 
     private final Injector injector;
 
@@ -43,18 +40,33 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             defaultProps.setProperty("email.smtp", "localhost");
             defaultProps.setProperty("email.fromAddress", "tg@localhost");
 
-            final var finalProps = propertiesUnionLeft(props, defaultProps);
-
-            final ApplicationDomain appDomain = new ApplicationDomain();
-            injector = new ApplicationInjectorFactory()
-                    .add(new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), finalProps))
-                    .add(new NewUserEmailNotifierTestIocModule())
-                    .add(new DataFilterTestIocModule())
-                    .add(new IocModule())
-                    .getInjector();
+            injector = createFactory(propertiesUnionLeft(props, defaultProps)).getInjector();
         } catch (final Exception e) {
             throw new IllegalStateException("Could not create data population configuration.", e);
         }
+    }
+
+    protected ApplicationInjectorFactory createFactory(final Properties properties) {
+        final ApplicationDomain appDomain = new ApplicationDomain();
+        return new ApplicationInjectorFactory()
+                .add(createApplicationServerModule(appDomain, properties))
+                .add(new NewUserEmailNotifierTestIocModule())
+                .add(new DataFilterTestIocModule())
+                .add(createAdditionalIocModule());
+    }
+
+    /// Creates the application-server [Module] used by [#createFactory].
+    /// Subclasses can override to substitute a different (e.g. web-aware) server module.
+    ///
+    protected TgTestApplicationServerIocModule createApplicationServerModule(final ApplicationDomain appDomain, final Properties properties) {
+        return new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), properties);
+    }
+
+    /// Creates an additional [Module] appended at the end of the factory chain.
+    /// Subclasses can override to substitute a module appropriate for their context (e.g. one that does not duplicate bindings already provided by their server module).
+    ///
+    protected Module createAdditionalIocModule() {
+        return new IocModule();
     }
 
     @Override

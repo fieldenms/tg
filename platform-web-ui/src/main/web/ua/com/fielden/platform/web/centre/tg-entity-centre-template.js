@@ -28,6 +28,9 @@ import '/resources/centre/tg-selection-criteria-styles.js';
 import { TgEntityCentreTemplateBehavior } from '/resources/centre/tg-entity-centre-template-behavior.js';
 import '/resources/centre/tg-entity-centre-insertion-point.js';
 import { TgReflector } from '/app/tg-reflector.js';
+// The following import statement are useful for pre/PostActions on Entity Centre actions.
+// This will be eliminated by pre/PostActions Imports API in #2407 (>= 3.0.0).
+import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 
 const selectionCritTemplate = html`
     <style include="tg-selection-criteria-styles"></style>

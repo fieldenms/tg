@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.web.centre;
 
-import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isCalculatedAndOfTypes;
-
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isCalculatedAndOfTypes;
 
 /**
  * Utilities for Web API (centre, master) and its implementation.
@@ -22,6 +22,9 @@ public class WebApiUtils {
      * The surrogate title of centre 'link' configuration. This is used when link with centre parameters opens.
      */
     public static final String LINK_CONFIG_TITLE = "_______________________link";
+    public static final String CONFIG_DOES_NOT_EXIST = "Configuration does not exist.";
+    public static final String SAVE_MSG = "Please save and try again.";
+    public static final String DUPLICATE_SAVE_MSG = "Please duplicate, save and try again.";
 
     /** Private default constructor to prevent instantiation. */
     private WebApiUtils() {

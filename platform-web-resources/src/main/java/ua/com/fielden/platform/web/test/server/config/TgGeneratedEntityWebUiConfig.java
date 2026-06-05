@@ -20,7 +20,10 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
-/** 
+
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
+
+/**
  * {@link TgGeneratedEntity} Web UI configuration.
  * 
  * @author TG Team
@@ -49,7 +52,7 @@ public class TgGeneratedEntityWebUiConfig {
      * @return created entity centre
      */
     private EntityCentre<TgGeneratedEntity> createCentre(final Injector injector) {
-        final String layout = LayoutComposer.mkGridForCentre(2, 2);
+        final String layout = LayoutComposer.mkVarGridForCentre(2, 2, 1);
 
         final EntityActionConfig standardNewAction = StandardActions.NEW_ACTION.mkAction(TgGeneratedEntity.class);
         final EntityActionConfig standardDeleteAction = StandardActions.DELETE_ACTION.mkAction(TgGeneratedEntity.class);
@@ -65,7 +68,8 @@ public class TgGeneratedEntityWebUiConfig {
                 .addCrit("this").asMulti().autocompleter(TgGeneratedEntity.class).also()
                 .addCrit("critOnlyMultiProp").asMulti().autocompleter(User.class).also()
                 .addCrit("critOnlySingleProp").asSingle().autocompleter(User.class).also()
-                .addCrit("createdBy").asMulti().autocompleter(User.class)
+                .addCrit("createdBy").asMulti().autocompleter(User.class).also()
+                .addCrit("requiredProp").asSingle().integer().setDefaultValue(single().integer().setValue(1).value())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)

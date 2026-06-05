@@ -1,24 +1,15 @@
 package ua.com.fielden.platform.ui.config;
 
+import ua.com.fielden.platform.algorithm.search.ITreeNode;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
-import ua.com.fielden.platform.algorithm.search.ITreeNode;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 import static ua.com.fielden.platform.error.Result.failure;
 
