@@ -199,7 +199,15 @@ export class TgDatetimePicker extends TgEditor {
     _formatText (_editingValue) {
         if (this.reflector().isEntity(this.entity)) {
             try {
+                // `_validMoment` can legitimately be null - in case if editor vaitaion was failed.
+                // In such cases the error appears as 'The entered date|time is incorrect'.
+                // However, at the time where tooltip computes, it may just be not yet computed.
+                // Force the computation here through `_approximate` method logic.
+                if (this._validMoment === null) {
+                    this._commitForDescendants();
+                }
                 return this.reflector().tg_toString(
+                    // `_validMoment` is already computed here and can be used.
                     this.convertFromString(_editingValue),
                     this.entity.type(),
                     this.propertyName,
