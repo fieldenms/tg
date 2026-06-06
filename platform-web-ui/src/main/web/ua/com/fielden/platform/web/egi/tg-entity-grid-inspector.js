@@ -2232,10 +2232,11 @@ Polymer({
         } else if (column.type === 'RichText') {
             const value = this.getBindedValue(entity, column).toString();
             return value && (`<div class="toastui-editor-contents" style="overflow:hidden;padding:8px;border-radius:2px;">${value}</div>`);
-        } else if (column.type === 'Date' && this._reflector.tg_determinePropertyType(realEntity.type(), realProperty) === 'Date') {
+        } else if (column.type?.startsWith?.('Date') && this._reflector.tg_determinePropertyType(realEntity.type(), realProperty) === 'Date') {
             const valueToFormat = this.getValueFromEntity(entity, column);
             // Date columns augment the tooltip with the server time-zone representation (see @DependentTimeZoneMode).
-            return this._reflector.tg_toString(valueToFormat, realEntity.type(), realProperty, { display: true, asTooltip: true });
+            const value = this._reflector.tg_toString(valueToFormat, realEntity.type(), realProperty, { display: true, asTooltip: true });
+            return value && ("<b>" + value + "</b>");
         } else {
             const value = this.getBindedValue(entity, column).toString();
             return value && ("<b>" + value + "</b>");
