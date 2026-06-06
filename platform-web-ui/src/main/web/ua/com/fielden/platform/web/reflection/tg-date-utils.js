@@ -41,12 +41,13 @@ export function _timeZoneFormat(prop, name) {
     return timeZone ? timeZoneFormats[timeZone][name] : moment.localeData().longDateFormat(name);
 };
 
-/// Converts 'dateMillis' to String-based date representation according to property configuration in 'prop' object.
+/// Calculates the momentjs format string for `dateMillis` based on `prop` configuration and the requested portion.
+/// Factored out of `_millisDateRepresentation` so alternative time-zone renderings can reuse the same format selection.
 ///
-/// @param prop {Object, likely EntityTypeProp} -- optional meta-property object (`timeZone()` / `datePortion` / `isDependentTimeZoneMode`)
+/// @param prop {Object, likely EntityTypeProp} -- optional meta-property object (`timeZone()` / `datePortion`)
 /// @param portionToDisplay {String} -- "DATE", "TIME" or empty for full date+time representation (taken from 'prop' if not specified)
 ///
-export function _millisDateRepresentation(dateMillis, prop, portionToDisplay) {
+function _dateFormat(dateMillis, prop, portionToDisplay) {
     // Create proper 'timeFormat' function based on the 'timeZone' and whether milliseconds / seconds are present.
     const millisecondsExist = dateMillis % 1000 !== 0;
     const secondsExist = !millisecondsExist ? (dateMillis / 1000) % 60 !== 0 : true;
@@ -60,7 +61,38 @@ export function _millisDateRepresentation(dateMillis, prop, portionToDisplay) {
     // Calculate 'format' based on 'portion', or use full format if empty / unknown.
     const format = portion === "DATE" ? "L" : portion === "TIME" ? timeFormat() : "L " + timeFormat();
     const timeZone = _fixedTimeZone(prop);
-    return _momentTz(dateMillis, prop).format(timeZone ? timeZoneFormats[timeZone][format] : format);
+    return timeZone ? timeZoneFormats[timeZone][format] : format;
+};
+
+/// Converts 'dateMillis' to String-based date representation according to property configuration in 'prop' object.
+///
+/// @param prop {Object, likely EntityTypeProp} -- optional meta-property object (`timeZone()` / `datePortion` / `isDependentTimeZoneMode`)
+/// @param portionToDisplay {String} -- "DATE", "TIME" or empty for full date+time representation (taken from 'prop' if not specified)
+///
+export function _millisDateRepresentation(dateMillis, prop, portionToDisplay) {
+    return _momentTz(dateMillis, prop).format(_dateFormat(dateMillis, prop, portionToDisplay));
+};
+
+/// Builds the tooltip augmentation that renders `dateMillis` in the server time-zone (`window.TG_APP.timeZone`).
+/// The result is suffixed with the zone id in parentheses, e.g. ` (Asia/Jakarta)`.
+///
+/// `@DependentTimeZoneMode` properties display their value in the real client time-zone.
+/// The server-side instant is otherwise invisible, so this surfaces it.
+///
+/// Returns an empty string when there is no configured server time-zone or the property is not in dependent time-zone mode.
+/// Also returns an empty string when the server rendering matches `currentValue` string-wise.
+///
+/// @param currentValue {String} -- the already-rendered client-time-zone representation (the displayed value) to compare against
+/// @param prop {Object, likely EntityTypeProp} -- meta-property object (`isDependentTimeZoneMode` / `datePortion`)
+/// @param portionToDisplay {String} -- "DATE", "TIME" or empty for full representation (defaults to `prop.datePortion()`)
+///
+export function _dependentTimeZoneTooltip(dateMillis, currentValue, prop, portionToDisplay) {
+    const serverTimeZone = window.TG_APP?.timeZone;
+    if (!serverTimeZone || !prop?.isDependentTimeZoneMode?.()) {
+        return '';
+    }
+    const serverValue = moment.tz(dateMillis, serverTimeZone).format(_dateFormat(dateMillis, prop, portionToDisplay));
+    return serverValue === currentValue ? '' : serverValue + ' (' + serverTimeZone + ')';
 };
 
 /// In case of independent time-zone mode, enforces real client time-zone for properties with @DependentTimeZoneMode.

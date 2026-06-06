@@ -2217,20 +2217,25 @@ Polymer({
     },
 
     getValueTooltip: function (entity, column) {
+        const realEntity = this.getRealEntity(entity, column);
         const realProperty = this.getRealProperty(column);
         // entity-itself columns (e.g., a key-only column) have no real property, so there is no per-property validation result to consult.
-        const validationResult = realProperty === '' ? null : this.getRealEntity(entity, column).prop(realProperty).validationResult();
+        const validationResult = realProperty === '' ? null : realEntity.prop(realProperty).validationResult();
         if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
             const messages = resultMessages(validationResult);
             return messages.extended && ("<b>" + messages.extended + "</b>");
         } else if (column.tooltipProperty) {
-            const value = this.getValue(this.getRealEntity(entity, column), column.tooltipProperty, "String").toString();
+            const value = this.getValue(realEntity, column.tooltipProperty, "String").toString();
             return value && ("<b>" + value + "</b>");
         } else if (this._reflector.findTypeByName(column.type)) {
             return this._generateEntityTooltip(entity, column);
         } else if (column.type === 'RichText') {
             const value = this.getBindedValue(entity, column).toString();
             return value && (`<div class="toastui-editor-contents" style="overflow:hidden;padding:8px;border-radius:2px;">${value}</div>`);
+        } else if (column.type === 'Date' && this._reflector.tg_determinePropertyType(realEntity.type(), realProperty) === 'Date') {
+            const valueToFormat = this.getValueFromEntity(entity, column);
+            // Date columns augment the tooltip with the server time-zone representation (see @DependentTimeZoneMode).
+            return this._reflector.tg_toString(valueToFormat, realEntity.type(), realProperty, { display: true, asTooltip: true });
         } else {
             const value = this.getBindedValue(entity, column).toString();
             return value && ("<b>" + value + "</b>");
@@ -2301,7 +2306,7 @@ Polymer({
         const valueToFormat = this.getValueFromEntity(entity, column);
         if (Array.isArray(valueToFormat)) {
             const realEntity = this.getRealEntity(entity, column);
-            return this._reflector.tg_toString(valueToFormat, realEntity.constructor.prototype.type.call(realEntity), this.getRealProperty(column), { collection: true, asTooltip: true });
+            return this._reflector.tg_toString(valueToFormat, realEntity.constructor.prototype.type.call(realEntity), this.getRealProperty(column), { display: true, asTooltip: true });
         } else {
             let desc;
             try {
