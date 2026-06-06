@@ -191,6 +191,27 @@ export class TgDatetimePicker extends TgEditor {
         }
     }
 
+    /// Renders the date tooltip via the reflector.
+    /// Shows the current value in bold and appends the server time-zone representation for @DependentTimeZoneMode properties.
+    ///
+    /// `value` is the editing string; on validation error it is shown as-is, otherwise the committed value is rendered.
+    ///
+    _formatText (_editingValue) {
+        if (this.reflector().isEntity(this.entity)) {
+            try {
+                return this.reflector().tg_toString(
+                    this.convertFromString(_editingValue),
+                    this.entity.type(),
+                    this.propertyName,
+                    { bindingValue: true, display: true, asTooltip: true }
+                );
+            } catch (error) {
+                return _editingValue;
+            }
+        }
+        return '';
+    }
+
     _showCalendar (e) {
         if (!this._isCalendarOpen) {
             this._isCalendarOpen = true;

@@ -1,7 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 
-import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+import { _millisDateRepresentation, _dependentTimeZoneTooltip } from '/resources/reflection/tg-date-utils.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 import { formatInteger, formatDecimal, formatMoney, DEFAULT_SCALE } from '/resources/reflection/tg-numeric-utils.js';
 
@@ -1451,6 +1451,14 @@ const _toStringForDisplay = function (bindingValue, rootEntityType, property, op
         return formatInteger(bindingValue, opts?.locale);
     } else if (propertyType === 'Money') {
         return formatMoney(bindingValue, opts?.locale, prop.scale(), prop.trailingZeros());
+    } else if (propertyType === 'Date' && opts?.asTooltip) {
+        // For @DependentTimeZoneMode properties, append the server time-zone representation underneath.
+        const current = _toString(bindingValue, rootEntityType, property);
+        if (current === '') {
+            return '';
+        }
+        const serverTzLine = typeof bindingValue === 'number' ? _dependentTimeZoneTooltip(bindingValue, current, prop) : '';
+        return current + (serverTzLine !== '' ? '<br>' + serverTzLine : '');
     } else {
         return _toString(bindingValue, rootEntityType, property);
     }
@@ -1781,8 +1789,9 @@ export const TgReflector = Polymer({
     ///     String that glues element representations together (`, ` by default); ignored when `opts.asTooltip` is true.
     /// @param opts.mappingFunction -- optional; applies to a collectional `value`.
     ///     Maps elements before the element-by-element conversion; ignored when `opts.asTooltip` is true.
-    /// @param opts.asTooltip -- optional; applies to a collectional `value` only when `opts.display === true`.
-    ///     If true then the collection is converted to its standard tooltip representation.
+    /// @param opts.asTooltip -- optional; applies when `opts.display === true` to a collectional or `Date` `value`.
+    ///     For a collection it produces the standard tooltip representation.
+    ///     For a `Date` it appends the server time-zone representation of @DependentTimeZoneMode properties.
     ///
     tg_toString: function (value, rootEntityType, property, opts) {
         if (!opts?.bindingValue) {
