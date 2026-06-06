@@ -95,7 +95,7 @@ export class TgCollectionalRepresentor extends TgEditor {
     _formatTooltipText (valueToFormat) {
         if (valueToFormat !== null) {
             if (Array.isArray(valueToFormat)) {
-                return this.reflector().tg_toString(valueToFormat, this.entity.type(), this.propertyName, { collection: true, asTooltip: true });
+                return this.reflector().tg_toString(valueToFormat, this.entity.type(), this.propertyName, { display: true, asTooltip: true });
             } else {
                 throw 'Unsupported value has appeared inside collectional representor: ' + valueToFormat;
             }

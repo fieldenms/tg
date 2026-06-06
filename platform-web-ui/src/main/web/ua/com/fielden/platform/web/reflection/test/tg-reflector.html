@@ -1175,7 +1175,7 @@
                 master.entityKey = null;
                 master.selfKey = null;
                 master.setOfEntitiesProp = [null, null, null];
-                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp', { collection: true, asTooltip: true }), '');
+                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp', { display: true, asTooltip: true }), '');
                 done();
             });
             
@@ -1216,7 +1216,7 @@
                 entity2.entityKey = null;
                 entity2.selfKey = master;
                 master.setOfEntitiesProp = [entity, null, entity, null, entity2, null];
-                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp', { collection: true, asTooltip: true }), '<b>STR1:MASTER, STR1:MASTER, STR2:MASTER</b><br>desc1, desc1');
+                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp', { display: true, asTooltip: true }), '<b>STR1:MASTER, STR1:MASTER, STR2:MASTER</b><br>desc1, desc1');
                 done();
             });
             
@@ -1246,7 +1246,7 @@
                 entity3.parentKey = master;
                 entity3.entityKey = null;
                 master.shortCollectionalProp = [entity1, null, entity2, null, entity3, null];
-                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp', { collection: true, asTooltip: true }), '<b>STR1, STR2</b><br>desc1');
+                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp', { display: true, asTooltip: true }), '<b>STR1, STR2</b><br>desc1');
                 done();
             });
             
@@ -1266,28 +1266,28 @@
                 entity3.parentKey = master;
                 entity3.entityKey = null;
                 master.shortCollectionalProp = [null, entity3, null];
-                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp', { collection: true, asTooltip: true }), '');
+                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp', { display: true, asTooltip: true }), '');
                 done();
             });
             
             test('tg_toString for collection: list of strings converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.listOfStringsProp = ['1', '', '2', null, '3', null];
-                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true }), '1, 2, 3');
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp'), '1, 2, 3');
                 done();
             });
             
             test('tg_toString for collection: list of strings converts with custom separator', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.listOfStringsProp = ['1', '', '2', null, '3', null];
-                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true, separator: ':' }), '1:2:3');
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { separator: ':' }), '1:2:3');
                 done();
             });
             
             test('tg_toString for collection: list of strings converts with mapping function', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.listOfStringsProp = ['1', '', '2', null, '3', null];
-                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true, mappingFunction: str => str ? '' + (+str * 2) : '' }), '2, 4, 6');
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { mappingFunction: str => str ? '' + (+str * 2) : '' }), '2, 4, 6');
                 done();
             });
             

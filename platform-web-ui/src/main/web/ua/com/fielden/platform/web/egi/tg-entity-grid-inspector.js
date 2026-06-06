@@ -2301,7 +2301,7 @@ Polymer({
         const valueToFormat = this.getValueFromEntity(entity, column);
         if (Array.isArray(valueToFormat)) {
             const realEntity = this.getRealEntity(entity, column);
-            return this._reflector.tg_toString(valueToFormat, realEntity.constructor.prototype.type.call(realEntity), this.getRealProperty(column), { collection: true, asTooltip: true });
+            return this._reflector.tg_toString(valueToFormat, realEntity.constructor.prototype.type.call(realEntity), this.getRealProperty(column), { display: true, asTooltip: true });
         } else {
             let desc;
             try {
