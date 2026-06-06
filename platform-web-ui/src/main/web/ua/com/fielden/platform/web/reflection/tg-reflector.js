@@ -1401,9 +1401,7 @@ const _toString = function (bindingValue, rootEntityType, property, opts) {
     } else if (Array.isArray(bindingValue)) {
         // Standard collection conversion.
         // Honours `opts.separator` (', ' by default) and `opts.mappingFunction` when provided.
-        const separator = (opts && opts.separator) || STANDARD_COLLECTION_SEPARATOR;
-        const mappingFunction = opts && opts.mappingFunction;
-        return _toStringForCollection(bindingValue, rootEntityType, property, separator, mappingFunction);
+        return _toStringForCollection(bindingValue, rootEntityType, property, opts?.separator || STANDARD_COLLECTION_SEPARATOR, opts?.mappingFunction);
     } else if (_isColour(bindingValue)) {
         return _colourVal(bindingValue); // represents string -- no conversion required
     } else if (_isHyperlink(bindingValue)) {
@@ -1435,7 +1433,7 @@ const _toStringForDisplay = function (bindingValue, rootEntityType, property, op
     // Collections are converted element-by-element, irrespective of their element type.
     // This structural check therefore precedes the type-based display formatting below
     if (Array.isArray(bindingValue)) {
-        if (opts && opts.asTooltip) {
+        if (opts?.asTooltip) {
             return _toStringForCollectionAsTooltip(bindingValue, rootEntityType, property);
         }
         // A non-tooltip collection reuses standard conversion (`opts.separator` / `opts.mappingFunction` honoured there).
@@ -1443,17 +1441,16 @@ const _toStringForDisplay = function (bindingValue, rootEntityType, property, op
     }
     const propertyType = _determinePropertyType(rootEntityType, property);
     const prop = rootEntityType.prop(property);
-    const locale = opts && opts.locale;
     // For all numeric types and Colour we have non-standard display formatting.
     // All other types are displayed the same way as in standard conversion.
     if (propertyType === 'Colour') {
         return bindingValue === null ? '' : '#' + _toString(bindingValue, rootEntityType, property);
     } else if (propertyType === 'BigDecimal') {
-        return formatDecimal(bindingValue, locale, prop.scale(), prop.trailingZeros());
+        return formatDecimal(bindingValue, opts?.locale, prop.scale(), prop.trailingZeros());
     } else if (propertyType === 'Integer' || propertyType === 'Long') {
-        return formatInteger(bindingValue, locale);
+        return formatInteger(bindingValue, opts?.locale);
     } else if (propertyType === 'Money') {
-        return formatMoney(bindingValue, locale, prop.scale(), prop.trailingZeros());
+        return formatMoney(bindingValue, opts?.locale, prop.scale(), prop.trailingZeros());
     } else {
         return _toString(bindingValue, rootEntityType, property);
     }
@@ -1788,11 +1785,10 @@ export const TgReflector = Polymer({
     ///     If true then the collection is converted to its standard tooltip representation.
     ///
     tg_toString: function (value, rootEntityType, property, opts) {
-        const isBindingValue = opts && opts.bindingValue;
-        if (!isBindingValue) {
+        if (!opts?.bindingValue) {
             // Copy `opts` with `bindingValue` assigned as true.
             return this.tg_toString(_convert(value), rootEntityType, property, Object.assign({}, opts, { bindingValue: true }));
-        } else if (opts && opts.display) {
+        } else if (opts?.display) {
             return _toStringForDisplay(value, rootEntityType, property, opts);
         } else {
             return _toString(value, rootEntityType, property, opts);
