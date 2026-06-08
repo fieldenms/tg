@@ -168,11 +168,11 @@ public abstract class DbCreator {
             try {
                 if (testCase.useSavedDataPopulationScript()) {
                     config.getInstance(TransactionalExecution.class).execStrict(conn -> restoreDataFromFile(testCaseType, conn));
-                    // After populating data from a script, the ID sequence remains unchanged, so we have to restart it ourselves.
+                    // Set the ID seed to a value greater than any ID used in the script.
                     // This is to prevent ID conflicts with populateDomain() which may save new entities.
                     testCase.setIdSeed(AbstractDomainDrivenTestCase.ID_HEADROOM + dbUtils.maxEntityId());
-                    testCase.resetIdGenerator();
                 }
+                testCase.resetIdGenerator();
                 // Call populateDomain regardless of using a data population script -- populateDomain may contain extra initialisation.
                 testCase.populateDomain();
                 testCase.setIdSeed(AbstractDomainDrivenTestCase.ID_HEADROOM + dbUtils.maxEntityId());
