@@ -111,10 +111,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     ///
     protected abstract void populateDomain();
 
-    /// Should return a complete list of domain entity types.
-    ///
-    protected abstract List<Class<? extends AbstractEntity<?>>> domainEntityTypes();
-
     /// Controls caching of data produced by methods annotated with `@EnsureData`.
     ///
     public boolean skipCaching() {
