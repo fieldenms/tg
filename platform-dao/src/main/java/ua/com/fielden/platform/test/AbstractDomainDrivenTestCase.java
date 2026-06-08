@@ -126,9 +126,9 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     /// Invoked once per JVM, before any test in Cached Mode runs, by the test framework when:
     /// - the current test class is in Cached Mode ([#skipCaching] returns `false`), AND
     /// - pre-population has not yet occurred in this JVM, AND
-    /// - `loadDataScriptFromFile` is `false` (i.e., scripts are being generated, not loaded from disk).
+    /// - [#LOAD_DATA_SCRIPT_FROM_FILE] is disabled (i.e., scripts are being generated, not loaded from disk).
     ///
-    /// If `loadDataScriptFromFile` is `true`, this method is never called, and previously created scripts are used instead.
+    /// If [#LOAD_DATA_SCRIPT_FROM_FILE] is enabled, this method is never called, and previously created scripts are used instead.
     ///
     /// Implementations should call all methods annotated with `@EnsureData`.
     /// Each such call is intercepted by the `@EnsureData` interceptor and recorded as an SQL script.
@@ -138,7 +138,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     ///
     /// After this method returns:
     /// - The framework captures the ID seed from the populated state.
-    /// - The seed is persisted to disk as a sequence-restart script for a future JVM run with `loadDataScriptFromFile = true`.
+    /// - If [#SAVE_SCRIPTS_TO_FILE] is enabled, the seed is persisted to disk as a sequence-restart script for a future JVM run with [#LOAD_DATA_SCRIPT_FROM_FILE] enabled.
     /// - The database is truncated; only the in-memory `@EnsureData` scripts remain, ready to be replayed by subsequent test classes.
     ///
     /// This method will be called with non-strict model verification active ([AbstractEntity#useNonStrictModelVerification]).
