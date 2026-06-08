@@ -149,7 +149,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     public abstract void afterPrePopulation();
 
     @Before
-    public final void beforeTest() throws Exception {
+    public final void beforeTest() {
         dbCreator.populateOrRestoreData(this);
         resetIdGenerator();
     }
