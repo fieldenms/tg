@@ -221,32 +221,34 @@ public abstract class DbCreator {
                 if (!loadDataScriptFromFile) {
                     logger.info(() -> "Performing initial pre-population.");
 
-                    // Delete all existing pre-population scripts.
-                    if (java.nio.file.Files.exists(Path.of(baseDir))) {
-                        logger.info(() -> "Deleting existing pre-population scripts.");
-                        try (final Stream<Path> paths = java.nio.file.Files.list(Path.of(baseDir))) {
-                            final var delCount = paths.filter(DbCreator::isPrePopulationScript)
-                                    .filter(p -> {
-                                        try {
-                                            return java.nio.file.Files.deleteIfExists(p);
-                                        } catch (final IOException ex) {
-                                            logger.warn(() -> "Could not delete pre-population script [%s]. This may affect test results.".formatted(p), ex);
-                                            return false;
-                                        }
-                                    }).count();
-                            logger.info(() -> "Deleted %s pre-population scripts.".formatted(delCount));
-                        } catch (final IOException ex) {
-                            logger.warn(() -> "Could not list existing pre-population scripts. This may affect test results.", ex);
+                    if (saveScriptsToFile) {
+                        // Delete all existing pre-population scripts.
+                        if (java.nio.file.Files.exists(Path.of(baseDir))) {
+                            logger.info(() -> "Deleting existing pre-population scripts.");
+                            try (final Stream<Path> paths = java.nio.file.Files.list(Path.of(baseDir))) {
+                                final var delCount = paths.filter(DbCreator::isPrePopulationScript)
+                                        .filter(p -> {
+                                            try {
+                                                return java.nio.file.Files.deleteIfExists(p);
+                                            } catch (final IOException ex) {
+                                                logger.warn(() -> "Could not delete pre-population script [%s]. This may affect test results.".formatted(p), ex);
+                                                return false;
+                                            }
+                                        }).count();
+                                logger.info(() -> "Deleted %s pre-population scripts.".formatted(delCount));
+                            } catch (final IOException ex) {
+                                logger.warn(() -> "Could not list existing pre-population scripts. This may affect test results.", ex);
+                            }
                         }
-                    }
 
-                    // Delete the ID seed script.
-                    try {
-                        if (java.nio.file.Files.deleteIfExists(Path.of(idSequenceScriptPath()))) {
-                            logger.info(() -> "Deleted [%s].".formatted(idSequenceScriptPath()));
+                        // Delete the ID seed script.
+                        try {
+                            if (java.nio.file.Files.deleteIfExists(Path.of(idSequenceScriptPath()))) {
+                                logger.info(() -> "Deleted [%s].".formatted(idSequenceScriptPath()));
+                            }
+                        } catch (final IOException ex) {
+                            logger.warn(() -> "Could not delete [%s].".formatted(idSequenceScriptPath()), ex);
                         }
-                    } catch (final IOException ex) {
-                        logger.warn(() -> "Could not delete [%s].".formatted(idSequenceScriptPath()), ex);
                     }
 
                     // let's use non-strict mode for scripting
