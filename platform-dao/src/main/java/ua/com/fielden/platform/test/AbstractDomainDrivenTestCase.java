@@ -90,6 +90,10 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     // The following three static fields are reflectively assigned only once, by the platform test runner.
+    // We could make these fields non-static and @Inject, but a lot of application-level tests use getInstance() in field
+    // initialisers, which requires `instantiator` to already have been injected in the parent constructor.
+    // Field-level injection through @Inject occurs only after the constructor.
+    // Therefore, such a change would break existing application tests.
     private static ICompanionObjectFinder coFinder;
     private static EntityFactory factory;
     private static Function<Class<?>, Object> instantiator;
