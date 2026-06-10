@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.layout.grid.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.web.layout.grid.IGridCell;
 
@@ -124,7 +123,7 @@ public class GridCell implements IGridCell {
         return this;
     }
 
-    /// Renders this cell as a JavaScript object literal, e.g. `{row:4,col:1,colSpan:"all",widget:"subheader-open:Asset",style:["padding-left: 0"]}`.
+    /// Renders this cell as a JavaScript object literal, e.g. `{row:4,col:1,colSpan:"all",widget:"subheader-open:Asset",style:{"padding-left":"0"}}`.
     ///
     String render() {
         final StringBuilder sb = new StringBuilder("{row:").append(row).append(",col:").append(col);
@@ -147,9 +146,7 @@ public class GridCell implements IGridCell {
             sb.append(",select:\"").append(selectAttribute).append("=").append(selectValue).append("\"");
         }
         if (!styles.isEmpty()) {
-            sb.append(",style:[").append(styles.entrySet().stream()
-                    .map(entry -> "\"" + entry.getKey() + ": " + entry.getValue() + "\"")
-                    .collect(Collectors.joining(","))).append("]");
+            sb.append(",style:").append(GridStyles.object(styles));
         }
         return sb.append("}").toString();
     }

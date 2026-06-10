@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.web.layout.grid.impl;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.web.layout.grid.IGridContent;
 
@@ -57,11 +55,15 @@ public class GridContent implements IGridContent {
         return this;
     }
 
-    /// Renders the configured CSS declarations as a list of `property: value` strings, in insertion order.
+    /// Indicates whether any container-level declaration has been set.
     ///
-    List<String> declarations() {
-        return styles.entrySet().stream()
-                .map(entry -> entry.getKey() + ": " + entry.getValue())
-                .collect(Collectors.toList());
+    boolean isEmpty() {
+        return styles.isEmpty();
+    }
+
+    /// Renders the configured declarations as a JavaScript object literal of `property: value` pairs, e.g. `{"row-gap":"0px","padding":"20px"}`.
+    ///
+    String renderObject() {
+        return GridStyles.object(styles);
     }
 }

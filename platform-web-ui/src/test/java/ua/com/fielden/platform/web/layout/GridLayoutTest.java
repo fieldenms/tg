@@ -53,16 +53,16 @@ public class GridLayoutTest {
                 .toString();
 
         assertEquals(
-                "{container:[\"display: grid\",\"grid-template-columns: 1fr 1fr\",\"row-gap: 0px\",\"column-gap: 20px\",\"padding: 20px\"],"
-                + "columns:[{style:[\"padding-left: 32px\"]},{}],"
+                "{container:{\"row-gap\":\"0px\",\"column-gap\":\"20px\",\"padding\":\"20px\"},"
+                + "columns:[{size:\"1fr\",style:{\"padding-left\":\"32px\"}},{size:\"1fr\"}],"
                 + "cells:[{row:2,col:1,colSpan:\"all\"},"
-                + "{row:3,col:1,colSpan:\"all\",widget:\"subheader-open:Asset\",style:[\"padding-left: 0\"]},"
+                + "{row:3,col:1,colSpan:\"all\",widget:\"subheader-open:Asset\",style:{\"padding-left\":\"0\"}},"
                 + "{row:4,col:2,widget:\"skip\"}]}",
                 wire);
     }
 
     @Test
-    public void row_alignment_is_emulated_and_unstyled_column_array_is_omitted() {
+    public void row_alignment_is_emulated_onto_its_track() {
         final String wire = grid()
                 .content(content().withGaps("10px", "10px"))
                 .columns()
@@ -77,9 +77,10 @@ public class GridLayoutTest {
                 .toString();
 
         assertEquals(
-                "{container:[\"display: grid\",\"grid-template-columns: 1fr auto\",\"grid-template-rows: auto min-content\",\"row-gap: 10px\",\"column-gap: 10px\"],"
-                + "rows:[{style:[\"align-self: center\"]},{}],"
-                + "cells:[{row:1,col:1,style:[\"align-self: start\",\"padding: 4px\"]},"
+                "{container:{\"row-gap\":\"10px\",\"column-gap\":\"10px\"},"
+                + "columns:[{size:\"1fr\"},{size:\"auto\"}],"
+                + "rows:[{size:\"auto\",style:{\"align-self\":\"center\"}},{size:\"min-content\"}],"
+                + "cells:[{row:1,col:1,style:{\"align-self\":\"start\",\"padding\":\"4px\"}},"
                 + "{row:2,col:2,colSpan:2}]}",
                 wire);
     }
@@ -110,17 +111,18 @@ public class GridLayoutTest {
                 .toString();
 
         assertEquals(
-                "{container:[\"display: grid\",\"grid-template-columns: 1fr 1fr 1fr\",\"grid-template-rows: repeat(22, auto)\",\"row-gap: 0px\",\"column-gap: 20px\",\"padding: 20px\"],"
-                + "columns:[{style:[\"padding-left: 32px\"]},{},{}],"
+                "{container:{\"row-gap\":\"0px\",\"column-gap\":\"20px\",\"padding\":\"20px\"},"
+                + "columns:[{size:\"1fr\",style:{\"padding-left\":\"32px\"}},{size:\"1fr\"},{size:\"1fr\"}],"
+                + "rows:[{size:\"auto\",repeat:22}],"
                 + "cells:[{row:2,col:1,colSpan:\"all\"},"
-                + "{row:4,col:1,colSpan:\"all\",widget:\"subheader-open:Asset\",style:[\"padding-left: 0\"]},"
-                + "{row:6,col:1,colSpan:\"all\",widget:\"subheader-open:Preventive Maintenance\",style:[\"padding-left: 0\"]},"
+                + "{row:4,col:1,colSpan:\"all\",widget:\"subheader-open:Asset\",style:{\"padding-left\":\"0\"}},"
+                + "{row:6,col:1,colSpan:\"all\",widget:\"subheader-open:Preventive Maintenance\",style:{\"padding-left\":\"0\"}},"
                 + "{row:9,col:3,widget:\"skip\"},"
-                + "{row:10,col:1,colSpan:\"all\",widget:\"subheader-open:Allocation\",style:[\"padding-left: 0\"]},"
-                + "{row:13,col:1,colSpan:\"all\",widget:\"subheader-open:Date and Time\",style:[\"padding-left: 0\"]},"
+                + "{row:10,col:1,colSpan:\"all\",widget:\"subheader-open:Allocation\",style:{\"padding-left\":\"0\"}},"
+                + "{row:13,col:1,colSpan:\"all\",widget:\"subheader-open:Date and Time\",style:{\"padding-left\":\"0\"}},"
                 + "{row:15,col:3,widget:\"skip\"},"
-                + "{row:18,col:1,colSpan:\"all\",widget:\"subheader-open:Financials and Accounting\",style:[\"padding-left: 0\"]},"
-                + "{row:21,col:1,colSpan:\"all\",widget:\"subheader-open:Notes\",style:[\"padding-left: 0\"]},"
+                + "{row:18,col:1,colSpan:\"all\",widget:\"subheader-open:Financials and Accounting\",style:{\"padding-left\":\"0\"}},"
+                + "{row:21,col:1,colSpan:\"all\",widget:\"subheader-open:Notes\",style:{\"padding-left\":\"0\"}},"
                 + "{row:22,col:1,colSpan:\"all\"}]}",
                 wire);
     }
@@ -136,7 +138,7 @@ public class GridLayoutTest {
                 .toString();
 
         assertEquals(
-                "{container:[\"display: grid\",\"grid-template-columns: 1fr 1fr 1fr\"],"
+                "{columns:[{size:\"1fr\"},{size:\"1fr\"},{size:\"1fr\"}],"
                 + "cells:[{row:1,col:1,widget:\"skip\"}]}",
                 wire);
     }
