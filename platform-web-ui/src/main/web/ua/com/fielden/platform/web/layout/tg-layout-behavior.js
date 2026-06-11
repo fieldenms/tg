@@ -1,6 +1,8 @@
 import { html } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { beforeNextRender } from "/resources/polymer/@polymer/polymer/lib/utils/render-status.js";
 
+import '/resources/polymer/@polymer/iron-media-query/iron-media-query.js';
+
 import '/app/tg-app-config.js'
 
 const countDots = function (path) {
@@ -111,21 +113,21 @@ export const TgLayoutBehavior = {
     _handleDesktopScreen: function (whenDesktop, whenTablet, whenMobile, desktopScreen, contentLoaded) {
         const layout = whenDesktop || whenTablet || whenMobile;
         if (contentLoaded && desktopScreen && layout) {
-            this._setLayout(layout);
+            this._setLayoutBeforeNextRender(layout);
         }
     },
 
     _handleTabletScreen: function (whenTablet, whenMobile, whenDesktop, tabletScreen, contentLoaded) {
         const layout = whenTablet || whenMobile || whenDesktop;
         if (contentLoaded && tabletScreen && layout ) {
-            this._setLayout(layout);
+            this._setLayoutBeforeNextRender(layout);
         }
     },
 
     _handleMobileScreen: function (whenMobile, whenTablet, whenDesktop, mobileScreen, contentLoaded) {
         const layout = whenMobile || whenTablet || whenDesktop;
         if (contentLoaded && mobileScreen && layout) {
-            this._setLayout(layout);
+            this._setLayoutBeforeNextRender(layout);
         }
     },
 

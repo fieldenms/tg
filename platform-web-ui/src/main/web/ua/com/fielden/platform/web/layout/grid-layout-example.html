@@ -1,0 +1,150 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Grid layout example</title>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script>
+        window.TG_APP = {
+            minDesktopWidth: 980, 
+            minTabletWidth: 768
+        }
+    </script>
+    <script type="module">
+        import '/resources/polymer/@polymer/paper-input/paper-input.js';
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
+        import './tg-grid-layout.js';
+    </script>
+    <custom-style>
+        <style>
+            html { font-size: 10pt; }
+            body { font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; }
+            .toolbar { padding: 12px 20px; color: rgba(0, 0, 0, 0.6); }
+            .toolbar input { font-size: 1rem; padding: 6px 8px; width: 280px; }
+            tg-grid-layout { border-top: 1px solid rgba(0, 0, 0, 0.12); }
+            textarea {
+                resize: vertical;
+                box-sizing: border-box;
+                width: 100%;
+                min-height: 64px;
+                font-family: inherit;
+                font-size: 1rem;
+            }
+        </style>
+    </custom-style>
+</head>
+
+<body unresolved class="fullbleed">
+    <dom-bind>
+        <template is="dom-bind">
+            <div class="toolbar">
+                <input type="text" placeholder="Filter fields by label…" oninput="filterFields(this.value)">
+                <span>— resize the window to switch desktop / tablet / mobile layouts. “Advanced” starts collapsed.</span>
+            </div>
+            <!--
+                The 12 plain paper-inputs auto-flow into the grid, in order.
+                The two text areas are bound to explicit cells by `select` (prop=bio, prop=comments),
+                so they land on their cells regardless of the column count.
+            -->
+            <tg-grid-layout when-desktop="[[_whenDesktop()]]" when-tablet="[[_whenTablet()]]" when-mobile="[[_whenMobile()]]">
+                <paper-input label="First name" filterable always-float-label></paper-input>
+                <paper-input label="Last name" filterable always-float-label></paper-input>
+                <paper-input label="Title" filterable always-float-label></paper-input>
+                <textarea prop="bio" label="Biography" filterable>Biography — bound by select, spans all columns.</textarea>
+                <paper-input label="Email" filterable always-float-label></paper-input>
+                <paper-input label="Phone" filterable always-float-label></paper-input>
+                <paper-input label="Mobile" filterable always-float-label></paper-input>
+                <paper-input label="Address" filterable always-float-label></paper-input>
+                <paper-input label="City" filterable always-float-label></paper-input>
+                <textarea prop="comments" label="Comments" filterable>Comments — bound by select, spans two rows on desktop.</textarea>
+                <paper-input label="Country" filterable always-float-label></paper-input>
+                <paper-input label="Postcode" filterable always-float-label></paper-input>
+                <paper-input label="Notes" filterable always-float-label></paper-input>
+                <paper-input label="Reference" filterable always-float-label></paper-input>
+            </tg-grid-layout>
+        </template>
+    </dom-bind>
+</body>
+
+<script>
+    var app = document.querySelector('dom-bind');
+
+    // Desktop — three columns, exercising every capability.
+    //  • container : gaps, padding, and the item-alignment defaults (justify-items / align-items).
+    //  • columns   : an indented 1fr column (per-column style), a flexible minmax column, and a content-sized column right-aligned (per-column justify).
+    //  • rows      : a min-height first row, normal rows, one baseline-aligned row (per-row align), and a repeated tail.
+    //  • cells     : spanAllCols (bio), spanRows (comments), a skip, open and closed subheaders, select bindings, and a per-cell override.
+    app._whenDesktop = function () {
+        return {
+            container: {
+                "row-gap": "12px",
+                "column-gap": "20px",
+                "padding": "20px",
+                "justify-items": "stretch",
+                "align-items": "center"
+            },
+            columns: [
+                { size: "1fr", style: { "padding-left": "32px" } },
+                { size: "minmax(120px, 1fr)" },
+                { size: "fit-content(320px)", style: { "justify-self": "end" } }
+            ],
+            rows: [
+                { size: "minmax(40px, auto)" },
+                { size: "auto" },
+                { size: "auto" },
+                { size: "auto", style: { "align-self": "baseline" } },
+                { size: "auto", repeat: 4 }
+            ],
+            cells: [
+                { row: 2, col: 1, colSpan: "all", select: "prop=bio" },
+                { row: 3, col: 1, colSpan: "all", widget: "subheader-open:Personal Details", style: { "padding-left": "0" } },
+                { row: 5, col: 3, widget: "skip" },
+                { row: 6, col: 1, colSpan: "all", widget: "subheader-closed:Advanced", style: { "padding-left": "0" } },
+                { row: 7, col: 1, rowSpan: 2, select: "prop=comments" },
+                { row: 8, col: 2, style: { "justify-self": "end", "align-self": "end", "background": "rgba(0,0,0,0.06)", "border-radius": "4px" } }
+            ]
+        };
+    };
+
+    // Tablet — two columns; the same editors and section structure, recomputed positions.
+    app._whenTablet = function () {
+        return {
+            container: { "row-gap": "12px", "column-gap": "20px", "padding": "20px", "align-items": "center" },
+            columns: [ { size: "1fr" }, { size: "1fr" } ],
+            rows: [ { size: "auto", repeat: 10 } ],
+            cells: [
+                { row: 2, col: 1, colSpan: "all", select: "prop=bio" },
+                { row: 3, col: 1, colSpan: "all", widget: "subheader-open:Personal Details" },
+                { row: 6, col: 1, colSpan: "all", widget: "subheader-closed:Advanced" },
+                { row: 7, col: 1, rowSpan: 2, select: "prop=comments" }
+            ]
+        };
+    };
+
+    // Mobile — a single column; everything stacks, spans collapse to one column.
+    app._whenMobile = function () {
+        return {
+            container: { "row-gap": "12px", "padding": "20px" },
+            columns: [ { size: "1fr" } ],
+            rows: [ { size: "auto", repeat: 16 } ],
+            cells: [
+                { row: 2, col: 1, colSpan: "all", select: "prop=bio" },
+                { row: 3, col: 1, colSpan: "all", widget: "subheader-open:Personal Details" },
+                { row: 9, col: 1, colSpan: "all", widget: "subheader-closed:Advanced" },
+                { row: 10, col: 1, colSpan: "all", select: "prop=comments" }
+            ]
+        };
+    };
+
+    // Demonstrates filtering: hides editors whose `label` does not contain the term,
+    // and the layout collapses subheaders whose entire section becomes hidden.
+    function filterFields(term) {
+        const grid = document.querySelector('tg-grid-layout');
+        const needle = (term || '').trim().toLowerCase();
+        grid.filter = needle ? (element => (element.getAttribute('label') || '').toLowerCase().includes(needle)) : null;
+    }
+</script>
+
+</html>

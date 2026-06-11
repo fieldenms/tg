@@ -1,6 +1,5 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
-import '/resources/polymer/@polymer/iron-media-query/iron-media-query.js'
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/components/tg-subheader.js';
