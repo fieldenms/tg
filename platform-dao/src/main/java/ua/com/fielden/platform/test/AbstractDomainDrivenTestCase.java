@@ -295,9 +295,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         }
     }
 
-    /// Instantiates a new entity with a non-composite key, where the key value is provided as the second argument,
-    /// and the description is provided as the third argument.
-    ///
     @Override
     public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key, final String desc) {
         final T entity = new_(entityClass);
@@ -306,8 +303,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         return entity;
     }
 
-    /// Instantiates a new entity with a non-composite key, whose value is provided as the second argument.
-    ///
     @Override
     public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key) {
         final T entity = new_(entityClass);
@@ -315,10 +310,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         return entity;
     }
 
-    /// Instantiates a new entity with a composite key, where the key members are assigned based on the provided values.
-    /// The order of values must match the order defined in the key member definitions.
-    /// An empty list of key values is permitted.
-    ///
     @Override
     public <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys) {
         final T entity = new_(entityClass);
@@ -337,8 +328,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         return entity;
     }
 
-    /// Instantiates a new entity based solely on the provided type, resulting in a completely empty instance with no properties assigned.
-    ///
     @Override
     public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass) {
         final IEntityDao<T> co = co$(entityClass);
