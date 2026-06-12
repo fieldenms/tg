@@ -83,15 +83,15 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     ///
     public static final String DATABASE_URI = "databaseUri";
 
-    private static final DateTimeFormatter JODA_FORMAT_WITHOUT_SECONDS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm");
-    private static final DateTimeFormatter JODA_FORMAT_WITHOUT_MILLIS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter JODA_FORMAT_WITH_MINUTES = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter JODA_FORMAT_WITH_SECONDS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateTimeFormatter JODA_FORMAT_WITH_MILLIS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private static final DateTimeFormatter JODA_FORMAT_DATE_ONLY = DateTimeFormat.forPattern("yyyy-MM-dd");
 
-    private static final DateFormat DATE_TIME_FORMAT_WITHOUT_SECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-    private static final DateFormat DATE_TIME_FORMAT_WITHOUT_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private static final DateFormat DATE_TIME_FORMAT_WITH_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final DateFormat DATE_FORMAT_WITH_MINUTES = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private static final DateFormat DATE_FORMAT_WITH_SECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final DateFormat DATE_FORMAT_WITH_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    private static final DateFormat DATE_FORMAT_DATE_ONLY = new SimpleDateFormat("yyyy-MM-dd");
 
     // The following three static fields are reflectively assigned only once, by the platform test runner.
     // We could make these fields non-static and @Inject, but a lot of application-level tests use getInstance() in field
@@ -252,19 +252,19 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         try {
             // Has millis part?
             if (dateTime.indexOf('.') > 0) {
-                return DATE_TIME_FORMAT_WITH_MILLIS.parse(dateTime);
+                return DATE_FORMAT_WITH_MILLIS.parse(dateTime);
             }
             // Has time part without seconds?
             else if (dateTime.lastIndexOf(":") == 13) {
-                return DATE_TIME_FORMAT_WITHOUT_SECONDS.parse(dateTime);
+                return DATE_FORMAT_WITH_MINUTES.parse(dateTime);
             }
             // Has time part without millis?
             else if (dateTime.indexOf(":") > 0) {
-                return DATE_TIME_FORMAT_WITHOUT_MILLIS.parse(dateTime);
+                return DATE_FORMAT_WITH_SECONDS.parse(dateTime);
             }
             // Otherwise, assume the date without the time part.
             else {
-                return DATE_FORMAT.parse(dateTime);
+                return DATE_FORMAT_DATE_ONLY.parse(dateTime);
             }
         } catch (final ParseException ex) {
             throw new DomainDrivenTestException(ERR_PARSING_DATE.formatted(dateTime), ex);
@@ -280,11 +280,11 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
             }
             // Has time part without seconds?
             else if (dateTime.lastIndexOf(":") == 13) {
-                return JODA_FORMAT_WITHOUT_SECONDS.parseDateTime(dateTime);
+                return JODA_FORMAT_WITH_MINUTES.parseDateTime(dateTime);
             }
             // Has time part without millis?
             else if (dateTime.indexOf(":") > 0) {
-                return JODA_FORMAT_WITHOUT_MILLIS.parseDateTime(dateTime);
+                return JODA_FORMAT_WITH_SECONDS.parseDateTime(dateTime);
             }
             // Otherwise, assume the date without the time part.
             else {
