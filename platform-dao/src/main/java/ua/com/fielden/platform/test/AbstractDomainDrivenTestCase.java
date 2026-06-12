@@ -266,8 +266,8 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
             else {
                 return DATE_FORMAT.parse(dateTime);
             }
-        } catch (ParseException e) {
-            throw new DomainDrivenTestException(ERR_PARSING_DATE.formatted(dateTime));
+        } catch (final ParseException ex) {
+            throw new DomainDrivenTestException(ERR_PARSING_DATE.formatted(dateTime), ex);
         }
     }
 
