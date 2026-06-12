@@ -83,7 +83,11 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     ///
     public static final String DATABASE_URI = "databaseUri";
 
-    private static final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter JODA_FORMAT_WITHOUT_SECONDS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter JODA_FORMAT_WITHOUT_MILLIS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter JODA_FORMAT_WITH_MILLIS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
+    private static final DateTimeFormatter JODA_FORMAT_DATE_ONLY = DateTimeFormat.forPattern("yyyy-MM-dd");
+
     private static final DateFormat DATE_TIME_FORMAT_WITHOUT_SECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private static final DateFormat DATE_TIME_FORMAT_WITHOUT_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final DateFormat DATE_TIME_FORMAT_WITH_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -243,15 +247,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
 
     }
 
-    /// Converts a date string to a [Date] using system's default time zone.
-    ///
-    /// Supported formats:
-    ///
-    /// - `yyyy-MM-dd`
-    /// - `yyyy-MM-dd HH:mm`
-    /// - `yyyy-MM-dd HH:mm:ss`
-    /// - `yyyy-MM-dd HH:mm:ss.SSS`
-    ///
     @Override
     public final Date date(final String dateTime) {
         try {
@@ -278,7 +273,26 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
 
     @Override
     public final DateTime dateTime(final String dateTime) {
-        return jodaFormatter.parseDateTime(dateTime);
+        try {
+            // Has millis part?
+            if (dateTime.indexOf('.') > 0) {
+                return JODA_FORMAT_WITH_MILLIS.parseDateTime(dateTime);
+            }
+            // Has time part without seconds?
+            else if (dateTime.lastIndexOf(":") == 13) {
+                return JODA_FORMAT_WITHOUT_SECONDS.parseDateTime(dateTime);
+            }
+            // Has time part without millis?
+            else if (dateTime.indexOf(":") > 0) {
+                return JODA_FORMAT_WITHOUT_MILLIS.parseDateTime(dateTime);
+            }
+            // Otherwise, assume the date without the time part.
+            else {
+                return JODA_FORMAT_DATE_ONLY.parseDateTime(dateTime);
+            }
+        } catch (final Exception ex) {
+            throw new DomainDrivenTestException(ERR_PARSING_DATE.formatted(dateTime), ex);
+        }
     }
 
     /// Instantiates a new entity with a non-composite key, where the key value is provided as the second argument,

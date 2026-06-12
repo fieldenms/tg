@@ -83,9 +83,27 @@ public interface IDomainDrivenData {
 
     <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type);
 
-    Date date(final String dateTime);
+    /// Parses a [Date] using the system's default time zone.
+    ///
+    /// Supported formats:
+    ///
+    /// - `yyyy-MM-dd` (time of day defaults to all zeroes)
+    /// - `yyyy-MM-dd HH:mm` (seconds default to zero)
+    /// - `yyyy-MM-dd HH:mm:ss` (milliseconds default to zero)
+    /// - `yyyy-MM-dd HH:mm:ss.SSS`
+    ///
+    Date date(String dateTime);
 
-    DateTime dateTime(final String dateTime);
+    /// Parses a [DateTime] using the system's default time zone.
+    ///
+    /// Supported formats:
+    ///
+    /// - `yyyy-MM-dd` (time of day defaults to all zeroes)
+    /// - `yyyy-MM-dd HH:mm` (seconds default to zero)
+    /// - `yyyy-MM-dd HH:mm:ss` (milliseconds default to zero)
+    /// - `yyyy-MM-dd HH:mm:ss.SSS`
+    ///
+    DateTime dateTime(String dateTime);
 
     default BigDecimal decimal(final String value) {
         return new BigDecimal(value);
