@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.content;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.grid;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.html;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.skip;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.subheaderOpen;
 
@@ -141,5 +142,17 @@ public class GridLayoutTest {
                 "{columns:[{size:\"1fr\"},{size:\"1fr\"},{size:\"1fr\"}],"
                 + "cells:[{row:1,col:1,widget:\"skip\"}]}",
                 wire);
+    }
+
+    @Test
+    public void html_cell_serialises_as_a_widget_and_escapes_the_snippet() {
+        assertEquals(
+                "{columns:[{size:\"1fr\"}],cells:[{row:1,col:1,widget:\"html:<b>note</b>\"}]}",
+                grid().columns().addColumn().elements(html(1, 1, "<b>note</b>")).toString());
+
+        // double quotes in the snippet are escaped for the JS wire string
+        assertEquals(
+                "{columns:[{size:\"1fr\"}],cells:[{row:1,col:1,widget:\"html:<i class=\\\"x\\\"></i>\"}]}",
+                grid().columns().addColumn().elements(html(1, 1, "<i class=\"x\"></i>")).toString());
     }
 }

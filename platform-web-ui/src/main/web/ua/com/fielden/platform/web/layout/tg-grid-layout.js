@@ -7,6 +7,13 @@ import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/c
 
 import { TgLayoutBehavior, layoutMediaQueryTemplate } from '/resources/layout/tg-layout-behavior.js';
 
+const Widgets = {
+    CELL: "cell",
+    SKIP: "skip",
+    SUBHEADER: "subheader",
+    HTML: "html"
+};
+
 const template = html`
     <style>
         :host {
@@ -55,6 +62,33 @@ const markOccupied = function (occupied, row, col, colSpan, rowSpan) {
     }
 };
 
+const calculateNumberOfElementsToFitInto = function (layout) {
+    if (!layout.rows || layout.rows.length === 0) {
+        return Infinity;
+    }
+    const columnCount = trackCount(layout.columns);
+    let elementsCount = columnCount + trackCount(layout.rows);
+    (layout.cells || []).forEach(cell => {
+        const multiplier = cell.widget && (cell.widget.indexOf(Widgets.SKIP) || cell.widget.indexOf(Widgets.SUBHEADER)) ? 0 : 1;
+        if (cell.colSpan === 'all') {
+            if (cell.col === 1) {
+                elementsCount -= columnCount * (cell.rowSpan || 1) - 1 * multiplier;
+            } else {
+                throw new Error ("Grid layout configuration error: colSpan: 'all' should applied to cell palced at first column only");
+            }
+        } else {
+            elementsCount -= (cell.colSpan || 1) * (cell.rowSpan || 1) - 1 * multiplier;
+        }
+    })
+}
+
+const createLayoutRepresentation = function(layout, componentsToLayout) {
+    if (!layout.columns || layout.columns.length === 0) {
+        throw new Error("Layout should have at least one column");
+    }
+
+}
+
 class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
 
     static get template() {
@@ -64,17 +98,24 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
     // Lays out the slotted editors over a CSS Grid according to the wire format `{container?, columns, rows?, cells?}`.
     // Explicitly configured cells (spans, overrides, subheaders, skips) are placed at their coordinates; the remaining editors auto-flow into the empty positions, in order.
     _setLayout (layout) {
+        if (!layout.columns) {
+            throw new Error("The provide layout is not grid layout");
+        }
         if (this.currentLayout === layout) {
             return;
         }
+
+        // 1. Create list of slotted elements to layout them. this will be done only once, before first layout will be set.
         this._slotChildrenOnce();
 
-        // Clear anything appended by a previous layout and reset the host's grid styles.
-        (this.appendedElements || []).forEach(element => this.shadowRoot.removeChild(element));
-        this.appendedElements = [];
-        this._subheaders.forEach(subheader => subheader.removeAllRelatedComponents());
-        this._subheaders = [];
-        this._clearContainerStyles();
+        // 2. Clear anything appended by a previous layout then
+        // reset the host's grid styles and styles for slotted elements setted by previous layout.
+        this._clearAppendedElements();
+        this._resetSubheaders();
+        this._resetStyles();
+
+        //3. Create internal layout representation
+        this._currentLayoutRepresentation = createLayoutRepresentation(layout, this.componentsToLayout);
         this._applyContainer(layout);
 
         const columns = layout.columns || [];
@@ -173,6 +214,25 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         }
     }
 
+    _clearAppendedElements () {
+        (this.appendedElements || []).forEach(element => this.shadowRoot.removeChild(element));
+        this.appendedElements = [];
+    }
+
+    _resetSubheaders () {
+        this._subheaders.forEach(subheader => subheader.removeAllRelatedComponents());
+        this._subheaders = [];
+    }
+
+    _resetStyles () {
+        //1. Clear container styles
+        this.style.removeProperty('grid-template-columns');
+        this.style.removeProperty('grid-template-rows');
+        (this._appliedContainerProps || []).forEach(property => this.style.removeProperty(property));
+        this._appliedContainerProps = [];
+        //TODO also remove styles from slotted elements
+    }
+
     // Applies `display: grid`, the column/row templates and the container-level declarations to the host.
     _applyContainer (layout) {
         this._appliedContainerProps = [];
@@ -193,13 +253,6 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         }
     }
 
-    // Removes the grid styles applied by the previous layout, so a per-breakpoint switch starts clean.
-    _clearContainerStyles () {
-        this.style.removeProperty('grid-template-columns');
-        this.style.removeProperty('grid-template-rows');
-        (this._appliedContainerProps || []).forEach(property => this.style.removeProperty(property));
-        this._appliedContainerProps = [];
-    }
 
     // A grid item that projects the editor of the given slot (or an empty item when no editor is available).
     _createCellElement (slotName) {

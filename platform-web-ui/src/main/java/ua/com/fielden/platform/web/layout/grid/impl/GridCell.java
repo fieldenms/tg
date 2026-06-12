@@ -7,15 +7,16 @@ import ua.com.fielden.platform.web.layout.grid.IGridCell;
 
 /// Implementation of a single non-conforming cell of a grid layout, placed at an explicit `(row, column)`.
 ///
-/// A cell is one of three kinds:
+/// A cell is one of four kinds:
 /// an ordinary cell (configures the editor that auto-flows to its position, or an explicitly bound editor),
 /// a skip (an empty placeholder cell),
-/// or a subheader (an inserted, optionally collapsible section title that spans all columns by default).
+/// a subheader (an inserted, optionally collapsible section title that spans all columns by default),
+/// or an inline `html` snippet (stamped with the layout's `context`).
 ///
 public class GridCell implements IGridCell {
 
     enum Kind {
-        CELL, SKIP, SUBHEADER
+        CELL, SKIP, SUBHEADER, HTML
     }
 
     /// Sentinel for [#colSpan] meaning "span all columns" (`grid-column: 1 / -1`).
@@ -35,6 +36,8 @@ public class GridCell implements IGridCell {
 
     private String selectAttribute;
     private String selectValue;
+
+    private String html;
 
     private final Map<String, String> styles = new LinkedHashMap<>();
 
@@ -62,6 +65,12 @@ public class GridCell implements IGridCell {
 
     public static GridCell subheaderClosed(final int row, final String title) {
         return subheaderOf(row, title, true, false);
+    }
+
+    public static GridCell html(final int row, final int col, final String html) {
+        final GridCell cell = new GridCell(row, col, Kind.HTML);
+        cell.html = html;
+        return cell;
     }
 
     private static GridCell subheaderOf(final int row, final String title, final boolean collapsible, final boolean open) {
@@ -137,10 +146,9 @@ public class GridCell implements IGridCell {
         if (rowSpan != null && rowSpan > 1) {
             sb.append(",rowSpan:").append(rowSpan);
         }
-        if (kind == Kind.SKIP) {
-            sb.append(",widget:\"skip\"");
-        } else if (kind == Kind.SUBHEADER) {
-            sb.append(",widget:\"").append(subheaderKeyword()).append(":").append(title).append("\"");
+        final String widget = widget();
+        if (widget != null) {
+            sb.append(",widget:\"").append(escape(widget)).append("\"");
         }
         if (selectAttribute != null) {
             sb.append(",select:\"").append(selectAttribute).append("=").append(selectValue).append("\"");
@@ -151,10 +159,31 @@ public class GridCell implements IGridCell {
         return sb.append("}").toString();
     }
 
+    /// The widget descriptor for this cell, or `null` for an ordinary editor cell.
+    ///
+    private String widget() {
+        return switch (kind) {
+            case SKIP -> "skip";
+            case SUBHEADER -> subheaderKeyword() + ":" + title;
+            case HTML -> "html:" + html;
+            case CELL -> null;
+        };
+    }
+
     private String subheaderKeyword() {
         if (!collapsible) {
             return "subheader";
         }
         return open ? "subheader-open" : "subheader-closed";
+    }
+
+    /// Escapes a value for embedding inside a double-quoted JavaScript string (backslash, double quote and line breaks).
+    ///
+    private static String escape(final String value) {
+        return value
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
     }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.layout.grid.ICell;
 import ua.com.fielden.platform.web.layout.grid.IColumn;
 import ua.com.fielden.platform.web.layout.grid.IColumns;
@@ -20,7 +21,7 @@ import ua.com.fielden.platform.web.layout.grid.IRows;
 /// Each chain method returns `this`; because the step interfaces declare narrower return types, the IDE and compiler only offer the methods valid at each step, enforcing the call order
 /// `grid().content(…).columns().addColumn(…)….rows().addRow(…)….elements(…)`.
 ///
-/// Intended to be used via a single static import, which brings the whole vocabulary (`grid`, `content`, `cell`, `skip`, `subheader`, `subheaderOpen`, `subheaderClosed`) into scope.
+/// Intended to be used via a single static import, which brings the whole vocabulary (`grid`, `content`, `cell`, `skip`, `subheader`, `subheaderOpen`, `subheaderClosed`, `html`) into scope.
 ///
 public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IRows, IRow {
 
@@ -76,6 +77,18 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IRows
     ///
     public static IGridCell subheaderClosed(final int row, final String title) {
         return GridCell.subheaderClosed(row, title);
+    }
+
+    /// An inline html snippet at `(row, col)`, stamped with the layout's `context` (e.g. a label, image or explanatory text).
+    ///
+    public static IGridCell html(final int row, final int col, final String html) {
+        return GridCell.html(row, col, html);
+    }
+
+    /// An inline html snippet at `(row, col)`, built from a [DomElement].
+    ///
+    public static IGridCell html(final int row, final int col, final DomElement dom) {
+        return GridCell.html(row, col, dom.toString());
     }
 
     // ------------------------------------------------------------------------
