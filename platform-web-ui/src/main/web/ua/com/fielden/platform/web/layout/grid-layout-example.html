@@ -22,7 +22,7 @@
             html { font-size: 10pt; }
             body { font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; }
             .toolbar { padding: 12px 20px; color: rgba(0, 0, 0, 0.6); }
-            .toolbar input { font-size: 1rem; padding: 6px 8px; width: 280px; }
+            .toolbar input[type="text"] { font-size: 1rem; padding: 6px 8px; width: 280px; }
             tg-grid-layout { border-top: 1px solid rgba(0, 0, 0, 0.12); }
             textarea {
                 resize: vertical;
@@ -42,11 +42,13 @@
             <div class="toolbar">
                 <input type="text" placeholder="Filter fields by label…" oninput="filterFields(this.value)">
                 <span>— resize the window to switch desktop / tablet / mobile layouts. “Advanced” starts collapsed.</span>
+                <label style="margin-left:16px;"><input type="checkbox" onchange="toggleClipped(this.checked)"> show the 2 clipped “Overflow” editors</label>
             </div>
             <!--
-                The 12 plain paper-inputs auto-flow into the grid, in order.
-                The two text areas are bound to explicit cells by `select` (prop=bio, prop=comments),
-                so they land on their cells regardless of the column count.
+                The plain paper-inputs auto-flow into the grid, in order.
+                The two text areas are bound to explicit cells by `select` (prop=bio, prop=comments), so they land on their cells regardless of the column count.
+                The last two paper-inputs (“Overflow 1/2”) do not fit within the declared rows, so by default the grid leaves them unslotted (hidden);
+                ticking the toolbar checkbox extends the rows and reveals them.
             -->
             <tg-grid-layout when-desktop="[[_whenDesktop()]]" when-tablet="[[_whenTablet()]]" when-mobile="[[_whenMobile()]]">
                 <paper-input label="First name" filterable always-float-label></paper-input>
@@ -63,6 +65,8 @@
                 <paper-input label="Postcode" filterable always-float-label></paper-input>
                 <paper-input label="Notes" filterable always-float-label></paper-input>
                 <paper-input label="Reference" filterable always-float-label></paper-input>
+                <paper-input label="Overflow 1" filterable always-float-label></paper-input>
+                <paper-input label="Overflow 2" filterable always-float-label></paper-input>
             </tg-grid-layout>
         </template>
     </dom-bind>
@@ -71,11 +75,18 @@
 <script>
     var app = document.querySelector('dom-bind');
 
+    // Whether the declared rows are extended to fit the two trailing "Overflow" editors.
+    // When false, those editors do not fit and the grid leaves them unslotted (hidden).
+    let showAll = false;
+
+    // A full-width inline html cell (banner), reused across the breakpoints. It renders its markup directly and consumes no editor.
+    const infoBanner = 'html:<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#e3f2fd;border-radius:4px;color:#0d47a1;"><b>Note</b><span>This full-width banner is an inline <b>html</b> cell, rendered by the grid layout (not a slotted editor).</span></div>';
+
     // Desktop — three columns, exercising every capability.
     //  • container : gaps, padding, and the item-alignment defaults (justify-items / align-items).
     //  • columns   : an indented 1fr column (per-column style), a flexible minmax column, and a content-sized column right-aligned (per-column justify).
-    //  • rows      : a min-height first row, normal rows, one baseline-aligned row (per-row align), and a repeated tail.
-    //  • cells     : spanAllCols (bio), spanRows (comments), a skip, open and closed subheaders, select bindings, and a per-cell override.
+    //  • rows      : the banner row, a min-height first editor row, normal rows, one baseline-aligned row (per-row align), and a repeated tail.
+    //  • cells     : a full-width html banner, spanAllCols (bio), spanRows (comments), a skip, open and closed subheaders, select bindings, and a per-cell override.
     app._whenDesktop = function () {
         return {
             container: {
@@ -91,19 +102,21 @@
                 { size: "fit-content(320px)", style: { "justify-self": "end" } }
             ],
             rows: [
+                { size: "auto" },
                 { size: "minmax(40px, auto)" },
                 { size: "auto" },
                 { size: "auto" },
                 { size: "auto", style: { "align-self": "baseline" } },
-                { size: "auto", repeat: 4 }
+                { size: "auto", repeat: showAll ? 5 : 4 }
             ],
             cells: [
-                { row: 2, col: 1, colSpan: "all", select: "prop=bio" },
-                { row: 3, col: 1, colSpan: "all", widget: "subheader-open:Personal Details", style: { "padding-left": "0" } },
-                { row: 5, col: 3, widget: "skip" },
-                { row: 6, col: 1, colSpan: "all", widget: "subheader-closed:Advanced", style: { "padding-left": "0" } },
-                { row: 7, col: 1, rowSpan: 2, select: "prop=comments" },
-                { row: 8, col: 2, style: { "justify-self": "end", "align-self": "end", "background": "rgba(0,0,0,0.06)", "border-radius": "4px" } }
+                { row: 1, col: 1, colSpan: "all", widget: infoBanner },
+                { row: 3, col: 1, colSpan: "all", select: "prop=bio" },
+                { row: 4, col: 1, colSpan: "all", widget: "subheader-open:Personal Details", style: { "padding-left": "0" } },
+                { row: 6, col: 3, widget: "skip" },
+                { row: 7, col: 1, colSpan: "all", widget: "subheader-closed:Advanced", style: { "padding-left": "0" } },
+                { row: 8, col: 1, rowSpan: 2, select: "prop=comments" },
+                { row: 9, col: 2, style: { "justify-self": "end", "align-self": "end", "background": "rgba(0,0,0,0.06)", "border-radius": "4px" } }
             ]
         };
     };
@@ -113,12 +126,13 @@
         return {
             container: { "row-gap": "12px", "column-gap": "20px", "padding": "20px", "align-items": "center" },
             columns: [ { size: "1fr" }, { size: "1fr" } ],
-            rows: [ { size: "auto", repeat: 10 } ],
+            rows: [ { size: "auto", repeat: showAll ? 12 : 11 } ],
             cells: [
-                { row: 2, col: 1, colSpan: "all", select: "prop=bio" },
-                { row: 3, col: 1, colSpan: "all", widget: "subheader-open:Personal Details" },
-                { row: 6, col: 1, colSpan: "all", widget: "subheader-closed:Advanced" },
-                { row: 7, col: 1, rowSpan: 2, select: "prop=comments" }
+                { row: 1, col: 1, colSpan: "all", widget: infoBanner },
+                { row: 3, col: 1, colSpan: "all", select: "prop=bio" },
+                { row: 4, col: 1, colSpan: "all", widget: "subheader-open:Personal Details" },
+                { row: 7, col: 1, colSpan: "all", widget: "subheader-closed:Advanced" },
+                { row: 8, col: 1, rowSpan: 2, select: "prop=comments" }
             ]
         };
     };
@@ -128,12 +142,13 @@
         return {
             container: { "row-gap": "12px", "padding": "20px" },
             columns: [ { size: "1fr" } ],
-            rows: [ { size: "auto", repeat: 16 } ],
+            rows: [ { size: "auto", repeat: showAll ? 19 : 17 } ],
             cells: [
-                { row: 2, col: 1, colSpan: "all", select: "prop=bio" },
-                { row: 3, col: 1, colSpan: "all", widget: "subheader-open:Personal Details" },
-                { row: 9, col: 1, colSpan: "all", widget: "subheader-closed:Advanced" },
-                { row: 10, col: 1, colSpan: "all", select: "prop=comments" }
+                { row: 1, col: 1, colSpan: "all", widget: infoBanner },
+                { row: 3, col: 1, colSpan: "all", select: "prop=bio" },
+                { row: 4, col: 1, colSpan: "all", widget: "subheader-open:Personal Details" },
+                { row: 10, col: 1, colSpan: "all", widget: "subheader-closed:Advanced" },
+                { row: 11, col: 1, colSpan: "all", select: "prop=comments" }
             ]
         };
     };
@@ -144,6 +159,16 @@
         const grid = document.querySelector('tg-grid-layout');
         const needle = (term || '').trim().toLowerCase();
         grid.filter = needle ? (element => (element.getAttribute('label') || '').toLowerCase().includes(needle)) : null;
+    }
+
+    // Toggles whether the declared rows are tall enough to fit the two trailing "Overflow" editors, then re-applies the layouts.
+    // With fewer rows the grid leaves those editors unslotted (hidden); with the extra row(s) they are placed and shown.
+    function toggleClipped(reveal) {
+        showAll = reveal;
+        const grid = document.querySelector('tg-grid-layout');
+        grid.whenDesktop = app._whenDesktop();
+        grid.whenTablet = app._whenTablet();
+        grid.whenMobile = app._whenMobile();
     }
 </script>
 

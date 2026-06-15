@@ -2,10 +2,12 @@ import '/resources/polymer/@polymer/iron-media-query/iron-media-query.js';
 
 import '/resources/components/tg-subheader.js';
 
+import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
+
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 
-import { TgLayoutBehavior, layoutMediaQueryTemplate } from '/resources/layout/tg-layout-behavior.js';
+import { TgLayoutBehavior, layoutMediaQueryTemplate, stampLayoutTemplate } from '/resources/layout/tg-layout-behavior.js';
 
 const Widgets = {
     CELL: "cell",
@@ -62,33 +64,6 @@ const markOccupied = function (occupied, row, col, colSpan, rowSpan) {
     }
 };
 
-const calculateNumberOfElementsToFitInto = function (layout) {
-    if (!layout.rows || layout.rows.length === 0) {
-        return Infinity;
-    }
-    const columnCount = trackCount(layout.columns);
-    let elementsCount = columnCount + trackCount(layout.rows);
-    (layout.cells || []).forEach(cell => {
-        const multiplier = cell.widget && (cell.widget.indexOf(Widgets.SKIP) || cell.widget.indexOf(Widgets.SUBHEADER)) ? 0 : 1;
-        if (cell.colSpan === 'all') {
-            if (cell.col === 1) {
-                elementsCount -= columnCount * (cell.rowSpan || 1) - 1 * multiplier;
-            } else {
-                throw new Error ("Grid layout configuration error: colSpan: 'all' should applied to cell palced at first column only");
-            }
-        } else {
-            elementsCount -= (cell.colSpan || 1) * (cell.rowSpan || 1) - 1 * multiplier;
-        }
-    })
-}
-
-const createLayoutRepresentation = function(layout, componentsToLayout) {
-    if (!layout.columns || layout.columns.length === 0) {
-        throw new Error("Layout should have at least one column");
-    }
-
-}
-
 class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
 
     static get template() {
@@ -99,7 +74,7 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
     // Explicitly configured cells (spans, overrides, subheaders, skips) are placed at their coordinates; the remaining editors auto-flow into the empty positions, in order.
     _setLayout (layout) {
         if (!layout.columns) {
-            throw new Error("The provide layout is not grid layout");
+            throw new Error("The provided layout is not grid layout");
         }
         if (this.currentLayout === layout) {
             return;
@@ -114,13 +89,14 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         this._resetSubheaders();
         this._resetStyles();
 
-        //3. Create internal layout representation
-        this._currentLayoutRepresentation = createLayoutRepresentation(layout, this.componentsToLayout);
+        //3. Apply styles to container
         this._applyContainer(layout);
 
         const columns = layout.columns || [];
         const rows = layout.rows || [];
         const columnCount = trackCount(columns) || 1;
+        // When `rows` are explicitly specified, the grid has a fixed height; an editor that does not fit within those rows is left unslotted (and so unrendered), rather than spilling into implicit rows.
+        const rowCount = rows.length > 0 ? trackCount(rows) : Infinity;
         const columnStyles = expandTrackStyles(columns);
         const rowStyles = expandTrackStyles(rows);
 
@@ -147,7 +123,7 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         const remainingCells = new Set(Object.keys(cellAt));
         let currentSubheader = null;
         let row = 1;
-        while (pool.length > 0 || remainingCells.size > 0) {
+        while ((pool.length > 0 || remainingCells.size > 0) && row <= rowCount) {
             for (let col = 1; col <= columnCount; col += 1) {
                 const key = row + ',' + col;
                 if (occupied.has(key)) {
@@ -161,11 +137,13 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
                     const colSpan = cell.colSpan === 'all' ? columnCount : (cell.colSpan || 1);
                     const rowSpan = cell.rowSpan || 1;
                     markOccupied(occupied, row, col, colSpan, rowSpan);
-                    if (cell.widget === 'skip') {
+                    if (cell.widget === Widgets.SKIP) {
                         placed = document.createElement('div');
-                    } else if (cell.widget && cell.widget.indexOf('subheader') === 0) {
+                    } else if (cell.widget && cell.widget.indexOf(Widgets.SUBHEADER) === 0) {
                         placed = this._createSubheader(cell.widget);
                         subheader = true;
+                    } else if (cell.widget && cell.widget.indexOf(Widgets.HTML) === 0) {
+                        placed = this._createHtmlElement(cell.widget);
                     } else {
                         placed = this._createCellElement(cell.boundSlot || pool.shift());
                     }
@@ -217,6 +195,7 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
     _clearAppendedElements () {
         (this.appendedElements || []).forEach(element => this.shadowRoot.removeChild(element));
         this.appendedElements = [];
+        this._htmlElements = {};
     }
 
     _resetSubheaders () {
@@ -279,6 +258,19 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
             subheader.closed = true;
         }
         return subheader;
+    }
+
+    // A grid item that stamps an inline html snippet (`html:<markup>`) into a `dom-bind`, kept in sync with the layout `context`.
+    _createHtmlElement (widget) {
+        const template = document.createElement('template');
+        template.innerHTML = widget.substring(widget.indexOf(':') + 1).trim();
+        const domBind = document.createElement('dom-bind');
+        domBind.appendChild(template);
+        stampLayoutTemplate(domBind, this.context);
+        (this._htmlElements[widget] = this._htmlElements[widget] || []).push(domBind);
+        const wrapper = document.createElement('div');
+        wrapper.appendChild(domBind);
+        return wrapper;
     }
 
     // Places a grid item at `(row, col)`, applying its span and the cascade of column, row and cell declarations.
