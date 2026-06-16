@@ -69,6 +69,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.layout.AbstractLayout;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.sse.IEventSource;
@@ -868,7 +869,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         logger.debug("Initiating layout...");
 
-        final FlexLayout layout = this.dslDefaultConfig.getSelectionCriteriaLayout();
+        final AbstractLayout<?> layout = this.dslDefaultConfig.getSelectionCriteriaLayout();
 
         final DomElement editorContainer = layout.render().attr("context", "[[_currEntity]]");
 

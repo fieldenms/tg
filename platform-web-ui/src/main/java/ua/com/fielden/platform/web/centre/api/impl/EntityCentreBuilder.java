@@ -29,7 +29,9 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
+import ua.com.fielden.platform.web.layout.AbstractLayout;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
 import ua.com.fielden.platform.web.sse.IEventSource;
 
 import java.math.BigDecimal;
@@ -117,7 +119,16 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
     protected final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria = new HashMap<>();
 
-    protected final FlexLayout selectionCriteriaLayout = new FlexLayout("sel_crit");
+    /// The selection-criteria layout manager.
+    /// Defaults to a [FlexLayout] and is replaced by the manager of the configured kind on the first `setLayoutFor` call.
+    ///
+    protected AbstractLayout<?> selectionCriteriaLayout = new FlexLayout("sel_crit");
+
+    /// The kind of layout configuration installed for selection criteria, captured on the first `setLayoutFor` call.
+    /// All subsequent breakpoints must use the same kind, because a single client element renders all of them.
+    ///
+    protected Class<? extends ILayoutConfiguration> selectionCriteriaLayoutKind;
+
     protected final FlexLayout resultsetCollapsedCardLayout = new FlexLayout("collapsed_card");
     protected final FlexLayout resultsetExpansionCardLayout = new FlexLayout("expansion_card");
     protected final FlexLayout resultsetSummaryCardLayout = new FlexLayout("summary_card");

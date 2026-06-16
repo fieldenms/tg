@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.layout.grid.impl;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/// A single column or row track of a [GridLayoutConfig].
+/// A single column or row track of a [GridLayoutConfiguration].
 ///
 /// A track carries its CSS size (e.g. `1fr`, `minmax(20%, 1fr)`, `auto`), an optional repeat count, and optional CSS declarations that the layout emulates per cell.
 /// The client builds `grid-template-columns` / `grid-template-rows` from the size and repeat count, and applies the declarations to every cell that lands in the track (CSS Grid has no per-track alignment or styling).

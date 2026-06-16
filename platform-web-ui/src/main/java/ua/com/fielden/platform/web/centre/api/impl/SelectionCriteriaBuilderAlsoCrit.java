@@ -10,6 +10,7 @@ import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResul
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
+import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,7 +41,7 @@ class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements I
     }
 
     @Override
-    public ILayoutConfigWithResultsetSupport<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+    public ILayoutConfigWithResultsetSupport<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final ILayoutConfiguration layout) {
         if (builder.selectionCriteria.isEmpty()) {
             throw new EntityCentreConfigurationException("Looks like out of sequence call as there are selection criteria to layout.");
         }
@@ -49,7 +50,7 @@ class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements I
             throw new EntityCentreConfigurationException("Selection criterial layout requries device and orientation (optional) to be specified.");
         }
 
-        return new SelectionCriteriaLayoutBuilder<>(builder).setLayoutFor(device, orientation, flexString);
+        return new SelectionCriteriaLayoutBuilder<>(builder).setLayoutFor(device, orientation, layout);
     }
 
     /// Builds a custom matcher configuration for criteria property with different parameters.

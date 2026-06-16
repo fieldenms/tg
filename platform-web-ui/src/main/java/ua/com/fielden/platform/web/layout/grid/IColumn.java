@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.layout.grid;
 
-import ua.com.fielden.platform.web.layout.grid.impl.GridLayoutConfig;
+import ua.com.fielden.platform.web.layout.grid.impl.GridLayoutConfiguration;
 
 /// The step at which a column track has been added and may be further configured.
 /// More columns may be added, the current column may be styled or justified, the row tracks may be declared, or the layout may be completed with its elements.
@@ -37,5 +37,5 @@ public interface IColumn {
     /// Completes the layout with the given element configurations (spans, overrides, subheaders, skips).
     /// Ordinary editors that are not named here auto-flow into the remaining cells, in order.
     ///
-    GridLayoutConfig elements(IGridCell... cells);
+    GridLayoutConfiguration elements(IGridCell... cells);
 }

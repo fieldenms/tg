@@ -2,8 +2,6 @@ package ua.com.fielden.platform.web.layout;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.interfaces.IExecutable;
-import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
 /// The device-sensitive layout that maps a fluent Java API onto CSS Grid, rendered by the `tg-grid-layout` client component.
@@ -11,7 +9,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 /// It is the grid-based counterpart of [FlexLayout] and reuses the same per-breakpoint machinery ([#whenMedia]).
 /// A per-breakpoint layout is supplied as the wire string produced by the fluent grid API (see `GridLayoutBuilder.grid()`).
 ///
-public class GridLayout extends AbstractLayout<AbstractLayoutSetter<GridLayout>> implements IImportable, IExecutable {
+public class GridLayout extends AbstractLayout<AbstractLayoutSetter<GridLayout>> {
     private final String gridLayoutPath = "layout/tg-grid-layout";
     private final String name;
 

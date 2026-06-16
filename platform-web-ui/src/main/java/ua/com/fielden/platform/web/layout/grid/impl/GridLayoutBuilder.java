@@ -155,8 +155,8 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IRows
     }
 
     @Override
-    public GridLayoutConfig elements(final IGridCell... cells) {
+    public GridLayoutConfiguration elements(final IGridCell... cells) {
         final List<GridCell> cellList = Stream.of(cells).map(GridCell.class::cast).collect(Collectors.toList());
-        return new GridLayoutConfig(content, columnTracks, rowTracks, cellList);
+        return new GridLayoutConfiguration(content, columnTracks, rowTracks, cellList);
     }
 }

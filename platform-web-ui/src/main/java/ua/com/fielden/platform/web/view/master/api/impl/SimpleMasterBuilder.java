@@ -16,7 +16,9 @@ import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.layout.AbstractLayout;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
@@ -56,7 +58,16 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<Object> entityActions = new ArrayList<>();
 
-    private final FlexLayout layout = new FlexLayout("editors");
+    /// The editors layout manager.
+    /// Defaults to a [FlexLayout] and is replaced by the manager of the configured kind on the first call to [#setLayoutFor(Device, Optional, ILayoutConfiguration)].
+    ///
+    private AbstractLayout<?> layout = new FlexLayout("editors");
+
+    /// The kind of layout configuration installed for the editors area, captured on the first call to [#setLayoutFor(Device, Optional, ILayoutConfiguration)].
+    /// All subsequent breakpoints must use the same kind, because a single client element renders all of them.
+    ///
+    private Class<? extends ILayoutConfiguration> layoutConfigKind;
+
     private final FlexLayout actionBarLayout = new FlexLayout("actions");
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
@@ -201,11 +212,19 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public ILayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+    public ILayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final ILayoutConfiguration config) {
         if (device == null || orientation == null) {
             throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
         }
-        layout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
+        // The first configuration determines the layout kind: replace the default flex manager with the configured kind's manager.
+        // A single client element renders all breakpoints, so every subsequent breakpoint must use the same kind.
+        if (layoutConfigKind == null) {
+            layout = config.mkLayoutManager("editors");
+            layoutConfigKind = config.getClass();
+        } else if (!layoutConfigKind.equals(config.getClass())) {
+            throw new IllegalArgumentException("All editor layouts for a master must be of the same kind. Cannot mix [%s] with [%s].".formatted(layoutConfigKind.getSimpleName(), config.getClass().getSimpleName()));
+        }
+        layout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(config.layout());
         return this;
     }
 

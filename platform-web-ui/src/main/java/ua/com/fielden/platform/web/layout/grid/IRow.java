@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.layout.grid;
 
-import ua.com.fielden.platform.web.layout.grid.impl.GridLayoutConfig;
+import ua.com.fielden.platform.web.layout.grid.impl.GridLayoutConfiguration;
 
 /// The step at which a row track has been added and may be further configured.
 /// More rows may be added, the current row may be styled, aligned or repeated, or the layout may be completed with its elements.
@@ -28,5 +28,5 @@ public interface IRow {
     /// Completes the layout with the given element configurations (spans, overrides, subheaders, skips).
     /// Ordinary editors that are not named here auto-flow into the remaining cells, in order.
     ///
-    GridLayoutConfig elements(IGridCell... cells);
+    GridLayoutConfiguration elements(IGridCell... cells);
 }
