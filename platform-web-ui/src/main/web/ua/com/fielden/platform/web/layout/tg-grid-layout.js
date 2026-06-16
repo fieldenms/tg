@@ -204,12 +204,18 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
     }
 
     _resetStyles () {
-        //1. Clear container styles
+        // 1. Clear the grid styles the previous layout applied to the host.
         this.style.removeProperty('grid-template-columns');
         this.style.removeProperty('grid-template-rows');
         (this._appliedContainerProps || []).forEach(property => this.style.removeProperty(property));
         this._appliedContainerProps = [];
-        //TODO also remove styles from slotted elements
+        // 2. Clear the per-editor state left on the slotted elements, so each starts the new layout from a clean slate.
+        // The cell/column/row declarations live on the wrapper grid-items, which are recreated each layout and so reset themselves;
+        // the only state carried on a slotted editor is the `hidden-with-filter` class, so it is cleared here. The new layout and filter
+        // re-apply it as needed — this also clears it from an editor that is now clipped, which the filter no longer revisits.
+        (this.componentsToLayout || []).forEach(slotName => {
+            this.toggleClass('hidden-with-filter', false, this.slottedElements[slotName]);
+        });
     }
 
     // Applies `display: grid`, the column/row templates and the container-level declarations to the host.
