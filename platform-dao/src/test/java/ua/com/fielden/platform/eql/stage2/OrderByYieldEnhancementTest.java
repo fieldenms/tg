@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1.ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY;
+import static ua.com.fielden.platform.types.Money.AMOUNT;
 
 import org.junit.Test;
 
@@ -53,7 +54,7 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(VEHICLE).model(), orderBy().yield("purchasePrice").desc().model());
 
         final Source2BasedOnPersistentType source = source(1, VEHICLE);
-        final Prop2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", "amount"));
+        final Prop2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", AMOUNT));
 
         assertEquals(orderBys(orderDesc(prop)), actQry.orderings);
     }
@@ -63,7 +64,7 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(VEHICLE).model(), orderBy().yield("purchasePrice.amount").desc().model());
 
         final Source2BasedOnPersistentType source = source(1, VEHICLE);
-        final Prop2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", "amount"));
+        final Prop2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", AMOUNT));
 
         assertEquals(orderBys(orderDesc(prop)), actQry.orderings);
     }

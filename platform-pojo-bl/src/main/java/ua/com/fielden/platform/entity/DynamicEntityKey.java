@@ -4,10 +4,12 @@ import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.types.Money;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.IntStream;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
@@ -110,47 +112,65 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     @SuppressWarnings("unchecked")
     @Override
     public final int compareTo(final DynamicEntityKey key) {
-        for (int index = 0; index < memberNames.size(); index++) {
-            if (keyMemberComparables.get(index + 1) != null) {
-                final Comparator comparator = keyMemberComparables.get(index + 1);
-                final int result = comparator.compare(value(index), key.value(index));
-                if (result != 0) {
-                    return result;
-                }
-            } else {
-                final Comparable thisValue = (Comparable) value(index);
-                final Comparable thatValue = (Comparable) key.value(index);
-                // first check the cases where one of or both values are null
-                if (thisValue == null && thatValue != null) {
-                    return -1;
-                }
-                if (thisValue != null && thatValue == null) {
-                    return 1;
-                }
-                if (thisValue != null && thatValue != null) {
-                    // there are no nulls, so need to perform comparison
-                    final int partialCmpResult = thisValue.compareTo(thatValue);
-                    if (partialCmpResult != 0) {
-                        return partialCmpResult;
+        return IntStream.range(0, memberNames.size())
+                .map(index -> {
+                    if (keyMemberComparables.get(index + 1) != null) {
+                        final Comparator comparator = keyMemberComparables.get(index + 1);
+                        return comparator.compare(value(index), key.value(index));
                     }
-                }
-            }
-        }
-        return 0;
+                    else {
+                        return compareToMember(key, index);
+                    }
+                })
+                .filter(result -> result != 0)
+                .findFirst()
+                .orElse(0);
     }
 
-    /**
-     * Performs comparison base on method {@link #compareTo(DynamicEntityKey)}.
-     */
+    private int compareToMember(final DynamicEntityKey key, final int index) {
+        final Comparable thisValue = (Comparable) value(index);
+        final Comparable thatValue = (Comparable) key.value(index);
+        // first check the cases where one of or both values are null
+        if (thisValue == null && thatValue == null) {
+            return 0;
+        }
+        if (thisValue == null) {
+            return -1;
+        }
+        if (thatValue == null) {
+            return 1;
+        }
+        // there are no nulls, so need to perform comparison
+        return thisValue.compareTo(thatValue);
+    }
+
+    /// Compares key members for equality using [#compareTo].
+    ///
+    /// As a special case, [Money]-typed members are compared using [Money#equals] to account for currency.
+    ///
     @Override
     public final boolean equals(final Object key) {
         if (this == key) {
             return true;
         }
-        if (!(key instanceof DynamicEntityKey)) {
+        if (!(key instanceof DynamicEntityKey that)) {
             return false;
         }
-        return compareTo((DynamicEntityKey) key) == 0;
+
+        return IntStream.range(0, memberNames.size()).allMatch(index -> {
+            if (keyMemberComparables.get(index + 1) != null) {
+                final Comparator comparator = keyMemberComparables.get(index + 1);
+                return comparator.compare(value(index), that.value(index)) == 0;
+            }
+            else {
+                if (value(index) instanceof Money thisMoney) {
+                    return thisMoney.equals(that.value(index));
+                }
+                else {
+                    return compareToMember(that, index) == 0;
+                }
+            }
+        });
     }
 
     /**

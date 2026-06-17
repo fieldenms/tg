@@ -23,6 +23,8 @@ import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamic
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessDao;
 import ua.com.fielden.platform.ioc.BasicWebServerIocModule;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.persistence.types.IPropertyPersistentTypeVerification;
+import ua.com.fielden.platform.persistence.types.NoPropertyPersistentTypeVerification;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.compound.*;
 import ua.com.fielden.platform.security.annotations.SessionCache;
@@ -75,6 +77,8 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(IApplicationSettings.class).to(ApplicationSettingsForTesting.class);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
+
+        bind(IPropertyPersistentTypeVerification.class).to(NoPropertyPersistentTypeVerification.class);
 
         install(new SecurityTestIocModule());
 

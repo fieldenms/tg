@@ -5,6 +5,7 @@ import ua.com.fielden.platform.persistence.types.MoneyWithTaxAmountType;
 import ua.com.fielden.platform.types.Money;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 public interface PropertyMetadataUtils {
@@ -49,6 +50,12 @@ public interface PropertyMetadataUtils {
     /// @param naming  specifies how to form the names of the resulting sub-properties
     ///
     List<PropertyMetadata> subProperties(PropertyMetadata pm, SubPropertyNaming naming);
+
+    /// This predicate is true iff property `pm` has a sub-property whose name is `subName`.
+    ///
+    /// @see #subProperties(PropertyMetadata, SubPropertyNaming)
+    ///
+    boolean hasSubProperty(PropertyMetadata pm, CharSequence subName);
 
     /// Naming strategies for sub-properties.
     ///

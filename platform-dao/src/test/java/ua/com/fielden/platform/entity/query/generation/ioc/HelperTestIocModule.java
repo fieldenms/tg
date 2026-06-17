@@ -2,6 +2,8 @@ package ua.com.fielden.platform.entity.query.generation.ioc;
 
 import com.google.inject.name.Names;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.utils.DefaultDates;
 import ua.com.fielden.platform.utils.DefaultUniversalConstants;
 import ua.com.fielden.platform.utils.IDates;
@@ -29,6 +31,7 @@ public class HelperTestIocModule extends AbstractPlatformIocModule {
 
         bind(IDates.class).to(DefaultDates.class);
         bind(IUniversalConstants.class).to(DefaultUniversalConstants.class);
+        bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
     }
 
 }

@@ -53,6 +53,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.Money.AMOUNT;
+import static ua.com.fielden.platform.types.Money.CURRENCY;
+import static ua.com.fielden.platform.types.Money.TAX_PERCENT;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
@@ -141,12 +144,12 @@ public class CentreUpdater {
     private static final Function<String, Currency> STRING_TO_CURRENCY = Currency::getInstance;
     private static final Function<Money, Map<String, Object>> MONEY_TO_MAP = money ->
         money.getTaxPercent() != null
-            ? mapOf(t2("amount", TO_STRING.apply(money.getAmount())), t2("taxPercent", TO_STRING.apply(money.getTaxPercent())), t2("currency", TO_STRING.apply(money.getCurrency())))
-            : mapOf(t2("amount", TO_STRING.apply(money.getAmount())), t2("currency", TO_STRING.apply(money.getCurrency())));
+            ? mapOf(t2(AMOUNT, TO_STRING.apply(money.getAmount())), t2(TAX_PERCENT, TO_STRING.apply(money.getTaxPercent())), t2(CURRENCY, TO_STRING.apply(money.getCurrency())))
+            : mapOf(t2(AMOUNT, TO_STRING.apply(money.getAmount())), t2(CURRENCY, TO_STRING.apply(money.getCurrency())));
     private static final Function<Map<String, Object>, Money> MAP_TO_MONEY = map -> 
-        map.containsKey("taxPercent") 
-            ? new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_INTEGER.apply((String) map.get("taxPercent")), STRING_TO_CURRENCY.apply((String) map.get("currency")))
-            : new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_CURRENCY.apply((String) map.get("currency")));
+        map.containsKey(TAX_PERCENT)
+            ? new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get(AMOUNT)), STRING_TO_INTEGER.apply((String) map.get(TAX_PERCENT)), STRING_TO_CURRENCY.apply((String) map.get(CURRENCY)))
+            : new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get(AMOUNT)), STRING_TO_CURRENCY.apply((String) map.get(CURRENCY)));
     private static final Function<AbstractEntity<?>, String> ENTITY_TO_STRING = entity -> entityWithMocksToString((ent) -> {
         if (isPersistentEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType()) || isUnionEntityType(ent.getType())) {
             if (ent.getId() == null) {

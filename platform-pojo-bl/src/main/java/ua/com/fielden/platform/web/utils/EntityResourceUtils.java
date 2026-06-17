@@ -70,6 +70,7 @@ import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isCollectional;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFromCriteriaType;
+import static ua.com.fielden.platform.types.Money.*;
 import static ua.com.fielden.platform.types.RichText.VALIDATION_RESULT;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
@@ -719,9 +720,9 @@ public class EntityResourceUtils {
         } else if (Money.class.isAssignableFrom(propertyType)) {
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
 
-            final BigDecimal amount = new BigDecimal(map.get("amount").toString());
-            final String currencyStr = (String) map.get("currency");
-            final Integer taxPercentage = (Integer) map.get("taxPercent");
+            final BigDecimal amount = new BigDecimal(map.get(AMOUNT).toString());
+            final String currencyStr = (String) map.get(CURRENCY);
+            final Integer taxPercentage = (Integer) map.get(TAX_PERCENT);
 
             if (taxPercentage == null) {
                 if (StringUtils.isEmpty(currencyStr)) {

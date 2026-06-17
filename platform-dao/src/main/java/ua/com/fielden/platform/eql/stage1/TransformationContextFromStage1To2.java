@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -27,36 +28,44 @@ public final class TransformationContextFromStage1To2 {
     public final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries; // in reverse order -- the first list is for the deepest nested query
     public final QuerySourceInfoProvider querySourceInfoProvider;
     public final IDomainMetadata domainMetadata;
+    public final QueryModelToStage1Transformer stage1Transformer;
+    public final MoneyComponentInference moneyComponentInference;
     public final boolean isForCalcProp; // indicates that this context is used to transform calc-prop expression.
 
     private TransformationContextFromStage1To2(
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IDomainMetadata domainMetadata,
+            final QueryModelToStage1Transformer stage1Transformer,
+            final MoneyComponentInference moneyComponentInference,
             final boolean isForCalcProp)
     {
-        this(querySourceInfoProvider, domainMetadata, ImmutableList.of(), isForCalcProp);
+        this(querySourceInfoProvider, domainMetadata, ImmutableList.of(), stage1Transformer, moneyComponentInference, isForCalcProp);
     }
 
     public static TransformationContextFromStage1To2 forCalcPropContext(
             final QuerySourceInfoProvider querySourceInfoProvider,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final QueryModelToStage1Transformer stage1Transformer,
+            final MoneyComponentInference moneyComponentInference)
     {
-        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, true);
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, stage1Transformer, moneyComponentInference, true);
     }
 
     public static TransformationContextFromStage1To2 forCalcPropContext(final TransformationContextFromStage1To2 context) {
-        return forCalcPropContext(context.querySourceInfoProvider, context.domainMetadata);
+        return forCalcPropContext(context.querySourceInfoProvider, context.domainMetadata, context.stage1Transformer, context.moneyComponentInference);
     }
 
     public static TransformationContextFromStage1To2 forMainContext(
             final QuerySourceInfoProvider querySourceInfoProvider,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final QueryModelToStage1Transformer stage1Transformer,
+            final MoneyComponentInference moneyComponentInference)
     {
-        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, false);
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, stage1Transformer, moneyComponentInference, false);
     }
 
     public static TransformationContextFromStage1To2 forMainContext(final TransformationContextFromStage1To2 context) {
-        return forMainContext(context.querySourceInfoProvider, context.domainMetadata);
+        return forMainContext(context.querySourceInfoProvider, context.domainMetadata, context.stage1Transformer, context.moneyComponentInference);
     }
 
     public static void showInternals() {
@@ -71,11 +80,15 @@ public final class TransformationContextFromStage1To2 {
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IDomainMetadata domainMetadata,
             final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries,
+            final QueryModelToStage1Transformer stage1Transformer,
+            final MoneyComponentInference moneyComponentInference,
             final boolean isForCalcProp)
     {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.sourcesForNestedQueries = sourcesForNestedQueries;
         this.domainMetadata = domainMetadata;
+        this.stage1Transformer = stage1Transformer;
+        this.moneyComponentInference = moneyComponentInference;
         this.isForCalcProp = isForCalcProp;
         if (SHOW_INTERNALS) {
             LOGGER.info(toString());
@@ -87,7 +100,12 @@ public final class TransformationContextFromStage1To2 {
                 .add(ImmutableList.of(transformedSource))
                 .addAll(sourcesForNestedQueries) // all lists within added list are already unmodifiable
                 .build();
-        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, newSourcesForNestedQueries, isForCalcProp);
+        return new TransformationContextFromStage1To2(querySourceInfoProvider,
+                                                      domainMetadata,
+                                                      newSourcesForNestedQueries,
+                                                      stage1Transformer,
+                                                      moneyComponentInference,
+                                                      isForCalcProp);
     }
 
     public TransformationContextFromStage1To2 cloneWithAdded(final List<ISource2<? extends ISource3>> leftNodeSources, final List<ISource2<? extends ISource3>> rightNodeSources) {
@@ -95,7 +113,12 @@ public final class TransformationContextFromStage1To2 {
                 .add(ImmutableList. <ISource2<? extends ISource3>> builder().addAll(leftNodeSources).addAll(rightNodeSources).build())
                 .addAll(sourcesForNestedQueries) // all lists within added list are already unmodifiable
                 .build();
-        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, newSourcesForNestedQueries, isForCalcProp);
+        return new TransformationContextFromStage1To2(querySourceInfoProvider,
+                                                      domainMetadata,
+                                                      newSourcesForNestedQueries,
+                                                      stage1Transformer,
+                                                      moneyComponentInference,
+                                                      isForCalcProp);
     }
 
     public List<ISource2<? extends ISource3>> getCurrentLevelSources() {

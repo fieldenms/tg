@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.queries;
 
 import com.google.common.base.Objects;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
@@ -48,9 +49,9 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
 
     public static final String ERR_NO_YIELDS = "Nothing can be yielded. Either the query source is empty, or yields were discarded by the fetch model.\n";
 
-    public final IRetrievalModel<?> retrievalModel;
+    public final @Nullable IRetrievalModel<?> retrievalModel;
 
-    public ResultQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType, final IRetrievalModel<?> retrievalModel) {
+    public ResultQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType, final @Nullable IRetrievalModel<?> retrievalModel) {
         super(queryComponents, requireNonNull(resultType));
         this.retrievalModel = retrievalModel;
     }

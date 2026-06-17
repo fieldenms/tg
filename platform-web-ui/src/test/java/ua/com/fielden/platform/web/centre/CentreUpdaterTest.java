@@ -17,6 +17,7 @@ import static java.math.RoundingMode.HALF_UP;
 import static ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum.NEXT;
 import static ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum.PREV;
 import static ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum.MONTH;
+import static ua.com.fielden.platform.types.Money.*;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
@@ -636,7 +637,7 @@ public class CentreUpdaterTest extends CentreUpdaterTestMixin {
     
     @Test
     public void left_money_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "1.0100"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
@@ -646,22 +647,22 @@ public class CentreUpdaterTest extends CentreUpdaterTestMixin {
     
     @Test
     public void default_left_money_value_2_non_empty() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyPropDefault", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropDefault", VALUE.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyPropDefault", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropDefault", VALUE.name(), mapOf(t2(AMOUNT, "1.0100"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_crit_money_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyPropCrit", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropCrit", VALUE.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyPropCrit", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropCrit", VALUE.name(), mapOf(t2(AMOUNT, "1.0100"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void crit_single_money_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyPropCritSingle", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropCritSingle", VALUE.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyPropCritSingle", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropCritSingle", VALUE.name(), mapOf(t2(AMOUNT, "1.0100"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void right_money_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "moneyProp", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyProp", VALUE2.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "moneyProp", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyProp", VALUE2.name(), mapOf(t2(AMOUNT, "1.0100"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
@@ -671,67 +672,67 @@ public class CentreUpdaterTest extends CentreUpdaterTestMixin {
     
     @Test
     public void default_right_money_value_2_non_empty() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "moneyPropDefault", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropDefault", VALUE2.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "moneyPropDefault", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropDefault", VALUE2.name(), mapOf(t2(AMOUNT, "1.0100"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void right_crit_money_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "moneyPropCrit", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropCrit", VALUE2.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "moneyPropCrit", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropCrit", VALUE2.name(), mapOf(t2(AMOUNT, "1.0100"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_money_value_byte() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(127), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "127.0000"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(127), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "127.0000"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_money_value_byte_negative() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-127), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "-127.0000"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-127), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "-127.0000"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_money_value_short() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(32767), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "32767.0000"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(32767), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "32767.0000"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_money_value_short_negative() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-32768), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "-32768.0000"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-32768), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "-32768.0000"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_money_value_int() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(2147483647), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "2147483647.0000"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(2147483647), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "2147483647.0000"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_money_value_int_negative() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-2147483648), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "-2147483648.0000"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-2147483648), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "-2147483648.0000"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_money_value_long() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(9223372036854775807L), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "9223372036854775807.0000"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(9223372036854775807L), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "9223372036854775807.0000"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_money_value_long_negative() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-9223372036854775808L), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "-9223372036854775808.0000"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-9223372036854775808L), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "-9223372036854775808.0000"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_money_value_bigDecimal() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal("2222222222222222222222222.100200"), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "2222222222222222222222222.1002"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal("2222222222222222222222222.100200"), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "2222222222222222222222222.1002"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_money_value_bigDecimal_negative() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal("-2222222222222222222222222.100200"), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "-2222222222222222222222222.1002"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal("-2222222222222222222222222.100200"), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "-2222222222222222222222222.1002"), t2(CURRENCY, "UAH"))));
     }
     
     @Test
     public void left_money_value_with_taxPercent() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal("3.1002"), 20, Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "3.1002"), t2("taxPercent", "20"), t2("currency", "UAH"))));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal("3.1002"), 20, Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2(AMOUNT, "3.1002"), t2(TAX_PERCENT, "20"), t2(CURRENCY, "UAH"))));
     }
     
 }

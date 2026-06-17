@@ -9,6 +9,7 @@ import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
@@ -52,6 +53,7 @@ public class DependentCalcPropsOrder {
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IDomainMetadata domainMetadata,
             final QueryModelToStage1Transformer gen,
+            final MoneyComponentInference moneyComponentInference,
             final QuerySourceInfo<?> querySourceInfo)
     {
 
@@ -70,7 +72,9 @@ public class DependentCalcPropsOrder {
                             calcPropChunk.data().expression.expressionModel().tokens(),
                             EqlCompilationResult.StandaloneExpression.class)
                     .model();
-            final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider, domainMetadata).cloneWithAdded(source);
+            final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(
+                    querySourceInfoProvider, domainMetadata, gen, moneyComponentInference)
+                    .cloneWithAdded(source);
             try {
                 final Expression2 exp2 = exp1.transform(prc);
                 final Set<Prop2> expProps = exp2.collectProps();

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
+import static ua.com.fielden.platform.types.Money.*;
 
 public class PropertyMetadataUtilsTest {
 
@@ -31,10 +32,10 @@ public class PropertyMetadataUtilsTest {
     @Test
     public void subProperties_for_composite_type_Money_depend_on_its_representation() {
         subPropertiesOf(Entity_VariousMoney.class, "moneyWithTax")
-                .assertSubPropertiesAre(List.of("amount", "taxAmount", "currency"));
+                .assertSubPropertiesAre(List.of(AMOUNT, TAX_AMOUNT, CURRENCY));
 
         subPropertiesOf(Entity_VariousMoney.class, "simpleMoney")
-                .assertSubPropertiesAre(List.of("amount"));
+                .assertSubPropertiesAre(List.of(AMOUNT));
     }
 
     @Test
@@ -54,11 +55,11 @@ public class PropertyMetadataUtilsTest {
     @Test
     public void types_of_subProperties_of_a_property_with_composite_type_are_determined_correctly() {
         subPropertiesOf(Entity_VariousMoney.class, "moneyWithTax")
-                .assertSubProperty("amount", p -> p.type()
+                .assertSubProperty(AMOUNT, p -> p.type()
                         .assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(BigDecimal.class))
-                .assertSubProperty("taxAmount", p -> p.type()
+                .assertSubProperty(TAX_AMOUNT, p -> p.type()
                         .assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(BigDecimal.class))
-                .assertSubProperty("currency", p -> p.type()
+                .assertSubProperty(CURRENCY, p -> p.type()
                         .assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(Currency.class));
     }
 
