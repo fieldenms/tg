@@ -38,8 +38,8 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public IActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
-        return simpleMasterBuilder.setActionBarLayoutFor(device, Optional.empty(), flexString);
+    public IActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final ILayoutConfiguration layout) {
+        return simpleMasterBuilder.setActionBarLayoutFor(device, Optional.empty(), layout);
     }
 
     @Override

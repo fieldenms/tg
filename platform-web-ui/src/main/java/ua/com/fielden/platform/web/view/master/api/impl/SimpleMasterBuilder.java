@@ -68,7 +68,15 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     ///
     private boolean layoutConfigured = false;
 
-    private final FlexLayout actionBarLayout = new FlexLayout("actions");
+    /// The action bar layout manager.
+    /// Defaults to a [FlexLayout] and is replaced by the manager of the configured kind on the first call to [#setActionBarLayoutFor(Device, Optional, ILayoutConfiguration)].
+    ///
+    private AbstractLayout<?> actionBarLayout = new FlexLayout("actions");
+
+    /// Whether an explicit action bar layout has been configured yet.
+    /// Until then, [#actionBarLayout] holds the default flex manager, which the first configuration replaces.
+    ///
+    private boolean actionBarLayoutConfigured = false;
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
@@ -267,6 +275,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
         // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions
         final DomElement actionContainer = actionBarLayout.render().attr("slot", "action-bar");
+        importPaths.add(actionBarLayout.importPath());
         final StringBuilder entityActionsStr = new StringBuilder();
         for (final Object action: entityActions) {
             if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {
@@ -463,11 +472,20 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public IActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+    public IActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final ILayoutConfiguration config) {
         if (device == null || orientation == null) {
             throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
         }
-        actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
+        // The first configuration determines the action bar layout kind: replace the default flex manager with the configured kind's manager.
+        // A single client element renders all breakpoints, so every subsequent breakpoint must resolve to the same kind of manager.
+        final AbstractLayout<?> manager = config.mkLayoutManager("actions");
+        if (!actionBarLayoutConfigured) {
+            actionBarLayout = manager;
+            actionBarLayoutConfigured = true;
+        } else if (!actionBarLayout.getClass().equals(manager.getClass())) {
+            throw new IllegalArgumentException("All action bar layouts for a master must be of the same kind. Cannot mix [%s] with [%s].".formatted(actionBarLayout.getClass().getSimpleName(), manager.getClass().getSimpleName()));
+        }
+        actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(config.layout());
         return this;
     }
 
