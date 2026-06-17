@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.layout;
 
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.web.layout.grid.AutoRepeat.AUTO_FILL;
+import static ua.com.fielden.platform.web.layout.grid.AutoRepeat.AUTO_FIT;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.content;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.grid;
@@ -167,5 +169,23 @@ public class GridLayoutTest {
         assertEquals(
                 "{columns:[{size:\"1fr\"}],rows:[{size:\"auto\"}],cells:[]}",
                 grid().columns().addColumn().rows().addRow("auto").layout());
+    }
+
+    @Test
+    public void auto_tracking_columns_serialise_with_a_repeat_keyword() {
+        // auto-fit — the browser fits as many tracks of the given size as it can; editors auto-flow
+        assertEquals(
+                "{columns:[{size:\"minmax(220px, 1fr)\",repeat:\"auto-fit\"}],cells:[]}",
+                grid().columns().addColumn("minmax(220px, 1fr)").repeat(AUTO_FIT).layout());
+
+        // auto-fill — like auto-fit, but empty trailing tracks are preserved
+        assertEquals(
+                "{columns:[{size:\"minmax(180px, 1fr)\",repeat:\"auto-fill\"}],cells:[]}",
+                grid().columns().addColumn("minmax(180px, 1fr)").repeat(AUTO_FILL).layout());
+
+        // a style declared on an auto-tracked column is serialised — the client applies it uniformly to every cell
+        assertEquals(
+                "{columns:[{size:\"minmax(220px, 1fr)\",repeat:\"auto-fit\",style:{\"padding\":\"8px\"}}],cells:[]}",
+                grid().columns().addColumn("minmax(220px, 1fr)").style("padding", "8px").repeat(AUTO_FIT).layout());
     }
 }

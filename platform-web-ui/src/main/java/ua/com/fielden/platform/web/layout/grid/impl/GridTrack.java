@@ -14,6 +14,7 @@ class GridTrack {
     private final String size;
     private final Map<String, String> styles = new LinkedHashMap<>();
     private int times = 1;
+    private String autoRepeat;
 
     GridTrack(final String size) {
         this.size = size;
@@ -27,11 +28,21 @@ class GridTrack {
         this.times = times;
     }
 
-    /// Renders this track as a JavaScript object literal, e.g. `{size:"1fr",repeat:3,style:{"padding-left":"32px"}}`.
+    /// Marks this track to be auto-tracked as `repeat(auto-fit, size)` or `repeat(auto-fill, size)`.
+    /// `keyword` is `auto-fit` or `auto-fill`; the number of generated tracks is determined by the browser.
+    ///
+    void autoRepeat(final String keyword) {
+        this.autoRepeat = keyword;
+    }
+
+    /// Renders this track as a JavaScript object literal, e.g. `{size:"1fr",repeat:3,style:{"padding-left":"32px"}}`,
+    /// or `{size:"minmax(220px, 1fr)",repeat:"auto-fit"}` for an auto-tracked column.
     ///
     String render() {
         final StringBuilder sb = new StringBuilder("{size:\"").append(size).append("\"");
-        if (times > 1) {
+        if (autoRepeat != null) {
+            sb.append(",repeat:\"").append(autoRepeat).append("\"");
+        } else if (times > 1) {
             sb.append(",repeat:").append(times);
         }
         if (!styles.isEmpty()) {

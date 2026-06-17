@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.layout.AbstractLayout;
 import ua.com.fielden.platform.web.layout.AbstractLayoutSetter;
+import ua.com.fielden.platform.web.layout.grid.AutoRepeat;
 import ua.com.fielden.platform.web.layout.grid.ICell;
 import ua.com.fielden.platform.web.layout.grid.IColumn;
 import ua.com.fielden.platform.web.layout.grid.IColumns;
@@ -148,6 +149,12 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IRows
     @Override
     public GridLayoutBuilder repeat(final int times) {
         current.repeat(times);
+        return this;
+    }
+
+    @Override
+    public GridLayoutBuilder repeat(final AutoRepeat mode) {
+        current.autoRepeat(mode.keyword());
         return this;
     }
 

@@ -34,9 +34,11 @@ const trackSpan = function (track) {
     return track.repeat && track.repeat > 1 ? track.repeat : 1;
 };
 
-// A track definition's contribution to a `grid-template-*` declaration: `repeat(n, size)` when repeated, otherwise the bare size.
+// A track definition's contribution to a `grid-template-*` declaration:
+// `repeat(n, size)` for a fixed repeat, `repeat(auto-fit|auto-fill, size)` for an auto-track (repeat is a keyword string), otherwise the bare size.
 const trackToken = function (track) {
-    return track.repeat && track.repeat > 1 ? `repeat(${track.repeat}, ${track.size})` : track.size;
+    const repeat = track.repeat;
+    return repeat && (typeof repeat === 'string' || repeat > 1) ? `repeat(${repeat}, ${track.size})` : track.size;
 };
 
 // The total number of logical tracks across the given definitions.
@@ -93,6 +95,24 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         this._applyContainer(layout);
 
         const columns = layout.columns || [];
+
+        // 3a. Auto-tracking columns — repeat(auto-fit|auto-fill, …) — produce a browser-determined number of tracks,
+        // so coordinate-based placement does not apply: every editor auto-flows across the generated tracks, reflowing on resize.
+        // Explicit cells and rows are not used in this mode. Per-column-index styling is likewise meaningless, so the styles
+        // declared on the column track(s) are applied uniformly to every cell.
+        if (columns.some(track => typeof track.repeat === 'string')) {
+            const autoCellStyle = columns.reduce((style, track) => Object.assign(style, track.style || {}), {});
+            this.componentsToLayout.forEach(slotName => {
+                const element = this._createCellElement(slotName);
+                Object.entries(autoCellStyle).forEach(([property, value]) => element.style.setProperty(property, value));
+                this.shadowRoot.appendChild(element);
+                this.appendedElements.push(element);
+            });
+            this._setCurrentLayout(layout);
+            this._filterLayout(this.filter);
+            this.fire('layout-finished', this);
+            return;
+        }
         const rows = layout.rows || [];
         const columnCount = trackCount(columns) || 1;
         // When `rows` are explicitly specified, the grid has a fixed height; an editor that does not fit within those rows is left unslotted (and so unrendered), rather than spilling into implicit rows.
