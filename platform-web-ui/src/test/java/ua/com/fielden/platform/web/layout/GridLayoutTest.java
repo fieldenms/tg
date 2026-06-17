@@ -155,4 +155,17 @@ public class GridLayoutTest {
                 "{columns:[{size:\"1fr\"}],cells:[{row:1,col:1,widget:\"html:<i class=\\\"x\\\"></i>\"}]}",
                 grid().columns().addColumn().elements(html(1, 1, "<i class=\"x\"></i>")).toString());
     }
+
+    @Test
+    public void elements_are_optional_and_the_chain_is_itself_a_configuration() {
+        // after columns — the declared column tracks alone form a complete, auto-flowing layout
+        assertEquals(
+                "{columns:[{size:\"1fr\"},{size:\"1fr\"}],cells:[]}",
+                grid().columns().addColumn("1fr").addColumn("1fr").layout());
+
+        // after rows — likewise a terminal configuration without an explicit elements(...) call
+        assertEquals(
+                "{columns:[{size:\"1fr\"}],rows:[{size:\"auto\"}],cells:[]}",
+                grid().columns().addColumn().rows().addRow("auto").layout());
+    }
 }

@@ -31,7 +31,6 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.layout.AbstractLayout;
 import ua.com.fielden.platform.web.layout.FlexLayout;
-import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
 import ua.com.fielden.platform.web.sse.IEventSource;
 
 import java.math.BigDecimal;
@@ -124,10 +123,10 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     ///
     protected AbstractLayout<?> selectionCriteriaLayout = new FlexLayout("sel_crit");
 
-    /// The kind of layout configuration installed for selection criteria, captured on the first `setLayoutFor` call.
-    /// All subsequent breakpoints must use the same kind, because a single client element renders all of them.
+    /// Whether an explicit selection-criteria layout has been configured yet.
+    /// Until then, [#selectionCriteriaLayout] holds the default flex manager, which the first configuration replaces.
     ///
-    protected Class<? extends ILayoutConfiguration> selectionCriteriaLayoutKind;
+    protected boolean selectionCriteriaLayoutConfigured;
 
     protected final FlexLayout resultsetCollapsedCardLayout = new FlexLayout("collapsed_card");
     protected final FlexLayout resultsetExpansionCardLayout = new FlexLayout("expansion_card");

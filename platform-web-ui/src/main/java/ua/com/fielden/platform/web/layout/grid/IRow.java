@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.web.layout.grid;
 
+import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
 import ua.com.fielden.platform.web.layout.grid.impl.GridLayoutConfiguration;
 
 /// The step at which a row track has been added and may be further configured.
-/// More rows may be added, the current row may be styled, aligned or repeated, or the layout may be completed with its elements.
+/// More rows may be added, the current row may be styled, aligned or repeated, or — since the declared tracks already form a complete layout — it may be used as is (all editors auto-flow) or completed with explicit elements.
 ///
-public interface IRow {
+/// This step is itself an [ILayoutConfiguration] and may be passed directly to `setLayoutFor`; the trailing `elements(…)` call is optional.
+///
+public interface IRow extends ILayoutConfiguration {
 
     /// Adds another row track.
     ///
@@ -25,8 +28,9 @@ public interface IRow {
     ///
     IRow align(String value);
 
-    /// Completes the layout with the given element configurations (spans, overrides, subheaders, skips).
+    /// Optionally completes the layout with explicit element configurations (spans, overrides, subheaders, skips).
     /// Ordinary editors that are not named here auto-flow into the remaining cells, in order.
+    /// When omitted, the declared tracks are used as the layout directly and every editor auto-flows.
     ///
     GridLayoutConfiguration elements(IGridCell... cells);
 }

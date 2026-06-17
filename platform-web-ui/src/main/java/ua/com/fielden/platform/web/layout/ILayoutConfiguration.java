@@ -5,7 +5,7 @@ package ua.com.fielden.platform.web.layout;
 /// It decouples the layout-specifying API (`setLayoutFor`) from the concrete layout kind: that API accepts an [ILayoutConfiguration] and never names a kind, so a new kind can be added without touching the master or centre builders.
 /// An implementation pairs the serialised layout for a single breakpoint ([#layout()]) with a factory for the matching device-sensitive manager ([#mkLayoutManager(String)]).
 ///
-/// Implementations: [FlexLayoutConfiguration] for flex layouts, and `GridLayoutConfiguration` (in package `grid.impl`) for grid layouts.
+/// Implementations: [FlexLayoutConfiguration] for flex layouts; for grid layouts, `GridLayoutConfiguration` (in package `grid.impl`) and the grid fluent chain itself (its `IColumn` / `IRow` steps), so a grid may be installed with or without a trailing `elements(…)` call.
 ///
 public interface ILayoutConfiguration {
 

@@ -63,10 +63,10 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     ///
     private AbstractLayout<?> layout = new FlexLayout("editors");
 
-    /// The kind of layout configuration installed for the editors area, captured on the first call to [#setLayoutFor(Device, Optional, ILayoutConfiguration)].
-    /// All subsequent breakpoints must use the same kind, because a single client element renders all of them.
+    /// Whether an explicit editors layout has been configured yet.
+    /// Until then, [#layout] holds the default flex manager, which the first configuration replaces.
     ///
-    private Class<? extends ILayoutConfiguration> layoutConfigKind;
+    private boolean layoutConfigured = false;
 
     private final FlexLayout actionBarLayout = new FlexLayout("actions");
 
@@ -217,12 +217,14 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
         }
         // The first configuration determines the layout kind: replace the default flex manager with the configured kind's manager.
-        // A single client element renders all breakpoints, so every subsequent breakpoint must use the same kind.
-        if (layoutConfigKind == null) {
-            layout = config.mkLayoutManager("editors");
-            layoutConfigKind = config.getClass();
-        } else if (!layoutConfigKind.equals(config.getClass())) {
-            throw new IllegalArgumentException("All editor layouts for a master must be of the same kind. Cannot mix [%s] with [%s].".formatted(layoutConfigKind.getSimpleName(), config.getClass().getSimpleName()));
+        // A single client element renders all breakpoints, so every subsequent breakpoint must resolve to the same kind of manager.
+        // The manager class is the kind, so different configuration types that yield the same manager — e.g. a fully built grid and a grid chain without explicit cells — are compatible.
+        final AbstractLayout<?> manager = config.mkLayoutManager("editors");
+        if (!layoutConfigured) {
+            layout = manager;
+            layoutConfigured = true;
+        } else if (!layout.getClass().equals(manager.getClass())) {
+            throw new IllegalArgumentException("All editor layouts for a master must be of the same kind. Cannot mix [%s] with [%s].".formatted(layout.getClass().getSimpleName(), manager.getClass().getSimpleName()));
         }
         layout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(config.layout());
         return this;
