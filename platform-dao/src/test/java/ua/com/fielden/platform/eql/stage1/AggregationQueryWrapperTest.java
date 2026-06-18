@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
@@ -372,6 +373,32 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         AggregationQueryWrapper.enabled = false;
         final var expected = qry(query2);
         assertEquals(expected, actual);
+    }
+
+    @Test
+    @Ignore("Nested aggregations are not possible in EQL.")
+    public void nested_aggregations_are_not_transformed() {
+        // 1. The EQL grammar does not permit an aggregation to be used as an argument of another aggregation.
+        /*
+        final var query1 = select(TgVehicle.class)
+                // No such method `maxOf` in this position.
+                .yield().sumOf().maxOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+        */
+
+        // 2. A calculated property cannot expand into a direct aggregate function call -- that would be an invalid definition,
+        // although the EQL grammar does permit such standalone expressions.
+        /*
+        select(TgVehicle.class)
+                .yield().sumOf().prop("calc").as("total")
+                .modelAsAggregate();
+
+        cannot expand into
+
+        select(TgVehicle.class)
+                .yield().sumOf().maxOf().prop("x").as("total")
+                .modelAsAggregate();
+        */
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
