@@ -2,14 +2,13 @@ package ua.com.fielden.platform.eql.stage1;
 
 import org.junit.After;
 import org.junit.Test;
-import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
-import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
@@ -35,40 +34,20 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
     }
 
     @Test
-    public void aggregation_on_persistent_property_without_grouping_is_transformed() {
-        final var query1 = select(TgVehicle.class)
-                .yield().sumOf().prop("price").as("totalPrice")
-                .modelAsAggregate();
-
-        final var query2 = select(select(TgVehicle.class)
-                                          .yield().prop("price").as("c1")
-                                          .modelAsAggregate())
-                .yield().sumOf().prop("c1").as("totalPrice")
-                .modelAsAggregate();
-
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1")));
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
-        final var actual = qry(query1);
-        AggregationQueryWrapper.enabled = false;
-        final var expected = qry(query2);
-        assertEquals(expected, actual);
-    }
-
-    @Test
     public void multiple_aggregations_over_the_same_operand_share_the_same_column() {
         final var query1 = select(TgVehicle.class)
-                .yield().sumOf().prop("price").as("totalPrice")
-                .yield().maxOf().prop("price").as("maxPrice")
+                .yield().sumOf().prop("sumOfPrices").as("totalPrice")
+                .yield().maxOf().prop("sumOfPrices").as("maxPrice")
                 .modelAsAggregate();
 
         final var query2 = select(select(TgVehicle.class)
-                                          .yield().prop("price").as("c1")
+                                          .yield().prop("sumOfPrices").as("c1")
                                           .modelAsAggregate())
                 .yield().sumOf().prop("c1").as("totalPrice")
                 .yield().maxOf().prop("c1").as("maxPrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -84,19 +63,19 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         final var query1 = select(TgVehicle.class)
                 .groupBy().prop("model.key")
                 .yield().prop("model.key").as("modelKey")
-                .yield().avgOf().prop("purchasePrice").as("avgPurchasePrice")
+                .yield().avgOf().prop("sumOfPrices").as("avg")
                 .modelAsAggregate();
 
         final var query2 = select(select(TgVehicle.class)
                                           .yield().prop("model.key").as("c1")
-                                          .yield().prop("purchasePrice").as("c2")
+                                          .yield().prop("sumOfPrices").as("c2")
                                           .modelAsAggregate())
                 .groupBy().prop("c1")
                 .yield().prop("c1").as("modelKey")
-                .yield().avgOf().prop("c2").as("avgPurchasePrice")
+                .yield().avgOf().prop("c2").as("avg")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -108,17 +87,17 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
     public void where_conditions_are_attached_to_the_source_query_and_not_to_the_outer_query_01() {
         final var query1 = select(TgVehicle.class).where()
                 .prop("purchasePrice").gt().val(100)
-                .yield().maxOf().prop("price").as("maxPrice")
+                .yield().maxOf().prop("sumOfPrices").as("maxPrice")
                 .modelAsAggregate();
 
         final var query2 = select(select(TgVehicle.class).where()
                                           .prop("purchasePrice").gt().val(100)
-                                          .yield().prop("price").as("c1")
+                                          .yield().prop("sumOfPrices").as("c1")
                                           .modelAsAggregate())
                 .yield().maxOf().prop("c1").as("maxPrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -132,19 +111,19 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .condition(EntityQueryUtils.cond().prop("purchasePrice").gt().val(100).model())
                 .and().prop("replacedBy.initDate").isNotNull()
                 .or().exists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).model())
-                .yield().maxOf().prop("price").as("maxPrice")
+                .yield().maxOf().prop("sumOfPrices").as("maxPrice")
                 .modelAsAggregate();
 
         final var query2 = select(select(TgVehicle.class).where()
                                           .condition(EntityQueryUtils.cond().prop("purchasePrice").gt().val(100).model())
                                           .and().prop("replacedBy.initDate").isNotNull()
                                           .or().exists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).model())
-                                          .yield().prop("price").as("c1")
+                                          .yield().prop("sumOfPrices").as("c1")
                                           .modelAsAggregate())
                 .yield().maxOf().prop("c1").as("maxPrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(3));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -158,18 +137,18 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
 
         final var query1 = select(TgVehicle.class)
                 .groupBy().prop("model.key")
-                .yield().avgOf().prop("price").as("avgPrice")
+                .yield().avgOf().prop("sumOfPrices").as("avgPrice")
                 .modelAsAggregate();
 
         final var query2 = select(select(TgVehicle.class)
                                           .yield().prop("model.key").as("c1")
-                                          .yield().prop("price").as("c2")
+                                          .yield().prop("sumOfPrices").as("c2")
                                           .modelAsAggregate())
                 .groupBy().prop("c1")
                 .yield().avgOf().prop("c2").as("avgPrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1, order);
         AggregationQueryWrapper.enabled = false;
@@ -182,19 +161,19 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         final var query1 = select(TgVehicle.class)
                 .groupBy().prop("model.key")
                 .orderBy().yield("avgPrice").desc()
-                .yield().avgOf().prop("price").as("avgPrice")
+                .yield().avgOf().prop("sumOfPrices").as("avgPrice")
                 .modelAsAggregate();
 
         final var query2 = select(select(TgVehicle.class)
                                           .yield().prop("model.key").as("c1")
-                                          .yield().prop("price").as("c2")
+                                          .yield().prop("sumOfPrices").as("c2")
                                           .modelAsAggregate())
                 .groupBy().prop("c1")
                 .orderBy().yield("avgPrice").desc()
                 .yield().avgOf().prop("c2").as("avgPrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -208,6 +187,21 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .prop("price").gt().val(100)
                 .yield().prop("key").as("vehicleKey")
                 .yield().prop("price").as("vehiclePrice")
+                .modelAsAggregate();
+
+        final var actual = qry(query);
+        AggregationQueryWrapper.enabled = false;
+        final var expected = qry(query);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void aggregation_over_persistent_properties_does_not_trigger_transformation() {
+        final var query = select(TgVehicle.class)
+                .yield().sumOf().prop("price").as("c1")
+                .yield().maxOf().prop("replacedBy.price").as("c2")
+                // lastFuelUsage is calculated, but qty is persistent.
+                .yield().maxOf().prop("lastFuelUsage.qty").as("c3")
                 .modelAsAggregate();
 
         final var actual = qry(query);
@@ -255,20 +249,20 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         final var query1 = select(TgVehicle.class)
                 .groupBy().prop("key")
                 // Aggregation to trigger transformation.
-                .yield().sumOf().prop("price").as("total")
+                .yield().sumOf().prop("sumOfPrices").as("total")
                 .yield().caseWhen().prop("key").eq().val("ABC").then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
         final var query2 = select(select(TgVehicle.class)
                                           .yield().prop("key").as("c1")
-                                          .yield().prop("price").as("c2")
+                                          .yield().prop("sumOfPrices").as("c2")
                                           .modelAsAggregate())
                 .groupBy().prop("c1")
                 .yield().sumOf().prop("c2").as("total")
                 .yield().caseWhen().prop("c1").eq().val("ABC").then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -281,21 +275,21 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         final var query1 = select(TgVehicle.class)
                 .groupBy().prop("initDate")
                 // Aggregation to trigger transformation.
-                .yield().sumOf().prop("price").as("total")
+                .yield().sumOf().beginExpr().prop("sumOfPrices").add().val(1).endExpr().as("total")
                 // prop("initDate") is nested within another operand secondOf()
                 .yield().caseWhen().val(40).eq().secondOf().prop("initDate").then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
         final var query2 = select(select(TgVehicle.class)
                                           .yield().prop("initDate").as("c1")
-                                          .yield().prop("price").as("c2")
+                                          .yield().beginExpr().prop("sumOfPrices").add().val(1).endExpr().as("c2")
                                           .modelAsAggregate())
                 .groupBy().prop("c1")
                 .yield().sumOf().prop("c2").as("total")
                 .yield().caseWhen().val(40).eq().secondOf().prop("c1").then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -308,20 +302,20 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         final var query1 = select(TgVehicle.class)
                 .groupBy().prop("initDate")
                 // Aggregation to trigger transformation.
-                .yield().sumOf().prop("price").as("total")
+                .yield().sumOf().prop("sumOfPrices").as("total")
                 .yield().caseWhen().prop("initDate").isNotNull().then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
         final var query2 = select(select(TgVehicle.class)
                                           .yield().prop("initDate").as("c1")
-                                          .yield().prop("price").as("c2")
+                                          .yield().prop("sumOfPrices").as("c2")
                                           .modelAsAggregate())
                 .groupBy().prop("c1")
                 .yield().sumOf().prop("c2").as("total")
                 .yield().caseWhen().prop("c1").isNotNull().then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -334,13 +328,13 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         final var query1 = select(TgVehicle.class)
                 .groupBy().prop("key")
                 // Aggregation to trigger transformation.
-                .yield().sumOf().prop("price").as("total")
+                .yield().sumOf().prop("sumOfPrices").as("total")
                 .yield().caseWhen().prop("key").like().val("ABC%").then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
         final var query2 = select(select(TgVehicle.class)
                                           .yield().prop("key").as("c1")
-                                          .yield().prop("price").as("c2")
+                                          .yield().prop("sumOfPrices").as("c2")
                                           .modelAsAggregate())
                 .groupBy().prop("c1")
                 .yield().sumOf().prop("c2").as("total")
@@ -348,7 +342,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .modelAsAggregate();
 
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
         final var expected = qry(query2);
@@ -359,20 +353,20 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
     public void set_predicate_in_case_when_has_its_properties_transformed() {
         final var query1 = select(TgVehicle.class)
                 .groupBy().prop("key")
-                .yield().sumOf().prop("price").as("total")
+                .yield().sumOf().prop("sumOfPrices").as("total")
                 .yield().caseWhen().prop("key").in().values("ABC", "DEF").then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
         final var query2 = select(select(TgVehicle.class)
                                           .yield().prop("key").as("c1")
-                                          .yield().prop("price").as("c2")
+                                          .yield().prop("sumOfPrices").as("c2")
                                           .modelAsAggregate())
                 .groupBy().prop("c1")
                 .yield().sumOf().prop("c2").as("total")
                 .yield().caseWhen().prop("c1").in().values("ABC", "DEF").then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -384,19 +378,8 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
     // : Utilities
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    private Stream<String> mkAliasGeneratorFromSeq(final List<String> list) {
-        final var gen = new Supplier<String>() {
-            int i = 0;
-
-            @Override
-            public String get() {
-                if (i >= list.size()) {
-                    throw new InvalidStateException("Out of aliases!");
-                }
-                return list.get(i++);
-            }
-        };
-        return Stream.generate(gen);
+    private Stream<String> mkAliasGenerator() {
+        return IntStream.iterate(1, i -> i + 1).mapToObj(i -> "c" + i);
     }
 
     private Supplier<Integer> mkSourceIdGeneratorFromRange(final int start) {

@@ -150,8 +150,10 @@ public final class AggregationQueryWrapper {
         final var origGroups = qc.groups();
         final var origOrderings = qc.orderings();
 
-        // TODO Narrower scope: No-op if aggregations go over persistent properties only.
-        final Set<ISingleOperand2<?>> aggregated = origYields.getYields().stream().flatMap(y -> extractAggregatedExpressions(y.operand())).collect(toCollection(LinkedHashSet::new));
+        final Set<ISingleOperand2<?>> aggregated = origYields.getYields().stream()
+                .flatMap(y -> extractAggregatedExpressions(y.operand()))
+                .filter(rand -> !isPersistentProperty(rand))
+                .collect(toCollection(LinkedHashSet::new));
         if (aggregated.isEmpty()) {
             return qc;
         }
@@ -412,6 +414,10 @@ public final class AggregationQueryWrapper {
             case JoinInnerNode2 it -> Stream.concat(streamSources(it.leftNode()), streamSources(it.rightNode()));
             default -> throw new InvalidStateException("Unsupported join node type: %s".formatted(origJoin.getClass().getName()));
         };
+    }
+
+    private static boolean isPersistentProperty(final ISingleOperand2<?> rand) {
+        return rand instanceof Prop2 prop && !prop.getPath().getLast().hasExpression();
     }
 
     private static Integer nextSourceId() {
