@@ -18,16 +18,17 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T2.toMap;
-import static ua.com.fielden.platform.utils.CollectionUtil.mapValues;
 
 /// This transformation is applicable only if the query yields an aggregation.
 /// Otherwise, it is a no-op.
@@ -118,7 +119,7 @@ public final class AggregationQueryWrapper {
     private static final Random random = new Random();
 
     private static Supplier<Integer> sourceIdGenerator = AggregationQueryWrapper::nextSourceId;
-    private static Supplier<String> aliasGenerator = AggregationQueryWrapper::uniqueAlias;
+    private static Supplier<Stream<String>> aliasGenerator = AggregationQueryWrapper::generateAliases;
 
     static void setSourceIdGenerator(final Supplier<Integer> generator) {
         sourceIdGenerator = generator;
@@ -128,12 +129,12 @@ public final class AggregationQueryWrapper {
         sourceIdGenerator = AggregationQueryWrapper::nextSourceId;
     }
 
-    static void setAliasGenerator(final Supplier<String> generator) {
+    static void setAliasGenerator(final Supplier<Stream<String>> generator) {
         aliasGenerator = generator;
     }
 
     static void resetAliasGenerator() {
-        aliasGenerator = AggregationQueryWrapper::uniqueAlias;
+        aliasGenerator = AggregationQueryWrapper::generateAliases;
     }
 
     public QueryComponents2 apply(final QueryComponents2 qc, final TransformationContextFromStage1To2 context) {
@@ -150,7 +151,7 @@ public final class AggregationQueryWrapper {
         final var origOrderings = qc.orderings();
 
         // TODO Narrower scope: No-op if aggregations go over persistent properties only.
-        final Set<ISingleOperand2<?>> aggregated = origYields.getYields().stream().flatMap(y -> extractAggregatedExpressions(y.operand())).collect(toSet());
+        final Set<ISingleOperand2<?>> aggregated = origYields.getYields().stream().flatMap(y -> extractAggregatedExpressions(y.operand())).collect(toCollection(LinkedHashSet::new));
         if (aggregated.isEmpty()) {
             return qc;
         }
@@ -167,17 +168,19 @@ public final class AggregationQueryWrapper {
         final Set<Prop2> props = StreamUtils.concat(origYields.collectProps().stream(), origGroups.collectProps().stream(), origOrderings.collectProps().stream())
                 .filter(prop -> origSourceIds.contains(prop.source.id()))
                 .filter(prop -> !aggregated.contains(prop))
-                .collect(toSet());
+                .sorted(comparing((Prop2 prop1) -> prop1.propPath).thenComparing(prop1 -> prop1.source.id()))
+                .collect(toCollection(LinkedHashSet::new));
 
-        final Map<ISingleOperand2<?>, String> operandsAndAliases = Stream.concat(props.stream(), aggregated.stream())
-                .collect(Collectors.toMap(Function.identity(), _ -> aliasGenerator.get()));
+        final List<? extends T2<? extends ISingleOperand2<?>, String>> operandsAndAliases = StreamUtils.zip(
+                Stream.concat(props.stream(), aggregated.stream()), aliasGenerator.get(), T2::t2)
+                .toList();
 
         final var sJoin = origJoin;
         final var sWhere = origWhere;
         final var sGroups = GroupBys2.EMPTY_GROUP_BYS;
         final var sOrderings = OrderBys2.EMPTY_ORDER_BYS;
-        final var sYields = new Yields2(operandsAndAliases.entrySet().stream()
-                .map(entry -> new Yield2(entry.getKey(), entry.getValue(), false))
+        final var sYields = new Yields2(operandsAndAliases.stream()
+                .map(t2 -> t2.map((rand, alias) -> new Yield2(rand, alias, false)))
                 .toList());
         final var sQuery = new SourceQuery2(Optional.of(sJoin), sWhere, sYields, sGroups, sOrderings, EntityAggregates.class);
         final QuerySourceInfo<?> newQuerySourceInfo = context.querySourceInfoProvider.produceQuerySourceInfoForEntityType(List.of(sQuery), EntityAggregates.class, false);
@@ -185,7 +188,9 @@ public final class AggregationQueryWrapper {
         final var topSource = new Source2BasedOnQueries(List.of(sQuery), null, sourceIdGenerator.get(), newQuerySourceInfo, false, true, context.isForCalcProp);
 
         // TODO Reusing AST nodes is probably not a good idea. Create copies.
-        final var replacements = mapValues(operandsAndAliases, (_, alias) -> new Prop2(topSource, List.of(newQuerySourceInfo.getProps().get(alias)), false));
+        final var replacements = operandsAndAliases.stream()
+                .collect(Collectors.toMap(T2::_1,
+                                          t2 -> t2.map((_, alias) -> new Prop2(topSource, List.of(newQuerySourceInfo.getProps().get(alias)), false))));
 
         final var topConditions = Conditions2.EMPTY_CONDITIONS;
         final var topYields = new Yields2(
@@ -233,16 +238,16 @@ public final class AggregationQueryWrapper {
         };
     }
 
-    private Yield2 replaceAll(final Yield2 yield, final Map<ISingleOperand2<?>, Prop2> replacements) {
+    private Yield2 replaceAll(final Yield2 yield, final Map<? extends ISingleOperand2<?>, Prop2> replacements) {
         return yield.setOperand(replace(yield.operand(), replacements));
     }
 
-    private GroupBy2 replaceAll(final GroupBy2 groupBy, final Map<ISingleOperand2<?>, Prop2> replacements) {
+    private GroupBy2 replaceAll(final GroupBy2 groupBy, final Map<? extends ISingleOperand2<?>, Prop2> replacements) {
         final var newOperand = replace(groupBy.operand(), replacements);
         return groupBy.setOperand(newOperand);
     }
 
-    private OrderBy2 replaceAll(final OrderBy2 orderBy, final Map<ISingleOperand2<?>, Prop2> replacements) {
+    private OrderBy2 replaceAll(final OrderBy2 orderBy, final Map<? extends ISingleOperand2<?>, Prop2> replacements) {
         if (orderBy.operand() != null) {
             final var newOperand = replace(orderBy.operand(), replacements);
             return orderBy.setOperand(newOperand);
@@ -413,8 +418,8 @@ public final class AggregationQueryWrapper {
         return random.nextInt();
     }
 
-    private static String uniqueAlias() {
-        return stringGenerator.generate(20);
+    private static Stream<String> generateAliases() {
+        return IntStream.iterate(1, i -> i + 1).mapToObj(i -> "c" + i);
     }
 
 }

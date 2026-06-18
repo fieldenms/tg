@@ -10,6 +10,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -45,7 +46,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .yield().sumOf().prop("c1").as("totalPrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1")));
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -67,7 +68,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .yield().maxOf().prop("c1").as("maxPrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1")));
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -95,7 +96,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .yield().avgOf().prop("c2").as("avgPurchasePrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -117,7 +118,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .yield().maxOf().prop("c1").as("maxPrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1")));
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -143,7 +144,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .yield().maxOf().prop("c1").as("maxPrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1")));
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(3));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -168,7 +169,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .yield().avgOf().prop("c2").as("avgPrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1, order);
         AggregationQueryWrapper.enabled = false;
@@ -193,7 +194,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .yield().avgOf().prop("c2").as("avgPrice")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -235,7 +236,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         //             .as("maxQty")
         //         .modelAsAggregate();
         //
-        // AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1")));
+        // AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1")));
         // AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(3));
         // final var actual = qry(query1);
         // AggregationQueryWrapper.enabled = false;
@@ -267,7 +268,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .yield().caseWhen().prop("c1").eq().val("ABC").then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -294,7 +295,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .yield().caseWhen().val(40).eq().secondOf().prop("c1").then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -320,7 +321,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .yield().caseWhen().prop("c1").isNotNull().then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -347,7 +348,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .modelAsAggregate();
 
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
         final var expected = qry(query2);
@@ -371,7 +372,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 .yield().caseWhen().prop("c1").in().values("ABC", "DEF").then().val(1).otherwise().val(0).end().as("flag")
                 .modelAsAggregate();
 
-        AggregationQueryWrapper.setAliasGenerator(mkAliasGeneratorFromSeq(List.of("c1", "c2")));
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1", "c2")));
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         AggregationQueryWrapper.enabled = false;
@@ -383,8 +384,8 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
     // : Utilities
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    private Supplier<String> mkAliasGeneratorFromSeq(final List<String> list) {
-        return new Supplier<>() {
+    private Stream<String> mkAliasGeneratorFromSeq(final List<String> list) {
+        final var gen = new Supplier<String>() {
             int i = 0;
 
             @Override
@@ -395,6 +396,7 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
                 return list.get(i++);
             }
         };
+        return Stream.generate(gen);
     }
 
     private Supplier<Integer> mkSourceIdGeneratorFromRange(final int start) {
