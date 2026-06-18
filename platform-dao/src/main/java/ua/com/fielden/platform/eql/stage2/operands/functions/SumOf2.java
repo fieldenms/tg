@@ -14,6 +14,10 @@ public class SumOf2 extends SingleOperandFunction2<SumOf3> {
         this.distinct = distinct;
     }
 
+    public SumOf2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new SumOf2(operand, distinct);
+    }
+
     @Override
     public TransformationResultFromStage2To3<SumOf3> transform(final TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTr = operand.transform(context);

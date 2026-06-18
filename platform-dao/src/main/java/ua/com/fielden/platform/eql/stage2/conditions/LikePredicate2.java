@@ -26,6 +26,19 @@ public record LikePredicate2 (ISingleOperand2<? extends ISingleOperand3> matchOp
         implements ICondition2<LikePredicate3>, ToString.IFormattable
 {
 
+    public LikePredicate2 update(
+            final ISingleOperand2<? extends ISingleOperand3> matchOperand,
+            final ISingleOperand2<? extends ISingleOperand3> patternOperand,
+            final LikeOptions options)
+    {
+        if (matchOperand == this.matchOperand && patternOperand == this.patternOperand && options == this.options) {
+            return this;
+        }
+        else {
+            return new LikePredicate2(matchOperand, patternOperand, options);
+        }
+    }
+
     @Override
     public boolean ignore() {
         return matchOperand.ignore() || patternOperand.ignore();

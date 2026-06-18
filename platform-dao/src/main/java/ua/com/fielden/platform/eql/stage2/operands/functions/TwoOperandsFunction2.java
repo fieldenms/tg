@@ -13,7 +13,7 @@ import java.util.Set;
 
 import static ua.com.fielden.platform.utils.CollectionUtil.concat;
 
-abstract class TwoOperandsFunction2<T extends ISingleOperand3> extends AbstractFunction2<T> {
+public abstract class TwoOperandsFunction2<T extends ISingleOperand3> extends AbstractFunction2<T> {
     public final ISingleOperand2<? extends ISingleOperand3> operand1;
     public final ISingleOperand2<? extends ISingleOperand3> operand2;
 
@@ -22,6 +22,8 @@ abstract class TwoOperandsFunction2<T extends ISingleOperand3> extends AbstractF
         this.operand1 = operand1;
         this.operand2 = operand2;
     }
+
+    public abstract TwoOperandsFunction2<T> setOperands(ISingleOperand2<? extends ISingleOperand3> operand1, ISingleOperand2<? extends ISingleOperand3> operand2);
 
     @Override
     public Set<Prop2> collectProps() {

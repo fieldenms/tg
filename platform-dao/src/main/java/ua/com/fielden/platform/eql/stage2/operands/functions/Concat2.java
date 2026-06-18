@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
+import graphql.com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
@@ -20,7 +21,15 @@ public class Concat2 extends AbstractFunction2<Concat3> {
 
     public Concat2(final List<ISingleOperand2<? extends ISingleOperand3>> operands) {
         super(STRING_PROP_TYPE);
-        this.operands = operands;
+        this.operands = ImmutableList.copyOf(operands);
+    }
+
+    public List<ISingleOperand2<? extends ISingleOperand3>> operands() {
+        return operands;
+    }
+
+    public Concat2 setOperands(final List<ISingleOperand2<? extends ISingleOperand3>> operands) {
+        return operands == this.operands ? this : new Concat2(operands);
     }
 
     @Override

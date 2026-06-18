@@ -13,6 +13,10 @@ public class UpperCaseOf2 extends SingleOperandFunction2<UpperCaseOf3> {
         super(operand, STRING_PROP_TYPE);
     }
 
+    public UpperCaseOf2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new UpperCaseOf2(operand);
+    }
+
     @Override
     public TransformationResultFromStage2To3<UpperCaseOf3> transform(final TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

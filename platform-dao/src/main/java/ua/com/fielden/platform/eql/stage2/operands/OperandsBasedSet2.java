@@ -18,6 +18,15 @@ public record OperandsBasedSet2 (List<ISingleOperand2<? extends ISingleOperand3>
         implements ISetOperand2<OperandsBasedSet3>, ToString.IFormattable
 {
 
+    public OperandsBasedSet2 update(final List<? extends ISingleOperand2<? extends ISingleOperand3>> operands) {
+        if (operands == this.operands) {
+            return this;
+        }
+        else {
+            return new OperandsBasedSet2((List<ISingleOperand2<? extends ISingleOperand3>>) operands);
+        }
+    }
+
     @Override
     public TransformationResultFromStage2To3<OperandsBasedSet3> transform(final TransformationContextFromStage2To3 context) {
         final List<ISingleOperand3> transformedOperands = new ArrayList<>();

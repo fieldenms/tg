@@ -9,6 +9,10 @@ public record CompoundSingleOperand2 (ISingleOperand2<? extends ISingleOperand3>
     implements ToString.IFormattable
 {
 
+    public CompoundSingleOperand2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new CompoundSingleOperand2(operand, operator);
+    }
+
     @Override
     public String toString() {
         return toString(ToString.separateLines());

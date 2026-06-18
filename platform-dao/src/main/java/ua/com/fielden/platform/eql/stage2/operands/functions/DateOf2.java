@@ -15,6 +15,10 @@ public class DateOf2 extends SingleOperandFunction2<DateOf3> {
         super(operand, DATE_PROP_TYPE);
     }
 
+    public DateOf2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new DateOf2(operand);
+    }
+
     @Override
     public TransformationResultFromStage2To3<DateOf3> transform(final TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

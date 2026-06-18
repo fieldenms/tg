@@ -12,6 +12,10 @@ public class Ceil2 extends SingleOperandFunction2<Ceil3> {
         super(operand, operand.type());
     }
 
+    public Ceil2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new Ceil2(operand);
+    }
+
     @Override
     public TransformationResultFromStage2To3<Ceil3> transform(final TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

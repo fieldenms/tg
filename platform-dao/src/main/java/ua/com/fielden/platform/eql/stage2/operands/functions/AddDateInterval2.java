@@ -24,7 +24,20 @@ public class AddDateInterval2 extends TwoOperandsFunction2<AddDateInterval3> {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> secondOperandTr = operand2.transform(firstOperandTr.updatedContext);
         return new TransformationResultFromStage2To3<>(new AddDateInterval3(firstOperandTr.item, intervalUnit, secondOperandTr.item, type), secondOperandTr.updatedContext);
     }
-    
+
+    @Override
+    public TwoOperandsFunction2<AddDateInterval3> setOperands(
+            final ISingleOperand2<? extends ISingleOperand3> operand1,
+            final ISingleOperand2<? extends ISingleOperand3> operand2)
+    {
+        if (this.operand1 == operand1 && this.operand2 == operand2) {
+            return this;
+        }
+        else {
+            return new AddDateInterval2(operand1, intervalUnit, operand2);
+        }
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

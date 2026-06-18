@@ -12,6 +12,10 @@ public class MonthOf2 extends DatePartFunction2<MonthOf3> {
         super(operand);
     }
 
+    public MonthOf2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new MonthOf2(operand);
+    }
+
     @Override
     public TransformationResultFromStage2To3<MonthOf3> transform(final TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

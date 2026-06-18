@@ -12,6 +12,10 @@ public class MinOf2 extends SingleOperandFunction2<MinOf3> {
         super(operand, operand.type());
     }
 
+    public MinOf2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new MinOf2(operand);
+    }
+
     @Override
     public TransformationResultFromStage2To3<MinOf3> transform(final TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

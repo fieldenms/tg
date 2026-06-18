@@ -10,7 +10,7 @@ import ua.com.fielden.platform.utils.ToString;
 import java.util.Objects;
 import java.util.Set;
 
-abstract class SingleOperandFunction2<T extends ISingleOperand3> extends AbstractFunction2<T> {
+public abstract class SingleOperandFunction2<T extends ISingleOperand3> extends AbstractFunction2<T> {
 
     public final ISingleOperand2<? extends ISingleOperand3> operand;
 
@@ -18,6 +18,8 @@ abstract class SingleOperandFunction2<T extends ISingleOperand3> extends Abstrac
         super(type);
         this.operand = operand;
     }
+
+    public abstract SingleOperandFunction2<T> setOperand(final ISingleOperand2<? extends ISingleOperand3> operand);
 
     @Override
     public Set<Prop2> collectProps() {

@@ -14,6 +14,10 @@ public record GroupBy2 (ISingleOperand2<? extends ISingleOperand3> operand) impl
         return new TransformationResultFromStage2To3<>(new GroupBy3(operandTr.item), operandTr.updatedContext);
     }
 
+    public GroupBy2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return operand == this.operand ? this : new GroupBy2(operand);
+    }
+
     @Override
     public String toString() {
         return toString(ToString.separateLines());

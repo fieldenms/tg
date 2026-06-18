@@ -21,6 +21,19 @@ public record ComparisonPredicate2 (ISingleOperand2<? extends ISingleOperand3> l
         implements ICondition2<ComparisonPredicate3>, ToString.IFormattable
 {
 
+    public ComparisonPredicate2 update(
+            final ISingleOperand2<? extends ISingleOperand3> leftOperand,
+            final ComparisonOperator operator,
+            final ISingleOperand2<? extends ISingleOperand3> rightOperand)
+    {
+        if (leftOperand == this.leftOperand && operator == this.operator && rightOperand == this.rightOperand) {
+            return this;
+        }
+        else {
+            return new ComparisonPredicate2(leftOperand, operator, rightOperand);
+        }
+    }
+
     @Override
     public boolean ignore() {
         return leftOperand.ignore() || rightOperand.ignore();

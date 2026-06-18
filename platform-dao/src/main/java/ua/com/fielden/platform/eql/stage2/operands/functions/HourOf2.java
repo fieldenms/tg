@@ -12,6 +12,10 @@ public class HourOf2 extends DatePartFunction2<HourOf3> {
         super(operand);
     }
 
+    public HourOf2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new HourOf2(operand);
+    }
+
     @Override
     public TransformationResultFromStage2To3<HourOf3> transform(final TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

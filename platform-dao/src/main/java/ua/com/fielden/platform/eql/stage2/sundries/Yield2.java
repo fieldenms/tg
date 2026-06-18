@@ -21,6 +21,15 @@ public record Yield2(ISingleOperand2<? extends ISingleOperand3> operand, String 
         implements ToString.IFormattable
 {
 
+    public Yield2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        if (operand == this.operand) {
+            return this;
+        }
+        else {
+            return new Yield2(operand, alias, hasNonnullableHint);
+        }
+    }
+
     public TransformationResultFromStage2To3<Yield3> transform(
             final TransformationContextFromStage2To3 context,
             final AbstractQuery2 query)

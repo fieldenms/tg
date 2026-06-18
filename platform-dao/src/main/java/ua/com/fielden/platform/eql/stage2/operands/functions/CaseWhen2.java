@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.meta.PropType;
@@ -21,17 +22,49 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
 
     private final List<T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs = new ArrayList<>();
-    private final ISingleOperand2<? extends ISingleOperand3> elseOperand;
+    private final @Nullable ISingleOperand2<? extends ISingleOperand3> elseOperand;
     private final ITypeCast typeCast;
 
-    public CaseWhen2(final List<T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs, final ISingleOperand2<? extends ISingleOperand3> elseOperand, final ITypeCast typeCast) {
+    public CaseWhen2(
+            final List<? extends T2<? extends ICondition2<? extends ICondition3>, ? extends ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs,
+            final ISingleOperand2<? extends ISingleOperand3> elseOperand,
+            final ITypeCast typeCast)
+    {
         super(extractTypes(whenThenPairs, elseOperand));
-        this.whenThenPairs.addAll(whenThenPairs);
+        this.whenThenPairs.addAll((Collection) whenThenPairs);
         this.elseOperand = elseOperand;
         this.typeCast = typeCast;
     }
 
-    private static Set<PropType> extractTypes(final List<T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs, final ISingleOperand2<? extends ISingleOperand3> elseOperand) {
+    public List<T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs() {
+        return Collections.unmodifiableList(whenThenPairs);
+    }
+
+    public @Nullable ISingleOperand2<? extends ISingleOperand3> elseOperand() {
+        return elseOperand;
+    }
+
+    public ITypeCast typeCast() {
+        return typeCast;
+    }
+
+    public CaseWhen2 update(
+            final List<? extends T2<? extends ICondition2<? extends ICondition3>, ? extends ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs,
+            final ISingleOperand2<? extends ISingleOperand3> elseOperand,
+            final ITypeCast typeCast)
+    {
+        if (whenThenPairs == this.whenThenPairs && elseOperand == this.elseOperand && typeCast == this.typeCast) {
+            return this;
+        }
+        else {
+            return new CaseWhen2(whenThenPairs, elseOperand, typeCast);
+        }
+    }
+
+    private static Set<PropType> extractTypes(
+            final List<? extends T2<? extends ICondition2<? extends ICondition3>, ? extends ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs,
+            final ISingleOperand2<? extends ISingleOperand3> elseOperand)
+    {
         final Set<PropType> types = new HashSet<>();
 
         if (elseOperand != null) {

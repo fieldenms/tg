@@ -15,6 +15,15 @@ public record NullPredicate2 (ISingleOperand2<? extends ISingleOperand3> operand
         implements ICondition2<NullPredicate3>, ToString.IFormattable
 {
 
+    public NullPredicate2 update(final ISingleOperand2<? extends ISingleOperand3> operand, final boolean negated) {
+        if (operand == this.operand && negated == this.negated) {
+            return this;
+        }
+        else {
+            return new NullPredicate2(operand, negated);
+        }
+    }
+
     @Override
     public boolean ignore() {
         return operand.ignore();

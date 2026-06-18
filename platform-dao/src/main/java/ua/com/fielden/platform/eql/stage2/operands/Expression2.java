@@ -18,7 +18,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.concat;
 public class Expression2 extends AbstractSingleOperand2 implements ISingleOperand2<Expression3> {
 
     public final ISingleOperand2<? extends ISingleOperand3> first;
-    private final List<CompoundSingleOperand2> items;
+    public final List<CompoundSingleOperand2> items;
     
     public Expression2(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {
         super(extractTypes(first, items));
