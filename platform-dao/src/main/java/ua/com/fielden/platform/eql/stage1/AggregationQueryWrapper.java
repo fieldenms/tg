@@ -160,16 +160,11 @@ public final class AggregationQueryWrapper {
 
         final var origSourceIds = streamSources(origJoin).map(ISource2::id).collect(toSet());
 
-        // collectProps() is used for convenience, and captures more than strictly necessary, but does not affect correctness.
-        // 1. It will recurse into subqueries, which we would otherwise skip.
-        //    The subsequent filter that uses origSourceIds does not help -- it will not exclude `extProp` used in subqueries.
-        // 2. It will recurse into aggregations, which we would otherwise skip as we have already collected them above.
-        // Nevertheless, these extra properties are harmless -- they may at most result in extra yields in the source
-        // query, which will never be used by the outer query because the subsequent replacement procedure skips subqueries
-        // and replaces extracted arguments of aggregate functions without recursing into them.
-        final Set<Prop2> props = StreamUtils.concat(origYields.collectProps().stream(), origGroups.collectProps().stream(), origOrderings.collectProps().stream())
+        final Set<Prop2> props = StreamUtils.concat(origYields.getYields().stream().map(Yield2::operand),
+                                                    origGroups.groups().stream().map(GroupBy2::operand),
+                                                    origOrderings.orderBys().stream().map(OrderBy2::operand).filter(Objects::nonNull))
+                .flatMap(this::extractProperties)
                 .filter(prop -> origSourceIds.contains(prop.source.id()))
-                .filter(prop -> !aggregated.contains(prop))
                 .sorted(comparing((Prop2 prop1) -> prop1.propPath).thenComparing(prop1 -> prop1.source.id()))
                 .collect(toCollection(LinkedHashSet::new));
 
@@ -214,7 +209,7 @@ public final class AggregationQueryWrapper {
     }
 
     /// Extracts the argument expression of every aggregate function occurring at the same level as the query source
-    /// (i.e., not inside a sub-query) within `operand`.
+    /// (i.e., not inside a subquery) within `node`.
     /// These are the per-row expressions that the source query must materialise as columns, so that the enclosing query
     /// can aggregate over them.
     ///
@@ -237,6 +232,30 @@ public final class AggregationQueryWrapper {
             // `COUNT(*)` has no argument.
             case CountAll2 _ -> Stream.empty();
             default -> streamChildren(node).flatMap(this::extractAggregatedExpressions);
+        };
+    }
+
+    /// Extracts properties occurring at the same level as the query source (i.e., not inside a subquery) within `node`.
+    /// These are the per-row properties that the source query must materialise as columns, so that the enclosing query
+    /// can reference them.
+    ///
+    /// Aggregate functions are never descended into as they are processed separately with [#extractAggregatedExpressions].
+    /// Subqueries are also skipped as any properties within them are at a different level than the original query source.
+    ///
+    private Stream<Prop2> extractProperties(final ISingleOperand2<? extends ISingleOperand3> node) {
+        return switch (node) {
+            // Skip aggregate functions, they are processed separately.
+            case AverageOf2 it -> Stream.empty();
+            case MinOf2 it -> Stream.empty();
+            case MaxOf2 it -> Stream.empty();
+            case SumOf2 it -> Stream.empty();
+            case CountOf2 it -> Stream.empty();
+            case ConcatOf2 it -> Stream.empty();
+            case CountAll2 _ -> Stream.empty();
+            // Skip subqueries.
+            case SubQuery2 _ -> Stream.empty();
+            case Prop2 it -> Stream.of(it);
+            default -> streamChildren(node).flatMap(this::extractProperties);
         };
     }
 
