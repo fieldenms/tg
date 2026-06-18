@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
+
 import java.util.function.Supplier;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -36,6 +39,8 @@ public class AbstractEntityEditActionProducer<T extends EntityEditAction> extend
                 .filter(computed -> computed instanceof T2)
                 .map(computed -> ((T2<Class<AbstractEntity<?>>, Long>) computed)._2)
                 .orElseGet(() -> chosenEntityId(editedEntity.getEntityTypeAsClass())
+                    // when [currentEntity; chosenProperty] yielded no ID, fall back to the ID carried directly by `chosenEntity` (when `withChosenEntity()` was opted in and the chosen entity is type-compatible).
+                    .or(() -> chosenEntityNotEmpty() && chosenEntityInstanceOf(editedEntity.getEntityTypeAsClass()) ? ofNullable(chosenEntity().getId()) : empty())
                     .orElseThrow(NOTHING_TO_OPEN_EXCEPTION_SUPPLIER)
                 );
             editedEntity.setEntityId(id.toString());

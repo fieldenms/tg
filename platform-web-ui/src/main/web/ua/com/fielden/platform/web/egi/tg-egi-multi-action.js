@@ -30,6 +30,7 @@ const template = html`
             toaster="[[action.toaster]]"
             current-entity="[[currentEntity]]"
             chosen-property="[[chosenProperty]]"
+            chosen-entity="[[chosenEntity]]"
             short-desc="[[action.shortDesc]]"
             long-desc="[[action.longDesc]]"
             icon="[[action.icon]]"
@@ -43,6 +44,7 @@ const template = html`
             require-selection-criteria="[[action.requireSelectionCriteria]]"
             require-selected-entities="[[action.requireSelectedEntities]]"
             require-master-entity="[[action.requireMasterEntity]]"
+            require-chosen-entity="[[action.requireChosenEntity]]"
             pre-action="[[action.preAction]]"
             post-action-success="[[action.postActionSuccess]]"
             post-action-error="[[action.postActionError]]"
@@ -78,6 +80,13 @@ export class TgEgiMultiAction extends PolymerElement {
             // Function that returns current entity of egi that was choosen by this action.
             //
             currentEntity: {
+                type: Function,
+                value: function () {
+                    return () => null;
+                }
+            },
+            //Function that returns the entity behind chosenProperty for the column that triggered the action.
+            chosenEntity: {
                 type: Function,
                 value: function () {
                     return () => null;

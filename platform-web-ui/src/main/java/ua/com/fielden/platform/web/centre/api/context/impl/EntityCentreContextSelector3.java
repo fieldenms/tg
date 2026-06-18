@@ -1,40 +1,30 @@
 package ua.com.fielden.platform.web.centre.api.context.impl;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-
-import java.util.function.BiFunction;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
-import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector1;
-import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector3;
-import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector4;
-import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
-import ua.com.fielden.platform.web.centre.api.context.IExtendedEntityCentreContextWithFunctionSelector;
+import ua.com.fielden.platform.web.centre.api.context.*;
 import ua.com.fielden.platform.web.centre.api.context.exceptions.CentreContextConfigException;
 
-/**
- * Default implementation for the entity centre context selector API.
- *
- * @author TG Team
- *
- * @param <T>
- */
+import java.util.function.BiFunction;
+
+import static java.util.Optional.*;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+
+/// Default implementation for the entity centre context selector API.
+///
 class EntityCentreContextSelector3<T extends AbstractEntity<?>> implements IEntityCentreContextSelector3<T> {
 
     private final boolean withSelectionCrit;
     private final boolean withMasterEntity;
+    private final boolean withChosenEntity;
 
 
-    public EntityCentreContextSelector3(final boolean withSelectionCrit, final boolean withMasterEntity) {
+    public EntityCentreContextSelector3(final boolean withSelectionCrit, final boolean withMasterEntity, final boolean withChosenEntity) {
         this.withSelectionCrit = withSelectionCrit;
         this.withMasterEntity = withMasterEntity;
+        this.withChosenEntity = withChosenEntity;
     }
 
     @Override
@@ -44,6 +34,7 @@ class EntityCentreContextSelector3<T extends AbstractEntity<?>> implements IEnti
                 false,
                 withSelectionCrit,
                 withMasterEntity,
+                withChosenEntity,
                 null,
                 empty(),
                 empty()
@@ -52,17 +43,17 @@ class EntityCentreContextSelector3<T extends AbstractEntity<?>> implements IEnti
 
     @Override
     public IEntityCentreContextSelector1<T> withCurrentEntity() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(true, false, withSelectionCrit, withMasterEntity, null, empty(), empty());
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(true, false, withSelectionCrit, withMasterEntity, withChosenEntity, null, empty(), empty());
     }
 
     @Override
     public IEntityCentreContextSelector1<T> withSelectedEntities() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(false, true, withSelectionCrit, withMasterEntity, null, empty(), empty());
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(false, true, withSelectionCrit, withMasterEntity, withChosenEntity, null, empty(), empty());
     }
 
     @Override
     public IEntityCentreContextSelector4<T> withMasterEntity() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(false, false, withSelectionCrit, true, null, empty(), empty());
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(false, false, withSelectionCrit, true, withChosenEntity, null, empty(), empty());
     }
 
     @Override
@@ -70,7 +61,7 @@ class EntityCentreContextSelector3<T extends AbstractEntity<?>> implements IEnti
         if (computation == null) {
             throw new CentreContextConfigException("The computational component of the context cannot be set as value null.");
         }
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(false, false, withSelectionCrit, withMasterEntity, computation, empty(), empty());
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(false, false, withSelectionCrit, withMasterEntity, withChosenEntity, computation, empty(), empty());
     }
 
     @Override
@@ -78,11 +69,11 @@ class EntityCentreContextSelector3<T extends AbstractEntity<?>> implements IEnti
         if (insertionPointFunctionalType == null) {
             throw new CentreContextConfigException("The insertion point type of the context cannot null.");
         }
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(false, false, withSelectionCrit, withMasterEntity, null, of(linkedMapOf(t2(insertionPointFunctionalType, contextForInsertionPoint))), empty());
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(false, false, withSelectionCrit, withMasterEntity, withChosenEntity, null, of(linkedMapOf(t2(insertionPointFunctionalType, contextForInsertionPoint))), empty());
     }
 
     @Override
     public IExtendedEntityCentreContextWithFunctionSelector<T> extendWithParentCentreContext(final CentreContextConfig parentCentreContext) {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(false, false, withSelectionCrit, withMasterEntity, null, empty(), ofNullable(parentCentreContext));
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(false, false, withSelectionCrit, withMasterEntity, withChosenEntity, null, empty(), ofNullable(parentCentreContext));
     }
 }
