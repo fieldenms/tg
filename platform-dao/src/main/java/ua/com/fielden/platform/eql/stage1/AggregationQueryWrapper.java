@@ -19,6 +19,7 @@ import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -109,12 +110,31 @@ public final class AggregationQueryWrapper {
 
     public static final AggregationQueryWrapper INSTANCE = new AggregationQueryWrapper();
 
-    public static boolean enabled = true;
+    static boolean enabled = true;
 
     private AggregationQueryWrapper() {}
 
-    private final RandomStringGenerator stringGenerator = new RandomStringGenerator.Builder().withinRange(new char[]{'a', 'z'}, new char[]{'0', '9'}).get();
-    private final Random random = new Random();
+    private static final RandomStringGenerator stringGenerator = new RandomStringGenerator.Builder().withinRange(new char[]{'a', 'z'}, new char[]{'0', '9'}).get();
+    private static final Random random = new Random();
+
+    private static Supplier<Integer> sourceIdGenerator = AggregationQueryWrapper::nextSourceId;
+    private static Supplier<String> aliasGenerator = AggregationQueryWrapper::uniqueAlias;
+
+    static void setSourceIdGenerator(final Supplier<Integer> generator) {
+        sourceIdGenerator = generator;
+    }
+
+    static void resetSourceIdGenerator() {
+        sourceIdGenerator = AggregationQueryWrapper::nextSourceId;
+    }
+
+    static void setAliasGenerator(final Supplier<String> generator) {
+        aliasGenerator = generator;
+    }
+
+    static void resetAliasGenerator() {
+        aliasGenerator = AggregationQueryWrapper::uniqueAlias;
+    }
 
     public QueryComponents2 apply(final QueryComponents2 qc, final TransformationContextFromStage1To2 context) {
         if (!enabled) {
@@ -150,7 +170,7 @@ public final class AggregationQueryWrapper {
                 .collect(toSet());
 
         final Map<ISingleOperand2<?>, String> operandsAndAliases = Stream.concat(props.stream(), aggregated.stream())
-                .collect(Collectors.toMap(Function.identity(), _ -> uniqueAlias()));
+                .collect(Collectors.toMap(Function.identity(), _ -> aliasGenerator.get()));
 
         final var sJoin = origJoin;
         final var sWhere = origWhere;
@@ -162,13 +182,12 @@ public final class AggregationQueryWrapper {
         final var sQuery = new SourceQuery2(Optional.of(sJoin), sWhere, sYields, sGroups, sOrderings, EntityAggregates.class);
         final QuerySourceInfo<?> newQuerySourceInfo = context.querySourceInfoProvider.produceQuerySourceInfoForEntityType(List.of(sQuery), EntityAggregates.class, false);
 
-        final var topSource = new Source2BasedOnQueries(List.of(sQuery), null, nextSourceId(), newQuerySourceInfo, false, true, context.isForCalcProp);
+        final var topSource = new Source2BasedOnQueries(List.of(sQuery), null, sourceIdGenerator.get(), newQuerySourceInfo, false, true, context.isForCalcProp);
 
         // TODO Reusing AST nodes is probably not a good idea. Create copies.
         final var replacements = mapValues(operandsAndAliases, (_, alias) -> new Prop2(topSource, List.of(newQuerySourceInfo.getProps().get(alias)), false));
 
         final var topConditions = Conditions2.EMPTY_CONDITIONS;
-        // TODO alLGenerated?
         final var topYields = new Yields2(
                 origYields.getYields()
                         .stream()
@@ -390,11 +409,11 @@ public final class AggregationQueryWrapper {
         };
     }
 
-    private Integer nextSourceId() {
+    private static Integer nextSourceId() {
         return random.nextInt();
     }
 
-    private String uniqueAlias() {
+    private static String uniqueAlias() {
         return stringGenerator.generate(20);
     }
 
