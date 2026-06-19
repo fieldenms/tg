@@ -37,4 +37,9 @@ public interface ICell {
     /// Binds a specific editor to this cell by matching an attribute and value, instead of relying on auto-flow order.
     ///
     IGridCell select(String attribute, String value);
+
+    /// Binds the editor of the given property to this cell by matching the editor's `property-name` attribute, instead of relying on auto-flow order.
+    /// A convenience over [#select(String, String)] for the `property-name` attribute; `propertyName` is a `CharSequence`, so a metamodel property reference may be passed directly.
+    ///
+    IGridCell withProp(CharSequence propertyName);
 }

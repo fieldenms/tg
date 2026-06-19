@@ -132,6 +132,11 @@ public class GridCell implements IGridCell {
         return this;
     }
 
+    @Override
+    public GridCell withProp(final CharSequence propertyName) {
+        return select("property-name", propertyName.toString());
+    }
+
     /// Renders this cell as a JavaScript object literal, e.g. `{row:4,col:1,colSpan:"all",widget:"subheader-open:Asset",style:{"padding-left":"0"}}`.
     ///
     String render() {

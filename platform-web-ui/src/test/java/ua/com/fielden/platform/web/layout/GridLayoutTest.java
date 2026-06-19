@@ -188,4 +188,17 @@ public class GridLayoutTest {
                 "{columns:[{size:\"minmax(220px, 1fr)\",repeat:\"auto-fit\",style:{\"padding\":\"8px\"}}],cells:[]}",
                 grid().columns().addColumn("minmax(220px, 1fr)").style("padding", "8px").repeat(AUTO_FIT).layout());
     }
+
+    @Test
+    public void with_prop_binds_an_editor_by_its_property_name_attribute() {
+        // withProp(name) is shorthand for select("property-name", name)
+        assertEquals(
+                "{columns:[{size:\"1fr\"}],cells:[{row:2,col:1,select:\"property-name=desc\"}]}",
+                grid().columns().addColumn().elements(cell(2, 1).withProp("desc")).toString());
+
+        // it composes with further cell configuration, e.g. spanning all columns
+        assertEquals(
+                "{columns:[{size:\"1fr\"},{size:\"1fr\"}],cells:[{row:3,col:1,colSpan:\"all\",select:\"property-name=bio\"}]}",
+                grid().columns().addColumn().addColumn().elements(cell(3, 1).withProp("bio").spanAllCols()).toString());
+    }
 }
