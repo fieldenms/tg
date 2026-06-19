@@ -22,7 +22,9 @@ const template = html`
             display: grid;
         }
         .hidden-with-subheader,
-        .hidden-with-filter {
+        .hidden-with-filter,
+        ::slotted(.hidden-with-subheader),
+        ::slotted(.hidden-with-filter) {
             display: none !important;
         }
     </style>
@@ -103,10 +105,10 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         if (columns.some(track => typeof track.repeat === 'string')) {
             const autoCellStyle = columns.reduce((style, track) => Object.assign(style, track.style || {}), {});
             this.componentsToLayout.forEach(slotName => {
-                const element = this._createCellElement(slotName);
-                Object.entries(autoCellStyle).forEach(([property, value]) => element.style.setProperty(property, value));
-                this.shadowRoot.appendChild(element);
-                this.appendedElements.push(element);
+                const slot = this._createCellElement(slotName);
+                this._applyStyles(this.slottedElements[slotName], autoCellStyle);
+                this.shadowRoot.appendChild(slot);
+                this.appendedElements.push(slot);
             });
             this._setCurrentLayout(layout);
             this._filterLayout(this.filter);
@@ -150,7 +152,8 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
                     continue;
                 }
                 const cell = cellAt[key];
-                let placed = null;
+                let placed = null;   // the element appended to the shadow root — a bare <slot> for an editor cell
+                let target = null;   // the grid item that receives placement and styles — the slotted editor itself for editor cells
                 let subheader = false;
                 if (cell) {
                     remainingCells.delete(key);
@@ -158,27 +161,31 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
                     const rowSpan = cell.rowSpan || 1;
                     markOccupied(occupied, row, col, colSpan, rowSpan);
                     if (cell.widget === Widgets.SKIP) {
-                        placed = document.createElement('div');
+                        placed = target = document.createElement('div');
                     } else if (cell.widget && cell.widget.indexOf(Widgets.SUBHEADER) === 0) {
-                        placed = this._createSubheader(cell.widget);
+                        placed = target = this._createSubheader(cell.widget);
                         subheader = true;
                     } else if (cell.widget && cell.widget.indexOf(Widgets.HTML) === 0) {
-                        placed = this._createHtmlElement(cell.widget);
+                        placed = target = this._createHtmlElement(cell.widget);
                     } else {
-                        placed = this._createCellElement(cell.boundSlot || pool.shift());
+                        const slotName = cell.boundSlot || pool.shift();
+                        placed = this._createCellElement(slotName);
+                        target = slotName ? this.slottedElements[slotName] : placed;
                     }
-                    this._placeItem(placed, row, col, colSpan, rowSpan, columnStyles, rowStyles, cell.style);
+                    this._placeItem(target, row, col, colSpan, rowSpan, columnStyles, rowStyles, cell.style);
                 } else if (pool.length > 0) {
-                    placed = this._createCellElement(pool.shift());
+                    const slotName = pool.shift();
+                    placed = this._createCellElement(slotName);
+                    target = this.slottedElements[slotName];
                     markOccupied(occupied, row, col, 1, 1);
-                    this._placeItem(placed, row, col, 1, 1, columnStyles, rowStyles, null);
+                    this._placeItem(target, row, col, 1, 1, columnStyles, rowStyles, null);
                 }
                 if (placed) {
                     if (subheader) {
-                        currentSubheader = placed;
-                        this._subheaders.push(placed);
+                        currentSubheader = target;
+                        this._subheaders.push(target);
                     } else if (currentSubheader) {
-                        currentSubheader.addRelativeElement(placed);
+                        currentSubheader.addRelativeElement(target);
                     }
                     this.shadowRoot.appendChild(placed);
                     this.appendedElements.push(placed);
@@ -229,12 +236,16 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         this.style.removeProperty('grid-template-rows');
         (this._appliedContainerProps || []).forEach(property => this.style.removeProperty(property));
         this._appliedContainerProps = [];
-        // 2. Clear the per-editor state left on the slotted elements, so each starts the new layout from a clean slate.
-        // The cell/column/row declarations live on the wrapper grid-items, which are recreated each layout and so reset themselves;
-        // the only state carried on a slotted editor is the `hidden-with-filter` class, so it is cleared here. The new layout and filter
-        // re-apply it as needed — this also clears it from an editor that is now clipped, which the filter no longer revisits.
+        // 2. Clear the per-editor state left on the slotted editors, so each starts the new layout from a clean slate.
+        // Editor cells place the slotted editor itself (not a recreated wrapper), so the placement and style declarations applied
+        // to it persist between layouts and are removed here, along with the visibility classes. The new layout and filter re-apply
+        // them as needed — this also clears an editor that is now clipped, which the filter no longer revisits.
         (this.componentsToLayout || []).forEach(slotName => {
-            this.toggleClass('hidden-with-filter', false, this.slottedElements[slotName]);
+            const editor = this.slottedElements[slotName];
+            (editor._appliedLayoutStyles || []).forEach(property => editor.style.removeProperty(property));
+            editor._appliedLayoutStyles = [];
+            this.toggleClass('hidden-with-filter', false, editor);
+            this.toggleClass('hidden-with-subheader', false, editor);
         });
     }
 
@@ -259,15 +270,16 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
     }
 
 
-    // A grid item that projects the editor of the given slot (or an empty item when no editor is available).
+    // Projects the editor of the given slot via a bare <slot>. A <slot> is `display: contents`, so the slotted editor itself
+    // becomes the grid item and receives the placement and styles directly — this is what lets a cell give the editor a specific size.
+    // When no slot is given (an explicitly configured cell with no editor to fill it), an empty placeholder div is returned instead.
     _createCellElement (slotName) {
-        const wrapper = document.createElement('div');
         if (slotName) {
             const slot = document.createElement('slot');
             slot.setAttribute('name', slotName);
-            wrapper.appendChild(slot);
+            return slot;
         }
-        return wrapper;
+        return document.createElement('div');
     }
 
     // A `tg-subheader` for a `subheader` / `subheader-open` / `subheader-closed` widget descriptor.
@@ -300,13 +312,26 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
     }
 
     // Places a grid item at `(row, col)`, applying its span and the cascade of column, row and cell declarations.
+    // The grid item is the slotted editor itself for editor cells, so the declarations (including a specific width) take effect on the editor.
     _placeItem (element, row, col, colSpan, rowSpan, columnStyles, rowStyles, cellStyle) {
-        element.style.gridColumn = colSpan > 1 ? `${col} / span ${colSpan}` : `${col}`;
-        element.style.gridRow = rowSpan > 1 ? `${row} / span ${rowSpan}` : `${row}`;
+        this._applyStyles(element, {
+            'grid-column': colSpan > 1 ? `${col} / span ${colSpan}` : `${col}`,
+            'grid-row': rowSpan > 1 ? `${row} / span ${rowSpan}` : `${row}`
+        });
         [columnStyles[col - 1], rowStyles[row - 1], cellStyle].forEach(styles => {
             if (styles) {
-                Object.entries(styles).forEach(([property, value]) => element.style.setProperty(property, value));
+                this._applyStyles(element, styles);
             }
+        });
+    }
+
+    // Applies the given CSS declarations to a grid item and records the property names on it, so the next layout can reset them.
+    // This matters because the grid items for editor cells are the slotted editors, which persist between layouts (unlike the recreated shadow-DOM cells).
+    _applyStyles (element, styles) {
+        const applied = element._appliedLayoutStyles || (element._appliedLayoutStyles = []);
+        Object.entries(styles).forEach(([property, value]) => {
+            element.style.setProperty(property, value);
+            applied.push(property);
         });
     }
 
