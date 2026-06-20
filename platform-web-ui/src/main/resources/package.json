@@ -79,7 +79,7 @@
   "//": "Do NOT nest overrides under a package that appears as $<name> elsewhere (npm/cli#5914 + #5730). Hoist such sub-rules to the root instead.",
   "overrides": {
     "@toast-ui/editor": {
-      "dompurify": "^3.4.3",
+      "dompurify": "^3.4.9",
       "@types/trusted-types": "../_EXCLUDED_"
     },
     "wct-browser-legacy": {
