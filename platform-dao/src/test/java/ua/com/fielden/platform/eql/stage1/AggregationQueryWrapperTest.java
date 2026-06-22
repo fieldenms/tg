@@ -431,6 +431,64 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         */
     }
 
+    // The following tests cover `concatOf`, whose intra-aggregate `order by` may reference properties that appear
+    // nowhere else in the query.
+    // Such properties must be materialised as columns of the source query so that the outer `concatOf` can order by them.
+    // The aggregated expression is handled like any other aggregate argument.
+
+    /// The `order by` of a `concatOf` references `initDate`, which appears nowhere else in the query.
+    /// The transformation is triggered by the `concatOf` itself, whose aggregated argument is a calculated property.
+    /// `initDate` must be materialised as a column so that the outer `concatOf` can order by it.
+    ///
+    @Test
+    public void concatOf_orderBy_property_referenced_nowhere_else_is_materialised_and_rewritten() {
+        final var query1 = select(TgVehicle.class)
+                .yield().concatOf().prop("sumOfPrices").orderBy().prop("initDate").asc().separator().val(", ").as("prices")
+                .modelAsAggregate();
+
+        final var query2 = select(select(TgVehicle.class)
+                                          .yield().prop("initDate").as("c1")
+                                          .yield().prop("sumOfPrices").as("c2")
+                                          .modelAsAggregate())
+                .yield().concatOf().prop("c2").orderBy().prop("c1").asc().separator().val(", ").as("prices")
+                .modelAsAggregate();
+
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
+        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
+        final var actual = qry(query1);
+        AggregationQueryWrapper.enabled = false;
+        final var expected = qry(query2);
+        assertEquals(expected, actual);
+    }
+
+    /// The `concatOf` aggregates over a persistent property (`qty`) and orders by another persistent property (`date`).
+    /// Neither alone would trigger the transformation, but the co-occurring `sum(qty * 2)` does.
+    /// Both the aggregated `qty` and the order-by `date` must then be materialised as columns of the source query.
+    ///
+    @Test
+    public void concatOf_orderBy_property_is_materialised_when_transformation_triggered_by_another_aggregation() {
+        final var query1 = select(TgFuelUsage.class)
+                .yield().sumOf().beginExpr().prop("qty").mult().val(2).endExpr().as("doubleSum")
+                .yield().concatOf().prop("qty").orderBy().prop("date").asc().separator().val(", ").as("qtys")
+                .modelAsAggregate();
+
+        final var query2 = select(select(TgFuelUsage.class)
+                                          .yield().prop("date").as("c1")
+                                          .yield().beginExpr().prop("qty").mult().val(2).endExpr().as("c2")
+                                          .yield().prop("qty").as("c3")
+                                          .modelAsAggregate())
+                .yield().concatOf().prop("c3").orderBy().prop("c1").asc().separator().val(", ").as("qtys")
+                .yield().sumOf().prop("c2").as("doubleSum")
+                .modelAsAggregate();
+
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
+        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
+        final var actual = qry(query1);
+        AggregationQueryWrapper.enabled = false;
+        final var expected = qry(query2);
+        assertEquals(expected, actual);
+    }
+
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Utilities
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

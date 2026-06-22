@@ -250,8 +250,9 @@ public final class AggregationQueryWrapper {
             case MaxOf2 it -> Stream.empty();
             case SumOf2 it -> Stream.empty();
             case CountOf2 it -> Stream.empty();
-            case ConcatOf2 it -> Stream.empty();
             case CountAll2 _ -> Stream.empty();
+            // concatOf: skip the aggregated expression, but include order-by expressions.
+            case ConcatOf2 it -> it.orderItems.stream().map(OrderBy2::operand).filter(Objects::nonNull).flatMap(this::extractProperties);
             // Skip subqueries.
             case SubQuery2 _ -> Stream.empty();
             case Prop2 it -> Stream.of(it);
