@@ -152,9 +152,8 @@ public final class AggregationQueryWrapper {
 
         final Set<ISingleOperand2<?>> aggregated = origYields.getYields().stream()
                 .flatMap(y -> extractAggregatedExpressions(y.operand()))
-                .filter(rand -> !isPersistentProperty(rand))
                 .collect(toCollection(LinkedHashSet::new));
-        if (aggregated.isEmpty()) {
+        if (aggregated.stream().allMatch(AggregationQueryWrapper::isPersistentProperty)) {
             return qc;
         }
 
@@ -165,6 +164,7 @@ public final class AggregationQueryWrapper {
                                                     origOrderings.orderBys().stream().map(OrderBy2::operand).filter(Objects::nonNull))
                 .flatMap(this::extractProperties)
                 .filter(prop -> origSourceIds.contains(prop.source.id()))
+                .filter(prop -> !aggregated.contains(prop))
                 .sorted(comparing((Prop2 prop1) -> prop1.propPath).thenComparing(prop1 -> prop1.source.id()))
                 .collect(toCollection(LinkedHashSet::new));
 

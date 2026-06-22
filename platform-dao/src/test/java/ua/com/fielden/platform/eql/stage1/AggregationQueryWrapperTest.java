@@ -211,6 +211,36 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         assertEquals(expected, actual);
     }
 
+    /// A query may yield an aggregation over a persistent property (`sum(qty)`) alongside an aggregation over a
+    /// non-trivial operand (`sum(qty * 2)`).
+    /// The latter triggers the transformation, and the former must be transformed too: its argument is materialised as
+    /// a column so that the outer aggregation references a column of the source query, rather than a property of the
+    /// original source that the outer query no longer accesses.
+    /// A transformation is skipped only when *all* aggregations are over persistent properties.
+    ///
+    @Test
+    public void aggregation_over_persistent_property_is_materialised_when_another_aggregation_triggers_the_transformation() {
+        final var query1 = select(TgFuelUsage.class)
+                .yield().sumOf().beginExpr().prop("qty").mult().val(2).endExpr().as("doubleQty")
+                .yield().sumOf().prop("qty").as("totalQty")
+                .modelAsAggregate();
+
+        final var query2 = select(select(TgFuelUsage.class)
+                                          .yield().beginExpr().prop("qty").mult().val(2).endExpr().as("c1")
+                                          .yield().prop("qty").as("c2")
+                                          .modelAsAggregate())
+                .yield().sumOf().prop("c1").as("doubleQty")
+                .yield().sumOf().prop("c2").as("totalQty")
+                .modelAsAggregate();
+
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
+        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
+        final var actual = qry(query1);
+        AggregationQueryWrapper.enabled = false;
+        final var expected = qry(query2);
+        assertEquals(expected, actual);
+    }
+
     // NOTE: Transformation is correct but source IDs do not match.
     @Test
     public void query_that_has_aggregation_only_within_a_subquery_is_not_transformed_but_the_subquery_is() {
