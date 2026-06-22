@@ -1239,9 +1239,13 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], 
         // null converts to '' in majority of cases (except boolean) in reflector.tg_toString... family of methods and this is the case for this editor (String or Array of Strings types)
         if (this.bindToString) {
             return value || '';
-        } else if (this.multi === true) {
-            return this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, collection: true, separator: this.separator }); // custom ',' separator is needed here, otherwise tg-editor.convertToString would be sufficient
-        } else {//if single entity value
+        }
+        else if (this.multi === true) {
+            // Custom ',' separator is needed here, - otherwise `tg-editor.convertToString` would be sufficient.
+            return this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, separator: this.separator });
+        }
+        // Single entity value case.
+        else {
             return super.convertToString(value);
         }
     }
