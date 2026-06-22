@@ -305,7 +305,8 @@ public final class AggregationQueryWrapper {
                     return replacedChild == child ? null : t2(child, replacedChild);
                 })
                 .filter(Objects::nonNull)
-                .collect(toMap());
+                // If some child nodes are equal, use any one as the key -- the lookup will work by hashCode and equals.
+                .collect(toMap((v1, _) -> v1));
         return replaceChildren(node, replacedChildren);
     }
 

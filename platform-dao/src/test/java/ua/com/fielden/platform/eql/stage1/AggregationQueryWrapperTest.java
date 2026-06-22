@@ -286,6 +286,32 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void equal_prop_nodes_under_the_same_parent_node_are_replaced_by_the_same_materialised_prop() {
+        final var query1 = select(TgVehicle.class)
+                // To trigger transformation.
+                .yield().sumOf().beginExpr().prop("price").mult().val(2).endExpr().as("cost")
+                // prop("key") -- 2 equal nodes that should be replaced by the same materialised prop.
+                .yield().concatOf().prop("key").orderBy().prop("key").asc().separator().val(" ").as("keys")
+                .modelAsAggregate();
+
+        // This is the expected query, and its AST must be constructed by hand because of generated source IDs.
+        final var query2 = select(select(TgVehicle.class)
+                                          .yield().beginExpr().prop("price").mult().val(2).endExpr().as("c1")
+                                          .yield().prop("key").as("c2")
+                                          .modelAsAggregate())
+                .yield().sumOf().prop("c1").as("cost")
+                .yield().concatOf().prop("c2").orderBy().prop("c2").asc().separator().val(" ").as("keys")
+                .modelAsAggregate();
+
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
+        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
+        final var actual = qry(query1);
+        AggregationQueryWrapper.enabled = false;
+        final var expected = qry(query2);
+        assertEquals(expected, actual);
+    }
+
     // The following tests cover the rewriting of source properties referenced within the conditions of a `caseWhen`.
     // Such a `caseWhen` is yielded alongside an aggregation, which triggers the transformation.
     // The aggregated argument (`price`) becomes `c2`, and the property referenced by the condition becomes `c1`.
