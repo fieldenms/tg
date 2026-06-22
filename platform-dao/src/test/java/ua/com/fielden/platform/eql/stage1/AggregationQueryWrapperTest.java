@@ -3,11 +3,17 @@ package ua.com.fielden.platform.eql.stage1;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForPrimType;
+import ua.com.fielden.platform.eql.stage2.operands.functions.MaxOf2;
+import ua.com.fielden.platform.eql.stage2.operands.functions.RoundTo2;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -16,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.eql.meta.PropType.BIGDECIMAL_PROP_TYPE;
 
 /// Tests for [AggregationQueryWrapper].
 ///
@@ -241,32 +248,42 @@ public class AggregationQueryWrapperTest extends EqlStage2TestCase {
         assertEquals(expected, actual);
     }
 
-    // NOTE: Transformation is correct but source IDs do not match.
     @Test
     public void query_that_has_aggregation_only_within_a_subquery_is_not_transformed_but_the_subquery_is() {
-        // final var query1 = select(TgVehicle.class).where()
-        //         .prop("price").gt().val(100)
-        //         .yield().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().maxOf().prop("qty").modelAsPrimitive()).as("maxQty")
-        //         .modelAsAggregate();
-        //
-        // final var query2 = select(TgVehicle.class)._annotate("id", 2).where()
-        //         .prop("price").gt().val(100)
-        //         .yield().model(select(select(TgFuelUsage.class)._annotate("id", 1).where()
-        //                                       .prop("vehicle").eq().extProp(ID)
-        //                                       .yield().prop("qty").as("c1")
-        //                                       .modelAsAggregate())
-        //                        ._annotate("id", 3)
-        //                                .yield().maxOf().prop("c1")
-        //                                .modelAsPrimitive())
-        //             .as("maxQty")
-        //         .modelAsAggregate();
-        //
-        // AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGeneratorFromSeq(List.of("c1")));
-        // AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(3));
-        // final var actual = qry(query1);
-        // AggregationQueryWrapper.enabled = false;
-        // final var expected = qry(query2);
-        // assertEquals(expected, actual);
+        final var query1 = select(TgVehicle.class).where()
+                .prop("price").gt().val(100)
+                .yield().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().maxOf().round().prop("qty").to(2).modelAsPrimitive()).as("maxQty")
+                .modelAsAggregate();
+
+        // This is the expected query, and its AST must be constructed by hand because of generated source IDs.
+        final var query2 = select(TgVehicle.class)/*ID=2*/.where()
+                .prop("price").gt().val(100)
+                .yield().model(select(select(TgFuelUsage.class)/*ID=1*/.where()
+                                              .prop("vehicle").eq().extProp(ID)
+                                              .yield().round().prop("qty").to(2).as("c1")
+                                              .modelAsAggregate())/*ID=3*/
+                                       .yield().maxOf().prop("c1")
+                                       .modelAsPrimitive())
+                    .as("maxQty")
+                .modelAsAggregate();
+
+        final var source3QuerySourceInfo = new QuerySourceInfo<>(EntityAggregates.class, false, List.of(new QuerySourceItemForPrimType<>("c1", BIGDECIMAL_PROP_TYPE.javaType(), BIGDECIMAL_PROP_TYPE.hibType())));
+
+        final var source2 = source(2, TgVehicle.class);
+        final var source1 = source(1, TgFuelUsage.class);
+        final var source3 = source(source3QuerySourceInfo, 3,
+                                   srcqry(sources(source1),
+                                          cond(eq(prop(source1, "vehicle"), prop(source2, ID))),
+                                          mkYields(mkYield(new RoundTo2(prop(source1, "qty"), val(2)), "c1"))));
+        final var maxQtyYield = subqry(sources(source3), mkYields(mkYield(new MaxOf2(prop(source3, "c1")))), BIGDECIMAL_PROP_TYPE);
+        final var expected = qry(sources(source2),
+                                 cond(gt(prop(source2, path(TgVehicle.class, "price.amount")), val(100))),
+                                 mkYields(mkYield(maxQtyYield, "maxQty")));
+
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
+        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(3));
+        final var actual = qry(query1);
+        assertEquals(expected, actual);
     }
 
     // The following tests cover the rewriting of source properties referenced within the conditions of a `caseWhen`.
