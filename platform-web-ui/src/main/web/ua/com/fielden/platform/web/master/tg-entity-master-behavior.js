@@ -1663,9 +1663,9 @@ const TgEntityMasterBehaviorImpl = {
         }));
     },
 
-    closeConfirmationDialog: function () {
-        if (this.$ && this.$.masterDom && this.$.masterDom.closeConfirmationDialog) {
-            return this.$.masterDom.closeConfirmationDialog();
+    confirmationDialog: function (action) {
+        if (this.$ && this.$.masterDom && this.$.masterDom.confirmationDialog) {
+            return this.$.masterDom.confirmationDialog(action);
         }
     },
 

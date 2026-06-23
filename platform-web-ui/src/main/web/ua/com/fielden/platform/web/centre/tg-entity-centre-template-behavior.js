@@ -198,14 +198,14 @@ const TgEntityCentreTemplateBehaviorImpl = {
         }
     },
 
-    closeConfirmationDialog: function () {
-        if (!this.$.egi.isEditing()) {
-            return this._dom().closeConfirmationDialog();
+    confirmationDialog: function (action) {
+        if (!this.$.egi.isEditing() && this._dom() && this._dom().confirmationDialog) {
+            return this._dom().confirmationDialog(action);
         }
     },
 
     confirm: function (message, buttons, options) {
-        if (!this.$.egi.isEditing()) {
+        if (!this.$.egi.isEditing() && this._dom() && this._dom()._confirmationDialog) {
             return this._dom()._confirmationDialog().showConfirmationDialog(message, buttons, options);
         }
         return this._saveOrCancelPromise();

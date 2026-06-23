@@ -354,6 +354,19 @@ Polymer({
             observer: 'isActionInProgressChanged'
         },
 
+        /// Indicates whether the action's recent execution (if any) was successful.
+        ///
+        /// In the beginning `isActionSuccessful` is false.
+        /// During action execution up until successful saving (including successful postActionSuccess without any exceptions) it is false.
+        /// After successful saving (including successful postActionSuccess without any exceptions) it is true.
+        /// It becomes false again after `isActionInProgress` becomes true.
+        ///
+        isActionSuccessful: {
+            type: Boolean,
+            value: false,
+            observer: 'isActionSuccessfulChanged'
+        },
+
         /**
          * Indicates whether this action should be disabled.
          */
@@ -639,9 +652,11 @@ Polymer({
             // One exception from that rule: embedded masters in master-with-master -- the flag is configured from MasterWithMasterBuilder API.
             master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
 
-            const restoreStateAfterSave = function () {
+            const restoreStateAfterSave = function (actionSuccessful) {
                 if (!self.skipAutomaticActionCompletion) {
-                    // action execution completes
+                    // Mark action as successful if `actionSuccessful`.
+                    self.isActionSuccessful = !!actionSuccessful || false;
+                    // Action execution completes.
                     self.isActionInProgress = false;
 
                     if (master.noUI === true) {
@@ -651,8 +666,9 @@ Polymer({
             };
 
             master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
+                const entitySavingSuccessful = potentiallySavedOrNewEntity && potentiallySavedOrNewEntity.isValidWithoutException();
                 try {
-                    if (potentiallySavedOrNewEntity.isValidWithoutException()) {
+                    if (entitySavingSuccessful) {
                         if (self.postActionSuccess) {
                             self.postActionSuccess(potentiallySavedOrNewEntity, self, master);
                         }
@@ -663,7 +679,9 @@ Polymer({
                     }
                 } catch (e) {
                     throw enhanceStateRestoration(e, () => {
-                        restoreStateAfterSave();
+                        // Even though `entitySavingSuccessful` may be true, we still consider `isActionSuccessful` false.
+                        // This, for example will leave ConfirmationPreAction.*withProgress opened to be able to repeat the action.
+                        restoreStateAfterSave(false);
                         master.restoreAfterSave();
                     });
                 } finally {
@@ -680,7 +698,7 @@ Polymer({
                         }
                     });
                 }
-                restoreStateAfterSave();
+                restoreStateAfterSave(entitySavingSuccessful);
             };
 
             master.postSavedError = function (errorResult) {
@@ -857,6 +875,11 @@ Polymer({
     },
 
     isActionInProgressChanged: function (newValue, oldValue) {
+        // If action is starting its progress then reset `isActionSuccessful` to `false` (i.e. it is not yet successfull).
+        if (newValue && !oldValue) {
+            this.isActionSuccessful = false;
+        }
+
         if (this._startSpinnerTimer) {
             clearTimeout(this._startSpinnerTimer);
         }
@@ -866,6 +889,9 @@ Polymer({
         } else {
             this.$.spinner.style.display = 'none';
         }
+    },
+
+    isActionSuccessfulChanged: function (newValue, oldValue) {
     },
 
     _computeIsIconButton: function (uiRole) {
