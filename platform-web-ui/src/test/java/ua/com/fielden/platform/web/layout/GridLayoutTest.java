@@ -190,6 +190,27 @@ public class GridLayoutTest {
     }
 
     @Test
+    public void subheader_indentation_serialises_as_a_top_level_field() {
+        final String wire = grid()
+                .content(content().withGaps("0px", "20px").withSubheaderIndentation("32px"))
+                .columns()
+                    .addColumn("1fr")
+                    .addColumn("1fr")
+                .elements(
+                    subheaderOpen(1, "Asset"),
+                    skip(2, 2))
+                .toString();
+
+        assertEquals(
+                "{container:{\"row-gap\":\"0px\",\"column-gap\":\"20px\"},"
+                + "subheaderIndentation:\"32px\","
+                + "columns:[{size:\"1fr\"},{size:\"1fr\"}],"
+                + "cells:[{row:1,col:1,colSpan:\"all\",widget:\"subheader-open:Asset\"},"
+                + "{row:2,col:2,widget:\"skip\"}]}",
+                wire);
+    }
+
+    @Test
     public void with_prop_binds_an_editor_by_its_property_name_attribute() {
         // withProp(name) is shorthand for select("property-name", name)
         assertEquals(

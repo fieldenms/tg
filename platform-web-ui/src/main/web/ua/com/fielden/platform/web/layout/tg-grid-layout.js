@@ -94,7 +94,10 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         this._resetStyles();
 
         //3. Apply styles to container
-        this._applyContainer(layout);
+        // A subheader indentation reserves an implicit leading "gutter" column, but only when the layout actually has a subheader.
+        const hasSubheader = (layout.cells || []).some(cell => cell.widget && cell.widget.indexOf(Widgets.SUBHEADER) === 0);
+        const indent = hasSubheader ? layout.subheaderIndentation : null;
+        this._applyContainer(layout, indent);
 
         const columns = layout.columns || [];
 
@@ -172,13 +175,13 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
                         placed = this._createCellElement(slotName);
                         target = slotName ? this.slottedElements[slotName] : placed;
                     }
-                    this._placeItem(target, row, col, colSpan, rowSpan, columnStyles, rowStyles, cell.style);
+                    this._placeItem(target, this._gridColumn(col, colSpan, cell.colSpan === 'all', subheader, indent, currentSubheader), row, col, rowSpan, columnStyles, rowStyles, cell.style);
                 } else if (pool.length > 0) {
                     const slotName = pool.shift();
                     placed = this._createCellElement(slotName);
                     target = this.slottedElements[slotName];
                     markOccupied(occupied, row, col, 1, 1);
-                    this._placeItem(target, row, col, 1, 1, columnStyles, rowStyles, null);
+                    this._placeItem(target, this._gridColumn(col, 1, false, false, indent, currentSubheader), row, col, 1, columnStyles, rowStyles, null);
                 }
                 if (placed) {
                     if (subheader) {
@@ -250,12 +253,14 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
     }
 
     // Applies `display: grid`, the column/row templates and the container-level declarations to the host.
-    _applyContainer (layout) {
+    // When `indent` is given, a fixed gutter track is prepended; the developer's columns then occupy grid columns 2..N+1.
+    _applyContainer (layout, indent) {
         this._appliedContainerProps = [];
         this.style.display = 'grid';
         const columnTemplate = (layout.columns || []).map(trackToken).join(' ');
-        if (columnTemplate) {
-            this.style.gridTemplateColumns = columnTemplate;
+        const fullTemplate = indent ? `${indent} ${columnTemplate}` : columnTemplate;
+        if (fullTemplate) {
+            this.style.gridTemplateColumns = fullTemplate;
         }
         const rowTemplate = (layout.rows || []).map(trackToken).join(' ');
         if (rowTemplate) {
@@ -311,11 +316,12 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         return wrapper;
     }
 
-    // Places a grid item at `(row, col)`, applying its span and the cascade of column, row and cell declarations.
+    // Places a grid item at the given resolved `grid-column` and at `(row)`, applying its row span and the cascade of column, row and cell declarations.
     // The grid item is the slotted editor itself for editor cells, so the declarations (including a specific width) take effect on the editor.
-    _placeItem (element, row, col, colSpan, rowSpan, columnStyles, rowStyles, cellStyle) {
+    // `col` is the developer column (1-based, gutter-agnostic), used only to index the column-level emulated styles.
+    _placeItem (element, gridColumn, row, col, rowSpan, columnStyles, rowStyles, cellStyle) {
         this._applyStyles(element, {
-            'grid-column': colSpan > 1 ? `${col} / span ${colSpan}` : `${col}`,
+            'grid-column': gridColumn,
             'grid-row': rowSpan > 1 ? `${row} / span ${rowSpan}` : `${row}`
         });
         [columnStyles[col - 1], rowStyles[row - 1], cellStyle].forEach(styles => {
@@ -323,6 +329,31 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
                 this._applyStyles(element, styles);
             }
         });
+    }
+
+    // Resolves a cell's `grid-column`, accounting for the implicit subheader-indentation gutter.
+    // Without indentation it is the plain developer column and span. With indentation a gutter occupies grid column 1 and the developer
+    // columns shift to 2..N+1: a subheader and any content before the first subheader span the gutter (flush), while content under a
+    // subheader skips it (indented). `spanAll` always resolves to the full span — `1 / -1` flush, or `2 / -1` when indented under a subheader.
+    _gridColumn (col, colSpan, spanAll, isSubheader, indent, currentSubheader) {
+        if (!indent) {
+            return spanAll ? '1 / -1' : (colSpan > 1 ? `${col} / span ${colSpan}` : `${col}`);
+        }
+        if (isSubheader) {
+            return '1 / -1';
+        }
+        if (!currentSubheader) {
+            // Before the first subheader — flush: the first column spans the gutter; the rest shift by one.
+            if (spanAll) {
+                return '1 / -1';
+            }
+            return col === 1 ? `1 / span ${colSpan + 1}` : (colSpan > 1 ? `${col + 1} / span ${colSpan}` : `${col + 1}`);
+        }
+        // Under a subheader — indented: the gutter is left empty, content occupies grid columns 2..N+1.
+        if (spanAll) {
+            return '2 / -1';
+        }
+        return colSpan > 1 ? `${col + 1} / span ${colSpan}` : `${col + 1}`;
     }
 
     // Applies the given CSS declarations to a grid item and records the property names on it, so the next layout can reset them.

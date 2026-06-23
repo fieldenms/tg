@@ -415,16 +415,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String actionMr = format("'margin-top: 20px', 'margin-left: 20px', 'width: %s'", MASTER_ACTION_DEFAULT_WIDTH + "px");
 
         final ILayoutConfiguration desktopGridConfig = grid()
-            .content(content().withGaps("0px", "20px").alignContent("start").style("padding", "20px").style("min-height", "fit-content").style("box-sizing", "border-box").style("height", "100%"))
+            .content(content().withGaps("0px", "20px").alignContent("start").withSubheaderIndentation("32px").style("padding", "20px").style("min-height", "fit-content").style("box-sizing", "border-box").style("height", "100%"))
             .columns()
-                .addColumn().style("margin-left","32px").addColumn().repeat(3)
+                .addColumn().repeat(4)
             .elements(
-                    GridLayoutBuilder.cell(1, 1).style("margin-left", "0px"),
-                    subheaderOpen(2, "Other components 1").style("margin-left", "0px"),
+                    subheaderOpen(2, "Other components 1"),
                     GridLayoutBuilder.cell(3, 1).spanAllCols(),
                     GridLayoutBuilder.cell(4, 1).spanCols(2),
                     GridLayoutBuilder.cell(4, 3).spanCols(2),
-                    subheaderOpen(6, "Other components 2").style("margin-left", "0px"),
+                    subheaderOpen(6, "Other components 2"),
                     GridLayoutBuilder.cell(4, 1).spanCols(2),
                     html(10, 1, "<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>").style("padding-top", "20px").spanAllCols(),
                     html(11, 1, "<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>").style("padding-top", "20px").spanAllCols());

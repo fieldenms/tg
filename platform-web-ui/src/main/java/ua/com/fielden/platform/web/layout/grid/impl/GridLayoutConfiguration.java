@@ -40,6 +40,9 @@ public class GridLayoutConfiguration implements ILayoutConfiguration {
         if (content != null && !content.isEmpty()) {
             parts.add("container:" + content.renderObject());
         }
+        if (content != null && content.subheaderIndentation() != null) {
+            parts.add("subheaderIndentation:\"" + content.subheaderIndentation() + "\"");
+        }
         if (!columns.isEmpty()) {
             parts.add("columns:[" + renderTracks(columns) + "]");
         }

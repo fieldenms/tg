@@ -14,6 +14,7 @@ import ua.com.fielden.platform.web.layout.grid.IGridContent;
 public class GridContent implements IGridContent {
 
     private final Map<String, String> styles = new LinkedHashMap<>();
+    private String subheaderIndentation;
 
     GridContent() {
     }
@@ -55,10 +56,22 @@ public class GridContent implements IGridContent {
         return this;
     }
 
+    @Override
+    public GridContent withSubheaderIndentation(final String size) {
+        this.subheaderIndentation = size;
+        return this;
+    }
+
     /// Indicates whether any container-level declaration has been set.
     ///
     boolean isEmpty() {
         return styles.isEmpty();
+    }
+
+    /// The left indentation reserved for content beneath subheaders (the implicit gutter width), or `null` when not configured.
+    ///
+    String subheaderIndentation() {
+        return subheaderIndentation;
     }
 
     /// Renders the configured declarations as a JavaScript object literal of `property: value` pairs, e.g. `{"row-gap":"0px","padding":"20px"}`.
