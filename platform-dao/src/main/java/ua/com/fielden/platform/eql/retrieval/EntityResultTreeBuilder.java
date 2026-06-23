@@ -180,7 +180,7 @@ public final class EntityResultTreeBuilder {
             singles.add(new QueryResultLeaf(localIndex, prop.name(), new HibernateScalar(prop.column(), getHibTypeAsType(declaredHibType)), getHibTypeAsUserType(declaredHibType)));
         }
 
-        return new ValueTreeResult(new ValueTree((ICompositeUserTypeInstantiate) propInfo.hibType, unmodifiableList(singles)), localIndex);
+        return new ValueTreeResult(new ValueTree((ICompositeUserTypeInstantiate<?>) propInfo.hibType, unmodifiableList(singles)), localIndex);
     }
 
     public static Object hibTypeFromJavaType(final Class<?> type) {
@@ -205,8 +205,8 @@ public final class EntityResultTreeBuilder {
         }
     }
 
-    private static IUserTypeInstantiate getHibTypeAsUserType(final Object hibType) {
-        return hibType instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibType : null;
+    private static IUserTypeInstantiate<?> getHibTypeAsUserType(final Object hibType) {
+        return hibType instanceof IUserTypeInstantiate<?> it ? it : null;
     }
 
     private static Type getHibTypeAsType(final Object hibType) {

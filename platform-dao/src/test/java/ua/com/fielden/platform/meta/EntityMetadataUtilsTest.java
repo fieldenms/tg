@@ -4,7 +4,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappingsProvider;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgCategory;
@@ -18,7 +18,7 @@ import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqual
 public class EntityMetadataUtilsTest {
 
     private static final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
-    private static final IDomainMetadata domainMetadata = new DomainMetadataBuilder(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), List.of(), dbVersionProvider).build();
+    private static final IDomainMetadata domainMetadata = new DomainMetadataBuilder(new PlatformHibernateTypeMappingsProvider(dbVersionProvider).get(), List.of(), dbVersionProvider).build();
     private static final EntityMetadataUtils emUtils = domainMetadata.entityMetadataUtils();
 
     @Test

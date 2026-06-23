@@ -12,7 +12,7 @@ import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappingsProvider;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.utils.IDates;
@@ -71,7 +71,7 @@ public abstract class EqlTestCase {
 
     static {
         final var dbVersionProvider = constantDbVersion(H2);
-        DOMAIN_METADATA = new DomainMetadataBuilder(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+        DOMAIN_METADATA = new DomainMetadataBuilder(new PlatformHibernateTypeMappingsProvider(dbVersionProvider).get(),
                                                     PlatformTestDomainTypes.entityTypes,
                                                     dbVersionProvider)
                 .build();
