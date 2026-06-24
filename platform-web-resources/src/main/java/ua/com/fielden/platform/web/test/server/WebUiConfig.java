@@ -421,10 +421,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .elements(
                     subheaderOpen(2, "Other components 1"),
                     GridLayoutBuilder.cell(3, 1).spanAllCols(),
-                    GridLayoutBuilder.cell(4, 1).spanCols(2),
+                    GridLayoutBuilder.cell(4, 1).spanCols(2).withProp("moneyProp"),
                     GridLayoutBuilder.cell(4, 3).spanCols(2),
                     subheaderOpen(6, "Other components 2"),
-                    GridLayoutBuilder.cell(4, 1).spanCols(2),
                     html(10, 1, "<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>").style("padding-top", "20px").spanAllCols(),
                     html(11, 1, "<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>").style("padding-top", "20px").spanAllCols());
         final FlexLayoutConfig layoutConfig = layout().withStyle("height", "100%").withStyle("box-sizing", "border-box")
@@ -446,7 +445,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .content(content().withGaps("0px", "20px").alignContent("start").style("padding", "20px").style("min-height", "fit-content").style("box-sizing", "border-box").style("height", "100%"))
                 .columns().addColumn().repeat(3)
                 .elements(
-                        GridLayoutBuilder.cell(3, 1).select("property-name", "stringProp").spanAllCols(),
+                        GridLayoutBuilder.cell(3, 1).withProp("stringProp").spanAllCols(),
                         html(9, 1, "<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>").style("padding-top", "20px").spanAllCols(),
                         html(10, 1, "<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>").style("padding-top", "20px").spanAllCols());
         final String tabletLayout = cell(
