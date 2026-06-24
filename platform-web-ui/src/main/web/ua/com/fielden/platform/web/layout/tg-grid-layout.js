@@ -175,13 +175,13 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
                         placed = this._createCellElement(slotName);
                         target = slotName ? this.slottedElements[slotName] : placed;
                     }
-                    this._placeItem(target, this._gridColumn(col, colSpan, cell.colSpan === 'all', subheader, indent, currentSubheader), row, col, rowSpan, columnStyles, rowStyles, cell.style);
+                    this._placeItem(target, this._gridColumn(col, colSpan, cell.colSpan === 'all', subheader, indent), row, col, rowSpan, columnStyles, rowStyles, cell.style);
                 } else if (pool.length > 0) {
                     const slotName = pool.shift();
                     placed = this._createCellElement(slotName);
                     target = this.slottedElements[slotName];
                     markOccupied(occupied, row, col, 1, 1);
-                    this._placeItem(target, this._gridColumn(col, 1, false, false, indent, currentSubheader), row, col, 1, columnStyles, rowStyles, null);
+                    this._placeItem(target, this._gridColumn(col, 1, false, false, indent), row, col, 1, columnStyles, rowStyles, null);
                 }
                 if (placed) {
                     if (subheader) {
@@ -332,24 +332,16 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
     }
 
     // Resolves a cell's `grid-column`, accounting for the implicit subheader-indentation gutter.
-    // Without indentation it is the plain developer column and span. With indentation a gutter occupies grid column 1 and the developer
-    // columns shift to 2..N+1: a subheader and any content before the first subheader span the gutter (flush), while content under a
-    // subheader skips it (indented). `spanAll` always resolves to the full span — `1 / -1` flush, or `2 / -1` when indented under a subheader.
-    _gridColumn (col, colSpan, spanAll, isSubheader, indent, currentSubheader) {
+    // Without indentation it is the plain developer column and span. When a subheader is present, a fixed gutter occupies grid column 1:
+    // a subheader spans it (`1 / -1`, staying flush), while all other content is indented into grid columns 2..N+1
+    // (developer column c maps to grid column c+1, and `spanAll` resolves to `2 / -1`).
+    _gridColumn (col, colSpan, spanAll, isSubheader, indent) {
         if (!indent) {
             return spanAll ? '1 / -1' : (colSpan > 1 ? `${col} / span ${colSpan}` : `${col}`);
         }
         if (isSubheader) {
             return '1 / -1';
         }
-        if (!currentSubheader) {
-            // Before the first subheader — flush: the first column spans the gutter; the rest shift by one.
-            if (spanAll) {
-                return '1 / -1';
-            }
-            return col === 1 ? `1 / span ${colSpan + 1}` : (colSpan > 1 ? `${col + 1} / span ${colSpan}` : `${col + 1}`);
-        }
-        // Under a subheader — indented: the gutter is left empty, content occupies grid columns 2..N+1.
         if (spanAll) {
             return '2 / -1';
         }
