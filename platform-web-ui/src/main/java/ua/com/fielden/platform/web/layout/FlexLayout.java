@@ -18,7 +18,7 @@ public class FlexLayout extends AbstractLayout<AbstractLayoutSetter<FlexLayout>>
 
     @Override
     public DomElement render() {
-        final DomElement flexElement = new DomElement("tg-flex-layout");
+        final DomElement flexElement = new DomElement("tg-flex-layout").clazz("tg-layout");
         for (final Pair<Device, Orientation> layout : layouts.keySet()) {
             if (layout.getValue() == null) {
                 flexElement.attr("when-" + layout.getKey().toString(), "[[_" + layout.getKey().toString() + "Layout_" + name + "]]");

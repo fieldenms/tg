@@ -21,7 +21,7 @@ public class GridLayout extends AbstractLayout<AbstractLayoutSetter<GridLayout>>
 
     @Override
     public DomElement render() {
-        final DomElement gridElement = new DomElement("tg-grid-layout");
+        final DomElement gridElement = new DomElement("tg-grid-layout").clazz("tg-layout");
         for (final Pair<Device, Orientation> layout : layouts.keySet()) {
             if (layout.getValue() == null) {
                 gridElement.attr("when-" + layout.getKey().toString(), "[[_" + layout.getKey().toString() + "Layout_" + name + "]]");

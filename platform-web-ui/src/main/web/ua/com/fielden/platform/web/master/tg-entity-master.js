@@ -18,7 +18,7 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 const template = html`
     <style>
-        :host::slotted(tg-flex-layout) {
+        :host::slotted(.tg-layout) {
             background-color: white;
         }
         .master-util-toolbar {
