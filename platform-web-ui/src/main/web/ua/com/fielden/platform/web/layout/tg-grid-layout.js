@@ -92,6 +92,8 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         this._clearAppendedElements();
         this._resetSubheaders();
         this._resetStyles();
+        // Reset the per-row index of placed grid items; row-based filtering is rebuilt from it below.
+        this._rowElements = {};
 
         //3. Apply styles to container
         // A subheader indentation reserves an implicit leading "gutter" column, but only when the layout actually has a subheader.
@@ -106,6 +108,8 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         // Explicit cells and rows are not used in this mode. Per-column-index styling is likewise meaningless, so the styles
         // declared on the column track(s) are applied uniformly to every cell.
         if (columns.some(track => typeof track.repeat === 'string')) {
+            // Auto-flow mode has no fixed rows — editors reflow across browser-determined tracks — so filtering stays per-element: hiding one reflows the rest, leaving no gaps.
+            this._autoFlow = true;
             const autoCellStyle = columns.reduce((style, track) => Object.assign(style, track.style || {}), {});
             this.componentsToLayout.forEach(slotName => {
                 const slot = this._createCellElement(slotName);
@@ -118,6 +122,8 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
             this.fire('layout-finished', this);
             return;
         }
+        // Fixed-track mode: editors are placed at explicit rows, so filtering is row-based (all-or-nothing per row).
+        this._autoFlow = false;
         const rows = layout.rows || [];
         const columnCount = trackCount(columns) || 1;
         // When `rows` are explicitly specified, the grid has a fixed height; an editor that does not fit within those rows is left unslotted (and so unrendered), rather than spilling into implicit rows.
@@ -187,8 +193,12 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
                     if (subheader) {
                         currentSubheader = target;
                         this._subheaders.push(target);
-                    } else if (currentSubheader) {
-                        currentSubheader.addRelativeElement(target);
+                    } else {
+                        if (currentSubheader) {
+                            currentSubheader.addRelativeElement(target);
+                        }
+                        // Index every non-subheader grid item by its row, so row-based filtering can hide or reveal the row as a whole.
+                        (this._rowElements[row] = this._rowElements[row] || []).push(target);
                     }
                     this.shadowRoot.appendChild(placed);
                     this.appendedElements.push(placed);
@@ -203,9 +213,37 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
     }
 
     _filterLayout (filter) {
-        if (this.currentLayout) {
-            this._filterElement(this.shadowRoot);
+        if (!this.currentLayout) {
+            return;
         }
+        if (this._autoFlow) {
+            // No fixed rows in auto-flow mode — filter per element (hidden items reflow out, leaving no gaps).
+            this._filterElement(this.shadowRoot);
+        } else {
+            this._filterByRow();
+        }
+    }
+
+    // Row-based filtering: a row is hidden only when it has filterable elements and every one of them is filtered out.
+    // If at least one remains visible, the whole row — every element in it — stays visible. A subheader is hidden only
+    // when every filterable element in its section is filtered out, and is reopened while a non-empty section is being filtered.
+    // This reproduces the all-or-nothing row semantics of the flex layout, which the grid cannot get structurally because its
+    // items are positioned individually rather than wrapped in per-row containers.
+    _filterByRow () {
+        const isFilteredOut = element => this.filter && !this.filter(element);
+        Object.values(this._rowElements || {}).forEach(elements => {
+            const filterable = elements.filter(element => element.hasAttribute('filterable'));
+            const hidden = filterable.length > 0 && filterable.every(isFilteredOut);
+            elements.forEach(element => this.toggleClass('hidden-with-filter', hidden, element));
+        });
+        (this._subheaders || []).forEach(subheader => {
+            const filterable = subheader.relativeElements.filter(element => element.hasAttribute('filterable'));
+            const hidden = filterable.length > 0 && filterable.every(isFilteredOut);
+            this.toggleClass('hidden-with-filter', hidden, subheader);
+            if (!hidden && this.filter) {
+                subheader.open();
+            }
+        });
     }
 
     // Slots the host's light-DOM children once, naming each slot so it can be projected into a grid cell.
@@ -358,7 +396,8 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         });
     }
 
-    // Recursively toggles `hidden-with-filter` according to `this.filter`, mirroring the flex layout's filtering (including subheader sections).
+    // Per-element filtering for auto-flow mode: recursively toggles `hidden-with-filter` according to `this.filter`.
+    // Fixed-track layouts filter by row instead (see `_filterByRow`); auto-flow has no fixed rows and reflows hidden items out, so each filterable element is hidden on its own.
     _filterElement (element) {
         if (element.hasAttribute && element.hasAttribute('filterable')) {
             this.toggleClass('hidden-with-filter', this.filter && !this.filter(element), element);
