@@ -50,13 +50,23 @@ const trackCount = function (tracks) {
 
 // One emulated-style object per logical track, expanding repeated tracks so the array is indexable by 0-based track position.
 const expandTrackStyles = function (tracks) {
-    const styles = [];
-    tracks.forEach(track => {
-        for (let i = 0; i < trackSpan(track); i += 1) {
-            styles.push(track.style || {});
-        }
-    });
-    return styles;
+    return tracks.flatMap(track => Array.from({ length: trackSpan(track) }, () => track.style || {}));
+};
+
+// Whether the column tracks use auto-tracking (`repeat(auto-fit|auto-fill, …)`): the browser then determines the track count and every editor auto-flows.
+const isAutoFlow = function (columns) {
+    return columns.some(track => typeof track.repeat === 'string');
+};
+
+// Whether a cell's `widget` descriptor is of the given kind. Matched by prefix, so `subheader-open:Title` is a `subheader`.
+const isWidget = function (widget, kind) {
+    return typeof widget === 'string' && widget.indexOf(kind) === 0;
+};
+
+// Splits a `select` descriptor `attribute=value` into its trimmed `[attribute, value]`.
+const splitSelect = function (select) {
+    const eq = select.indexOf('=');
+    return [select.substring(0, eq).trim(), select.substring(eq + 1).trim()];
 };
 
 // Marks every position covered by a (possibly spanning) cell as occupied.
@@ -83,167 +93,21 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         if (this.currentLayout === layout) {
             return;
         }
-
-        // 1. Create list of slotted elements to layout them. this will be done only once, before first layout will be set.
         this._slotChildrenOnce();
+        this._resetForLayout();
 
-        // 2. Clear anything appended by a previous layout then
-        // reset the host's grid styles and styles for slotted elements setted by previous layout.
-        this._clearAppendedElements();
-        this._resetSubheaders();
-        this._resetStyles();
-        // Reset the per-row index of placed grid items; row-based filtering is rebuilt from it below.
-        this._rowElements = {};
-
-        //3. Apply styles to container
-        // A subheader indentation reserves an implicit leading "gutter" column, but only when the layout actually has a subheader.
-        const hasSubheader = (layout.cells || []).some(cell => cell.widget && cell.widget.indexOf(Widgets.SUBHEADER) === 0);
-        const indent = hasSubheader ? layout.subheaderIndentation : null;
+        const indent = this._subheaderIndent(layout);
         this._applyContainer(layout, indent);
 
-        const columns = layout.columns || [];
-
-        // 3a. Auto-tracking columns — repeat(auto-fit|auto-fill, …) — produce a browser-determined number of tracks,
-        // so coordinate-based placement does not apply: every editor auto-flows across the generated tracks, reflowing on resize.
-        // Explicit cells and rows are not used in this mode. Per-column-index styling is likewise meaningless, so the styles
-        // declared on the column track(s) are applied uniformly to every cell.
-        if (columns.some(track => typeof track.repeat === 'string')) {
-            // Auto-flow mode has no fixed rows — editors reflow across browser-determined tracks — so filtering stays per-element: hiding one reflows the rest, leaving no gaps.
-            this._autoFlow = true;
-            const autoCellStyle = columns.reduce((style, track) => Object.assign(style, track.style || {}), {});
-            this.componentsToLayout.forEach(slotName => {
-                const slot = this._createCellElement(slotName);
-                this._applyStyles(this.slottedElements[slotName], autoCellStyle);
-                this.shadowRoot.appendChild(slot);
-                this.appendedElements.push(slot);
-            });
-            this._setCurrentLayout(layout);
-            this._filterLayout(this.filter);
-            this.fire('layout-finished', this);
-            return;
-        }
-        // Fixed-track mode: editors are placed at explicit rows, so filtering is row-based (all-or-nothing per row).
-        this._autoFlow = false;
-        const rows = layout.rows || [];
-        const columnCount = trackCount(columns) || 1;
-        // When `rows` are explicitly specified, the grid has a fixed height; an editor that does not fit within those rows is left unslotted (and so unrendered), rather than spilling into implicit rows.
-        const rowCount = rows.length > 0 ? trackCount(rows) : Infinity;
-        const columnStyles = expandTrackStyles(columns);
-        const rowStyles = expandTrackStyles(rows);
-
-        // Index the explicit cells by position and bind any `select` cells to their specific editor, removing those editors from the auto-flow pool.
-        const cellAt = {};
-        (layout.cells || []).forEach(cell => {
-            cellAt[cell.row + ',' + cell.col] = Object.assign({}, cell);
-        });
-        const pool = this.componentsToLayout.slice();
-        Object.values(cellAt).forEach(cell => {
-            if (cell.select) {
-                const eqIndex = cell.select.indexOf('=');
-                const attribute = cell.select.substring(0, eqIndex).trim();
-                const value = cell.select.substring(eqIndex + 1).trim();
-                const index = pool.findIndex(slotName => this.slottedElements[slotName].getAttribute(attribute) === value);
-                if (index >= 0) {
-                    cell.boundSlot = pool.splice(index, 1)[0];
-                }
-            }
-        });
-
-        // Walk positions row-major: place explicit cells, bind/auto-flow editors into the rest.
-        const occupied = new Set();
-        const remainingCells = new Set(Object.keys(cellAt));
-        let currentSubheader = null;
-        let row = 1;
-        while ((pool.length > 0 || remainingCells.size > 0) && row <= rowCount) {
-            for (let col = 1; col <= columnCount; col += 1) {
-                const key = row + ',' + col;
-                if (occupied.has(key)) {
-                    continue;
-                }
-                const cell = cellAt[key];
-                let placed = null;   // the element appended to the shadow root — a bare <slot> for an editor cell
-                let target = null;   // the grid item that receives placement and styles — the slotted editor itself for editor cells
-                let subheader = false;
-                if (cell) {
-                    remainingCells.delete(key);
-                    const colSpan = cell.colSpan === 'all' ? columnCount : (cell.colSpan || 1);
-                    const rowSpan = cell.rowSpan || 1;
-                    markOccupied(occupied, row, col, colSpan, rowSpan);
-                    if (cell.widget === Widgets.SKIP) {
-                        placed = target = document.createElement('div');
-                    } else if (cell.widget && cell.widget.indexOf(Widgets.SUBHEADER) === 0) {
-                        placed = target = this._createSubheader(cell.widget);
-                        subheader = true;
-                    } else if (cell.widget && cell.widget.indexOf(Widgets.HTML) === 0) {
-                        placed = target = this._createHtmlElement(cell.widget);
-                    } else {
-                        const slotName = cell.boundSlot || pool.shift();
-                        placed = this._createCellElement(slotName);
-                        target = slotName ? this.slottedElements[slotName] : placed;
-                    }
-                    this._placeItem(target, this._gridColumn(col, colSpan, cell.colSpan === 'all', subheader, indent), row, col, rowSpan, columnStyles, rowStyles, cell.style);
-                } else if (pool.length > 0) {
-                    const slotName = pool.shift();
-                    placed = this._createCellElement(slotName);
-                    target = this.slottedElements[slotName];
-                    markOccupied(occupied, row, col, 1, 1);
-                    this._placeItem(target, this._gridColumn(col, 1, false, false, indent), row, col, 1, columnStyles, rowStyles, null);
-                }
-                if (placed) {
-                    if (subheader) {
-                        currentSubheader = target;
-                        this._subheaders.push(target);
-                    } else {
-                        if (currentSubheader) {
-                            currentSubheader.addRelativeElement(target);
-                        }
-                        // Index every non-subheader grid item by its row, so row-based filtering can hide or reveal the row as a whole.
-                        (this._rowElements[row] = this._rowElements[row] || []).push(target);
-                    }
-                    this.shadowRoot.appendChild(placed);
-                    this.appendedElements.push(placed);
-                }
-            }
-            row += 1;
-        }
-
-        this._setCurrentLayout(layout);
-        this._filterLayout(this.filter);
-        this.fire('layout-finished', this);
-    }
-
-    _filterLayout (filter) {
-        if (!this.currentLayout) {
-            return;
-        }
+        // Auto-tracking columns yield a browser-determined track count, so coordinate-based placement (cells, rows, spans) does not apply — every editor simply auto-flows.
+        this._autoFlow = isAutoFlow(layout.columns);
         if (this._autoFlow) {
-            // No fixed rows in auto-flow mode — filter per element (hidden items reflow out, leaving no gaps).
-            this._filterElement(this.shadowRoot);
+            this._layoutAutoFlow(layout.columns);
         } else {
-            this._filterByRow();
+            this._layoutFixedTracks(layout, indent);
         }
-    }
 
-    // Row-based filtering: a row is hidden only when it has filterable elements and every one of them is filtered out.
-    // If at least one remains visible, the whole row — every element in it — stays visible. A subheader is hidden only
-    // when every filterable element in its section is filtered out, and is reopened while a non-empty section is being filtered.
-    // This reproduces the all-or-nothing row semantics of the flex layout, which the grid cannot get structurally because its
-    // items are positioned individually rather than wrapped in per-row containers.
-    _filterByRow () {
-        const isFilteredOut = element => this.filter && !this.filter(element);
-        Object.values(this._rowElements || {}).forEach(elements => {
-            const filterable = elements.filter(element => element.hasAttribute('filterable'));
-            const hidden = filterable.length > 0 && filterable.every(isFilteredOut);
-            elements.forEach(element => this.toggleClass('hidden-with-filter', hidden, element));
-        });
-        (this._subheaders || []).forEach(subheader => {
-            const filterable = subheader.relativeElements.filter(element => element.hasAttribute('filterable'));
-            const hidden = filterable.length > 0 && filterable.every(isFilteredOut);
-            this.toggleClass('hidden-with-filter', hidden, subheader);
-            if (!hidden && this.filter) {
-                subheader.open();
-            }
-        });
+        this._finishLayout(layout);
     }
 
     // Slots the host's light-DOM children once, naming each slot so it can be projected into a grid cell.
@@ -258,6 +122,14 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
                 this.slottedElements[slotName] = item;
             });
         }
+    }
+
+    // Clears everything a previous layout left behind: appended shadow elements, subheaders, host/editor styles, and the per-row index.
+    _resetForLayout () {
+        this._clearAppendedElements();
+        this._resetSubheaders();
+        this._resetStyles();
+        this._rowElements = {};
     }
 
     _clearAppendedElements () {
@@ -290,6 +162,12 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         });
     }
 
+    // The subheader-indentation gutter size, but only when the layout actually has a subheader; otherwise `null` (no gutter).
+    _subheaderIndent (layout) {
+        const hasSubheader = (layout.cells || []).some(cell => isWidget(cell.widget, Widgets.SUBHEADER));
+        return hasSubheader ? layout.subheaderIndentation : null;
+    }
+
     // Applies `display: grid`, the column/row templates and the container-level declarations to the host.
     // When `indent` is given, a fixed gutter track is prepended; the developer's columns then occupy grid columns 2..N+1.
     _applyContainer (layout, indent) {
@@ -312,17 +190,96 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         }
     }
 
-
-    // Projects the editor of the given slot via a bare <slot>. A <slot> is `display: contents`, so the slotted editor itself
-    // becomes the grid item and receives the placement and styles directly — this is what lets a cell give the editor a specific size.
-    // When no slot is given (an explicitly configured cell with no editor to fill it), an empty placeholder div is returned instead.
-    _createCellElement (slotName) {
-        if (slotName) {
-            const slot = document.createElement('slot');
-            slot.setAttribute('name', slotName);
-            return slot;
+    // Auto-flow placement: editors flow across the browser-generated tracks of the lone auto-tracking column (reflowing on resize), so that column's style applies uniformly to every editor.
+    // Auto-tracking is supported only as a single column — it cannot be combined with other (static or auto) columns, since the browser-determined track count would make per-column styling indeterminate — which is enforced here.
+    _layoutAutoFlow (columns) {
+        if (columns.length > 1) {
+            throw new Error("An auto-tracking column (repeat(auto-fit|auto-fill, …)) must be the only column; it cannot be mixed with other columns.");
         }
-        return document.createElement('div');
+        const cellStyle = columns[0].style || {};
+        this.componentsToLayout.forEach(slotName => {
+            this._applyStyles(this.slottedElements[slotName], cellStyle);
+            this._append(this._createCellElement(slotName));
+        });
+    }
+
+    // Fixed-track placement: resolve the grid geometry, bind any `select` cells, then walk the cells row-major.
+    _layoutFixedTracks (layout, indent) {
+        const columns = layout.columns;
+        const rows = layout.rows || [];
+        const grid = {
+            indent,
+            columnCount: trackCount(columns) || 1,
+            // Explicit rows fix the grid height: an editor that does not fit is left unslotted (and so unrendered), rather than spilling into implicit rows.
+            rowCount: rows.length > 0 ? trackCount(rows) : Infinity,
+            columnStyles: expandTrackStyles(columns),
+            rowStyles: expandTrackStyles(rows)
+        };
+        const pool = this.componentsToLayout.slice();
+        this._placeCells(this._indexCells(layout.cells || [], pool), pool, grid);
+    }
+
+    // Indexes the explicit cells by `row,col` and binds any `select` cells to their matching editor, removing those editors from the auto-flow `pool`.
+    _indexCells (cells, pool) {
+        const cellAt = {};
+        cells.forEach(cell => { cellAt[cell.row + ',' + cell.col] = Object.assign({}, cell); });
+        Object.values(cellAt).forEach(cell => {
+            if (cell.select) {
+                const [attribute, value] = splitSelect(cell.select);
+                const index = pool.findIndex(slotName => this.slottedElements[slotName].getAttribute(attribute) === value);
+                if (index >= 0) {
+                    cell.boundSlot = pool.splice(index, 1)[0];
+                }
+            }
+        });
+        return cellAt;
+    }
+
+    // Walks positions row-major, placing the explicit cell at each coordinate or auto-flowing the next editor into an empty one.
+    _placeCells (cellAt, pool, grid) {
+        const { columnCount, rowCount, indent, columnStyles, rowStyles } = grid;
+        const occupied = new Set();
+        const remaining = new Set(Object.keys(cellAt));
+        let currentSubheader = null;
+        let row = 1;
+        while ((pool.length > 0 || remaining.size > 0) && row <= rowCount) {
+            for (let col = 1; col <= columnCount; col += 1) {
+                const key = row + ',' + col;
+                const cell = cellAt[key];
+                if (occupied.has(key) || (!cell && pool.length === 0)) {
+                    continue;
+                }
+                remaining.delete(key);
+                const spanAll = !!cell && cell.colSpan === 'all';
+                const colSpan = spanAll ? columnCount : ((cell && cell.colSpan) || 1);
+                const rowSpan = (cell && cell.rowSpan) || 1;
+                markOccupied(occupied, row, col, colSpan, rowSpan);
+                const placement = this._createPlacement(cell, pool);
+                this._placeItem(placement.target, this._gridColumn(col, colSpan, spanAll, placement.subheader, indent), row, col, rowSpan, columnStyles, rowStyles, cell && cell.style);
+                currentSubheader = this._registerPlacement(placement, row, currentSubheader);
+            }
+            row += 1;
+        }
+    }
+
+    // Builds the DOM for a cell, returning `{ placed, target, subheader }`: `placed` is appended to the shadow root; `target` is the grid item that receives placement and styles.
+    // A skip is a placeholder div, a subheader a `tg-subheader`, an html cell a stamped snippet; otherwise it is an editor projected via a `<slot>` — explicitly bound, or (for an absent/unbound cell) the next one auto-flowed from `pool`.
+    _createPlacement (cell, pool) {
+        if (cell && cell.widget === Widgets.SKIP) {
+            const div = document.createElement('div');
+            return { placed: div, target: div, subheader: false };
+        }
+        if (cell && isWidget(cell.widget, Widgets.SUBHEADER)) {
+            const subheader = this._createSubheader(cell.widget);
+            return { placed: subheader, target: subheader, subheader: true };
+        }
+        if (cell && isWidget(cell.widget, Widgets.HTML)) {
+            const wrapper = this._createHtmlElement(cell.widget);
+            return { placed: wrapper, target: wrapper, subheader: false };
+        }
+        const slotName = (cell && cell.boundSlot) || pool.shift();
+        const slot = this._createCellElement(slotName);
+        return { placed: slot, target: slotName ? this.slottedElements[slotName] : slot, subheader: false };
     }
 
     // A `tg-subheader` for a `subheader` / `subheader-open` / `subheader-closed` widget descriptor.
@@ -352,6 +309,18 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         const wrapper = document.createElement('div');
         wrapper.appendChild(domBind);
         return wrapper;
+    }
+
+    // Projects the editor of the given slot via a bare <slot>. A <slot> is `display: contents`, so the slotted editor itself
+    // becomes the grid item and receives the placement and styles directly — this is what lets a cell give the editor a specific size.
+    // When no slot is given (an explicitly configured cell with no editor to fill it), an empty placeholder div is returned instead.
+    _createCellElement (slotName) {
+        if (slotName) {
+            const slot = document.createElement('slot');
+            slot.setAttribute('name', slotName);
+            return slot;
+        }
+        return document.createElement('div');
     }
 
     // Places a grid item at the given resolved `grid-column` and at `(row)`, applying its row span and the cascade of column, row and cell declarations.
@@ -396,38 +365,76 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         });
     }
 
-    // Per-element filtering for auto-flow mode: recursively toggles `hidden-with-filter` according to `this.filter`.
-    // Fixed-track layouts filter by row instead (see `_filterByRow`); auto-flow has no fixed rows and reflows hidden items out, so each filterable element is hidden on its own.
-    _filterElement (element) {
-        if (element.hasAttribute && element.hasAttribute('filterable')) {
-            this.toggleClass('hidden-with-filter', this.filter && !this.filter(element), element);
+    // Records a placed grid item: a subheader becomes the current section; any other item is attached to the current section (if any) and indexed by its row for row-based filtering.
+    // Returns the (possibly updated) current subheader.
+    _registerPlacement ({ placed, target, subheader }, row, currentSubheader) {
+        if (subheader) {
+            this._subheaders.push(target);
+            currentSubheader = target;
         } else {
-            const children = [...element.children].flatMap(child => child.tagName === 'SLOT' ? [...child.assignedNodes()] : [child]);
-            children.forEach(child => this._filterElement(child));
-            const filterableChildren = children.filter(child => child.hasAttribute('filterable') || child.hasAttribute('has-filterable-children'));
-            if (filterableChildren.length > 0) {
-                element.setAttribute && element.setAttribute('has-filterable-children', '');
-            } else {
-                element.removeAttribute && element.removeAttribute('has-filterable-children');
+            if (currentSubheader) {
+                currentSubheader.addRelativeElement(target);
             }
-            element.classList && this.toggleClass('hidden-with-filter', filterableChildren.length > 0 && filterableChildren.every(child => child.classList.contains('hidden-with-filter')), element);
-
-            children.filter(child => child.tagName === 'TG-SUBHEADER').forEach(subheader => {
-                const filterableElements = subheader.relativeElements
-                        .flatMap(relativeElement => relativeElement.tagName === 'SLOT' ? [...relativeElement.assignedNodes()] : [relativeElement])
-                        .filter(relativeElement => relativeElement.hasAttribute('filterable') || relativeElement.hasAttribute('has-filterable-children'));
-                const isHidden = filterableElements.length > 0 && filterableElements.every(filterableElement => filterableElement.classList.contains('hidden-with-filter'));
-                this.toggleClass('hidden-with-filter', isHidden, subheader);
-                if (!isHidden && this.filter) {
-                    subheader.open();
-                }
-                subheader.relativeElements.forEach(relativeElement => {
-                    if (filterableElements.indexOf(relativeElement) < 0) {
-                        this.toggleClass('hidden-with-filter', isHidden, relativeElement);
-                    }
-                });
-            });
+            (this._rowElements[row] = this._rowElements[row] || []).push(target);
         }
+        this._append(placed);
+        return currentSubheader;
+    }
+
+    // Appends an element to the shadow root and tracks it so the next layout can remove it.
+    _append (element) {
+        this.shadowRoot.appendChild(element);
+        this.appendedElements.push(element);
+    }
+
+    // Commits the layout: remember it, apply the current filter, and notify listeners.
+    _finishLayout (layout) {
+        this._setCurrentLayout(layout);
+        this._filterLayout(this.filter);
+        this.fire('layout-finished', this);
+    }
+
+    _filterLayout (filter) {
+        if (!this.currentLayout) {
+            return;
+        }
+        if (this._autoFlow) {
+            this._filterAutoFlow();
+        } else {
+            this._filterByRow();
+        }
+    }
+
+    // Row-based filtering: a row is hidden only when it has filterable elements and every one of them is filtered out.
+    // If at least one remains visible, the whole row — every element in it — stays visible. A subheader is hidden only
+    // when every filterable element in its section is filtered out, and is reopened while a non-empty section is being filtered.
+    // This reproduces the all-or-nothing row semantics of the flex layout, which the grid cannot get structurally because its
+    // items are positioned individually rather than wrapped in per-row containers.
+    _filterByRow () {
+        const isFilteredOut = element => this.filter && !this.filter(element);
+        Object.values(this._rowElements || {}).forEach(elements => {
+            const filterable = elements.filter(element => element.hasAttribute('filterable'));
+            const hidden = filterable.length > 0 && filterable.every(isFilteredOut);
+            elements.forEach(element => this.toggleClass('hidden-with-filter', hidden, element));
+        });
+        (this._subheaders || []).forEach(subheader => {
+            const filterable = subheader.relativeElements.filter(element => element.hasAttribute('filterable'));
+            const hidden = filterable.length > 0 && filterable.every(isFilteredOut);
+            this.toggleClass('hidden-with-filter', hidden, subheader);
+            if (!hidden && this.filter) {
+                subheader.open();
+            }
+        });
+    }
+
+    // Per-element filtering for auto-flow mode: the shadow root holds a flat list of slotted editors — no rows or subheaders — so each filterable editor is simply hidden on its own (and reflows out, leaving no gaps).
+    _filterAutoFlow () {
+        this.componentsToLayout.forEach(slotName => {
+            const editor = this.slottedElements[slotName];
+            if (editor.hasAttribute('filterable')) {
+                this.toggleClass('hidden-with-filter', this.filter && !this.filter(editor), editor);
+            }
+        });
     }
 }
 
