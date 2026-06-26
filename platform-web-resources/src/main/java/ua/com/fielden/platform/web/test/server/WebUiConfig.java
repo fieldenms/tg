@@ -479,7 +479,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final IGridLayoutConfiguration actionGridConfig = grid()
                 .content(content().justifyContent("center").withGaps("20px", "20px").style("padding", "20px"))
-                .columns().addColumn("80px").repeat(AUTO_FIT);
+                .columns().addAutoColumn("80px", AUTO_FIT);
 
         // Add entity masters.
         final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<>();

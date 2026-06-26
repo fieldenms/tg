@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.layout.grid.AutoRepeat;
+import ua.com.fielden.platform.web.layout.grid.IAutoColumn;
 import ua.com.fielden.platform.web.layout.grid.ICell;
 import ua.com.fielden.platform.web.layout.grid.IColumn;
 import ua.com.fielden.platform.web.layout.grid.IColumns;
@@ -25,7 +26,7 @@ import ua.com.fielden.platform.web.layout.grid.IRows;
 ///
 /// Intended to be used via a single static import, which brings the whole vocabulary (`grid`, `content`, `cell`, `skip`, `subheader`, `subheaderOpen`, `subheaderClosed`, `html`) into scope.
 ///
-public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IRows, IRow {
+public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAutoColumn, IRows, IRow {
 
     private GridContent content;
     private final List<GridTrack> columnTracks = new ArrayList<>();
@@ -121,6 +122,14 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IRows
     }
 
     @Override
+    public GridLayoutBuilder addAutoColumn(final String size, final AutoRepeat mode) {
+        current = new GridTrack(size);
+        current.autoRepeat(mode.keyword());
+        columnTracks.add(current);
+        return this;
+    }
+
+    @Override
     public GridLayoutBuilder justify(final String value) {
         current.putStyle("justify-self", value);
         return this;
@@ -147,12 +156,6 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IRows
     @Override
     public GridLayoutBuilder repeat(final int times) {
         current.repeat(times);
-        return this;
-    }
-
-    @Override
-    public GridLayoutBuilder repeat(final AutoRepeat mode) {
-        current.autoRepeat(mode.keyword());
         return this;
     }
 

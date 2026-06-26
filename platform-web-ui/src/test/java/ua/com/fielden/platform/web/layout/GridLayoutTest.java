@@ -176,17 +176,22 @@ public class GridLayoutTest {
         // auto-fit — the browser fits as many tracks of the given size as it can; editors auto-flow
         assertEquals(
                 "{columns:[{size:\"minmax(220px, 1fr)\",repeat:\"auto-fit\"}],cells:[]}",
-                grid().columns().addColumn("minmax(220px, 1fr)").repeat(AUTO_FIT).layout());
+                grid().columns().addAutoColumn("minmax(220px, 1fr)", AUTO_FIT).layout());
 
         // auto-fill — like auto-fit, but empty trailing tracks are preserved
         assertEquals(
                 "{columns:[{size:\"minmax(180px, 1fr)\",repeat:\"auto-fill\"}],cells:[]}",
-                grid().columns().addColumn("minmax(180px, 1fr)").repeat(AUTO_FILL).layout());
+                grid().columns().addAutoColumn("minmax(180px, 1fr)", AUTO_FILL).layout());
 
         // a style declared on an auto-tracked column is serialised — the client applies it uniformly to every cell
         assertEquals(
                 "{columns:[{size:\"minmax(220px, 1fr)\",repeat:\"auto-fit\",style:{\"padding\":\"8px\"}}],cells:[]}",
-                grid().columns().addColumn("minmax(220px, 1fr)").style("padding", "8px").repeat(AUTO_FIT).layout());
+                grid().columns().addAutoColumn("minmax(220px, 1fr)", AUTO_FIT).style("padding", "8px").layout());
+
+        // `justify` on an auto-tracked column is emitted as a `justify-self` declaration the client applies to every cell
+        assertEquals(
+                "{columns:[{size:\"minmax(220px, 1fr)\",repeat:\"auto-fit\",style:{\"justify-self\":\"center\"}}],cells:[]}",
+                grid().columns().addAutoColumn("minmax(220px, 1fr)", AUTO_FIT).justify("center").layout());
     }
 
     @Test

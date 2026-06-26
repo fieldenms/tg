@@ -21,12 +21,6 @@ public interface IColumn extends IGridLayoutConfiguration {
     ///
     IColumn repeat(int times);
 
-    /// Auto-tracks the current column with `repeat(auto-fit, size)` or `repeat(auto-fill, size)`, per `mode`.
-    /// The browser creates as many columns of this size as fit and the editors flow across them, reflowing on resize; pair it with a flexible size such as `minmax(220px, 1fr)`.
-    /// Because the track count is browser-determined, coordinate-based placement does not apply — this is intended for a grid whose editors simply auto-flow, so it is used without explicit elements.
-    ///
-    IColumn repeat(AutoRepeat mode);
-
     /// Emulates a CSS declaration on every cell that lands in the current column.
     /// May be called more than once.
     ///

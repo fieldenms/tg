@@ -12,4 +12,9 @@ public interface IColumns {
     /// Adds a column track sized `1fr` — an equal share of the free space.
     ///
     IColumn addColumn();
+
+    /// Adds the grid's single auto-tracking column — `repeat(auto-fit|auto-fill, size)` per `mode` — across which every editor auto-flows.
+    /// Because the browser determines the track count, an auto-tracking column must stand alone: no other column may be declared, which the returned [IAutoColumn] step enforces.
+    ///
+    IAutoColumn addAutoColumn(String size, AutoRepeat mode);
 }
