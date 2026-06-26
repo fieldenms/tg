@@ -5,7 +5,7 @@ import java.util.Optional;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
-import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
+import ua.com.fielden.platform.web.layout.grid.IGridLayoutConfiguration;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
@@ -19,6 +19,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfigWithoutNew;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
+import ua.com.fielden.platform.web.view.master.api.helpers.IGridActionBarLayoutConfig1;
+import ua.com.fielden.platform.web.view.master.api.helpers.IGridLayoutConfigWithDimensionsAndDone;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDimensionsAndDone;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
@@ -38,13 +40,23 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public IActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final ILayoutConfiguration layout) {
-        return simpleMasterBuilder.setActionBarLayoutFor(device, Optional.empty(), layout);
+    public IActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+        return simpleMasterBuilder.setActionBarLayoutFor(device, Optional.empty(), flexString);
     }
 
     @Override
-    public ILayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final ILayoutConfiguration layout) {
-        return simpleMasterBuilder.setLayoutFor(device, orientation, layout);
+    public IGridActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final IGridLayoutConfiguration grid) {
+        return simpleMasterBuilder.setActionBarLayoutFor(device, Optional.empty(), grid);
+    }
+
+    @Override
+    public ILayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+        return simpleMasterBuilder.setLayoutFor(device, orientation, flexString);
+    }
+
+    @Override
+    public IGridLayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final IGridLayoutConfiguration grid) {
+        return simpleMasterBuilder.setLayoutFor(device, orientation, grid);
     }
 
     @Override

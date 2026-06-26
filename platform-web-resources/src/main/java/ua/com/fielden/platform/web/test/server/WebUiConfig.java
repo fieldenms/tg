@@ -58,9 +58,9 @@ import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
-import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
+import ua.com.fielden.platform.web.layout.grid.IGridLayoutConfiguration;
 import ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
@@ -414,7 +414,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String fmr = "'flex', 'margin-right: 20px'";
         final String actionMr = format("'margin-top: 20px', 'margin-left: 20px', 'width: %s'", MASTER_ACTION_DEFAULT_WIDTH + "px");
 
-        final ILayoutConfiguration desktopGridConfig = grid()
+        final IGridLayoutConfiguration desktopGridConfig = grid()
             .content(content().withGaps("0px", "20px").alignContent("start").withSubheaderIndentation("32px").style("padding", "20px").style("min-height", "fit-content").style("box-sizing", "border-box").style("height", "100%"))
             .columns()
                 .addColumn().repeat(4)
@@ -441,7 +441,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
-        final ILayoutConfiguration tabletGridConfig = grid()
+        final IGridLayoutConfiguration tabletGridConfig = grid()
                 .content(content().withGaps("0px", "20px").alignContent("start").style("padding", "20px").style("min-height", "fit-content").style("box-sizing", "border-box").style("height", "100%"))
                 .columns().addColumn().repeat(3)
                 .elements(
@@ -458,7 +458,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
-        final ILayoutConfiguration mobileGridConfig = grid()
+        final IGridLayoutConfiguration mobileGridConfig = grid()
                 .content(content().withGaps("0px", "20px").alignContent("start").style("padding", "20px").style("min-height", "fit-content").style("box-sizing", "border-box").style("height", "100%"))
                 .columns().addColumn().repeat(2)
                 .elements(
@@ -477,7 +477,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
 
-        final ILayoutConfiguration actionGridConfig = grid()
+        final IGridLayoutConfiguration actionGridConfig = grid()
                 .content(content().justifyContent("center").withGaps("20px", "20px").style("padding", "20px"))
                 .columns().addColumn("80px").repeat(AUTO_FIT);
 

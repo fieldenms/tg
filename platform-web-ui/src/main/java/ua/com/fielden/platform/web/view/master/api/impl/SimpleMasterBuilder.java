@@ -18,7 +18,8 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.AbstractLayout;
 import ua.com.fielden.platform.web.layout.FlexLayout;
-import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
+import ua.com.fielden.platform.web.layout.GridLayout;
+import ua.com.fielden.platform.web.layout.grid.IGridLayoutConfiguration;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
@@ -51,7 +52,7 @@ import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
-public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T> {
+public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IGridLayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T>, IGridActionBarLayoutConfig1<T> {
 
     private static final String ERR_WIDGET_IS_ALREADY_PRESENT = "A widget with property [%s] is already present in the entity master for [%s].";
 
@@ -59,24 +60,14 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private final List<Object> entityActions = new ArrayList<>();
 
     /// The editors layout manager.
-    /// Defaults to a [FlexLayout] and is replaced by the manager of the configured kind on the first call to [#setLayoutFor(Device, Optional, ILayoutConfiguration)].
+    /// Defaults to a [FlexLayout]; the first grid `setLayoutFor` replaces it with a [GridLayout]. The editors kind is fixed at compile time, so no breakpoint can change it.
     ///
     private AbstractLayout<?> layout = new FlexLayout("editors");
 
-    /// Whether an explicit editors layout has been configured yet.
-    /// Until then, [#layout] holds the default flex manager, which the first configuration replaces.
-    ///
-    private boolean layoutConfigured = false;
-
     /// The action bar layout manager.
-    /// Defaults to a [FlexLayout] and is replaced by the manager of the configured kind on the first call to [#setActionBarLayoutFor(Device, Optional, ILayoutConfiguration)].
+    /// Defaults to a [FlexLayout]; the first grid `setActionBarLayoutFor` replaces it with a [GridLayout]. The action bar kind is fixed at compile time, so no breakpoint can change it.
     ///
     private AbstractLayout<?> actionBarLayout = new FlexLayout("actions");
-
-    /// Whether an explicit action bar layout has been configured yet.
-    /// Until then, [#actionBarLayout] holds the default flex manager, which the first configuration replaces.
-    ///
-    private boolean actionBarLayoutConfigured = false;
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
@@ -220,21 +211,25 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public ILayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final ILayoutConfiguration config) {
+    public ILayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
         if (device == null || orientation == null) {
             throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
         }
-        // The first configuration determines the layout kind: replace the default flex manager with the configured kind's manager.
-        // A single client element renders all breakpoints, so every subsequent breakpoint must resolve to the same kind of manager.
-        // The manager class is the kind, so different configuration types that yield the same manager — e.g. a fully built grid and a grid chain without explicit cells — are compatible.
-        final AbstractLayout<?> manager = config.mkLayoutManager("editors");
-        if (!layoutConfigured) {
-            layout = manager;
-            layoutConfigured = true;
-        } else if (!layout.getClass().equals(manager.getClass())) {
-            throw new IllegalArgumentException("All editor layouts for a master must be of the same kind. Cannot mix [%s] with [%s].".formatted(layout.getClass().getSimpleName(), manager.getClass().getSimpleName()));
+        // The editors layout is flex; the default manager is already a FlexLayout.
+        layout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
+        return this;
+    }
+
+    @Override
+    public IGridLayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final IGridLayoutConfiguration grid) {
+        if (device == null || orientation == null) {
+            throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
         }
-        layout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(config.layout());
+        // The editors layout is grid; replace the default flex manager with a GridLayout on the first breakpoint. The kind is compile-time fixed, so all breakpoints share it.
+        if (!(layout instanceof GridLayout)) {
+            layout = new GridLayout("editors");
+        }
+        layout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(grid.layout());
         return this;
     }
 
@@ -472,20 +467,25 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public IActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final ILayoutConfiguration config) {
+    public IActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
         if (device == null || orientation == null) {
             throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
         }
-        // The first configuration determines the action bar layout kind: replace the default flex manager with the configured kind's manager.
-        // A single client element renders all breakpoints, so every subsequent breakpoint must resolve to the same kind of manager.
-        final AbstractLayout<?> manager = config.mkLayoutManager("actions");
-        if (!actionBarLayoutConfigured) {
-            actionBarLayout = manager;
-            actionBarLayoutConfigured = true;
-        } else if (!actionBarLayout.getClass().equals(manager.getClass())) {
-            throw new IllegalArgumentException("All action bar layouts for a master must be of the same kind. Cannot mix [%s] with [%s].".formatted(actionBarLayout.getClass().getSimpleName(), manager.getClass().getSimpleName()));
+        // The action bar layout is flex; the default manager is already a FlexLayout.
+        actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
+        return this;
+    }
+
+    @Override
+    public IGridActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final IGridLayoutConfiguration grid) {
+        if (device == null || orientation == null) {
+            throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
         }
-        actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(config.layout());
+        // The action bar layout is grid; replace the default flex manager with a GridLayout on the first breakpoint. The kind is compile-time fixed, so all breakpoints share it.
+        if (!(actionBarLayout instanceof GridLayout)) {
+            actionBarLayout = new GridLayout("actions");
+        }
+        actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(grid.layout());
         return this;
     }
 

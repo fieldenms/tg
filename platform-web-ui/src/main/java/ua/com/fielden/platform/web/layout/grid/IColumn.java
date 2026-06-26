@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.web.layout.grid;
 
-import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
 import ua.com.fielden.platform.web.layout.grid.impl.GridLayoutConfiguration;
 
 /// The step at which a column track has been added and may be further configured.
 /// More columns may be added, the current column may be styled or justified, the row tracks may be declared, or — since the declared column tracks already form a complete layout — it may be used as is (all editors auto-flow) or completed with explicit elements.
 ///
-/// Because at least one column track has been declared, this step is itself an [ILayoutConfiguration] and may be passed directly to `setLayoutFor`; the trailing `elements(…)` call is optional.
+/// Because at least one column track has been declared, this step is itself an [IGridLayoutConfiguration] and may be passed directly to `setLayoutFor`; the trailing `elements(…)` call is optional.
 ///
-public interface IColumn extends ILayoutConfiguration {
+public interface IColumn extends IGridLayoutConfiguration {
 
     /// Adds another column track.
     ///

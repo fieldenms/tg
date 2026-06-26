@@ -8,15 +8,16 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiAppearance;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
+import ua.com.fielden.platform.web.layout.grid.IGridLayoutConfiguration;
 
-/// The flex selection-criteria layout continuation: further flex breakpoints, the generator option, and the result-set builder.
-/// It does not expose the grid `setLayoutFor`, so selection criteria that started flex stay flex.
+/// The grid selection-criteria layout continuation: further grid breakpoints, the generator option, and the result-set builder.
+/// It does not expose the flex `setLayoutFor`, so selection criteria that started grid stay grid.
 ///
-public interface ILayoutConfigWithResultsetSupport<T extends AbstractEntity<?>> extends IResultSetBuilder1aEgiAppearance<T> {
+public interface IGridLayoutConfigWithResultsetSupport<T extends AbstractEntity<?>> extends IResultSetBuilder1aEgiAppearance<T> {
 
-    /// Installs a flex selection-criteria layout for a further `device` and `orientation` from its layout string.
+    /// Installs a grid selection-criteria layout for a further `device` and `orientation`.
     ///
-    ILayoutConfigWithResultsetSupport<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString);
+    IGridLayoutConfigWithResultsetSupport<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final IGridLayoutConfiguration grid);
 
     /// Augments the centre's selection criteria definition with a data [IGenerator].
     ///

@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.web.layout.grid;
 
-import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
 import ua.com.fielden.platform.web.layout.grid.impl.GridLayoutConfiguration;
 
 /// The step at which a row track has been added and may be further configured.
 /// More rows may be added, the current row may be styled, aligned or repeated, or — since the declared tracks already form a complete layout — it may be used as is (all editors auto-flow) or completed with explicit elements.
 ///
-/// This step is itself an [ILayoutConfiguration] and may be passed directly to `setLayoutFor`; the trailing `elements(…)` call is optional.
+/// This step is itself an [IGridLayoutConfiguration] and may be passed directly to `setLayoutFor`; the trailing `elements(…)` call is optional.
 ///
-public interface IRow extends ILayoutConfiguration {
+public interface IRow extends IGridLayoutConfiguration {
 
     /// Adds another row track.
     ///

@@ -6,8 +6,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.web.layout.AbstractLayout;
-import ua.com.fielden.platform.web.layout.AbstractLayoutSetter;
 import ua.com.fielden.platform.web.layout.grid.AutoRepeat;
 import ua.com.fielden.platform.web.layout.grid.ICell;
 import ua.com.fielden.platform.web.layout.grid.IColumn;
@@ -23,7 +21,7 @@ import ua.com.fielden.platform.web.layout.grid.IRows;
 /// One instance implements every step interface of the chain ([IContentStep] through [IRow]).
 /// Each chain method returns `this`; because the step interfaces declare narrower return types, the IDE and compiler only offer the methods valid at each step, enforcing the call order
 /// `grid().content(…).columns().addColumn(…)….rows().addRow(…)….elements(…)`.
-/// Once at least one column has been added the chain is itself an `ILayoutConfiguration`, so the trailing `elements(…)` is optional — omit it for a grid whose editors simply auto-flow.
+/// Once at least one column has been added the chain is itself an `IGridLayoutConfiguration`, so the trailing `elements(…)` is optional — omit it for a grid whose editors simply auto-flow.
 ///
 /// Intended to be used via a single static import, which brings the whole vocabulary (`grid`, `content`, `cell`, `skip`, `subheader`, `subheaderOpen`, `subheaderClosed`, `html`) into scope.
 ///
@@ -172,11 +170,6 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IRows
     @Override
     public String layout() {
         return build(List.of()).layout();
-    }
-
-    @Override
-    public AbstractLayout<? extends AbstractLayoutSetter<?>> mkLayoutManager(final String name) {
-        return build(List.of()).mkLayoutManager(name);
     }
 
     /// Assembles the configured content, column and row tracks with the given explicit cells into an immutable [GridLayoutConfiguration].

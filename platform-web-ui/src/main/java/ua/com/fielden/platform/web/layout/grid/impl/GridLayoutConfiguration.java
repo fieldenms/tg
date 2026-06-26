@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import ua.com.fielden.platform.web.layout.AbstractLayout;
-import ua.com.fielden.platform.web.layout.AbstractLayoutSetter;
-import ua.com.fielden.platform.web.layout.GridLayout;
-import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
+import ua.com.fielden.platform.web.layout.grid.IGridLayoutConfiguration;
 
 /// An assembled grid layout, produced by completing the fluent chain with `elements(...)`.
 ///
@@ -18,9 +15,9 @@ import ua.com.fielden.platform.web.layout.ILayoutConfiguration;
 /// - `columns` / `rows` — the track definitions: each carries its `size` (and an optional `repeat`), from which the client builds `grid-template-columns` / `grid-template-rows`, plus an optional `style` it emulates on every cell of the track. `rows` is omitted when left implicit.
 /// - `cells` — the explicitly configured, non-conforming cells (spans, overrides, subheaders, skips); ordinary editors auto-flow into the rest.
 ///
-/// As an [ILayoutConfiguration], it can be passed directly to `setLayoutFor` on a master or centre, where it pairs the wire string with a [GridLayout] manager.
+/// As an [IGridLayoutConfiguration], it can be passed directly to `setLayoutFor` on a master or centre.
 ///
-public class GridLayoutConfiguration implements ILayoutConfiguration {
+public class GridLayoutConfiguration implements IGridLayoutConfiguration {
 
     private final GridContent content;
     private final List<GridTrack> columns;
@@ -56,11 +53,6 @@ public class GridLayoutConfiguration implements ILayoutConfiguration {
     @Override
     public String layout() {
         return toString();
-    }
-
-    @Override
-    public AbstractLayout<? extends AbstractLayoutSetter<?>> mkLayoutManager(final String name) {
-        return new GridLayout(name);
     }
 
     private static String renderTracks(final List<GridTrack> tracks) {
