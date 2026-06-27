@@ -22,7 +22,14 @@ public class TgEntityWithTimeZoneDatesDao extends CommonEntityDao<TgEntityWithTi
 
     @Override
     protected IFetchProvider<TgEntityWithTimeZoneDates> createFetchProvider() {
-        return super.createFetchProvider().with("key", "dateProp", "datePropUtc");
+        return super.createFetchProvider().with(
+            "key",
+            "dateProp",
+            "datePropUtc",
+            "datePropDependent",
+            "dateOnlyProp",
+            "dateOnlyPropUtc"
+        );
     }
     
 }

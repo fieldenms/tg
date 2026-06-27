@@ -111,6 +111,15 @@ var _createEntityTypePropPrototype = function () {
     }
 
     /**
+     * Indicates whether dependent time-zone mode is enforced for the property of date type.
+     *
+     * IMPORTANT: do not use '_dependentTimeZoneMode' field directly!
+     */
+    EntityTypeProp.prototype.isDependentTimeZoneMode = function () {
+        return typeof this._dependentTimeZoneMode === 'undefined' ? false : this._dependentTimeZoneMode;
+    }
+
+    /**
      * Returns 'true' when the type property is secrete, false otherwise.
      *
      * IMPORTANT: do not use '_secrete' field directly!
@@ -1381,7 +1390,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
     } else if (typeof bindingValue === 'number') {
         if (propertyType === 'Date') {
             const prop = rootEntityType.prop(property);
-            return _millisDateRepresentation(bindingValue, prop.timeZone(), prop.datePortion());
+            return _millisDateRepresentation(bindingValue, prop);
         } else {
             return '' + bindingValue; // Integer value (or Long, but very rare) and BigDecimal value
         }
