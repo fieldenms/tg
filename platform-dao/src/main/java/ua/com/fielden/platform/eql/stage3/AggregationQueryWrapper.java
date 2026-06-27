@@ -174,8 +174,8 @@ public final class AggregationQueryWrapper {
 
         final var sJoin = origJoin;
         final var sWhere = origWhere;
-        final var sGroups = GroupBys3.empty();
-        final var sOrderings = OrderBys3.empty();
+        final GroupBys3 sGroups = null;
+        final OrderBys3 sOrderings = null;
         final var sYieldList_Context = createYields(operandsAndAliases, context);
         final var sYields = new Yields3(sYieldList_Context._1);
         final var context2 = sYieldList_Context._2;
@@ -189,7 +189,7 @@ public final class AggregationQueryWrapper {
                 .collect(Collectors.toMap(T2::_1,
                                           t2 -> t2.map((rand, alias) -> new Prop3(alias, topSource, rand.type()))));
 
-        final var topConditions = Conditions3.empty();
+        final Conditions3 topConditions = null;
         final var topYields = new Yields3(
                 origYields.getYields()
                         .stream()
