@@ -160,8 +160,8 @@ public final class AggregationQueryWrapper {
         final var origSourceIds = streamSources(origJoin).map(ISource3::id).collect(toSet());
 
         final Set<Prop3> props = StreamUtils.concat(origYields.getYields().stream().map(Yield3::operand),
-                                                    origGroups.groups().stream().map(GroupBy3::operand),
-                                                    origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull))
+                                                    origGroups == null ? Stream.of() : origGroups.groups().stream().map(GroupBy3::operand),
+                                                    origOrderings == null ? Stream.of() : origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull))
                 .flatMap(this::extractProperties)
                 .filter(prop -> origSourceIds.contains(prop.source.id()))
                 .filter(prop -> !aggregated.contains(prop))
@@ -195,12 +195,12 @@ public final class AggregationQueryWrapper {
                         .stream()
                         .map(y -> replaceAll(y, replacements))
                         .toList());
-        final var topGroups = new GroupBys3(
+        final var topGroups = origGroups == null ? null : new GroupBys3(
                 origGroups.groups()
                         .stream()
                         .map(g -> replaceAll(g, replacements))
                         .toList());
-        final var topOrders = origOrderings.updateOrderBys(
+        final var topOrders = origOrderings == null ? null : origOrderings.updateOrderBys(
                 origOrderings.list()
                         .stream()
                         .map(o -> replaceAll(o, replacements))
