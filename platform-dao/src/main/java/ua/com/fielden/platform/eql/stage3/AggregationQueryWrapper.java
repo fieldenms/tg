@@ -218,7 +218,7 @@ public final class AggregationQueryWrapper {
         for (final var it : operandsAndAliases) {
             final var operand = it._1;
             final var alias = it._2;
-            ctx = context.cloneWithNextSqlId();
+            ctx = ctx.cloneWithNextSqlId();
             yields.add(new Yield3(operand, alias, ctx.sqlId, operand.type()));
         }
 
