@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.queries;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.stage1.AggregationQueryWrapper;
 import ua.com.fielden.platform.eql.stage2.ITransformableFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
@@ -86,7 +87,9 @@ public abstract class AbstractQuery2 implements ToString.IFormattable {
         final TransformationResultFromStage2To3<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
         final TransformationResultFromStage2To3<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
 
-        return new TransformationResultFromStage2To3<>(new QueryComponents3(Optional.ofNullable(joinRootTr.item), whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item), orderingsTr.updatedContext);
+        final var qc = new QueryComponents3(Optional.ofNullable(joinRootTr.item), whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
+        final var newQc = AggregationQueryWrapper.INSTANCE.apply(qc, orderingsTr.updatedContext);
+        return new TransformationResultFromStage2To3<>(newQc, orderingsTr.updatedContext);
     }
 
     public Set<Prop2> collectProps() {

@@ -15,6 +15,11 @@ public class SumOf3 extends SingleOperandFunction3 {
         super(operand, type);
         this.distinct = distinct;
     }
+
+    @Override
+    public SumOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new SumOf3(operand, distinct, type);
+    }
     
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {

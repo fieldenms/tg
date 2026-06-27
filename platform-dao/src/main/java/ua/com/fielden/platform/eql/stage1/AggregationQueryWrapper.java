@@ -3,17 +3,15 @@ package ua.com.fielden.platform.eql.stage1;
 import org.apache.commons.text.RandomStringGenerator;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
-import ua.com.fielden.platform.eql.stage2.QueryComponents2;
-import ua.com.fielden.platform.eql.stage2.conditions.*;
-import ua.com.fielden.platform.eql.stage2.operands.*;
-import ua.com.fielden.platform.eql.stage2.operands.functions.*;
-import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
-import ua.com.fielden.platform.eql.stage2.queries.SubQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.*;
-import ua.com.fielden.platform.eql.stage2.sundries.*;
-import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
-import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
+import ua.com.fielden.platform.eql.stage3.QueryComponents3;
+import ua.com.fielden.platform.eql.stage3.conditions.*;
+import ua.com.fielden.platform.eql.stage3.operands.*;
+import ua.com.fielden.platform.eql.stage3.operands.functions.*;
+import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
+import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
+import ua.com.fielden.platform.eql.stage3.sources.*;
+import ua.com.fielden.platform.eql.stage3.sundries.*;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.StreamUtils;
 
@@ -24,11 +22,13 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T2.toMap;
+import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
 /// This transformation is applicable only if the query yields an aggregation.
 /// Otherwise, it is a no-op.
@@ -137,7 +137,7 @@ public final class AggregationQueryWrapper {
         aliasGenerator = AggregationQueryWrapper::generateAliases;
     }
 
-    public QueryComponents2 apply(final QueryComponents2 qc, final TransformationContextFromStage1To2 context) {
+    public QueryComponents3 apply(final QueryComponents3 qc, final TransformationContextFromStage2To3 context) {
         if (!enabled) {
             return qc;
         }
@@ -150,62 +150,79 @@ public final class AggregationQueryWrapper {
         final var origGroups = qc.groups();
         final var origOrderings = qc.orderings();
 
-        final Set<ISingleOperand2<?>> aggregated = origYields.getYields().stream()
+        final Set<ISingleOperand3> aggregated = origYields.getYields().stream()
                 .flatMap(y -> extractAggregatedExpressions(y.operand()))
                 .collect(toCollection(LinkedHashSet::new));
         if (aggregated.stream().allMatch(AggregationQueryWrapper::isPersistentProperty)) {
             return qc;
         }
 
-        final var origSourceIds = streamSources(origJoin).map(ISource2::id).collect(toSet());
+        final var origSourceIds = streamSources(origJoin).map(ISource3::id).collect(toSet());
 
-        final Set<Prop2> props = StreamUtils.concat(origYields.getYields().stream().map(Yield2::operand),
-                                                    origGroups.groups().stream().map(GroupBy2::operand),
-                                                    origOrderings.orderBys().stream().map(OrderBy2::operand).filter(Objects::nonNull))
+        final Set<Prop3> props = StreamUtils.concat(origYields.getYields().stream().map(Yield3::operand),
+                                                    origGroups.groups().stream().map(GroupBy3::operand),
+                                                    origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull))
                 .flatMap(this::extractProperties)
                 .filter(prop -> origSourceIds.contains(prop.source.id()))
                 .filter(prop -> !aggregated.contains(prop))
-                .sorted(comparing((Prop2 prop1) -> prop1.propPath).thenComparing(prop1 -> prop1.source.id()))
+                .sorted(comparing((Prop3 prop) -> prop.name).thenComparing(prop -> prop.source.id()))
                 .collect(toCollection(LinkedHashSet::new));
 
-        final List<? extends T2<? extends ISingleOperand2<?>, String>> operandsAndAliases = StreamUtils.zip(
+        final List<? extends T2<? extends ISingleOperand3, String>> operandsAndAliases = zip(
                 Stream.concat(props.stream(), aggregated.stream()), aliasGenerator.get(), T2::t2)
                 .toList();
 
         final var sJoin = origJoin;
         final var sWhere = origWhere;
-        final var sGroups = GroupBys2.EMPTY_GROUP_BYS;
-        final var sOrderings = OrderBys2.EMPTY_ORDER_BYS;
-        final var sYields = new Yields2(operandsAndAliases.stream()
-                .map(t2 -> t2.map((rand, alias) -> new Yield2(rand, alias, false)))
-                .toList());
-        final var sQuery = new SourceQuery2(Optional.of(sJoin), sWhere, sYields, sGroups, sOrderings, EntityAggregates.class);
-        final QuerySourceInfo<?> newQuerySourceInfo = context.querySourceInfoProvider.produceQuerySourceInfoForEntityType(List.of(sQuery), EntityAggregates.class, false);
+        final var sGroups = GroupBys3.empty();
+        final var sOrderings = OrderBys3.empty();
+        final var sYieldList_Context = createYields(operandsAndAliases, context);
+        final var sYields = new Yields3(sYieldList_Context._1);
+        final var context2 = sYieldList_Context._2;
+        final var sQuery = new SourceQuery3(new QueryComponents3(Optional.of(sJoin), sWhere, sYields, sGroups, sOrderings), EntityAggregates.class);
 
-        final var topSource = new Source2BasedOnQueries(List.of(sQuery), null, sourceIdGenerator.get(), newQuerySourceInfo, false, true, context.isForCalcProp);
+        final var context3 = context2.cloneWithNextSqlId();
+        final var topSource = new Source3BasedOnQueries(List.of(sQuery), sourceIdGenerator.get(), context3.sqlId);
 
         // TODO Reusing AST nodes is probably not a good idea. Create copies.
         final var replacements = operandsAndAliases.stream()
                 .collect(Collectors.toMap(T2::_1,
-                                          t2 -> t2.map((_, alias) -> new Prop2(topSource, List.of(newQuerySourceInfo.getProps().get(alias)), false))));
+                                          t2 -> t2.map((rand, alias) -> new Prop3(alias, topSource, rand.type()))));
 
-        final var topConditions = Conditions2.EMPTY_CONDITIONS;
-        final var topYields = new Yields2(
+        final var topConditions = Conditions3.empty();
+        final var topYields = new Yields3(
                 origYields.getYields()
                         .stream()
                         .map(y -> replaceAll(y, replacements))
                         .toList());
-        final var topGroups = new GroupBys2(
+        final var topGroups = new GroupBys3(
                 origGroups.groups()
                         .stream()
                         .map(g -> replaceAll(g, replacements))
                         .toList());
         final var topOrders = origOrderings.updateOrderBys(
-                origOrderings.orderBys()
+                origOrderings.list()
                         .stream()
                         .map(o -> replaceAll(o, replacements))
                         .toList());
-        return new QueryComponents2(Optional.of(new JoinLeafNode2(topSource)), topConditions, topYields, topGroups, topOrders);
+        return new QueryComponents3(Optional.of(new JoinLeafNode3(topSource)), topConditions, topYields, topGroups, topOrders);
+    }
+
+    private T2<List<Yield3>, TransformationContextFromStage2To3> createYields(
+            final List<? extends T2<? extends ISingleOperand3, String>> operandsAndAliases,
+            final TransformationContextFromStage2To3 context)
+    {
+        var ctx = context;
+
+        final var yields = new ArrayList<Yield3>(operandsAndAliases.size());
+        for (final var it : operandsAndAliases) {
+            final var operand = it._1;
+            final var alias = it._2;
+            ctx = context.cloneWithNextSqlId();
+            yields.add(new Yield3(operand, alias, ctx.sqlId, operand.type()));
+        }
+
+        return t2(unmodifiableList(yields), ctx);
     }
 
     /// Extracts the argument expression of every aggregate function occurring at the same level as the query source
@@ -218,19 +235,19 @@ public final class AggregationQueryWrapper {
     /// A sub-query is an exception: any aggregation it contains belongs to a deeper level and must not be extracted --
     /// this is what confines extraction to the level of the source.
     ///
-    private Stream<ISingleOperand2<?>> extractAggregatedExpressions(final ISingleOperand2<? extends ISingleOperand3> node) {
+    private Stream<ISingleOperand3> extractAggregatedExpressions(final ISingleOperand3 node) {
         return switch (node) {
             // Aggregate functions
-            case AverageOf2 it -> Stream.of(it.operand);
-            case MinOf2 it -> Stream.of(it.operand);
-            case MaxOf2 it -> Stream.of(it.operand);
-            case SumOf2 it -> Stream.of(it.operand);
-            case CountOf2 it -> Stream.of(it.operand);
+            case AverageOf3 it -> Stream.of(it.operand);
+            case MinOf3 it -> Stream.of(it.operand);
+            case MaxOf3 it -> Stream.of(it.operand);
+            case SumOf3 it -> Stream.of(it.operand);
+            case CountOf3 it -> Stream.of(it.operand);
             // `STRING_AGG`: only the aggregated value is a per-row expression.
             // The separator is a constant, and ordering items are irrelevant here.
-            case ConcatOf2 it -> Stream.of(it.operand1);
+            case ConcatOf3 it -> Stream.of(it.operand1);
             // `COUNT(*)` has no argument.
-            case CountAll2 _ -> Stream.empty();
+            case CountAll3 _ -> Stream.empty();
             default -> streamChildren(node).flatMap(this::extractAggregatedExpressions);
         };
     }
@@ -242,34 +259,34 @@ public final class AggregationQueryWrapper {
     /// Aggregate functions are never descended into as they are processed separately with [#extractAggregatedExpressions].
     /// Subqueries are also skipped as any properties within them are at a different level than the original query source.
     ///
-    private Stream<Prop2> extractProperties(final ISingleOperand2<? extends ISingleOperand3> node) {
+    private Stream<Prop3> extractProperties(final ISingleOperand3 node) {
         return switch (node) {
             // Skip aggregate functions, they are processed separately.
-            case AverageOf2 it -> Stream.empty();
-            case MinOf2 it -> Stream.empty();
-            case MaxOf2 it -> Stream.empty();
-            case SumOf2 it -> Stream.empty();
-            case CountOf2 it -> Stream.empty();
-            case CountAll2 _ -> Stream.empty();
+            case AverageOf3 _ -> Stream.empty();
+            case MinOf3 _ -> Stream.empty();
+            case MaxOf3 _ -> Stream.empty();
+            case SumOf3 _ -> Stream.empty();
+            case CountOf3 _ -> Stream.empty();
+            case CountAll3 _ -> Stream.empty();
             // concatOf: skip the aggregated expression, but include order-by expressions.
-            case ConcatOf2 it -> it.orderItems.stream().map(OrderBy2::operand).filter(Objects::nonNull).flatMap(this::extractProperties);
+            case ConcatOf3 it -> it.orderItems.stream().map(OrderBy3::operand).filter(Objects::nonNull).flatMap(this::extractProperties);
             // Skip subqueries.
-            case SubQuery2 _ -> Stream.empty();
-            case Prop2 it -> Stream.of(it);
+            case SubQuery3 _ -> Stream.empty();
+            case Prop3 it -> Stream.of(it);
             default -> streamChildren(node).flatMap(this::extractProperties);
         };
     }
 
-    private Yield2 replaceAll(final Yield2 yield, final Map<? extends ISingleOperand2<?>, Prop2> replacements) {
+    private Yield3 replaceAll(final Yield3 yield, final Map<? extends ISingleOperand3, Prop3> replacements) {
         return yield.setOperand(replace(yield.operand(), replacements));
     }
 
-    private GroupBy2 replaceAll(final GroupBy2 groupBy, final Map<? extends ISingleOperand2<?>, Prop2> replacements) {
+    private GroupBy3 replaceAll(final GroupBy3 groupBy, final Map<? extends ISingleOperand3, Prop3> replacements) {
         final var newOperand = replace(groupBy.operand(), replacements);
         return groupBy.setOperand(newOperand);
     }
 
-    private OrderBy2 replaceAll(final OrderBy2 orderBy, final Map<? extends ISingleOperand2<?>, Prop2> replacements) {
+    private OrderBy3 replaceAll(final OrderBy3 orderBy, final Map<? extends ISingleOperand3, Prop3> replacements) {
         if (orderBy.operand() != null) {
             final var newOperand = replace(orderBy.operand(), replacements);
             return orderBy.setOperand(newOperand);
@@ -290,9 +307,9 @@ public final class AggregationQueryWrapper {
     ///
     /// @param replacements  a mapping between old nodes to be replaced and new nodes to take their place
     ///
-    private ISingleOperand2<?> replace(
-            final ISingleOperand2<?> node,
-            final Map<? extends ISingleOperand2<?>, ? extends ISingleOperand2<?>> replacements)
+    private ISingleOperand3 replace(
+            final ISingleOperand3 node,
+            final Map<? extends ISingleOperand3, ? extends ISingleOperand3> replacements)
     {
         final var newNode = replacements.get(node);
         if (newNode != null) {
@@ -300,7 +317,7 @@ public final class AggregationQueryWrapper {
         }
 
         final var replacedChildren = streamChildren(node)
-                .<T2<ISingleOperand2, ISingleOperand2<? extends ISingleOperand3>>> map(child -> {
+                .map(child -> {
                     final var replacedChild = replace(child, replacements);
                     return replacedChild == child ? null : t2(child, replacedChild);
                 })
@@ -315,29 +332,29 @@ public final class AggregationQueryWrapper {
     ///
     /// @param replacements  a mapping between old nodes to be replaced and new nodes to take their place
     ///
-    private ISingleOperand2<?> replaceChildren(final ISingleOperand2<?> node, final Map<ISingleOperand2, ISingleOperand2<? extends ISingleOperand3>> replacements) {
+    private ISingleOperand3 replaceChildren(final ISingleOperand3 node, final Map<ISingleOperand3, ISingleOperand3> replacements) {
         if (replacements.isEmpty()) {
             return node;
         }
 
         return switch (node) {
-            case SingleOperandFunction2<?> it -> it.setOperand(replacements.getOrDefault(it.operand, it.operand));
-            case ConcatOf2 it -> it.update(
+            case SingleOperandFunction3 it -> it.setOperand(replacements.getOrDefault(it.operand, it.operand));
+            case ConcatOf3 it -> it.update(
                     replacements.getOrDefault(it.operand1, it.operand1),
                     replacements.getOrDefault(it.operand2, it.operand2),
                     replaceChildren(it.orderItems, replacements));
-            case TwoOperandsFunction2<?> it -> {
+            case TwoOperandsFunction3 it -> {
                 final var newOperand1 = replacements.getOrDefault(it.operand1, it.operand1);
                 final var newOperand2 = replacements.getOrDefault(it.operand2, it.operand2);
                 yield it.setOperands(newOperand1, newOperand2);
             }
-            case Expression2 it when streamChildren(it).anyMatch(replacements::containsKey)
-                    -> new Expression2(replacements.getOrDefault(it.first, it.first),
-                                       it.items.stream().map(item -> item.setOperand(replacements.getOrDefault(item.operand(), item.operand()))).toList());
-            case Concat2 it when it.operands().stream().anyMatch(replacements::containsKey)
+            case Expression3 it when streamChildren(it).anyMatch(replacements::containsKey)
+                    -> it.update(replacements.getOrDefault(it.firstOperand, it.firstOperand),
+                                 it.otherOperands.stream().map(item -> item.setOperand(replacements.getOrDefault(item.operand(), item.operand()))).toList());
+            case Concat3 it when it.operands().stream().anyMatch(replacements::containsKey)
                     -> it.setOperands(it.operands().stream().map(rand -> replacements.getOrDefault(rand, rand)).collect(toImmutableList()));
             // For case-when, also consider immediate children within the "when" conditions.
-            case CaseWhen2 it -> it.update(it.whenThenPairs().stream()
+            case CaseWhen3 it -> it.update(it.whenThenPairs().stream()
                                                    .map(t2 -> t2.map((when, then) -> t2(replaceChildren(when, replacements), replacements.getOrDefault(then, then))))
                                                    .toList(),
                                            it.elseOperand() == null ? null : replacements.getOrDefault(it.elseOperand(), it.elseOperand()),
@@ -346,9 +363,9 @@ public final class AggregationQueryWrapper {
         };
     }
 
-    private List<OrderBy2> replaceChildren(
-            final List<OrderBy2> orderBys,
-            final Map<ISingleOperand2, ISingleOperand2<? extends ISingleOperand3>> replacements)
+    private List<OrderBy3> replaceChildren(
+            final List<OrderBy3> orderBys,
+            final Map<ISingleOperand3, ISingleOperand3> replacements)
     {
         return orderBys.stream().anyMatch(o -> o.operand() != null && replacements.containsKey(o.operand()))
                 ? orderBys.stream().map(o -> o.setOperand(replacements.get(o.operand()))).collect(toImmutableList())
@@ -359,33 +376,33 @@ public final class AggregationQueryWrapper {
     ///
     /// @param replacements  a mapping between old nodes to be replaced and new nodes to take their place
     ///
-    private ICondition2<? extends ICondition3> replaceChildren(
-            final ICondition2<? extends ICondition3> condition,
-            final Map<ISingleOperand2, ISingleOperand2<? extends ISingleOperand3>> replacements)
+    private ICondition3 replaceChildren(
+            final ICondition3 condition,
+            final Map<ISingleOperand3, ISingleOperand3> replacements)
     {
         return switch (condition) {
-            case ComparisonPredicate2 it -> it.update(replacements.getOrDefault(it.leftOperand(), it.leftOperand()),
+            case ComparisonPredicate3 it -> it.update(replacements.getOrDefault(it.leftOperand(), it.leftOperand()),
                                                       it.operator(),
                                                       replacements.getOrDefault(it.rightOperand(), it.rightOperand()));
-            case NullPredicate2 it -> it.update(replacements.getOrDefault(it.operand(), it.operand()), it.negated());
-            case LikePredicate2 it -> it.update(replacements.getOrDefault(it.matchOperand(), it.matchOperand()),
+            case NullPredicate3 it -> it.update(replacements.getOrDefault(it.operand(), it.operand()), it.negated());
+            case LikePredicate3 it -> it.update(replacements.getOrDefault(it.matchOperand(), it.matchOperand()),
                                                 replacements.getOrDefault(it.patternOperand(), it.patternOperand()),
                                                 it.options());
-            case SetPredicate2 it -> it.update(replacements.getOrDefault(it.leftOperand(), it.leftOperand()),
+            case SetPredicate3 it -> it.update(replacements.getOrDefault(it.leftOperand(), it.leftOperand()),
                                                it.negated(),
                                                switch (it.rightOperand()) {
-                                                   case QueryBasedSet2 set -> set;
-                                                   case OperandsBasedSet2 set -> set.update(set.operands().stream().map(rand -> replacements.getOrDefault(rand, rand)).toList());
+                                                   case QueryBasedSet3 set -> set;
+                                                   case OperandsBasedSet3 set -> set.update(set.operands().stream().map(rand -> replacements.getOrDefault(rand, rand)).toList());
                                                    default -> it.rightOperand();
                                                });
-            case ExistencePredicate2 it -> it; // Subquery ignored.
-            case QuantifiedPredicate2 it -> it.update(replacements.getOrDefault(it.leftOperand(), it.leftOperand()),
+            case ExistencePredicate3 it -> it; // Subquery ignored.
+            case QuantifiedPredicate3 it -> it.update(replacements.getOrDefault(it.leftOperand(), it.leftOperand()),
                                                       it.operator(),
                                                       it.quantifier(),
                                                       // Subquery ignored.
                                                       it.rightOperand());
-            case Conditions2 it -> it.update(it.negated(),
-                                             it.dnf().stream()
+            case Conditions3 it -> it.update(it.negated(),
+                                             it.allConditionsAsDnf().stream()
                                                      .map(conds -> conds.stream().map(c -> replaceChildren(c, replacements)).collect(toImmutableList()))
                                                      .collect(toImmutableList()));
             default -> condition;
@@ -393,52 +410,54 @@ public final class AggregationQueryWrapper {
     }
 
     /// Given a composite node, returns its immediate children.
-    /// [Subqueries][SubQuery2] are ignored.
+    /// [Subqueries][SubQuery3] are ignored.
     ///
-    private Stream<ISingleOperand2<?>> streamChildren(final ISingleOperand2<?> node) {
+    private Stream<ISingleOperand3> streamChildren(final ISingleOperand3 node) {
         return switch (node) {
-            case ConcatOf2 it -> Stream.concat(Stream.of(it.operand1, it.operand2), it.orderItems.stream().map(OrderBy2::operand));
-            case SingleOperandFunction2<?> it -> Stream.of(it.operand);
-            case TwoOperandsFunction2<?> it -> Stream.of(it.operand1, it.operand2);
-            case Expression2 it -> Stream.concat(Stream.of(it.first), it.items.stream().map(CompoundSingleOperand2::operand));
-            case Concat2 it -> it.operands().stream();
+            case ConcatOf3 it -> Stream.concat(Stream.of(it.operand1, it.operand2), it.orderItems.stream().map(OrderBy3::operand));
+            case SingleOperandFunction3 it -> Stream.of(it.operand);
+            case TwoOperandsFunction3 it -> Stream.of(it.operand1, it.operand2);
+            case Expression3 it -> Stream.concat(Stream.of(it.firstOperand), it.otherOperands.stream().map(CompoundSingleOperand3::operand));
+            case Concat3 it -> it.operands().stream();
             // Case-when is special: operands within conditions are not immediate children but are included.
-            case CaseWhen2 it -> Stream.concat(
+            case CaseWhen3 it -> Stream.concat(
                     it.whenThenPairs().stream().flatMap(t2 -> t2.map((when, then) -> Stream.concat(streamChildren(when), Stream.of(then)))),
                     Optional.ofNullable(it.elseOperand()).stream());
             default -> Stream.empty();
         };
     }
 
-    private Stream<? extends ISingleOperand2<?>> streamChildren(final ICondition2<? extends ICondition3> condition) {
+    private Stream<? extends ISingleOperand3> streamChildren(final ICondition3 condition) {
         return switch (condition) {
-            case ComparisonPredicate2 it -> Stream.of(it.leftOperand(), it.rightOperand());
-            case NullPredicate2 it -> Stream.of(it.operand());
-            case LikePredicate2 it -> Stream.of(it.matchOperand(), it.patternOperand());
-            case SetPredicate2 it -> Stream.concat(
+            case ComparisonPredicate3 it -> Stream.of(it.leftOperand(), it.rightOperand());
+            case NullPredicate3 it -> Stream.of(it.operand());
+            case LikePredicate3 it -> Stream.of(it.matchOperand(), it.patternOperand());
+            case SetPredicate3 it -> Stream.concat(
                     Stream.of(it.leftOperand()),
                     switch (it.rightOperand()) {
-                        case OperandsBasedSet2 set -> set.operands().stream();
-                        case QueryBasedSet2 _ -> Stream.of(); // Subquery ignored.
+                        case OperandsBasedSet3 set -> set.operands().stream();
+                        case QueryBasedSet3 _ -> Stream.of(); // Subquery ignored.
                         default -> Stream.of();
                     });
-            case ExistencePredicate2 _ -> Stream.of(); // Subquery ignored.
-            case QuantifiedPredicate2 it -> Stream.of(it.leftOperand()); // Subquery ignored.
-            case Conditions2 it -> it.dnf().stream().flatMap(List::stream).flatMap(this::streamChildren);
+            case ExistencePredicate3 _ -> Stream.of(); // Subquery ignored.
+            case QuantifiedPredicate3 it -> Stream.of(it.leftOperand()); // Subquery ignored.
+            case Conditions3 it -> it.allConditionsAsDnf().stream().flatMap(List::stream).flatMap(this::streamChildren);
             default -> Stream.of();
         };
     }
 
-    private Stream<ISource2<?>> streamSources(final IJoinNode2<?> origJoin) {
+    private Stream<ISource3> streamSources(final IJoinNode3 origJoin) {
         return switch (origJoin) {
-            case JoinLeafNode2 it -> Stream.of(it.source());
-            case JoinInnerNode2 it -> Stream.concat(streamSources(it.leftNode()), streamSources(it.rightNode()));
+            case JoinLeafNode3 it -> Stream.of(it.source());
+            case JoinInnerNode3 it -> Stream.concat(streamSources(it.leftNode()), streamSources(it.rightNode()));
             default -> throw new InvalidStateException("Unsupported join node type: %s".formatted(origJoin.getClass().getName()));
         };
     }
 
-    private static boolean isPersistentProperty(final ISingleOperand2<?> rand) {
-        return rand instanceof Prop2 prop && !prop.getPath().getLast().hasExpression();
+    private static boolean isPersistentProperty(final ISingleOperand3 rand) {
+        // All stage 3 properties are persistent.
+        // Calculated properties are expanded before stage 3.
+        return rand instanceof Prop3;
     }
 
     private static Integer nextSourceId() {

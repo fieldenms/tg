@@ -13,6 +13,20 @@ public record QuantifiedPredicate3(ISingleOperand3 leftOperand, ComparisonOperat
         implements ICondition3, ToString.IFormattable
 {
 
+    public QuantifiedPredicate3 update(
+            final ISingleOperand3 leftOperand,
+            final ComparisonOperator operator,
+            final Quantifier quantifier,
+            final SubQuery3 rightOperand)
+    {
+        if (leftOperand == this.leftOperand && operator == this.operator && quantifier == this.quantifier && rightOperand == this.rightOperand) {
+            return this;
+        }
+        else {
+            return new QuantifiedPredicate3(leftOperand, operator, quantifier, rightOperand);
+        }
+    }
+
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return leftOperand.sql(metadata, dbVersion) + " " + operator + " " + quantifier + " " + rightOperand.sql(

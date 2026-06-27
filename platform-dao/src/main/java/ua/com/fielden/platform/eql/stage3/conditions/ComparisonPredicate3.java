@@ -16,6 +16,17 @@ public record ComparisonPredicate3 (ISingleOperand3 leftOperand,
         implements ICondition3, ToString.IFormattable
 {
 
+    public ComparisonPredicate3 update(
+            final ISingleOperand3 leftOperand,
+            final ComparisonOperator operator,
+            final ISingleOperand3 rightOperand)
+    {
+        if (leftOperand == this.leftOperand && operator == this.operator && rightOperand == this.rightOperand) {
+            return this;
+        }
+        return new ComparisonPredicate3(leftOperand, operator, rightOperand);
+    }
+
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         if (dbVersion == POSTGRESQL) {

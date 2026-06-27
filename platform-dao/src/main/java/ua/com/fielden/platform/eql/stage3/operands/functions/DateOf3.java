@@ -12,6 +12,11 @@ public class DateOf3 extends SingleOperandFunction3 {
     public DateOf3(final ISingleOperand3 operand, final PropType type) {
         super(operand, type);
     }
+
+    @Override
+    public DateOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new DateOf3(operand, type);
+    }
     
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {

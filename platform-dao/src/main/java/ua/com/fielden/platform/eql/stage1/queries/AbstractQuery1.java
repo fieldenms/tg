@@ -121,8 +121,7 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
         final OrderBys2 orderings2 = enhanceOrderBys(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         // it is important to enhance yields after orderings to enable functioning of 'orderBy().yield(..)' in application to properties rather than true yields
         final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource()).yields;
-        final var qc = new QueryComponents2(Optional.of(joinRoot2), whereConditions2, enhancedYields2, groups2, orderings2);
-        return AggregationQueryWrapper.INSTANCE.apply(qc, context);
+        return new QueryComponents2(Optional.of(joinRoot2), whereConditions2, enhancedYields2, groups2, orderings2);
     }
 
     /**

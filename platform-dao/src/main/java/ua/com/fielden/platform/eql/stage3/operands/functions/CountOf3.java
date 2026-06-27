@@ -15,6 +15,11 @@ public class CountOf3 extends SingleOperandFunction3 {
         super(operand, type);
         this.distinct = distinct;
     }
+
+    @Override
+    public CountOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new CountOf3(operand, distinct, type);
+    }
     
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {

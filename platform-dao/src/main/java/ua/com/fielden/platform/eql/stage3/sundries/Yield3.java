@@ -36,6 +36,15 @@ public record Yield3 (ISingleOperand3 operand, String alias, String column, Prop
         this(operand, alias, isEmpty(alias) ? null : "C_" + columnId, type);
     }
 
+    public Yield3 setOperand(final ISingleOperand3 operand) {
+        if (operand == this.operand) {
+            return this;
+        }
+        else {
+            return new Yield3(operand, alias, column, type);
+        }
+    }
+
     /// @param expectedType  unless it is the [PropType#NULL_TYPE], the yielded value is cast to the given type
     ///
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final PropType expectedType) {

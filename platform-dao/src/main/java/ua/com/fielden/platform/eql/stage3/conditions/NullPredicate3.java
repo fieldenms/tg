@@ -7,6 +7,15 @@ import ua.com.fielden.platform.utils.ToString;
 
 public record NullPredicate3 (ISingleOperand3 operand, boolean negated) implements ICondition3, ToString.IFormattable {
 
+    public NullPredicate3 update(final ISingleOperand3 operand, final boolean negated) {
+        if (operand == this.operand && negated == this.negated) {
+            return this;
+        }
+        else {
+            return new NullPredicate3(operand, negated);
+        }
+    }
+
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return operand.sql(metadata, dbVersion) + " IS " + (negated ? "NOT" : "") + " NULL";

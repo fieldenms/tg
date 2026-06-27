@@ -10,6 +10,15 @@ public record SetPredicate3(ISingleOperand3 leftOperand, boolean negated, ISetOp
         implements ICondition3, ToString.IFormattable
 {
 
+    public SetPredicate3 update(final ISingleOperand3 leftOperand, final boolean negated, final ISetOperand3 rightOperand) {
+        if (leftOperand == this.leftOperand && negated == this.negated && rightOperand == this.rightOperand) {
+            return this;
+        }
+        else {
+            return new SetPredicate3(leftOperand, negated, rightOperand);
+        }
+    }
+
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return leftOperand.sql(metadata, dbVersion) + (negated ? " NOT IN " : " IN ") + rightOperand.sql(metadata, dbVersion);

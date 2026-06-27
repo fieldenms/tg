@@ -14,6 +14,11 @@ public class DayOf3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public DayOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new DayOf3(operand, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return switch (dbVersion) {
             case H2, MSSQL -> format("DAY(%s)", operand.sql(metadata, dbVersion));

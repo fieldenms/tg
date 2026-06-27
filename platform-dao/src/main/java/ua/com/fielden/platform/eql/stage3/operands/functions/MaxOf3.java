@@ -14,6 +14,11 @@ public class MaxOf3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public MaxOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new MaxOf3(operand, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return format("MAX(%s)", operand.sql(metadata, dbVersion));
     }
