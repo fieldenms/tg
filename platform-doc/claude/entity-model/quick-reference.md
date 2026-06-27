@@ -96,6 +96,13 @@ protected static final EntityResultQueryModel<T> model_ = select(Source.class)
 Use `models_` (plural `List`), inner `enum`, `@SupportsEntityExistsValidation`.
 See `entity-model/reference.md` § *Synthetic Grouping Property Entities*.
 
+## Fixed Entity Instances
+
+Protect specific records of a user-maintained *persistent* entity that business logic references by key.
+An inner `enum Fixed` lists the protected keys and is the single source of truth; the rows are created by migration/population, not by the enum.
+Four parts: (1) the `Fixed` enum with `matches` / `fromValue` / `isOneOf`; (2) a key+desc `@BeforeChange` validator — **fail** on key rename, **warn** on desc change, guarded by `isPersisted() && Fixed.isOneOf(entity)`; (3) an `IRenderingCustomiser` that italicises fixed rows; (4) a `batchDelete` override rejecting fixed rows.
+See `entity-model/reference.md` § *Fixed Entity Instances*.
+
 ## Metamodel References
 
 Always use metamodel references instead of string literals:
