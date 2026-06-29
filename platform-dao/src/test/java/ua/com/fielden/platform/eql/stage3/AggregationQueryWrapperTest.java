@@ -36,7 +36,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.ADD;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.MULT;
 import static ua.com.fielden.platform.eql.meta.PropType.*;
-import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
+import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.yieldWithoutAlias;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 /// Tests for [AggregationQueryWrapper].
@@ -194,7 +194,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var existsSubQry = new SubQueryForExists3(
                 new QueryComponents3(Optional.of(new JoinLeafNode3(fuelUsageSource)),
                                      cond(eq(entityProp("vehicle", fuelUsageSource, TgVehicle.class), idProp(vehicleSource))),
-                                     yields(new Yield3(new Value3(null, NULL_TYPE), ABSENT_ALIAS, 6, NULL_TYPE)),
+                                     yields(yieldWithoutAlias(new Value3(null, NULL_TYPE), NULL_TYPE)),
                                      null,
                                      null));
 
@@ -409,8 +409,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
 
         final var srcQryAsSource = new Source3BasedOnQueries(List.of(srcQry), 3, 5);
         final var subQry = subqry(sources(srcQryAsSource),
-                                  yields(new Yield3(new MaxOf3(prop("c1", srcQryAsSource, BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE),
-                                                    ABSENT_ALIAS, 0, BIGDECIMAL_PROP_TYPE)),
+                                  yields(yieldWithoutAlias(new MaxOf3(prop("c1", srcQryAsSource, BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE)),
                                   BIGDECIMAL_PROP_TYPE);
         final var expected = qry(sources(source2),
                                  yields(yieldModel(subQry, "maxQty", 6, BIGDECIMAL_PROP_TYPE)));

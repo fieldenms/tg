@@ -36,6 +36,10 @@ public record Yield3 (ISingleOperand3 operand, String alias, String column, Prop
         this(operand, alias, isEmpty(alias) ? null : "C_" + columnId, type);
     }
 
+    public static Yield3 yieldWithoutAlias(final ISingleOperand3 operand, final PropType type) {
+        return new Yield3(operand, "", 0, type);
+    }
+
     public Yield3 setOperand(final ISingleOperand3 operand) {
         if (operand == this.operand) {
             return this;
