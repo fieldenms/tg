@@ -25,7 +25,6 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -49,7 +48,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
     @After
     public void afterTest() {
         AggregationQueryWrapper.enabled = true;
-        AggregationQueryWrapper.resetSourceIdGenerator();
         AggregationQueryWrapper.resetAliasGenerator();
     }
 
@@ -82,7 +80,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_maxId, topYield_minId));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -126,7 +123,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  groups(topGroupBy_c1));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -160,7 +156,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_maxId));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -216,7 +211,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_maxPrice));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(3));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -257,7 +251,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  orders(new OrderBy3(topYield_avgPrice, true)));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1, order);
         assertQueryEquals(expected, actual);
     }
@@ -298,7 +291,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  orders(new OrderBy3(topYield_avgPrice, true)));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -374,7 +366,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_doubleQty, topYield_totalQty));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -412,7 +403,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(yieldModel(subQry, "maxQty", 6, BIGDECIMAL_PROP_TYPE)));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(3));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -455,7 +445,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_cost, topYield_keys));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -509,7 +498,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  groups(topGroupBy_c1));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -558,7 +546,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  groups(topGroupBy_c1));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -606,7 +593,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  groups(topGroupBy_c1));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -653,7 +639,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_maxId, topYield_flag),
                                  groups(topGroupBy_c1));
 
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
@@ -702,7 +687,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  groups(topGroupBy_c1));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -746,7 +730,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_prices));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -794,7 +777,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_qtys, topYield_doubleSum));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -828,7 +810,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_max));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -869,7 +850,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                   yields(new Yield3(lastFuelUsageQty, "c1", 7, BIGDECIMAL_PROP_TYPE)),
                                   EntityAggregates.class);
 
-        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 8);
+        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 4, 8);
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
         final var topYield_max = new Yield3(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), "max", 6, BIGDECIMAL_PROP_TYPE);
 
@@ -877,7 +858,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_max));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -924,7 +904,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                   yields(new Yield3(halfLastFuelUsageQty, "c1", 7, BIGDECIMAL_PROP_TYPE)),
                                   EntityAggregates.class);
 
-        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 8);
+        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 4, 8);
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
         final var topYield_max = new Yield3(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), "max", 6, BIGDECIMAL_PROP_TYPE);
 
@@ -932,7 +912,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_max));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -978,7 +957,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_total));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -1019,7 +997,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_result));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
@@ -1032,17 +1009,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
 
     private Stream<String> mkAliasGenerator() {
         return IntStream.iterate(1, i -> i + 1).mapToObj(i -> "c" + i);
-    }
-
-    private Supplier<Integer> mkSourceIdGeneratorFromRange(final int start) {
-        return new Supplier<>() {
-            int n = start;
-
-            @Override
-            public Integer get() {
-                return n++;
-            }
-        };
     }
 
 }

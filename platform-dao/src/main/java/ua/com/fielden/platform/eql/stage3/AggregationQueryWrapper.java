@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage3;
 
-import org.apache.commons.text.RandomStringGenerator;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
@@ -117,19 +116,7 @@ public final class AggregationQueryWrapper {
 
     private AggregationQueryWrapper() {}
 
-    private static final RandomStringGenerator stringGenerator = new RandomStringGenerator.Builder().withinRange(new char[]{'a', 'z'}, new char[]{'0', '9'}).get();
-    private static final Random random = new Random();
-
-    private static Supplier<Integer> sourceIdGenerator = AggregationQueryWrapper::nextSourceId;
     private static Supplier<Stream<String>> aliasGenerator = AggregationQueryWrapper::generateAliases;
-
-    static void setSourceIdGenerator(final Supplier<Integer> generator) {
-        sourceIdGenerator = generator;
-    }
-
-    static void resetSourceIdGenerator() {
-        sourceIdGenerator = AggregationQueryWrapper::nextSourceId;
-    }
 
     static void setAliasGenerator(final Supplier<Stream<String>> generator) {
         aliasGenerator = generator;
@@ -184,7 +171,7 @@ public final class AggregationQueryWrapper {
         final var sQuery = new SourceQuery3(new QueryComponents3(Optional.of(sJoin), sWhere, sYields, sGroups, sOrderings), EntityAggregates.class);
 
         final var context3 = context2.cloneWithNextSqlId();
-        final var topSource = new Source3BasedOnQueries(List.of(sQuery), sourceIdGenerator.get(), context3.sqlId);
+        final var topSource = new Source3BasedOnQueries(List.of(sQuery), context3.gen().nextSourceId(), context3.sqlId);
 
         // TODO Reusing AST nodes is probably not a good idea. Create copies.
         final var replacements = operandsAndAliases.stream()
@@ -470,10 +457,6 @@ public final class AggregationQueryWrapper {
         // All stage 3 properties are persistent.
         // Calculated properties are expanded before stage 3.
         return rand instanceof Prop3;
-    }
-
-    private static Integer nextSourceId() {
-        return random.nextInt();
     }
 
     private static Stream<String> generateAliases() {
