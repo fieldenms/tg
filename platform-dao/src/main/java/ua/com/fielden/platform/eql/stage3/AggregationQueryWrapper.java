@@ -99,7 +99,8 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 /// `Wt = empty` -- conditions are applied in `St`.
 ///
 /// `Ot = [transform(o) for o in O]`
-/// * `transform(o)` -- replace each referenced property of `S` with a corresponding property of `St`.
+/// * `transform(o)` -- replace each referenced property of `S` with a corresponding property of `St`
+///   AND, if `o` references a yield from `Y`, replace it with a corresponding yield (based on alias) from `Yt`.
 ///
 /// `Gt = [transform(g) for g in G]`
 /// * `transform(g)` -- replace each referenced property of `S` with a corresponding property of `St`.
@@ -203,7 +204,8 @@ public final class AggregationQueryWrapper {
         final var topOrders = origOrderings == null ? null : origOrderings.updateOrderBys(
                 origOrderings.list()
                         .stream()
-                        .map(o -> replaceAll(o, replacements))
+                        // If an order by referenced a yield, the old yield has to be replaced with a new one.
+                        .map(o -> replaceYield(replaceAll(o, replacements), topYields))
                         .toList());
         return new QueryComponents3(Optional.of(new JoinLeafNode3(topSource)), topConditions, topYields, topGroups, topOrders);
     }
@@ -293,6 +295,15 @@ public final class AggregationQueryWrapper {
         }
         else {
             return orderBy;
+        }
+    }
+
+    private OrderBy3 replaceYield(final OrderBy3 orderBy3, final Yields3 yields) {
+        if (orderBy3.yield() != null) {
+            return orderBy3.setYield(yields.yieldsMap().getOrDefault(orderBy3.yield().alias(), orderBy3.yield()));
+        }
+        else {
+            return orderBy3;
         }
     }
 

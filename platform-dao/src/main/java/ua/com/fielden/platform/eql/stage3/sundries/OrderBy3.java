@@ -31,6 +31,13 @@ public record OrderBy3 (@Nullable ISingleOperand3 operand, @Nullable Yield3 yiel
         return operand == this.operand ? this : new OrderBy3(operand, isDesc);
     }
 
+    public OrderBy3 setYield(final Yield3 yield) {
+        if (this.operand != null) {
+            throw new InvalidStateException("Cannot use a yield with an order by that references an operand.");
+        }
+        return yield == this.yield ? this : new OrderBy3(yield, isDesc);
+    }
+
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return (operand != null ? operand.sql(metadata, dbVersion) : yield.column()) + (isDesc ? DESC : ASC);
     }
