@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.stage3;
 
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
@@ -31,10 +30,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.ADD;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.MULT;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.*;
 import static ua.com.fielden.platform.eql.meta.PropType.*;
 import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.yieldWithoutAlias;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -710,32 +707,6 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         assertQueryEquals(expected, actual);
     }
 
-    @Test
-    @Ignore("Nested aggregations are not possible in EQL.")
-    public void nested_aggregations_are_not_transformed() {
-        // 1. The EQL grammar does not permit an aggregation to be used as an argument of another aggregation.
-        /*
-        final var query1 = select(TgVehicle.class)
-                // No such method `maxOf` in this position.
-                .yield().sumOf().maxOf().prop("sumOfPrices").as("total")
-                .modelAsAggregate();
-        */
-
-        // 2. A calculated property cannot expand into a direct aggregate function call -- that would be an invalid definition,
-        // although the EQL grammar does permit such standalone expressions.
-        /*
-        select(TgVehicle.class)
-                .yield().sumOf().prop("calc").as("total")
-                .modelAsAggregate();
-
-        cannot expand into
-
-        select(TgVehicle.class)
-                .yield().sumOf().maxOf().prop("x").as("total")
-                .modelAsAggregate();
-        */
-    }
-
     // The following tests cover `concatOf`, whose intra-aggregate `order by` may reference properties that appear
     // nowhere else in the query.
     // Such properties must be materialised as columns of the source query so that the outer `concatOf` can order by them.
@@ -827,6 +798,233 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var actual = qry(query1);
         assertQueryEquals(expected, actual);
     }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Calculated properties
+
+    @Test
+    public void aggregation_over_a_calculated_property_whose_expression_does_not_contain_a_subquery_is_transformed() {
+        final var query1 = select(TgVehicle.class).yield().maxOf().prop("constValueProp").as("max").modelAsAggregate();
+
+        // This is the expected query, and its AST must be constructed by hand because of generated IDs.
+        final var query2 = select(select(TgVehicle.class).yield().expr(expr().val(10).add().val(20).model()).as("c1").modelAsAggregate())
+                .yield().maxOf().prop("c1").as("max")
+                .modelAsAggregate();
+
+        // `constValueProp` is materialised as its expression.
+        final var srcQrySource = source(TgVehicle.class, 1, 1);
+        final var constValue = new Expression3(new Value3(10, INTEGER_PROP_TYPE),
+                                               List.of(new CompoundSingleOperand3(new Value3(20, INTEGER_PROP_TYPE), ADD)),
+                                               INTEGER_PROP_TYPE);
+        final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
+                                  yields(new Yield3(constValue, "c1", 3, INTEGER_PROP_TYPE)),
+                                  EntityAggregates.class);
+
+        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 4);
+        final var prop_c1 = prop("c1", topSource, INTEGER_PROP_TYPE);
+        final var topYield_max = new Yield3(new MaxOf3(prop_c1, INTEGER_PROP_TYPE), "max", 2, INTEGER_PROP_TYPE);
+
+        final var expected = qry(new JoinLeafNode3(topSource),
+                                 yields(topYield_max));
+
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
+        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
+        final var actual = qry(query1);
+        assertQueryEquals(expected, actual);
+    }
+
+    @Test
+    public void aggregation_over_a_calculated_property_whose_expression_contains_a_subquery_is_transformed() {
+        final var query1 = select(TgVehicle.class).yield().maxOf().prop("lastFuelUsageQty").as("max").modelAsAggregate();
+
+        // This is the expected query, and its AST must be constructed by hand because of generated IDs.
+        final var query2 = select(select(TgVehicle.class).yield().prop("lastFuelUsageQty").as("c1").modelAsAggregate())
+                .yield().maxOf().prop("c1").as("max")
+                .modelAsAggregate();
+
+        // `lastFuelUsageQty` is calculated as the `qty` of this vehicle's most recent fuel usage, expressed as a
+        // correlated sub-query, so it is materialised as that sub-query.
+        final var vehicleSource = source(TgVehicle.class, 1, 1);
+        final var fuelUsageSource = source(TgFuelUsage.class, 2, 2);
+        final var laterFuelUsageSource = source(TgFuelUsage.class, 3, 3);
+
+        // `not exists` (a later fuel usage for the same vehicle), used to single out the most recent one.
+        final var noLaterFuelUsage = new SubQueryForExists3(
+                new QueryComponents3(Optional.of(new JoinLeafNode3(laterFuelUsageSource)),
+                                     or(and(eq(entityProp("vehicle", laterFuelUsageSource, TgVehicle.class), entityProp("vehicle", fuelUsageSource, TgVehicle.class)),
+                                            gt(prop("date", laterFuelUsageSource, DATETIME_PROP_TYPE), prop("date", fuelUsageSource, DATETIME_PROP_TYPE)))),
+                                     yields(yieldWithoutAlias(new Value3(null, NULL_TYPE), NULL_TYPE)),
+                                     null,
+                                     null));
+
+        // The whole sub-query: the `qty` of this vehicle's fuel usage that has no later fuel usage.
+        final var lastFuelUsageQty = subqry(
+                new JoinLeafNode3(fuelUsageSource),
+                or(and(eq(entityProp("vehicle", fuelUsageSource, TgVehicle.class), idProp(vehicleSource)),
+                       new ExistencePredicate3(true, noLaterFuelUsage))),
+                yields(yieldWithoutAlias(prop("qty", fuelUsageSource, BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE)),
+                BIGDECIMAL_PROP_TYPE);
+
+        final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
+                                  yields(new Yield3(lastFuelUsageQty, "c1", 7, BIGDECIMAL_PROP_TYPE)),
+                                  EntityAggregates.class);
+
+        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 8);
+        final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
+        final var topYield_max = new Yield3(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), "max", 6, BIGDECIMAL_PROP_TYPE);
+
+        final var expected = qry(new JoinLeafNode3(topSource),
+                                 yields(topYield_max));
+
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
+        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
+        final var actual = qry(query1);
+        assertQueryEquals(expected, actual);
+    }
+
+    @Test
+    public void aggregation_over_a_calculated_property_whose_expression_contains_another_calculated_property_containing_a_subquery_is_transformed() {
+        final var query1 = select(TgVehicle.class).yield().maxOf().prop("halfLastFuelUsageQty").as("max").modelAsAggregate();
+
+        // This is the expected query, and its AST must be constructed by hand because of generated IDs.
+        final var query2 = select(select(TgVehicle.class).yield().prop("halfLastFuelUsageQty").as("c1").modelAsAggregate())
+                .yield().maxOf().prop("c1").as("max")
+                .modelAsAggregate();
+
+        // `halfLastFuelUsageQty` is `lastFuelUsageQty / 2`, where `lastFuelUsageQty` is the `qty` of this vehicle's most
+        // recent fuel usage, expressed as a correlated sub-query.
+        // The whole expression is materialised, with the nested calculated property inlined as that sub-query.
+        final var vehicleSource = source(TgVehicle.class, 1, 1);
+        final var fuelUsageSource = source(TgFuelUsage.class, 2, 2);
+        final var laterFuelUsageSource = source(TgFuelUsage.class, 3, 3);
+
+        // `not exists` (a later fuel usage for the same vehicle), used to single out the most recent one.
+        final var noLaterFuelUsage = new SubQueryForExists3(
+                new QueryComponents3(Optional.of(new JoinLeafNode3(laterFuelUsageSource)),
+                                     or(and(eq(entityProp("vehicle", laterFuelUsageSource, TgVehicle.class), entityProp("vehicle", fuelUsageSource, TgVehicle.class)),
+                                            gt(prop("date", laterFuelUsageSource, DATETIME_PROP_TYPE), prop("date", fuelUsageSource, DATETIME_PROP_TYPE)))),
+                                     yields(yieldWithoutAlias(new Value3(null, NULL_TYPE), NULL_TYPE)),
+                                     null,
+                                     null));
+
+        // `lastFuelUsageQty`: the `qty` of this vehicle's fuel usage that has no later fuel usage.
+        final var lastFuelUsageQty = subqry(
+                new JoinLeafNode3(fuelUsageSource),
+                or(and(eq(entityProp("vehicle", fuelUsageSource, TgVehicle.class), idProp(vehicleSource)),
+                       new ExistencePredicate3(true, noLaterFuelUsage))),
+                yields(yieldWithoutAlias(prop("qty", fuelUsageSource, BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE)),
+                BIGDECIMAL_PROP_TYPE);
+
+        // The materialised `c1`: the sub-query divided by 2.
+        final var halfLastFuelUsageQty = new Expression3(lastFuelUsageQty,
+                                                         List.of(new CompoundSingleOperand3(new Value3(2, INTEGER_PROP_TYPE), DIV)),
+                                                         BIGDECIMAL_PROP_TYPE);
+
+        final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
+                                  yields(new Yield3(halfLastFuelUsageQty, "c1", 7, BIGDECIMAL_PROP_TYPE)),
+                                  EntityAggregates.class);
+
+        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 8);
+        final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
+        final var topYield_max = new Yield3(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), "max", 6, BIGDECIMAL_PROP_TYPE);
+
+        final var expected = qry(new JoinLeafNode3(topSource),
+                                 yields(topYield_max));
+
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
+        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
+        final var actual = qry(query1);
+        assertQueryEquals(expected, actual);
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // The transformation algorithm is not recursive.
+    // The argument of an aggregate function is materialised once, and is not itself transformed.
+
+    @Test
+    public void nested_aggregation_with_depth_2_is_transformed() {
+        final var query1 = select(TgVehicle.class)
+                .yield().sumOf().expr(expr().maxOf().prop("sumOfPrices").model()).as("total")
+                .modelAsAggregate();
+
+        // This is the expected query, and its AST must be constructed by hand because of generated IDs.
+        final var query2 = select(select(TgVehicle.class)
+                                          .yield().expr(expr().maxOf().prop("sumOfPrices").model()).as("c1")
+                                          .modelAsAggregate())
+                .yield().sumOf().prop("c1").as("total")
+                .modelAsAggregate();
+
+        // The aggregated argument of the outer `sum` is materialised once and is not transformed further:
+        // `c1` is `max(sumOfPrices)`, with the inner `max` left intact.
+        // `sumOfPrices` is calculated as `1 * price.amount + purchasePrice.amount`.
+        final var vehicleSource = source(TgVehicle.class, 1, 1);
+        final var sumOfPrices = new Expression3(new Value3(1, INTEGER_PROP_TYPE),
+                                                List.of(new CompoundSingleOperand3(prop("price.amount", vehicleSource, BIGDECIMAL_PROP_TYPE), MULT),
+                                                        new CompoundSingleOperand3(prop("purchasePrice.amount", vehicleSource, BIGDECIMAL_PROP_TYPE), ADD)),
+                                                BIGDECIMAL_PROP_TYPE);
+        final var maxOfSumOfPrices = new Expression3(new MaxOf3(sumOfPrices, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE);
+
+        final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
+                                  yields(new Yield3(maxOfSumOfPrices, "c1", 3, BIGDECIMAL_PROP_TYPE)),
+                                  EntityAggregates.class);
+
+        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 4);
+        final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
+        final var topYield_total = new Yield3(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "total", 2, BIGDECIMAL_PROP_TYPE);
+
+        final var expected = qry(new JoinLeafNode3(topSource),
+                                 yields(topYield_total));
+
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
+        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
+        final var actual = qry(query1);
+        assertQueryEquals(expected, actual);
+    }
+
+    @Test
+    public void nested_aggregation_with_depth_3_is_transformed_only_once() {
+        final var query1 = select(TgVehicle.class)
+                .yield().avgOf().expr(expr().sumOf().expr(expr().maxOf().prop("sumOfPrices").model()).model()).as("result")
+                .modelAsAggregate();
+
+        // This is the expected query, and its AST must be constructed by hand because of generated IDs.
+        final var query2 = select(select(TgVehicle.class)
+                                          .yield().expr(expr().sumOf().expr(expr().maxOf().prop("sumOfPrices").model()).model()).as("c1")
+                                          .modelAsAggregate())
+                .yield().avgOf().prop("c1").as("result")
+                .modelAsAggregate();
+
+        // The aggregated argument of the outer `avg` is materialised once and is not transformed further:
+        // `c1` is `sum(max(sumOfPrices))`, with the nested `sum` and `max` left intact.
+        // `sumOfPrices` is calculated as `1 * price.amount + purchasePrice.amount`.
+        final var vehicleSource = source(TgVehicle.class, 1, 1);
+        final var sumOfPrices = new Expression3(new Value3(1, INTEGER_PROP_TYPE),
+                                                List.of(new CompoundSingleOperand3(prop("price.amount", vehicleSource, BIGDECIMAL_PROP_TYPE), MULT),
+                                                        new CompoundSingleOperand3(prop("purchasePrice.amount", vehicleSource, BIGDECIMAL_PROP_TYPE), ADD)),
+                                                BIGDECIMAL_PROP_TYPE);
+        final var maxOfSumOfPrices = new Expression3(new MaxOf3(sumOfPrices, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE);
+        final var sumOfMax = new Expression3(new SumOf3(maxOfSumOfPrices, false, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE);
+
+        final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
+                                  yields(new Yield3(sumOfMax, "c1", 3, BIGDECIMAL_PROP_TYPE)),
+                                  EntityAggregates.class);
+
+        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 4);
+        final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
+        final var topYield_result = new Yield3(new AverageOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "result", 2, BIGDECIMAL_PROP_TYPE);
+
+        final var expected = qry(new JoinLeafNode3(topSource),
+                                 yields(topYield_result));
+
+        AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
+        AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
+        final var actual = qry(query1);
+        assertQueryEquals(expected, actual);
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Utilities
