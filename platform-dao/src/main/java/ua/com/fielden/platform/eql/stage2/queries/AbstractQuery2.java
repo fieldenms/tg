@@ -88,8 +88,10 @@ public abstract class AbstractQuery2 implements ToString.IFormattable {
         final TransformationResultFromStage2To3<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
 
         final var qc = new QueryComponents3(Optional.ofNullable(joinRootTr.item), whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
-        final var newQc = AggregationQueryWrapper.INSTANCE.apply(qc, orderingsTr.updatedContext);
-        return new TransformationResultFromStage2To3<>(newQc, orderingsTr.updatedContext);
+        final var qcTr = AggregationQueryWrapper.INSTANCE.apply(qc, orderingsTr.updatedContext);
+        return qcTr.item != null
+                ? qcTr
+                : new TransformationResultFromStage2To3<>(qc, orderingsTr.updatedContext);
     }
 
     public Set<Prop2> collectProps() {

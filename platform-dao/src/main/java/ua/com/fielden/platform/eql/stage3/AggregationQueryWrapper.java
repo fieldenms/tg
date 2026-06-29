@@ -4,7 +4,7 @@ import org.apache.commons.text.RandomStringGenerator;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
-import ua.com.fielden.platform.eql.stage3.QueryComponents3;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.conditions.*;
 import ua.com.fielden.platform.eql.stage3.operands.*;
 import ua.com.fielden.platform.eql.stage3.operands.functions.*;
@@ -26,6 +26,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3.skipTransformation;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T2.toMap;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
@@ -138,12 +139,12 @@ public final class AggregationQueryWrapper {
         aliasGenerator = AggregationQueryWrapper::generateAliases;
     }
 
-    public QueryComponents3 apply(final QueryComponents3 qc, final TransformationContextFromStage2To3 context) {
+    public TransformationResultFromStage2To3<QueryComponents3> apply(final QueryComponents3 qc, final TransformationContextFromStage2To3 context) {
         if (!enabled) {
-            return qc;
+            return skipTransformation(context);
         }
         if (qc.maybeJoinRoot().isEmpty()) {
-            return qc;
+            return skipTransformation(context);
         }
         final var origJoin = qc.maybeJoinRoot().get();
         final var origWhere = qc.whereConditions();
@@ -155,7 +156,7 @@ public final class AggregationQueryWrapper {
                 .flatMap(y -> extractAggregatedExpressions(y.operand()))
                 .collect(toCollection(LinkedHashSet::new));
         if (aggregated.stream().allMatch(AggregationQueryWrapper::isPersistentProperty)) {
-            return qc;
+            return skipTransformation(context);
         }
 
         final var origSourceIds = streamSources(origJoin).map(ISource3::id).collect(toSet());
@@ -207,7 +208,7 @@ public final class AggregationQueryWrapper {
                         // If an order by referenced a yield, the old yield has to be replaced with a new one.
                         .map(o -> replaceYield(replaceAll(o, replacements), topYields))
                         .toList());
-        return new QueryComponents3(Optional.of(new JoinLeafNode3(topSource)), topConditions, topYields, topGroups, topOrders);
+        return new TransformationResultFromStage2To3<>(new QueryComponents3(Optional.of(new JoinLeafNode3(topSource)), topConditions, topYields, topGroups, topOrders), context3);
     }
 
     private T2<List<Yield3>, TransformationContextFromStage2To3> createYields(
