@@ -47,6 +47,32 @@ public class GridCell implements IGridCell {
         this.kind = kind;
     }
 
+    int row() {
+        return row;
+    }
+
+    int col() {
+        return col;
+    }
+
+    /// The leftmost column this cell occupies — column 1 for a `spanAllCols` cell, otherwise its declared column.
+    ///
+    int firstColumn() {
+        return colSpan != null && colSpan == SPAN_ALL ? 1 : col;
+    }
+
+    /// The number of columns this cell occupies — all `columnCount` of them for a `spanAllCols` cell, otherwise its declared column span (default 1).
+    ///
+    int occupiedColumns(final int columnCount) {
+        return colSpan != null && colSpan == SPAN_ALL ? columnCount : (colSpan != null && colSpan > 1 ? colSpan : 1);
+    }
+
+    /// The number of rows this cell occupies — its declared row span (default 1).
+    ///
+    int occupiedRows() {
+        return rowSpan != null && rowSpan > 1 ? rowSpan : 1;
+    }
+
     public static GridCell cell(final int row, final int col) {
         return new GridCell(row, col, Kind.CELL);
     }

@@ -35,6 +35,12 @@ class GridTrack {
         this.autoRepeat = keyword;
     }
 
+    /// The number of logical tracks this definition represents: its fixed `repeat` count, or 1 for a single or auto-tracked track (the browser determines an auto-track's count).
+    ///
+    int span() {
+        return autoRepeat == null && times > 1 ? times : 1;
+    }
+
     /// Renders this track as a JavaScript object literal, e.g. `{size:"1fr",repeat:3,style:{"padding-left":"32px"}}`,
     /// or `{size:"minmax(220px, 1fr)",repeat:"auto-fit"}` for an auto-tracked column.
     ///

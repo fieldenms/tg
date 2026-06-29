@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.layout.grid.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,6 +29,12 @@ import ua.com.fielden.platform.web.layout.grid.IRows;
 /// Intended to be used via a single static import, which brings the whole vocabulary (`grid`, `content`, `cell`, `skip`, `subheader`, `subheaderOpen`, `subheaderClosed`, `html`) into scope.
 ///
 public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAutoColumn, IRows, IRow {
+
+    public static final String
+        ERR_COLUMN_OUT_OF_BOUNDS = "Grid cell at row %s, column %s is outside the layout's %s declared column(s).",
+        ERR_NON_POSITIVE_ROW = "Grid cell at column %s has a non-positive row %s.",
+        ERR_ROW_OUT_OF_BOUNDS = "Grid cell at row %s, column %s is outside the layout's %s declared row(s).",
+        ERR_OVERLAPPING_CELLS = "Grid cell at row %s, column %s overlaps the cell at row %s, column %s.";
 
     private GridContent content;
     private final List<GridTrack> columnTracks = new ArrayList<>();
@@ -179,6 +187,41 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
     /// When no `elements(…)` are supplied (the chain used directly as a configuration), the cell list is empty and every editor auto-flows.
     ///
     private GridLayoutConfiguration build(final List<GridCell> cells) {
+        validateCells(cells);
         return new GridLayoutConfiguration(content, columnTracks, rowTracks, cells);
+    }
+
+    /// Rejects misconfigured explicit cells before the layout is assembled:
+    /// a cell anchored outside the declared grid — a column outside `1..N` (N = declared columns), or, when explicit rows are declared, a row outside `1..M` (M = declared rows); with implicit rows only a non-positive row;
+    /// or a cell whose occupied region (accounting for spans) overlaps a position already taken by an earlier cell.
+    /// Either leaves the client unable to place the cell — its coordinate is never reachable, hanging an implicit-row layout — so both are configuration errors caught here rather than at render time.
+    ///
+    private void validateCells(final List<GridCell> cells) {
+        final int columnCount = columnTracks.stream().mapToInt(GridTrack::span).sum();
+        final boolean hasExplicitRows = !rowTracks.isEmpty();
+        final int rowCount = hasExplicitRows ? rowTracks.stream().mapToInt(GridTrack::span).sum() : Integer.MAX_VALUE;
+        final Map<String, GridCell> occupied = new HashMap<>();
+        for (final GridCell cell : cells) {
+            if (cell.col() < 1 || cell.col() > columnCount) {
+                throw new IllegalArgumentException(ERR_COLUMN_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), columnCount));
+            }
+            if (cell.row() < 1) {
+                throw new IllegalArgumentException(ERR_NON_POSITIVE_ROW.formatted(cell.col(), cell.row()));
+            }
+            if (hasExplicitRows && cell.row() > rowCount) {
+                throw new IllegalArgumentException(ERR_ROW_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), rowCount));
+            }
+            final int firstCol = cell.firstColumn();
+            final int lastCol = firstCol + cell.occupiedColumns(columnCount) - 1;
+            final int lastRow = cell.row() + cell.occupiedRows() - 1;
+            for (int r = cell.row(); r <= lastRow; r += 1) {
+                for (int c = firstCol; c <= lastCol; c += 1) {
+                    final GridCell other = occupied.putIfAbsent(r + "," + c, cell);
+                    if (other != null) {
+                        throw new IllegalArgumentException(ERR_OVERLAPPING_CELLS.formatted(cell.row(), cell.col(), other.row(), other.col()));
+                    }
+                }
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.layout;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static ua.com.fielden.platform.web.layout.grid.AutoRepeat.AUTO_FILL;
 import static ua.com.fielden.platform.web.layout.grid.AutoRepeat.AUTO_FIT;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.cell;
@@ -9,6 +10,10 @@ import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.gri
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.html;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.skip;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.subheaderOpen;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_COLUMN_OUT_OF_BOUNDS;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_NON_POSITIVE_ROW;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_OVERLAPPING_CELLS;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_ROW_OUT_OF_BOUNDS;
 
 import org.junit.Test;
 
@@ -226,5 +231,67 @@ public class GridLayoutTest {
         assertEquals(
                 "{columns:[{size:\"1fr\"},{size:\"1fr\"}],cells:[{row:3,col:1,colSpan:\"all\",select:\"property-name=bio\"}]}",
                 grid().columns().addColumn().addColumn().elements(cell(3, 1).withProp("bio").spanAllCols()).toString());
+    }
+
+    @Test
+    public void a_cell_with_a_column_beyond_the_declared_columns_is_rejected() {
+        final var ex = assertThrows(IllegalArgumentException.class, () ->
+                grid().columns().addColumn().addColumn().elements(cell(2, 3).withProp("desc")));
+        assertEquals(ERR_COLUMN_OUT_OF_BOUNDS.formatted(2, 3, 2), ex.getMessage());
+    }
+
+    @Test
+    public void a_cell_with_a_non_positive_column_is_rejected() {
+        final var ex = assertThrows(IllegalArgumentException.class, () ->
+                grid().columns().addColumn().addColumn().elements(skip(1, 0)));
+        assertEquals(ERR_COLUMN_OUT_OF_BOUNDS.formatted(1, 0, 2), ex.getMessage());
+    }
+
+    @Test
+    public void a_cell_with_a_non_positive_row_is_rejected() {
+        final var ex = assertThrows(IllegalArgumentException.class, () ->
+                grid().columns().addColumn().elements(skip(0, 1)));
+        assertEquals(ERR_NON_POSITIVE_ROW.formatted(1, 0), ex.getMessage());
+    }
+
+    @Test
+    public void a_cell_with_a_row_beyond_the_declared_explicit_rows_is_rejected() {
+        final var ex = assertThrows(IllegalArgumentException.class, () ->
+                grid().columns().addColumn().rows().addRow("auto").addRow("auto").elements(skip(3, 1)));
+        assertEquals(ERR_ROW_OUT_OF_BOUNDS.formatted(3, 1, 2), ex.getMessage());
+    }
+
+    @Test
+    public void in_bounds_cells_are_accepted_and_implicit_rows_have_no_upper_bound() {
+        // within the declared 2 columns — no exception
+        grid().columns().addColumn().addColumn().elements(cell(2, 2).withProp("desc"));
+        // a high row is fine when rows are implicit (no explicit rows())
+        grid().columns().addColumn().elements(cell(100, 1).withProp("desc"));
+        // non-overlapping spans are accepted: a full-width row 1, then a cell in row 2
+        grid().columns().addColumn().addColumn().elements(cell(1, 1).spanCols(2), skip(2, 1));
+    }
+
+    @Test
+    public void a_cell_overlapping_an_earlier_cells_column_span_is_rejected() {
+        // the first cell spans columns 1-2 of row 1; the skip at (1,2) lands inside that span
+        final var ex = assertThrows(IllegalArgumentException.class, () ->
+                grid().columns().addColumn().addColumn().elements(cell(1, 1).spanCols(2), skip(1, 2)));
+        assertEquals(ERR_OVERLAPPING_CELLS.formatted(1, 2, 1, 1), ex.getMessage());
+    }
+
+    @Test
+    public void a_cell_overlapping_an_earlier_cells_row_span_is_rejected() {
+        // the first cell spans rows 1-2 of column 1; the skip at (2,1) lands inside that span
+        final var ex = assertThrows(IllegalArgumentException.class, () ->
+                grid().columns().addColumn().elements(cell(1, 1).spanRows(2), skip(2, 1)));
+        assertEquals(ERR_OVERLAPPING_CELLS.formatted(2, 1, 1, 1), ex.getMessage());
+    }
+
+    @Test
+    public void a_cell_in_a_full_width_subheaders_row_is_rejected() {
+        // the subheader at row 1 spans every column; a cell in row 1 overlaps it
+        final var ex = assertThrows(IllegalArgumentException.class, () ->
+                grid().columns().addColumn().addColumn().elements(subheaderOpen(1, "Section"), skip(1, 1)));
+        assertEquals(ERR_OVERLAPPING_CELLS.formatted(1, 1, 1, 1), ex.getMessage());
     }
 }

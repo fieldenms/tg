@@ -240,9 +240,13 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         const { columnCount, rowCount, indent, columnStyles, rowStyles } = grid;
         const occupied = new Set();
         const remaining = new Set(Object.keys(cellAt));
+        // The highest row any explicit cell sits on. Past it, a cell still left in `remaining` is unreachable (its position was
+        // occupied by a span, or its column is out of range), so it must not keep the loop alive — otherwise an implicit-row grid
+        // (rowCount === Infinity) would spin forever. The server rejects such layouts (GridLayoutBuilder.validateCells); this is a backstop.
+        const maxCellRow = Object.keys(cellAt).reduce((max, key) => Math.max(max, parseInt(key, 10)), 0);
         let currentSubheader = null;
         let row = 1;
-        while ((pool.length > 0 || remaining.size > 0) && row <= rowCount) {
+        while ((pool.length > 0 || (remaining.size > 0 && row <= maxCellRow)) && row <= rowCount) {
             for (let col = 1; col <= columnCount; col += 1) {
                 const key = row + ',' + col;
                 const cell = cellAt[key];
