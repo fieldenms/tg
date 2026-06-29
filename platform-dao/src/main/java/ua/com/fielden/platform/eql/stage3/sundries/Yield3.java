@@ -83,6 +83,7 @@ public record Yield3 (ISingleOperand3 operand, String alias, String column, Prop
                || obj instanceof Yield3 that
                   && Objects.equals(operand, that.operand)
                   && Objects.equals(alias, that.alias)
+                  && Objects.equals(column, that.column)
                   && Objects.equals(type, that.type);
     }
 
