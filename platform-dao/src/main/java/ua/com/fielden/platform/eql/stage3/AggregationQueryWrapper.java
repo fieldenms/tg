@@ -107,14 +107,17 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///
 /// `Yt = [transform(y) for y in Y]`
 /// * `transform(y)` -- replace each referenced property of `S` with a corresponding property of `St` AND replace each expression `x` matched earlier by `extractAgg(y)` with a corresponding property of `St`.
-
+///
 public final class AggregationQueryWrapper {
 
     public static final AggregationQueryWrapper INSTANCE = new AggregationQueryWrapper();
 
-    static boolean enabled = true;
-
     private AggregationQueryWrapper() {}
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Ad-hoc configuration for testing purposes.
+
+    static boolean enabled = true;
 
     private static Supplier<Stream<String>> aliasGenerator = AggregationQueryWrapper::generateAliases;
 
@@ -125,6 +128,8 @@ public final class AggregationQueryWrapper {
     static void resetAliasGenerator() {
         aliasGenerator = AggregationQueryWrapper::generateAliases;
     }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     public TransformationResultFromStage2To3<QueryComponents3> apply(final QueryComponents3 qc, final TransformationContextFromStage2To3 context) {
         if (!enabled) {

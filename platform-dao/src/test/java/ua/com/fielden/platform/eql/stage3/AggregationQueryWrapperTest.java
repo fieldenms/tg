@@ -53,13 +53,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
 
     @Test
     public void multiple_aggregations_over_the_same_operand_share_the_same_column() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .yield().maxOf().absOf().prop("id").as("maxId")
                 .yield().minOf().absOf().prop("id").as("minId")
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().absOf().prop("id").as("c1")
                                           .modelAsAggregate())
                 .yield().maxOf().prop("c1").as("maxId")
@@ -80,7 +80,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_maxId, topYield_minId));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
@@ -89,14 +89,14 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
     ///
     @Test
     public void groupBy_and_yield_that_use_the_same_operand_in_original_query_use_the_same_column_in_transformed_query() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .groupBy().prop("key")
                 .yield().prop("key").as("vehKey")
                 .yield().avgOf().absOf().prop("id").as("avg")
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().prop("key").as("c1")
                                           .yield().absOf().prop("id").as("c2")
                                           .modelAsAggregate())
@@ -123,20 +123,20 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  groups(topGroupBy_c1));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void where_conditions_are_attached_to_the_source_query_and_not_to_the_outer_query_01() {
-        final var query1 = select(TgVehicle.class).where()
+        final var actualEql = select(TgVehicle.class).where()
                 .prop("purchasePrice").gt().val(100)
                 // To trigger transformation.
                 .yield().maxOf().absOf().prop("id").as("maxId")
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class).where()
+        final var expectedEql = select(select(TgVehicle.class).where()
                                           .prop("purchasePrice").gt().val(100)
                                           .yield().absOf().prop("id").as("c1")
                                           .modelAsAggregate())
@@ -156,13 +156,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_maxId));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void where_conditions_are_attached_to_the_source_query_and_not_to_the_outer_query_02() {
-        final var query1 = select(TgVehicle.class).where()
+        final var actualEql = select(TgVehicle.class).where()
                 .condition(EntityQueryUtils.cond().prop("purchasePrice").gt().val(100).model())
                 .and().prop("replacedBy").isNotNull()
                 .or().exists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).model())
@@ -170,7 +170,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class).where()
+        final var expectedEql = select(select(TgVehicle.class).where()
                                           .condition(EntityQueryUtils.cond().prop("purchasePrice").gt().val(100).model())
                                           .and().prop("replacedBy").isNotNull()
                                           .or().exists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).model())
@@ -211,7 +211,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_maxPrice));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
@@ -219,13 +219,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
     public void order_by_yield_is_preserved_under_transformation__standalone_order_by() {
         final var order = orderBy().yield("maxId").desc().model();
 
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .groupBy().prop("key")
                 .yield().maxOf().absOf().prop("id").as("maxId")
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().prop("key").as("c1")
                                           .yield().absOf().prop("id").as("c2")
                                           .modelAsAggregate())
@@ -251,20 +251,20 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  orders(new OrderBy3(topYield_avgPrice, true)));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1, order);
+        final var actual = qry(actualEql, order);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void order_by_yield_is_preserved_under_transformation__inline_order_by() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .groupBy().prop("key")
                 .orderBy().yield("maxId").desc()
                 .yield().maxOf().absOf().prop("id").as("maxId")
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().prop("key").as("c1")
                                           .yield().absOf().prop("id").as("c2")
                                           .modelAsAggregate())
@@ -291,7 +291,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  orders(new OrderBy3(topYield_avgPrice, true)));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
@@ -333,13 +333,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
     ///
     @Test
     public void aggregation_over_persistent_property_is_materialised_when_another_aggregation_triggers_the_transformation() {
-        final var query1 = select(TgFuelUsage.class)
+        final var actualEql = select(TgFuelUsage.class)
                 .yield().sumOf().beginExpr().prop("qty").mult().val(2).endExpr().as("doubleQty")
                 .yield().sumOf().prop("qty").as("totalQty")
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgFuelUsage.class)
+        final var expectedEql = select(select(TgFuelUsage.class)
                                           .yield().beginExpr().prop("qty").mult().val(2).endExpr().as("c1")
                                           .yield().prop("qty").as("c2")
                                           .modelAsAggregate())
@@ -366,18 +366,18 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_doubleQty, topYield_totalQty));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void query_that_has_aggregation_only_within_a_subquery_is_not_transformed_but_the_subquery_is() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .yield().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().maxOf().round().prop("qty").to(2).modelAsPrimitive()).as("maxQty")
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated source IDs.
-        final var query2 = select(TgVehicle.class)/*ID=2*/
+        final var expectedEql = select(TgVehicle.class)/*ID=2*/
                 .yield().model(select(select(TgFuelUsage.class)/*ID=1*/.where()
                                               .prop("vehicle").eq().extProp(ID)
                                               .yield().round().prop("qty").to(2).as("c1")
@@ -403,13 +403,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(yieldModel(subQry, "maxQty", 6, BIGDECIMAL_PROP_TYPE)));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void equal_prop_nodes_under_the_same_parent_node_are_replaced_by_the_same_materialised_prop() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 // To trigger transformation.
                 .yield().sumOf().beginExpr().prop("price").mult().val(2).endExpr().as("cost")
                 // prop("key") -- 2 equal nodes that should be replaced by the same materialised prop.
@@ -417,7 +417,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().beginExpr().prop("price").mult().val(2).endExpr().as("c1")
                                           .yield().prop("key").as("c2")
                                           .modelAsAggregate())
@@ -445,7 +445,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_cost, topYield_keys));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
@@ -457,7 +457,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
 
     @Test
     public void comparison_predicate_in_case_when_has_its_properties_transformed() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .groupBy().prop("key")
                 // Aggregation to trigger transformation.
                 .yield().maxOf().absOf().prop("id").as("maxId")
@@ -465,7 +465,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().prop("key").as("c1")
                                           .yield().absOf().prop("id").as("c2")
                                           .modelAsAggregate())
@@ -498,13 +498,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  groups(topGroupBy_c1));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void comparison_predicate_in_case_when_has_its_properties_transformed__nested_operand_case() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .groupBy().prop("initDate")
                 // Aggregation to trigger transformation.
                 .yield().maxOf().absOf().prop("id").as("maxId")
@@ -513,7 +513,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().prop("initDate").as("c1")
                                           .yield().absOf().prop("id").as("c2")
                                           .modelAsAggregate())
@@ -546,13 +546,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  groups(topGroupBy_c1));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void null_predicate_in_case_when_has_its_properties_transformed() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .groupBy().prop("initDate")
                 // Aggregation to trigger transformation.
                 .yield().maxOf().absOf().prop("id").as("maxId")
@@ -560,7 +560,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().prop("initDate").as("c1")
                                           .yield().absOf().prop("id").as("c2")
                                           .modelAsAggregate())
@@ -593,13 +593,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  groups(topGroupBy_c1));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void like_predicate_in_case_when_has_its_properties_transformed() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .groupBy().prop("key")
                 // Aggregation to trigger transformation.
                 .yield().maxOf().absOf().prop("id").as("maxId")
@@ -607,7 +607,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().prop("key").as("c1")
                                           .yield().absOf().prop("id").as("c2")
                                           .modelAsAggregate())
@@ -640,13 +640,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  groups(topGroupBy_c1));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void set_predicate_in_case_when_has_its_properties_transformed() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .groupBy().prop("key")
                 // Aggregation to trigger transformation.
                 .yield().maxOf().absOf().prop("id").as("maxId")
@@ -654,7 +654,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().prop("key").as("c1")
                                           .yield().absOf().prop("id").as("c2")
                                           .modelAsAggregate())
@@ -687,7 +687,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  groups(topGroupBy_c1));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
@@ -702,12 +702,12 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
     ///
     @Test
     public void concatOf_orderBy_property_referenced_nowhere_else_is_materialised_and_rewritten() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .yield().concatOf().absOf().prop("id").orderBy().prop("initDate").asc().separator().val(", ").as("ids")
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().prop("initDate").as("c1")
                                           .yield().absOf().prop("id").as("c2")
                                           .modelAsAggregate())
@@ -730,7 +730,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_prices));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
@@ -740,13 +740,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
     ///
     @Test
     public void concatOf_orderBy_property_is_materialised_when_transformation_triggered_by_another_aggregation() {
-        final var query1 = select(TgFuelUsage.class)
+        final var actualEql = select(TgFuelUsage.class)
                 .yield().sumOf().beginExpr().prop("qty").mult().val(2).endExpr().as("doubleSum")
                 .yield().concatOf().prop("qty").orderBy().prop("date").asc().separator().val(", ").as("qtys")
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgFuelUsage.class)
+        final var expectedEql = select(select(TgFuelUsage.class)
                                           .yield().prop("date").as("c1")
                                           .yield().beginExpr().prop("qty").mult().val(2).endExpr().as("c2")
                                           .yield().prop("qty").as("c3")
@@ -777,7 +777,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_qtys, topYield_doubleSum));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
@@ -786,10 +786,10 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
 
     @Test
     public void aggregation_over_a_calculated_property_whose_expression_does_not_contain_a_subquery_is_transformed() {
-        final var query1 = select(TgVehicle.class).yield().maxOf().prop("constValueProp").as("max").modelAsAggregate();
+        final var actualEql = select(TgVehicle.class).yield().maxOf().prop("constValueProp").as("max").modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class).yield().expr(expr().val(10).add().val(20).model()).as("c1").modelAsAggregate())
+        final var expectedEql = select(select(TgVehicle.class).yield().expr(expr().val(10).add().val(20).model()).as("c1").modelAsAggregate())
                 .yield().maxOf().prop("c1").as("max")
                 .modelAsAggregate();
 
@@ -810,16 +810,16 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_max));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void aggregation_over_a_calculated_property_whose_expression_contains_a_subquery_is_transformed() {
-        final var query1 = select(TgVehicle.class).yield().maxOf().prop("lastFuelUsageQty").as("max").modelAsAggregate();
+        final var actualEql = select(TgVehicle.class).yield().maxOf().prop("lastFuelUsageQty").as("max").modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class).yield().prop("lastFuelUsageQty").as("c1").modelAsAggregate())
+        final var expectedEql = select(select(TgVehicle.class).yield().prop("lastFuelUsageQty").as("c1").modelAsAggregate())
                 .yield().maxOf().prop("c1").as("max")
                 .modelAsAggregate();
 
@@ -858,16 +858,16 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_max));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void aggregation_over_a_calculated_property_whose_expression_contains_another_calculated_property_containing_a_subquery_is_transformed() {
-        final var query1 = select(TgVehicle.class).yield().maxOf().prop("halfLastFuelUsageQty").as("max").modelAsAggregate();
+        final var actualEql = select(TgVehicle.class).yield().maxOf().prop("halfLastFuelUsageQty").as("max").modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class).yield().prop("halfLastFuelUsageQty").as("c1").modelAsAggregate())
+        final var expectedEql = select(select(TgVehicle.class).yield().prop("halfLastFuelUsageQty").as("c1").modelAsAggregate())
                 .yield().maxOf().prop("c1").as("max")
                 .modelAsAggregate();
 
@@ -912,7 +912,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_max));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
@@ -924,12 +924,12 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
 
     @Test
     public void nested_aggregation_with_depth_2_is_transformed() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .yield().sumOf().expr(expr().maxOf().prop("sumOfPrices").model()).as("total")
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().expr(expr().maxOf().prop("sumOfPrices").model()).as("c1")
                                           .modelAsAggregate())
                 .yield().sumOf().prop("c1").as("total")
@@ -957,18 +957,18 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_total));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
     @Test
     public void nested_aggregation_with_depth_3_is_transformed_only_once() {
-        final var query1 = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .yield().avgOf().expr(expr().sumOf().expr(expr().maxOf().prop("sumOfPrices").model()).model()).as("result")
                 .modelAsAggregate();
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var query2 = select(select(TgVehicle.class)
+        final var expectedEql = select(select(TgVehicle.class)
                                           .yield().expr(expr().sumOf().expr(expr().maxOf().prop("sumOfPrices").model()).model()).as("c1")
                                           .modelAsAggregate())
                 .yield().avgOf().prop("c1").as("result")
@@ -997,7 +997,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                  yields(topYield_result));
 
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(query1);
+        final var actual = qry(actualEql);
         assertQueryEquals(expected, actual);
     }
 
