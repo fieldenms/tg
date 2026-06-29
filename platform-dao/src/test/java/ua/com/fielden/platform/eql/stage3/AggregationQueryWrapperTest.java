@@ -30,7 +30,6 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -88,7 +87,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     /// A group-by key that is also yielded as a non-aggregate property is materialised once (as `c1`) and referenced by
@@ -132,7 +131,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -166,7 +165,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -222,7 +221,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(3));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -263,7 +262,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1, order);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -304,7 +303,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -318,7 +317,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var actual = qry(query);
         AggregationQueryWrapper.enabled = false;
         final var expected = qry(query);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -333,7 +332,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var actual = qry(query);
         AggregationQueryWrapper.enabled = false;
         final var expected = qry(query);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     /// A query may yield an aggregation over a persistent property (`sum(qty)`) alongside an aggregation over a
@@ -380,7 +379,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -419,7 +418,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(3));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -462,7 +461,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     // The following tests cover the rewriting of source properties referenced within the conditions of a `caseWhen`.
@@ -516,7 +515,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -565,7 +564,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -613,7 +612,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -661,7 +660,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -709,7 +708,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     @Test
@@ -779,7 +778,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     /// The `concatOf` aggregates over a persistent property (`qty`) and orders by another persistent property (`date`).
@@ -827,7 +826,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         AggregationQueryWrapper.setAliasGenerator(() -> mkAliasGenerator());
         AggregationQueryWrapper.setSourceIdGenerator(mkSourceIdGeneratorFromRange(2));
         final var actual = qry(query1);
-        assertEquals(expected, actual);
+        assertQueryEquals(expected, actual);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
