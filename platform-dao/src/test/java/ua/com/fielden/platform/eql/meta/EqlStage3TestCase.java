@@ -11,8 +11,6 @@ import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
-import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -411,6 +409,12 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
 
     public static Yields3 yields(final Yield3... yields) {
         return new Yields3(asList(yields));
+    }
+
+    /// Creates a yield with the same type as the operand.
+    ///
+    public static Yield3 mkYield(final ISingleOperand3 operand, final String alias, final int columnId) {
+        return new Yield3(operand, alias, columnId, operand.type());
     }
 
     public static Yield3 yieldCountAll(final String alias) {

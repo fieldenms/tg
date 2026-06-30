@@ -19,7 +19,6 @@ import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
-import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
@@ -68,13 +67,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
 
         final var srcQrySource = source(TgVehicle.class, 1, 1);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
-                                  yields(new Yield3(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c1", 4, LONG_PROP_TYPE)),
+                                  yields(mkYield(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c1", 4)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 5);
         final var prop_c1 = prop("c1", topSource, LONG_PROP_TYPE);
-        final var topYield_maxId = new Yield3(new MaxOf3(prop_c1, LONG_PROP_TYPE), "maxId", 2, LONG_PROP_TYPE);
-        final var topYield_minId = new Yield3(new MinOf3(prop_c1, LONG_PROP_TYPE), "minId", 3, LONG_PROP_TYPE);
+        final var topYield_maxId = mkYield(new MaxOf3(prop_c1, LONG_PROP_TYPE), "maxId", 2);
+        final var topYield_minId = mkYield(new MinOf3(prop_c1, LONG_PROP_TYPE), "minId", 3);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_maxId, topYield_minId));
@@ -108,14 +107,14 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var srcQrySource = source(TgVehicle.class, 1, 1);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
                                   yields(yieldProp("key", srcQrySource, "c1", STRING_PROP_TYPE, 4),
-                                         new Yield3(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5, LONG_PROP_TYPE)),
+                                         mkYield(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 6);
         final var prop_c1 = prop("c1", topSource, STRING_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, LONG_PROP_TYPE);
-        final var topYield_vehKey = new Yield3(prop_c1, "vehKey", 3, STRING_PROP_TYPE);
-        final var topYield_avg = new Yield3(new AverageOf3(prop_c2, false, LONG_PROP_TYPE), "avg", 2, LONG_PROP_TYPE);
+        final var topYield_vehKey = mkYield(prop_c1, "vehKey", 3);
+        final var topYield_avg = mkYield(new AverageOf3(prop_c2, false, LONG_PROP_TYPE), "avg", 2);
         final var topGroupBy_c1 = new GroupBy3(prop_c1);
 
         final var expected = qry(new JoinLeafNode3(topSource),
@@ -146,11 +145,11 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var srcQrySource = source(TgVehicle.class, 1, 1);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
                                   cond(gt(prop("purchasePrice.amount", srcQrySource, BIGDECIMAL_PROP_TYPE), new Value3(100, INTEGER_PROP_TYPE))),
-                                  yields(new Yield3(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c1", 3, LONG_PROP_TYPE)));
+                                  yields(mkYield(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c1", 3)));
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 4);
         final var prop_c1 = prop("c1", topSource, LONG_PROP_TYPE);
-        final var topYield_maxId = new Yield3(new MaxOf3(prop_c1, LONG_PROP_TYPE), "maxId", 2, LONG_PROP_TYPE);
+        final var topYield_maxId = mkYield(new MaxOf3(prop_c1, LONG_PROP_TYPE), "maxId", 2);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_maxId));
@@ -201,11 +200,11 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                   or(and(or(and(cond(gt(prop("purchasePrice.amount", vehicleSource, BIGDECIMAL_PROP_TYPE), new Value3(100, INTEGER_PROP_TYPE))),
                                                 isNotNull(entityProp("replacedBy", vehicleSource, TgVehicle.class))))),
                                      and(new ExistencePredicate3(false, existsSubQry))),
-                                  yields(new Yield3(sumOfPrices, "c1", 5, BIGDECIMAL_PROP_TYPE)));
+                                  yields(mkYield(sumOfPrices, "c1", 5)));
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 3, 6);
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
-        final var topYield_maxPrice = new Yield3(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), "maxPrice", 4, BIGDECIMAL_PROP_TYPE);
+        final var topYield_maxPrice = mkYield(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), "maxPrice", 4);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_maxPrice));
@@ -236,13 +235,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var srcQrySource = source(TgVehicle.class, 1, 1);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
                                   yields(yieldProp("key", srcQrySource, "c1", STRING_PROP_TYPE, 3),
-                                         new Yield3(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 4, LONG_PROP_TYPE)),
+                                         mkYield(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 4)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 5);
         final var prop_c1 = prop("c1", topSource, STRING_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, LONG_PROP_TYPE);
-        final var topYield_avgPrice = new Yield3(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 2, LONG_PROP_TYPE);
+        final var topYield_avgPrice = mkYield(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 2);
         final var topGroupBy_c1 = new GroupBy3(prop_c1);
 
         final var expected = qry(new JoinLeafNode3(topSource),
@@ -276,13 +275,13 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var srcQrySource = source(TgVehicle.class, 1, 1);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
                                   yields(yieldProp("key", srcQrySource, "c1", STRING_PROP_TYPE, 3),
-                                         new Yield3(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 4, LONG_PROP_TYPE)),
+                                         mkYield(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 4)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 5);
         final var prop_c1 = prop("c1", topSource, STRING_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, LONG_PROP_TYPE);
-        final var topYield_avgPrice = new Yield3(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 2, LONG_PROP_TYPE);
+        final var topYield_avgPrice = mkYield(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 2);
         final var topGroupBy_c1 = new GroupBy3(prop_c1);
 
         final var expected = qry(new JoinLeafNode3(topSource),
@@ -352,15 +351,15 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                               List.of(new CompoundSingleOperand3(new Value3(2, INTEGER_PROP_TYPE), MULT)),
                                               BIGDECIMAL_PROP_TYPE);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
-                                  yields(new Yield3(qtyTimes2, "c1", 4, BIGDECIMAL_PROP_TYPE),
+                                  yields(mkYield(qtyTimes2, "c1", 4),
                                          yieldProp("qty", srcQrySource, "c2", BIGDECIMAL_PROP_TYPE, 5)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 6);
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, BIGDECIMAL_PROP_TYPE);
-        final var topYield_doubleQty = new Yield3(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "doubleQty", 2, BIGDECIMAL_PROP_TYPE);
-        final var topYield_totalQty = new Yield3(new SumOf3(prop_c2, false, BIGDECIMAL_PROP_TYPE), "totalQty", 3, BIGDECIMAL_PROP_TYPE);
+        final var topYield_doubleQty = mkYield(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "doubleQty", 2);
+        final var topYield_totalQty = mkYield(new SumOf3(prop_c2, false, BIGDECIMAL_PROP_TYPE), "totalQty", 3);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_doubleQty, topYield_totalQty));
@@ -392,8 +391,8 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
 
         final var srcQry = srcqry(sources(source1),
                                   cond(eq(entityProp("vehicle", source1, TgVehicle.class), idProp(source2))),
-                                  yields(new Yield3(new RoundTo3(prop("qty", source1, BIGDECIMAL_PROP_TYPE), new Value3(2, INTEGER_PROP_TYPE), BIGDECIMAL_PROP_TYPE),
-                                                    "c1", 4, BIGDECIMAL_PROP_TYPE)));
+                                  yields(mkYield(new RoundTo3(prop("qty", source1, BIGDECIMAL_PROP_TYPE), new Value3(2, INTEGER_PROP_TYPE), BIGDECIMAL_PROP_TYPE),
+                                                    "c1", 4)));
 
         final var srcQryAsSource = new Source3BasedOnQueries(List.of(srcQry), 3, 5);
         final var subQry = subqry(sources(srcQryAsSource),
@@ -430,16 +429,16 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                                 List.of(new CompoundSingleOperand3(new Value3(2, INTEGER_PROP_TYPE), MULT)),
                                                 BIGDECIMAL_PROP_TYPE);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
-                                  yields(new Yield3(priceTimes2, "c1", 4, BIGDECIMAL_PROP_TYPE),
+                                  yields(mkYield(priceTimes2, "c1", 4),
                                          yieldProp("key", srcQrySource, "c2", STRING_PROP_TYPE, 5)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 6);
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, STRING_PROP_TYPE);
-        final var topYield_cost = new Yield3(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "cost", 2, BIGDECIMAL_PROP_TYPE);
-        final var topYield_keys = new Yield3(new ConcatOf3(prop_c2, new Value3(" ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new OrderBy3(prop_c2, false))),
-                                             "keys", 3, STRING_PROP_TYPE);
+        final var topYield_cost = mkYield(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "cost", 2);
+        final var topYield_keys = mkYield(new ConcatOf3(prop_c2, new Value3(" ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new OrderBy3(prop_c2, false))),
+                                             "keys", 3);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_cost, topYield_keys));
@@ -477,20 +476,20 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var srcQrySource = source(TgVehicle.class, 1, 1);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
                                   yields(yieldProp("key", srcQrySource, "c1", STRING_PROP_TYPE, 4),
-                                         new Yield3(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5, LONG_PROP_TYPE)),
+                                         mkYield(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 6);
         final var prop_c1 = prop("c1", topSource, STRING_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, LONG_PROP_TYPE);
-        final var topYield_maxId = new Yield3(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 3, LONG_PROP_TYPE);
-        final var topYield_flag = new Yield3(
+        final var topYield_maxId = mkYield(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 3);
+        final var topYield_flag = mkYield(
                 new CaseWhen3(List.of(t2(eq(prop_c1, new Value3("ABC", "P_1", STRING_PROP_TYPE)),
                                          new Value3(1, INTEGER_PROP_TYPE))),
                               new Value3(0, INTEGER_PROP_TYPE),
                               null,
                               INTEGER_PROP_TYPE),
-                "flag", 2, INTEGER_PROP_TYPE);
+                "flag", 2);
         final var topGroupBy_c1 = new GroupBy3(prop_c1);
 
         final var expected = qry(new JoinLeafNode3(topSource),
@@ -525,20 +524,20 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var srcQrySource = source(TgVehicle.class, 1, 1);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
                                   yields(yieldProp("initDate", srcQrySource, "c1", DATETIME_PROP_TYPE, 4),
-                                         new Yield3(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5, LONG_PROP_TYPE)),
+                                         mkYield(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 6);
         final var prop_c1 = prop("c1", topSource, DATETIME_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, LONG_PROP_TYPE);
-        final var topYield_maxId = new Yield3(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 3, LONG_PROP_TYPE);
-        final var topYield_flag = new Yield3(
+        final var topYield_maxId = mkYield(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 3);
+        final var topYield_flag = mkYield(
                 new CaseWhen3(List.of(t2(eq(new Value3(40, INTEGER_PROP_TYPE), new SecondOf3(prop_c1, INTEGER_PROP_TYPE)),
                                          new Value3(1, INTEGER_PROP_TYPE))),
                               new Value3(0, INTEGER_PROP_TYPE),
                               null,
                               INTEGER_PROP_TYPE),
-                "flag", 2, INTEGER_PROP_TYPE);
+                "flag", 2);
         final var topGroupBy_c1 = new GroupBy3(prop_c1);
 
         final var expected = qry(new JoinLeafNode3(topSource),
@@ -572,20 +571,20 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var srcQrySource = source(TgVehicle.class, 1, 1);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
                                   yields(yieldProp("initDate", srcQrySource, "c1", DATETIME_PROP_TYPE, 4),
-                                         new Yield3(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5, LONG_PROP_TYPE)),
+                                         mkYield(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 6);
         final var prop_c1 = prop("c1", topSource, DATETIME_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, LONG_PROP_TYPE);
-        final var topYield_maxId = new Yield3(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 3, LONG_PROP_TYPE);
-        final var topYield_flag = new Yield3(
+        final var topYield_maxId = mkYield(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 3);
+        final var topYield_flag = mkYield(
                 new CaseWhen3(List.of(t2(isNotNull(prop_c1),
                                          new Value3(1, INTEGER_PROP_TYPE))),
                               new Value3(0, INTEGER_PROP_TYPE),
                               null,
                               INTEGER_PROP_TYPE),
-                "flag", 2, INTEGER_PROP_TYPE);
+                "flag", 2);
         final var topGroupBy_c1 = new GroupBy3(prop_c1);
 
         final var expected = qry(new JoinLeafNode3(topSource),
@@ -619,20 +618,20 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var srcQrySource = source(TgVehicle.class, 1, 1);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
                                   yields(yieldProp("key", srcQrySource, "c1", STRING_PROP_TYPE, 4),
-                                         new Yield3(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5, LONG_PROP_TYPE)),
+                                         mkYield(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 6);
         final var prop_c1 = prop("c1", topSource, STRING_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, LONG_PROP_TYPE);
-        final var topYield_maxId = new Yield3(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 3, LONG_PROP_TYPE);
-        final var topYield_flag = new Yield3(
+        final var topYield_maxId = mkYield(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 3);
+        final var topYield_flag = mkYield(
                 new CaseWhen3(List.of(t2(new LikePredicate3(prop_c1, new Value3("ABC%", "P_1", STRING_PROP_TYPE), LikeOptions.DEFAULT_OPTIONS),
                                          new Value3(1, INTEGER_PROP_TYPE))),
                               new Value3(0, INTEGER_PROP_TYPE),
                               null,
                               INTEGER_PROP_TYPE),
-                "flag", 2, INTEGER_PROP_TYPE);
+                "flag", 2);
         final var topGroupBy_c1 = new GroupBy3(prop_c1);
 
         final var expected = qry(new JoinLeafNode3(topSource),
@@ -666,20 +665,20 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var srcQrySource = source(TgVehicle.class, 1, 1);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
                                   yields(yieldProp("key", srcQrySource, "c1", STRING_PROP_TYPE, 4),
-                                         new Yield3(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5, LONG_PROP_TYPE)),
+                                         mkYield(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 5)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 6);
         final var prop_c1 = prop("c1", topSource, STRING_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, LONG_PROP_TYPE);
-        final var topYield_maxId = new Yield3(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 3, LONG_PROP_TYPE);
-        final var topYield_flag = new Yield3(
+        final var topYield_maxId = mkYield(new MaxOf3(prop_c2, LONG_PROP_TYPE), "maxId", 3);
+        final var topYield_flag = mkYield(
                 new CaseWhen3(List.of(t2(new SetPredicate3(prop_c1, false, new OperandsBasedSet3(List.of(new Value3("ABC", "P_1", STRING_PROP_TYPE), new Value3("DEF", "P_2", STRING_PROP_TYPE)))),
                                          new Value3(1, INTEGER_PROP_TYPE))),
                               new Value3(0, INTEGER_PROP_TYPE),
                               null,
                               INTEGER_PROP_TYPE),
-                "flag", 2, INTEGER_PROP_TYPE);
+                "flag", 2);
         final var topGroupBy_c1 = new GroupBy3(prop_c1);
 
         final var expected = qry(new JoinLeafNode3(topSource),
@@ -717,14 +716,14 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var srcQrySource = source(TgVehicle.class, 1, 1);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
                                   yields(yieldProp("initDate", srcQrySource, "c1", DATETIME_PROP_TYPE, 3),
-                                         new Yield3(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 4, LONG_PROP_TYPE)),
+                                         mkYield(new AbsOf3(prop(ID, srcQrySource, LONG_PROP_TYPE), LONG_PROP_TYPE), "c2", 4)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 5);
         final var prop_c1 = prop("c1", topSource, DATETIME_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, LONG_PROP_TYPE);
-        final var topYield_prices = new Yield3(new ConcatOf3(prop_c2, new Value3(", ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new OrderBy3(prop_c1, false))),
-                                               "ids", 2, STRING_PROP_TYPE);
+        final var topYield_prices = mkYield(new ConcatOf3(prop_c2, new Value3(", ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new OrderBy3(prop_c1, false))),
+                                               "ids", 2);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_prices));
@@ -761,7 +760,7 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                               BIGDECIMAL_PROP_TYPE);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
                                   yields(yieldProp("date", srcQrySource, "c1", DATETIME_PROP_TYPE, 4),
-                                         new Yield3(qtyTimes2, "c2", 5, BIGDECIMAL_PROP_TYPE),
+                                         mkYield(qtyTimes2, "c2", 5),
                                          yieldProp("qty", srcQrySource, "c3", BIGDECIMAL_PROP_TYPE, 6)),
                                   EntityAggregates.class);
 
@@ -769,9 +768,9 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var prop_c1 = prop("c1", topSource, DATETIME_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, BIGDECIMAL_PROP_TYPE);
         final var prop_c3 = prop("c3", topSource, BIGDECIMAL_PROP_TYPE);
-        final var topYield_qtys = new Yield3(new ConcatOf3(prop_c3, new Value3(", ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new OrderBy3(prop_c1, false))),
-                                             "qtys", 3, STRING_PROP_TYPE);
-        final var topYield_doubleSum = new Yield3(new SumOf3(prop_c2, false, BIGDECIMAL_PROP_TYPE), "doubleSum", 2, BIGDECIMAL_PROP_TYPE);
+        final var topYield_qtys = mkYield(new ConcatOf3(prop_c3, new Value3(", ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new OrderBy3(prop_c1, false))),
+                                             "qtys", 3);
+        final var topYield_doubleSum = mkYield(new SumOf3(prop_c2, false, BIGDECIMAL_PROP_TYPE), "doubleSum", 2);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_qtys, topYield_doubleSum));
@@ -799,12 +798,12 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                                List.of(new CompoundSingleOperand3(new Value3(20, INTEGER_PROP_TYPE), ADD)),
                                                INTEGER_PROP_TYPE);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
-                                  yields(new Yield3(constValue, "c1", 3, INTEGER_PROP_TYPE)),
+                                  yields(mkYield(constValue, "c1", 3)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 4);
         final var prop_c1 = prop("c1", topSource, INTEGER_PROP_TYPE);
-        final var topYield_max = new Yield3(new MaxOf3(prop_c1, INTEGER_PROP_TYPE), "max", 2, INTEGER_PROP_TYPE);
+        final var topYield_max = mkYield(new MaxOf3(prop_c1, INTEGER_PROP_TYPE), "max", 2);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_max));
@@ -847,12 +846,12 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                 BIGDECIMAL_PROP_TYPE);
 
         final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
-                                  yields(new Yield3(lastFuelUsageQty, "c1", 7, BIGDECIMAL_PROP_TYPE)),
+                                  yields(mkYield(lastFuelUsageQty, "c1", 7)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 4, 8);
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
-        final var topYield_max = new Yield3(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), "max", 6, BIGDECIMAL_PROP_TYPE);
+        final var topYield_max = mkYield(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), "max", 6);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_max));
@@ -901,12 +900,12 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
                                                          BIGDECIMAL_PROP_TYPE);
 
         final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
-                                  yields(new Yield3(halfLastFuelUsageQty, "c1", 7, BIGDECIMAL_PROP_TYPE)),
+                                  yields(mkYield(halfLastFuelUsageQty, "c1", 7)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 4, 8);
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
-        final var topYield_max = new Yield3(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), "max", 6, BIGDECIMAL_PROP_TYPE);
+        final var topYield_max = mkYield(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), "max", 6);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_max));
@@ -946,12 +945,12 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var maxOfSumOfPrices = new Expression3(new MaxOf3(sumOfPrices, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE);
 
         final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
-                                  yields(new Yield3(maxOfSumOfPrices, "c1", 3, BIGDECIMAL_PROP_TYPE)),
+                                  yields(mkYield(maxOfSumOfPrices, "c1", 3)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 4);
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
-        final var topYield_total = new Yield3(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "total", 2, BIGDECIMAL_PROP_TYPE);
+        final var topYield_total = mkYield(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "total", 2);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_total));
@@ -986,12 +985,12 @@ public class AggregationQueryWrapperTest extends EqlStage3TestCase {
         final var sumOfMax = new Expression3(new SumOf3(maxOfSumOfPrices, false, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE);
 
         final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
-                                  yields(new Yield3(sumOfMax, "c1", 3, BIGDECIMAL_PROP_TYPE)),
+                                  yields(mkYield(sumOfMax, "c1", 3)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 4);
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
-        final var topYield_result = new Yield3(new AverageOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "result", 2, BIGDECIMAL_PROP_TYPE);
+        final var topYield_result = mkYield(new AverageOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "result", 2);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_result));
