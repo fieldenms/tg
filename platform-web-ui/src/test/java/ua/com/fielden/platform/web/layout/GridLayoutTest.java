@@ -302,4 +302,12 @@ public class GridLayoutTest {
                 "{columns:[{size:\"1fr\"},{size:\"1fr\"},{size:\"1fr\"}],cells:[{row:2,col:1,colSpan:\"all\",select:\"property-name=bio\"}]}",
                 grid().columns().addColumn().addColumn().addColumn().elements(cell(2, 3).withProp("bio").spanAllCols()).toString());
     }
+
+    @Test
+    public void developer_values_are_escaped_for_the_javascript_wire_format() {
+        // a double quote in a CSS value is backslash-escaped so the generated JS string literal stays valid
+        assertEquals(
+                "{columns:[{size:\"1fr\",style:{\"content\":\"\\\"x\\\"\"}}],cells:[]}",
+                grid().columns().addColumn().style("content", "\"x\"").layout());
+    }
 }

@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.web.layout.grid.IGridLayoutConfiguration;
 
+import static ua.com.fielden.platform.web.layout.grid.impl.GridStyles.escape;
+
 /// An assembled grid layout, produced by completing the fluent chain with `elements(...)`.
 ///
 /// Its [#toString()] (and equivalently [#layout()]) renders the wire format consumed by the `tg-grid-layout` client — a single JavaScript object literal of the shape:
@@ -38,7 +40,7 @@ public class GridLayoutConfiguration implements IGridLayoutConfiguration {
             parts.add("container:" + content.renderObject());
         }
         if (content != null && content.subheaderIndentation() != null) {
-            parts.add("subheaderIndentation:\"" + content.subheaderIndentation() + "\"");
+            parts.add("subheaderIndentation:\"" + escape(content.subheaderIndentation()) + "\"");
         }
         if (!columns.isEmpty()) {
             parts.add("columns:[" + renderTracks(columns) + "]");

@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.layout.grid.impl;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static ua.com.fielden.platform.web.layout.grid.impl.GridStyles.escape;
+
 /// A single column or row track of a [GridLayoutConfiguration].
 ///
 /// A track carries its CSS size (e.g. `1fr`, `minmax(20%, 1fr)`, `auto`), an optional repeat count, and optional CSS declarations that the layout emulates per cell.
@@ -45,7 +47,7 @@ class GridTrack {
     /// or `{size:"minmax(220px, 1fr)",repeat:"auto-fit"}` for an auto-tracked column.
     ///
     String render() {
-        final StringBuilder sb = new StringBuilder("{size:\"").append(size).append("\"");
+        final StringBuilder sb = new StringBuilder("{size:\"").append(escape(size)).append("\"");
         if (autoRepeat != null) {
             sb.append(",repeat:\"").append(autoRepeat).append("\"");
         } else if (times > 1) {

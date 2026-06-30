@@ -5,6 +5,8 @@ import java.util.Map;
 
 import ua.com.fielden.platform.web.layout.grid.IGridCell;
 
+import static ua.com.fielden.platform.web.layout.grid.impl.GridStyles.escape;
+
 /// Implementation of a single non-conforming cell of a grid layout, placed at an explicit `(row, column)`.
 ///
 /// A cell is one of four kinds:
@@ -182,7 +184,7 @@ public class GridCell implements IGridCell {
             sb.append(",widget:\"").append(escape(widget)).append("\"");
         }
         if (selectAttribute != null) {
-            sb.append(",select:\"").append(selectAttribute).append("=").append(selectValue).append("\"");
+            sb.append(",select:\"").append(escape(selectAttribute + "=" + selectValue)).append("\"");
         }
         if (!styles.isEmpty()) {
             sb.append(",style:").append(GridStyles.object(styles));
@@ -206,15 +208,5 @@ public class GridCell implements IGridCell {
             return "subheader";
         }
         return open ? "subheader-open" : "subheader-closed";
-    }
-
-    /// Escapes a value for embedding inside a double-quoted JavaScript string (backslash, double quote and line breaks).
-    ///
-    private static String escape(final String value) {
-        return value
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r");
     }
 }
