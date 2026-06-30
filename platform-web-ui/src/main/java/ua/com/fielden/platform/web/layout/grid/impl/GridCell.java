@@ -29,6 +29,13 @@ public class GridCell implements IGridCell {
         ERR_INVALID_COLUMN_SPAN = "Column span must be at least 1, but was %s.",
         ERR_INVALID_ROW_SPAN = "Row span must be at least 1, but was %s.";
 
+    /// The HTML attribute that property-editor elements expose to carry the name of the property they are bound to.
+    /// Editors set it through `AbstractWidget`, and a few hand-written insertion-point masters set it directly; the `tg-grid-layout` client matches on it to place an editor into a cell.
+    /// [#withProp(CharSequence)] uses it to bind a cell to the editor of a given property.
+    /// This is a shared client-side contract rather than a value owned here, so it must stay in step with the emitter side and the client if it is ever renamed.
+    ///
+    private static final String PROPERTY_NAME_ATTRIBUTE = "property-name";
+
     private final int row;
     private final int col;
     private final Kind kind;
@@ -172,7 +179,7 @@ public class GridCell implements IGridCell {
 
     @Override
     public GridCell withProp(final CharSequence propertyName) {
-        return select("property-name", propertyName.toString());
+        return select(PROPERTY_NAME_ATTRIBUTE, propertyName.toString());
     }
 
     /// Renders this cell as a JavaScript object literal, e.g. `{row:4,col:1,colSpan:"all",widget:"subheader-open:Asset",style:{"padding-left":"0"}}`.
