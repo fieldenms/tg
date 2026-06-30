@@ -294,4 +294,12 @@ public class GridLayoutTest {
                 grid().columns().addColumn().addColumn().elements(subheaderOpen(1, "Section"), skip(1, 1)));
         assertEquals(ERR_OVERLAPPING_CELLS.formatted(1, 1, 1, 1), ex.getMessage());
     }
+
+    @Test
+    public void span_all_cols_anchors_at_column_1_regardless_of_the_declared_column() {
+        // `spanAllCols` is full-width, so it serialises (and is occupancy-checked) at column 1 even when declared elsewhere
+        assertEquals(
+                "{columns:[{size:\"1fr\"},{size:\"1fr\"},{size:\"1fr\"}],cells:[{row:2,col:1,colSpan:\"all\",select:\"property-name=bio\"}]}",
+                grid().columns().addColumn().addColumn().addColumn().elements(cell(2, 3).withProp("bio").spanAllCols()).toString());
+    }
 }

@@ -166,7 +166,7 @@ public class GridCell implements IGridCell {
     /// Renders this cell as a JavaScript object literal, e.g. `{row:4,col:1,colSpan:"all",widget:"subheader-open:Asset",style:{"padding-left":"0"}}`.
     ///
     String render() {
-        final StringBuilder sb = new StringBuilder("{row:").append(row).append(",col:").append(col);
+        final StringBuilder sb = new StringBuilder("{row:").append(row).append(",col:").append(firstColumn());
         if (colSpan != null) {
             if (colSpan == SPAN_ALL) {
                 sb.append(",colSpan:\"all\"");

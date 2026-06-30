@@ -202,7 +202,7 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
         final int rowCount = hasExplicitRows ? rowTracks.stream().mapToInt(GridTrack::span).sum() : Integer.MAX_VALUE;
         final Map<String, GridCell> occupied = new HashMap<>();
         for (final GridCell cell : cells) {
-            if (cell.col() < 1 || cell.col() > columnCount) {
+            if (cell.firstColumn() < 1 || cell.firstColumn() > columnCount) {
                 throw new IllegalArgumentException(ERR_COLUMN_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), columnCount));
             }
             if (cell.row() < 1) {
