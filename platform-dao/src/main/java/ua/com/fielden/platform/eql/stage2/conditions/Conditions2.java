@@ -42,15 +42,6 @@ public record Conditions2 (boolean negated, List<List<? extends ICondition2<?>>>
         return negated == this.negated ? this : new Conditions2(negated, dnf);
     }
 
-    public Conditions2 update(final boolean negated, final List<List<? extends ICondition2<?>>> dnf) {
-        if (negated == this.negated && dnf == this.dnf) {
-            return this;
-        }
-        else {
-            return new Conditions2(negated, dnf);
-        }
-    }
-
     public boolean isEmpty() {
         return dnf.isEmpty();
     }

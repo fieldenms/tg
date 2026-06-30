@@ -11,7 +11,7 @@ import ua.com.fielden.platform.utils.ToString;
 import java.util.List;
 import java.util.Set;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public record Concat1 (List<? extends ISingleOperand1<? extends ISingleOperand2<?>>> operands)
@@ -20,7 +20,7 @@ public record Concat1 (List<? extends ISingleOperand1<? extends ISingleOperand2<
 
     @Override
     public Concat2 transform(final TransformationContextFromStage1To2 context) {
-        return new Concat2(operands.stream().map(el -> el.transform(context)).collect(toImmutableList()));
+        return new Concat2(operands.stream().map(el -> el.transform(context)).collect(toList()));
     }
 
     @Override

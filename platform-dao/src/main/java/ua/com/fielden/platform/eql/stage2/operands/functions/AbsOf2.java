@@ -11,10 +11,6 @@ public class AbsOf2 extends SingleOperandFunction2<AbsOf3> {
     public AbsOf2(final ISingleOperand2<? extends ISingleOperand3> operand) {
         super(operand, operand.type());
     }
-
-    public AbsOf2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        return new AbsOf2(operand);
-    }
     
     @Override
     public TransformationResultFromStage2To3<AbsOf3> transform(final TransformationContextFromStage2To3 context) {

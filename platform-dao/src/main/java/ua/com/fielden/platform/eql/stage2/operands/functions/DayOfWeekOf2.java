@@ -14,10 +14,6 @@ public class DayOfWeekOf2 extends SingleOperandFunction2<DayOfWeekOf3> {
         super(operand, INTEGER_PROP_TYPE);
     }
 
-    public DayOfWeekOf2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        return new DayOfWeekOf2(operand);
-    }
-
     @Override
     public TransformationResultFromStage2To3<DayOfWeekOf3> transform(final TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

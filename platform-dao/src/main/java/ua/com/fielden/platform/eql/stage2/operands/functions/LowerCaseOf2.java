@@ -13,10 +13,6 @@ public class LowerCaseOf2 extends SingleOperandFunction2<LowerCaseOf3> {
         super(operand, STRING_PROP_TYPE);
     }
 
-    public LowerCaseOf2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        return new LowerCaseOf2(operand);
-    }
-
     @Override
     public TransformationResultFromStage2To3<LowerCaseOf3> transform(final TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

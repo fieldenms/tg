@@ -15,10 +15,6 @@ public class AverageOf2 extends SingleOperandFunction2<AverageOf3> {
         this.distinct = distinct;
     }
 
-    public AverageOf2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        return new AverageOf2(operand, distinct);
-    }
-
     @Override
     public TransformationResultFromStage2To3<AverageOf3> transform(final TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTr = operand.transform(context);

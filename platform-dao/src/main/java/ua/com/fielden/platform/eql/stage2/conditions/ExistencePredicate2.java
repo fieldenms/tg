@@ -15,15 +15,6 @@ public record ExistencePredicate2 (boolean negated, SubQueryForExists2 subQuery)
         implements ICondition2<ExistencePredicate3>, ToString.IFormattable
 {
 
-    public ExistencePredicate2 update(final boolean negated, final SubQueryForExists2 subQuery) {
-        if (negated == this.negated && subQuery == this.subQuery) {
-            return this;
-        }
-        else {
-            return new ExistencePredicate2(negated, subQuery);
-        }
-    }
-
     @Override
     public boolean ignore() {
         return false;

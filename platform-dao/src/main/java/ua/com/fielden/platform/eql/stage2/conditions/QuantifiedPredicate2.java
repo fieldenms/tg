@@ -25,20 +25,6 @@ public record QuantifiedPredicate2 (ISingleOperand2<? extends ISingleOperand3> l
         implements ICondition2<QuantifiedPredicate3>, ToString.IFormattable
 {
 
-    public QuantifiedPredicate2 update(
-            final ISingleOperand2<? extends ISingleOperand3> leftOperand,
-            final ComparisonOperator operator,
-            final Quantifier quantifier,
-            final SubQuery2 rightOperand)
-    {
-        if (leftOperand == this.leftOperand && operator == this.operator && quantifier == this.quantifier && rightOperand == this.rightOperand) {
-            return this;
-        }
-        else {
-            return new QuantifiedPredicate2(leftOperand, operator, quantifier, rightOperand);
-        }
-    }
-
     @Override
     public boolean ignore() {
         return leftOperand.ignore();

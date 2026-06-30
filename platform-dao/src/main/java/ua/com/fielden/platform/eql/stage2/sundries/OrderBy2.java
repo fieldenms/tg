@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage2.sundries;
 import com.google.common.collect.ImmutableSet;
 import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -29,13 +28,6 @@ public record OrderBy2 (@Nullable ISingleOperand2<? extends ISingleOperand3> ope
 
     public OrderBy2(final String yieldName, final boolean isDesc) {
         this(null, yieldName, isDesc);
-    }
-
-    public OrderBy2 setOperand(final ISingleOperand2<?> operand) {
-        if (yieldName != null) {
-            throw new InvalidStateException("Cannot use an operand with an order by that references a yield.");
-        }
-        return operand == this.operand ? this : new OrderBy2(operand, null, isDesc);
     }
 
     public TransformationResultFromStage2To3<OrderBy3> transform(final TransformationContextFromStage2To3 context, final Yields3 yields) {

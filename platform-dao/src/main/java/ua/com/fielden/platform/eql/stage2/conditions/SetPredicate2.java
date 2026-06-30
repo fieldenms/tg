@@ -22,19 +22,6 @@ public record SetPredicate2 (ISingleOperand2<? extends ISingleOperand3> leftOper
         implements ICondition2<SetPredicate3>, ToString.IFormattable
 {
 
-    public SetPredicate2 update(
-            final ISingleOperand2<? extends ISingleOperand3> leftOperand,
-            final boolean negated,
-            final ISetOperand2<? extends ISetOperand3> rightOperand)
-    {
-        if (leftOperand == this.leftOperand && negated == this.negated && rightOperand == this.rightOperand) {
-            return this;
-        }
-        else {
-            return new SetPredicate2(leftOperand, negated, rightOperand);
-        }
-    }
-
     @Override
     public boolean ignore() {
         return leftOperand.ignore();

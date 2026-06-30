@@ -16,10 +16,6 @@ public class CountOf2 extends SingleOperandFunction2<CountOf3> {
         this.distinct = distinct;
     }
 
-    public CountOf2 setOperand(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        return new CountOf2(operand, distinct);
-    }
-
     @Override
     public TransformationResultFromStage2To3<CountOf3> transform(final TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTr = operand.transform(context);

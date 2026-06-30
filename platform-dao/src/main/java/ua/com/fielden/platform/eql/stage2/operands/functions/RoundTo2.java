@@ -18,20 +18,7 @@ public class RoundTo2 extends TwoOperandsFunction2<RoundTo3> {
         final TransformationResultFromStage2To3<? extends ISingleOperand3> secondOperandTransformationResult = operand2.transform(firstOperandTransformationResult.updatedContext);
         return new TransformationResultFromStage2To3<>(new RoundTo3(firstOperandTransformationResult.item, secondOperandTransformationResult.item, type), secondOperandTransformationResult.updatedContext);
     }
-
-    @Override
-    public TwoOperandsFunction2<RoundTo3> setOperands(
-            final ISingleOperand2<? extends ISingleOperand3> operand1,
-            final ISingleOperand2<? extends ISingleOperand3> operand2)
-    {
-        if (this.operand1 == operand1 && this.operand2 == operand2) {
-            return this;
-        }
-        else {
-            return new RoundTo2(operand1, operand2);
-        }
-    }
-
+    
     @Override
     public int hashCode() {
         final int prime = 31;

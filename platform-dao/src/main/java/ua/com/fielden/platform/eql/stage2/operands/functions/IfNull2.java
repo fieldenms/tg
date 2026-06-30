@@ -30,20 +30,7 @@ public class IfNull2 extends TwoOperandsFunction2<IfNull3> {
         //  - if first operand is not null and is returned the result will be false (but actually should be true, but there is no way to infer this from the available information).
         return operand2.isNonnullableEntity();
     }
-
-    @Override
-    public TwoOperandsFunction2<IfNull3> setOperands(
-            final ISingleOperand2<? extends ISingleOperand3> operand1,
-            final ISingleOperand2<? extends ISingleOperand3> operand2)
-    {
-        if (this.operand1 == operand1 && this.operand2 == operand2) {
-            return this;
-        }
-        else {
-            return new IfNull2(operand1, operand2);
-        }
-    }
-
+    
     @Override
     public int hashCode() {
         final int prime = 31;
