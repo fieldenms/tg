@@ -25,6 +25,10 @@ public class GridCell implements IGridCell {
     ///
     static final int SPAN_ALL = -1;
 
+    public static final String
+        ERR_INVALID_COLUMN_SPAN = "Column span must be at least 1, but was %s.",
+        ERR_INVALID_ROW_SPAN = "Row span must be at least 1, but was %s.";
+
     private final int row;
     private final int col;
     private final Kind kind;
@@ -118,20 +122,26 @@ public class GridCell implements IGridCell {
 
     @Override
     public GridCell spanCols(final int columns) {
+        if (columns < 1) {
+            throw new IllegalArgumentException(ERR_INVALID_COLUMN_SPAN.formatted(columns));
+        }
         colSpan = columns;
         return this;
     }
 
     @Override
     public GridCell spanRows(final int rows) {
+        if (rows < 1) {
+            throw new IllegalArgumentException(ERR_INVALID_ROW_SPAN.formatted(rows));
+        }
         rowSpan = rows;
         return this;
     }
 
     @Override
     public GridCell span(final int columns, final int rows) {
-        colSpan = columns;
-        rowSpan = rows;
+        spanCols(columns);
+        spanRows(rows);
         return this;
     }
 

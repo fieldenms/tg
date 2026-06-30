@@ -14,6 +14,8 @@ import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_NON_POSITIVE_ROW;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_OVERLAPPING_CELLS;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_ROW_OUT_OF_BOUNDS;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridCell.ERR_INVALID_COLUMN_SPAN;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridCell.ERR_INVALID_ROW_SPAN;
 
 import org.junit.Test;
 
@@ -309,5 +311,26 @@ public class GridLayoutTest {
         assertEquals(
                 "{columns:[{size:\"1fr\",style:{\"content\":\"\\\"x\\\"\"}}],cells:[]}",
                 grid().columns().addColumn().style("content", "\"x\"").layout());
+    }
+
+    @Test
+    public void a_non_positive_column_span_is_rejected() {
+        assertEquals(ERR_INVALID_COLUMN_SPAN.formatted(0),
+                assertThrows(IllegalArgumentException.class, () -> cell(1, 1).spanCols(0)).getMessage());
+        // -1 is the internal span-all sentinel — it must be rejected, not silently treated as span-all
+        assertEquals(ERR_INVALID_COLUMN_SPAN.formatted(-1),
+                assertThrows(IllegalArgumentException.class, () -> cell(1, 1).spanCols(-1)).getMessage());
+        // span(columns, rows) validates the column span too
+        assertEquals(ERR_INVALID_COLUMN_SPAN.formatted(0),
+                assertThrows(IllegalArgumentException.class, () -> cell(1, 1).span(0, 2)).getMessage());
+    }
+
+    @Test
+    public void a_non_positive_row_span_is_rejected() {
+        assertEquals(ERR_INVALID_ROW_SPAN.formatted(0),
+                assertThrows(IllegalArgumentException.class, () -> cell(1, 1).spanRows(0)).getMessage());
+        // span(columns, rows) validates the row span too
+        assertEquals(ERR_INVALID_ROW_SPAN.formatted(0),
+                assertThrows(IllegalArgumentException.class, () -> cell(1, 1).span(2, 0)).getMessage());
     }
 }
