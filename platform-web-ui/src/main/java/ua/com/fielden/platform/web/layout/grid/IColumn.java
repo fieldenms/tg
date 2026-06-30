@@ -30,7 +30,7 @@ public interface IColumn extends IGridLayoutConfiguration {
     IColumn justify(String value);
 
     /// Begins declaration of the grid's row tracks.
-    /// Rows are optional — call [#elements(IGridCell...)] directly to leave them implicit (`grid-auto-rows`).
+    /// Rows are optional — call [#elements(IGridElement...)] directly to leave them implicit (`grid-auto-rows`).
     ///
     IRows rows();
 
@@ -38,5 +38,5 @@ public interface IColumn extends IGridLayoutConfiguration {
     /// Ordinary editors that are not named here auto-flow into the remaining cells, in order.
     /// When omitted, the declared tracks are used as the layout directly and every editor auto-flows.
     ///
-    IGridLayoutConfiguration elements(IGridCell... cells);
+    IGridLayoutConfiguration elements(IGridElement... cells);
 }

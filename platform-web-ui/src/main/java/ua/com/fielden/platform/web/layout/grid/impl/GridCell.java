@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.web.layout.grid.IGridCell;
+import ua.com.fielden.platform.web.layout.grid.ISubheader;
 
 import static ua.com.fielden.platform.web.layout.grid.impl.GridStyles.escape;
 
@@ -12,10 +13,10 @@ import static ua.com.fielden.platform.web.layout.grid.impl.GridStyles.escape;
 /// A cell is one of four kinds:
 /// an ordinary cell (configures the editor that auto-flows to its position, or an explicitly bound editor),
 /// a skip (an empty placeholder cell),
-/// a subheader (an inserted, optionally collapsible section title that spans all columns by default),
+/// a subheader (an inserted, optionally collapsible section title that always spans all columns),
 /// or an inline `html` snippet (stamped with the layout's `context`).
 ///
-public class GridCell implements IGridCell {
+public class GridCell implements IGridCell, ISubheader {
 
     enum Kind {
         CELL, SKIP, SUBHEADER, HTML

@@ -16,8 +16,10 @@ import ua.com.fielden.platform.web.layout.grid.IColumns;
 import ua.com.fielden.platform.web.layout.grid.IContentStep;
 import ua.com.fielden.platform.web.layout.grid.IGridCell;
 import ua.com.fielden.platform.web.layout.grid.IGridContent;
+import ua.com.fielden.platform.web.layout.grid.IGridElement;
 import ua.com.fielden.platform.web.layout.grid.IRow;
 import ua.com.fielden.platform.web.layout.grid.IRows;
+import ua.com.fielden.platform.web.layout.grid.ISubheader;
 
 /// The single implementation behind the staged grid-layout fluent API and the home of its static factories.
 ///
@@ -74,19 +76,19 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
 
     /// A non-collapsible subheader at the given row, in column 1, spanning all columns.
     ///
-    public static IGridCell subheader(final int row, final String title) {
+    public static ISubheader subheader(final int row, final String title) {
         return GridCell.subheader(row, title);
     }
 
     /// A collapsible subheader, open by default, at the given row, in column 1, spanning all columns.
     ///
-    public static IGridCell subheaderOpen(final int row, final String title) {
+    public static ISubheader subheaderOpen(final int row, final String title) {
         return GridCell.subheaderOpen(row, title);
     }
 
     /// A collapsible subheader, closed by default, at the given row, in column 1, spanning all columns.
     ///
-    public static IGridCell subheaderClosed(final int row, final String title) {
+    public static ISubheader subheaderClosed(final int row, final String title) {
         return GridCell.subheaderClosed(row, title);
     }
 
@@ -174,7 +176,7 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
     }
 
     @Override
-    public GridLayoutConfiguration elements(final IGridCell... cells) {
+    public GridLayoutConfiguration elements(final IGridElement... cells) {
         return build(Stream.of(cells).map(GridCell.class::cast).collect(Collectors.toList()));
     }
 

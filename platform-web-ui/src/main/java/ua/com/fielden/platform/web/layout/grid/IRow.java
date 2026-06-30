@@ -29,5 +29,5 @@ public interface IRow extends IGridLayoutConfiguration {
     /// Ordinary editors that are not named here auto-flow into the remaining cells, in order.
     /// When omitted, the declared tracks are used as the layout directly and every editor auto-flows.
     ///
-    IGridLayoutConfiguration elements(IGridCell... cells);
+    IGridLayoutConfiguration elements(IGridElement... cells);
 }
