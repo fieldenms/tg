@@ -1,25 +1,14 @@
 package ua.com.fielden.platform.web.layout.grid.impl;
 
+import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.web.layout.grid.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.web.layout.grid.AutoRepeat;
-import ua.com.fielden.platform.web.layout.grid.IAutoColumn;
-import ua.com.fielden.platform.web.layout.grid.ICell;
-import ua.com.fielden.platform.web.layout.grid.IColumn;
-import ua.com.fielden.platform.web.layout.grid.IColumns;
-import ua.com.fielden.platform.web.layout.grid.IContentStep;
-import ua.com.fielden.platform.web.layout.grid.IGridCell;
-import ua.com.fielden.platform.web.layout.grid.IGridContent;
-import ua.com.fielden.platform.web.layout.grid.IGridElement;
-import ua.com.fielden.platform.web.layout.grid.IRow;
-import ua.com.fielden.platform.web.layout.grid.IRows;
-import ua.com.fielden.platform.web.layout.grid.ISubheader;
 
 /// The single implementation behind the staged grid-layout fluent API and the home of its static factories.
 ///
@@ -34,8 +23,10 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
 
     public static final String
         ERR_COLUMN_OUT_OF_BOUNDS = "Grid cell at row %s, column %s is outside the layout's %s declared column(s).",
+        ERR_COLUMN_SPAN_OUT_OF_BOUNDS = "Grid cell at row %s, column %s spans to column %s, past the layout's %s declared column(s).",
         ERR_NON_POSITIVE_ROW = "Grid cell at column %s has a non-positive row %s.",
         ERR_ROW_OUT_OF_BOUNDS = "Grid cell at row %s, column %s is outside the layout's %s declared row(s).",
+        ERR_ROW_SPAN_OUT_OF_BOUNDS = "Grid cell at row %s, column %s spans to row %s, past the layout's %s declared row(s).",
         ERR_OVERLAPPING_CELLS = "Grid cell at row %s, column %s overlaps the cell at row %s, column %s.";
 
     private GridContent content;
@@ -195,8 +186,9 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
 
     /// Rejects misconfigured explicit cells before the layout is assembled:
     /// a cell anchored outside the declared grid — a column outside `1..N` (N = declared columns), or, when explicit rows are declared, a row outside `1..M` (M = declared rows); with implicit rows only a non-positive row;
+    /// a cell whose span reaches past the last column (or, with explicit rows, past the last row), which would otherwise make the client expand the grid with implicit tracks;
     /// or a cell whose occupied region (accounting for spans) overlaps a position already taken by an earlier cell.
-    /// Either leaves the client unable to place the cell — its coordinate is never reachable, hanging an implicit-row layout — so both are configuration errors caught here rather than at render time.
+    /// Each would leave the client unable to place the cell as declared — an unreachable coordinate hangs an implicit-row layout, an over-span silently grows the grid — so they are configuration errors caught here rather than at render time.
     ///
     private void validateCells(final List<GridCell> cells) {
         final int columnCount = columnTracks.stream().mapToInt(GridTrack::span).sum();
@@ -216,6 +208,12 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
             final int firstCol = cell.firstColumn();
             final int lastCol = firstCol + cell.occupiedColumns(columnCount) - 1;
             final int lastRow = cell.row() + cell.occupiedRows() - 1;
+            if (lastCol > columnCount) {
+                throw new IllegalArgumentException(ERR_COLUMN_SPAN_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), lastCol, columnCount));
+            }
+            if (hasExplicitRows && lastRow > rowCount) {
+                throw new IllegalArgumentException(ERR_ROW_SPAN_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), lastRow, rowCount));
+            }
             for (int r = cell.row(); r <= lastRow; r += 1) {
                 for (int c = firstCol; c <= lastCol; c += 1) {
                     final GridCell other = occupied.putIfAbsent(r + "," + c, cell);

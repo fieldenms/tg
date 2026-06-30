@@ -14,6 +14,8 @@ import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_NON_POSITIVE_ROW;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_OVERLAPPING_CELLS;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_ROW_OUT_OF_BOUNDS;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_COLUMN_SPAN_OUT_OF_BOUNDS;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_ROW_SPAN_OUT_OF_BOUNDS;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridCell.ERR_INVALID_COLUMN_SPAN;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridCell.ERR_INVALID_ROW_SPAN;
 
@@ -83,7 +85,7 @@ public class GridLayoutTest {
                     .addRow("min-content")
                 .elements(
                     cell(1, 1).align("start").style("padding", "4px"),
-                    cell(2, 2).spanCols(2))
+                    cell(2, 1).spanCols(2))
                 .toString();
 
         assertEquals(
@@ -91,7 +93,7 @@ public class GridLayoutTest {
                 + "columns:[{size:\"1fr\"},{size:\"auto\"}],"
                 + "rows:[{size:\"auto\",style:{\"align-self\":\"center\"}},{size:\"min-content\"}],"
                 + "cells:[{row:1,col:1,style:{\"align-self\":\"start\",\"padding\":\"4px\"}},"
-                + "{row:2,col:2,colSpan:2}]}",
+                + "{row:2,col:1,colSpan:2}]}",
                 wire);
     }
 
@@ -332,5 +334,27 @@ public class GridLayoutTest {
         // span(columns, rows) validates the row span too
         assertEquals(ERR_INVALID_ROW_SPAN.formatted(0),
                 assertThrows(IllegalArgumentException.class, () -> cell(1, 1).span(2, 0)).getMessage());
+    }
+
+    @Test
+    public void a_cell_spanning_past_the_last_column_is_rejected() {
+        // anchored at column 2 of a 2-column grid and spanning 3 columns reaches column 4, which would expand the grid with implicit tracks
+        final var ex = assertThrows(IllegalArgumentException.class, () ->
+                grid().columns().addColumn().addColumn().elements(cell(1, 2).spanCols(3)));
+        assertEquals(ERR_COLUMN_SPAN_OUT_OF_BOUNDS.formatted(1, 2, 4, 2), ex.getMessage());
+    }
+
+    @Test
+    public void a_cell_spanning_past_the_last_explicit_row_is_rejected() {
+        final var ex = assertThrows(IllegalArgumentException.class, () ->
+                grid().columns().addColumn().rows().addRow("auto").addRow("auto").elements(cell(1, 1).spanRows(3)));
+        assertEquals(ERR_ROW_SPAN_OUT_OF_BOUNDS.formatted(1, 1, 3, 2), ex.getMessage());
+    }
+
+    @Test
+    public void a_cell_spanning_exactly_to_the_last_column_is_accepted() {
+        assertEquals(
+                "{columns:[{size:\"1fr\"},{size:\"1fr\"}],cells:[{row:1,col:1,colSpan:2}]}",
+                grid().columns().addColumn().addColumn().elements(cell(1, 1).spanCols(2)).toString());
     }
 }

@@ -31,8 +31,8 @@ public interface IGridContent {
     ///
     IGridContent style(String property, String value);
 
-    /// Reserves a left indentation for content that appears beneath a subheader.
-    /// When the layout contains at least one subheader, an implicit leading column of this width is added: a subheader spans it (so its title stays flush), content under a subheader skips it (so it is indented by this width, while the declared columns keep equal widths), and content before the first subheader spans it (so it stays flush).
+    /// Reserves a left indentation gutter for a layout that uses subheaders.
+    /// When the layout contains at least one subheader, an implicit leading column of this width is added: only the subheaders span it (so their titles stay flush with the left edge), while every other element — including content before the first subheader — is indented past it, and the declared columns keep equal widths.
     /// The developer's columns and cell coordinates are unaffected — the gutter is entirely implicit.
     ///
     IGridContent withSubheaderIndentation(String size);
