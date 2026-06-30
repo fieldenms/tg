@@ -203,6 +203,10 @@ public final class AggregationQueryWrapper {
         return new TransformationResultFromStage2To3<>(new QueryComponents3(Optional.of(new JoinLeafNode3(topSource)), topConditions, topYields, topGroups, topOrders), context3);
     }
 
+    /// Creates yields from `operandsAndAliases`, updating context to generate a new SQL id for each yield.
+    ///
+    /// @param operandsAndAliases  a list of pairs `(operand, alias)`. Each `operand` is yielded under `alias`.
+    ///
     private T2<List<Yield3>, TransformationContextFromStage2To3> createYields(
             final List<? extends T2<? extends ISingleOperand3, String>> operandsAndAliases,
             final TransformationContextFromStage2To3 context)
@@ -301,10 +305,16 @@ public final class AggregationQueryWrapper {
     }
 
     /*
-    # Operations on EQL AST nodes
+    # The replacement operation on EQL AST nodes
 
-    The code below implements operations on a subset of EQL AST nodes -- operands, represented by [ISingleOperand2].
-    TODO...
+    The code below implements the replacement operation on a subset of EQL AST nodes -- operands, represented by [ISingleOperand2].
+    The replacement operation can be viewed as a function `replace(node, replacements)`, where `node` is an input node and
+    `replacements` is a map with entries `(oldNode, newNode)`.
+    This operation produces a node equal to the input `node` but with all occurrences of `oldNode` replaced by `newNode`,
+    for each `(oldNode, newNode)` entry in the `replacements` map.
+
+    In general, this operation could process the whole tree rooted at the input node.
+    But for the purposes of this specific transformation, it does not descend into subquery nodes.
     */
 
     /// Reconstructs the tree rooted at `node` by replacing all reachable nodes that are contained in `replacements`.
