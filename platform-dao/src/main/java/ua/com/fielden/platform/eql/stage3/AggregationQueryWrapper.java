@@ -135,7 +135,7 @@ public final class AggregationQueryWrapper {
         if (!enabled) {
             return skipTransformation(context);
         }
-        if (qc.maybeJoinRoot().isEmpty()) {
+        if (qc.maybeJoinRoot().isEmpty() || qc.yields() == null || qc.yields().isEmpty()) {
             return skipTransformation(context);
         }
         final var origJoin = qc.maybeJoinRoot().get();
