@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage1;
+package ua.com.fielden.platform.eql.stage3;
 
 import org.apache.commons.text.RandomStringGenerator;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;

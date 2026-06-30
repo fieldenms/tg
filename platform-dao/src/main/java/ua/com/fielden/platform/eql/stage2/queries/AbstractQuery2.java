@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.queries;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.AggregationQueryWrapper;
 import ua.com.fielden.platform.eql.stage2.ITransformableFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
@@ -12,6 +11,7 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sundries.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
+import ua.com.fielden.platform.eql.stage3.AggregationQueryWrapper;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;

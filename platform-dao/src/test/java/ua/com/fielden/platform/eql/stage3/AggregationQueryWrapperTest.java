@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage1;
+package ua.com.fielden.platform.eql.stage3;
 
 import org.junit.After;
 import org.junit.Ignore;
@@ -6,6 +6,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
+import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForPrimType;
 import ua.com.fielden.platform.eql.stage2.operands.functions.MaxOf2;
@@ -32,7 +33,7 @@ import static ua.com.fielden.platform.eql.meta.PropType.BIGDECIMAL_PROP_TYPE;
 /// that its structure is preserved verbatim rather than being affected by the transformation.
 /// [#afterTest()] restores the flag after every test to avoid leaking the disabled state into other tests.
 ///
-public class AggregationQueryWrapperTest extends EqlStage2TestCase {
+public class AggregationQueryWrapperTest extends EqlStage3TestCase {
 
     @After
     public void afterTest() {
