@@ -178,10 +178,10 @@ public final class AggregationQueryWrapper {
         final var context3 = context2.cloneWithNextSqlId();
         final var topSource = new Source3BasedOnQueries(List.of(sQuery), context3.gen().nextSourceId(), context3.sqlId);
 
-        // TODO Reusing AST nodes is probably not a good idea. Create copies.
-        final var replacements = operandsAndAliases.stream()
+        // Each replacement property has to be a new instance to ensure uniqueness of AST nodes.
+        final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements = operandsAndAliases.stream()
                 .collect(Collectors.toMap(T2::_1,
-                                          t2 -> t2.map((rand, alias) -> new Prop3(alias, topSource, rand.type()))));
+                                          t2 -> t2.map((rand, alias) -> () -> new Prop3(alias, topSource, rand.type()))));
 
         final Conditions3 topConditions = null;
         final var topYields = new Yields3(
@@ -276,16 +276,16 @@ public final class AggregationQueryWrapper {
         };
     }
 
-    private Yield3 replaceAll(final Yield3 yield, final Map<? extends ISingleOperand3, Prop3> replacements) {
+    private Yield3 replaceAll(final Yield3 yield, final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements) {
         return yield.setOperand(replace(yield.operand(), replacements));
     }
 
-    private GroupBy3 replaceAll(final GroupBy3 groupBy, final Map<? extends ISingleOperand3, Prop3> replacements) {
+    private GroupBy3 replaceAll(final GroupBy3 groupBy, final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements) {
         final var newOperand = replace(groupBy.operand(), replacements);
         return groupBy.setOperand(newOperand);
     }
 
-    private OrderBy3 replaceAll(final OrderBy3 orderBy, final Map<? extends ISingleOperand3, Prop3> replacements) {
+    private OrderBy3 replaceAll(final OrderBy3 orderBy, final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements) {
         if (orderBy.operand() != null) {
             final var newOperand = replace(orderBy.operand(), replacements);
             return orderBy.setOperand(newOperand);
@@ -323,11 +323,11 @@ public final class AggregationQueryWrapper {
     ///
     private ISingleOperand3 replace(
             final ISingleOperand3 node,
-            final Map<? extends ISingleOperand3, ? extends ISingleOperand3> replacements)
+            final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements)
     {
-        final var newNode = replacements.get(node);
-        if (newNode != null) {
-            return newNode;
+        final var mkNewNode = replacements.get(node);
+        if (mkNewNode != null) {
+            return mkNewNode.get();
         }
 
         final var replacedChildren = streamChildren(node)
@@ -336,8 +336,8 @@ public final class AggregationQueryWrapper {
                     return replacedChild == child ? null : t2(child, replacedChild);
                 })
                 .filter(Objects::nonNull)
-                // If some child nodes are equal, use any one as the key -- the lookup will work by hashCode and equals.
-                .collect(toMap((v1, _) -> v1));
+                // Use reference-based equality for keys as nodes may be equal.
+                .collect(toMap((v1, _) -> v1, IdentityHashMap::new));
         return replaceChildren(node, replacedChildren);
     }
 
