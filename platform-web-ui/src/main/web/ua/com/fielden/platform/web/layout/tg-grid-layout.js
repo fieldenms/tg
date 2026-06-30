@@ -281,6 +281,12 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
             const wrapper = this._createHtmlElement(cell.widget);
             return { placed: wrapper, target: wrapper, subheader: false };
         }
+        // A select/withProp cell whose editor was not found leaves the cell empty (and warns) rather than silently consuming an unrelated editor from the pool.
+        if (cell && cell.select && !cell.boundSlot) {
+            console.warn(`tg-grid-layout: no editor matched select "${cell.select}" for the cell at row ${cell.row}, column ${cell.col} — leaving it empty.`);
+            const div = document.createElement('div');
+            return { placed: div, target: div, subheader: false };
+        }
         const slotName = (cell && cell.boundSlot) || pool.shift();
         const slot = this._createCellElement(slotName);
         return { placed: slot, target: slotName ? this.slottedElements[slotName] : slot, subheader: false };
