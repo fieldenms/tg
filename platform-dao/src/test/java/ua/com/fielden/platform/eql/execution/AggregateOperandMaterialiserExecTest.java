@@ -6,7 +6,8 @@ import ua.com.fielden.platform.entity.query.exceptions.EntityFetcherException;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
-import ua.com.fielden.platform.eql.stage3.AggregationQueryWrapper;
+import ua.com.fielden.platform.eql.stage3.AggregateOperandMaterialiser;
+import ua.com.fielden.platform.eql.stage3.AggregateOperandMaterialiserTest;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.types.Money;
 
@@ -23,10 +24,10 @@ import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
-/// Operational test for [AggregationQueryWrapper].
+/// Operational test for [AggregateOperandMaterialiser].
 ///
-/// This suite covers the correctness of execution of EQL queries that get transformed by [AggregationQueryWrapper].
-/// See `AggregationQueryWrapperTest` for the corresponding denotational tests (which assert the shape of the
+/// This suite covers the correctness of execution of EQL queries that get transformed by [AggregateOperandMaterialiser].
+/// See [AggregateOperandMaterialiserTest] for the corresponding denotational tests (which assert the shape of the
 /// transformed stage-3 AST rather than the values it produces when executed).
 ///
 /// Each test here mirrors an invariant from the denotational suite, but instead of comparing ASTs it runs the query
@@ -35,7 +36,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 /// operand at the level of the source (a calculated property, an expression, or a sub-query) -- and so that their
 /// expected results are easy to compute by hand from the populated domain.
 ///
-public class AggregationQueryWrapperExecTest extends AbstractEqlExecutionTestCase {
+public class AggregateOperandMaterialiserExecTest extends AbstractEqlExecutionTestCase {
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Materialisation of aggregate arguments

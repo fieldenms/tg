@@ -11,7 +11,7 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sundries.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
-import ua.com.fielden.platform.eql.stage3.AggregationQueryWrapper;
+import ua.com.fielden.platform.eql.stage3.AggregateOperandMaterialiser;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
@@ -88,7 +88,7 @@ public abstract class AbstractQuery2 implements ToString.IFormattable {
         final TransformationResultFromStage2To3<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
 
         final var qc = new QueryComponents3(Optional.ofNullable(joinRootTr.item), whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
-        final var qcTr = AggregationQueryWrapper.INSTANCE.apply(qc, orderingsTr.updatedContext);
+        final var qcTr = AggregateOperandMaterialiser.INSTANCE.apply(qc, orderingsTr.updatedContext);
         return qcTr.item != null
                 ? qcTr
                 : new TransformationResultFromStage2To3<>(qc, orderingsTr.updatedContext);

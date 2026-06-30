@@ -135,25 +135,25 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 /// The current implementation compares queries by [AbstractQuery3#equals], which considers generated IDs (they are unique,
 /// so the queries are never equal).
 ///
-public final class AggregationQueryWrapper {
+public final class AggregateOperandMaterialiser {
 
-    public static final AggregationQueryWrapper INSTANCE = new AggregationQueryWrapper();
+    public static final AggregateOperandMaterialiser INSTANCE = new AggregateOperandMaterialiser();
 
-    private AggregationQueryWrapper() {}
+    private AggregateOperandMaterialiser() {}
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Ad-hoc configuration for testing purposes.
 
     static boolean enabled = true;
 
-    private static Supplier<Stream<String>> aliasGenerator = AggregationQueryWrapper::generateAliases;
+    private static Supplier<Stream<String>> aliasGenerator = AggregateOperandMaterialiser::generateAliases;
 
     static void setAliasGenerator(final Supplier<Stream<String>> generator) {
         aliasGenerator = generator;
     }
 
     static void resetAliasGenerator() {
-        aliasGenerator = AggregationQueryWrapper::generateAliases;
+        aliasGenerator = AggregateOperandMaterialiser::generateAliases;
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -175,7 +175,7 @@ public final class AggregationQueryWrapper {
                         origYields.getYields().stream().flatMap(y -> extractAggregatedExpressions(y.operand())),
                         origGroups == null ? Stream.of() : origGroups.groups().stream().map(GroupBy3::operand))
                 .collect(toCollection(LinkedHashSet::new));
-        if (operandsToMaterialise.isEmpty() || operandsToMaterialise.stream().allMatch(AggregationQueryWrapper::isPersistentProperty)) {
+        if (operandsToMaterialise.isEmpty() || operandsToMaterialise.stream().allMatch(AggregateOperandMaterialiser::isPersistentProperty)) {
             return skipTransformation(context);
         }
 
