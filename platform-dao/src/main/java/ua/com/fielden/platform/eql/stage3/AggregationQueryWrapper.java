@@ -1,18 +1,18 @@
 package ua.com.fielden.platform.eql.stage3;
 
-import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.conditions.*;
 import ua.com.fielden.platform.eql.stage3.operands.*;
 import ua.com.fielden.platform.eql.stage3.operands.functions.*;
+import ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
-import ua.com.fielden.platform.eql.stage3.sources.*;
+import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
+import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sundries.*;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -22,9 +22,7 @@ import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.unmodifiableList;
-import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3.skipTransformation;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T2.toMap;
@@ -44,7 +42,8 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 /// * `G` - group by list
 /// * `Y` - yields
 ///
-/// The transformation is applicable only if `Y` contains a yield `y = Yield(operand)` such that `operand` contains an aggregate function at the level of `S`.
+/// The transformation is applicable iff a query yields an aggregation.
+/// I.e., `Y` contains a yield `y = Yield(operand)` such that `operand` contains an aggregate function at the level of `S`.
 ///
 /// Note: expression `e` is said to be at the level of `S` of query `Q` with yields `Y` iff (`e` is one of the yields in `Y`) OR (there is a yield in `Y` that contains `e` AND that yield is not a sub-query).
 ///
@@ -57,6 +56,30 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 /// select (select max(...) from T where ...) from S
 /// ```
 ///
+/// A query that yields an aggregation has the following properties:
+/// * `G` may be empty or may contain non-aggregate expressions (e.g., `prop`).
+/// * `Y` contains at least one aggregation.
+/// * For each `y` in `Y`, if `y` is NOT an aggregation and references `S`, it may do so only through an expression from `G`.
+///   ```
+///   .groupBy().prop("key")
+///   .yield().prop("key")
+///   .yield().lowerCase().prop("key")
+///   .yield().prop("id") -- Invalid
+///   ```
+/// * For each `o` in `O`, if `o` is NOT an aggregation and references `S`, it may do so only through an expression from `G`.
+///   ```
+///   .groupBy().prop("key")
+///   .orderBy().prop("key").asc()
+///             .lowerCase().prop("key").asc()
+///             .prop("id").asc() -- Invalid
+///   ```
+///
+/// Based on these properties, it can be seen that any reference to `S` is either within an aggregation or within an expression in `G`.
+///
+/// The transformation consists of the following steps:
+/// 1. Materialise all expressions that are aggregated over and all expressions in `G`.
+/// 2. Replace all original expressions with their materialised counterparts.
+///
 /// The transformation results in a new query `Qt = {St, Wt, Ot, Gt, Yt}`, where:
 ///
 /// `St` - a source query `{Ss, Ws, Os, Gs, Ys}`, where:
@@ -67,46 +90,50 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///
 /// * `Os, Gs = empty` -- ordering and grouping apply to the outer query only.
 ///
-/// * `Ys = collectProps(O) + collectProps(G) + collectProps(Y) + flatmap(extractAgg, Y)`
+/// * `Ys = flatmap(extractAgg, Y) + G` -- everything that has to be materialised.
 ///
-///   `collectProps(x)` -- all properties of `S` referenced in clause `x`.
-///
-///   `extractAgg(y)` -- all expressions `x` that appear in yield `y` as arguments of aggregate functions at the level of S.
+///   `extractAgg(node)` -- all expressions `x` that appear in `node` as arguments of aggregate functions at the level of S.
 ///   Examples:
 ///   ```
-///   max().prop(cost) => [prop(cost)]
-///   sum().prop(labourCost).add().sum().prop(orderCost) => [prop(labourCost), prop(orderCost)]
-///   ifNull().sum().prop(cost).then().val(0) => [prop(cost)]
+///   maxOf().prop(cost) => [prop(cost)]
+///   sumOf().prop(labourCost).add().sumOf().prop(orderCost) => [prop(labourCost), prop(orderCost)]
+///   ifNull().sumOf().prop(cost).then().val(0) => [prop(cost)]
 ///   ```
 ///
-///   The core of the transformation is the extraction of arguments to aggregate functions.
-///   It will materialise them as columns of source query `St` so that they can be used in the outer query `Qt`.
-///
-///   Collection of all properties of `S` referenced in the original `O`, `G` and `Y` is necessary because the transformed query `Qt` will no longer access `S`, but `St` instead.
-///   Therefore, all referenced properties have to be yielded from `St`.
-///
-/// The transformation of `S` into `St` has the following effects:
-///
-/// 1. Affects all expressions that were referencing properties of `S`.
-///
-///    Adjusting them is simple: replace each reference to a property of `S` with a corresponding property of `St` (i.e., a yield in `Ys`).
-///
-/// 2. `St` contains extra yields corresponding to the arguments of aggregate functions contained in the original `Y`.
-///
-///    It is important to use them in the outer query as this is the essence of the whole transformation -- pushing the aggregated expressions down into a source query.
-///    This will be achieved by transforming the original yields `Y` into `Yt`.
+///   Group-by expressions in `G` also have to be materialised as they may reference `S`.
 ///
 /// `Wt = empty` -- conditions are applied in `St`.
 ///
-/// `Ot = [transform(o) for o in O]`
-/// * `transform(o)` -- replace each referenced property of `S` with a corresponding property of `St`
-///   AND, if `o` references a yield from `Y`, replace it with a corresponding yield (based on alias) from `Yt`.
+/// `Ot = [transform(o) for o in O]`, and, for each `o`, if `o` references a yield from `Y`, replace it with a corresponding yield (based on alias) from `Yt`.
 ///
 /// `Gt = [transform(g) for g in G]`
-/// * `transform(g)` -- replace each referenced property of `S` with a corresponding property of `St`.
 ///
 /// `Yt = [transform(y) for y in Y]`
-/// * `transform(y)` -- replace each referenced property of `S` with a corresponding property of `St` AND replace each expression `x` matched earlier by `extractAgg(y)` with a corresponding property of `St`.
+///
+/// `transform(x)` -- replaces all expressions in `x` that were materialised in the source query `St`.
+///
+/// ## Limitations
+///
+/// ### 1. A subquery cannot be both yielded and grouped by
+///
+/// If a query contains a subquery as one of its group-by items and also yields that subquery, the transformation will result in an invalid query.
+/// However, if a subquery is used in `groupBy` and is not yielded, the resulting query will be valid.
+///
+/// ```
+/// countFuelUsage = select(FuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
+/// select(Vehicle.class)
+///     .groupBy().model(countFuelUsage)
+///     .yield().model(countFuelUsage).as("count") // Remove this yield and it works.
+///     .modelAsAggregate();
+/// ```
+///
+/// When the query above is transformed, the resulting source query will materialise the subquery for the group-by usage, but not for the yield.
+/// The outer query will retain the original subquery yield, which will have become invalid as it will no longer have access to the original query source.
+///
+/// The reason the transformation cannot produce a valid query in such cases is that the two subqueries are not seen as equal,
+/// hence cannot be materialised under one column.
+/// The current implementation compares queries by [AbstractQuery3#equals], which considers generated IDs (they are unique,
+/// so the queries are never equal).
 ///
 public final class AggregationQueryWrapper {
 
@@ -144,27 +171,15 @@ public final class AggregationQueryWrapper {
         final var origGroups = qc.groups();
         final var origOrderings = qc.orderings();
 
-        final Set<ISingleOperand3> aggregated = origYields.getYields().stream()
-                .flatMap(y -> extractAggregatedExpressions(y.operand()))
+        final Set<ISingleOperand3> operandsToMaterialise = Stream.concat(
+                        origYields.getYields().stream().flatMap(y -> extractAggregatedExpressions(y.operand())),
+                        origGroups == null ? Stream.of() : origGroups.groups().stream().map(GroupBy3::operand))
                 .collect(toCollection(LinkedHashSet::new));
-        if (aggregated.stream().allMatch(AggregationQueryWrapper::isPersistentProperty)) {
+        if (operandsToMaterialise.isEmpty() || operandsToMaterialise.stream().allMatch(AggregationQueryWrapper::isPersistentProperty)) {
             return skipTransformation(context);
         }
 
-        final var origSourceIds = streamSources(origJoin).map(ISource3::id).collect(toSet());
-
-        final Set<Prop3> props = StreamUtils.concat(origYields.getYields().stream().map(Yield3::operand),
-                                                    origGroups == null ? Stream.of() : origGroups.groups().stream().map(GroupBy3::operand),
-                                                    origOrderings == null ? Stream.of() : origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull))
-                .flatMap(this::extractProperties)
-                .filter(prop -> origSourceIds.contains(prop.source.id()))
-                .filter(prop -> !aggregated.contains(prop))
-                .sorted(comparing((Prop3 prop) -> prop.name).thenComparing(prop -> prop.source.id()))
-                .collect(toCollection(LinkedHashSet::new));
-
-        final List<? extends T2<? extends ISingleOperand3, String>> operandsAndAliases = zip(
-                Stream.concat(props.stream(), aggregated.stream()), aliasGenerator.get(), T2::t2)
-                .toList();
+        final List<? extends T2<? extends ISingleOperand3, String>> operandsAndAliases = zip(operandsToMaterialise.stream(), aliasGenerator.get(), T2::t2).toList();
 
         final var sJoin = origJoin;
         final var sWhere = origWhere;
@@ -242,37 +257,13 @@ public final class AggregationQueryWrapper {
             case MaxOf3 it -> Stream.of(it.operand);
             case SumOf3 it -> Stream.of(it.operand);
             case CountOf3 it -> Stream.of(it.operand);
-            // `STRING_AGG`: only the aggregated value is a per-row expression.
-            // The separator is a constant, and ordering items are irrelevant here.
-            case ConcatOf3 it -> Stream.of(it.operand1);
+            // concatOf: extract the aggregated expression and the ordering items.
+            // The ordering items may reference properties of the source, hence have to be materialised.
+            // The separator is always a constant, hence does not have to be materialised.
+            case ConcatOf3 it -> Stream.concat(Stream.of(it.operand1), it.orderItems.stream().map(OrderBy3::operand).filter(Objects::nonNull));
             // `COUNT(*)` has no argument.
             case CountAll3 _ -> Stream.empty();
             default -> streamChildren(node).flatMap(this::extractAggregatedExpressions);
-        };
-    }
-
-    /// Extracts properties occurring at the same level as the query source (i.e., not inside a subquery) within `node`.
-    /// These are the per-row properties that the source query must materialise as columns, so that the enclosing query
-    /// can reference them.
-    ///
-    /// Aggregate functions are never descended into as they are processed separately with [#extractAggregatedExpressions].
-    /// Subqueries are also skipped as any properties within them are at a different level than the original query source.
-    ///
-    private Stream<Prop3> extractProperties(final ISingleOperand3 node) {
-        return switch (node) {
-            // Skip aggregate functions, they are processed separately.
-            case AverageOf3 _ -> Stream.empty();
-            case MinOf3 _ -> Stream.empty();
-            case MaxOf3 _ -> Stream.empty();
-            case SumOf3 _ -> Stream.empty();
-            case CountOf3 _ -> Stream.empty();
-            case CountAll3 _ -> Stream.empty();
-            // concatOf: skip the aggregated expression, but include order-by expressions.
-            case ConcatOf3 it -> it.orderItems.stream().map(OrderBy3::operand).filter(Objects::nonNull).flatMap(this::extractProperties);
-            // Skip subqueries.
-            case SubQuery3 _ -> Stream.empty();
-            case Prop3 it -> Stream.of(it);
-            default -> streamChildren(node).flatMap(this::extractProperties);
         };
     }
 
@@ -457,14 +448,6 @@ public final class AggregationQueryWrapper {
             case QuantifiedPredicate3 it -> Stream.of(it.leftOperand()); // Subquery ignored.
             case Conditions3 it -> it.allConditionsAsDnf().stream().flatMap(List::stream).flatMap(this::streamChildren);
             default -> Stream.of();
-        };
-    }
-
-    private Stream<ISource3> streamSources(final IJoinNode3 origJoin) {
-        return switch (origJoin) {
-            case JoinLeafNode3 it -> Stream.of(it.source());
-            case JoinInnerNode3 it -> Stream.concat(streamSources(it.leftNode()), streamSources(it.rightNode()));
-            default -> throw new InvalidStateException("Unsupported join node type: %s".formatted(origJoin.getClass().getName()));
         };
     }
 

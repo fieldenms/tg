@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.execution;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.exceptions.EntityFetcherException;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
@@ -13,9 +14,13 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 /// Operational test for [AggregationQueryWrapper].
@@ -66,6 +71,60 @@ public class AggregationQueryWrapperExecTest extends AbstractEqlExecutionTestCas
         assertNumericEquals("44", byFlag.get(true).get("total"));
         // active == false: V2 (22)
         assertNumericEquals("22", byFlag.get(false).get("total"));
+    }
+
+    @Test
+    public void groupBy_a_subquery_that_is_NOT_yielded() {
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
+        final var qry = select(TgVehicle.class)
+                .groupBy().model(countFuelUsage)
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+
+        // count == 2: V1 (sumOfPrices=11)
+        // count == 1: V2 (sumOfPrices=22)
+        // count == 0: V3 (sumOfPrices=33)
+        final var aggs = retrieveAll(qry);
+        assertEquals(Set.of(new BigDecimal("11.00"), new BigDecimal("22.00"), new BigDecimal("33.00")),
+                     aggs.stream().map(agg -> agg.get("total")).collect(toSet()));
+    }
+
+    @Test
+    public void groupBy_a_subquery_that_is_also_yielded_is_not_supported() {
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
+        final var qry = select(TgVehicle.class)
+                .groupBy().model(countFuelUsage)
+                .yield().model(countFuelUsage).as("count")
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+
+        assertThatThrownBy(() -> retrieveAll(qry)).isInstanceOf(EntityFetcherException.class);
+    }
+
+    @Test
+    public void groupBy_a_calculated_property_that_contains_a_subquery_that_is_NOT_yielded() {
+        final var qry = select(TgVehicle.class)
+                .groupBy().prop("lastFuelUsageQty")
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+
+        // lastFuelUsageQty == 70: V1 (sumOfPrices=11)
+        // lastFuelUsageQty == 100: V2 (sumOfPrices=22)
+        // lastFuelUsageQty == null: V3 (sumOfPrices=33)
+        final var aggs = retrieveAll(qry);
+        assertEquals(Set.of(new BigDecimal("11.00"), new BigDecimal("22.00"), new BigDecimal("33.00")),
+                     aggs.stream().map(agg -> agg.get("total")).collect(toSet()));
+    }
+
+    @Test
+    public void groupBy_a_calculated_property_that_contains_a_subquery_that_is_also_yielded_is_not_supported() {
+        final var qry = select(TgVehicle.class)
+                .groupBy().prop("lastFuelUsageQty")
+                .yield().prop("lastFuelUsageQty").as("qty")
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+
+        assertThatThrownBy(() -> retrieveAll(qry)).isInstanceOf(EntityFetcherException.class);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
