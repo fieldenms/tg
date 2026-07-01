@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.eql.stage3;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
+import ua.com.fielden.platform.eql.meta.EqlTestCase;
 import ua.com.fielden.platform.eql.stage3.conditions.ExistencePredicate3;
 import ua.com.fielden.platform.eql.stage3.conditions.LikePredicate3;
 import ua.com.fielden.platform.eql.stage3.conditions.SetPredicate3;
@@ -28,6 +31,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.*;
 import static ua.com.fielden.platform.eql.meta.PropType.*;
@@ -42,12 +46,25 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 /// because the transformation generates fresh source and SQL identifiers that cannot be reproduced by recompiling a model.
 /// Each test also declares a query that reflects the shape of the expected query.
 ///
+/// [AggregateOperandMaterialiser] applies only to [DbVersion#MSSQL], which requires the [DbVersion] to be adjusted before each test
+/// and restored afterwards.
+/// This remains necessary until the base test class [EqlTestCase] is refactored using IoC.
+///
 public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
+
+    private DbVersion prevDbVersion;
+
+    @Before
+    public void setup() {
+        prevDbVersion = dbVersion();
+        setDbVersion(MSSQL);
+    }
 
     @After
     public void afterTest() {
         AggregateOperandMaterialiser.enabled = true;
         AggregateOperandMaterialiser.resetAliasGenerator();
+        setDbVersion(prevDbVersion);
     }
 
     @Test

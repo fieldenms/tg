@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.execution;
 
 import org.junit.Test;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EntityFetcherException;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -9,6 +10,7 @@ import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException
 import ua.com.fielden.platform.eql.stage3.AggregateOperandMaterialiser;
 import ua.com.fielden.platform.eql.stage3.AggregateOperandMaterialiserTest;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.test.WithDbVersion;
 import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
@@ -36,6 +38,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 /// operand at the level of the source (a calculated property, an expression, or a sub-query) -- and so that their
 /// expected results are easy to compute by hand from the populated domain.
 ///
+@WithDbVersion(DbVersion.MSSQL)
 public class AggregateOperandMaterialiserExecTest extends AbstractEqlExecutionTestCase {
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
