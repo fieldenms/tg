@@ -13,6 +13,7 @@ import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
+import ua.com.fielden.platform.web.layout.grid.IGridLayoutConfiguration;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -20,13 +21,13 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 import java.util.Optional;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
-import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.content;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.grid;
 
 public class TgEntityWithRichTextPropWebUiConfig {
 
@@ -92,20 +93,27 @@ public class TgEntityWithRichTextPropWebUiConfig {
     }
 
     private EntityMaster<TgEntityWithRichTextProp> createMaster(final Injector injector) {
+        final IGridLayoutConfiguration gridLayout = grid()
+                .content(content().withGaps("0px", MARGIN_PIX).style("padding", MARGIN_PIX).style("height", "100%").style("box-sizing", "border-box"))
+                .columns().addColumn()          // a single 1fr column
+                .rows()
+                    .addRow("1fr")              // row 1 grows to fill the master's free height ...
+                    .addRow("auto").repeat(2);  // ... above two content-height rows
+
         final String layout = cell(
-                cell(cell(CELL_LAYOUT)).repeat(3),
+                cell(CELL_LAYOUT).cell(cell(CELL_LAYOUT)).cell(cell(CELL_LAYOUT)),
             FLEXIBLE_LAYOUT_WITH_PADDING).toString();
 
         final IMaster<TgEntityWithRichTextProp> masterConfig = new SimpleMasterBuilder<TgEntityWithRichTextProp>().forEntity(TgEntityWithRichTextProp.class)
-                .addProp("richTextProp").asRichText().withHeight(350).also()
+                .addProp("richTextProp").asRichText().withMinHeight(50).also()
                 .addProp("key").asSinglelineText().also()
                 .addProp("desc").asSinglelineText().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkActionLayoutForMaster())
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
-                .setLayoutFor(Device.TABLET, Optional.empty(), layout)
-                .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), gridLayout)
+                .setLayoutFor(Device.TABLET, Optional.empty(), gridLayout)
+                .setLayoutFor(Device.MOBILE, Optional.empty(), gridLayout)
                 .withDimensions(RICH_TEXT_DIM)
                 .done();
 
