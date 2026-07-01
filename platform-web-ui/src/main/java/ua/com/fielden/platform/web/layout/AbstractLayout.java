@@ -6,16 +6,15 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.interfaces.IExecutable;
+import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.ILayout;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 
-/**
- * The web layout manager contract.
- *
- * @author TG Team
- *
- */
-public abstract class AbstractLayout<T extends AbstractLayoutSetter<?>> implements ILayout<T>, IRenderable {
+/// The web layout manager contract.
+/// Every layout manager is renderable into a DOM element ([IRenderable]), declares the import path of its client component ([IImportable]), and emits the JavaScript that wires its per-breakpoint values ([IExecutable]).
+///
+public abstract class AbstractLayout<T extends AbstractLayoutSetter<?>> implements ILayout<T>, IRenderable, IImportable, IExecutable {
 
     /**
      * Map of available layouts.

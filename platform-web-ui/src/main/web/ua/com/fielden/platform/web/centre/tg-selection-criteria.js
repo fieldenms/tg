@@ -11,7 +11,7 @@ import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
     <style>
-        :host ::slotted(tg-flex-layout) {
+        :host ::slotted(.tg-layout) {
             padding: 0 20px 20px 20px;
         }
     </style>

@@ -2,9 +2,9 @@ package ua.com.fielden.platform.web.layout;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.interfaces.IImportable;
+import ua.com.fielden.platform.web.minijs.JsCode;
 
-public class TileLayout extends AbstractLayout<AbstractLayoutSetter<TileLayout>> implements IImportable {
+public class TileLayout extends AbstractLayout<AbstractLayoutSetter<TileLayout>> {
     private final String tileLayoutPath = "layout/tg-tile-layout";
 
     private int minCellWidth = 100, minCellHeight = 100;
@@ -35,6 +35,13 @@ public class TileLayout extends AbstractLayout<AbstractLayoutSetter<TileLayout>>
     @Override
     public String importPath() {
         return tileLayoutPath;
+    }
+
+    /// The tile layout inlines its per-breakpoint values directly into the rendered element via data-binding, so it emits no separate JavaScript assignment.
+    ///
+    @Override
+    public JsCode code() {
+        return new JsCode("");
     }
 
     @Override

@@ -5,10 +5,10 @@ const styleElement = document.createElement('dom-module');
 styleElement.innerHTML = `
     <template>
         <style>
-            tg-flex-layout * {
+            .tg-layout * {
                 min-width: 48px;
             }
-            tg-flex-layout * .criterion-editors {
+            .tg-layout * .criterion-editors{
                 min-width: 0;
             }
         </style>

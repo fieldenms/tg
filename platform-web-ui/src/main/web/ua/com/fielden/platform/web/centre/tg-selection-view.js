@@ -206,7 +206,7 @@ Polymer({
 
     _selectionCritFilteringChanged: function(isFiltering) {
         const selectionCrit = this._getSelectionCrit();
-        const critLayout = selectionCrit && selectionCrit.shadowRoot && selectionCrit.shadowRoot.querySelector('tg-flex-layout');
+        const critLayout = selectionCrit && selectionCrit.shadowRoot && selectionCrit.shadowRoot.querySelector('.tg-layout');
         if (critLayout) {
             critLayout.filter = isFiltering ? filterSelectionCriteria : null;
             this.$.scrollable_container.notifyResize();

@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Flex layout example</title>
     <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script>
+        window.TG_APP = {
+            minDesktopWidth: 980, 
+            minTabletWidth: 768
+        }
+    </script>
     <script type="module">
         import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
         import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
