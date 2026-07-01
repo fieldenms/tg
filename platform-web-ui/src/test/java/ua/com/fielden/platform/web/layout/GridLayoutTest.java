@@ -357,4 +357,29 @@ public class GridLayoutTest {
                 "{columns:[{size:\"1fr\"},{size:\"1fr\"}],cells:[{row:1,col:1,colSpan:2}]}",
                 grid().columns().addColumn().addColumn().elements(cell(1, 1).spanCols(2)).toString());
     }
+
+    @Test
+    public void an_image_cell_spanning_five_rows_builds_via_the_java_api() {
+        // Example 5 of the change overview: two 1fr columns with an image pinned to column 2 spanning rows 2-6,
+        // sized (absolutely positioned + object-fit) to fill its span without enlarging the rows.
+        assertEquals(
+                "{container:{\"row-gap\":\"12px\",\"column-gap\":\"20px\",\"align-items\":\"start\",\"padding\":\"20px\"},"
+                + "columns:[{size:\"1fr\"},{size:\"1fr\"}],"
+                + "cells:[{row:2,col:2,rowSpan:5,"
+                + "widget:\"html:<img src='{{photo}}' style='position:absolute;inset:0;width:100%;height:100%;object-fit:cover'>\","
+                + "style:{\"align-self\":\"stretch\",\"position\":\"relative\",\"min-height\":\"0\",\"overflow\":\"hidden\"}}]}",
+                grid()
+                    .content(content().withGaps("12px", "20px").alignItems("start").style("padding", "20px"))
+                    .columns()
+                        .addColumn()
+                        .addColumn()
+                    .elements(
+                        html(2, 2, "<img src='{{photo}}' style='position:absolute;inset:0;width:100%;height:100%;object-fit:cover'>")
+                            .spanRows(5)
+                            .style("align-self", "stretch")
+                            .style("position", "relative")
+                            .style("min-height", "0")
+                            .style("overflow", "hidden"))
+                    .toString());
+    }
 }
