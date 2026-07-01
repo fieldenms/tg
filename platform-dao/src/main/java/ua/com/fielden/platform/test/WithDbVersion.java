@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * Annotates a test method to indicate that it should be run only if one of the specified databases is currently in use.
  * Otherwise, the annotated test method is ignored.
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WithDbVersion {
 

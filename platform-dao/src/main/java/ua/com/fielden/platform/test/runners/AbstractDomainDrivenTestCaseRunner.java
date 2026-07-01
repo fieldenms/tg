@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test.runners;
 
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.Logger;
 import org.junit.runner.notification.RunNotifier;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test.WithDbVersion;
 import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.function.Function;
@@ -211,7 +213,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             return true;
         }
 
-        final var atWithDbVersion = child.getAnnotation(WithDbVersion.class);
+        final var atWithDbVersion = getFirstAnnotation(WithDbVersion.class, child, child.getDeclaringClass());
         final var dbVersionMatches = atWithDbVersion == null || ArrayUtils.contains(atWithDbVersion.value(), dbVersionProvider.dbVersion());
         if (!dbVersionMatches) {
             logger.info(() -> INFO_TEST_IGNORED_DUE_TO_DB_VERSION.formatted(
@@ -235,6 +237,18 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         } catch (final Exception ex) {
             throw new DomainDrivenTestException(ERR_FAILED_TO_CREATE_TEST_CONFIGURATION, ex);
         }
+    }
+
+    private static <A extends Annotation> @Nullable A getFirstAnnotation(
+            final Class<A> annotType,
+            final FrameworkMethod child,
+            final Class<?> klass)
+    {
+        final var childAnnot = child.getAnnotation(annotType);
+        if (childAnnot != null) {
+            return childAnnot;
+        }
+        return klass.getAnnotation(annotType);
     }
 
 }
