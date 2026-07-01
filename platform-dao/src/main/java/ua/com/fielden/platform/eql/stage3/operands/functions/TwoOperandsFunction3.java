@@ -6,7 +6,7 @@ import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
-abstract class TwoOperandsFunction3 extends AbstractFunction3 {
+public abstract class TwoOperandsFunction3 extends AbstractFunction3 {
     public final ISingleOperand3 operand1;
     public final ISingleOperand3 operand2;
 
@@ -15,6 +15,11 @@ abstract class TwoOperandsFunction3 extends AbstractFunction3 {
         this.operand1 = operand1;
         this.operand2 = operand2;
     }
+
+    /// Returns a copy of this function with `operand1` and `operand2` replaced.
+    /// Implementations must preserve all other state and the concrete node type.
+    ///
+    public abstract TwoOperandsFunction3 setOperands(ISingleOperand3 operand1, ISingleOperand3 operand2);
 
     @Override
     public int hashCode() {

@@ -32,6 +32,20 @@ public class ConcatOf3 extends TwoOperandsFunction3 {
         this(operand1, operand2, type, ImmutableList.of());
     }
 
+    public ConcatOf3 update(final ISingleOperand3 operand1, final ISingleOperand3 operand2, final List<OrderBy3> orderItems) {
+        if (this.operand1 == operand1 && this.operand2 == operand2 && this.orderItems == orderItems) {
+            return this;
+        }
+        return new ConcatOf3(operand1, operand2, type, orderItems);
+    }
+
+    @Override
+    public TwoOperandsFunction3 setOperands(final ISingleOperand3 operand1, final ISingleOperand3 operand2) {
+        return this.operand1 == operand1 && this.operand2 == operand2
+                ? this
+                : new ConcatOf3(operand1, operand2, type, orderItems);
+    }
+
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         final String exprSql = exprSql(operand1, metadata, dbVersion);

@@ -2,23 +2,35 @@ package ua.com.fielden.platform.eql.stage3.operands;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage2.operands.AbstractSingleOperand2;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static java.util.stream.Collectors.joining;
 
 public class Expression3 extends AbstractSingleOperand3 {
 
     public final ISingleOperand3 firstOperand;
-    private final List<CompoundSingleOperand3> otherOperands;
+    public final List<CompoundSingleOperand3> otherOperands;
 
     public Expression3(final ISingleOperand3 first, final List<CompoundSingleOperand3> items, final PropType type) {
         super(type);
         this.firstOperand = first;
         this.otherOperands = items;
+    }
+
+    public Expression3 update(final ISingleOperand3 first, final List<CompoundSingleOperand3> items) {
+        if (first == this.firstOperand && items == this.otherOperands) {
+            return this;
+        }
+        else {
+            return new Expression3(first, items, type);
+        }
     }
 
     public boolean isSingleOperandExpression() {

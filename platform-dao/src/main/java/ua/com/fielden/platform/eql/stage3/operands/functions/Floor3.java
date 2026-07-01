@@ -12,6 +12,11 @@ public class Floor3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public Floor3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new Floor3(operand, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return "FLOOR(%s)".formatted(operand.sql(metadata, dbVersion));
     }

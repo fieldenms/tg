@@ -14,6 +14,11 @@ public class MonthOf3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public MonthOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new MonthOf3(operand, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return switch (dbVersion) {
             case H2, MSSQL -> format("MONTH(%s)", operand.sql(metadata, dbVersion));

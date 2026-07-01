@@ -18,6 +18,11 @@ public class IfNull3 extends TwoOperandsFunction3 {
     }
 
     @Override
+    public IfNull3 setOperands(final ISingleOperand3 operand1, final ISingleOperand3 operand2) {
+        return operand1 == this.operand1 && operand2 == this.operand2 ? this : new IfNull3(operand1, operand2, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         final String operand1Sql;
         final String operand2Sql;

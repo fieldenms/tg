@@ -22,6 +22,19 @@ public record LikePredicate3(ISingleOperand3 matchOperand, ISingleOperand3 patte
     private static final String WARN_ESCAPING_NOT_SUPPORTED =
             "Escaping of special characters in LIKE clauses is not supported for database [%s].";
 
+    public LikePredicate3 update(
+            final ISingleOperand3 matchOperand,
+            final ISingleOperand3 patternOperand,
+            final LikeOptions options)
+    {
+        if (matchOperand == this.matchOperand && patternOperand == this.patternOperand && options == this.options) {
+            return this;
+        }
+        else {
+            return new LikePredicate3(matchOperand, patternOperand, options);
+        }
+    }
+
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return dbVersion.likeSql(options.negated,

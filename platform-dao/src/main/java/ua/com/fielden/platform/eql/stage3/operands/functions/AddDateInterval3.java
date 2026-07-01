@@ -20,6 +20,13 @@ public class AddDateInterval3 extends TwoOperandsFunction3 {
     }
 
     @Override
+    public AddDateInterval3 setOperands(final ISingleOperand3 operand1, final ISingleOperand3 operand2) {
+        return operand1 == this.operand1 && operand2 == this.operand2
+                ? this
+                : new AddDateInterval3(operand1, intervalUnit, operand2, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         switch (dbVersion) {
         case POSTGRESQL:

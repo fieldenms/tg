@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
 import jakarta.annotation.Nullable;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -21,6 +22,20 @@ public record OrderBy3 (@Nullable ISingleOperand3 operand, @Nullable Yield3 yiel
 
     public OrderBy3(final Yield3 yield, final boolean isDesc) {
         this(null, yield, isDesc);
+    }
+
+    public OrderBy3 setOperand(final ISingleOperand3 operand) {
+        if (yield != null) {
+            throw new InvalidStateException("Cannot use an operand with an order by that references a yield.");
+        }
+        return operand == this.operand ? this : new OrderBy3(operand, isDesc);
+    }
+
+    public OrderBy3 setYield(final Yield3 yield) {
+        if (this.operand != null) {
+            throw new InvalidStateException("Cannot use a yield with an order by that references an operand.");
+        }
+        return yield == this.yield ? this : new OrderBy3(yield, isDesc);
     }
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {

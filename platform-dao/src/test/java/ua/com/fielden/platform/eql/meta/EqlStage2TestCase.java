@@ -14,7 +14,9 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.sundries.Yield1;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.conditions.*;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -38,10 +40,11 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.*;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.*;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.eql.meta.PropType.propType;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CONDITIONS;
@@ -53,6 +56,13 @@ import static ua.com.fielden.platform.eql.stage2.sundries.Yields2.nullYields;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 public abstract class EqlStage2TestCase extends EqlTestCase {
+
+    protected static List<AbstractQuerySourceItem<?>> path(final Class<? extends AbstractEntity<?>> type, final CharSequence path) {
+        final var progress = querySourceInfoProvider().getModelledQuerySourceInfo(type).resolve(new PropResolutionProgress(path.toString()));
+        assertTrue(format("Could not resolve property [%s] against [%s].", path, type.getSimpleName()),
+                   progress.isSuccessful());
+        return progress.getResolved();
+    }
 
     protected static AbstractQuerySourceItem<?> pi(final Class<? extends AbstractEntity<?>> type, final String propName) {
         return querySourceInfoProvider().getModelledQuerySourceInfo(type).getProps().get(propName);
@@ -149,12 +159,27 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         return new Yield2(operand, alias, false);
     }
 
+    protected static Yield2 mkYield(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new Yield2(operand, Yield1.ABSENT_ALIAS, false);
+    }
+
     protected static Prop2 prop(final ISource2<? extends ISource3> source, final AbstractQuerySourceItem<?>... querySourceInfoItems) {
         return new Prop2(source, asList(querySourceInfoItems));
     }
 
+    protected static Prop2 prop(final ISource2<? extends ISource3> source, final List<AbstractQuerySourceItem<?>> path) {
+        return new Prop2(source, path);
+    }
+
     protected static Prop2 prop(final ISource2<? extends ISource3> source, final String name) {
-        return prop(source, pi(source.sourceType(), name));
+        if (EntityAggregates.class.equals(source.sourceType())) {
+            assertTrue(format("No such property [%s] in the specified source.", name),
+                       source.querySourceInfo().hasProp(name));
+            return prop(source, source.querySourceInfo().getProps().get(name));
+        }
+        else {
+            return prop(source, pi(source.sourceType(), name));
+        }
     }
 
     protected static Prop2 propWithIsId(final ISource2<? extends ISource3> source, final AbstractQuerySourceItem<?>... querySourceInfoItems) {
@@ -244,6 +269,10 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static ComparisonPredicate2 eq(final ISingleOperand2<? extends ISingleOperand3> op1, final ISingleOperand2<? extends ISingleOperand3> op2) {
         return new ComparisonPredicate2(op1, EQ, op2);
+    }
+
+    protected static ComparisonPredicate2 gt(final ISingleOperand2<? extends ISingleOperand3> op1, final ISingleOperand2<? extends ISingleOperand3> op2) {
+        return new ComparisonPredicate2(op1, GT, op2);
     }
 
     protected static ComparisonPredicate2 ne(final ISingleOperand2<? extends ISingleOperand3> op1, final ISingleOperand2<? extends ISingleOperand3> op2) {

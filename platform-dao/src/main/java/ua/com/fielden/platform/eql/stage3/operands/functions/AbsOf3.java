@@ -14,6 +14,11 @@ public class AbsOf3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public AbsOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new AbsOf3(operand, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         switch (dbVersion) {
         case H2:

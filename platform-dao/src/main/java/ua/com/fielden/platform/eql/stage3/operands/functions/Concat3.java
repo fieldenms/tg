@@ -15,11 +15,20 @@ import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.oper
 
 public class Concat3 extends AbstractFunction3 {
 
+
     private final List<ISingleOperand3> operands;
 
     public Concat3(final List<ISingleOperand3> operands, final PropType type) {
         super(type);
         this.operands = operands;
+    }
+
+    public List<ISingleOperand3> operands() {
+        return operands;
+    }
+
+    public Concat3 setOperands(final List<ISingleOperand3> operands) {
+        return operands == this.operands ? this : new Concat3(operands, type);
     }
 
     @Override

@@ -14,6 +14,11 @@ public class YearOf3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public YearOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new YearOf3(operand, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return switch (dbVersion) {
             case H2, MSSQL -> format("YEAR(%s)", operand.sql(metadata, dbVersion));
