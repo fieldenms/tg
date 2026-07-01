@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
@@ -28,10 +29,13 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T2.toMap;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
+/// Transforms a query that yields an aggregation by materialising the aggregated expression (the aggregate function's argument)
+/// in a source query created on top of the original source.
+///
 /// This transformation is applicable only if the query yields an aggregation.
 /// Otherwise, it is a no-op.
 ///
-/// In practice, this transformation enables aggregation over sub-queries, which is not supported in SQL Server.
+/// This transformation applies only to SQL Server.
 ///
 /// ## Transformation algorithm
 ///
@@ -160,6 +164,9 @@ public final class AggregateOperandMaterialiser {
 
     public TransformationResultFromStage2To3<QueryComponents3> apply(final QueryComponents3 qc, final TransformationContextFromStage2To3 context) {
         if (!enabled) {
+            return skipTransformation(context);
+        }
+        if (context.dbVersion() != DbVersion.MSSQL) {
             return skipTransformation(context);
         }
         if (qc.maybeJoinRoot().isEmpty() || qc.yields() == null || qc.yields().isEmpty()) {
