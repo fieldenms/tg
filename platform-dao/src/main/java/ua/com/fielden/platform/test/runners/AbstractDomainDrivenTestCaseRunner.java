@@ -16,11 +16,11 @@ import ua.com.fielden.platform.test.*;
 import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 
 import java.lang.reflect.Constructor;
+import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Function;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Reflector.assignStatic;
@@ -39,7 +39,8 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             ERR_INVALID_TYPE = "Test case [%s] should extend [%s].",
             ERR_MISSING_DB_CREATOR = "DbCreator type was not provided, but is required.",
             ERR_FAILED_TO_CREATE_TEST_CONFIGURATION = "Could not create test configuration.",
-            INFO_TEST_IGNORED_DUE_TO_TIMEZONE = "Test [%s] is ignored because it requires timezone [%s] while the actual is [%s].";
+            INFO_TEST_IGNORED_DUE_TO_TIMEZONE = "Test [%s] is ignored because it requires timezone [%s] while the actual is [%s].",
+            ERR_INVALID_TIMEZONE = "Test [%s] specifies an unrecognised timezone [%s] in @%s.";
 
     public final Logger logger = getLogger(getClass());
 
@@ -241,12 +242,15 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         final ZoneId zoneId;
         try {
             zoneId = ZoneId.of(atRequireTimezone.value());
-        } catch (final Exception e) {
-            logger.warn(() -> format("Unrecognised timezone [%s] specified in @%s for [%s]. This test will be ignored. Timezone parsing error is attached as the cause.",
-                                     atRequireTimezone.value(), RequireTimezone.class.getSimpleName(),
-                                     "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName())),
-                        e);
-            return false;
+        } catch (final DateTimeException ex) {
+            // An unparseable timezone is a programming error (e.g., a typo), not an environmental condition.
+            // Fail loudly rather than silently ignoring the test, which would otherwise hide the mistake in every environment.
+            throw new DomainDrivenTestException(
+                    ERR_INVALID_TIMEZONE.formatted(
+                            "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName()),
+                            atRequireTimezone.value(),
+                            RequireTimezone.class.getSimpleName()),
+                    ex);
         }
 
         // Compare by zone rules rather than by ID (i.e. not `TimeZone.equals`, which compares IDs).

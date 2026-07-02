@@ -24,6 +24,9 @@ public @interface RequireTimezone {
     /// A timezone ID, as accepted by [ZoneId#of(String)].
     /// A common accepted format is `{area}/{city}` (e.g., `Australia/Melbourne`).
     ///
+    /// An unrecognised value causes the test to fail rather than be ignored,
+    /// so that a typo surfaces immediately instead of silently skipping the test in every environment.
+    ///
     String value();
 
 }

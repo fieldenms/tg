@@ -3,12 +3,15 @@ package ua.com.fielden.platform.test.runners;
 import org.junit.Test;
 import org.junit.runners.model.FrameworkMethod;
 import ua.com.fielden.platform.test.RequireTimezone;
+import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerContextSelector;
 
+import java.time.DateTimeException;
 import java.util.TimeZone;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 /// Verifies that the TG test runner correctly decides whether a test method should be ignored based on the [RequireTimezone] annotation.
@@ -44,10 +47,13 @@ public class RequireTimezoneTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void method_is_ignored_if_the_required_timezone_is_invalid() throws Exception {
+    public void an_invalid_required_timezone_raises_an_exception_rather_than_silently_ignoring_the_test() throws Exception {
         final var runner = new H2OrPostgreSqlOrSqlServerContextSelector(MyTest.class);
-        assertTrue("Method should be ignored when @RequireTimezone does not match the default timezone.",
-                   runner.isIgnored(findMethod(runner, "test_with_invalid_timezone")));
+        final var ex = assertThrows("An invalid @RequireTimezone should fail loudly rather than silently ignore the test.",
+                                    DomainDrivenTestException.class,
+                                    () -> runner.isIgnored(findMethod(runner, "test_with_invalid_timezone")));
+        assertTrue("The underlying timezone parsing error should be preserved as the cause.",
+                   ex.getCause() instanceof DateTimeException);
     }
 
     // ---- Fixture classes used as input to the runner under test ----
@@ -65,7 +71,7 @@ public class RequireTimezoneTest extends AbstractDaoTestCase {
         public void test_anywhere() {}
 
         @Test
-        @RequireTimezone("I don't exist")
+        @RequireTimezone("I don‘t exist")
         public void test_with_invalid_timezone() {}
     }
 
