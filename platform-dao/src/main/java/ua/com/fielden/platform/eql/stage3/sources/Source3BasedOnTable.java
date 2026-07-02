@@ -9,9 +9,6 @@ import java.util.Objects;
 
 public class Source3BasedOnTable extends AbstractSource3 {
     public final String tableName;
-    /// Cached [#hashCode()] to improve performance for large tables.
-    /// The hash code is used extensively when storing AST nodes in a hash set or a hash map.
-    private int hashCode = 0;
 
     public Source3BasedOnTable(final EqlTable table, final Integer id, final int sqlId) {
         super("T_" + sqlId, id, table.columns());
@@ -25,13 +22,10 @@ public class Source3BasedOnTable extends AbstractSource3 {
 
     @Override
     public int hashCode() {
-        if (hashCode != 0) {
-            return hashCode;
-        }
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + tableName.hashCode();
-        return (hashCode = result);
+        return result;
     }
 
     @Override

@@ -34,9 +34,6 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final List<SourceQuery3> models;
-    /// Cached [#hashCode()] to improve performance for large, nested queries.
-    /// The hash code is used extensively when storing AST nodes in a hash set or a hash map.
-    private int hashCode = 0;
     
     public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
         // It is sufficient to use just the first model's yields because all models in a list must share the same yield aliases.
@@ -101,13 +98,10 @@ public class Source3BasedOnQueries extends AbstractSource3 {
 
     @Override
     public int hashCode() {
-        if (hashCode != 0) {
-            return hashCode;
-        }
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + models.hashCode();
-        return (hashCode = result);
+        return result;
     }
 
     @Override

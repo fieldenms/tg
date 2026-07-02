@@ -38,7 +38,7 @@ public class Prop3 extends AbstractSingleOperand3 {
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + name.hashCode();
-        result = prime * result + (source == null ? 0 : source.hashCode());
+        result = prime * result + (source == null ? 0 : source.id().hashCode());
         return result;
     }
 
@@ -47,7 +47,7 @@ public class Prop3 extends AbstractSingleOperand3 {
         return this == obj
                || obj instanceof Prop3 that
                   && Objects.equals(name, that.name)
-                  && Objects.equals(source, that.source)
+                  && Objects.equals(source.id(), that.source.id())
                   && super.equals(that);
     }
 
