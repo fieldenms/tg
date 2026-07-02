@@ -249,11 +249,15 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             return false;
         }
 
-        if (!TimeZone.getTimeZone(zoneId).equals(TimeZone.getDefault())) {
+        // Compare by zone rules rather than by ID (i.e. not `TimeZone.equals`, which compares IDs).
+        // This way, equivalent zones are treated as matching -- e.g. `UTC` and `Etc/UTC`, or `America/New_York` and `US/Eastern`.
+        // It matters in practice because CI/containerised JVMs commonly resolve the default zone to an alias such as `Etc/UTC`,
+        // which would otherwise cause a test annotated with `@RequireTimezone("UTC")` to be silently ignored.
+        if (!zoneId.getRules().equals(ZoneId.systemDefault().getRules())) {
             logger.info(() -> INFO_TEST_IGNORED_DUE_TO_TIMEZONE.formatted(
                     "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName()),
                     atRequireTimezone.value(),
-                    TimeZone.getDefault()));
+                    ZoneId.systemDefault()));
             return false;
         }
 

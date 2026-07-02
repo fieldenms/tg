@@ -7,10 +7,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.time.ZoneId;
-import java.util.TimeZone;
 
-/// When this annotation is present on a JUnit test method, it will be ignored if the timezone specified in the annotation
-/// does not match [the default timezone][TimeZone#getDefault()].
+/// When this annotation is present on a JUnit test method, the test is ignored unless the timezone specified in the annotation
+/// matches [the default timezone][ZoneId#systemDefault()].
+///
+/// Matching is by zone rules, not by ID, so equivalent zones are considered a match.
+/// For example, `UTC` matches a default of `Etc/UTC`, and `America/New_York` matches `US/Eastern`.
+/// This matters because CI and containerised JVMs commonly resolve the default zone to such an alias.
 ///
 /// Note that the test runner, specified in [RunWith], must support this annotation for it to have effect.
 ///
