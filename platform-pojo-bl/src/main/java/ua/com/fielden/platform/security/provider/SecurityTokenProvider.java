@@ -20,7 +20,6 @@ import ua.com.fielden.platform.security.tokens.attachment.*;
 import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.persistent.*;
 import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanReadModel_Token;
@@ -67,7 +66,6 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             ReUser_CanRead_Token.class,
             ReUser_CanReadModel_Token.class,
             User_CanDelete_Token.class,
-            UserMaster_CanOpen_Token.class,
             OpenUserMasterAction_CanOpen_Token.class,
             UserMaster_OpenMain_MenuItem_CanAccess_Token.class,
             UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token.class,

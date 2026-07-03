@@ -10,7 +10,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.security.tokens.*;
-import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
 import java.util.Set;
@@ -119,7 +119,7 @@ public class SecurityTokenProviderAndNodeConstructionTest {
     }
 
     private static class SecurityTokenProviderWithExclusion extends SecurityTokenProvider {
-        static final Class<UserMaster_CanOpen_Token> EXCLUDED_TOKEN = UserMaster_CanOpen_Token.class;
+        static final Class<UserRoleMaster_CanOpen_Token> EXCLUDED_TOKEN = UserRoleMaster_CanOpen_Token.class;
 
         @Inject
         SecurityTokenProviderWithExclusion(final @Named("tokens.path") String path, final @Named("tokens.package") String packageName) {
