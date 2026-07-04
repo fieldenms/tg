@@ -8,11 +8,11 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerContextSelector;
 
 import java.time.DateTimeException;
-import java.util.TimeZone;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.test_utils.TestUtils.withTimeZone;
 
 /// Verifies that the TG test runner correctly decides whether a test method should be ignored based on the [RequireTimezone] annotation.
 ///
@@ -25,7 +25,7 @@ public class RequireTimezoneTest extends AbstractDaoTestCase {
 
     @Test
     public void method_is_ignored_only_when_the_required_timezone_does_not_match_the_default_one() throws Exception {
-        withTimezone(TZ_PARIS, () -> {
+        withTimeZone(TZ_PARIS, () -> {
             final var runner = new H2OrPostgreSqlOrSqlServerContextSelector(MyTest.class);
             assertTrue("Method should be ignored when @RequireTimezone does not match the default timezone.",
                        runner.isIgnored(findMethod(runner, "test_in_utc")));
@@ -35,7 +35,7 @@ public class RequireTimezoneTest extends AbstractDaoTestCase {
                         runner.isIgnored(findMethod(runner, "test_anywhere")));
         });
 
-        withTimezone(TZ_UTC, () -> {
+        withTimeZone(TZ_UTC, () -> {
             final var runner = new H2OrPostgreSqlOrSqlServerContextSelector(MyTest.class);
             assertTrue("Method should be ignored when @RequireTimezone does not match the default timezone.",
                        runner.isIgnored(findMethod(runner, "test_in_paris")));
@@ -82,24 +82,6 @@ public class RequireTimezoneTest extends AbstractDaoTestCase {
                 .filter(m -> m.getName().equals(name))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Fixture is missing test method [%s].".formatted(name)));
-    }
-
-    @FunctionalInterface
-    private interface ThrowingRunnable {
-        void run() throws Exception;
-    }
-
-    /// Sets the JVM default timezone for the duration of `action` and restores it afterwards.
-    /// Single-threaded test execution is assumed, in line with the project-wide convention.
-    ///
-    private static void withTimezone(final String tzId, final ThrowingRunnable action) throws Exception {
-        final TimeZone original = TimeZone.getDefault();
-        try {
-            TimeZone.setDefault(TimeZone.getTimeZone(tzId));
-            action.run();
-        } finally {
-            TimeZone.setDefault(original);
-        }
     }
 
 }

@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.types;
 
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import ua.com.fielden.platform.persistence.types.UtcDateTimeType;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
@@ -20,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
+import static ua.com.fielden.platform.test_utils.TestUtils.withTimeZone;
 
 /**
  * A test case covering the usage of {@link UtcDateTimeType} in queries (persistence, retrieval).
@@ -122,22 +122,6 @@ public class UtcDateTimeQueryingTestCase extends AbstractDaoTestCase {
         final var query = select().yield().val(myDate).as("dateProp").modelAsEntity(TgEntityWithTimeZoneDates.class);
         final TgEntityWithTimeZoneDates entity = co(TgEntityWithTimeZoneDates.class).getEntity(from(query).model());
         assertEquals(myDate, entity.getDateProp());
-    }
-
-    // ============================================================
-    // UTILITIES
-    // ============================================================
-
-    private static void withTimeZone(final TimeZone timeZone, final ThrowingRunnable runnable) {
-        final TimeZone origTz = TimeZone.getDefault();
-        TimeZone.setDefault(timeZone);
-        try {
-            runnable.run();
-        } catch (final Throwable e) {
-            throw new RuntimeException(e);
-        } finally {
-            TimeZone.setDefault(origTz);
-        }
     }
 
 }
