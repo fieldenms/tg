@@ -29,12 +29,12 @@ public class RequireTimeZoneTest extends AbstractDaoTestCase {
     private static final String TZ_UTC = "UTC";
 
     @Test
-    public void method_is_ignored_only_when_the_required_timezone_does_not_match_the_default_one() throws Exception {
+    public void method_is_ignored_only_when_the_required_time_zone_does_not_match_the_default_one() throws Exception {
         withTimeZone(TZ_PARIS, () -> {
             final var runner = new H2OrPostgreSqlOrSqlServerContextSelector(MyTest.class);
-            assertTrue("Method should be ignored when @RequireTimeZone does not match the default timezone.",
+            assertTrue("Method should be ignored when @RequireTimeZone does not match the default time zone.",
                        runner.isIgnored(findMethod(runner, "test_in_utc")));
-            assertFalse("Method should not be ignored when @RequireTimeZone matches the default timezone.",
+            assertFalse("Method should not be ignored when @RequireTimeZone matches the default time zone.",
                         runner.isIgnored(findMethod(runner, "test_in_paris")));
             assertFalse("Method should not be ignored when @RequireTimeZone is absent.",
                         runner.isIgnored(findMethod(runner, "test_anywhere")));
@@ -42,9 +42,9 @@ public class RequireTimeZoneTest extends AbstractDaoTestCase {
 
         withTimeZone(TZ_UTC, () -> {
             final var runner = new H2OrPostgreSqlOrSqlServerContextSelector(MyTest.class);
-            assertTrue("Method should be ignored when @RequireTimeZone does not match the default timezone.",
+            assertTrue("Method should be ignored when @RequireTimeZone does not match the default time zone.",
                        runner.isIgnored(findMethod(runner, "test_in_paris")));
-            assertFalse("Method should not be ignored when @RequireTimeZone matches the default timezone.",
+            assertFalse("Method should not be ignored when @RequireTimeZone matches the default time zone.",
                         runner.isIgnored(findMethod(runner, "test_in_utc")));
             assertFalse("Method should not be ignored when @RequireTimeZone is absent.",
                         runner.isIgnored(findMethod(runner, "test_anywhere")));
@@ -52,19 +52,19 @@ public class RequireTimeZoneTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void an_invalid_required_timezone_raises_an_exception_rather_than_silently_ignoring_the_test() throws Exception {
+    public void an_invalid_required_time_zone_raises_an_exception_rather_than_silently_ignoring_the_test() throws Exception {
         final var runner = new H2OrPostgreSqlOrSqlServerContextSelector(MyTest.class);
         final var ex = assertThrows("An invalid @RequireTimeZone should fail loudly rather than silently ignore the test.",
                                     DomainDrivenTestException.class,
-                                    () -> runner.isIgnored(findMethod(runner, "test_with_invalid_timezone")));
-        assertTrue("The underlying timezone parsing error should be preserved as the cause.",
+                                    () -> runner.isIgnored(findMethod(runner, "test_with_invalid_time_zone")));
+        assertTrue("The underlying time zone parsing error should be preserved as the cause.",
                    ex.getCause() instanceof DateTimeException);
     }
 
     @Test
-    public void an_invalid_required_timezone_fails_only_its_own_method_and_does_not_abort_the_class() throws Exception {
+    public void an_invalid_required_time_zone_fails_only_its_own_method_and_does_not_abort_the_class() throws Exception {
         final var runner = new H2OrPostgreSqlOrSqlServerContextSelector(MyTest.class);
-        final var invalidMethod = findMethod(runner, "test_with_invalid_timezone");
+        final var invalidMethod = findMethod(runner, "test_with_invalid_time_zone");
 
         final var failures = new ArrayList<Failure>();
         final var notifier = new RunNotifier();
@@ -81,7 +81,7 @@ public class RequireTimeZoneTest extends AbstractDaoTestCase {
         assertEquals("Exactly one test failure should be reported.", 1, failures.size());
         final var failure = failures.get(0);
         assertEquals("The failure should be attributed to the offending method, not the class.",
-                     "test_with_invalid_timezone", failure.getDescription().getMethodName());
+                     "test_with_invalid_time_zone", failure.getDescription().getMethodName());
         assertTrue("The failure should carry a DomainDrivenTestException.",
                    failure.getException() instanceof DomainDrivenTestException);
     }
@@ -102,7 +102,7 @@ public class RequireTimeZoneTest extends AbstractDaoTestCase {
 
         @Test
         @RequireTimeZone("I don‘t exist")
-        public void test_with_invalid_timezone() {}
+        public void test_with_invalid_time_zone() {}
     }
 
     // ---- Helpers ----

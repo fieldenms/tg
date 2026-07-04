@@ -140,7 +140,7 @@ public final class TestUtils {
         return collection;
     }
 
-    /// Runs `action` with the JVM default timezone temporarily set to `timeZone`, restoring the previous default afterwards.
+    /// Runs `action` with the JVM default time zone temporarily set to `timeZone`, restoring the previous default afterwards.
     ///
     /// A checked exception raised by `action` is rethrown wrapped in a [RuntimeException]; unchecked throwables (including assertion failures) propagate unchanged.
     /// Single-threaded test execution is assumed, in line with the project-wide convention.
@@ -159,7 +159,7 @@ public final class TestUtils {
         }
     }
 
-    /// Overload of [#withTimeZone(TimeZone, ThrowingRunnable)] accepting a timezone ID, as per [TimeZone#getTimeZone(String)].
+    /// Overload of [#withTimeZone(TimeZone, ThrowingRunnable)] accepting a time zone ID, as per [TimeZone#getTimeZone(String)].
     ///
     public static void withTimeZone(final String timeZoneId, final ThrowingRunnable action) {
         withTimeZone(TimeZone.getTimeZone(timeZoneId), action);

@@ -41,8 +41,8 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             ERR_INVALID_TYPE = "Test case [%s] should extend [%s].",
             ERR_MISSING_DB_CREATOR = "DbCreator type was not provided, but is required.",
             ERR_FAILED_TO_CREATE_TEST_CONFIGURATION = "Could not create test configuration.",
-            INFO_TEST_IGNORED_DUE_TO_TIMEZONE = "Test [%s] is ignored because it requires timezone [%s] while the actual is [%s].",
-            ERR_INVALID_TIMEZONE = "Test [%s] specifies an unrecognised timezone [%s] in @%s.";
+            INFO_TEST_IGNORED_DUE_TO_TIME_ZONE = "Test [%s] is ignored because it requires time zone [%s] while the actual is [%s].",
+            ERR_INVALID_TIME_ZONE = "Test [%s] specifies an unrecognised time zone [%s] in @%s.";
 
     public final Logger logger = getLogger(getClass());
 
@@ -259,10 +259,10 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         try {
             zoneId = ZoneId.of(atRequireTimeZone.value());
         } catch (final DateTimeException ex) {
-            // An unparseable timezone is a programming error (e.g., a typo), not an environmental condition.
+            // An unparseable time zone is a programming error (e.g., a typo), not an environmental condition.
             // Fail loudly rather than silently ignoring the test, which would otherwise hide the mistake in every environment.
             throw new DomainDrivenTestException(
-                    ERR_INVALID_TIMEZONE.formatted(
+                    ERR_INVALID_TIME_ZONE.formatted(
                             methodId(child),
                             atRequireTimeZone.value(),
                             RequireTimeZone.class.getSimpleName()),
@@ -274,7 +274,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         // It matters in practice because CI/containerised JVMs commonly resolve the default zone to an alias such as `Etc/UTC`,
         // which would otherwise cause a test annotated with `@RequireTimeZone("UTC")` to be silently ignored.
         if (!zoneId.getRules().equals(ZoneId.systemDefault().getRules())) {
-            logger.info(() -> INFO_TEST_IGNORED_DUE_TO_TIMEZONE.formatted(
+            logger.info(() -> INFO_TEST_IGNORED_DUE_TO_TIME_ZONE.formatted(
                     methodId(child),
                     atRequireTimeZone.value(),
                     ZoneId.systemDefault()));

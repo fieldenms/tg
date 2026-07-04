@@ -8,8 +8,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.time.ZoneId;
 
-/// When this annotation is present on a JUnit test method, the test is ignored unless the timezone specified in the annotation
-/// matches [the default timezone][ZoneId#systemDefault()].
+/// When this annotation is present on a JUnit test method, the test is ignored unless the time zone specified in the annotation
+/// matches [the default time zone][ZoneId#systemDefault()].
 ///
 /// Matching is by zone rules, not by ID, so equivalent zones are considered a match.
 /// For example, `UTC` matches a default of `Etc/UTC`, and `America/New_York` matches `US/Eastern`.
@@ -21,7 +21,7 @@ import java.time.ZoneId;
 @Target(ElementType.METHOD)
 public @interface RequireTimeZone {
 
-    /// A timezone ID, as accepted by [ZoneId#of(String)].
+    /// A time zone ID, as accepted by [ZoneId#of(String)].
     /// A common accepted format is `{area}/{city}` (e.g., `Australia/Melbourne`).
     ///
     /// An unrecognised value causes the test to fail rather than be ignored,
