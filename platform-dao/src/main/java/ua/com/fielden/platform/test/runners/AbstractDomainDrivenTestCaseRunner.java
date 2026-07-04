@@ -220,7 +220,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         final var dbVersionMatches = atWithDbVersion == null || ArrayUtils.contains(atWithDbVersion.value(), dbVersionProvider.dbVersion());
         if (!dbVersionMatches) {
             logger.info(() -> INFO_TEST_IGNORED_DUE_TO_DB_VERSION.formatted(
-                              "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName()),
+                              methodId(child),
                               Arrays.toString(atWithDbVersion.value()),
                               dbVersionProvider.dbVersion()));
             return true;
@@ -247,7 +247,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             // Fail loudly rather than silently ignoring the test, which would otherwise hide the mistake in every environment.
             throw new DomainDrivenTestException(
                     ERR_INVALID_TIMEZONE.formatted(
-                            "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName()),
+                            methodId(child),
                             atRequireTimezone.value(),
                             RequireTimezone.class.getSimpleName()),
                     ex);
@@ -259,13 +259,19 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         // which would otherwise cause a test annotated with `@RequireTimezone("UTC")` to be silently ignored.
         if (!zoneId.getRules().equals(ZoneId.systemDefault().getRules())) {
             logger.info(() -> INFO_TEST_IGNORED_DUE_TO_TIMEZONE.formatted(
-                    "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName()),
+                    methodId(child),
                     atRequireTimezone.value(),
                     ZoneId.systemDefault()));
             return false;
         }
 
         return true;
+    }
+
+    /// Returns a human-readable identifier for `method`, in the form `SimpleDeclaringClassName.methodName`, for use in log and error messages.
+    ///
+    private static String methodId(final FrameworkMethod method) {
+        return "%s.%s".formatted(method.getDeclaringClass().getSimpleName(), method.getName());
     }
 
     /// A helper function to instantiate a test case configuration as specified in `props` under the property `"config.domain"`.
