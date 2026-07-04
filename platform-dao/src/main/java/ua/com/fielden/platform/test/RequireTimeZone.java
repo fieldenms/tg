@@ -19,7 +19,7 @@ import java.time.ZoneId;
 ///
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface RequireTimezone {
+public @interface RequireTimeZone {
 
     /// A timezone ID, as accepted by [ZoneId#of(String)].
     /// A common accepted format is `{area}/{city}` (e.g., `Australia/Melbourne`).

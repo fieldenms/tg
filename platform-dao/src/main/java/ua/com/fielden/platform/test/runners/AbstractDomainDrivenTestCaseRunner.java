@@ -32,7 +32,7 @@ import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 ///
 /// * Supports [WithDbVersion].
 ///
-/// * Supports [RequireTimezone].
+/// * Supports [RequireTimeZone].
 ///
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
@@ -202,7 +202,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     /// This ensures that tests using [CommonEntityDao#setMoreData(String, IContinuationData)]
     /// do not fail due to the absence of a bound scoped storage.
     ///
-    /// If [#isIgnored(FrameworkMethod)] raises a [DomainDrivenTestException] (e.g., due to an invalid [RequireTimezone] value),
+    /// If [#isIgnored(FrameworkMethod)] raises a [DomainDrivenTestException] (e.g., due to an invalid [RequireTimeZone] value),
     /// the error is reported as a failure of this method alone.
     /// This is deliberate: the exception would otherwise propagate up to [org.junit.runners.ParentRunner], which reports it as a
     /// class-level failure and aborts all remaining methods in the class, including those unrelated to the misconfiguration.
@@ -242,41 +242,41 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             return true;
         }
 
-        if (!hasRequiredTimezone(child)) {
+        if (!hasRequiredTimeZone(child)) {
             return true;
         }
 
         return false;
     }
 
-    private boolean hasRequiredTimezone(final FrameworkMethod child) {
-        final var atRequireTimezone = child.getAnnotation(RequireTimezone.class);
-        if (atRequireTimezone == null) {
+    private boolean hasRequiredTimeZone(final FrameworkMethod child) {
+        final var atRequireTimeZone = child.getAnnotation(RequireTimeZone.class);
+        if (atRequireTimeZone == null) {
             return true;
         }
 
         final ZoneId zoneId;
         try {
-            zoneId = ZoneId.of(atRequireTimezone.value());
+            zoneId = ZoneId.of(atRequireTimeZone.value());
         } catch (final DateTimeException ex) {
             // An unparseable timezone is a programming error (e.g., a typo), not an environmental condition.
             // Fail loudly rather than silently ignoring the test, which would otherwise hide the mistake in every environment.
             throw new DomainDrivenTestException(
                     ERR_INVALID_TIMEZONE.formatted(
                             methodId(child),
-                            atRequireTimezone.value(),
-                            RequireTimezone.class.getSimpleName()),
+                            atRequireTimeZone.value(),
+                            RequireTimeZone.class.getSimpleName()),
                     ex);
         }
 
         // Compare by zone rules rather than by ID (i.e. not `TimeZone.equals`, which compares IDs).
         // This way, equivalent zones are treated as matching -- e.g. `UTC` and `Etc/UTC`, or `America/New_York` and `US/Eastern`.
         // It matters in practice because CI/containerised JVMs commonly resolve the default zone to an alias such as `Etc/UTC`,
-        // which would otherwise cause a test annotated with `@RequireTimezone("UTC")` to be silently ignored.
+        // which would otherwise cause a test annotated with `@RequireTimeZone("UTC")` to be silently ignored.
         if (!zoneId.getRules().equals(ZoneId.systemDefault().getRules())) {
             logger.info(() -> INFO_TEST_IGNORED_DUE_TO_TIMEZONE.formatted(
                     methodId(child),
-                    atRequireTimezone.value(),
+                    atRequireTimeZone.value(),
                     ZoneId.systemDefault()));
             return false;
         }
