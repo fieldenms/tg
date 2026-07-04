@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.types;
 
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import ua.com.fielden.platform.persistence.types.UtcDateTimeType;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
@@ -20,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
+import static ua.com.fielden.platform.test_utils.TestUtils.withTimeZone;
 
 /**
  * A test case covering the usage of {@link UtcDateTimeType} in queries (persistence, retrieval).
@@ -55,7 +55,7 @@ public class UtcDateTimeQueryingTestCase extends AbstractDaoTestCase {
     }
     
     @Test
-    public void date_conversions_between_local_and_UTC_timezone_using_string_representation_works_as_expected() throws Exception {
+    public void date_conversions_between_local_and_UTC_time_zone_using_string_representation_works_as_expected() throws Exception {
         final Date localDate = localFormat.parse("2016-01-01 11:00:00");
         final Date utcDate = utcFormat.parse("2016-01-01 00:00:00");
         
@@ -70,7 +70,7 @@ public class UtcDateTimeQueryingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void fetched_value_of_utc_datetime_property_is_the_same_across_different_timezones() {
+    public void fetched_value_of_utc_datetime_property_is_the_same_across_different_time_zones() {
         final var co = co(TgEntityWithTimeZoneDates.class);
         final var fetch = fetch(TgEntityWithTimeZoneDates.class).with("datePropUtc");
         final var key = "something_unique_87321";
@@ -88,7 +88,7 @@ public class UtcDateTimeQueryingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void fetched_value_of_datetime_property_is_different_across_different_timezones() {
+    public void fetched_value_of_datetime_property_is_different_across_different_time_zones() {
         final var co = co(TgEntityWithTimeZoneDates.class);
         final var fetch = fetch(TgEntityWithTimeZoneDates.class).with("dateProp");
         final var key = "something_unique_74329";
@@ -106,7 +106,7 @@ public class UtcDateTimeQueryingTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void Date_val_yielded_as_UTC_datetime_property_is_offset_from_fetched_val_by_default_timezone() {
+    public void Date_val_yielded_as_UTC_datetime_property_is_offset_from_fetched_val_by_default_time_zone() {
         withTimeZone(TimeZone.getTimeZone(ZoneId.of("+06")), () -> {
             // 14:10 in +06 gets saved as 14:10 in UTC which is 20:10 in +06
             final Date myDate = date("2024-04-18 14:10:00");
@@ -122,22 +122,6 @@ public class UtcDateTimeQueryingTestCase extends AbstractDaoTestCase {
         final var query = select().yield().val(myDate).as("dateProp").modelAsEntity(TgEntityWithTimeZoneDates.class);
         final TgEntityWithTimeZoneDates entity = co(TgEntityWithTimeZoneDates.class).getEntity(from(query).model());
         assertEquals(myDate, entity.getDateProp());
-    }
-
-    // ============================================================
-    // UTILITIES
-    // ============================================================
-
-    private static void withTimeZone(final TimeZone timeZone, final ThrowingRunnable runnable) {
-        final TimeZone origTz = TimeZone.getDefault();
-        TimeZone.setDefault(timeZone);
-        try {
-            runnable.run();
-        } catch (final Throwable e) {
-            throw new RuntimeException(e);
-        } finally {
-            TimeZone.setDefault(origTz);
-        }
     }
 
 }
