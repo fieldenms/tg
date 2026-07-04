@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.test.runners;
 
 import org.junit.Test;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
+import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.FrameworkMethod;
 import ua.com.fielden.platform.test.RequireTimezone;
 import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
@@ -8,7 +11,9 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerContextSelector;
 
 import java.time.DateTimeException;
+import java.util.ArrayList;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -54,6 +59,31 @@ public class RequireTimezoneTest extends AbstractDaoTestCase {
                                     () -> runner.isIgnored(findMethod(runner, "test_with_invalid_timezone")));
         assertTrue("The underlying timezone parsing error should be preserved as the cause.",
                    ex.getCause() instanceof DateTimeException);
+    }
+
+    @Test
+    public void an_invalid_required_timezone_fails_only_its_own_method_and_does_not_abort_the_class() throws Exception {
+        final var runner = new H2OrPostgreSqlOrSqlServerContextSelector(MyTest.class);
+        final var invalidMethod = findMethod(runner, "test_with_invalid_timezone");
+
+        final var failures = new ArrayList<Failure>();
+        final var notifier = new RunNotifier();
+        notifier.addListener(new RunListener() {
+            @Override
+            public void testFailure(final Failure failure) {
+                failures.add(failure);
+            }
+        });
+
+        // Must return normally: were the exception to propagate out of runChild, JUnit would abort the whole class.
+        runner.runChild(invalidMethod, notifier);
+
+        assertEquals("Exactly one test failure should be reported.", 1, failures.size());
+        final var failure = failures.get(0);
+        assertEquals("The failure should be attributed to the offending method, not the class.",
+                     "test_with_invalid_timezone", failure.getDescription().getMethodName());
+        assertTrue("The failure should carry a DomainDrivenTestException.",
+                   failure.getException() instanceof DomainDrivenTestException);
     }
 
     // ---- Fixture classes used as input to the runner under test ----

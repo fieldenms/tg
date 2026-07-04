@@ -2,6 +2,8 @@ package ua.com.fielden.platform.test.runners;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.Logger;
+import org.junit.runner.Description;
+import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
@@ -200,13 +202,27 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     /// This ensures that tests using [CommonEntityDao#setMoreData(String, IContinuationData)]
     /// do not fail due to the absence of a bound scoped storage.
     ///
+    /// If [#isIgnored(FrameworkMethod)] raises a [DomainDrivenTestException] (e.g., due to an invalid [RequireTimezone] value),
+    /// the error is reported as a failure of this method alone.
+    /// This is deliberate: the exception would otherwise propagate up to [org.junit.runners.ParentRunner], which reports it as a
+    /// class-level failure and aborts all remaining methods in the class, including those unrelated to the misconfiguration.
+    ///
     @Override
-    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-        if (!method.getMethod().isAnnotationPresent(SkipNeedMoreDataStorageBinding.class)) {
-            NeedMoreDataStorage.runWithMoreData(Map.of(), () -> super.runChild(method, notifier));
-        }
-        else {
-            super.runChild(method, notifier);
+    protected void runChild(final FrameworkMethod method, final RunNotifier notifier) {
+        try {
+            if (!method.getMethod().isAnnotationPresent(SkipNeedMoreDataStorageBinding.class)) {
+                NeedMoreDataStorage.runWithMoreData(Map.of(), () -> super.runChild(method, notifier));
+            }
+            else {
+                super.runChild(method, notifier);
+            }
+        } catch (final DomainDrivenTestException ex) {
+            // Only `isIgnored` can propagate this exception out of `super.runChild`:
+            // a test body's exceptions are caught and reported by JUnit's `runLeaf`, never rethrown.
+            final Description description = describeChild(method);
+            notifier.fireTestStarted(description);
+            notifier.fireTestFailure(new Failure(description, ex));
+            notifier.fireTestFinished(description);
         }
     }
 
