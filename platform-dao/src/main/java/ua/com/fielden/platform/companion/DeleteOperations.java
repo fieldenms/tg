@@ -98,11 +98,37 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             throw new EntityCompanionException(ERR_DIRTY_CANNOT_BE_DELETED);
         }
 
+        return deleteById(beforeDeletingActivatable(entity));
+    }
+
+    private T beforeDeletingActivatable(final T entity) {
         if (entity instanceof ActivatableAbstractEntity<?> activatable) {
-            return deleteActivatable(activatable);
-        } else {
-            return deleteById(entity.getId());
+            // Iff the persisted version of `entity` is active, we need to decrement refCounts of referenced active activatables, ignoring self-references.
+            // Reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed.
+            final var persistedEntity = (ActivatableAbstractEntity<?>) session.get().load(activatable.getType(), activatable.getId(), UPGRADE);
+            if (persistedEntity.isActive()) {
+                // Let's collect activatable properties from entity to check them for activity and also to decrement their refCount.
+                // If `prop` is proxied, its value will be retrieved lazily by Hibernate.
+                // Load the latest activatable value.
+                // If `persistedActivatable` is active and not a self-reference, then its `refCount` needs to be decremented.
+                activatableProperties((Class<? extends ActivatableAbstractEntity<?>>) activatable.getType(), persistedEntity)
+                        .map(prop -> extractActivatable(persistedEntity.get(prop)))
+                        .filter(Objects::nonNull)
+                        .map(ref -> (ActivatableAbstractEntity<?>) session.get().load(ref.getType(), ref.getId(), UPGRADE))
+                        .forEach(persistedActivatable -> {
+                            persistedActivatable.setIgnoreEditableState(true);
+                            if (persistedActivatable.isActive() && !activatable.equals(persistedActivatable)) {
+                                session.get().update(persistedActivatable.decRefCount());
+                            }
+                        });
+            }
         }
+
+        return entity;
+    }
+
+    private int deleteById(final T entity) {
+        return deleteById(entity.getId());
     }
 
     /// Deletes an entity by ID.
@@ -119,33 +145,6 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             LOGGER.error(msg, ex);
             throw new EntityDeletionException(msg, ex.getCause());
         }
-    }
-
-    /// Deletes the specified activatable entity, and decrements the `refCount` of referenced activatables if applicable.
-    ///
-    @SuppressWarnings("unchecked")
-    private int deleteActivatable(final ActivatableAbstractEntity<?> entity) {
-        // Iff the persisted version of `entity` is active, we need to decrement refCounts of referenced active activatables, ignoring self-references.
-        // Reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed.
-        final var persistedEntity = (ActivatableAbstractEntity<?>) session.get().load(entity.getType(), entity.getId(), UPGRADE);
-        if (persistedEntity.isActive()) {
-            // Let's collect activatable properties from entity to check them for activity and also to decrement their refCount.
-            // If `prop` is proxied, its value will be retrieved lazily by Hibernate.
-            // Load the latest activatable value.
-            // If `persistedActivatable` is active and not a self-reference, then its `refCount` needs to be decremented.
-            activatableProperties((Class<? extends ActivatableAbstractEntity<?>>) entity.getType(), persistedEntity)
-                    .map(prop -> extractActivatable(persistedEntity.get(prop)))
-                    .filter(Objects::nonNull)
-                    .map(activatable -> (ActivatableAbstractEntity<?>) session.get().load(activatable.getType(), activatable.getId(), UPGRADE))
-                    .forEach(persistedActivatable -> {
-                        persistedActivatable.setIgnoreEditableState(true);
-                        if (persistedActivatable.isActive() && !entity.equals(persistedActivatable)) {
-                            session.get().update(persistedActivatable.decRefCount());
-                        }
-                    });
-        }
-
-        return deleteById(entity.getId());
     }
 
     private Stream<String> activatableProperties(final Class<? extends ActivatableAbstractEntity<?>> entityType, final AbstractEntity<?> persistedEntity) {
