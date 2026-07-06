@@ -10,6 +10,12 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 /// Specific types derived from this one are expected to declare properties [#AUDIT_ENTITY] and [#PROPERTY].
 /// These properties cannot be declared in this base type due to a limitation on using type variables in property types.
 ///
+/// ### Deletion
+///
+/// Audit-prop companions **do not support deletion**.
+/// Instead, audit records are cascade deleted when the corresponding audited record is (as referenced by [AbstractAuditEntity#AUDITED_ENTITY]).
+/// This coupling of deletion at the model level prevents manipulation of an entity's audit trail.
+///
 /// @param <E>  type of the audited entity
 ///
 @KeyType(DynamicEntityKey.class)

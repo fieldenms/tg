@@ -7,6 +7,10 @@ import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
+import ua.com.fielden.platform.audit.AbstractAuditEntity;
+import ua.com.fielden.platform.audit.AbstractAuditProp;
+import ua.com.fielden.platform.audit.AuditingMode;
+import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
@@ -17,6 +21,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -32,6 +37,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.hibernate.LockOptions.UPGRADE;
+import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -57,6 +63,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     private final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory;
     private final IDomainMetadata domainMetadata;
     private final ICompanionObjectFinder coFinder;
+    private final AuditingMode auditingMode;
+    private final IAuditTypeFinder auditTypeFinder;
 
     @Inject
     public DeleteOperations(
@@ -66,7 +74,9 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             final EqlTables eqlTables,
             final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory,
             final IDomainMetadata domainMetadata,
-            final ICompanionObjectFinder coFinder)
+            final ICompanionObjectFinder coFinder,
+            final AuditingMode auditingMode,
+            final IAuditTypeFinder auditTypeFinder)
     {
         this.reader = reader;
         this.session = session;
@@ -74,6 +84,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         this.entityBatchDeleteFactory = entityBatchDeleteFactory;
         this.domainMetadata = domainMetadata;
         this.coFinder = coFinder;
+        this.auditingMode = auditingMode;
+        this.auditTypeFinder = auditTypeFinder;
         this.batchDeleteByIdsOp = () -> new EntityBatchDeleteByIdsOperation<>(session.get(), eqlTables.getTableForEntityType(entityType));
     }
 
@@ -98,7 +110,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             throw new EntityCompanionException(ERR_DIRTY_CANNOT_BE_DELETED);
         }
 
-        return deleteById(beforeDeletingActivatable(entity));
+        return deleteById(beforeDeletingAudited(beforeDeletingActivatable(entity)));
     }
 
     private T beforeDeletingActivatable(final T entity) {
@@ -124,6 +136,35 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             }
         }
 
+        return entity;
+    }
+
+    private void beforeDeletingAudited(final SingleResultQueryModel<T> model, final Map<String, Object> parameters) {
+        if (auditingMode == AuditingMode.ENABLED && isAudited(entityType)) {
+            // Delete all audit-prop records, then all audit-entity records (the latter are referenced by the former).
+            // Do this for all audit type versions.
+            // Delete directly rather than via companions, which delibaretly do not support deletion on their own.
+            for (final var auditPropType : auditTypeFinder.navigate(entityType).allAuditPropTypes()) {
+                entityBatchDeleteFactory.create(session).deleteEntities(
+                        select(auditPropType).where().prop(AbstractAuditProp.AUDIT_ENTITY + "." + AbstractAuditEntity.AUDITED_ENTITY).in().model(model).model(),
+                        parameters);
+            }
+            for (final var auditEntityType : auditTypeFinder.navigate(entityType).allAuditEntityTypes()) {
+                entityBatchDeleteFactory.create(session).deleteEntities(
+                        select(auditEntityType).where().prop(AbstractAuditEntity.AUDITED_ENTITY).in().model(model).model(),
+                        parameters);
+            }
+        }
+    }
+
+    private void beforeDeletingAudited(final SingleResultQueryModel<T> model) {
+        beforeDeletingAudited(model, Map.of());
+    }
+
+    private T beforeDeletingAudited(final T entity) {
+        @SuppressWarnings("unchecked")
+        final SingleResultQueryModel<T> model = select().yield().val(entity.getId()).modelAsPrimitive();
+        beforeDeletingAudited(model);
         return entity;
     }
 
@@ -194,6 +235,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         if (isActivatableEntityType(entityType)) {
             return defaultDelete(model, parameters);
         } else {
+            beforeDeletingAudited(model, parameters);
             return entityBatchDeleteFactory.create(session).deleteEntities(model, parameters);
         }
     }
@@ -227,6 +269,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         if (isActivatableEntityType(entityType)) {
             return defaultDelete(select(entityType).where().prop(propName).in().values(entitiesIds).model());
         } else {
+            beforeDeletingAudited(select(entityType).where().prop(propName).in().values(entitiesIds).model());
             return batchDeleteByIdsOp.get().deleteEntities(propName, entitiesIds);
         }
     }
@@ -247,22 +290,30 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         private final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory;
         private final IDomainMetadata domainMetadata;
         private final ICompanionObjectFinder coFinder;
+        private final AuditingMode auditingMode;
+        private final IAuditTypeFinder auditTypeFinder;
 
         @Inject
         FactoryImpl(final EqlTables eqlTables,
                     final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory,
                     final IDomainMetadata domainMetadata,
-                    final ICompanionObjectFinder coFinder) {
+                    final ICompanionObjectFinder coFinder,
+                    final AuditingMode auditingMode,
+                    final IAuditTypeFinder auditTypeFinder)
+        {
             this.eqlTables = eqlTables;
             this.entityBatchDeleteFactory = entityBatchDeleteFactory;
             this.domainMetadata = domainMetadata;
             this.coFinder = coFinder;
+            this.auditingMode = auditingMode;
+            this.auditTypeFinder = auditTypeFinder;
         }
 
         public <E extends AbstractEntity<?>> DeleteOperations<E> create(final IEntityReader<E> reader,
                                                                         final Supplier<Session> session,
                                                                         final Class<E> entityType) {
-            return new DeleteOperations<>(reader, session, entityType, eqlTables, entityBatchDeleteFactory, domainMetadata, coFinder);
+            return new DeleteOperations<>(reader, session, entityType, eqlTables, entityBatchDeleteFactory, domainMetadata, coFinder,
+                                          auditingMode, auditTypeFinder);
         }
     }
 
