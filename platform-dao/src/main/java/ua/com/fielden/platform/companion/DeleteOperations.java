@@ -3,6 +3,7 @@ package ua.com.fielden.platform.companion;
 import com.google.inject.ImplementedBy;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -51,10 +52,12 @@ import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 public final class DeleteOperations<T extends AbstractEntity<?>> {
 
     private static final Logger LOGGER = getLogger();
-    public static final String ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES = "Deletion was unsuccessful due to existing dependencies.";
-    public static final String ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_OTHER_REASONS = "Deletion was unsuccessful due to: %s";
-    public static final String ERR_ONLY_PERSISTED_CAN_BE_DELETED = "Only persisted entity instances can be deleted.";
-    public static final String ERR_DIRTY_CANNOT_BE_DELETED = "Dirty entity instances cannot be deleted.";
+
+    public static final String
+            ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES = "Deletion was unsuccessful due to existing dependencies.",
+            ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_OTHER_REASONS = "Deletion was unsuccessful due to: %s",
+            ERR_ONLY_PERSISTED_CAN_BE_DELETED = "Only persisted entity instances can be deleted.",
+            ERR_DIRTY_CANNOT_BE_DELETED = "Dirty entity instances cannot be deleted.";
 
     private final Supplier<Session> session;
     private final Class<T> entityType;
@@ -282,9 +285,9 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         return defaultBatchDeleteByPropertyValues(propName, propEntities.stream().map(AbstractEntity::getId).toList());
     }
 
-    // This factory must be implemented by hand since com.google.inject.assistedinject.FactoryModuleBuilder
-    // does not support generic factory methods.
-    static final class FactoryImpl implements Factory {
+    /// This factory must be implemented by hand since [FactoryModuleBuilder] does not support generic factory methods.
+    ///
+    static class FactoryImpl implements Factory {
 
         private final EqlTables eqlTables;
         private final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory;
@@ -294,12 +297,13 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         private final IAuditTypeFinder auditTypeFinder;
 
         @Inject
-        FactoryImpl(final EqlTables eqlTables,
-                    final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory,
-                    final IDomainMetadata domainMetadata,
-                    final ICompanionObjectFinder coFinder,
-                    final AuditingMode auditingMode,
-                    final IAuditTypeFinder auditTypeFinder)
+        protected FactoryImpl(
+                final EqlTables eqlTables,
+                final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory,
+                final IDomainMetadata domainMetadata,
+                final ICompanionObjectFinder coFinder,
+                final AuditingMode auditingMode,
+                final IAuditTypeFinder auditTypeFinder)
         {
             this.eqlTables = eqlTables;
             this.entityBatchDeleteFactory = entityBatchDeleteFactory;
@@ -309,12 +313,22 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             this.auditTypeFinder = auditTypeFinder;
         }
 
-        public <E extends AbstractEntity<?>> DeleteOperations<E> create(final IEntityReader<E> reader,
-                                                                        final Supplier<Session> session,
-                                                                        final Class<E> entityType) {
-            return new DeleteOperations<>(reader, session, entityType, eqlTables, entityBatchDeleteFactory, domainMetadata, coFinder,
-                                          auditingMode, auditTypeFinder);
+        public <E extends AbstractEntity<?>> DeleteOperations<E> create(
+                final IEntityReader<E> reader,
+                final Supplier<Session> session,
+                final Class<E> entityType)
+        {
+            return new DeleteOperations<>(reader,
+                                          session,
+                                          entityType,
+                                          eqlTables,
+                                          entityBatchDeleteFactory,
+                                          domainMetadata,
+                                          coFinder,
+                                          auditingMode,
+                                          auditTypeFinder);
         }
+
     }
 
 }
