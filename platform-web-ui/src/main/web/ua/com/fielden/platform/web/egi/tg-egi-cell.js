@@ -19,6 +19,10 @@ import { simplifyRichText } from '/resources/components/rich-text/tg-rich-text-u
 export const EGI_CELL_PADDING = "0.6rem";
 export const EGI_CELL_PADDING_TEMPLATE = html`0.6rem`;
 
+// The overflow button at the bottom of the template is stamped via dom-if (rather than always stamped and toggled with hidden$) so that a cell whose column has no multi-group property actions never instantiates a paper-icon-button.
+// An EGI renders as a non-virtualized dom-repeat of tg-egi-cell (one instance per row per column), so an always-stamped per-cell paper-icon-button would boot tens of thousands of elements on a large centre — a significant, purely wasted rendering cost, since almost all cells keep it hidden.
+// _hasOverflow depends only on column configuration (stable per column), so dom-if stamps the button once for the columns that need it and never for those that do not.
+// This explanation lives outside the html literal deliberately — a comment inside would be cloned as a comment node into every stamped cell instance.
 const template = html`
     <style>
         :host {
@@ -132,11 +136,6 @@ const template = html`
     <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" icon="[[_value]]"></iron-icon>
     <a class="value-container" hidden$="[[!_isHyperlinkProp(_hostComponent, _entity, column)]]" href$="[[_value]]" target="_blank" style$="[[_foregroundRendHints]]">[[_value]]</a>
     <div class="value-container" word-wrap$="[[column.wordWrap]]" hidden$="[[!_isNotBooleanOrHyperlinkProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" inner-h-t-m-l="[[_value]]"></div>
-    <!--
-      The overflow button is stamped via dom-if (rather than always stamped and toggled with hidden$) so that a cell whose column has no multi-group property actions never instantiates a paper-icon-button.
-      An EGI renders as a non-virtualized dom-repeat of tg-egi-cell (one instance per row per column), so an always-stamped per-cell paper-icon-button would boot tens of thousands of elements on a large centre — a significant, purely wasted rendering cost, since almost all cells keep it hidden.
-      _hasOverflow depends only on column configuration (stable per column), so dom-if stamps the button once for the columns that need it and never for those that do not.
-    -->
     <template is="dom-if" if="[[_hasOverflow(column)]]">
         <paper-icon-button id="dropdownAction" class="overflow-button" icon="more-vert" on-tap="_openOverflow" tooltip-text="Opens list of available actions"></paper-icon-button>
     </template>`;
