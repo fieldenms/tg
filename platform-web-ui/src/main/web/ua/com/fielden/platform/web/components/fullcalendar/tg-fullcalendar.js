@@ -173,6 +173,8 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
         this._appConfig = new TgAppConfig();
         // Raised when an event source rebuild is requested while the calendar is hidden; flushed by `_resizeEventListener` once the calendar becomes visible.
         this._pendingEventSourceUpdate = false;
+        // Latches whether a deferred rebuild still owes a navigate-to-first-event: a run deferred while hidden must navigate on flush even if a later refresh arrives before the flush.
+        this._pendingNavigate = false;
     }
 
     ready () {
@@ -323,19 +325,25 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
         }
         if (this.offsetParent === null) {
             this._pendingEventSourceUpdate = true;
+            // Latch the navigation intent at defer time: `dataChangeReason` reflects only the latest update, so a refresh arriving later while still hidden must not cancel the navigation owed to an earlier deferred run.
+            this._pendingNavigate = this._pendingNavigate || this.dataChangeReason !== RunActions.refresh;
             return;
         }
-        this._rebuildEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar);
+        // This rebuild supersedes any deferred one, consuming a latched navigation if such is owed.
+        this._pendingEventSourceUpdate = false;
+        const shouldNavigate = this._pendingNavigate || this.dataChangeReason !== RunActions.refresh;
+        this._pendingNavigate = false;
+        this._rebuildEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar, shouldNavigate);
     }
 
     /**
-     * Rebuilds calendar events from `entities`, navigating to the chronologically first event (if any); the calendar re-renders exactly once.
+     * Rebuilds calendar events from `entities`, navigating to the chronologically first event (if any) when `shouldNavigate` is true; the calendar re-renders exactly once.
      *
      * All mutations are grouped under `batchRendering` because FullCalendar otherwise re-renders synchronously after every single mutation
      * (each removed event, each added event, each navigation) — an unbatched rebuild triggers thousands of re-renders for large result sets.
      * The single re-render happens when the batch completes, hence no explicit `render()` call.
      */
-    _rebuildEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar) {
+    _rebuildEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar, shouldNavigate) {
         // Sentinels for open-ended events. Far enough outside any plausible calendar view to behave like ±infinity.
         const FAR_PAST = moment('1900-01-01').toDate();
         const FAR_FUTURE = moment('2200-01-01').toDate();
@@ -411,7 +419,7 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
                     }
                 });
                 // Navigate once, after the earliest event start across all entities is known.
-                if (this.dataChangeReason !== RunActions.refresh && startTime < Infinity) {
+                if (shouldNavigate && startTime < Infinity) {
                     _calendar.gotoDate(startTime);
                 }
             });
@@ -429,7 +437,9 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
             // `iron-resize` is guaranteed on becoming visible: `iron-pages` performs `notifyResize` on every selection change and the notification reaches this component through the resizable chain.
             if (this._pendingEventSourceUpdate && this.offsetParent !== null) {
                 this._pendingEventSourceUpdate = false;
-                this._rebuildEventSource(this.entities, this.eventKeyProperty, this.eventDescProperty, this.eventFromProperty, this.eventToProperty, this._calendar);
+                const shouldNavigate = this._pendingNavigate;
+                this._pendingNavigate = false;
+                this._rebuildEventSource(this.entities, this.eventKeyProperty, this.eventDescProperty, this.eventFromProperty, this.eventToProperty, this._calendar, shouldNavigate);
             }
             this._calendar.render();
         }
