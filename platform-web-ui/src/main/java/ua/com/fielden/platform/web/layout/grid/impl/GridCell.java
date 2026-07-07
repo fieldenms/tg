@@ -87,6 +87,19 @@ public class GridCell implements IGridCell, ISubheader {
         return rowSpan != null && rowSpan > 1 ? rowSpan : 1;
     }
 
+    /// Whether this cell is a subheader.
+    ///
+    boolean isSubheader() {
+        return kind == Kind.SUBHEADER;
+    }
+
+    /// Folds the given declarations into this cell's own styles as defaults: a property the cell already sets keeps its value (the cell wins), an absent property is appended in the given map's order.
+    /// Used to apply container-level subheader-style defaults while a per-subheader `style(...)` overrides them; idempotent, so a repeated application is harmless.
+    ///
+    void addDefaultStyles(final Map<String, String> defaults) {
+        defaults.forEach(styles::putIfAbsent);
+    }
+
     public static GridCell cell(final int row, final int col) {
         return new GridCell(row, col, Kind.CELL);
     }

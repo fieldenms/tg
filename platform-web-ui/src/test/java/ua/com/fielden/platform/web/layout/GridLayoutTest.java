@@ -382,4 +382,81 @@ public class GridLayoutTest {
                             .style("overflow", "hidden"))
                     .toString());
     }
+
+    @Test
+    public void container_subheader_style_is_a_default_that_each_subheader_can_override() {
+        final String wire = grid()
+                .content(content()
+                    .withGaps("0px", "20px")
+                    .withSubheaderStyle("padding-left", "0")
+                    .withSubheaderStyle("font-weight", "bold"))
+                .columns()
+                    .addColumn("1fr").style("padding-left", "32px")
+                    .addColumn("1fr")
+                .elements(
+                    subheaderOpen(1, "Asset"),
+                    subheaderOpen(2, "Details").style("padding-left", "8px"),
+                    skip(3, 2))
+                .toString();
+
+        // Asset inherits both container defaults; Details keeps its own padding-left and inherits font-weight.
+        // Container subheader styles do NOT appear in the container:{...} block -- they ride each subheader cell's style.
+        assertEquals(
+                "{container:{\"row-gap\":\"0px\",\"column-gap\":\"20px\"},"
+                + "columns:[{size:\"1fr\",style:{\"padding-left\":\"32px\"}},{size:\"1fr\"}],"
+                + "cells:[{row:1,col:1,colSpan:\"all\",widget:\"subheader-open:Asset\",style:{\"padding-left\":\"0\",\"font-weight\":\"bold\"}},"
+                + "{row:2,col:1,colSpan:\"all\",widget:\"subheader-open:Details\",style:{\"padding-left\":\"8px\",\"font-weight\":\"bold\"}},"
+                + "{row:3,col:2,widget:\"skip\"}]}",
+                wire);
+    }
+
+    @Test
+    public void container_subheader_style_affects_only_subheaders() {
+        final String wire = grid()
+                .content(content().withSubheaderStyle("padding-left", "0"))
+                .columns()
+                    .addColumn("1fr")
+                    .addColumn("1fr")
+                .elements(
+                    cell(1, 1).withProp("desc"),
+                    subheaderOpen(2, "Asset"),
+                    skip(3, 2))
+                .toString();
+
+        // The ordinary cell and the skip are untouched; only the subheader carries the container default.
+        // content holds no container styles, so there is no container:{...} block.
+        assertEquals(
+                "{columns:[{size:\"1fr\"},{size:\"1fr\"}],"
+                + "cells:[{row:1,col:1,select:\"property-name=desc\"},"
+                + "{row:2,col:1,colSpan:\"all\",widget:\"subheader-open:Asset\",style:{\"padding-left\":\"0\"}},"
+                + "{row:3,col:2,widget:\"skip\"}]}",
+                wire);
+    }
+
+    @Test
+    public void subheader_indentation_and_subheader_style_combine_independently() {
+        // subheaderIndentation is a top-level layout field (the gutter); withSubheaderStyle rides each subheader cell's style.
+        // They are orthogonal: the indentation appears once at the top level, the style is folded into the subheader cell.
+        final String wire = grid()
+                .content(content()
+                    .withGaps("0px", "20px")
+                    .withSubheaderIndentation("32px")
+                    .withSubheaderStyle("padding-left", "0")
+                    .withSubheaderStyle("font-weight", "bold"))
+                .columns()
+                    .addColumn("1fr")
+                    .addColumn("1fr")
+                .elements(
+                    subheaderOpen(1, "Asset"),
+                    skip(2, 2))
+                .toString();
+
+        assertEquals(
+                "{container:{\"row-gap\":\"0px\",\"column-gap\":\"20px\"},"
+                + "subheaderIndentation:\"32px\","
+                + "columns:[{size:\"1fr\"},{size:\"1fr\"}],"
+                + "cells:[{row:1,col:1,colSpan:\"all\",widget:\"subheader-open:Asset\",style:{\"padding-left\":\"0\",\"font-weight\":\"bold\"}},"
+                + "{row:2,col:2,widget:\"skip\"}]}",
+                wire);
+    }
 }

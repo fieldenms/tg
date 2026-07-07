@@ -36,4 +36,12 @@ public interface IGridContent {
     /// The developer's columns and cell coordinates are unaffected — the gutter is entirely implicit.
     ///
     IGridContent withSubheaderIndentation(String size);
+
+    /// Sets an arbitrary CSS declaration applied to every subheader of the layout (e.g. `padding-left`, `font-weight`, `color`).
+    /// Unlike [#style(String, String)], which styles the grid container, this is the container-level default for what `subheader(row, title).style(property, value)` sets on a single subheader.
+    /// A declaration set here is overridden, for the same property, by that property set on an individual subheader via its own `style(property, value)`.
+    /// It participates in the same cascade as a per-subheader style — so, like the per-subheader value, it wins over column and row track styles.
+    /// May be called more than once; declarations accumulate in the order given.
+    ///
+    IGridContent withSubheaderStyle(String property, String value);
 }

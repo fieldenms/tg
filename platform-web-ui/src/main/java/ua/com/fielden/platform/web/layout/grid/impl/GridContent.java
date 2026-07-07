@@ -14,6 +14,7 @@ import ua.com.fielden.platform.web.layout.grid.IGridContent;
 public class GridContent implements IGridContent {
 
     private final Map<String, String> styles = new LinkedHashMap<>();
+    private final Map<String, String> subheaderStyles = new LinkedHashMap<>();
     private String subheaderIndentation;
 
     GridContent() {
@@ -62,6 +63,12 @@ public class GridContent implements IGridContent {
         return this;
     }
 
+    @Override
+    public GridContent withSubheaderStyle(final String property, final String value) {
+        subheaderStyles.put(property, value);
+        return this;
+    }
+
     /// Indicates whether any container-level declaration has been set.
     ///
     boolean isEmpty() {
@@ -72,6 +79,14 @@ public class GridContent implements IGridContent {
     ///
     String subheaderIndentation() {
         return subheaderIndentation;
+    }
+
+    /// The CSS declarations applied by default to every subheader, in declaration order; empty when none configured.
+    /// These are folded into each subheader cell's own styles as defaults at build time (see [GridLayoutBuilder]), where a per-subheader declaration for the same property wins.
+    /// The returned map is the live backing map — callers must treat it as read-only.
+    ///
+    Map<String, String> subheaderStyles() {
+        return subheaderStyles;
     }
 
     /// Renders the configured declarations as a JavaScript object literal of `property: value` pairs, e.g. `{"row-gap":"0px","padding":"20px"}`.

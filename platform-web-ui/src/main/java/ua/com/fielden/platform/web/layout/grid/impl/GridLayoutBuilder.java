@@ -181,7 +181,23 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
     ///
     private GridLayoutConfiguration build(final List<GridCell> cells) {
         validateCells(cells);
+        applySubheaderStyles(cells);
         return new GridLayoutConfiguration(content, columnTracks, rowTracks, cells);
+    }
+
+    /// Folds the container-level subheader-style defaults (from `content().withSubheaderStyle(...)`) into every subheader cell's own styles.
+    /// A per-subheader `style(...)` for the same property wins; a container declaration only fills a property the subheader has not set.
+    /// A no-op when no content is configured, when no subheader styles are declared, or when the layout contains no subheaders.
+    ///
+    private void applySubheaderStyles(final List<GridCell> cells) {
+        if (content == null || content.subheaderStyles().isEmpty()) {
+            return;
+        }
+        for (final GridCell cell : cells) {
+            if (cell.isSubheader()) {
+                cell.addDefaultStyles(content.subheaderStyles());
+            }
+        }
     }
 
     /// Rejects misconfigured explicit cells before the layout is assembled:
