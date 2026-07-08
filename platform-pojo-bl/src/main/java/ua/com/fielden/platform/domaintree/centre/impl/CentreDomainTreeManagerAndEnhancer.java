@@ -773,6 +773,63 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
 
         @Override
+        public void setDynamicWidth(final Class<?> root, final String property, final int width) {
+            base().setDynamicWidth(enhancer().getManagedType(root), property, width);
+        }
+
+        @Override
+        public Optional<Integer> getDynamicWidth(final Class<?> root, final String property) {
+            return base().getDynamicWidth(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public void setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor) {
+            base().setDynamicGrowFactor(enhancer().getManagedType(root), property, growFactor);
+        }
+
+        @Override
+        public Optional<Integer> getDynamicGrowFactor(final Class<?> root, final String property) {
+            return base().getDynamicGrowFactor(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> getDynamicWidthsAndGrowFactors() {
+            return base().getDynamicWidthsAndGrowFactors();
+        }
+
+        @Override
+        public void setDynamicWidthsAndGrowFactors(
+            final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors
+        ) {
+            base().setDynamicWidthsAndGrowFactors(widthsAndGrowFactors);
+        }
+
+        @Override
+        public void setDynamicLastSeen(final Class<?> root, final String property, final long lastSeenMillis) {
+            base().setDynamicLastSeen(enhancer().getManagedType(root), property, lastSeenMillis);
+        }
+
+        @Override
+        public Optional<Long> getDynamicLastSeen(final Class<?> root, final String property) {
+            return base().getDynamicLastSeen(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public EnhancementPropertiesMap<Long> getDynamicLastSeenMap() {
+            return base().getDynamicLastSeenMap();
+        }
+
+        @Override
+        public void setDynamicLastSeenMap(final EnhancementPropertiesMap<Long> lastSeenMap) {
+            base().setDynamicLastSeenMap(lastSeenMap);
+        }
+
+        @Override
+        public void removeDynamicEntry(final Class<?> root, final String property) {
+            base().removeDynamicEntry(enhancer().getManagedType(root), property);
+        }
+
+        @Override
         public int getPageCapacity() {
             return base().getPageCapacity();
         }
