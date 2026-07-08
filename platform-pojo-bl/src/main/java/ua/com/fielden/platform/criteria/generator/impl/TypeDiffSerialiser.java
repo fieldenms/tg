@@ -34,7 +34,7 @@ public class TypeDiffSerialiser extends ObjectMapper {
      */
     public byte[] serialise(final Map<String, Object> diff) {
         try {
-            return writeValueAsBytes(diff); // default encoding is Charsets.UTF_8
+            return writeValueAsBytes(diff); // default encoding is StandardCharsets.UTF_8
         } catch (final JsonProcessingException ex) {
             throw new SerialisationException("Error during type diff serialisation.", ex);
         }
