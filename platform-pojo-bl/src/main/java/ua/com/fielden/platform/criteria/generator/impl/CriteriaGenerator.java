@@ -215,15 +215,10 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         return generatedProperties;
     }
 
-    /**
-     * Copies date-related property annotations.
-     * 
-     * @param managedType
-     * @param propertyName
-     * @return
-     */
+    /// Copies date-related property annotations.
+    ///
     private static List<Annotation> copyDateAnnotations(final Class<?> managedType, final String propertyName) {
-        return of(DateOnly.class, TimeOnly.class, PersistentType.class)
+        return of(DateOnly.class, TimeOnly.class, PersistentType.class, DependentTimeZoneMode.class)
             .map(annotationType -> getPropertyAnnotationOptionally(annotationType, managedType, propertyName))
             .flatMap(annotation -> annotation.isPresent() ? of(annotation.get()) : empty())
             .map(annotation -> {
@@ -231,8 +226,10 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                     return newDateOnlyAnnotation();
                 } else if (annotation instanceof TimeOnly) {
                     return newTimeOnlyAnnotation();
-                } else {
+                } else if (annotation instanceof PersistentType) {
                     return newUtcAnnotation();
+                } else {
+                    return newDependentTimeZoneModeAnnotation();
                 }
             })
             .collect(toList());

@@ -4,7 +4,7 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 import '/app/tg-app-config.js';
 
-import {_momentTz} from '/resources/reflection/tg-date-utils.js'
+import { _momentTz, now } from '/resources/reflection/tg-date-utils.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -97,11 +97,11 @@ const template = html`
 (function () {
     const getDaysInMonth = function (year, month) {
         const yearMonth = { year: year, month: month, day: 1 };
-        return _momentTz(yearMonth, this.timeZone).daysInMonth();
+        return _momentTz(yearMonth, this.prop).daysInMonth();
     };
     const getDaysInPreviousMonth = function (year, month) {
         const yearMonth = { year: year, month: month, day: 1 };
-        return _momentTz(yearMonth, this.timeZone).add(-1, 'M').daysInMonth();
+        return _momentTz(yearMonth, this.prop).add(-1, 'M').daysInMonth();
     };
     const createMonth = function (year, month, firstDayOfWeek) {
         const weeks = [];
@@ -117,7 +117,7 @@ const template = html`
     };
     const createWeek = function (year, month, day, firstDayOfWeek) {
         const yearMonthDay = { year: year, month: month, day: day };
-        const firstDay = (7 - firstDayOfWeek + _momentTz(yearMonthDay, this.timeZone).day()) % 7;//Maps week day where 0 - Sunday into week where 0 - custom first day of week
+        const firstDay = (7 - firstDayOfWeek + _momentTz(yearMonthDay, this.prop).day()) % 7;//Maps week day where 0 - Sunday into week where 0 - custom first day of week
         const week = [];
         const previousMonthDays = getDaysInPreviousMonth.bind(this)(year, month);
         let _i = 0;
@@ -145,12 +145,15 @@ const template = html`
         is: "tg-month-selector",
 
         properties: {
-            /**
-             * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods. 
-             * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
-             */
-            timeZone: {
-                type: String
+            /// Holds an instance of `tg-reflector.EntityTypeProp` corresponding to the property being edited.
+            /// Must be used as the last parameter for `_momentTz(...)` invocations, or passed to `now(...)`.
+            ///
+            /// It is used for moment conversions for:
+            /// - fixed time-zone properties;
+            /// - properties with enforced dependent time-zone mode.
+            ///
+            prop: {
+                type: Object
             },
             
             selectedDate: {
@@ -176,7 +179,9 @@ const template = html`
         },
 
         ready: function () {
-            var today = _momentTz(this.timeZone);
+            // Use `now(prop)`, not `_momentTz(prop)`, so the current day resolves in the user's real time-zone.
+            // This keeps the `today-date` correct near midnight in independent time-zone mode.
+            const today = now(this.prop);
             this.todayDay = today.date();
             this.todayMonth = today.month();
             this.todayYear = today.year();
@@ -197,9 +202,11 @@ const template = html`
          * @param {Number} newFirstDayOfWeek - changed first day of week
          */
         _firstDayOfWeekChanged: function (newFirstDayOfWeek) {
-            const momentToShow = this.selectedDate ? 
-                    _momentTz(this.selectedDate, this.timeZone) :
-                    _momentTz(this.timeZone);
+            // When no date is selected, fall back to `now(prop)` rather than `_momentTz(prop)`.
+            // This defaults the calendar to the current month in the user's real time-zone (independent tz mode).
+            const momentToShow = this.selectedDate ?
+                    _momentTz(this.selectedDate, this.prop) :
+                    now(this.prop);
             this._adjustMonth(momentToShow, newFirstDayOfWeek);
         },
 
@@ -221,8 +228,8 @@ const template = html`
          * Selects month depending on increment (the increment might be positive or negetive).
          */
         _selectMonth: function (inc) {
-            var yearMonth = { year: this.year, month: this.month, day: 1 };
-            var momentToShow = _momentTz(yearMonth, this.timeZone).add(inc, 'M');
+            const yearMonth = { year: this.year, month: this.month, day: 1 };
+            const momentToShow = _momentTz(yearMonth, this.prop).add(inc, 'M');
             this._adjustMonth(momentToShow, this._firstDayOfWeek);
         },
 
@@ -243,7 +250,7 @@ const template = html`
          */
         _selectDay: function (event, detail, el) {
             const yearMonthDay = { year: this.year, month: this.month, day: 1 };
-            this.selectedDate = _momentTz(yearMonthDay, this.timeZone).add(event.model.day.monthIncrementor, 'M').date(Math.abs(event.model.day.day)).valueOf();
+            this.selectedDate = _momentTz(yearMonthDay, this.prop).add(event.model.day.monthIncrementor, 'M').date(Math.abs(event.model.day.day)).valueOf();
         },
 
         _acceptDate: function (e) {
@@ -255,7 +262,7 @@ const template = html`
          */
         _selectedDateChanged: function (newValue, oldValue) {
             if (newValue !== null) {
-                var newMoment = _momentTz(newValue, this.timeZone);
+                const newMoment = _momentTz(newValue, this.prop);
                 if (newMoment.isValid()) {
                     this.selectedYear = newMoment.year();
                     this.selectedMonth = newMoment.month();
