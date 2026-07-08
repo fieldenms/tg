@@ -28,8 +28,8 @@ import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 import java.io.InputStream;
 import java.util.*;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.sort;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
