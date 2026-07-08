@@ -17,7 +17,7 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.refreshAndEvictDynamicEntries;
 
 /// Unit test for [CriteriaResource#refreshAndEvictDynamicEntries].
-/// Exercises the full decision matrix of the eviction sweep — active key, stale orphan, fresh orphan, and the no-op fast path.
+/// Exercises the full decision matrix of the eviction sweep — active key, stale orphan, fresh orphan, the no-op fast path, and bump throttling.
 ///
 public class RefreshAndEvictDynamicEntriesTest {
 
@@ -86,6 +86,52 @@ public class RefreshAndEvictDynamicEntriesTest {
         // Nothing to bump, nothing to evict — the silent-tick-adjuster must not fire.
         invocations.set(0);
         refreshAndEvictDynamicEntries(tick, ROOT, silentTickAdjuster, of());
+
+        assertEquals(0, invocations.get());
+
+        // Third sweep: "A" is used again, but its lastSeen was just bumped — well within the bump interval.
+        // The throttle must suppress the re-stamp, so the silent-tick-adjuster must not fire.
+        refreshAndEvictDynamicEntries(tick, ROOT, silentTickAdjuster, of("A"));
+
+        assertEquals(0, invocations.get());
+    }
+
+    /// Bump throttling and healing:
+    /// - a used key with a fresh `lastSeen` (within the one-day bump interval) must not trigger any persistence;
+    /// - a used key with a persisted width but no recorded `lastSeen` must be stamped once, becoming evictable later.
+    ///
+    @Test
+    public void bump_is_throttled_by_interval_and_stamps_missing_lastSeen() {
+        final var tick = new AddToResultTickManager();
+        final var nowMillis = currentTimeMillis();
+
+        // D: used key, lastSeen one hour ago — within the bump interval, must not be re-stamped.
+        final long dLastSeen = nowMillis - DAY_MS / 24;
+        tick.setDynamicWidth(ROOT, "D", 100);
+        tick.setDynamicLastSeen(ROOT, "D", dLastSeen);
+
+        // E: used key with a width but no lastSeen — must be healed with a fresh stamp.
+        tick.setDynamicWidth(ROOT, "E", 200);
+
+        final var invocations = new AtomicInteger();
+        final Consumer<Consumer<IAddToResultTickManager>> silentTickAdjuster = consumer -> {
+            invocations.incrementAndGet();
+            consumer.accept(tick);
+        };
+
+        refreshAndEvictDynamicEntries(tick, ROOT, silentTickAdjuster, of("D", "E"));
+
+        // Exactly one persistence pass — solely for E's healing; D must remain untouched.
+        assertEquals(1, invocations.get());
+        assertEquals(Optional.of(dLastSeen), tick.getDynamicLastSeen(ROOT, "D"));
+        assertTrue(
+            "E's lastSeen should have been stamped to near 'now'",
+            tick.getDynamicLastSeen(ROOT, "E").orElseThrow() >= nowMillis - 1000
+        );
+
+        // Second sweep with the same used keys: both are now within the bump interval — no persistence at all.
+        invocations.set(0);
+        refreshAndEvictDynamicEntries(tick, ROOT, silentTickAdjuster, of("D", "E"));
 
         assertEquals(0, invocations.get());
     }

@@ -66,6 +66,7 @@ import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
+import static org.joda.time.DateTimeConstants.MILLIS_PER_DAY;
 import static org.joda.time.Days.daysBetween;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
@@ -124,9 +125,17 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// Number of days after which an unused persisted dynamic-column entry is discarded.
     /// The threshold is evaluated using full days in the server's default time zone.
-    /// See [#refreshAndEvictDynamicEntries(IAddToResultTickManager, Class, EnhancedCentreEntityQueryCriteria, Set)].
+    /// See [#refreshAndEvictDynamicEntries(IAddToResultTickManager, Class, Consumer, Set)].
     ///
     private static final int DYNAMIC_ENTRY_EVICTION_DAYS = 30;
+
+    /// Minimal age of a recorded `lastSeen` before the maintenance sweep re-stamps ("bumps") it.
+    /// Throttles silent persistence for actively used centres to at most one adjustment per bump interval per configuration.
+    /// Re-stamping on every emission would instead rewrite three surrogate configurations on each run / page navigation.
+    /// Day granularity is lossless for the eviction decision: eviction fires only after strictly more than [#DYNAMIC_ENTRY_EVICTION_DAYS] whole days since the recorded `lastSeen`.
+    /// So even with `lastSeen` lagging behind the actual use by up to a day, at least [#DYNAMIC_ENTRY_EVICTION_DAYS] days of actual non-use are guaranteed before eviction.
+    ///
+    private static final long DYNAMIC_LAST_SEEN_BUMP_INTERVAL_MILLIS = MILLIS_PER_DAY;
 
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
@@ -886,12 +895,13 @@ public class CriteriaResource extends AbstractWebResource {
         return dynamicColumns;
     }
 
-    /// Refreshes the `lastSeen` millis for every dynamic column key used in the current emission.
+    /// Refreshes the `lastSeen` millis for dynamic column keys used in the current emission.
     /// Discards any other persisted entries (width / growFactor / lastSeen) that have not been used recently.
     /// "Recently" means within [#DYNAMIC_ENTRY_EVICTION_DAYS] days.
     ///
-    /// The bump is performed on every emission, that uses a dynamic width override.
-    /// An actively used key should never age out simply because no eviction happened to fire at the same time.
+    /// The bump is throttled: a used key is re-stamped only when its recorded `lastSeen` is missing or at least [#DYNAMIC_LAST_SEEN_BUMP_INTERVAL_MILLIS] old.
+    /// An actively used key still never ages out — eviction requires strictly more than [#DYNAMIC_ENTRY_EVICTION_DAYS] whole days without a re-stamp, which cannot accumulate while the key keeps being used.
+    /// At the same time, repeated runs / page navigations within the bump interval cost no persistence actions at all.
     /// Eviction also covers the "orphan override" case — a persisted entry whose corresponding column is no longer emitted.
     /// Day arithmetic uses Joda `Days.daysBetween` in [DateTimeZone#getDefault] time-zone.
     ///
@@ -932,12 +942,21 @@ public class CriteriaResource extends AbstractWebResource {
             )
             .collect(toSet());
 
+        // Bump only used keys whose lastSeen is missing (stamping heals legacy width-only entries) or old enough to matter.
+        // Re-stamping on every emission would rewrite three surrogate configurations on each run / page navigation.
+        final Set<String> keysToBump = usedDynamicKeys.stream()
+            .filter(key -> secondTick.getDynamicLastSeen(root, key)
+                .map(ls -> nowMillis - ls >= DYNAMIC_LAST_SEEN_BUMP_INTERVAL_MILLIS)
+                .orElse(true)
+            )
+            .collect(toSet());
+
         // Persist only when there is something to do: either a key to bump or a key to remove.
         // Scanning above is purely in-memory, so if there is "nothing to do" - means no persistent storage actions.
-        if (!staleKeys.isEmpty() || !usedDynamicKeys.isEmpty()) {
+        if (!staleKeys.isEmpty() || !keysToBump.isEmpty()) {
             silentTickAdjuster.accept(tick -> {
                 staleKeys.forEach(key -> tick.removeDynamicEntry(root, key));
-                usedDynamicKeys.forEach(key -> tick.setDynamicLastSeen(root, key, nowMillis));
+                keysToBump.forEach(key -> tick.setDynamicLastSeen(root, key, nowMillis));
             });
         }
     }
