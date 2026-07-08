@@ -12,7 +12,6 @@ import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -53,7 +52,6 @@ public class TgTestApplicationServerIocModule extends BasicWebServerIocModule {
         bind(IUserPreferencesProvider.class).to(CustomUserSettings.class);
         bind(IAuthenticationModel.class).to(TgTestAppAuthenticationModel.class);
         bind(ISecurityTokenNodeTransformation.class).to(TgTestApplicationSecurityTokenNodeTransformation.class);
-        bind(ISecurityTokenProvider.class).to(TgTestSecurityTokenProvider.class);
 
         requireBinding(IDates.class);
         requireBinding(IUniversalConstants.class);
