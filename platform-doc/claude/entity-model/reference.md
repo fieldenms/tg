@@ -667,6 +667,204 @@ The distinguishing line is *what kind of data they present*, not the field shape
 
 Grouping property entities pair naturally with **generative entities** below — the latter typically host them as `@CritOnly(SINGLE)` selection criteria that drive the data generator.
 
+## Fixed Entity Instances
+
+The **fixed entity instances** pattern protects a subset of records in an otherwise user-maintained reference (lookup) entity.
+The table supports full CRUD through its Entity Centre and Master, but a few specific records are referenced by key from business logic, so they must not be renamed or deleted — and their descriptions must not silently drift.
+The protected records are declared as an inner `enum` (named `Fixed`), which is the single source of truth for their keys.
+
+The enum **identifies** fixed records; it does not create them.
+The records themselves are inserted by the usual means — a data-migration retriever, a release script, or test data population.
+Each fixed record's key must equal the key value its enum member declares. 
+This is the value that the conventional enum method `matches` compares against. 
+It could be the enum member's name or one of its fields (e.g., `HIGH_PRIORITY("High Priority")`
+carries the key `"High Priority"`.).
+Unlike a *synthetic grouping property entity*, which synthesises its records from the enum at query time, a fixed-instance entity is an ordinary persistent entity whose records live in the database; the enum merely flags which of them are protected.
+
+The code blocks below are reproduced verbatim from a representative implementation; the pattern itself is independent of any particular entity.
+
+### The `Fixed` enum — conventional methods
+
+```java
+public enum Fixed {
+    NONE("NONE", "No Meter");
+
+    public final String unit;
+    public final String desc;
+
+    Fixed(final String unit, final String desc) {
+        this.unit = unit;
+        this.desc = desc;
+    }
+
+    public boolean matches(final String unit) {
+        return this.unit.equalsIgnoreCase(unit);
+    }
+
+    public boolean matches(final MeasurementUnit unit) {
+        return unit != null && matches(unit.getUnit());
+    }
+
+    public static Fixed fromValue(final MeasurementUnit unit) {
+        return unit != null ? fromValue(unit.getUnit()) : null;
+    }
+
+    public static Fixed fromValue(final String unit) {
+        for (final var fixed : Fixed.values()) {
+            if (fixed.matches(unit)) {
+                return fixed;
+            }
+        }
+        return null;
+    }
+
+    public static boolean isOneOf(final MeasurementUnit unit) {
+        return fromValue(unit) != null;
+    }
+
+    public static boolean isOneOf(final String unit) {
+        return fromValue(unit) != null;
+    }
+}
+```
+
+The contract every `Fixed` enum provides:
+- A field per key-defining property — at minimum the natural key (`unit`), usually the description too.
+- `matches(String)` — case-insensitive comparison against the key.
+  The `String` overload is the primitive; the entity overload is a null-safe convenience.
+- `fromValue(...)` — resolve the enum constant from a key or entity, returning `null` when none matches (paired `String` and entity overloads).
+- `isOneOf(...)` — membership test built on `fromValue`.
+
+Business logic consumes these directly — e.g. `Fixed.NONE.matches(unit)` to special-case a particular record, or `Fixed.isOneOf(unit)` to ask "is this a protected record?".
+
+### Validation of key and desc
+
+A single validator guards both the key and the description, attached to each via `@BeforeChange(@Handler(...))`:
+
+```java
+@IsProperty
+@MapTo
+@CompositeKeyMember(1)
+@BeforeChange(@Handler(MeasurementUnitKeyAndDescValidator.class))
+private String unit;
+
+@IsProperty
+@MapTo
+@BeforeChange(@Handler(MeasurementUnitKeyAndDescValidator.class))
+private String desc;
+```
+
+```java
+public class MeasurementUnitKeyAndDescValidator implements IBeforeChangeEventHandler<String> {
+
+    public static final String 
+        ERR_FIXED_MEASUREMENT_UNIT = MeasurementUnit.ENTITY_TITLE + " [%s] is used in the business logic and cannot be modified.",
+        WARN_FIXED_MEASUREMENT_UNIT = MeasurementUnit.ENTITY_TITLE + " [%s] is used in the business logic — please make sure that overall meaning remains the same if the description is changed.";
+
+    @Override
+    public Result handle(final MetaProperty<String> property, final String newValue, final Set<Annotation> mutatorAnnotations) {
+        final MeasurementUnit unit = property.getEntity();
+        if (unit.isPersisted() && Fixed.isOneOf(unit)) {
+            if (property.getName().contentEquals(MeasurementUnit_.unit()) && fromValue(unit) != fromValue(newValue)) {
+                return failuref(ERR_FIXED_MEASUREMENT_UNIT, unit.getUnit());
+            } 
+            else if (property.getName().contentEquals(MeasurementUnit_.desc()) && !EntityUtils.equalsEx(property.getValue(), newValue)) {
+                return warningf(WARN_FIXED_MEASUREMENT_UNIT, unit.getUnit());
+            }
+        }
+        return successful();
+    }
+
+}
+```
+
+The rules encoded here:
+- **Guard on `isPersisted() && Fixed.isOneOf(entity)`.**
+  Restrictions apply only to a persisted record that *is* one of the fixed instances.
+  New entities are unrestricted — which is what lets migration/population create the fixed records in the first place — and non-fixed records are never touched.
+- **Key change is a hard failure.**
+  Renaming a fixed record to a different identity (`fromValue(current) != fromValue(newValue)`) returns `failuref(...)`, blocking the assignment.
+  Comparing fixed *identities* rather than raw strings means a case-only or no-op re-set of the same key is allowed.
+- **Description change is a warning, not a failure.**
+  A genuine description change produces a warning — the edit is permitted but the user is warned that the record carries business meaning.
+
+**Deactivation (activatable reference entities).**
+When the entity extends `ActivatableAbstractEntity`, protect the `active` flag too: add a separate validator on `active` that *warns* when a fixed record is deactivated, chained after `ActivePropertyValidator`.
+
+### Rendering in the Entity Centre
+
+Fixed records are rendered italic and in the "required" colour so users can distinguish protected records from their own.
+Implement an `IRenderingCustomiser` whose `getCustomRenderingFor` returns value styles for the key column (keyed by `""`, which stands for "this") when the entity is a fixed record, and register it on the centre via `.setRenderingCustomiser(...)`.
+
+```java
+private static class MeasurementUnitRenderingCustomiser implements IRenderingCustomiser<Map<String, Object>> {
+
+    @Override
+    public Optional<Map<String, Object>> getCustomRenderingFor(final AbstractEntity<?> entity) {
+        return RenderingCustomiserUtils.getCustomRenderingForFixedValue((MeasurementUnit) entity, MeasurementUnit.Fixed::isOneOf);
+    }
+
+}
+```
+
+The customiser delegates to a small shared helper that holds the two non-obvious details — the italic + required-colour styling, and a workaround for a platform bug that unwraps an empty `Optional` (so it returns an empty map, never `Optional.empty()`):
+
+```java
+public static <T extends AbstractEntity<?>> Optional<Map<String, Object>> getCustomRenderingForFixedValue(final T entity, final Predicate<T> isFixed) {
+    if (isFixed.test(entity)) {
+        final Map<String, String> valueStyles = new HashMap<>();
+        valueStyles.put("font-style", "italic");
+        valueStyles.put("color", REQUIRED_PROPERTY_COLOUR);
+
+        final Map<String, Map<String, String>> keyStyles = new HashMap<>();
+        keyStyles.put("valueStyles", valueStyles);
+
+        final Map<String, Object> styles = mapOf(t2("" /* stands for "this" */, keyStyles));
+
+        return Optional.of(styles);
+    }
+
+    return Optional.of(Map.of());
+}
+```
+
+Pass the membership predicate as a method reference (`Fixed::isOneOf`); `REQUIRED_PROPERTY_COLOUR` is `#03A9F4`.
+
+### Deletion rules
+
+Block deletion of fixed records in the DAO by overriding `batchDelete(Collection<Long>)` (see *Canonical `batchDelete` Pattern*):
+
+```java
+public static final String ERR_FIXED_UNIT_CANNOT_BE_DELETED = MeasurementUnit.ENTITY_TITLE + " [%s] is used in the business logic and cannot be deleted.";
+
+@Override
+@SessionRequired
+@Authorise(MeasurementUnit_CanDelete_Token.class)
+public int batchDelete(final Collection<Long> entitiesIds) {
+    validateDeletion(entitiesIds).ifFailure(Result::throwRuntime);
+
+    return defaultBatchDelete(entitiesIds);
+}
+
+private Result validateDeletion(final Collection<Long> entitiesIds) {
+    final var query = select(MeasurementUnit.class).where()
+            .prop(MeasurementUnit_.id()).in().values(entitiesIds)
+            .and().prop(MeasurementUnit_.unit()).in().values(Arrays.stream(MeasurementUnit.Fixed.values()).map(it -> it.unit).toList())
+            .model();
+    final var maybeUnit = first(co(MeasurementUnit.class).getFirstEntities(from(query).model(), 1));
+    if (maybeUnit.isPresent()) {
+        return failuref(ERR_FIXED_UNIT_CANNOT_BE_DELETED, maybeUnit.get());
+    }
+
+    return successful();
+}
+```
+
+- The check is a single DB query intersecting the requested IDs with the set of fixed keys (`Fixed.values()` mapped to keys), asking for at most one hit (`getFirstEntities(..., 1)`).
+  This avoids loading every requested entity and short-circuits on the first protected record.
+- This key comparison runs in the database, so its case sensitivity follows the column's collation — unlike method `matches`, which may be case-insensitive via `equalsIgnoreCase`. Store fixed keys in their canonical case so the two sites cannot diverge.
+- Only override the `Collection<Long>` overload; leave `batchDelete(List<T>)` delegating to `defaultBatchDelete`.
+
 ## Generative Entities
 
 A **generative entity** is a persistent entity whose rows are computed ad hoc at Entity Centre `run` phase rather than maintained by normal CRUD.

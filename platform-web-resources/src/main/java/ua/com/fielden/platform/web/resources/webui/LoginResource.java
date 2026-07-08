@@ -141,6 +141,11 @@ public class LoginResource extends AbstractWebResource {
             // in case of an exception log the error and return the login page for the user to try again
             LOGGER.fatal(ex.getMessage(), ex);
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(loginPageForMixedMode), MediaType.TEXT_HTML));
+        } finally {
+            // This handler may set the current user (above) to validate an existing session.
+            // It is attached at the component level and is not covered by the application-level cleanup filter, so it must clear the user itself —
+            // otherwise a pooled worker thread would retain it after the request.
+            up.clearUser();
         }
     }
 
