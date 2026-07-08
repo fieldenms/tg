@@ -822,20 +822,25 @@ const TgEntityCentreBehaviorImpl = {
         }
     },
 
+    /**
+     * Pushes the current page of run data into the EGI and synchronises centre-level `retrievedEntities` / `renderingHints`.
+     *
+     * The EGI side arrays are primed before `retrievedEntities` is assigned, so the single `egiModel` rebuild (triggered by the EGI `entities` assignment inside the `retrievedEntities` observer) consumes fresh values in one pass.
+     * Assigning them after `retrievedEntities` (as was done previously) made the rebuild read stale values and then triggered a redundant per-row refresh pass for each array.
+     * `renderingHints` is assigned the same array reference that was primed, so the EGI-forwarding observer dirty-checks it into a no-op.
+     */
     _setPageData: function (startIdx, endIdx) {
-        if (typeof startIdx === 'undefined') {
-            this.retrievedEntities = this.allFilteredEntities;
-            this.renderingHints = this.allFilteredRenderingHints;
-            this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices;
-            this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices;
-            this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices;
-        } else {
-            this.retrievedEntities = this.allFilteredEntities.slice(startIdx, endIdx);
-            this.renderingHints = this.allFilteredRenderingHints.slice(startIdx, endIdx);
-            this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices.slice(startIdx, endIdx);
-            this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices.slice(startIdx, endIdx);
-            this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices.slice(startIdx, endIdx);
-        }
+        const page = arr => typeof startIdx === 'undefined' ? arr : arr.slice(startIdx, endIdx);
+        const entities = page(this.allFilteredEntities);
+        const renderingHints = page(this.allFilteredRenderingHints);
+        this.$.egi.primeGridData({
+            renderingHints: renderingHints,
+            primaryActionIndices: page(this.allFilteredPrimaryActionIndices),
+            secondaryActionIndices: page(this.allFilteredSecondaryActionIndices),
+            propertyActionIndices: page(this.allFilteredPropertyActionIndices)
+        });
+        this.retrievedEntities = entities;
+        this.renderingHints = renderingHints;
     },
 
     _setPageNumber: function (number) {
