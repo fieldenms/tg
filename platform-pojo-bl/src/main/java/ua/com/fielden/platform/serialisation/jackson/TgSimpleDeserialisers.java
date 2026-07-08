@@ -4,8 +4,8 @@ import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 
+import java.time.Duration;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.Logger;
 
@@ -27,7 +27,7 @@ public class TgSimpleDeserialisers extends SimpleDeserializers {
     private static final Logger LOGGER = getLogger(TgSimpleDeserialisers.class);
 
     private final transient TgJacksonModule module;
-    private final transient Cache<Class<?>,JsonDeserializer<?>> genClassDeserialisers = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(1000).build();
+    private final transient Cache<Class<?>,JsonDeserializer<?>> genClassDeserialisers = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofSeconds(10)).initialCapacity(1000).build();
 
     public TgSimpleDeserialisers(final TgJacksonModule module) {
         this.module = module;

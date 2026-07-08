@@ -149,13 +149,15 @@ function createNewEntity(reflector, editingValue, rootEntityType) {
  * Sets string values from 'entity' keys into 'embeddedMaster' key editors.
  */
 function setKeyFields(entity, embeddedMaster) {
-    const keys = entity.type().isCompositeEntity() ? entity.type().compositeKeyNames(): ["key"];
-    keys.forEach(keyProp => {
-        const keyEditor = embeddedMaster.$["editor_4_" + keyProp];
-        if (keyEditor && !keyEditor._disabled) {
-            embeddedMaster.setEditorValue4PropertyFromConcreteValue(keyProp, entity.get(keyProp));
-        }
-    })
+    if (embeddedMaster && embeddedMaster.$) {
+        const keys = entity.type().isCompositeEntity() ? entity.type().compositeKeyNames(): ["key"];
+        keys.forEach(keyProp => {
+            const keyEditor = embeddedMaster.$["editor_4_" + keyProp];
+            if (keyEditor && !keyEditor._disabled) {
+                embeddedMaster.setEditorValue4PropertyFromConcreteValue(keyProp, entity.get(keyProp));
+            }
+        })
+    }
 }
 
 /**

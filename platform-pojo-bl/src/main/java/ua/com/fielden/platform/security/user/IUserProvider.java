@@ -17,4 +17,11 @@ public interface IUserProvider {
 
     IUserProvider setUser(final User user);
 
+    /// Clears the current user from this provider.
+    ///
+    /// Implementations backed by thread-confined storage (e.g. a [ThreadLocal]) must remove the stored value, so that a worker thread returned to a pool does not retain a previous request's user.
+    /// This should be invoked once a unit of work (such as an HTTP request) completes.
+    ///
+    void clearUser();
+
 }
