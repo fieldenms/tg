@@ -16,7 +16,7 @@
     </description>
 
     <properties>
-        <jackson.version>2.22.0</jackson.version>
+        <jackson.version>2.22.1</jackson.version>
         <jackson.annotations.version>2.22</jackson.annotations.version>
         <guava.version>33.6.0-jre</guava.version>
         <poi.verstion>5.5.1</poi.verstion>
