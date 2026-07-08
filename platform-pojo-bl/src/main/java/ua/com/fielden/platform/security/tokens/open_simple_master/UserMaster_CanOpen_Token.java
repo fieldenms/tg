@@ -15,7 +15,7 @@ import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_
 /// in existing applications (e.g., listed as excluded in custom [ISecurityTokenProvider] implementations).
 /// This change should be accompanied by an SQL script to delete the corresponding [SecurityRoleAssociation] records.
 ///
-@Deprecated(forRemoval = true)
+@Deprecated(forRemoval = true, since = "2.4.5")
 public class UserMaster_CanOpen_Token implements ISecurityToken {
     private final static String ENTITY_TITLE = User.ENTITY_TITLE + " Master";
     public final static String TITLE = String.format(Template.MASTER_OPEN.forTitle(), ENTITY_TITLE);
