@@ -3,6 +3,8 @@ package ua.com.fielden.platform.test.runners;
 import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.Logger;
+import org.junit.runner.Description;
+import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
@@ -13,14 +15,13 @@ import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test.DbCreator;
-import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
-import ua.com.fielden.platform.test.WithDbVersion;
+import ua.com.fielden.platform.test.*;
 import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.time.DateTimeException;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Function;
 
@@ -31,13 +32,19 @@ import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 
 /// The domain test case runner responsible for instantiating and initializing domain test cases.
 ///
+/// * Supports [WithDbVersion].
+///
+/// * Supports [RequireTimeZone].
+///
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
     private static final String
             INFO_TEST_IGNORED_DUE_TO_DB_VERSION = "Test [%s] is ignored because it requires one of databases %s while the current one is [%s].",
             ERR_INVALID_TYPE = "Test case [%s] should extend [%s].",
             ERR_MISSING_DB_CREATOR = "DbCreator type was not provided, but is required.",
-            ERR_FAILED_TO_CREATE_TEST_CONFIGURATION = "Could not create test configuration.";
+            ERR_FAILED_TO_CREATE_TEST_CONFIGURATION = "Could not create test configuration.",
+            INFO_TEST_IGNORED_DUE_TO_TIME_ZONE = "Test [%s] is ignored because it requires time zone [%s] while the actual is [%s].",
+            ERR_INVALID_TIME_ZONE = "Test [%s] specifies an unrecognised time zone [%s] in @%s.";
 
     public final Logger logger = getLogger(getClass());
 
@@ -197,13 +204,27 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     /// This ensures that tests using [CommonEntityDao#setMoreData(String, IContinuationData)]
     /// do not fail due to the absence of a bound scoped storage.
     ///
+    /// If [#isIgnored(FrameworkMethod)] raises a [DomainDrivenTestException] (e.g., due to an invalid [RequireTimeZone] value),
+    /// the error is reported as a failure of this method alone.
+    /// This is deliberate: the exception would otherwise propagate up to [org.junit.runners.ParentRunner], which reports it as a
+    /// class-level failure and aborts all remaining methods in the class, including those unrelated to the misconfiguration.
+    ///
     @Override
-    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-        if (!method.getMethod().isAnnotationPresent(SkipNeedMoreDataStorageBinding.class)) {
-            NeedMoreDataStorage.runWithMoreData(Map.of(), () -> super.runChild(method, notifier));
-        }
-        else {
-            super.runChild(method, notifier);
+    protected void runChild(final FrameworkMethod method, final RunNotifier notifier) {
+        try {
+            if (!method.getMethod().isAnnotationPresent(SkipNeedMoreDataStorageBinding.class)) {
+                NeedMoreDataStorage.runWithMoreData(Map.of(), () -> super.runChild(method, notifier));
+            }
+            else {
+                super.runChild(method, notifier);
+            }
+        } catch (final DomainDrivenTestException ex) {
+            // Only `isIgnored` can propagate this exception out of `super.runChild`:
+            // a test body's exceptions are caught and reported by JUnit's `runLeaf`, never rethrown.
+            final Description description = describeChild(method);
+            notifier.fireTestStarted(description);
+            notifier.fireTestFailure(new Failure(description, ex));
+            notifier.fireTestFinished(description);
         }
     }
 
@@ -217,13 +238,58 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         final var dbVersionMatches = atWithDbVersion == null || ArrayUtils.contains(atWithDbVersion.value(), dbVersionProvider.dbVersion());
         if (!dbVersionMatches) {
             logger.info(() -> INFO_TEST_IGNORED_DUE_TO_DB_VERSION.formatted(
-                              "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName()),
+                              methodId(child),
                               Arrays.toString(atWithDbVersion.value()),
                               dbVersionProvider.dbVersion()));
             return true;
         }
 
+        if (!hasRequiredTimeZone(child)) {
+            return true;
+        }
+
         return false;
+    }
+
+    private boolean hasRequiredTimeZone(final FrameworkMethod child) {
+        final var atRequireTimeZone = child.getAnnotation(RequireTimeZone.class);
+        if (atRequireTimeZone == null) {
+            return true;
+        }
+
+        final ZoneId zoneId;
+        try {
+            zoneId = ZoneId.of(atRequireTimeZone.value());
+        } catch (final DateTimeException ex) {
+            // An unparseable time zone is a programming error (e.g., a typo), not an environmental condition.
+            // Fail loudly rather than silently ignoring the test, which would otherwise hide the mistake in every environment.
+            throw new DomainDrivenTestException(
+                    ERR_INVALID_TIME_ZONE.formatted(
+                            methodId(child),
+                            atRequireTimeZone.value(),
+                            RequireTimeZone.class.getSimpleName()),
+                    ex);
+        }
+
+        // Compare by zone rules rather than by ID (i.e. not `TimeZone.equals`, which compares IDs).
+        // This way, equivalent zones are treated as matching -- e.g. `UTC` and `Etc/UTC`, or `America/New_York` and `US/Eastern`.
+        // It matters in practice because CI/containerised JVMs commonly resolve the default zone to an alias such as `Etc/UTC`,
+        // which would otherwise cause a test annotated with `@RequireTimeZone("UTC")` to be silently ignored.
+        if (!zoneId.getRules().equals(ZoneId.systemDefault().getRules())) {
+            logger.info(() -> INFO_TEST_IGNORED_DUE_TO_TIME_ZONE.formatted(
+                    methodId(child),
+                    atRequireTimeZone.value(),
+                    ZoneId.systemDefault()));
+            return false;
+        }
+
+        return true;
+    }
+
+    /// Returns a human-readable identifier for `method`, in the form `SimpleDeclaringClassName.methodName`, for use in log and error messages.
+    ///
+    private static String methodId(final FrameworkMethod method) {
+        return "%s.%s".formatted(method.getDeclaringClass().getSimpleName(), method.getName());
     }
 
     /// A helper function to instantiate a test case configuration as specified in `props` under the property `"config.domain"`.
