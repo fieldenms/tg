@@ -34,6 +34,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///
 /// This transformation is applicable only if the query yields or orders by an aggregation.
 /// Otherwise, it is a no-op.
+/// In particular, group-by operands alone do not make a query eligible, regardless of their complexity.
 /// It is also skipped if a yield or an order-by contains a subquery that would not be materialised (see Limitations).
 ///
 /// This transformation applies only to SQL Server.
@@ -189,6 +190,16 @@ public final class AggregateOperandMaterialiser {
         final var origGroups = qc.groups();
         final var origOrderings = qc.orderings();
 
+        final List<ISingleOperand3> yieldAndOrderingOperands = Stream.concat(
+                        origYields.getYields().stream().map(Yield3::operand),
+                        origOrderings == null ? Stream.of() : origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull))
+                .toList();
+        // The transformation is applicable only to queries that yield or order by an aggregation.
+        // In particular, group-by operands alone do not trigger the transformation, regardless of their complexity.
+        if (yieldAndOrderingOperands.stream().noneMatch(this::containsAggregation)) {
+            return skipTransformation(context);
+        }
+
         final Set<ISingleOperand3> operandsToMaterialise = Stream.concat(
                         Stream.concat(
                                 origYields.getYields().stream().flatMap(y -> extractAggregatedExpressions(y.operand())),
@@ -201,9 +212,7 @@ public final class AggregateOperandMaterialiser {
         // A subquery in a yield or an order-by that is not materialised would keep referencing the original source,
         // which the outer query no longer accesses (the replacement operation does not descend into subqueries).
         // Skip the transformation to preserve such references (see Limitations in the class documentation).
-        if (Stream.concat(origYields.getYields().stream().map(Yield3::operand),
-                          origOrderings == null ? Stream.of() : origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull))
-                .anyMatch(rand -> hasUnmaterialisedSubQuery(rand, operandsToMaterialise))) {
+        if (yieldAndOrderingOperands.stream().anyMatch(rand -> hasUnmaterialisedSubQuery(rand, operandsToMaterialise))) {
             return skipTransformation(context);
         }
 
@@ -292,6 +301,16 @@ public final class AggregateOperandMaterialiser {
             // `COUNT(*)` has no argument.
             case CountAll3 _ -> Stream.empty();
             default -> streamChildren(node).flatMap(this::extractAggregatedExpressions);
+        };
+    }
+
+    /// Determines whether `node` contains an aggregate function at the level of the query source
+    /// (i.e., not inside a subquery).
+    ///
+    private boolean containsAggregation(final ISingleOperand3 node) {
+        return switch (node) {
+            case AverageOf3 _, MinOf3 _, MaxOf3 _, SumOf3 _, CountOf3 _, CountAll3 _, ConcatOf3 _ -> true;
+            default -> streamChildren(node).anyMatch(this::containsAggregation);
         };
     }
 

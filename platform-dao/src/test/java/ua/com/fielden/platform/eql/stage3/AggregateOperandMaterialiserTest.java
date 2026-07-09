@@ -360,12 +360,75 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         assertQueryEquals(expected, actual);
     }
 
+    /// An aggregation occurring only in an order-by (with none in the yields) makes the query eligible for the
+    /// transformation on its own.
+    ///
+    @Test
+    public void an_order_by_aggregation_alone_triggers_the_transformation() {
+        final var order = orderBy().expr(expr().maxOf().beginExpr().prop("qty").mult().val(2).endExpr().model()).desc().model();
+        final var actualEql = select(TgFuelUsage.class)
+                .groupBy().prop("date")
+                .yield().prop("date").as("d")
+                .modelAsAggregate();
+
+        // This is the expected query, and its AST must be constructed by hand because of generated IDs.
+        final var expectedEql = select(select(TgFuelUsage.class)
+                                          .yield().prop("date").as("c1")
+                                          .yield().beginExpr().prop("qty").mult().val(2).endExpr().as("c2")
+                                          .modelAsAggregate())
+                .groupBy().prop("c1")
+                .orderBy().expr(expr().maxOf().prop("c2").model()).desc()
+                .yield().prop("c1").as("d")
+                .modelAsAggregate();
+
+        final var srcQrySource = source(TgFuelUsage.class, 1, 1);
+        final var qtyTimes2 = new Expression3(prop("qty", srcQrySource, BIGDECIMAL_PROP_TYPE),
+                                              List.of(new CompoundSingleOperand3(new Value3(2, INTEGER_PROP_TYPE), MULT)),
+                                              BIGDECIMAL_PROP_TYPE);
+        final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
+                                  yields(yieldProp("date", srcQrySource, "c1", DATETIME_PROP_TYPE, 3),
+                                         mkYield(qtyTimes2, "c2", 4)),
+                                  EntityAggregates.class);
+
+        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 5);
+        final var prop_c1 = prop("c1", topSource, DATETIME_PROP_TYPE);
+        final var prop_c2 = prop("c2", topSource, BIGDECIMAL_PROP_TYPE);
+        final var topYield_d = mkYield(prop_c1, "d", 2);
+        final var topGroupBy_c1 = new GroupBy3(prop_c1);
+        final var topOrder = new OrderBy3(new Expression3(new MaxOf3(prop_c2, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE), true);
+
+        final var expected = qry(new JoinLeafNode3(topSource),
+                                 yields(topYield_d),
+                                 groups(topGroupBy_c1),
+                                 orders(topOrder));
+
+        AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
+        final var actual = qry(actualEql, order);
+        assertQueryEquals(expected, actual);
+    }
+
     @Test
     public void query_without_aggregation_is_not_transformed() {
         final var query = select(TgVehicle.class).where()
                 .prop("price").gt().val(100)
                 .yield().prop("key").as("vehicleKey")
                 .yield().prop("price").as("vehiclePrice")
+                .modelAsAggregate();
+
+        final var actual = qry(query);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(query);
+        assertQueryEquals(expected, actual);
+    }
+
+    /// Group-by operands alone do not make a query eligible for the transformation, regardless of their complexity.
+    /// A non-aggregating query with a non-trivial group-by operand is evaluated by SQL Server natively.
+    ///
+    @Test
+    public void non_aggregating_query_with_a_non_trivial_groupBy_operand_is_not_transformed() {
+        final var query = select(TgVehicle.class)
+                .groupBy().lowerCase().prop("key")
+                .yield().lowerCase().prop("key").as("k")
                 .modelAsAggregate();
 
         final var actual = qry(query);
@@ -948,6 +1011,52 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_total),
                                  groups(topGroupBy_c2));
+
+        AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
+        final var actual = qry(actualEql);
+        assertQueryEquals(expected, actual);
+    }
+
+    /// `count(*)` is an aggregation without an argument: it contributes nothing to materialisation, but it does make
+    /// the query eligible for the transformation, enabling the materialisation of the group-by subquery.
+    ///
+    @Test
+    public void groupBy_a_subquery_yielding_only_countAll_is_transformed() {
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
+        final var actualEql = select(TgVehicle.class)
+                .groupBy().model(countFuelUsage)
+                .yield().countAll().as("n")
+                .modelAsAggregate();
+
+        // This is the expected query, and its AST must be constructed by hand because of generated IDs.
+        final var expectedEql = select(select(TgVehicle.class)
+                                          .yield().model(countFuelUsage).as("c1")
+                                          .modelAsAggregate())
+                .groupBy().prop("c1")
+                .yield().countAll().as("n")
+                .modelAsAggregate();
+
+        final var vehicleSource = source(TgVehicle.class, 1, 1);
+        final var fuelUsageSource = source(TgFuelUsage.class, 2, 3);
+
+        // The group-by sub-query: the number of this vehicle's fuel usages.
+        final var countFuelUsageSubQry = subqry(new JoinLeafNode3(fuelUsageSource),
+                                                cond(eq(entityProp("vehicle", fuelUsageSource, TgVehicle.class), idProp(vehicleSource))),
+                                                yields(yieldWithoutAlias(CountAll3.INSTANCE, INTEGER_PROP_TYPE)),
+                                                INTEGER_PROP_TYPE);
+
+        final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
+                                  yields(mkYield(countFuelUsageSubQry, "c1", 5)),
+                                  EntityAggregates.class);
+
+        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 3, 6);
+        final var prop_c1 = prop("c1", topSource, INTEGER_PROP_TYPE);
+        final var topYield_n = mkYield(CountAll3.INSTANCE, "n", 2);
+        final var topGroupBy_c1 = new GroupBy3(prop_c1);
+
+        final var expected = qry(new JoinLeafNode3(topSource),
+                                 yields(topYield_n),
+                                 groups(topGroupBy_c1));
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);

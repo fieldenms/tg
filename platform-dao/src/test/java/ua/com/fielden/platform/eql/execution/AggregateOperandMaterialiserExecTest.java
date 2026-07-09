@@ -93,6 +93,23 @@ public class AggregateOperandMaterialiserExecTest extends AbstractEqlExecutionTe
                      aggs.stream().map(agg -> agg.get("total")).collect(toSet()));
     }
 
+    /// `count(*)` has no argument to materialise, but it makes the query eligible for the transformation,
+    /// enabling the materialisation of the group-by subquery.
+    ///
+    @Test
+    public void groupBy_a_subquery_yielding_only_countAll() {
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
+        final var qry = select(TgVehicle.class)
+                .groupBy().model(countFuelUsage)
+                .yield().countAll().as(RESULT)
+                .modelAsAggregate();
+
+        // Fuel usage counts per vehicle: V1 -> 2, V2 -> 1, V3 -> 0 -- three distinct groups, each with a single vehicle.
+        final var aggs = retrieveAll(qry);
+        assertEquals(3, aggs.size());
+        aggs.forEach(agg -> assertNumericEquals("1", agg.get(RESULT)));
+    }
+
     @Test
     public void groupBy_a_subquery_that_is_also_yielded_is_not_supported() {
         final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
