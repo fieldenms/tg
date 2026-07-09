@@ -964,137 +964,78 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         assertQueryEquals(expected, actual);
     }
 
-    // The following two tests cover a known limitation: a subquery that is both grouped by and yielded cannot be
-    // transformed into a valid query.
-    // The group-by subquery is materialised as a column, but the yielded subquery is a distinct AST node -- it is not
-    // equal to the group-by one (subqueries are compared by their unique generated IDs), so it is left referencing the
-    // original source, which the outer query no longer accesses.
-    // These tests pin the resulting (invalid) AST.
+    // The following tests cover a known limitation: a subquery in a yield (or an order-by) outside of an aggregate
+    // function's argument cannot be rewritten, because the replacement operation does not descend into subqueries.
+    // Left as is, such a subquery would keep referencing the original source, which the outer query no longer accesses.
+    // The transformation is therefore skipped, leaving the query untouched.
+    // The notable instance is a subquery that is both grouped by and yielded: the group-by subquery would be
+    // materialised as a column, but the yielded subquery is a distinct AST node -- it is not equal to the group-by one
+    // (subqueries are compared with their generated identifiers included), so it could not reuse that column.
 
     @Test
-    public void groupBy_a_subquery_that_is_also_yielded_leaves_the_yielded_subquery_referencing_the_original_source() {
+    public void groupBy_a_subquery_that_is_also_yielded_skips_the_transformation() {
         final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
-        final var actualEql = select(TgVehicle.class)
+        final var query = select(TgVehicle.class)
                 .groupBy().model(countFuelUsage)
                 .yield().model(countFuelUsage).as("count")
                 .yield().sumOf().prop("sumOfPrices").as("total")
                 .modelAsAggregate();
 
-        // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var vehicleSource = source(TgVehicle.class, 2, 1);
-        final var fuelUsageSourceForGroupBy = source(TgFuelUsage.class, 3, 6);
-        final var fuelUsageSourceForYield = source(TgFuelUsage.class, 1, 2);
+        final var actual = qry(query);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(query);
+        assertQueryEquals(expected, actual);
+    }
 
-        // `sumOfPrices` is calculated as `1 * price.amount + purchasePrice.amount`.
-        final var sumOfPrices = new Expression3(new Value3(1, INTEGER_PROP_TYPE),
-                                                List.of(new CompoundSingleOperand3(prop("price.amount", vehicleSource, BIGDECIMAL_PROP_TYPE), MULT),
-                                                        new CompoundSingleOperand3(prop("purchasePrice.amount", vehicleSource, BIGDECIMAL_PROP_TYPE), ADD)),
-                                                BIGDECIMAL_PROP_TYPE);
+    /// A yielded correlated subquery, even when it is not grouped by, prevents the transformation:
+    /// it would keep correlating to the original source, which the outer query would no longer access.
+    ///
+    @Test
+    public void yielded_subquery_alongside_an_aggregation_skips_the_transformation() {
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
+        final var query = select(TgVehicle.class)
+                .groupBy().prop("key")
+                .yield().prop("key").as("k")
+                .yield().model(countFuelUsage).as("count")
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
 
-        // The group-by sub-query is materialised as `c2`, correctly correlating to the vehicle source within the source query.
-        final var countFuelUsageForGroupBy = subqry(new JoinLeafNode3(fuelUsageSourceForGroupBy),
-                                                    cond(eq(entityProp("vehicle", fuelUsageSourceForGroupBy, TgVehicle.class), idProp(vehicleSource))),
-                                                    yields(yieldWithoutAlias(CountAll3.INSTANCE, INTEGER_PROP_TYPE)),
-                                                    INTEGER_PROP_TYPE);
+        final var actual = qry(query);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(query);
+        assertQueryEquals(expected, actual);
+    }
 
-        // The yielded sub-query is a distinct node, left intact, still correlating to the vehicle source -- now out of scope in the outer query.
-        final var countFuelUsageForYield = subqry(new JoinLeafNode3(fuelUsageSourceForYield),
-                                                  cond(eq(entityProp("vehicle", fuelUsageSourceForYield, TgVehicle.class), idProp(vehicleSource))),
-                                                  yields(yieldWithoutAlias(CountAll3.INSTANCE, INTEGER_PROP_TYPE)),
-                                                  INTEGER_PROP_TYPE);
+    /// A subquery in an order-by (outside of an aggregate argument) prevents the transformation for the same reason
+    /// as a yielded subquery.
+    /// The same query without the order-by is transformed (see `groupBy_a_subquery_that_is_not_yielded_materialises_it_as_a_column`).
+    ///
+    @Test
+    public void order_by_a_subquery_alongside_an_aggregation_skips_the_transformation() {
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
+        final var order = orderBy().model(countFuelUsage).desc().model();
+        final var query = select(TgVehicle.class)
+                .groupBy().model(countFuelUsage)
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
 
-        final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
-                                  yields(mkYield(sumOfPrices, "c1", 8),
-                                         mkYield(countFuelUsageForGroupBy, "c2", 9)),
-                                  EntityAggregates.class);
-
-        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 4, 10);
-        final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
-        final var prop_c2 = prop("c2", topSource, INTEGER_PROP_TYPE);
-        final var topYield_count = mkYield(countFuelUsageForYield, "count", 4);
-        final var topYield_total = mkYield(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "total", 5);
-        final var topGroupBy_c2 = new GroupBy3(prop_c2);
-
-        final var expected = qry(new JoinLeafNode3(topSource),
-                                 yields(topYield_count, topYield_total),
-                                 groups(topGroupBy_c2));
-
-        AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(actualEql);
+        final var actual = qry(query, order);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(query, order);
         assertQueryEquals(expected, actual);
     }
 
     @Test
-    public void groupBy_a_calculated_property_containing_a_subquery_that_is_also_yielded_leaves_the_yielded_subquery_referencing_the_original_source() {
-        final var actualEql = select(TgVehicle.class)
+    public void groupBy_a_calculated_property_containing_a_subquery_that_is_also_yielded_skips_the_transformation() {
+        final var query = select(TgVehicle.class)
                 .groupBy().prop("lastFuelUsageQty")
                 .yield().prop("lastFuelUsageQty").as("qty")
                 .yield().sumOf().prop("sumOfPrices").as("total")
                 .modelAsAggregate();
 
-        // This is the expected query, and its AST must be constructed by hand because of generated IDs.
-        final var vehicleSource = source(TgVehicle.class, 1, 1);
-        // Group-by instance of `lastFuelUsageQty` (materialised as `c2`).
-        final var fuelUsageSourceForGroupBy = source(TgFuelUsage.class, 2, 8);
-        final var laterFuelUsageSourceForGroupBy = source(TgFuelUsage.class, 3, 9);
-        // Yielded instance of `lastFuelUsageQty` (left intact).
-        final var fuelUsageSourceForYield = source(TgFuelUsage.class, 2, 2);
-        final var laterFuelUsageSourceForYield = source(TgFuelUsage.class, 3, 3);
-
-        // `sumOfPrices` is calculated as `1 * price.amount + purchasePrice.amount`.
-        final var sumOfPrices = new Expression3(new Value3(1, INTEGER_PROP_TYPE),
-                                                List.of(new CompoundSingleOperand3(prop("price.amount", vehicleSource, BIGDECIMAL_PROP_TYPE), MULT),
-                                                        new CompoundSingleOperand3(prop("purchasePrice.amount", vehicleSource, BIGDECIMAL_PROP_TYPE), ADD)),
-                                                BIGDECIMAL_PROP_TYPE);
-
-        // The group-by instance of `lastFuelUsageQty`: materialised as `c2`, correlating to the vehicle source within the source query.
-        final var noLaterFuelUsageForGroupBy = new SubQueryForExists3(
-                new QueryComponents3(Optional.of(new JoinLeafNode3(laterFuelUsageSourceForGroupBy)),
-                                     or(and(eq(entityProp("vehicle", laterFuelUsageSourceForGroupBy, TgVehicle.class), entityProp("vehicle", fuelUsageSourceForGroupBy, TgVehicle.class)),
-                                            gt(prop("date", laterFuelUsageSourceForGroupBy, DATETIME_PROP_TYPE), prop("date", fuelUsageSourceForGroupBy, DATETIME_PROP_TYPE)))),
-                                     yields(yieldWithoutAlias(new Value3(null, NULL_TYPE), NULL_TYPE)),
-                                     null,
-                                     null));
-        final var lastFuelUsageQtyForGroupBy = subqry(
-                new JoinLeafNode3(fuelUsageSourceForGroupBy),
-                or(and(eq(entityProp("vehicle", fuelUsageSourceForGroupBy, TgVehicle.class), idProp(vehicleSource)),
-                       new ExistencePredicate3(true, noLaterFuelUsageForGroupBy))),
-                yields(yieldWithoutAlias(prop("qty", fuelUsageSourceForGroupBy, BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE)),
-                BIGDECIMAL_PROP_TYPE);
-
-        // The yielded instance of `lastFuelUsageQty`: a distinct sub-query left correlating to the vehicle source -- now out of scope in the outer query.
-        final var noLaterFuelUsageForYield = new SubQueryForExists3(
-                new QueryComponents3(Optional.of(new JoinLeafNode3(laterFuelUsageSourceForYield)),
-                                     or(and(eq(entityProp("vehicle", laterFuelUsageSourceForYield, TgVehicle.class), entityProp("vehicle", fuelUsageSourceForYield, TgVehicle.class)),
-                                            gt(prop("date", laterFuelUsageSourceForYield, DATETIME_PROP_TYPE), prop("date", fuelUsageSourceForYield, DATETIME_PROP_TYPE)))),
-                                     yields(yieldWithoutAlias(new Value3(null, NULL_TYPE), NULL_TYPE)),
-                                     null,
-                                     null));
-        final var lastFuelUsageQtyForYield = subqry(
-                new JoinLeafNode3(fuelUsageSourceForYield),
-                or(and(eq(entityProp("vehicle", fuelUsageSourceForYield, TgVehicle.class), idProp(vehicleSource)),
-                       new ExistencePredicate3(true, noLaterFuelUsageForYield))),
-                yields(yieldWithoutAlias(prop("qty", fuelUsageSourceForYield, BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE)),
-                BIGDECIMAL_PROP_TYPE);
-
-        final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
-                                  yields(mkYield(sumOfPrices, "c1", 12),
-                                         mkYield(lastFuelUsageQtyForGroupBy, "c2", 13)),
-                                  EntityAggregates.class);
-
-        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 4, 14);
-        final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
-        final var prop_c2 = prop("c2", topSource, BIGDECIMAL_PROP_TYPE);
-        final var topYield_qty = mkYield(lastFuelUsageQtyForYield, "qty", 6);
-        final var topYield_total = mkYield(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "total", 7);
-        final var topGroupBy_c2 = new GroupBy3(prop_c2);
-
-        final var expected = qry(new JoinLeafNode3(topSource),
-                                 yields(topYield_qty, topYield_total),
-                                 groups(topGroupBy_c2));
-
-        AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
-        final var actual = qry(actualEql);
+        final var actual = qry(query);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(query);
         assertQueryEquals(expected, actual);
     }
 

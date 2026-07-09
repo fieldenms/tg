@@ -131,6 +131,32 @@ public class AggregateOperandMaterialiserExecTest extends AbstractEqlExecutionTe
         assertThatThrownBy(() -> retrieveAll(qry)).isInstanceOf(EntityFetcherException.class);
     }
 
+    /// A yielded correlated subquery (outside any aggregate argument) causes the transformation to be skipped:
+    /// the replacement operation does not descend into subqueries, so the subquery's correlation with the original
+    /// source can only be preserved by leaving the query untouched.
+    /// The untransformed query is evaluated by SQL Server natively, as the subquery correlates via the grouped column
+    /// and the aggregation is over an expression without subqueries.
+    ///
+    @Test
+    public void yielded_correlated_subquery_alongside_an_aggregation() {
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle.key").eq().extProp("key").yield().countAll().modelAsPrimitive();
+        final var qry = select(TgVehicle.class)
+                .groupBy().prop("key")
+                .yield().prop("key").as("vehKey")
+                .yield().model(countFuelUsage).as("cnt")
+                .yield().maxOf().prop("sumOfPrices").as("maxSum")
+                .modelAsAggregate();
+
+        final var byKey = retrieveByKey(qry, "vehKey");
+        assertEquals(3, byKey.size());
+        assertNumericEquals("2", byKey.get("V1").get("cnt"));
+        assertNumericEquals("1", byKey.get("V2").get("cnt"));
+        assertNumericEquals("0", byKey.get("V3").get("cnt"));
+        assertNumericEquals("11", byKey.get("V1").get("maxSum"));
+        assertNumericEquals("22", byKey.get("V2").get("maxSum"));
+        assertNumericEquals("33", byKey.get("V3").get("maxSum"));
+    }
+
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

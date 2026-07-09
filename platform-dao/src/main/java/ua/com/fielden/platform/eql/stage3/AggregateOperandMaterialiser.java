@@ -34,6 +34,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///
 /// This transformation is applicable only if the query yields or orders by an aggregation.
 /// Otherwise, it is a no-op.
+/// It is also skipped if a yield or an order-by contains a subquery that would not be materialised (see Limitations).
 ///
 /// This transformation applies only to SQL Server.
 ///
@@ -121,26 +122,33 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///
 /// ## Limitations
 ///
-/// ### 1. A subquery cannot be both yielded and grouped by
+/// ### 1. Subqueries outside aggregate arguments
 ///
-/// If a query contains a subquery as one of its group-by items and also yields that subquery, the transformation will result in an invalid query.
-/// However, if a subquery is used in `groupBy` and is not yielded, the resulting query will be valid.
+/// The replacement operation does not descend into subqueries.
+/// Therefore, a subquery that occurs in a yield or an order-by outside of an aggregate function's argument cannot be
+/// rewritten to account for the new query structure: any reference to the original source within it would become
+/// dangling after the transformation, as the original source moves into the source query.
+/// When such a subquery is detected and it is not materialised itself, the transformation is skipped, and the query remains as is.
+///
+/// SQL Server can evaluate such an untransformed query unless it genuinely requires materialisation (an aggregate
+/// function's argument or a group-by operand contains a subquery), in which case SQL Server rejects it natively --
+/// the same outcome as in the absence of this transformation.
+///
+/// The notable instance of this limitation is a subquery that is both grouped by and yielded:
 ///
 /// ```
 /// countFuelUsage = select(FuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
 /// select(Vehicle.class)
 ///     .groupBy().model(countFuelUsage)
-///     .yield().model(countFuelUsage).as("count") // Remove this yield and it works.
+///     .yield().model(countFuelUsage).as("count") // Remove this yield and the transformation applies.
 ///     .modelAsAggregate();
 /// ```
 ///
-/// When the query above is transformed, the resulting source query will materialise the subquery for the group-by usage, but not for the yield.
-/// The outer query will retain the original subquery yield, which will have become invalid as it will no longer have access to the original query source.
-///
-/// The reason the transformation cannot produce a valid query in such cases is that the two subqueries are not seen as equal,
-/// hence cannot be materialised under one column.
-/// The current implementation compares queries by [AbstractQuery3#equals], which considers generated IDs (they are unique,
-/// so the queries are never equal).
+/// The group-by subquery would be materialised, but the yielded subquery could not reuse that column: the two
+/// subqueries are not seen as equal, hence cannot be materialised under one column.
+/// The current implementation compares queries by [AbstractQuery3#equals], which considers generated identifiers
+/// (they differ between the two instances, so the queries are never equal).
+/// Such queries are therefore skipped and fail on SQL Server, which does not support subqueries in `GROUP BY`.
 ///
 public final class AggregateOperandMaterialiser {
 
@@ -188,6 +196,14 @@ public final class AggregateOperandMaterialiser {
                         origOrderings == null ? Stream.of() : origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull).flatMap(this::extractAggregatedExpressions))
                 .collect(toCollection(LinkedHashSet::new));
         if (operandsToMaterialise.isEmpty() || operandsToMaterialise.stream().allMatch(AggregateOperandMaterialiser::isPersistentProperty)) {
+            return skipTransformation(context);
+        }
+        // A subquery in a yield or an order-by that is not materialised would keep referencing the original source,
+        // which the outer query no longer accesses (the replacement operation does not descend into subqueries).
+        // Skip the transformation to preserve such references (see Limitations in the class documentation).
+        if (Stream.concat(origYields.getYields().stream().map(Yield3::operand),
+                          origOrderings == null ? Stream.of() : origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull))
+                .anyMatch(rand -> hasUnmaterialisedSubQuery(rand, operandsToMaterialise))) {
             return skipTransformation(context);
         }
 
@@ -276,6 +292,49 @@ public final class AggregateOperandMaterialiser {
             // `COUNT(*)` has no argument.
             case CountAll3 _ -> Stream.empty();
             default -> streamChildren(node).flatMap(this::extractAggregatedExpressions);
+        };
+    }
+
+    /// Determines whether `node` contains a [subquery][SubQuery3] that would not be materialised by this transformation.
+    ///
+    /// Subqueries are not descended into by the replacement operation, so a subquery that is neither materialised itself
+    /// nor part of a materialised expression retains its references to the original query source.
+    /// After the transformation, such references would become dangling, as the original source moves into the source query.
+    ///
+    /// Arguments of aggregate functions are always materialised in full (including any subqueries they contain),
+    /// and so is every operand contained in `materialised`.
+    ///
+    /// @param materialised  operands that will be materialised as columns of the source query
+    ///
+    private boolean hasUnmaterialisedSubQuery(final ISingleOperand3 node, final Set<ISingleOperand3> materialised) {
+        if (materialised.contains(node)) {
+            return false;
+        }
+        return switch (node) {
+            case SubQuery3 _ -> true;
+            // Arguments of aggregate functions are materialised in full, together with any subqueries they may contain.
+            // For concatOf, this includes the operands of its order items.
+            case AverageOf3 _, MinOf3 _, MaxOf3 _, SumOf3 _, CountOf3 _, CountAll3 _, ConcatOf3 _ -> false;
+            // For case-when, also consider conditions, which may contain subqueries within predicates.
+            case CaseWhen3 it -> it.whenThenPairs().stream()
+                                         .anyMatch(pair -> pair.map((when, then) -> hasUnmaterialisedSubQuery(when, materialised)
+                                                                                    || hasUnmaterialisedSubQuery(then, materialised)))
+                                 || it.elseOperand() != null && hasUnmaterialisedSubQuery(it.elseOperand(), materialised);
+            default -> streamChildren(node).anyMatch(child -> hasUnmaterialisedSubQuery(child, materialised));
+        };
+    }
+
+    private boolean hasUnmaterialisedSubQuery(final ICondition3 condition, final Set<ISingleOperand3> materialised) {
+        return switch (condition) {
+            case ExistencePredicate3 _ -> true;
+            // The right operand of a quantified predicate is always a subquery.
+            case QuantifiedPredicate3 _ -> true;
+            case SetPredicate3 it -> it.rightOperand() instanceof QueryBasedSet3
+                                     || streamChildren(it).anyMatch(rand -> hasUnmaterialisedSubQuery(rand, materialised));
+            case Conditions3 it -> it.allConditionsAsDnf().stream()
+                    .flatMap(List::stream)
+                    .anyMatch(c -> hasUnmaterialisedSubQuery(c, materialised));
+            default -> streamChildren(condition).anyMatch(rand -> hasUnmaterialisedSubQuery(rand, materialised));
         };
     }
 
