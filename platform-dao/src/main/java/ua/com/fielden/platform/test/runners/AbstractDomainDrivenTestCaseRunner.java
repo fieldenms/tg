@@ -234,7 +234,9 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             return true;
         }
 
-        final var atWithDbVersion = getFirstAnnotation(WithDbVersion.class, child, child.getDeclaringClass());
+        // The class-level annotation is resolved against the test class being run rather than the method's declaring class:
+        // for an inherited test method, the declaring class is an ancestor, which would miss an annotation on the concrete class.
+        final var atWithDbVersion = getFirstAnnotation(WithDbVersion.class, child, getTestClass().getJavaClass());
         final var dbVersionMatches = atWithDbVersion == null || ArrayUtils.contains(atWithDbVersion.value(), dbVersionProvider.dbVersion());
         if (!dbVersionMatches) {
             logger.info(() -> INFO_TEST_IGNORED_DUE_TO_DB_VERSION.formatted(
