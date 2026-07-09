@@ -32,7 +32,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 /// Transforms a query that yields an aggregation by materialising the aggregated expression (the aggregate function's argument)
 /// in a source query created on top of the original source.
 ///
-/// This transformation is applicable only if the query yields an aggregation.
+/// This transformation is applicable only if the query yields or orders by an aggregation.
 /// Otherwise, it is a no-op.
 ///
 /// This transformation applies only to SQL Server.
@@ -46,8 +46,8 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 /// * `G` - group by list
 /// * `Y` - yields
 ///
-/// The transformation is applicable iff a query yields an aggregation.
-/// I.e., `Y` contains a yield `y = Yield(operand)` such that `operand` contains an aggregate function at the level of `S`.
+/// The transformation is applicable iff a query yields or orders by an aggregation.
+/// I.e., `Y` contains a yield `y = Yield(operand)` (or `O` contains an order-by with an operand) such that `operand` contains an aggregate function at the level of `S`.
 ///
 /// Note: expression `e` is said to be at the level of `S` of query `Q` with yields `Y` iff (`e` is one of the yields in `Y`) OR (there is a yield in `Y` that contains `e` AND that yield is not a sub-query).
 ///
@@ -94,7 +94,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///
 /// * `Os, Gs = empty` -- ordering and grouping apply to the outer query only.
 ///
-/// * `Ys = flatmap(extractAgg, Y) + G` -- everything that has to be materialised.
+/// * `Ys = flatmap(extractAgg, Y) + G + flatmap(extractAgg, O)` -- everything that has to be materialised.
 ///
 ///   `extractAgg(node)` -- all expressions `x` that appear in `node` as arguments of aggregate functions at the level of S.
 ///   Examples:
@@ -105,6 +105,9 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///   ```
 ///
 ///   Group-by expressions in `G` also have to be materialised as they may reference `S`.
+///
+///   Aggregate arguments in `O` are materialised for the same reason as those in `Y`: the outer order-by aggregates
+///   over columns of the source query, not over the original source.
 ///
 /// `Wt = empty` -- conditions are applied in `St`.
 ///
@@ -179,8 +182,10 @@ public final class AggregateOperandMaterialiser {
         final var origOrderings = qc.orderings();
 
         final Set<ISingleOperand3> operandsToMaterialise = Stream.concat(
-                        origYields.getYields().stream().flatMap(y -> extractAggregatedExpressions(y.operand())),
-                        origGroups == null ? Stream.of() : origGroups.groups().stream().map(GroupBy3::operand))
+                        Stream.concat(
+                                origYields.getYields().stream().flatMap(y -> extractAggregatedExpressions(y.operand())),
+                                origGroups == null ? Stream.of() : origGroups.groups().stream().map(GroupBy3::operand)),
+                        origOrderings == null ? Stream.of() : origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull).flatMap(this::extractAggregatedExpressions))
                 .collect(toCollection(LinkedHashSet::new));
         if (operandsToMaterialise.isEmpty() || operandsToMaterialise.stream().allMatch(AggregateOperandMaterialiser::isPersistentProperty)) {
             return skipTransformation(context);

@@ -21,6 +21,7 @@ import ua.com.fielden.platform.eql.stage3.queries.SubQueryForExists3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBy3;
+import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
@@ -308,6 +309,53 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
+        assertQueryEquals(expected, actual);
+    }
+
+    /// An aggregation within an order-by has its argument materialised, just like an aggregation within a yield.
+    /// Otherwise, the outer order-by would aggregate over the original source, which the outer query no longer accesses.
+    ///
+    @Test
+    public void order_by_an_aggregation_has_its_argument_materialised() {
+        final var order = orderBy().expr(expr().maxOf().beginExpr().prop("qty").div().val(3).endExpr().model()).asc().model();
+        final var actualEql = select(TgFuelUsage.class)
+                .yield().sumOf().beginExpr().prop("qty").mult().val(2).endExpr().as("doubleQty")
+                .modelAsAggregate();
+
+        // This is the expected query, and its AST must be constructed by hand because of generated IDs.
+        final var expectedEql = select(select(TgFuelUsage.class)
+                                          .yield().beginExpr().prop("qty").mult().val(2).endExpr().as("c1")
+                                          .yield().beginExpr().prop("qty").div().val(3).endExpr().as("c2")
+                                          .modelAsAggregate())
+                .orderBy().expr(expr().maxOf().prop("c2").model()).asc()
+                .yield().sumOf().prop("c1").as("doubleQty")
+                .modelAsAggregate();
+
+        final var srcQrySource = source(TgFuelUsage.class, 1, 1);
+        final var qtyTimes2 = new Expression3(prop("qty", srcQrySource, BIGDECIMAL_PROP_TYPE),
+                                              List.of(new CompoundSingleOperand3(new Value3(2, INTEGER_PROP_TYPE), MULT)),
+                                              BIGDECIMAL_PROP_TYPE);
+        final var qtyDiv3 = new Expression3(prop("qty", srcQrySource, BIGDECIMAL_PROP_TYPE),
+                                            List.of(new CompoundSingleOperand3(new Value3(3, INTEGER_PROP_TYPE), DIV)),
+                                            BIGDECIMAL_PROP_TYPE);
+        final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
+                                  yields(mkYield(qtyTimes2, "c1", 3),
+                                         mkYield(qtyDiv3, "c2", 4)),
+                                  EntityAggregates.class);
+
+        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 5);
+        final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
+        final var prop_c2 = prop("c2", topSource, BIGDECIMAL_PROP_TYPE);
+        final var topYield_doubleQty = mkYield(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "doubleQty", 2);
+        final var topOrder = new OrderBy3(new Expression3(new MaxOf3(prop_c2, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE), false);
+
+        final var expected = qry(new JoinLeafNode3(topSource),
+                                 yields(topYield_doubleQty),
+                                 (GroupBys3) null,
+                                 orders(topOrder));
+
+        AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
+        final var actual = qry(actualEql, order);
         assertQueryEquals(expected, actual);
     }
 

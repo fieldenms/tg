@@ -207,6 +207,25 @@ public class AggregateOperandMaterialiserExecTest extends AbstractEqlExecutionTe
         assertNumericEquals("44", rows.get(1).get("total"));
     }
 
+    /// A standalone `order by` over an aggregation that does not occur in any yield has the aggregate's argument
+    /// materialised, and the result is ordered correctly.
+    ///
+    @Test
+    public void standalone_order_by_an_aggregation_over_an_expression() {
+        final var qry = select(TgVehicle.class)
+                .groupBy().prop("active")
+                .yield().prop("active").as("flag")
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+        final OrderingModel ordering = orderBy().expr(expr().maxOf().beginExpr().prop("price.amount").mult().val(2).endExpr().model()).desc().model();
+
+        final var rows = retrieveAll(qry, ordering);
+        assertEquals(2, rows.size());
+        // Ordered by max(price * 2) descending: active group (max = 60) before inactive group (max = 40).
+        assertNumericEquals("44", rows.get(0).get("total"));
+        assertNumericEquals("22", rows.get(1).get("total"));
+    }
+
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
