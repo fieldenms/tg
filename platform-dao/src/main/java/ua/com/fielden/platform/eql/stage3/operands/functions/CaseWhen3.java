@@ -12,7 +12,6 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ToString;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;

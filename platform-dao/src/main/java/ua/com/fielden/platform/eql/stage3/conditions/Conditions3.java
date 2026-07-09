@@ -18,10 +18,6 @@ public record Conditions3 (boolean negated, List<List<? extends ICondition3>> al
         this.negated = negated;
     }
 
-    public static Conditions3 empty() {
-        return new Conditions3(false, ImmutableList.of());
-    }
-
     public boolean isEmpty() {
         return allConditionsAsDnf().isEmpty();
     }

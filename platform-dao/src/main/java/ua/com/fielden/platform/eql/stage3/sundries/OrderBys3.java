@@ -35,18 +35,14 @@ public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implemen
         this.offset = offset;
     }
 
-    public static OrderBys3 empty() {
-        return new OrderBys3(ImmutableList.of());
-    }
-
     public boolean isEmpty() {
         return list.isEmpty();
     }
 
     /// Returns a new instance with the order-by list replaced by `newList`, preserving `limit` and `offset`.
     ///
-    public OrderBys3 updateOrderBys(final List<OrderBy3> list) {
-        return list == this.list ? this : new OrderBys3(list, limit, offset);
+    public OrderBys3 updateOrderBys(final List<OrderBy3> newList) {
+        return newList == this.list ? this : new OrderBys3(newList, limit, offset);
     }
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final AbstractQuery3 enclosingQuery) {

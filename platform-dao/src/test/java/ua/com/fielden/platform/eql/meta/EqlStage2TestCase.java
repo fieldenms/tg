@@ -40,7 +40,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.*;
 
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertTrue;
@@ -59,7 +58,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static List<AbstractQuerySourceItem<?>> path(final Class<? extends AbstractEntity<?>> type, final CharSequence path) {
         final var progress = querySourceInfoProvider().getModelledQuerySourceInfo(type).resolve(new PropResolutionProgress(path.toString()));
-        assertTrue(format("Could not resolve property [%s] against [%s].", path, type.getSimpleName()),
+        assertTrue("Could not resolve property [%s] against [%s].".formatted(path, type.getSimpleName()),
                    progress.isSuccessful());
         return progress.getResolved();
     }
@@ -173,7 +172,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static Prop2 prop(final ISource2<? extends ISource3> source, final String name) {
         if (EntityAggregates.class.equals(source.sourceType())) {
-            assertTrue(format("No such property [%s] in the specified source.", name),
+            assertTrue("No such property [%s] in the specified source.".formatted(name),
                        source.querySourceInfo().hasProp(name));
             return prop(source, source.querySourceInfo().getProps().get(name));
         }

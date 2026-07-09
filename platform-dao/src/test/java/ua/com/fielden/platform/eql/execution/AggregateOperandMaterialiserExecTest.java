@@ -37,6 +37,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 /// Queries are constructed so that they trigger the transformation -- i.e., they aggregate over a non-persistent
 /// operand at the level of the source (a calculated property, an expression, or a sub-query) -- and so that their
 /// expected results are easy to compute by hand from the populated domain.
+/// Some tests instead cover queries that the transformation deliberately skips, asserting that they execute natively.
 ///
 @WithDbVersion(DbVersion.MSSQL)
 public class AggregateOperandMaterialiserExecTest extends AbstractEqlExecutionTestCase {

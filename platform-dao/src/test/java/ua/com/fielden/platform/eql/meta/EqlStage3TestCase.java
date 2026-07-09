@@ -441,10 +441,6 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new Yield3(prop(propName, source, type), alias, nextSqlId(), type);
     }
 
-    public static Yield3 yieldProp(final String propName, final ISource3 source, final String alias, final Integer sqlId, final PropType type) {
-        return new Yield3(prop(propName, source, type), alias, sqlId, type);
-    }
-
     public static Yield3 yieldProp(final String propName, final ISource3 source, final String alias, final PropType type, final Integer sqlId) {
         return new Yield3(prop(propName, source, type), alias, sqlId, type);
     }

@@ -111,7 +111,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable source = source(MODEL, 1);
 
         final Yield3 modelYield = yieldId(source, "model", 3);
-        final Yield3 makeYield = yieldProp("make", source, "make", 2, propType(MAKE, H_LONG));
+        final Yield3 makeYield = yieldProp("make", source, "make", propType(MAKE, H_LONG), 2);
         final Yields3 yields = yields(modelYield, makeYield);
 
         final ResultQuery3 expQry = qry(sources(source), yields);

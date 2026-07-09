@@ -2,14 +2,11 @@ package ua.com.fielden.platform.eql.stage3.operands;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
-import ua.com.fielden.platform.eql.stage2.operands.AbstractSingleOperand2;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import static java.util.stream.Collectors.joining;
 
