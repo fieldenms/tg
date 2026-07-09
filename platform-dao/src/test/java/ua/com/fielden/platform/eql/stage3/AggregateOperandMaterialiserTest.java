@@ -14,6 +14,7 @@ import ua.com.fielden.platform.eql.stage3.conditions.LikePredicate3;
 import ua.com.fielden.platform.eql.stage3.conditions.SetPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.CompoundSingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
+import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.OperandsBasedSet3;
 import ua.com.fielden.platform.eql.stage3.operands.Value3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.*;
@@ -839,6 +840,56 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_qtys, topYield_doubleSum));
+
+        AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
+        final var actual = qry(actualEql);
+        assertQueryEquals(expected, actual);
+    }
+
+    /// A `concatOf` order item may reference a yield of the enclosing query, which is expressible only by including a
+    /// pre-built `OrderingModel` (`orderBy().yield(...)`).
+    /// At stage 3, such an item has neither an operand nor a yield: `ConcatOf2` resolves yield references against
+    /// empty yields, producing `OrderBy3(operand = null, yield = null)`.
+    /// The node replacement operation must tolerate such items: it must neither NPE on the null operand while
+    /// streaming the children of the `concatOf`, nor rewrite the item.
+    ///
+    @Test
+    public void concatOf_orderBy_item_that_references_a_yield_is_preserved_under_transformation() {
+        final var actualEql = select(TgFuelUsage.class)
+                .groupBy().prop("date")
+                .yield().prop("date").as("fuDate")
+                .yield().concatOf().absOf().prop("qty").orderBy().order(orderBy().yield("fuDate").asc().model()).separator().val(", ").as("qtys")
+                .modelAsAggregate();
+
+        // This is the expected query, and its AST must be constructed by hand because of generated IDs.
+        final var expectedEql = select(select(TgFuelUsage.class)
+                                          .yield().absOf().prop("qty").as("c1")
+                                          .yield().prop("date").as("c2")
+                                          .modelAsAggregate())
+                .groupBy().prop("c2")
+                .yield().prop("c2").as("fuDate")
+                .yield().concatOf().prop("c1").orderBy().order(orderBy().yield("fuDate").asc().model()).separator().val(", ").as("qtys")
+                .modelAsAggregate();
+
+        final var srcQrySource = source(TgFuelUsage.class, 1, 1);
+        final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
+                                  yields(mkYield(new AbsOf3(prop("qty", srcQrySource, BIGDECIMAL_PROP_TYPE), BIGDECIMAL_PROP_TYPE), "c1", 4),
+                                         yieldProp("date", srcQrySource, "c2", DATETIME_PROP_TYPE, 5)),
+                                  EntityAggregates.class);
+
+        final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 6);
+        final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
+        final var prop_c2 = prop("c2", topSource, DATETIME_PROP_TYPE);
+        final var topYield_fuDate = mkYield(prop_c2, "fuDate", 2);
+        // The yield-referencing order item is preserved as is: no operand, no yield.
+        final var topYield_qtys = mkYield(new ConcatOf3(prop_c1, new Value3(", ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE,
+                                                        List.of(new OrderBy3((ISingleOperand3) null, false))),
+                                          "qtys", 3);
+        final var topGroupBy_c2 = new GroupBy3(prop_c2);
+
+        final var expected = qry(new JoinLeafNode3(topSource),
+                                 yields(topYield_fuDate, topYield_qtys),
+                                 groups(topGroupBy_c2));
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
