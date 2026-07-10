@@ -14,6 +14,7 @@ import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sundries.*;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -190,7 +191,7 @@ public final class AggregateOperandMaterialiser {
         final var origGroups = qc.groups();
         final var origOrderings = qc.orderings();
 
-        final List<ISingleOperand3> yieldAndOrderingOperands = Stream.concat(
+        final List<ISingleOperand3> yieldAndOrderingOperands = StreamUtils.concat(
                         origYields.getYields().stream().map(Yield3::operand),
                         origOrderings == null ? Stream.of() : origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull))
                 .toList();
@@ -200,10 +201,9 @@ public final class AggregateOperandMaterialiser {
             return skipTransformation(context);
         }
 
-        final Set<ISingleOperand3> operandsToMaterialise = Stream.concat(
-                        Stream.concat(
-                                origYields.getYields().stream().flatMap(y -> extractAggregatedExpressions(y.operand())),
-                                origGroups == null ? Stream.of() : origGroups.groups().stream().map(GroupBy3::operand)),
+        final Set<ISingleOperand3> operandsToMaterialise = StreamUtils.concat(
+                        origYields.getYields().stream().flatMap(y -> extractAggregatedExpressions(y.operand())),
+                        origGroups == null ? Stream.of() : origGroups.groups().stream().map(GroupBy3::operand),
                         origOrderings == null ? Stream.of() : origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull).flatMap(this::extractAggregatedExpressions))
                 .collect(toCollection(LinkedHashSet::new));
         if (operandsToMaterialise.isEmpty() || operandsToMaterialise.stream().allMatch(AggregateOperandMaterialiser::isPersistentProperty)) {
@@ -297,7 +297,7 @@ public final class AggregateOperandMaterialiser {
             // concatOf: extract the aggregated expression and the ordering items.
             // The ordering items may reference properties of the source, hence have to be materialised.
             // The separator is always a constant, hence does not have to be materialised.
-            case ConcatOf3 it -> Stream.concat(Stream.of(it.operand1), it.orderItems.stream().map(OrderBy3::operand).filter(Objects::nonNull));
+            case ConcatOf3 it -> StreamUtils.concat(Stream.of(it.operand1), it.orderItems.stream().map(OrderBy3::operand).filter(Objects::nonNull));
             // `COUNT(*)` has no argument.
             case CountAll3 _ -> Stream.empty();
             default -> streamChildren(node).flatMap(this::extractAggregatedExpressions);
@@ -513,14 +513,14 @@ public final class AggregateOperandMaterialiser {
     ///
     private Stream<ISingleOperand3> streamChildren(final ISingleOperand3 node) {
         return switch (node) {
-            case ConcatOf3 it -> Stream.concat(Stream.of(it.operand1, it.operand2), it.orderItems.stream().map(OrderBy3::operand).filter(Objects::nonNull));
+            case ConcatOf3 it -> StreamUtils.concat(Stream.of(it.operand1, it.operand2), it.orderItems.stream().map(OrderBy3::operand).filter(Objects::nonNull));
             case SingleOperandFunction3 it -> Stream.of(it.operand);
             case TwoOperandsFunction3 it -> Stream.of(it.operand1, it.operand2);
-            case Expression3 it -> Stream.concat(Stream.of(it.firstOperand), it.otherOperands.stream().map(CompoundSingleOperand3::operand));
+            case Expression3 it -> StreamUtils.concat(Stream.of(it.firstOperand), it.otherOperands.stream().map(CompoundSingleOperand3::operand));
             case Concat3 it -> it.operands().stream();
             // Case-when is special: operands within conditions are not immediate children but are included.
-            case CaseWhen3 it -> Stream.concat(
-                    it.whenThenPairs().stream().flatMap(t2 -> t2.map((when, then) -> Stream.concat(streamChildren(when), Stream.of(then)))),
+            case CaseWhen3 it -> StreamUtils.concat(
+                    it.whenThenPairs().stream().flatMap(t2 -> t2.map((when, then) -> StreamUtils.concat(streamChildren(when), Stream.of(then)))),
                     Optional.ofNullable(it.elseOperand()).stream());
             default -> Stream.empty();
         };
@@ -531,7 +531,7 @@ public final class AggregateOperandMaterialiser {
             case ComparisonPredicate3 it -> Stream.of(it.leftOperand(), it.rightOperand());
             case NullPredicate3 it -> Stream.of(it.operand());
             case LikePredicate3 it -> Stream.of(it.matchOperand(), it.patternOperand());
-            case SetPredicate3 it -> Stream.concat(
+            case SetPredicate3 it -> StreamUtils.concat(
                     Stream.of(it.leftOperand()),
                     switch (it.rightOperand()) {
                         case OperandsBasedSet3 set -> set.operands().stream();
