@@ -500,6 +500,18 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
+         * Indicates whether the SAVE action of this master may close the enclosing dialog.
+         *
+         * A master that embeds this one and governs closing itself (e.g. the master for 'EntityEditAction') assigns 'false'.
+         * Such an assignment is made by 'tg-element-loader', which applies the loaded element's attributes before inserting
+         * that element into the DOM -- that is, before this master gets connected and, hence, before 'ready' runs.
+         */
+        shouldCloseAfterSave: {
+            type: Boolean,
+            value: true
+        },
+
+        /**
          * The map of saved continuation functional entities by their property name identifiers.
          *
          * Continuation functional entity master pops-up after unsuccessful saving with concrete 'continuation' exception.
@@ -1017,9 +1029,9 @@ const TgEntityMasterBehaviorImpl = {
             }
         });
 
-        // Don't close this master on save action if it is a part of compound master.
+        // Don't close this master on save action if it is a part of compound master, or if an embedding master governs closing itself.
         const menuSectionParent = getParentAnd(self, element => element.matches('tg-master-menu-item-section'));
-        if (menuSectionParent) {
+        if (menuSectionParent || !self.shouldCloseAfterSave) {
             const saveButton = self.$._saveAction;
             if (saveButton) {
                 saveButton.closeAfterExecution = false;
