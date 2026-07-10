@@ -202,9 +202,8 @@ public final class AggregateOperandMaterialiser {
         }
 
         final Set<ISingleOperand3> operandsToMaterialise = StreamUtils.concat(
-                        origYields.getYields().stream().flatMap(y -> extractAggregatedExpressions(y.operand())),
-                        origGroups == null ? Stream.of() : origGroups.groups().stream().map(GroupBy3::operand),
-                        origOrderings == null ? Stream.of() : origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull).flatMap(this::extractAggregatedExpressions))
+                        yieldAndOrderingOperands.stream().flatMap(this::extractAggregatedExpressions),
+                        origGroups == null ? Stream.of() : origGroups.groups().stream().map(GroupBy3::operand))
                 .collect(toCollection(LinkedHashSet::new));
         if (operandsToMaterialise.isEmpty() || operandsToMaterialise.stream().allMatch(AggregateOperandMaterialiser::isPersistentProperty)) {
             return skipTransformation(context);

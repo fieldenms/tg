@@ -372,12 +372,12 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         // This is the expected query, and its AST must be constructed by hand because of generated IDs.
         final var expectedEql = select(select(TgFuelUsage.class)
-                                          .yield().prop("date").as("c1")
-                                          .yield().beginExpr().prop("qty").mult().val(2).endExpr().as("c2")
+                                          .yield().beginExpr().prop("qty").mult().val(2).endExpr().as("c1")
+                                          .yield().prop("date").as("c2")
                                           .modelAsAggregate())
-                .groupBy().prop("c1")
-                .orderBy().expr(expr().maxOf().prop("c2").model()).desc()
-                .yield().prop("c1").as("d")
+                .groupBy().prop("c2")
+                .orderBy().expr(expr().maxOf().prop("c1").model()).desc()
+                .yield().prop("c2").as("d")
                 .modelAsAggregate();
 
         final var srcQrySource = source(TgFuelUsage.class, 1, 1);
@@ -385,20 +385,20 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
                                               List.of(new CompoundSingleOperand3(new Value3(2, INTEGER_PROP_TYPE), MULT)),
                                               BIGDECIMAL_PROP_TYPE);
         final var srcQry = srcqry(new JoinLeafNode3(srcQrySource),
-                                  yields(yieldProp("date", srcQrySource, "c1", DATETIME_PROP_TYPE, 3),
-                                         mkYield(qtyTimes2, "c2", 4)),
+                                  yields(mkYield(qtyTimes2, "c1", 3),
+                                         yieldProp("date", srcQrySource, "c2", DATETIME_PROP_TYPE, 4)),
                                   EntityAggregates.class);
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 5);
-        final var prop_c1 = prop("c1", topSource, DATETIME_PROP_TYPE);
-        final var prop_c2 = prop("c2", topSource, BIGDECIMAL_PROP_TYPE);
-        final var topYield_d = mkYield(prop_c1, "d", 2);
-        final var topGroupBy_c1 = new GroupBy3(prop_c1);
-        final var topOrder = new OrderBy3(new Expression3(new MaxOf3(prop_c2, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE), true);
+        final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
+        final var prop_c2 = prop("c2", topSource, DATETIME_PROP_TYPE);
+        final var topYield_d = mkYield(prop_c2, "d", 2);
+        final var topGroupBy_c2 = new GroupBy3(prop_c2);
+        final var topOrder = new OrderBy3(new Expression3(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE), true);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_d),
-                                 groups(topGroupBy_c1),
+                                 groups(topGroupBy_c2),
                                  orders(topOrder));
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
