@@ -416,7 +416,8 @@ public final class AggregateOperandMaterialiser {
                     return replacedChild == child ? null : t2(child, replacedChild);
                 })
                 .filter(Objects::nonNull)
-                // Use reference-based equality for keys as nodes may be equal.
+                // Use reference-based equality to ensure that equal nodes are each replaced with their own new node.
+                // Replacing two or more old nodes by the same new node would violate the node uniqueness invariant.
                 .collect(toMap((v1, _) -> v1, IdentityHashMap::new));
         return replaceChildren(node, replacedChildren);
     }
