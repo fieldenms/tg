@@ -221,9 +221,9 @@ public final class AggregateOperandMaterialiser {
         final var sWhere = origWhere;
         final GroupBys3 sGroups = null;
         final OrderBys3 sOrderings = null;
-        final var sYieldList_Context = createYields(operandsAndAliases, context);
-        final var sYields = new Yields3(sYieldList_Context._1);
-        final var context2 = sYieldList_Context._2;
+        final var createYieldsResult = createYields(operandsAndAliases, context);
+        final var sYields = new Yields3(createYieldsResult.item);
+        final var context2 = createYieldsResult.updatedContext;
         final var sQuery = new SourceQuery3(new QueryComponents3(Optional.of(sJoin), sWhere, sYields, sGroups, sOrderings), EntityAggregates.class);
 
         final var context3 = context2.cloneWithNextSqlId();
@@ -258,7 +258,7 @@ public final class AggregateOperandMaterialiser {
     ///
     /// @param operandsAndAliases  a list of pairs `(operand, alias)`. Each `operand` is yielded under `alias`.
     ///
-    private T2<List<Yield3>, TransformationContextFromStage2To3> createYields(
+    private TransformationResultFromStage2To3<List<Yield3>> createYields(
             final List<? extends T2<? extends ISingleOperand3, String>> operandsAndAliases,
             final TransformationContextFromStage2To3 context)
     {
@@ -272,7 +272,7 @@ public final class AggregateOperandMaterialiser {
             yields.add(new Yield3(operand, alias, ctx.sqlId, operand.type()));
         }
 
-        return t2(unmodifiableList(yields), ctx);
+        return new TransformationResultFromStage2To3<>(unmodifiableList(yields), ctx);
     }
 
     /// Extracts the argument expression of every aggregate function occurring at the same level as the query source
