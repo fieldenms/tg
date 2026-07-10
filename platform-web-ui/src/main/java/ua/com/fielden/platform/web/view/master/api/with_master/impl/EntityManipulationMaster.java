@@ -24,6 +24,29 @@ public class EntityManipulationMaster<T extends AbstractEntityManipulationAction
         return true;
     }
 
+    /**
+     * Announces an imminent change of the embedded master's type by firing `tg-master-type-before-change`.
+     * The enclosing dialog reacts to this event (see `tg-custom-action-dialog._handleMasterBeforeChange`) to update its title and to start the resize animation before the new master is rendered.
+     *
+     * This applies to every manipulation master, as `entityType` is a property of {@link AbstractEntityManipulationAction}.
+     * The event is fired only when the type actually changes, so masters bound to a single entity type never fire it.
+     */
+    @Override
+    protected String getAdditionalReadyCallbackCode() {
+        return "this._handleBindingEntityChanged = function (e) {\n"
+             + "    if (e.detail.value && e.detail.value.entityType) {\n"
+             + "        if (this._prevCurrBindingEntity && e.detail.value.entityType !== this._prevCurrBindingEntity.entityType) {\n"
+             + "            this.fire('tg-master-type-before-change', {\n"
+             + "                prevType: this._prevCurrBindingEntity.entityType,\n"
+             + "                currType: e.detail.value.entityType\n"
+             + "            });\n"
+             + "        }\n"
+             + "        this._prevCurrBindingEntity = e.detail.value;\n"
+             + "    }\n"
+             + "}.bind(this);\n"
+             + "this.addEventListener('_curr-binding-entity-changed', this._handleBindingEntityChanged);\n";
+    }
+
     @Override
     protected String getAttributes(final Class<? extends AbstractEntity<?>> entityType, final String bindingEntityName, final boolean shouldRefreshParentCentreAfterSave) {
         return "{" +

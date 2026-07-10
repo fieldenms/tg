@@ -21,22 +21,10 @@ public class EntityEditMaster extends EntityManipulationMaster<EntityEditAction>
     public EntityEditMaster(final Class<EntityEditAction> entityType, final boolean shouldRefreshParentCentreAfterSave) {
         super(entityType, shouldRefreshParentCentreAfterSave);
         final String masterTemplate = super.render().render().toString().replace("//@master-is-ready-custom-code",
-                "             //Provide custom listeners to support navigation between heterogenic entities\n"
-              + "             self._handleBindingEntityChanged = function (e) {\n"
-              + "                 if (e.detail.value && e.detail.value.entityType) {\n"
-              + "                     if (this._prevCurrBindingEntity && e.detail.value.entityType !== this._prevCurrBindingEntity.entityType) {\n"
-              + "                         this.fire('tg-master-type-before-change',{\n"
-              + "                             prevType: this._prevCurrBindingEntity.entityType,\n"
-              + "                             currType: e.detail.value.entityType\n"
-              + "                         });\n"
-              + "                     }\n"
-              + "                     this._prevCurrBindingEntity = e.detail.value;\n"
-              + "                 }\n"
-              + "             }.bind(self);\n"
+                "             //Report a failure to retrieve the entity being navigated to\n"
               + "             self._handleBindingEntityRetrievedError = function (e) {\n"
               + "                 this.fire('tg-master-navigation-error');\n"
               + "             }.bind(self);\n"
-              + "             self.addEventListener('_curr-binding-entity-changed', self._handleBindingEntityChanged);\n"
               + "             self.$.loader.addEventListener('binding-entity-retrieved-error', self._handleBindingEntityRetrievedError);\n");
       this.renderable = () -> new InnerTextElement(masterTemplate);
     }
