@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.operands.functions;
 
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.Value1;
@@ -21,6 +22,8 @@ import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException
 
 public class ConcatOf1 extends TwoOperandsFunction1<ConcatOf2> {
 
+    public static final String ERR_ORDER_BY_WITHIN_CONCATOF_REFS_YIELD = "Invalid orderBy within concatOf: yields may not be referenced.";
+
     public final List<OrderBy1> orderItems;
 
     public ConcatOf1(
@@ -31,6 +34,7 @@ public class ConcatOf1 extends TwoOperandsFunction1<ConcatOf2> {
         super(expr, separator);
         requireNotNullArgument(separator, "separator");
         requireNotNullArgument(orderItems, "orderItems");
+        validateOrderItems(orderItems);
         this.orderItems = ImmutableList.copyOf(orderItems);
     }
 
@@ -71,6 +75,12 @@ public class ConcatOf1 extends TwoOperandsFunction1<ConcatOf2> {
                || obj instanceof ConcatOf1 that
                   && super.equals(that)
                   && Objects.equals(orderItems, that.orderItems);
+    }
+
+    private static void validateOrderItems(final List<OrderBy1> orderItems) {
+        if (orderItems.stream().anyMatch(o -> o.yieldName() != null)) {
+            throw new EqlStage1ProcessingException(ERR_ORDER_BY_WITHIN_CONCATOF_REFS_YIELD);
+        }
     }
 
 }

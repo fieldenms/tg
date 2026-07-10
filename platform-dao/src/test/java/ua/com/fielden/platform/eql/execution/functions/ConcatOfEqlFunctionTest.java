@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.execution.functions;
 
 import org.junit.Test;
 import ua.com.fielden.platform.eql.execution.AbstractEqlExecutionTestCase;
+import ua.com.fielden.platform.eql.stage1.operands.functions.ConcatOf1;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.types.Money;
 
@@ -9,10 +10,22 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class ConcatOfEqlFunctionTest extends AbstractEqlExecutionTestCase {
+    
+    @Test
+    public void orderBy_within_concatOf_cannot_reference_yields() {
+        final var ordering = orderBy().yield("k").asc().model();
+        final var qry = select(TgPersonName.class)
+                .yield().prop("key").as("k")
+                .yield().concatOf().prop("key").orderBy().order(ordering).separator().val(", ").as(RESULT)
+                .modelAsAggregate();
+        assertThatThrownBy(() -> retrieveResult(qry))
+                .hasStackTraceContaining(ConcatOf1.ERR_ORDER_BY_WITHIN_CONCATOF_REFS_YIELD);
+    }
 
     @Test
     public void concatOf_prop_without_orderBy() {

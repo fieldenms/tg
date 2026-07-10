@@ -513,7 +513,6 @@ public final class AggregateOperandMaterialiser {
     ///
     private Stream<ISingleOperand3> streamChildren(final ISingleOperand3 node) {
         return switch (node) {
-            // Order items may reference a yield instead of an operand, in which case the operand is null.
             case ConcatOf3 it -> Stream.concat(Stream.of(it.operand1, it.operand2), it.orderItems.stream().map(OrderBy3::operand).filter(Objects::nonNull));
             case SingleOperandFunction3 it -> Stream.of(it.operand);
             case TwoOperandsFunction3 it -> Stream.of(it.operand1, it.operand2);
