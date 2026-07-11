@@ -32,6 +32,28 @@ const TgEntityCentreTemplateBehaviorImpl = {
             type: Boolean,
             value : false
         },
+
+        /**
+         * The minimum interval (in seconds) between automatic, SSE-driven refreshes -- the "refresh governor".
+         * The value gets generated from Entity Centre DSL configuration (withMinAutoRefreshInterval); undefined if not configured.
+         */
+        minAutoRefreshInterval: Number,
+
+        /**
+         * The moment (epoch millis) when the last data load completed or a refresh prompt was skipped.
+         * Determines expiry of the quiet window, imposed by minAutoRefreshInterval.
+         */
+        _lastRefreshTimestamp: {
+            type: Number,
+            value: 0
+        },
+
+        /* A timer ID for a pending refresh, deferred until the minAutoRefreshInterval window expires. */
+        _timerIdForDeferredRefresh: {
+            type: Number,
+            value: null
+        },
+
         /**
          * Represents the action that allows to open entity master for specified entity type.
          */
@@ -73,11 +95,9 @@ const TgEntityCentreTemplateBehaviorImpl = {
 
             if (!this._pendingRefresh) {
                 this._pendingRefresh = true;
-                if (this._visible && !this._isEgiEditing) {
-                    this.showRefreshToast();
-                }
+                this._promptOrDeferPendingRefresh();
             }
-            
+
         }.bind(this);
 
         /////////////////TgDelayedActionBehavior related properties//////////////////////
@@ -94,9 +114,15 @@ const TgEntityCentreTemplateBehaviorImpl = {
             }
         }.bind(this);
 
-        this.cancelHandler = function () {
+        this.cancelHandler = function (skippedByUser) {
             this._pendingRefresh = false;
             this._entitiesToRefresh = [];
+            this._cancelDeferredRefreshToast();
+            if (skippedByUser === true && this._minAutoRefreshIntervalConfigured()) {
+                // Skipping snoozes: a fresh quiet window starts, so that a subsequent SSE event does not re-prompt almost immediately.
+                // A programmatic cancellation (no argument) does not snooze -- it accompanies a data load, whose completion restarts the window anyway.
+                this._lastRefreshTimestamp = Date.now();
+            }
         }.bind(this);
         /////////////////////////////////////////////////////////////////////////////////
     },
@@ -117,9 +143,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
 
             if (anyViewVisibility && !this._visible) {
                 this._visible = true;
-                if (this._pendingRefresh && !this._isEgiEditing) {
-                    this.showRefreshToast();
-                }
+                this._showRefreshToastIfApplicable();
             } else if (!anyViewVisibility && this._visible) {
                 this._visible = false;
                 if (this._pendingRefresh && !this._isEgiEditing) {
@@ -144,9 +168,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
         });
         this.addEventListener("tg-egi-finish-editing", (event) => {
             this._isEgiEditing = false;
-            if (this._pendingRefresh && this._visible) {
-                this.showRefreshToast();
-            }
+            this._showRefreshToastIfApplicable();
         });
         /////////////////////////////////////////////////////////////////////////////////
 
@@ -193,8 +215,92 @@ const TgEntityCentreTemplateBehaviorImpl = {
     _isRunningChanged: function (newValue, oldValue) {
         if (newValue) {
             this.disableView();
+            // A started data load (Run, paging, refresh) supersedes a pending SSE-driven auto-refresh, and also SSE events that are still awaiting their delayed handling:
+            // all of them arrived before the load started, so the load delivers data at least as fresh as those events indicated.
+            // The auto-refresh gets cancelled and only the next SSE event can instigate it again.
+            this.cancelDataHandling();
+            this._cancelDeferredRefreshToast();
+            if (this._pendingRefresh) {
+                this._pendingRefresh = false;
+                this._entitiesToRefresh = [];
+                this.hideRefreshToast();
+            }
         } else {
             this.enableView();
+            if (oldValue === true) {
+                // A completed data load restarts the quiet window, imposed by minAutoRefreshInterval.
+                this._lastRefreshTimestamp = Date.now();
+                this._cancelDeferredRefreshToast();
+                // Prompt for a refresh that became pending while the load was in progress, if any.
+                // Such SSE events are not superseded by the load -- their changes may have been committed after the load's query got executed.
+                // They are, however, subject to the freshly restarted quiet window.
+                this._promptOrDeferPendingRefresh();
+            }
+        }
+    },
+
+    /**
+     * Indicates whether the minimum auto-refresh interval (the refresh governor) is configured for this centre.
+     */
+    _minAutoRefreshIntervalConfigured: function () {
+        return typeof this.minAutoRefreshInterval === 'number' && this.minAutoRefreshInterval > 0;
+    },
+
+    /**
+     * Returns the number of milliseconds until the quiet window, imposed by minAutoRefreshInterval, expires.
+     * Returns 0 if the interval is not configured or the window has already expired.
+     */
+    _millisUntilAutoRefreshWindowExpiry: function () {
+        if (this._minAutoRefreshIntervalConfigured()) {
+            return Math.max(0, this._lastRefreshTimestamp + this.minAutoRefreshInterval * 1000 - Date.now());
+        }
+        return 0;
+    },
+
+    /**
+     * Prompts for a pending refresh, deferring the prompt until the quiet window (imposed by minAutoRefreshInterval) expires.
+     * A no-op if there is no pending refresh.
+     */
+    _promptOrDeferPendingRefresh: function () {
+        if (this._pendingRefresh) {
+            const deferBy = this._millisUntilAutoRefreshWindowExpiry();
+            if (deferBy > 0) {
+                this._deferRefreshToast(deferBy);
+            } else {
+                this._showRefreshToastIfApplicable();
+            }
+        }
+    },
+
+    /**
+     * Shows the refresh toast for a pending refresh, unless the centre is invisible, EGI is being edited, a data load is in progress or the refresh is deferred by the refresh governor.
+     * Each condition gets re-evaluated when it changes: the centre becomes visible, EGI editing finishes, the load completes or the deferral timer fires.
+     */
+    _showRefreshToastIfApplicable: function () {
+        if (this._pendingRefresh && this._visible && !this._isEgiEditing && !this.isRunning && !this._timerIdForDeferredRefresh) {
+            this.showRefreshToast();
+        }
+    },
+
+    /**
+     * Defers showing of the refresh toast (and thus the pending refresh) until the quiet window expires.
+     */
+    _deferRefreshToast: function (millis) {
+        if (!this._timerIdForDeferredRefresh) {
+            this._timerIdForDeferredRefresh = setTimeout(() => {
+                this._timerIdForDeferredRefresh = null;
+                this._showRefreshToastIfApplicable();
+            }, millis);
+        }
+    },
+
+    /**
+     * Cancels a deferred refresh timer, if any.
+     */
+    _cancelDeferredRefreshToast: function () {
+        if (this._timerIdForDeferredRefresh) {
+            clearTimeout(this._timerIdForDeferredRefresh);
+            this._timerIdForDeferredRefresh = null;
         }
     },
 

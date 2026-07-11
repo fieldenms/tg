@@ -226,6 +226,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /// After refreshCountdown seconds centre will be refreshed immediately.
     ///
     private final Integer refreshCountdown;
+    /// The minimum interval in seconds between automatic refreshes, driven by SSE events.
+    /// This value might be `null`, in which case there is no lower bound on the frequency of such refreshes.
+    /// If a value is specified, an SSE-driven refresh is deferred until at least that many seconds have passed since the last completed data load (Run, paging, refresh) or a skipped refresh prompt.
+    ///
+    private final Integer minAutoRefreshInterval;
 
     /////////////////////////////////////////////
     ////////////////// RESULT SET ///////////////
@@ -481,6 +486,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
             final Class<? extends IEventSource> eventSourceClass,
             final Integer refreshCountdown,
+            final Integer minAutoRefreshInterval,
 
             final FlexLayout selectionCriteriaLayout,
             final FlexLayout resultsetCollapsedCardLayout,
@@ -566,6 +572,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
         this.eventSourceClass = eventSourceClass;
         this.refreshCountdown = refreshCountdown;
+        this.minAutoRefreshInterval = minAutoRefreshInterval;
 
         this.resultSetProperties.addAll(resultSetProperties);
         this.summaryExpressions.putAll(summaryExpressions);
@@ -947,6 +954,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public Optional<Integer> getRefreshCountdown() {
         return Optional.ofNullable(refreshCountdown);
+    }
+
+    public Optional<Integer> getMinAutoRefreshInterval() {
+        return Optional.ofNullable(minAutoRefreshInterval);
     }
 
     public boolean isEgiHidden() {

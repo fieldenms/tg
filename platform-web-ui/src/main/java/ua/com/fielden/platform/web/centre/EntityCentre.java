@@ -188,6 +188,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String RIGHT_SPLITTER_POSITION = "@rightSplitterPositionPlacehoder";
     private static final String INSERTION_POINT_CUSTOM_LAYOUT_ENABLED = "@insertionPointCustomLayoutEnabled";
     private static final String SSE_REFRESH_COUNTDOWN = "@sseRefreshCountdown";
+    private static final String SSE_MIN_AUTO_REFRESH_INTERVAL = "@sseMinAutoRefreshInterval";
     // generic custom code
     private static final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
     private static final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
@@ -1190,6 +1191,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).
                 replace(CENTRE_RETRIEVE_ALL_OPTION, Boolean.toString(dslDefaultConfig.shouldRetrieveAll())).
                 replace(SSE_REFRESH_COUNTDOWN, dslDefaultConfig.getRefreshCountdown().map(seconds -> format("self.countdown=%s;", seconds)).orElse("")).
+                replace(SSE_MIN_AUTO_REFRESH_INTERVAL, dslDefaultConfig.getMinAutoRefreshInterval().map(seconds -> format("self.minAutoRefreshInterval=%s;", seconds)).orElse("")).
                 replace("@" + ALLOW_CUSTOMISED.name(), allowCustomised() ? "\nself.allowCustomised = true;" : "").
                 replace(CENTRE_SCROLL, dslDefaultConfig.isLockScrollingForInsertionPoints() ? "centre-scroll" : "").
                 replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).

@@ -14,21 +14,31 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.utils.StreamUtils.of;
 
-public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements ICentreSseWithPromptRefresh<T>,  ICentreTopLevelActionsWithRunConfig<T>{
+public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements ICentreSseWithMinAutoRefreshInterval<T>,  ICentreTopLevelActionsWithRunConfig<T>{
 
     private static final String ERR_EVENT_SOURCE_CLASS_NULL = "Event Source Class can not be null.";
     private static final String ERR_COUNTDOWN_SECONDS_LESS_THAN_ZERO = "The countdown seconds [%s] should be greater than zero.";
+    private static final String ERR_MIN_AUTO_REFRESH_INTERVAL_LESS_THAN_ZERO = "The minimum auto-refresh interval [%s] should be greater than zero.";
 
     public GenericCentreConfigBuilder(final EntityCentreBuilder<T> builder) {
         super(builder);
     }
 
     @Override
-    public ICentreSseWithPromptRefresh<T> hasEventSource(final Class<? extends IEventSource> eventSourceClass) {
+    public ICentreSseWithMinAutoRefreshInterval<T> hasEventSource(final Class<? extends IEventSource> eventSourceClass) {
         if (eventSourceClass == null) {
             throw new EntityCentreConfigurationException(ERR_EVENT_SOURCE_CLASS_NULL);
         }
         builder.eventSourceClass = eventSourceClass;
+        return this;
+    }
+
+    @Override
+    public ICentreSseWithPromptRefresh<T> withMinAutoRefreshInterval(final int seconds) {
+        if (seconds <= 0) {
+            throw new EntityCentreConfigurationException(format(ERR_MIN_AUTO_REFRESH_INTERVAL_LESS_THAN_ZERO, seconds));
+        }
+        builder.minAutoRefreshInterval = Integer.valueOf(seconds);
         return this;
     }
 
