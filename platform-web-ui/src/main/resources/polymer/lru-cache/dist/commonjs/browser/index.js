@@ -170,6 +170,8 @@ class LRUCache {
      * {@link LRUCache.OptionsBase.ignoreFetchAbort}
      */
     ignoreFetchAbort;
+    /** {@link LRUCache.OptionsBase.backgroundFetchSize} */
+    backgroundFetchSize;
     // computed properties
     #size;
     #calculatedSize;
@@ -280,7 +282,8 @@ class LRUCache {
         return this.#disposeAfter;
     }
     constructor(options) {
-        const { max = 0, ttl, ttlResolution = 1, ttlAutopurge, updateAgeOnGet, updateAgeOnHas, allowStale, dispose, onInsert, disposeAfter, noDisposeOnSet, noUpdateTTL, maxSize = 0, maxEntrySize = 0, sizeCalculation, fetchMethod, memoMethod, noDeleteOnFetchRejection, noDeleteOnStaleGet, allowStaleOnFetchRejection, allowStaleOnFetchAbort, ignoreFetchAbort, perf, } = options;
+        const { max = 0, ttl, ttlResolution = 1, ttlAutopurge, updateAgeOnGet, updateAgeOnHas, allowStale, dispose, onInsert, disposeAfter, noDisposeOnSet, noUpdateTTL, maxSize = 0, maxEntrySize = 0, sizeCalculation, fetchMethod, memoMethod, noDeleteOnFetchRejection, noDeleteOnStaleGet, allowStaleOnFetchRejection, allowStaleOnFetchAbort, ignoreFetchAbort, backgroundFetchSize = 1, perf, } = options;
+        this.backgroundFetchSize = backgroundFetchSize;
         if (perf !== undefined) {
             if (typeof perf?.now !== 'function') {
                 throw new TypeError('perf option must have a now() method if specified');
@@ -508,12 +511,15 @@ class LRUCache {
             sizes[index] = 0;
         };
         this.#requireSize = (k, v, size, sizeCalculation) => {
-            // provisionally accept background fetches.
-            // actual value size will be checked when they return.
-            if (this.#isBackgroundFetch(v)) {
-                return 0;
-            }
             if (!isPosInt(size)) {
+                // provisionally accept background fetches.
+                // actual value size will be checked when they return.
+                if (this.#isBackgroundFetch(v)) {
+                    // NB: this cannot occur if v.__staleWhileFetching is set,
+                    // because in that case, it would take on the size of the
+                    // existing entry that it temporarily replaces.
+                    return this.backgroundFetchSize;
+                }
                 if (sizeCalculation) {
                     if (typeof sizeCalculation !== 'function') {
                         throw new TypeError('sizeCalculation must be a function');
@@ -880,6 +886,7 @@ class LRUCache {
             status.key = k;
             if (v !== undefined)
                 status.value = v;
+            status.cache = this;
         }
         const result = this.#set(k, v, setOptions);
         if (status && diagnostics_channel_js_1.metrics.hasSubscribers) {
@@ -887,8 +894,9 @@ class LRUCache {
         }
         return result;
     }
-    #set(k, v, setOptions = {}) {
+    #set(k, v, setOptions, bf) {
         const { ttl = this.ttl, start, noDisposeOnSet = this.noDisposeOnSet, sizeCalculation = this.sizeCalculation, status, } = setOptions;
+        const isBF = this.#isBackgroundFetch(v);
         if (v === undefined) {
             if (status)
                 status.set = 'deleted';
@@ -896,7 +904,7 @@ class LRUCache {
             return this;
         }
         let { noUpdateTTL = this.noUpdateTTL } = setOptions;
-        if (status && !this.#isBackgroundFetch(v))
+        if (status && !isBF)
             status.value = v;
         const size = this.#requireSize(k, v, setOptions.size || 0, sizeCalculation, status);
         // if the item doesn't fit, don't do anything
@@ -928,52 +936,68 @@ class LRUCache {
             if (status)
                 status.set = 'add';
             noUpdateTTL = false;
-            if (this.#hasOnInsert) {
+            if (this.#hasOnInsert && !isBF) {
                 this.#onInsert?.(v, k, 'add');
             }
         }
         else {
             // update
+            // might be updating a background fetch!
             this.#moveToTail(index);
             const oldVal = this.#valList[index];
             if (v !== oldVal) {
-                if (this.#hasFetchMethod && this.#isBackgroundFetch(oldVal)) {
-                    oldVal.__abortController.abort(new Error('replaced'));
-                    const { __staleWhileFetching: s } = oldVal;
-                    if (s !== undefined && !noDisposeOnSet) {
+                if (!noDisposeOnSet) {
+                    if (this.#isBackgroundFetch(oldVal)) {
+                        if (oldVal !== bf) {
+                            // setting over a background fetch, not merely resolving it.
+                            oldVal.__abortController.abort(new Error('replaced'));
+                        }
+                        const { __staleWhileFetching: s } = oldVal;
+                        if (s !== undefined && s !== v) {
+                            if (this.#hasDispose) {
+                                this.#dispose?.(s, k, 'set');
+                            }
+                            if (this.#hasDisposeAfter) {
+                                this.#disposed?.push([s, k, 'set']);
+                            }
+                        }
+                    }
+                    else {
                         if (this.#hasDispose) {
-                            this.#dispose?.(s, k, 'set');
+                            this.#dispose?.(oldVal, k, 'set');
                         }
                         if (this.#hasDisposeAfter) {
-                            this.#disposed?.push([s, k, 'set']);
+                            this.#disposed?.push([oldVal, k, 'set']);
                         }
-                    }
-                }
-                else if (!noDisposeOnSet) {
-                    if (this.#hasDispose) {
-                        this.#dispose?.(oldVal, k, 'set');
-                    }
-                    if (this.#hasDisposeAfter) {
-                        this.#disposed?.push([oldVal, k, 'set']);
                     }
                 }
                 this.#removeItemSize(index);
                 this.#addItemSize(index, size, status);
                 this.#valList[index] = v;
-                if (status) {
-                    status.set = 'replace';
+                if (!isBF) {
                     const oldValue = oldVal && this.#isBackgroundFetch(oldVal) ?
                         oldVal.__staleWhileFetching
                         : oldVal;
-                    if (oldValue !== undefined)
-                        status.oldValue = oldValue;
+                    const setType = oldValue === undefined ? 'add'
+                        : v !== oldValue ? 'replace'
+                            : 'update';
+                    if (status) {
+                        status.set = setType;
+                        if (oldValue !== undefined)
+                            status.oldValue = oldValue;
+                    }
+                    if (this.#hasOnInsert) {
+                        this.onInsert?.(v, k, setType);
+                    }
                 }
             }
-            else if (status) {
-                status.set = 'update';
-            }
-            if (this.#hasOnInsert) {
-                this.onInsert?.(v, k, v === oldVal ? 'update' : 'replace');
+            else if (!isBF) {
+                if (status) {
+                    status.set = 'update';
+                }
+                if (this.#hasOnInsert) {
+                    this.onInsert?.(v, k, 'update');
+                }
             }
         }
         if (ttl !== 0 && !this.#ttls) {
@@ -1028,15 +1052,18 @@ class LRUCache {
         const head = this.#head;
         const k = this.#keyList[head];
         const v = this.#valList[head];
-        if (this.#hasFetchMethod && this.#isBackgroundFetch(v)) {
+        const isBF = this.#isBackgroundFetch(v);
+        if (isBF) {
             v.__abortController.abort(new Error('evicted'));
         }
-        else if (this.#hasDispose || this.#hasDisposeAfter) {
+        const oldValue = isBF ? v.__staleWhileFetching : v;
+        if ((this.#hasDispose || this.#hasDisposeAfter) &&
+            oldValue !== undefined) {
             if (this.#hasDispose) {
-                this.#dispose?.(v, k, 'evict');
+                this.#dispose?.(oldValue, k, 'evict');
             }
             if (this.#hasDisposeAfter) {
-                this.#disposed?.push([v, k, 'evict']);
+                this.#disposed?.push([oldValue, k, 'evict']);
             }
         }
         this.#removeItemSize(head);
@@ -1083,6 +1110,7 @@ class LRUCache {
         if (status) {
             status.op = 'has';
             status.key = k;
+            status.cache = this;
         }
         const result = this.#has(k, hasOptions);
         if (diagnostics_channel_js_1.metrics.hasSubscribers)
@@ -1130,6 +1158,7 @@ class LRUCache {
         if (status) {
             status.op = 'peek';
             status.key = k;
+            status.cache = this;
         }
         peekOptions.status = status;
         const result = this.#peek(k, peekOptions);
@@ -1212,7 +1241,7 @@ class LRUCache {
                 else {
                     if (options.status)
                         options.status.fetchUpdated = true;
-                    this.#set(k, v, fetchOpts.options);
+                    this.#set(k, v, fetchOpts.options, bf);
                 }
             }
             return v;
@@ -1258,9 +1287,6 @@ class LRUCache {
         };
         const pcall = (res, rej) => {
             const fmp = this.#fetchMethod?.(k, v, fetchOpts);
-            if (fmp && fmp instanceof Promise) {
-                fmp.then(v => res(v === undefined ? undefined : v), rej);
-            }
             // ignored, we go until we finish, regardless.
             // defer check until we are actually aborting,
             // so fetchMethod can override.
@@ -1273,6 +1299,12 @@ class LRUCache {
                     }
                 }
             });
+            if (fmp && fmp instanceof Promise) {
+                fmp.then(v => res(v === undefined ? undefined : v), rej);
+            }
+            else if (fmp !== undefined) {
+                res(fmp);
+            }
         };
         if (options.status)
             options.status.fetchDispatched = true;
@@ -1288,6 +1320,10 @@ class LRUCache {
             index = this.#keyMap.get(k);
         }
         else {
+            // do not call #set, because we do not want to adjust its place
+            // in the lru queue, as it has not yet been "used". Also, we don't
+            // need to worry about evicting for size, because a background fetch
+            // over a stale value is treated as the same size as its stale value.
             this.#valList[index] = bf;
         }
         return bf;
@@ -1328,6 +1364,7 @@ class LRUCache {
             status.key = k;
             if (forceRefresh)
                 status.forceRefresh = true;
+            status.cache = this;
         }
         if (!this.#hasFetchMethod) {
             if (status)
@@ -1430,6 +1467,7 @@ class LRUCache {
             if (memoOptions.context) {
                 status.context = memoOptions.context;
             }
+            status.cache = this;
         }
         const result = this.#memo(k, memoOptions);
         if (status)
@@ -1476,6 +1514,7 @@ class LRUCache {
         if (status) {
             status.op = 'get';
             status.key = k;
+            status.cache = this;
         }
         const result = this.#get(k, getOptions);
         if (status) {
@@ -1574,6 +1613,7 @@ class LRUCache {
                 op: 'delete',
                 delete: reason,
                 key: k,
+                cache: this,
             });
         }
         let deleted = false;
@@ -1654,7 +1694,7 @@ class LRUCache {
             }
         }
         this.#keyMap.clear();
-        this.#valList.fill(undefined);
+        void this.#valList.fill(undefined);
         this.#keyList.fill(undefined);
         if (this.#ttls && this.#starts) {
             this.#ttls.fill(0);

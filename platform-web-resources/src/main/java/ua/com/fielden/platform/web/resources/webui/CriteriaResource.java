@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -11,6 +13,7 @@ import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -57,9 +60,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Optional.*;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toSet;
+import static org.joda.time.DateTimeConstants.MILLIS_PER_DAY;
+import static org.joda.time.Days.daysBetween;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -78,6 +86,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.*;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.*;
@@ -113,6 +122,20 @@ public class CriteriaResource extends AbstractWebResource {
     /// Hypothetically, this approach provides a better user experience.
     ///
     private static final long RUNNING_LOCK_TIMEOUT = 10;
+
+    /// Number of days after which an unused persisted dynamic-column entry is discarded.
+    /// The threshold is evaluated using full days in the server's default time zone.
+    /// See [#refreshAndEvictDynamicEntries(IAddToResultTickManager, Class, Consumer, Set)].
+    ///
+    private static final int DYNAMIC_ENTRY_EVICTION_DAYS = 30;
+
+    /// Minimal age of a recorded `lastSeen` before the maintenance sweep re-stamps ("bumps") it.
+    /// Throttles silent persistence for actively used centres to at most one adjustment per bump interval per configuration.
+    /// Re-stamping on every emission would instead rewrite three surrogate configurations on each run / page navigation.
+    /// Day granularity is lossless for the eviction decision: eviction fires only after strictly more than [#DYNAMIC_ENTRY_EVICTION_DAYS] whole days since the recorded `lastSeen`.
+    /// So even with `lastSeen` lagging behind the actual use by up to a day, at least [#DYNAMIC_ENTRY_EVICTION_DAYS] days of actual non-use are guaranteed before eviction.
+    ///
+    private static final long DYNAMIC_LAST_SEEN_BUMP_INTERVAL_MILLIS = MILLIS_PER_DAY;
 
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
@@ -671,7 +694,12 @@ public class CriteriaResource extends AbstractWebResource {
                         device(),
                         sharingModel);
 
-                pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext));
+                pair.getKey().put("dynamicColumns", createDynamicProperties(
+                    resPropsWithContext,
+                    previouslyRunCentre.getSecondTick(),
+                    centre.getEntityType(),
+                    previouslyRunCriteriaEntity
+                ));
 
                 Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
                         centre,
@@ -816,14 +844,121 @@ public class CriteriaResource extends AbstractWebResource {
         return resList;
     }
 
-    private Map<String, List<Map<String, Object>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
+    private Map<String, List<Map<String, Object>>> createDynamicProperties(
+        final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext,
+        final IAddToResultTickManager secondTick,
+        final Class<? extends AbstractEntity<?>> root,
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity
+    ) {
         final Map<String, List<Map<String, Object>>> dynamicColumns = new LinkedHashMap<>();
+        // Keys of dynamic columns whose width / growFactor was actually overridden by user and are present in result-set.
+        final Set<String> usedDynamicKeys = new HashSet<>();
         resPropsWithContext.forEach(resPropWithContext -> {
             centre.getDynamicColumnBuilderFor(resPropWithContext.getKey())
                     .flatMap(dynColumnBuilder -> dynColumnBuilder.getColumnsConfig(resPropWithContext.getValue()))
-                    .ifPresent(config -> dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", config.build()));
+                    .ifPresent(config -> {
+                        final List<Map<String, Object>> built = config.build();
+                        // Override default width / growFactor for each dynamic column from previously persisted values, if any.
+                        // The per-column key is the group-property value - see DynamicColumn.DYN_COL_GROUP_PROP_VALUE.
+                        built.forEach(col -> {
+                            final Object groupPropValue = col.get(DYN_COL_GROUP_PROP_VALUE);
+                            if (groupPropValue instanceof CharSequence) {
+                                final String key = groupPropValue.toString();
+                                final Optional<Integer> wOverride = secondTick.getDynamicWidth(root, key);
+                                final Optional<Integer> gOverride = secondTick.getDynamicGrowFactor(root, key);
+                                wOverride.ifPresent(w -> col.put(DYN_COL_WIDTH, w));
+                                gOverride.ifPresent(g -> col.put(DYN_COL_GROW_FACTOR, g));
+                                if (wOverride.isPresent() || gOverride.isPresent()) {
+                                    usedDynamicKeys.add(key);
+                                }
+                            }
+                        });
+                        dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", built);
+                    });
         });
+        // Maintenance sweep: a single point at which we KNOW which dynamic columns are present and which are persisted overrides.
+        // Triggered when at least one dynamic column was actually emitted in this run (regardless of any persisted overrides).
+        // This is necessary to evict orphan entries — keys whose corresponding columns are no longer emitted.
+        // Because their non-emission means they would never reach `usedDynamicKeys`.
+        // Performance: `dynamicColumns` is empty when dynamic builder produced no output (or none is configured).
+        // So for centres without any dynamic columns this method has identical cost to before.
+        if (!dynamicColumns.isEmpty()) {
+            refreshAndEvictDynamicEntries(
+                secondTick,
+                root,
+                tickConsumer -> criteriaEntity.adjustCentreSilently(
+                        centreManager -> tickConsumer.accept(centreManager.getSecondTick())
+                ),
+                usedDynamicKeys
+            );
+        }
         return dynamicColumns;
+    }
+
+    /// Refreshes the `lastSeen` millis for dynamic column keys used in the current emission.
+    /// Discards any other persisted entries (width / growFactor / lastSeen) that have not been used recently.
+    /// "Recently" means within [#DYNAMIC_ENTRY_EVICTION_DAYS] days.
+    ///
+    /// The bump is throttled: a used key is re-stamped only when its recorded `lastSeen` is missing or at least [#DYNAMIC_LAST_SEEN_BUMP_INTERVAL_MILLIS] old.
+    /// An actively used key still never ages out — eviction requires strictly more than [#DYNAMIC_ENTRY_EVICTION_DAYS] whole days without a re-stamp, which cannot accumulate while the key keeps being used.
+    /// At the same time, repeated runs / page navigations within the bump interval cost no persistence actions at all.
+    /// Eviction also covers the "orphan override" case — a persisted entry whose corresponding column is no longer emitted.
+    /// Day arithmetic uses Joda `Days.daysBetween` in [DateTimeZone#getDefault] time-zone.
+    ///
+    /// `silentTickAdjuster` receives a `Consumer<IAddToResultTickManager>` to apply silently across surrogate centres.
+    /// Production wires it to `criteriaEntity::adjustCentreSilently` (so the mutation lands on `FRESH`, `PREVIOUSLY_RUN` and `SAVED`).
+    /// Tests can pass a lambda that captures invocations and/or applies the mutation directly to a single tick.
+    /// Package-private for testability.
+    ///
+    static void refreshAndEvictDynamicEntries(
+        final IAddToResultTickManager secondTick,
+        final Class<? extends AbstractEntity<?>> root,
+        final Consumer<Consumer<IAddToResultTickManager>> silentTickAdjuster,
+        final Set<String> usedDynamicKeys
+    ) {
+        final var nowMillis = currentTimeMillis();
+        final var now = new DateTime(nowMillis);
+        final var widthsAndGrowFactors = secondTick.getDynamicWidthsAndGrowFactors();
+
+        // Union of persisted dynamic keys.
+        // A key may appear in only one of the three maps if previously partially evicted - we still collect it.
+        final Set<String> persistedKeys = Stream.<Map<Pair<Class<?>, String>, ?>>of(
+            widthsAndGrowFactors._1,
+            widthsAndGrowFactors._2,
+            secondTick.getDynamicLastSeenMap()
+        )
+            .flatMap(m -> m.keySet().stream())
+            .filter(k -> root.equals(k.getKey()))
+            .map(Pair::getValue)
+            .collect(toCollection(LinkedHashSet::new));
+
+        // A missing lastSeen is treated as a sentinel meaning "never recorded" and is left alone.
+        // Only entries with an actual stale millis are evicted.
+        final Set<String> staleKeys = persistedKeys.stream()
+            .filter(key -> !usedDynamicKeys.contains(key))
+            .filter(key -> secondTick.getDynamicLastSeen(root, key)
+                .map(ls -> daysBetween(new DateTime(ls), now).getDays() > DYNAMIC_ENTRY_EVICTION_DAYS)
+                .orElse(false)
+            )
+            .collect(toSet());
+
+        // Bump only used keys whose lastSeen is missing (stamping heals legacy width-only entries) or old enough to matter.
+        // Re-stamping on every emission would rewrite three surrogate configurations on each run / page navigation.
+        final Set<String> keysToBump = usedDynamicKeys.stream()
+            .filter(key -> secondTick.getDynamicLastSeen(root, key)
+                .map(ls -> nowMillis - ls >= DYNAMIC_LAST_SEEN_BUMP_INTERVAL_MILLIS)
+                .orElse(true)
+            )
+            .collect(toSet());
+
+        // Persist only when there is something to do: either a key to bump or a key to remove.
+        // Scanning above is purely in-memory, so if there is "nothing to do" - means no persistent storage actions.
+        if (!staleKeys.isEmpty() || !keysToBump.isEmpty()) {
+            silentTickAdjuster.accept(tick -> {
+                staleKeys.forEach(key -> tick.removeDynamicEntry(root, key));
+                keysToBump.forEach(key -> tick.setDynamicLastSeen(root, key, nowMillis));
+            });
+        }
     }
 
     /// The resultant custom object contains key result information, such as:
