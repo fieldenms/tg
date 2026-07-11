@@ -67,6 +67,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -84,7 +85,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.FALSE;
-import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.*;
@@ -192,6 +192,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     // generic custom code
     private static final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
     private static final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
+    // error messages
+    public static final String
+        ERR_MISSING_ENTITY_TYPE_ANNOTATION = "The menu item type %s has no ‘EntityType’ annotation, which is necessary to specify the root type of the centre.",
+        ERR_NO_RESULT_VIEWS = "At least one result view should be available for entity centre %s.",
+        ERR_INCORRECT_RESULT_SET_PROP_DEFINITION = "The state of result-set property [%s] definition is not correct, need to exist either a ‘propName’ for the property or ‘propDef’.",
+        ERR_UNSUPPORTED_SINGLE_CRIT_TYPE = "The single-crit type [%s] is currently unsupported.",
+        ERR_UNSUPPORTED_MULTI_CRIT_TYPE = "The multi-crit type [%s] is currently unsupported.",
+        ERR_UNSUPPORTED_MULTI_RANGE_EDITOR_TYPE = "The multi / range editor type [%s] is currently unsupported.",
+        ERR_UNSUPPORTED_CRIT_ONLY_SINGLE_EDITOR_TYPE = "The crit-only single editor type [%s] is currently unsupported.";
 
     private final Logger logger = getLogger(getClass());
     private final String name;
@@ -245,7 +254,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static void validateMenuItemTypeRootType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         final EntityType etAnnotation = miType.getAnnotation(EntityType.class);
         if (etAnnotation == null || etAnnotation.value() == null) {
-            throw new WebUiBuilderException(format("The menu item type %s has no 'EntityType' annotation, which is necessary to specify the root type of the centre.", miType.getSimpleName()));
+            throw new WebUiBuilderException(ERR_MISSING_ENTITY_TYPE_ANNOTATION.formatted(miType.getSimpleName()));
         }
         final Class<?> root = etAnnotation.value();
         validateRootType(root);
@@ -259,7 +268,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final long insPointCount = dslDefaultConfig.getInsertionPointConfigs().size() - altViewCount;
 
         if (dslDefaultConfig.isEgiHidden() && insPointCount == 0 && altViewCount == 0) {
-            throw new WebUiBuilderException(format("At least one result view should be available for entity centre %s.", miType.getSimpleName()));
+            throw new WebUiBuilderException(ERR_NO_RESULT_VIEWS.formatted(miType.getSimpleName()));
         }
     }
 
@@ -282,13 +291,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         customProperties.put(entityType, new ArrayList<CustomProperty>());
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp<T> property : resultSetProps.get()) {
-                if (!property.propName.isPresent()) {
+                if (property.propName.isEmpty()) {
                     if (property.propDef.isPresent()) { // represents the 'custom' property
                         final PropDef<?> propDef = property.propDef.get();
                         final Class<?> managedType = entityType; // getManagedType(entityType); -- please note that mutual custom props validation is not be performed -- apply method invokes at the end after adding all custom / calculated properties
                         customProperties.get(entityType).add(new CustomProperty(entityType, managedType, "" /* this is the contextPath */, generateNameFrom(propDef.title), propDef.title, propDef.desc, propDef.type, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE));
                     } else {
-                        throw new IllegalStateException(format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
+                        throw new IllegalStateException(ERR_INCORRECT_RESULT_SET_PROP_DEFINITION.formatted(property));
                     }
                 }
             }
@@ -345,7 +354,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             final Map<String, Integer> growFactors = calculateGrowFactors(resultSetProps.get());
             for (final ResultSetProp<T> property : resultSetProps.get()) {
                 final String propertyName = derivePropName(property);
-                if (!property.dynamicColBuilderType.isPresent()) {
+                if (property.dynamicColBuilderType.isEmpty()) {
                     cdtmae.getSecondTick().check(entityType, propertyName, true);
                     if (property.presentByDefault) {
                         cdtmae.getSecondTick().use(entityType, propertyName, true);
@@ -402,7 +411,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static <T extends AbstractEntity<?>> Integer calculatePreferredViewIndex(final EntityCentreConfig<T> dslDefaultConfig) {
         final List<InsertionPointConfig> altViews = dslDefaultConfig.getInsertionPointConfigs().stream()
             .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == ALTERNATIVE_VIEW).orElse(FALSE))
-            .collect(toList());
+            .toList();
         final long insPointCount = dslDefaultConfig.getInsertionPointConfigs().size() - altViews.size();
         final AtomicInteger preferredViewIndex = new AtomicInteger(!dslDefaultConfig.isEgiHidden() || insPointCount > 0 ? 1 : 2);
         for (int idx = 0; idx < altViews.size(); idx++) {
@@ -440,7 +449,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             } else if (isDate(propertyType)) {
                 provideDefaultsDateSingle(() -> dslDefaultConfig.getDefaultSingleValuesForDateSelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForDateSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
             } else {
-                throw new UnsupportedOperationException(String.format("The single-crit type [%s] is currently unsupported.", propertyType));
+                throw new UnsupportedOperationException(ERR_UNSUPPORTED_SINGLE_CRIT_TYPE.formatted(propertyType));
             }
         } else {
             if (isEntityType(propertyType) || isString(propertyType) || isRichText(propertyType)) {
@@ -454,7 +463,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             } else if (isDate(propertyType)) {
                 provideDefaultsDateRange(() -> dslDefaultConfig.getDefaultRangeValuesForDateSelectionCriteria(), () -> dslDefaultConfig.getDefaultRangeValueAssignersForDateSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
             } else {
-                throw new UnsupportedOperationException(String.format("The multi-crit type [%s] is currently unsupported.", propertyType));
+                throw new UnsupportedOperationException(ERR_UNSUPPORTED_MULTI_CRIT_TYPE.formatted(propertyType));
             }
         }
     }
@@ -1183,19 +1192,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(INSERTION_POINT_ACTIONS_DOM, insertionPointActionsDom.toString()).
                 replace(LEFT_INSERTION_POINT_DOM, leftInsertionPointsDom.toString()).
                 replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
-                replace(LEFT_SPLITTER_POSITION, dslDefaultConfig.getLeftSplitterPosition().map(pos -> format("left-splitter-position=\"%s\"", pos/100.0)).orElse("")).
-                replace(RIGHT_SPLITTER_POSITION, dslDefaultConfig.getRightSplitterPosition().map(pos -> format("right-splitter-position=\"%s\"", pos/100.0)).orElse("")).
+                replace(LEFT_SPLITTER_POSITION, dslDefaultConfig.getLeftSplitterPosition().map(pos -> "left-splitter-position=\"%s\"".formatted(pos/100.0)).orElse("")).
+                replace(RIGHT_SPLITTER_POSITION, dslDefaultConfig.getRightSplitterPosition().map(pos -> "right-splitter-position=\"%s\"".formatted(pos/100.0)).orElse("")).
                 replace(INSERTION_POINT_CUSTOM_LAYOUT_ENABLED, dslDefaultConfig.isInsertionPointCustomLayoutEnabled() ? "insertion-point-custom-layout-enabled" : "").
                 replace(TOP_INSERTION_POINT_DOM, topInsertionPointsDom.toString()).
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
                 replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).
                 replace(CENTRE_RETRIEVE_ALL_OPTION, Boolean.toString(dslDefaultConfig.shouldRetrieveAll())).
-                replace(SSE_REFRESH_COUNTDOWN, dslDefaultConfig.getRefreshCountdown().map(seconds -> format("self.countdown=%s;", seconds)).orElse("")).
-                replace(SSE_MIN_AUTO_REFRESH_INTERVAL, dslDefaultConfig.getMinAutoRefreshInterval().map(seconds -> format("self.minAutoRefreshInterval=%s;", seconds)).orElse("")).
+                replace(SSE_REFRESH_COUNTDOWN, dslDefaultConfig.getRefreshCountdown().map("self.countdown=%s;"::formatted).orElse("")).
+                replace(SSE_MIN_AUTO_REFRESH_INTERVAL, dslDefaultConfig.getMinAutoRefreshInterval().map("self.minAutoRefreshInterval=%s;"::formatted).orElse("")).
                 replace("@" + ALLOW_CUSTOMISED.name(), allowCustomised() ? "\nself.allowCustomised = true;" : "").
                 replace(CENTRE_SCROLL, dslDefaultConfig.isLockScrollingForInsertionPoints() ? "centre-scroll" : "").
-                replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
-                replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
+                replace(READY_CUSTOM_CODE, customCode.map(JsCode::toString).orElse("")).
+                replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(JsCode::toString).orElse(""));
         logger.debug("Finishing...");
         final IRenderable representation = new IRenderable() {
             @Override
@@ -1228,14 +1237,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     /// (i.e. there is only EGI or only one alternative view with hidden EGI and without other insertion points)
     ///
     private Optional<DomElement> switchViewButtons(final List<InsertionPointBuilder> insertionPointActionsElements, final Optional<InsertionPointBuilder> insertionPoint) {
-        final List<InsertionPointBuilder> altViews = insertionPointActionsElements.stream().filter(insPoint -> insPoint.whereToInsert() == ALTERNATIVE_VIEW).collect(toList());
+        final List<InsertionPointBuilder> altViews = insertionPointActionsElements.stream().filter(insPoint -> insPoint.whereToInsert() == ALTERNATIVE_VIEW).toList();
         final long otherViewCount = insertionPointActionsElements.size() - altViews.size();//Calculate the number of insertion points those are not an alternative view.
         final long allViewCount = altViews.size() + (!dslDefaultConfig.isEgiHidden() || otherViewCount > 0 ? 1 : 0);//Calculate the number of views to switch between.
         if (allViewCount > 1) {//If there are more than one available views (EGI and alternative views) then create switch view button
-            if (!insertionPoint.isPresent()) {//Create switch view button for EGI view.
+            if (insertionPoint.isEmpty()) {//Create switch view button for EGI view.
                 return of(selectView(1, dslDefaultConfig.getToolbarConfig().getSwitchViewButtonWidth()));
             } else {//Create switch view button for alternative view.
-                return of(selectView(altViews.indexOf(insertionPoint.get()) + 2, insertionPoint.get().toolbar().map(toolbar -> toolbar.getSwitchViewButtonWidth()).orElse(0)));
+                return of(selectView(altViews.indexOf(insertionPoint.get()) + 2, insertionPoint.get().toolbar().map(IToolbarConfig::getSwitchViewButtonWidth).orElse(0)));
             }
         }
         return empty(); //Otherwise return empty switch view button indicating that there are no enough available views to switch between
@@ -1274,12 +1283,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             shortLayout.append("desktop: " + collapseLayout.getLayout(Device.DESKTOP, null).get());
         }
         if (collapseLayout.hasLayoutFor(Device.TABLET, null)) {
-            shortLayout.append((shortLayout.length() > 0 ? ",\n" : "") + "tablet: " + collapseLayout.getLayout(Device.TABLET, null).get());
+            shortLayout.append((!shortLayout.isEmpty() ? ",\n" : "") + "tablet: " + collapseLayout.getLayout(Device.TABLET, null).get());
         }
         if (collapseLayout.hasLayoutFor(Device.MOBILE, null)) {
-            shortLayout.append((shortLayout.length() > 0 ? ",\n" : "") + "mobile: " + collapseLayout.getLayout(Device.MOBILE, null).get());
+            shortLayout.append((!shortLayout.isEmpty() ? ",\n" : "") + "mobile: " + collapseLayout.getLayout(Device.MOBILE, null).get());
         }
-        if (shortLayout.length() > 0) {
+        if (!shortLayout.isEmpty()) {
             resultsetLayoutJs.append("self.gridShortLayout={\n" + shortLayout.toString() + "\n};");
             resultsetLayoutHtml.append("short-layout='[[gridShortLayout]]'");
         }
@@ -1289,12 +1298,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             longLayout.append("desktop: " + expandLayout.getLayout(Device.DESKTOP, null).get());
         }
         if (expandLayout.hasLayoutFor(Device.TABLET, null)) {
-            longLayout.append((longLayout.length() > 0 ? ",\n" : "") + "tablet: " + expandLayout.getLayout(Device.TABLET, null).get());
+            longLayout.append((!longLayout.isEmpty() ? ",\n" : "") + "tablet: " + expandLayout.getLayout(Device.TABLET, null).get());
         }
         if (expandLayout.hasLayoutFor(Device.MOBILE, null)) {
-            longLayout.append((longLayout.length() > 0 ? ",\n" : "") + "mobile: " + expandLayout.getLayout(Device.MOBILE, null).get());
+            longLayout.append((!longLayout.isEmpty() ? ",\n" : "") + "mobile: " + expandLayout.getLayout(Device.MOBILE, null).get());
         }
-        if (longLayout.length() > 0) {
+        if (!longLayout.isEmpty()) {
             resultsetLayoutJs.append("self.gridLongLayout={\n" + longLayout.toString() + "\n};");
             resultsetLayoutHtml.append(" long-layout='[[gridLongLayout]]'");
         }
@@ -1304,12 +1313,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             gridSummaryLayout.append("desktop: " + summaryLayout.getLayout(Device.DESKTOP, null).get());
         }
         if (summaryLayout.hasLayoutFor(Device.TABLET, null)) {
-            gridSummaryLayout.append((gridSummaryLayout.length() > 0 ? ",\n" : "") + "tablet: " + summaryLayout.getLayout(Device.TABLET, null).get());
+            gridSummaryLayout.append((!gridSummaryLayout.isEmpty() ? ",\n" : "") + "tablet: " + summaryLayout.getLayout(Device.TABLET, null).get());
         }
         if (summaryLayout.hasLayoutFor(Device.MOBILE, null)) {
-            gridSummaryLayout.append((gridSummaryLayout.length() > 0 ? ",\n" : "") + "mobile: " + summaryLayout.getLayout(Device.MOBILE, null).get());
+            gridSummaryLayout.append((!gridSummaryLayout.isEmpty() ? ",\n" : "") + "mobile: " + summaryLayout.getLayout(Device.MOBILE, null).get());
         }
-        if (gridSummaryLayout.length() > 0) {
+        if (!gridSummaryLayout.isEmpty()) {
             resultsetLayoutJs.append("self.summaryLayout={\n" + gridSummaryLayout.toString() + "\n};");
             resultsetLayoutHtml.append(" summary-layout='[[summaryLayout]]'");
         }
@@ -1368,7 +1377,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     } else if (EntityUtils.isDate(propertyType)) {
                         criterionWidget = new DateSingleCriterionWidget(root, managedType, critProp);
                     } else {
-                        throw new UnsupportedOperationException(String.format("The crit-only single editor type [%s] is currently unsupported.", propertyType));
+                        throw new UnsupportedOperationException(ERR_UNSUPPORTED_CRIT_ONLY_SINGLE_EDITOR_TYPE.formatted(propertyType));
                     }
                 } else {
                     if (EntityUtils.isEntityType(propertyType)) {
@@ -1390,7 +1399,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     } else if (EntityUtils.isDate(propertyType)) {
                         criterionWidget = new DateCriterionWidget(root, managedType, critProp);
                     } else {
-                        throw new UnsupportedOperationException(String.format("The multi / range editor type [%s] is currently unsupported.", propertyType));
+                        throw new UnsupportedOperationException(ERR_UNSUPPORTED_MULTI_RANGE_EDITOR_TYPE.formatted(propertyType));
                     }
                 }
                 criteriaWidgets.add(criterionWidget);

@@ -229,6 +229,8 @@ const TgEntityCentreTemplateBehaviorImpl = {
             this.enableView();
             if (oldValue === true) {
                 // A completed data load restarts the quiet window, imposed by minAutoRefreshInterval.
+                // A failed load passes here too (isRunning simply mirrors the runner request lifecycle) -- deliberately so:
+                // distinguishing failures is not worth the complexity, and the next SSE event re-prompts, bounding any resultant staleness.
                 this._lastRefreshTimestamp = Date.now();
                 this._cancelDeferredRefreshToast();
                 // Prompt for a refresh that became pending while the load was in progress, if any.

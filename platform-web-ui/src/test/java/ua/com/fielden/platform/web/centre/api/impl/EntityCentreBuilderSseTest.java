@@ -5,6 +5,7 @@ import static java.util.Optional.of;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
+import static ua.com.fielden.platform.web.centre.api.impl.GenericCentreConfigBuilder.ERR_MIN_AUTO_REFRESH_INTERVAL_LESS_THAN_ZERO;
 
 import org.junit.Test;
 
@@ -60,7 +61,7 @@ public class EntityCentreBuilderSseTest {
                 centreFor(TgWorkOrder.class).hasEventSource(StubEventSource.class).withMinAutoRefreshInterval(seconds);
                 fail("Configuration with a non-positive minimum auto-refresh interval should have failed.");
             } catch (final EntityCentreConfigurationException ex) {
-                assertEquals("The minimum auto-refresh interval [%s] should be greater than zero.".formatted(seconds), ex.getMessage());
+                assertEquals(ERR_MIN_AUTO_REFRESH_INTERVAL_LESS_THAN_ZERO.formatted(seconds), ex.getMessage());
             }
         }
     }
