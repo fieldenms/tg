@@ -38,6 +38,14 @@ public abstract class AbstractAuditProp<E extends AbstractEntity<?>> extends Abs
     ///
     public static final String PROPERTY = "property";
 
+    /// Property path from an audit-prop type to the audited entity, via [#AUDIT_ENTITY].
+    ///
+    /// Note that [#AUDIT_ENTITY] is a required key-member, so EQL renders this path as an *inner* join.
+    /// Therefore, a query using this path is blind to audit-prop records whose audit-entity record no longer exists.
+    /// This is precisely why audit-prop records must be deleted *before* audit-entity records.
+    ///
+    public static final String PATH_TO_AUDITED_ENTITY = AUDIT_ENTITY + "." + AbstractAuditEntity.AUDITED_ENTITY;
+
     /// Getter for property [#AUDIT_ENTITY].
     ///
     public abstract AbstractAuditEntity<E> getAuditEntity();

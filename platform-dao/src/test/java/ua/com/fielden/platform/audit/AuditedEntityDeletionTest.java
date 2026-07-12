@@ -2,7 +2,6 @@ package ua.com.fielden.platform.audit;
 
 import com.google.inject.Inject;
 import org.junit.Test;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.AuditedEntity;
 import ua.com.fielden.platform.sample.domain.AuditedEntityDao;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -18,18 +17,14 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 /// Tests for deletion of an audited entity together with its own audit records.
 ///
-/// Deleting an audited entity deletes all of its own audit records first — audit-prop records, then audit-entity
-/// records, across all audit versions — within the same transaction as the deletion of the entity itself
-/// (see [ua.com.fielden.platform.companion.DeleteOperations]).
+/// Deleting an audited entity deletes all of its own audit records first — audit-prop records, then audit-entity records, across all audit versions.
+/// This happens within the same transaction as the deletion of the entity itself (see [ua.com.fielden.platform.companion.DeleteOperations]).
 ///
-/// This applies uniformly to every deletion entry point: the single-entity delete, the query-model-based deletes,
-/// and all batch-delete variants. These tests exercise each of the public `defaultDelete` / `defaultBatchDelete`
-/// methods declared on [AuditedEntityDao].
+/// This applies uniformly to every deletion entry point: the single-entity delete, the query-model-based deletes, and all batch-delete variants.
+/// These tests exercise each of the public `defaultDelete` / `defaultBatchDelete` methods declared on [AuditedEntityDao].
 ///
 /// The test database is created without foreign-key constraints.
-/// These tests therefore assert on the observable outcome — that the audit records are actually removed, and that only
-/// the deleted entity's own records are affected — rather than on foreign-key enforcement, which could be exercised only
-/// against a real RDBMS with FKs.
+/// These tests therefore assert on the observable outcome — that audit records are actually removed, and that none are left orphaned — rather than on foreign-key enforcement, which could be exercised only against a real RDBMS with FKs.
 ///
 public class AuditedEntityDeletionTest extends AbstractDaoTestCase {
 
@@ -142,7 +137,7 @@ public class AuditedEntityDeletionTest extends AbstractDaoTestCase {
         assertHasAuditRecords(a.getId());
         assertHasAuditRecords(b.getId());
 
-        // `AuditedEntity` has no other persistent entity-typed property to match on, so ID is used as the property.
+        // `AuditedEntity` has no persistent entity-typed property that is convenient to match on, so ID is used as the property.
         final int count = coAuditedEntity.batchDeleteByPropertyValues(ID, List.of(a.getId(), b.getId()));
 
         assertEquals(2, count);
@@ -180,19 +175,21 @@ public class AuditedEntityDeletionTest extends AbstractDaoTestCase {
     // ---------- helpers ----------
 
     /// Saves a new audited entity with an audited change, so that both an audit-entity record and audit-prop records are created.
+    ///
     private AuditedEntity saveAudited(final String key) {
         return save(new_(AuditedEntity.class, key).setStr2(key));
     }
 
     private void assertHasAuditRecords(final Long id) {
         assertThat(coAuditedEntityAudit.getAudits(id)).isNotEmpty();
-        assertThat(countAllAuditProps(AuditedEntity.class, id)).isPositive();
+        assertThat(countAuditProps(id)).isPositive();
     }
 
     private void assertGoneWithoutAuditRecords(final Long id) {
         assertFalse(coAuditedEntity.entityExists(id));
         assertThat(coAuditedEntityAudit.getAudits(id)).isEmpty();
-        assertEquals(0, countAllAuditProps(AuditedEntity.class, id));
+        assertEquals(0, countAuditProps(id));
+        assertNoOrphanedAuditProps();
     }
 
     private void assertExistsWithAuditRecords(final Long id) {
@@ -202,16 +199,34 @@ public class AuditedEntityDeletionTest extends AbstractDaoTestCase {
 
     /// Counts persisted audit-prop records for the audited entity with the specified ID, across all audit versions.
     ///
-    private int countAllAuditProps(final Class<? extends AbstractEntity<?>> auditedType, final Long auditedEntityId) {
-        return auditTypeFinder.navigate(auditedType)
+    /// This count is *reachability-based*: [AbstractAuditProp#PATH_TO_AUDITED_ENTITY] starts with a required key-member, so EQL renders it as an inner join.
+    /// Audit-prop records whose audit-entity record no longer exists are therefore invisible to this count.
+    /// Detecting those requires [#assertNoOrphanedAuditProps()].
+    ///
+    private int countAuditProps(final Long auditedEntityId) {
+        return auditTypeFinder.navigate(AuditedEntity.class)
                 .allAuditPropTypes()
                 .stream()
-                .mapToInt(propType -> countAuditProps(propType, auditedEntityId))
+                .mapToInt(auditPropType -> co(auditPropType).count(
+                        select(auditPropType).where().prop(AbstractAuditProp.PATH_TO_AUDITED_ENTITY).eq().val(auditedEntityId).model()))
                 .sum();
     }
 
-    private <P extends AbstractAuditProp<?>> int countAuditProps(final Class<P> auditPropType, final Long auditedEntityId) {
-        return co(auditPropType).count(select(auditPropType).where().prop(AbstractAuditProp.AUDIT_ENTITY + "." + AbstractAuditEntity.AUDITED_ENTITY).eq().val(auditedEntityId).model());
+    /// Asserts that no audit-prop record is orphaned, that is, that every audit-prop record still references an existing audit-entity record.
+    ///
+    /// Deleting audit-entity records without first deleting their audit-prop records would orphan the latter, and [#countAuditProps(Long)] cannot detect this, because its inner join silently drops orphans instead of revealing them.
+    /// This assertion matches audit-prop records on their own [AbstractAuditProp#AUDIT_ENTITY] property, so no join is involved and orphans are visible.
+    ///
+    private void assertNoOrphanedAuditProps() {
+        final var auditTypes = auditTypeFinder.navigate(AuditedEntity.class);
+        for (final var auditPropType : auditTypes.allAuditPropTypes()) {
+            final var auditEntityType = auditTypes.auditEntityType(AuditUtils.getAuditTypeVersion(auditPropType));
+            final int orphanCount = co(auditPropType).count(
+                    select(auditPropType).where()
+                            .prop(AbstractAuditProp.AUDIT_ENTITY).notIn().model(select(auditEntityType).model())
+                            .model());
+            assertEquals("Orphaned audit-prop records in [%s].".formatted(auditPropType.getSimpleName()), 0, orphanCount);
+        }
     }
 
 }

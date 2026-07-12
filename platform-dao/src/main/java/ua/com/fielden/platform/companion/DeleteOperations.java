@@ -35,7 +35,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
+import static com.google.common.collect.Iterables.partition;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
@@ -49,9 +49,29 @@ import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 /// Various delete operations that are used by entity companions.
 /// The main purpose of this class is to be more like a mixin that provides an implementation of delete operations.
 ///
+/// ### Deletion of audited entities
+///
+/// If auditing is [enabled][AuditingMode#ENABLED] and the entity type is audited, then **every** delete operation
+/// here cascades the deletion to the entity's own audit records, in the same transaction as the deletion of the
+/// entity itself.
+/// Refer to [AbstractAuditEntity] for the rationale.
+///
+/// Only audit records that belong to the entity being deleted are removed.
+/// Audit records belonging to *other* audited entities, which reference the entity being deleted (e.g., because they
+/// captured a historical value of an entity-typed property), are left intact.
+/// Deletion is therefore prohibited in that case by referential integrity, which is the intended behaviour.
+///
 public final class DeleteOperations<T extends AbstractEntity<?>> {
 
     private static final Logger LOGGER = getLogger();
+
+    /// Maximum number of ID values per EQL statement.
+    /// EQL binds one statement parameter per value, so batches must stay within the most restrictive limit imposed by
+    /// a supported RDBMS on the number of statement parameters (SQL Server permits 2100).
+    ///
+    /// [EntityBatchDeleteByIdsOperation] is exempt, as it inlines ID values as SQL literals.
+    ///
+    private static final int ID_BATCH_SIZE = 990;
 
     public static final String
             ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES = "Deletion was unsuccessful due to existing dependencies.",
@@ -99,7 +119,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
                                                                  final Class<E> entityType);
     }
 
-    /// A convenient default implementation for entity deletion, which should be used by overriding method [CommonEntityDao#delete(AbstractEntity)]}.
+    /// A convenient default implementation for entity deletion, which should be used by overriding method [CommonEntityDao#delete(AbstractEntity)].
     ///
     /// @return the number of deleted entities, which could be 1 or 0.
     ///
@@ -113,10 +133,16 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             throw new EntityCompanionException(ERR_DIRTY_CANNOT_BE_DELETED);
         }
 
-        return deleteById(beforeDeletingAudited(beforeDeletingActivatable(entity)));
+        beforeDeletingActivatable(entity);
+        beforeDeletingAudited(entity);
+        return deleteById(entity.getId());
     }
 
-    private T beforeDeletingActivatable(final T entity) {
+    /// Decrements `refCount` of active activatables referenced by `entity`, if `entity` is an activatable that is active.
+    /// Does nothing otherwise.
+    ///
+    @SuppressWarnings("unchecked")
+    private void beforeDeletingActivatable(final T entity) {
         if (entity instanceof ActivatableAbstractEntity<?> activatable) {
             // Iff the persisted version of `entity` is active, we need to decrement refCounts of referenced active activatables, ignoring self-references.
             // Reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed.
@@ -138,41 +164,49 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
                         });
             }
         }
-
-        return entity;
     }
 
-    private void beforeDeletingAudited(final SingleResultQueryModel<T> model, final Map<String, Object> parameters) {
-        if (auditingMode == AuditingMode.ENABLED && isAudited(entityType)) {
-            // Delete all audit-prop records, then all audit-entity records (the latter are referenced by the former).
-            // Do this for all audit type versions.
-            // Delete directly rather than via companions, which delibaretly do not support deletion on their own.
-            for (final var auditPropType : auditTypeFinder.navigate(entityType).allAuditPropTypes()) {
-                entityBatchDeleteFactory.create(session).deleteEntities(
-                        select(auditPropType).where().prop(AbstractAuditProp.AUDIT_ENTITY + "." + AbstractAuditEntity.AUDITED_ENTITY).in().model(model).model(),
-                        parameters);
-            }
-            for (final var auditEntityType : auditTypeFinder.navigate(entityType).allAuditEntityTypes()) {
-                entityBatchDeleteFactory.create(session).deleteEntities(
-                        select(auditEntityType).where().prop(AbstractAuditEntity.AUDITED_ENTITY).in().model(model).model(),
-                        parameters);
-            }
+    /// Cascade deletes audit records of `entity`, if its type is audited and auditing is enabled.
+    /// Does nothing otherwise.
+    ///
+    private void beforeDeletingAudited(final T entity) {
+        if (isAuditCascadeRequired()) {
+            // A source-less select avoids an otherwise pointless scan of the audited entity's own table.
+            deleteAuditRecords(select().yield().val(entity.getId()).modelAsPrimitive(), Map.of());
         }
     }
 
-    private void beforeDeletingAudited(final SingleResultQueryModel<T> model) {
-        beforeDeletingAudited(model, Map.of());
+    /// Whether delete operations must cascade to audit records.
+    /// This predicate is the exact counterpart of the one governing the *creation* of audit records upon a save,
+    /// so audit records are removed under precisely the conditions under which they are written.
+    ///
+    private boolean isAuditCascadeRequired() {
+        return auditingMode == AuditingMode.ENABLED && isAudited(entityType);
     }
 
-    private T beforeDeletingAudited(final T entity) {
-        @SuppressWarnings("unchecked")
-        final SingleResultQueryModel<T> model = select().yield().val(entity.getId()).modelAsPrimitive();
-        beforeDeletingAudited(model);
-        return entity;
-    }
+    /// Deletes audit records of the audited entities identified by `auditedEntityIds`, which yields their ID values.
+    ///
+    /// Audit-prop records are deleted first, then audit-entity records.
+    /// **This order is essential**: audit-prop records are located by joining to their audit-entity record, so deleting
+    /// audit-entity records first would leave the audit-prop records orphaned and unreachable.
+    /// Both are deleted for all audit versions.
+    ///
+    /// Deletion is performed directly, rather than via companions, which deliberately do not support deletion on their own.
+    ///
+    private void deleteAuditRecords(final SingleResultQueryModel<?> auditedEntityIds, final Map<String, Object> parameters) {
+        final var auditTypes = auditTypeFinder.navigate(entityType);
+        final var batchDelete = entityBatchDeleteFactory.create(session);
 
-    private int deleteById(final T entity) {
-        return deleteById(entity.getId());
+        for (final var auditPropType : auditTypes.allAuditPropTypes()) {
+            batchDelete.deleteEntities(
+                    select(auditPropType).where().prop(AbstractAuditProp.PATH_TO_AUDITED_ENTITY).in().model(auditedEntityIds).model(),
+                    parameters);
+        }
+        for (final var auditEntityType : auditTypes.allAuditEntityTypes()) {
+            batchDelete.deleteEntities(
+                    select(auditEntityType).where().prop(AbstractAuditEntity.AUDITED_ENTITY).in().model(auditedEntityIds).model(),
+                    parameters);
+        }
     }
 
     /// Deletes an entity by ID.
@@ -181,7 +215,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     ///
     private int deleteById(final long id) {
         try {
-            return session.get().createQuery(format("delete %s where id = %s", entityType.getName(), id)).executeUpdate();
+            return session.get().createQuery("delete %s where id = %s".formatted(entityType.getName(), id)).executeUpdate();
         } catch (final PersistenceException ex) {
             final var msg = ex.getCause() instanceof ConstraintViolationException
                     ? ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES
@@ -215,9 +249,9 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     public int defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> parameters) {
         requireNonNull(model, "model");
 
-       return reader.stream(from(model).with(parameters).lightweight().model())
-               .mapToInt(this::defaultDelete)
-               .sum();
+        try (final var stream = reader.stream(from(model).with(parameters).lightweight().model())) {
+            return stream.mapToInt(this::defaultDelete).sum();
+        }
     }
 
     /// The same as [#defaultDelete(EntityResultQueryModel,Map)], but with empty parameters.
@@ -236,9 +270,13 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         requireNonNull(model, "model");
 
         if (isActivatableEntityType(entityType)) {
+            // Activatables are deleted one by one to maintain `refCount` of referenced activatables.
+            // Audit records, if any, are cascade deleted as part of deleting each individual entity.
             return defaultDelete(model, parameters);
         } else {
-            beforeDeletingAudited(model, parameters);
+            if (isAuditCascadeRequired()) {
+                deleteAuditRecords(model, parameters);
+            }
             return entityBatchDeleteFactory.create(session).deleteEntities(model, parameters);
         }
     }
@@ -269,12 +307,31 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             throw new EntityCompanionException("No entity ids have been provided for deletion.");
         }
 
+        // Both branches below match entities with an EQL query, which binds a statement parameter per ID value.
+        // Hence, the batching by `ID_BATCH_SIZE` that keeps those queries within the DB limit on the number of parameters.
         if (isActivatableEntityType(entityType)) {
-            return defaultDelete(select(entityType).where().prop(propName).in().values(entitiesIds).model());
+            // Activatables are deleted one by one to maintain `refCount` of referenced activatables.
+            // Audit records, if any, are cascade deleted as part of deleting each individual entity.
+            int deletedCount = 0;
+            for (final var batchOfIds : partition(entitiesIds, ID_BATCH_SIZE)) {
+                deletedCount += defaultDelete(selectByPropertyValues(propName, batchOfIds));
+            }
+            return deletedCount;
         } else {
-            beforeDeletingAudited(select(entityType).where().prop(propName).in().values(entitiesIds).model());
+            if (isAuditCascadeRequired()) {
+                for (final var batchOfIds : partition(entitiesIds, ID_BATCH_SIZE)) {
+                    deleteAuditRecords(selectByPropertyValues(propName, batchOfIds), Map.of());
+                }
+            }
+            // Unlike the audit-cascade queries above, `batchDeleteByIdsOp` inlines ID values as SQL literals, so it needs no batching.
             return batchDeleteByIdsOp.get().deleteEntities(propName, entitiesIds);
         }
+    }
+
+    /// A query matching entities whose property `propName` has one of the specified ID values.
+    ///
+    private EntityResultQueryModel<T> selectByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
+        return select(entityType).where().prop(propName).in().values(entitiesIds).model();
     }
 
     /// The same as [#defaultBatchDeleteByPropertyValues(String,Collection)], but using a list of entity instances instead of ID values
@@ -287,7 +344,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
 
     /// This factory must be implemented by hand since [FactoryModuleBuilder] does not support generic factory methods.
     ///
-    static class FactoryImpl implements Factory {
+    static final class FactoryImpl implements Factory {
 
         private final EqlTables eqlTables;
         private final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory;
@@ -297,7 +354,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         private final IAuditTypeFinder auditTypeFinder;
 
         @Inject
-        protected FactoryImpl(
+        FactoryImpl(
                 final EqlTables eqlTables,
                 final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory,
                 final IDomainMetadata domainMetadata,
