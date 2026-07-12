@@ -19,9 +19,9 @@ import java.util.Optional;
 
 public interface IDomainDrivenData {
 
-    public static final String ADMIN = "ADMIN";
-    public static final String BASE_SUFFIX = "_BASE";
-    public static final String SUPER_SECRET_PASSWORD = "cooking with rocket fuel";
+    String ADMIN = "ADMIN";
+    String BASE_SUFFIX = "_BASE";
+    String SUPER_SECRET_PASSWORD = "cooking with rocket fuel";
 
     /// Saves the specified entity and returns a refetched instance.
     ///
@@ -30,7 +30,7 @@ public interface IDomainDrivenData {
     ///
     /// To specify a custom fetch model for refetching, use [#save(AbstractEntity, Optional)].
     ///
-    <T extends AbstractEntity<?>> T save(final T instance);
+    <T extends AbstractEntity<?>> T save(T instance);
 
     /// Calls _save-with-fetch_ on the companion of the specified entity.
     ///
@@ -69,23 +69,54 @@ public interface IDomainDrivenData {
         return save(entity, noFetch()).asLeft().value();
     }
 
-    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass);
+    /// Instantiates a new entity.
+    ///
+    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(Class<T> entityClass);
 
-    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key);
+    /// Instantiates a new entity with a simple key.
+    ///
+    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(Class<T> entityClass, K key);
 
-    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key, final String desc);
+    /// Instantiates a new entity with a simple key and description.
+    ///
+    <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(Class<T> entityClass, K key, String desc);
 
-    <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys);
+    /// Instantiates a new entity with a composite key.
+    /// The order of key member values must match the order defined in the entity type.
+    ///
+    /// If the list of key values is not empty, the number of provided key values must be equal to the number of key members.
+    ///
+    /// If the list of key values is empty, no key members are assigned.
+    ///
+    <T extends AbstractEntity<DynamicEntityKey>> T new_composite(Class<T> entityClass, Object... keys);
 
-    <T> T getInstance(final Class<T> type);
+    <T> T getInstance(Class<T> type);
 
-    <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co$(final Class<E> type);
+    <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co$(Class<E> type);
 
-    <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type);
+    <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(Class<E> type);
 
-    Date date(final String dateTime);
+    /// Parses a [Date] using the system's default time zone.
+    ///
+    /// Supported formats:
+    ///
+    /// - `yyyy-MM-dd` (time of day defaults to all zeroes)
+    /// - `yyyy-MM-dd HH:mm` (seconds default to zero)
+    /// - `yyyy-MM-dd HH:mm:ss` (milliseconds default to zero)
+    /// - `yyyy-MM-dd HH:mm:ss.SSS`
+    ///
+    Date date(String dateTime);
 
-    DateTime dateTime(final String dateTime);
+    /// Parses a [DateTime] using the system's default time zone.
+    ///
+    /// Supported formats:
+    ///
+    /// - `yyyy-MM-dd` (time of day defaults to all zeroes)
+    /// - `yyyy-MM-dd HH:mm` (seconds default to zero)
+    /// - `yyyy-MM-dd HH:mm:ss` (milliseconds default to zero)
+    /// - `yyyy-MM-dd HH:mm:ss.SSS`
+    ///
+    DateTime dateTime(String dateTime);
 
     default BigDecimal decimal(final String value) {
         return new BigDecimal(value);
