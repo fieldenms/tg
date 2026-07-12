@@ -35,7 +35,7 @@ Compound.openNew(OpenAction.class, "add-circle-outline", ENTITY_TITLE, "Add new 
 
 ## Centre Options
 
-`.runAutomatically()`, `.hideCheckboxes()`, `.hideToolbar()`, `.setPageCapacity(n)`, `.retrieveAll()`, `.enforcePostSaveRefresh()`, `.hasEventSource(EventSourceClass.class)`
+`.runAutomatically()`, `.hideCheckboxes()`, `.hideToolbar()`, `.setPageCapacity(n)`, `.retrieveAll()`, `.enforcePostSaveRefresh()`, `.hasEventSource(EventSourceClass.class)`, `.withMinAutoRefreshInterval(seconds)`
 
 ## Result Property Options
 
