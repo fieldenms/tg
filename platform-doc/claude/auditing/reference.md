@@ -128,7 +128,15 @@ Audit records are only ever removed as a cascade from the deletion of the audite
 `DeleteOperations` performs the cascade under exactly the same predicate that governs audit-record *creation* (`AuditingMode.ENABLED && AuditUtils.isAudited(entityType)`), so audit records are removed under precisely the conditions under which they are written.
 Every delete entry point cascades — `defaultDelete`, `defaultBatchDelete`, and `defaultBatchDeleteByPropertyValues` — and the cascade runs in the caller's transaction, since all of these are `@SessionRequired`.
 
-Ordering is essential:
+### Disabling auditing makes audited entities undeletable
+
+If auditing is not `ENABLED` — the mode being `DISABLED` or `GENERATION` — the cascade does not run.
+Against a database that already holds audit records, deleting an audited entity then fails on the foreign key from those records, reported as `ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES` ("Deletion was unsuccessful due to existing dependencies.").
+Disabling auditing therefore makes previously audited entities undeletable, rather than merely stopping the creation of new audit records.
+
+### Ordering
+
+Audit records must be deleted in this order:
 
 1. **Audit-prop records first**, for all audit versions (`allAuditPropTypes()`).
 2. **Audit-entity records second**, for all audit versions (`allAuditEntityTypes()`).

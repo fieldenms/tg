@@ -40,6 +40,8 @@ Test databases are created **without** FK constraints, so tests cannot exercise 
   Audit companions themselves do not support deletion; the cascade is the only way audit records are removed.
   Audit records of *other* audited entities that reference the deleted entity are **not** cascaded, so their FKs still prohibit the deletion — that is intended.
   See `reference.md` § *Deletion of audited entities*.
+- **Disabling auditing makes previously audited entities undeletable**: The cascade runs only when the mode is `ENABLED`.
+  Against a database that already holds audit records, switching to `DISABLED` (or `GENERATION`) stops the cascade, and the FK from those records then prohibits the deletion — reported as an existing-dependency failure, which does not point at auditing.
 - **Audited entities get a platform-built info master**: The "info" action on every `AbstractPersistentEntity` master opens `PersistentEntityInfo`, which includes an audit-review menu for `@Audited` types.
   Do not hand-wire an "Audit" menu item into an entity's own compound master.
 - **`IApplicationDomainProvider` from the injector ≠ `new ApplicationDomain()`**: The injected provider augments compile-time types with audit types.
