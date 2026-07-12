@@ -19,9 +19,9 @@ import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -59,7 +59,7 @@ class BenchmarkIocModule extends BasicWebServerIocModule  {
     @Provides
     @Singleton
     @SessionCache Cache<String, UserSession> provideSessionCache() {
-        return CacheBuilder.newBuilder().expireAfterWrite(2, TimeUnit.MINUTES).build();
+        return CacheBuilder.newBuilder().expireAfterWrite(Duration.ofMinutes(2)).build();
     }
 
 }

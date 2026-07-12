@@ -34,6 +34,10 @@ export const TgDelayedActionBehavior = {
 
         actionHandler: Function,
 
+        /**
+         * A function invoked when the action gets cancelled.
+         * Receives true when cancelled explicitly by the user (e.g. button SKIP), and no argument when cancelled programmatically (cancelRefreshToast).
+         */
         cancelHandler: Function,
 
         _countdownTimerID: {
@@ -108,7 +112,7 @@ export const TgDelayedActionBehavior = {
     _cancelHandler: function (event) {
         this.hideRefreshToast(this.context);
         if (typeof this.cancelHandler === 'function') {
-            this.cancelHandler();
+            this.cancelHandler(true /* cancelled explicitly by the user */);
         }
     },
 

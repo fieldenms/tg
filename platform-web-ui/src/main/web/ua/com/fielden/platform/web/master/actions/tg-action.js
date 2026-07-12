@@ -422,6 +422,11 @@ Polymer({
             const closeAfterExecution = this._options[itemIdx].closeAfterExecution;
             const subRole = this._options[itemIdx].subRole;
             this.async(function () {
+                // This action could have become disabled during the delay above -- see '_asyncRun' for the rationale.
+                // No exemption for programmatic invocations is needed here, as an option can only be activated by the user.
+                if (this.hasAttribute('action-disabled')) {
+                    return;
+                }
                 this.run(closeAfterExecution, subRole);
             }, 100);
         }
@@ -600,6 +605,14 @@ Polymer({
         // it is critical to execute the actual logic that is intended for an on-tap action in async
         // with a relatively long delay to make sure that all required changes
         this.async(function () {
+            // A user-initiated action gets admitted only while enabled, but it could have become disabled during the delay above.
+            // For example, a retrieval or a saving, initiated meanwhile, disables the master and, with it, all of its actions.
+            // Running such an action would issue a request concurrent with the one already in progress.
+            // Programmatic invocations, which pass neither 'e' nor 'shortcut', are exempt.
+            // This is because developer-driven code may legitimately run a disabled action, such as saving an unmodified entity (see '_createSavingPromise' in 'tg-entity-master-behavior').
+            if ((e || shortcut) && this.hasAttribute('action-disabled')) {
+                return;
+            }
             let subRole = '';
             let closeAfterExecution = this.closeAfterExecution;
             if (shortcut && this._options) {

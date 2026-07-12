@@ -39,7 +39,8 @@ Do not use `FETCH_PROVIDER` for read-only access to basic properties.
 
 ## Auditing in Tests
 
-`AUDIT_MODE = DISABLED` in DAO test config is expected — see `auditing/quick-reference.md`.
+The platform's DAO test config sets `AUDIT_MODE = ENABLED`, so auditing is exercised by DAO tests — see `auditing/quick-reference.md`.
+Test databases are created without FK constraints, so tests cannot exercise the FKs that audit tables carry.
 
 ## Authorization in Tests
 
