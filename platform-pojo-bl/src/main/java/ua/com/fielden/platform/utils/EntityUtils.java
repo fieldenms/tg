@@ -37,9 +37,9 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
+import java.time.Duration;
 import java.util.*;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -67,9 +67,9 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 public class EntityUtils {
     private static final Logger logger = getLogger();
 
-    private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
-    private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
-    private static final Cache<Class<?>, Boolean> entityCriteriaTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
+    private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofSeconds(10)).initialCapacity(512).build();
+    private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofSeconds(10)).initialCapacity(512).build();
+    private static final Cache<Class<?>, Boolean> entityCriteriaTypes = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofSeconds(10)).initialCapacity(512).build();
 
     public static final String ERR_PERSISTENT_NATURE_OF_ENTITY_TYPE = "Could not determine persistent nature of entity type [%s].";
 

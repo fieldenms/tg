@@ -14,6 +14,9 @@ import java.util.Date;
 import java.util.Map;
 
 import static java.math.RoundingMode.HALF_UP;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum.NEXT;
 import static ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum.PREV;
 import static ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum.MONTH;
@@ -21,7 +24,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.*;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.createEmptyDifferences;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createNotFoundMockString;
 
@@ -733,5 +736,47 @@ public class CentreUpdaterTest extends CentreUpdaterTestMixin {
     public void left_money_value_with_taxPercent() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal("3.1002"), 20, Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "3.1002"), t2("taxPercent", "20"), t2("currency", "UAH"))));
     }
-    
+
+    // dynamic-column overrides — discriminator on DYNAMIC_LAST_SEEN
+
+    /// `DYNAMIC_LAST_SEEN` in the diff entry marks the row as a dynamic-column override.
+    /// `applyDifferences` must route `WIDTH`, `GROW_FACTOR` and `DYNAMIC_LAST_SEEN` into the dynamic maps for keys that are not in `checkedProperties`.
+    ///
+    @Test
+    public void applyDifferences_routes_dynamic_when_DYNAMIC_LAST_SEEN_present() {
+        final var diff = createEmptyDifferences();
+        propDiff("20260315_01", diff).put(WIDTH.name(), 150);
+        propDiff("20260315_01", diff).put(GROW_FACTOR.name(), 0);
+        propDiff("20260315_01", diff).put(DYNAMIC_LAST_SEEN.name(), 1_700_000_000_000L);
+
+        final var centre = create();
+        applyDifferences(centre, diff, ROOT, null /* companionFinder — not needed without first-tick VALUE entries */);
+
+        assertEquals(of(150), centre.getSecondTick().getDynamicWidth(ROOT, "20260315_01"));
+        assertEquals(of(0), centre.getSecondTick().getDynamicGrowFactor(ROOT, "20260315_01"));
+        assertEquals(of(1_700_000_000_000L), centre.getSecondTick().getDynamicLastSeen(ROOT, "20260315_01"));
+    }
+
+    /// Without `DYNAMIC_LAST_SEEN`, a diff entry for a non-checked key is treated as a genuinely-disappeared / legacy static property.
+    /// `WIDTH` and `GROW_FACTOR` are warn-and-dropped, the in-memory state stays empty.
+    /// The next `createDifferences` re-emits nothing for that key — the diff self-cleans.
+    ///
+    @Test
+    public void applyDifferences_warns_and_drops_when_DYNAMIC_LAST_SEEN_absent_and_self_cleans_diff() {
+        final var diff = createEmptyDifferences();
+        propDiff("disappeared", diff).put(WIDTH.name(), 150);
+        propDiff("disappeared", diff).put(GROW_FACTOR.name(), 0);
+
+        final var centre = create();
+        applyDifferences(centre, diff, ROOT, null);
+
+        // Dynamic maps remain empty — width/growFactor were warned-and-dropped (no DYNAMIC_LAST_SEEN signal).
+        assertEquals(empty(), centre.getSecondTick().getDynamicWidth(ROOT, "disappeared"));
+        assertEquals(empty(), centre.getSecondTick().getDynamicGrowFactor(ROOT, "disappeared"));
+
+        // A subsequent `createDifferences` against the default centre produces no entry for `disappeared` — diff self-cleans on next commit.
+        final var newDiff = createDifferences(centre, create(), ROOT);
+        assertEquals(createEmptyDifferences(), newDiff);
+    }
+
 }
