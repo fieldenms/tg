@@ -71,7 +71,7 @@ builder.register(centre);
 
 **Result property options:** `.order(n).asc()/.desc()`, `.width(px)/.minWidth(px)`, `.withSummary(alias, eqlExpr, titleAndDesc)`, `.withAction(config)`, `.withWordWrap()`
 
-**Centre options:** `.runAutomatically()`, `.hideCheckboxes()`, `.hideToolbar()`, `.setPageCapacity(n)`, `.retrieveAll()`, `.enforcePostSaveRefresh()`, `.hasEventSource(EventSourceClass.class)`
+**Centre options:** `.runAutomatically()`, `.hideCheckboxes()`, `.hideToolbar()`, `.setPageCapacity(n)`, `.retrieveAll()`, `.enforcePostSaveRefresh()`, `.hasEventSource(EventSourceClass.class)`, `.withMinAutoRefreshInterval(seconds)`
 
 ## Entity Master
 
@@ -574,4 +574,13 @@ For the full audit Web UI reference — `IAuditWebUiConfigFactory`, `PersistentE
 
 - `IEventSource` / `AbstractEventSource<T, OK>` — implement `eventToData(T event)`
 - `SseServlet` — separate Jetty server (default port 8092), configurable via `sse.*` properties
-- Integration: `.hasEventSource(EventSourceClass.class).withCountdownRefreshPrompt(5)`
+- Integration: `.hasEventSource(EventSourceClass.class).withMinAutoRefreshInterval(300).withCountdownRefreshPrompt(5)`
+- A started data load (Run, paging, refresh) supersedes a pending SSE-driven auto-refresh and any SSE events still awaiting their delayed (`minDelay`/`delay`) handling — the auto-refresh is skipped as redundant; only the next SSE event can instigate one again.
+  Applies to all SSE-enabled centres, with or without `withMinAutoRefreshInterval`.
+  Events arriving while the load is in progress are not superseded (their changes may postdate the load's query) and prompt after it completes, subject to the quiet window.
+- `.withMinAutoRefreshInterval(seconds)` (optional, follows `hasEventSource`) — the "refresh governor": a minimum interval between SSE-driven refreshes.
+  An event arriving inside the quiet window defers the refresh (trailing edge) instead of dropping it.
+  Any completed data load restarts the window, and so does Skip in the refresh prompt.
+  The window governs only refreshes instigated by subsequent SSE events — a pending auto-refresh is not deferred to the new window edge, but cancelled outright by a load (previous bullet).
+  Combined effect: an actively working user is never auto-refreshed — each load cancels the pending refresh and pushes the window out for the next one.
+  Without it, every SSE event may trigger a refresh (subject to payload `minDelay`/`delay` and the prompt); the load-supersedes-pending cancellation (previous bullet) still applies.

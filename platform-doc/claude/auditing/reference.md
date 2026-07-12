@@ -53,7 +53,7 @@ Declared on `AbstractAuditEntity<E extends AbstractEntity<?>>`:
 
 | Property | Type | Role |
 |---|---|---|
-| `auditedEntity` | `E` | Composite key member 1 — reference to the audited entity. Entity-exists validation is disabled so audited entities can be deleted while audit rows remain. |
+| `auditedEntity` | `E` | Composite key member 1 — reference to the audited entity. Entity-exists validation is disabled. Deleting the audited entity cascades to its audit records — see [Deletion of audited entities](#deletion-of-audited-entities). |
 | `auditedVersion` | `Long` | Composite key member 2 — the `version` of `E` at audit time. |
 | `auditDate` | `Date` | Timestamp of the audit event (final, required). |
 | `auditUser` | `User` | User that performed the audited save (final, required). |
@@ -119,6 +119,44 @@ void audit(Long auditedEntityId,
 on `IEntityAuditor<E>`.
 The call **participates in the caller's transaction** — `IEntityAuditor.audit(...)` is deliberately not `@SessionRequired`, so an audit failure rolls back the original save.
 Only auditable properties that are dirty at save time produce `_Prop` rows; if nothing auditable is dirty, no audit row is written.
+
+## Deletion of audited entities
+
+Audit companions (persistent and synthetic, audit-entity and audit-prop) **do not support deletion** — they inherit the throwing defaults of `IPersistentEntityDeleter`.
+Audit records are only ever removed as a cascade from the deletion of the audited entity itself, which prevents manipulation of an entity's audit trail.
+
+`DeleteOperations` performs the cascade under exactly the same predicate that governs audit-record *creation* (`AuditingMode.ENABLED && AuditUtils.isAudited(entityType)`), so audit records are removed under precisely the conditions under which they are written.
+Every delete entry point cascades — `defaultDelete`, `defaultBatchDelete`, and `defaultBatchDeleteByPropertyValues` — and the cascade runs in the caller's transaction, since all of these are `@SessionRequired`.
+
+### Disabling auditing makes audited entities undeletable
+
+If auditing is not `ENABLED` — the mode being `DISABLED` or `GENERATION` — the cascade does not run.
+Against a database that already holds audit records, deleting an audited entity then fails on the foreign key from those records, reported as `ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES` ("Deletion was unsuccessful due to existing dependencies.").
+Disabling auditing therefore makes previously audited entities undeletable, rather than merely stopping the creation of new audit records.
+
+### Ordering
+
+Audit records must be deleted in this order:
+
+1. **Audit-prop records first**, for all audit versions (`allAuditPropTypes()`).
+2. **Audit-entity records second**, for all audit versions (`allAuditEntityTypes()`).
+
+Audit-prop records are located through `AbstractAuditProp.PATH_TO_AUDITED_ENTITY` (`auditEntity.auditedEntity`).
+That path starts with a required key-member, so EQL renders it as an **inner join** — meaning an audit-prop record whose audit-entity record has already been deleted is unreachable through it.
+Deleting audit-entity records first would therefore silently orphan every audit-prop record.
+
+### What is *not* cascaded
+
+Only audit records belonging to the entity being deleted are removed, i.e. those matched on `AbstractAuditEntity.AUDITED_ENTITY`.
+Every other entity-typed column on an audit table carries its own FK, and none of them are cascaded:
+
+- `auditUser` → `User`, on every audit-entity table.
+- `a3t_<prop>` → the referenced type, for every entity-typed audited property (including self-references).
+
+So an entity that some *other* audited entity's trail still references — even only historically — cannot be deleted; the FK prohibits it.
+This is intended (see issue #2771): only entities referenced solely by their own audit records become deletable.
+
+Note that DAO test databases are created **without** FK constraints (`generateDatabaseDdl(dialect, false)`), so no test can exercise this enforcement; tests assert on the observable outcome instead.
 
 ## Runtime plumbing
 
