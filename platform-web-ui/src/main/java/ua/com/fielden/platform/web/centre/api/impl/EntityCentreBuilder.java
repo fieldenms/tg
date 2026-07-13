@@ -151,6 +151,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected Integer rightSplitterPosition = null;
     protected Class<? extends IEventSource> eventSourceClass = null;
     protected Integer refreshCountdown = null;
+    protected Integer minAutoRefreshInterval = null;
     protected boolean insertionPointCustomLayoutEnabled = false;
 
     private EntityCentreBuilder() {
@@ -250,6 +251,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 rightSplitterPosition,
                 eventSourceClass,
                 refreshCountdown,
+                minAutoRefreshInterval,
                 selectionCriteriaLayout,
                 resultsetCollapsedCardLayout,
                 resultsetExpansionCardLayout,

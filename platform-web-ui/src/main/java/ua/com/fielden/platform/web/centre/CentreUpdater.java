@@ -93,7 +93,9 @@ public class CentreUpdater {
      *
      */
     enum MetaValueType {
-        VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, WIDTH, GROW_FACTOR, AUTOCOMPLETE_ACTIVE_ONLY
+        VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP,
+        DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, WIDTH, GROW_FACTOR,
+        AUTOCOMPLETE_ACTIVE_ONLY, DYNAMIC_LAST_SEEN
     }
     
     /**
@@ -1149,7 +1151,7 @@ public class CentreUpdater {
      */
     public static Map<String, Object> extendDiffsWithNonIntrusiveDifferences(final Map<String, Object> diff, final IAddToResultTickManager secondTick, final IAddToResultTickManager defaultSecondTick, final Class<AbstractEntity<?>> root) {
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
-        
+
         // extract widths that are changed and add them to the diff
         for (final String property : secondTick.checkedProperties(root)) {
             final int widthVal = secondTick.getWidth(root, property);
@@ -1161,6 +1163,22 @@ public class CentreUpdater {
                 diff(property, propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
             }
         }
+
+        // Extract dynamic-column widths / grow factors / last-seen millis and add them to the diff.
+        // Dynamic columns are emitted at request time by an IDynamicColumnBuilder, identified by their group-key value.
+        // Their keys never appear in checkedProperties(root), so they are processed separately.
+        // Any value present in the dynamic maps is considered an override.
+        // The "default" is computed by the dynamic builder at emission time and is not available here.
+        // Defensive filter: skip keys that *do* appear in checkedProperties.
+        // Avoids colliding with the static branch above on the rare case of name reuse.
+        final var checkedRootProps = new HashSet<>(secondTick.checkedProperties(root));
+        final var widthsAndGrowFactors = secondTick.getDynamicWidthsAndGrowFactors();
+        final var defaultWidthsAndGrowFactors = defaultSecondTick.getDynamicWidthsAndGrowFactors();
+        final var lastSeen = secondTick.getDynamicLastSeenMap();
+        final var defaultLastSeen = defaultSecondTick.getDynamicLastSeenMap();
+        diffDynamic(widthsAndGrowFactors._1, defaultWidthsAndGrowFactors._1, WIDTH.name(), root, checkedRootProps, propertiesDiff);
+        diffDynamic(widthsAndGrowFactors._2, defaultWidthsAndGrowFactors._2, GROW_FACTOR.name(), root, checkedRootProps, propertiesDiff);
+        diffDynamic(lastSeen, defaultLastSeen, DYNAMIC_LAST_SEEN.name(), root, checkedRootProps, propertiesDiff);
         
         // determine whether usedProperties have been changed (as a whole) and add them to the diff if true
         final List<String> visibilityAndOrderPropertiesVal = secondTick.usedProperties(root);
@@ -1237,6 +1255,30 @@ public class CentreUpdater {
             }
         }
     }
+
+    /// Iterates `source` (a dynamic-column map) and appends an entry to `propertiesDiff` under `diffName`.
+    /// Done for every key whose value differs from `defaultSource`.
+    /// Skips keys whose root class is not `root` or whose property name appears in `checkedRootProps`.
+    /// Used by [#extendDiffsWithNonIntrusiveDifferences(Map, IAddToResultTickManager, IAddToResultTickManager, Class)].
+    ///
+    private static <V> void diffDynamic(
+        final Map<Pair<Class<?>, String>, V> source,
+        final Map<Pair<Class<?>, String>, V> defaultSource,
+        final String diffName,
+        final Class<AbstractEntity<?>> root,
+        final Set<String> checkedRootProps,
+        final Map<String, Map<String, Object>> propertiesDiff
+    ) {
+        source.forEach((key, value) -> {
+            if (
+                root.equals(key.getKey())
+                && !checkedRootProps.contains(key.getValue())
+                && !equalsEx(value, defaultSource.get(key))
+            ) {
+                diff(key.getValue(), propertiesDiff).put(diffName, value);
+            }
+        });
+    }
     
     /**
      * Applies the differences from 'differences centre' on top of 'target centre'.
@@ -1270,9 +1312,28 @@ public class CentreUpdater {
             processValue(diff, AUTOCOMPLETE_ACTIVE_ONLY.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAutocompleteActiveOnly(root, property, (Boolean) value), property);
             
             final boolean resultSetContains = targetCentre.getSecondTick().checkedProperties(root).contains(property);
-            
-            processValue(diff, WIDTH.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value), property);
-            processValue(diff, GROW_FACTOR.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value), property);
+
+            if (resultSetContains || !diff.containsKey(DYNAMIC_LAST_SEEN.name())) {
+                // Static path (resultSetContains == true) or genuinely-disappeared / legacy entry.
+                // `processValue` applies when `resultSetContains` is true and warns-and-drops when false.
+                // This preserves upstream warn-and-drop semantics for the latter so the diff self-cleans on the next commit.
+                processValue(diff, WIDTH.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value), property);
+                processValue(diff, GROW_FACTOR.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value), property);
+            }
+            else {
+                // The presence of DYNAMIC_LAST_SEEN marks this entry as a *dynamic column* override.
+                // The producer always writes lastSeen alongside any dynamic width/growFactor resize.
+                // Route WIDTH / GROW_FACTOR / DYNAMIC_LAST_SEEN to the dynamic maps.
+                // If the key is orphan or stale, the eviction sweep discards it.
+                // See `CriteriaResource.refreshAndEvictDynamicEntries`.
+                if (diff.containsKey(WIDTH.name())) {
+                    targetCentre.getSecondTick().setDynamicWidth(root, property, (int) diff.get(WIDTH.name()));
+                }
+                if (diff.containsKey(GROW_FACTOR.name())) {
+                    targetCentre.getSecondTick().setDynamicGrowFactor(root, property, (int) diff.get(GROW_FACTOR.name()));
+                }
+                targetCentre.getSecondTick().setDynamicLastSeen(root, property, ((Number) diff.get(DYNAMIC_LAST_SEEN.name())).longValue());
+            }
         }
         
         // process EGI column visibility / order

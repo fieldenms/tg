@@ -207,6 +207,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return this;
     }
 
+    /// Sets the natural width and makes the column **rigid** (`isFlexible = false`).
+    /// The column will render at `width` pixels and will not grow when the EGI is wider than the sum of column widths.
+    /// During drag-resize the user can still shrink the column down to the resize-floor
+    /// I.e. to `PropertyColumnElement.resizeFloor(width)` — typically `MIN_COLUMN_WIDTH = 16`.
+    /// Mirrors [DynamicColumn#width(int)] for dynamic columns.
+    ///
     @Override
     public IResultSetBuilder4bWordWrap<T> width(final int width) {
         this.width = width;
@@ -214,6 +220,14 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return this;
     }
 
+    /// Sets the natural width and leaves the column **flexible** (`isFlexible = true`).
+    /// `EntityCentre.calculateGrowFactors` will later assign a per-column `growFactor`.
+    /// The factor is proportional to the column's width across the set of flexible columns.
+    /// So, the column may grow to absorb leftover horizontal space.
+    /// (`minWidth` here is the user-supplied *natural width* for the flexible case — it is **not** the resize floor.
+    /// That is `PropertyColumnElement.resizeFloor(width)`.).
+    /// Mirrors [DynamicColumn#minWidth(int)] for dynamic columns.
+    ///
     @Override
     public IResultSetBuilder4bWordWrap<T> minWidth(final int minWidth) {
         this.width = minWidth;

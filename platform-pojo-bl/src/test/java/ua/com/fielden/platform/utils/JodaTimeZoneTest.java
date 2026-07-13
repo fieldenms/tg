@@ -18,14 +18,14 @@ import org.junit.Test;
 public class JodaTimeZoneTest {
 
     @Test
-    public void default_joda_timezone_equals_to_default_java_timezone() {
+    public void default_joda_time_zone_equals_to_default_java_time_zone() {
         assertEquals(org.joda.time.DateTimeZone.getDefault().toTimeZone(), java.util.TimeZone.getDefault());
     }
 
     @Test
-    public void date_parsed_in_java_timezone_converts_to_joda_date_with_the_same_field_values() throws ParseException {
-        final Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2009-03-01 11:00:55"); // uses default java timezone
-        final DateTime dateTime = new DateTime(date.getTime()); // uses default joda timezone
+    public void date_parsed_in_java_time_zone_converts_to_joda_date_with_the_same_field_values() throws ParseException {
+        final Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2009-03-01 11:00:55"); // uses default java time zone
+        final DateTime dateTime = new DateTime(date.getTime()); // uses default joda time zone
         assertEquals(2009, dateTime.getYear());
         assertEquals(03, dateTime.getMonthOfYear());
         assertEquals(01, dateTime.getDayOfMonth());
