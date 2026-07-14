@@ -409,9 +409,9 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
             return;
         }
         if (this._autoFlow) {
-            this._filterAutoFlow();
+            this._filterAutoFlow(filter);
         } else {
-            this._filterByRow();
+            this._filterByRow(filter);
         }
     }
 
@@ -420,8 +420,8 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
     // when every filterable element in its section is filtered out, and is reopened while a non-empty section is being filtered.
     // This reproduces the all-or-nothing row semantics of the flex layout, which the grid cannot get structurally because its
     // items are positioned individually rather than wrapped in per-row containers.
-    _filterByRow () {
-        const isFilteredOut = element => this.filter && !this.filter(element);
+    _filterByRow (filter) {
+        const isFilteredOut = element => filter && !filter(element);
         Object.values(this._rowElements || {}).forEach(elements => {
             const filterable = elements.filter(element => element.hasAttribute('filterable'));
             const hidden = filterable.length > 0 && filterable.every(isFilteredOut);
@@ -431,18 +431,18 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
             const filterable = subheader.relativeElements.filter(element => element.hasAttribute('filterable'));
             const hidden = filterable.length > 0 && filterable.every(isFilteredOut);
             this.toggleClass('hidden-with-filter', hidden, subheader);
-            if (!hidden && this.filter) {
+            if (!hidden && filter) {
                 subheader.open();
             }
         });
     }
 
     // Per-element filtering for auto-flow mode: the shadow root holds a flat list of slotted editors — no rows or subheaders — so each filterable editor is simply hidden on its own (and reflows out, leaving no gaps).
-    _filterAutoFlow () {
+    _filterAutoFlow (filter) {
         this.componentsToLayout.forEach(slotName => {
             const editor = this.slottedElements[slotName];
             if (editor.hasAttribute('filterable')) {
-                this.toggleClass('hidden-with-filter', this.filter && !this.filter(editor), editor);
+                this.toggleClass('hidden-with-filter', filter && !filter(editor), editor);
             }
         });
     }

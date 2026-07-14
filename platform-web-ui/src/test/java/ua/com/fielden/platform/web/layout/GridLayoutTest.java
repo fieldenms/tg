@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.layout;
 
+import ua.com.fielden.platform.web.layout.grid.exceptions.GridLayoutConfigurationException;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static ua.com.fielden.platform.web.layout.grid.AutoRepeat.AUTO_FILL;
@@ -246,28 +248,28 @@ public class GridLayoutTest {
 
     @Test
     public void a_cell_with_a_column_beyond_the_declared_columns_is_rejected() {
-        final var ex = assertThrows(IllegalArgumentException.class, () ->
+        final var ex = assertThrows(GridLayoutConfigurationException.class, () ->
                 grid().columns().addColumn().addColumn().elements(cell(2, 3).withProp("desc")));
         assertEquals(ERR_COLUMN_OUT_OF_BOUNDS.formatted(2, 3, 2), ex.getMessage());
     }
 
     @Test
     public void a_cell_with_a_non_positive_column_is_rejected() {
-        final var ex = assertThrows(IllegalArgumentException.class, () ->
+        final var ex = assertThrows(GridLayoutConfigurationException.class, () ->
                 grid().columns().addColumn().addColumn().elements(skip(1, 0)));
         assertEquals(ERR_COLUMN_OUT_OF_BOUNDS.formatted(1, 0, 2), ex.getMessage());
     }
 
     @Test
     public void a_cell_with_a_non_positive_row_is_rejected() {
-        final var ex = assertThrows(IllegalArgumentException.class, () ->
+        final var ex = assertThrows(GridLayoutConfigurationException.class, () ->
                 grid().columns().addColumn().elements(skip(0, 1)));
         assertEquals(ERR_NON_POSITIVE_ROW.formatted(1, 0), ex.getMessage());
     }
 
     @Test
     public void a_cell_with_a_row_beyond_the_declared_explicit_rows_is_rejected() {
-        final var ex = assertThrows(IllegalArgumentException.class, () ->
+        final var ex = assertThrows(GridLayoutConfigurationException.class, () ->
                 grid().columns().addColumn().rows().addRow("auto").addRow("auto").elements(skip(3, 1)));
         assertEquals(ERR_ROW_OUT_OF_BOUNDS.formatted(3, 1, 2), ex.getMessage());
     }
@@ -285,7 +287,7 @@ public class GridLayoutTest {
     @Test
     public void a_cell_overlapping_an_earlier_cells_column_span_is_rejected() {
         // the first cell spans columns 1-2 of row 1; the skip at (1,2) lands inside that span
-        final var ex = assertThrows(IllegalArgumentException.class, () ->
+        final var ex = assertThrows(GridLayoutConfigurationException.class, () ->
                 grid().columns().addColumn().addColumn().elements(cell(1, 1).spanCols(2), skip(1, 2)));
         assertEquals(ERR_OVERLAPPING_CELLS.formatted(1, 2, 1, 1), ex.getMessage());
     }
@@ -293,7 +295,7 @@ public class GridLayoutTest {
     @Test
     public void a_cell_overlapping_an_earlier_cells_row_span_is_rejected() {
         // the first cell spans rows 1-2 of column 1; the skip at (2,1) lands inside that span
-        final var ex = assertThrows(IllegalArgumentException.class, () ->
+        final var ex = assertThrows(GridLayoutConfigurationException.class, () ->
                 grid().columns().addColumn().elements(cell(1, 1).spanRows(2), skip(2, 1)));
         assertEquals(ERR_OVERLAPPING_CELLS.formatted(2, 1, 1, 1), ex.getMessage());
     }
@@ -301,7 +303,7 @@ public class GridLayoutTest {
     @Test
     public void a_cell_in_a_full_width_subheaders_row_is_rejected() {
         // the subheader at row 1 spans every column; a cell in row 1 overlaps it
-        final var ex = assertThrows(IllegalArgumentException.class, () ->
+        final var ex = assertThrows(GridLayoutConfigurationException.class, () ->
                 grid().columns().addColumn().addColumn().elements(subheaderOpen(1, "Section"), skip(1, 1)));
         assertEquals(ERR_OVERLAPPING_CELLS.formatted(1, 1, 1, 1), ex.getMessage());
     }
@@ -325,35 +327,35 @@ public class GridLayoutTest {
     @Test
     public void a_non_positive_column_span_is_rejected() {
         assertEquals(ERR_INVALID_COLUMN_SPAN.formatted(0),
-                assertThrows(IllegalArgumentException.class, () -> cell(1, 1).spanCols(0)).getMessage());
+                assertThrows(GridLayoutConfigurationException.class, () -> cell(1, 1).spanCols(0)).getMessage());
         // -1 is the internal span-all sentinel — it must be rejected, not silently treated as span-all
         assertEquals(ERR_INVALID_COLUMN_SPAN.formatted(-1),
-                assertThrows(IllegalArgumentException.class, () -> cell(1, 1).spanCols(-1)).getMessage());
+                assertThrows(GridLayoutConfigurationException.class, () -> cell(1, 1).spanCols(-1)).getMessage());
         // span(columns, rows) validates the column span too
         assertEquals(ERR_INVALID_COLUMN_SPAN.formatted(0),
-                assertThrows(IllegalArgumentException.class, () -> cell(1, 1).span(0, 2)).getMessage());
+                assertThrows(GridLayoutConfigurationException.class, () -> cell(1, 1).span(0, 2)).getMessage());
     }
 
     @Test
     public void a_non_positive_row_span_is_rejected() {
         assertEquals(ERR_INVALID_ROW_SPAN.formatted(0),
-                assertThrows(IllegalArgumentException.class, () -> cell(1, 1).spanRows(0)).getMessage());
+                assertThrows(GridLayoutConfigurationException.class, () -> cell(1, 1).spanRows(0)).getMessage());
         // span(columns, rows) validates the row span too
         assertEquals(ERR_INVALID_ROW_SPAN.formatted(0),
-                assertThrows(IllegalArgumentException.class, () -> cell(1, 1).span(2, 0)).getMessage());
+                assertThrows(GridLayoutConfigurationException.class, () -> cell(1, 1).span(2, 0)).getMessage());
     }
 
     @Test
     public void a_cell_spanning_past_the_last_column_is_rejected() {
         // anchored at column 2 of a 2-column grid and spanning 3 columns reaches column 4, which would expand the grid with implicit tracks
-        final var ex = assertThrows(IllegalArgumentException.class, () ->
+        final var ex = assertThrows(GridLayoutConfigurationException.class, () ->
                 grid().columns().addColumn().addColumn().elements(cell(1, 2).spanCols(3)));
         assertEquals(ERR_COLUMN_SPAN_OUT_OF_BOUNDS.formatted(1, 2, 4, 2), ex.getMessage());
     }
 
     @Test
     public void a_cell_spanning_past_the_last_explicit_row_is_rejected() {
-        final var ex = assertThrows(IllegalArgumentException.class, () ->
+        final var ex = assertThrows(GridLayoutConfigurationException.class, () ->
                 grid().columns().addColumn().rows().addRow("auto").addRow("auto").elements(cell(1, 1).spanRows(3)));
         assertEquals(ERR_ROW_SPAN_OUT_OF_BOUNDS.formatted(1, 1, 3, 2), ex.getMessage());
     }

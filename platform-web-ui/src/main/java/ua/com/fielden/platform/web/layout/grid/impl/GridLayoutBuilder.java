@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.layout.grid.impl;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.layout.grid.*;
+import ua.com.fielden.platform.web.layout.grid.exceptions.GridLayoutConfigurationException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +28,8 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
         ERR_NON_POSITIVE_ROW = "Grid cell at column %s has a non-positive row %s.",
         ERR_ROW_OUT_OF_BOUNDS = "Grid cell at row %s, column %s is outside the layout's %s declared row(s).",
         ERR_ROW_SPAN_OUT_OF_BOUNDS = "Grid cell at row %s, column %s spans to row %s, past the layout's %s declared row(s).",
-        ERR_OVERLAPPING_CELLS = "Grid cell at row %s, column %s overlaps the cell at row %s, column %s.";
+        ERR_OVERLAPPING_CELLS = "Grid cell at row %s, column %s overlaps the cell at row %s, column %s.",
+        ERR_INVALID_REPEAT = "Track repeat count must be at least 1, but was %s.";
 
     private GridContent content;
     private final List<GridTrack> columnTracks = new ArrayList<>();
@@ -85,11 +87,14 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
 
     /// An inline html snippet at `(row, col)`, stamped with the layout's `context` (e.g. a label, image or explanatory text).
     ///
+    /// The markup must be developer-authored and trusted: it is rendered into the DOM as-is (stamped via `innerHTML` on the client), so it must never incorporate user- or entity-supplied data.
+    ///
     public static IGridCell html(final int row, final int col, final String html) {
         return GridCell.html(row, col, html);
     }
 
     /// An inline html snippet at `(row, col)`, built from a [DomElement].
+    /// As with [#html(int, int, String)], the resulting markup must be developer-authored and trusted.
     ///
     public static IGridCell html(final int row, final int col, final DomElement dom) {
         return GridCell.html(row, col, dom.toString());
@@ -161,6 +166,9 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
 
     @Override
     public GridLayoutBuilder repeat(final int times) {
+        if (times < 1) {
+            throw new GridLayoutConfigurationException(ERR_INVALID_REPEAT.formatted(times));
+        }
         current.repeat(times);
         return this;
     }
@@ -218,28 +226,28 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
         final Map<String, GridCell> occupied = new HashMap<>();
         for (final GridCell cell : cells) {
             if (cell.firstColumn() < 1 || cell.firstColumn() > columnCount) {
-                throw new IllegalArgumentException(ERR_COLUMN_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), columnCount));
+                throw new GridLayoutConfigurationException(ERR_COLUMN_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), columnCount));
             }
             if (cell.row() < 1) {
-                throw new IllegalArgumentException(ERR_NON_POSITIVE_ROW.formatted(cell.col(), cell.row()));
+                throw new GridLayoutConfigurationException(ERR_NON_POSITIVE_ROW.formatted(cell.col(), cell.row()));
             }
             if (hasExplicitRows && cell.row() > rowCount) {
-                throw new IllegalArgumentException(ERR_ROW_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), rowCount));
+                throw new GridLayoutConfigurationException(ERR_ROW_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), rowCount));
             }
             final int firstCol = cell.firstColumn();
             final int lastCol = firstCol + cell.occupiedColumns(columnCount) - 1;
             final int lastRow = cell.row() + cell.occupiedRows() - 1;
             if (lastCol > columnCount) {
-                throw new IllegalArgumentException(ERR_COLUMN_SPAN_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), lastCol, columnCount));
+                throw new GridLayoutConfigurationException(ERR_COLUMN_SPAN_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), lastCol, columnCount));
             }
             if (hasExplicitRows && lastRow > rowCount) {
-                throw new IllegalArgumentException(ERR_ROW_SPAN_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), lastRow, rowCount));
+                throw new GridLayoutConfigurationException(ERR_ROW_SPAN_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), lastRow, rowCount));
             }
             for (int r = cell.row(); r <= lastRow; r += 1) {
                 for (int c = firstCol; c <= lastCol; c += 1) {
                     final GridCell other = occupied.putIfAbsent(r + "," + c, cell);
                     if (other != null) {
-                        throw new IllegalArgumentException(ERR_OVERLAPPING_CELLS.formatted(cell.row(), cell.col(), other.row(), other.col()));
+                        throw new GridLayoutConfigurationException(ERR_OVERLAPPING_CELLS.formatted(cell.row(), cell.col(), other.row(), other.col()));
                     }
                 }
             }

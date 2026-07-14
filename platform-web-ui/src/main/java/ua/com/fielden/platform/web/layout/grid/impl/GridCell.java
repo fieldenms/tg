@@ -5,6 +5,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.web.layout.grid.IGridCell;
 import ua.com.fielden.platform.web.layout.grid.ISubheader;
+import ua.com.fielden.platform.web.layout.grid.exceptions.GridLayoutConfigurationException;
 
 import static ua.com.fielden.platform.web.layout.grid.impl.GridStyles.escape;
 
@@ -144,7 +145,7 @@ public class GridCell implements IGridCell, ISubheader {
     @Override
     public GridCell spanCols(final int columns) {
         if (columns < 1) {
-            throw new IllegalArgumentException(ERR_INVALID_COLUMN_SPAN.formatted(columns));
+            throw new GridLayoutConfigurationException(ERR_INVALID_COLUMN_SPAN.formatted(columns));
         }
         colSpan = columns;
         return this;
@@ -153,7 +154,7 @@ public class GridCell implements IGridCell, ISubheader {
     @Override
     public GridCell spanRows(final int rows) {
         if (rows < 1) {
-            throw new IllegalArgumentException(ERR_INVALID_ROW_SPAN.formatted(rows));
+            throw new GridLayoutConfigurationException(ERR_INVALID_ROW_SPAN.formatted(rows));
         }
         rowSpan = rows;
         return this;
