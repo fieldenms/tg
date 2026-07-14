@@ -156,6 +156,13 @@ public class GridLayoutTest {
     }
 
     @Test
+    public void addRow_without_size_defaults_to_auto() {
+        assertEquals(
+                "{columns:[{size:\"1fr\"}],rows:[{size:\"auto\"}],cells:[]}",
+                grid().columns().addColumn().rows().addRow().layout());
+    }
+
+    @Test
     public void html_cell_serialises_as_a_widget_and_escapes_the_snippet() {
         assertEquals(
                 "{columns:[{size:\"1fr\"}],cells:[{row:1,col:1,widget:\"html:<b>note</b>\"}]}",

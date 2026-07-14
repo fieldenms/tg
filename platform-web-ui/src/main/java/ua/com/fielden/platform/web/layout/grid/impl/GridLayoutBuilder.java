@@ -149,6 +149,11 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
     }
 
     @Override
+    public GridLayoutBuilder addRow() {
+        return addRow("auto");
+    }
+
+    @Override
     public GridLayoutBuilder align(final String value) {
         current.putStyle("align-self", value);
         return this;

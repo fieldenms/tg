@@ -11,6 +11,10 @@ public interface IRow extends IGridLayoutConfiguration {
     ///
     IRow addRow(String size);
 
+    /// Adds another row track sized `auto` — tall enough to fit its content.
+    ///
+    IRow addRow();
+
     /// Repeats the current row track the specified number of times — emitted as `repeat(n, size)` in the template.
     ///
     IRow repeat(int times);
