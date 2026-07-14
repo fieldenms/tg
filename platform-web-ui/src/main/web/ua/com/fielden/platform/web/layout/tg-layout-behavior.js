@@ -43,7 +43,7 @@ export const TgLayoutBehavior = {
             readOnly: true
         },
         currentLayout: {
-            type: Boolean,
+            type: Object,
             readOnly: true
         },
         contentLoaded: {
