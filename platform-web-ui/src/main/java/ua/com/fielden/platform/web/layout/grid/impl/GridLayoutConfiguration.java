@@ -11,11 +11,12 @@ import static ua.com.fielden.platform.web.layout.grid.impl.GridStyles.escape;
 /// An assembled grid layout, produced by completing the fluent chain with `elements(...)`.
 ///
 /// Its [#toString()] (and equivalently [#layout()]) renders the wire format consumed by the `tg-grid-layout` client — a single JavaScript object literal of the shape:
-/// `{container:{…}, columns:[…], rows:[…], cells:[…]}`.
+/// `{container:{…}, columns:[…], rows:[…], cells:[…], hidden:[…]}`.
 ///
 /// - `container` — the container-level CSS declarations as `property: value` pairs (gaps, content distribution, item-alignment defaults, arbitrary styles); omitted when empty. The client supplies `display: grid` itself.
 /// - `columns` / `rows` — the track definitions: each carries its `size` (and an optional `repeat`), from which the client builds `grid-template-columns` / `grid-template-rows`, plus an optional `style` it emulates on every cell of the track. `rows` is omitted when left implicit.
 /// - `cells` — the explicitly configured, non-conforming cells (spans, overrides, subheaders, skips); ordinary editors auto-flow into the rest.
+/// - `hidden` — select descriptors of editors kept in the light DOM but not placed into the grid (they stay bound yet unrendered); omitted when none.
 ///
 /// As an [IGridLayoutConfiguration], it can be passed directly to `setLayoutFor` on a master or centre.
 ///
@@ -48,7 +49,11 @@ public class GridLayoutConfiguration implements IGridLayoutConfiguration {
         if (!rows.isEmpty()) {
             parts.add("rows:[" + renderTracks(rows) + "]");
         }
-        parts.add("cells:[" + cells.stream().map(GridCell::render).collect(Collectors.joining(",")) + "]");
+        parts.add("cells:[" + cells.stream().filter(cell -> !cell.isHidden()).map(GridCell::render).collect(Collectors.joining(",")) + "]");
+        final String hidden = cells.stream().filter(GridCell::isHidden).map(cell -> "\"" + escape(cell.selectDescriptor()) + "\"").collect(Collectors.joining(","));
+        if (!hidden.isEmpty()) {
+            parts.add("hidden:[" + hidden + "]");
+        }
         return "{" + String.join(",", parts) + "}";
     }
 

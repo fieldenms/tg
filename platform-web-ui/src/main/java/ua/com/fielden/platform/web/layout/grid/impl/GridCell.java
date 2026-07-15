@@ -20,7 +20,7 @@ import static ua.com.fielden.platform.web.layout.grid.impl.GridStyles.escape;
 public class GridCell implements IGridCell, ISubheader {
 
     enum Kind {
-        CELL, SKIP, SUBHEADER, HTML
+        CELL, SKIP, SUBHEADER, HTML, HIDDEN
     }
 
     /// Sentinel for [#colSpan] meaning "span all columns" (`grid-column: 1 / -1`).
@@ -94,6 +94,18 @@ public class GridCell implements IGridCell, ISubheader {
         return kind == Kind.SUBHEADER;
     }
 
+    /// Whether this element is hidden — kept in the light DOM but not placed into the grid.
+    ///
+    boolean isHidden() {
+        return kind == Kind.HIDDEN;
+    }
+
+    /// The `attribute=value` select descriptor that binds this element to a specific editor.
+    ///
+    String selectDescriptor() {
+        return selectAttribute + "=" + selectValue;
+    }
+
     /// Folds the given declarations into this cell's own styles as defaults: a property the cell already sets keeps its value (the cell wins), an absent property is appended in the given map's order.
     /// Used to apply container-level subheader-style defaults while a per-subheader `style(...)` overrides them; idempotent, so a repeated application is harmless.
     ///
@@ -124,6 +136,15 @@ public class GridCell implements IGridCell, ISubheader {
     public static GridCell html(final int row, final int col, final String html) {
         final GridCell cell = new GridCell(row, col, Kind.HTML);
         cell.html = html;
+        return cell;
+    }
+
+    /// An editor kept in the light DOM but not placed into the grid, bound by its `property-name`.
+    ///
+    public static GridCell hidden(final CharSequence propertyName) {
+        final GridCell cell = new GridCell(0, 0, Kind.HIDDEN);
+        cell.selectAttribute = PROPERTY_NAME_ATTRIBUTE;
+        cell.selectValue = propertyName.toString();
         return cell;
     }
 
@@ -216,7 +237,7 @@ public class GridCell implements IGridCell, ISubheader {
             sb.append(",widget:\"").append(escape(widget)).append("\"");
         }
         if (selectAttribute != null) {
-            sb.append(",select:\"").append(escape(selectAttribute + "=" + selectValue)).append("\"");
+            sb.append(",select:\"").append(escape(selectDescriptor())).append("\"");
         }
         if (!styles.isEmpty()) {
             sb.append(",style:").append(GridStyles.object(styles));

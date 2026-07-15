@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.web.layout.grid.AutoRepeat.AUTO_FIT;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.content;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.grid;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.hidden;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.html;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.skip;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.subheaderOpen;
@@ -187,6 +188,18 @@ public class GridLayoutTest {
         assertEquals(
                 "{columns:[{size:\"1fr\"}],rows:[{size:\"auto\"}],cells:[]}",
                 grid().columns().addColumn().rows().addRow("auto").layout());
+    }
+
+    @Test
+    public void hidden_elements_are_kept_out_of_the_grid_and_serialised_separately() {
+        // a hidden element is not a positioned cell — it serialises into the top-level `hidden` array, leaving `cells` empty
+        assertEquals(
+                "{columns:[{size:\"1fr\"}],cells:[],hidden:[\"property-name=secret\"]}",
+                grid().columns().addColumn().elements(hidden("secret")).layout());
+        // hidden elements coexist with positioned cells and preserve declaration order
+        assertEquals(
+                "{columns:[{size:\"1fr\"},{size:\"1fr\"}],cells:[{row:1,col:1,widget:\"skip\"}],hidden:[\"property-name=a\",\"property-name=b\"]}",
+                grid().columns().addColumn().addColumn().elements(skip(1, 1), hidden("a"), hidden("b")).layout());
     }
 
     @Test

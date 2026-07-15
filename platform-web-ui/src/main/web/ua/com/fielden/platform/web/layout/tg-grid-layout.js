@@ -102,7 +102,7 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         // Auto-tracking columns yield a browser-determined track count, so coordinate-based placement (cells, rows, spans) does not apply — every editor simply auto-flows.
         this._autoFlow = isAutoFlow(layout.columns);
         if (this._autoFlow) {
-            this._layoutAutoFlow(layout.columns);
+            this._layoutAutoFlow(layout.columns, layout.hidden);
         } else {
             this._layoutFixedTracks(layout, indent);
         }
@@ -192,15 +192,28 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
 
     // Auto-flow placement: editors flow across the browser-generated tracks of the lone auto-tracking column (reflowing on resize), so that column's style applies uniformly to every editor.
     // Auto-tracking is supported only as a single column — it cannot be combined with other (static or auto) columns, since the browser-determined track count would make per-column styling indeterminate — which is enforced here.
-    _layoutAutoFlow (columns) {
+    _layoutAutoFlow (columns, hidden) {
         if (columns.length > 1) {
             throw new Error("An auto-tracking column (repeat(auto-fit|auto-fill, …)) must be the only column; it cannot be mixed with other columns.");
         }
         const cellStyle = columns[0].style || {};
-        this.componentsToLayout.forEach(slotName => {
+        this._autoFlowPool(hidden).forEach(slotName => {
             this._applyStyles(this.slottedElements[slotName], cellStyle);
             this._append(this._createCellElement(slotName));
         });
+    }
+
+    // The slot names to lay out: every slotted editor except those a `hidden` descriptor pins out of the grid — kept in the light DOM (still bound) but never projected into a slot.
+    _autoFlowPool (hidden) {
+        const pool = this.componentsToLayout.slice();
+        (hidden || []).forEach(descriptor => {
+            const [attribute, value] = splitSelect(descriptor);
+            const index = pool.findIndex(slotName => this.slottedElements[slotName].getAttribute(attribute) === value);
+            if (index >= 0) {
+                pool.splice(index, 1);
+            }
+        });
+        return pool;
     }
 
     // Fixed-track placement: resolve the grid geometry, bind any `select` cells, then walk the cells row-major.
@@ -215,7 +228,7 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
             columnStyles: expandTrackStyles(columns),
             rowStyles: expandTrackStyles(rows)
         };
-        const pool = this.componentsToLayout.slice();
+        const pool = this._autoFlowPool(layout.hidden);
         this._placeCells(this._indexCells(layout.cells || [], pool), pool, grid);
     }
 

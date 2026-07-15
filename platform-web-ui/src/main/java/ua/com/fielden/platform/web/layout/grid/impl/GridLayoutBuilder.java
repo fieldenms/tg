@@ -100,6 +100,13 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
         return GridCell.html(row, col, dom.toString());
     }
 
+    /// An editor kept in the light DOM but not projected into the grid — it stays bound (so it still participates in the entity, its validators and definers) yet is never rendered and occupies no cell.
+    /// Identified by its `property-name`; a metamodel property reference may be passed directly.
+    ///
+    public static IGridElement hidden(final CharSequence propertyName) {
+        return GridCell.hidden(propertyName);
+    }
+
     // ------------------------------------------------------------------------
     // Chain — every method returns `this`; the step interfaces narrow the view.
     // ------------------------------------------------------------------------
@@ -225,6 +232,9 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
         final int rowCount = hasExplicitRows ? rowTracks.stream().mapToInt(GridTrack::span).sum() : Integer.MAX_VALUE;
         final Map<String, GridCell> occupied = new HashMap<>();
         for (final GridCell cell : cells) {
+            if (cell.isHidden()) {
+                continue;
+            }
             if (cell.firstColumn() < 1 || cell.firstColumn() > columnCount) {
                 throw new GridLayoutConfigurationException(ERR_COLUMN_OUT_OF_BOUNDS.formatted(cell.row(), cell.col(), columnCount));
             }
