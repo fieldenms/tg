@@ -1100,13 +1100,74 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
     /// it would keep correlating to the original source, which the outer query would no longer access.
     ///
     @Test
-    public void yielded_subquery_alongside_an_aggregation_skips_the_transformation() {
+    public void yielded_subquery_alongside_an_aggregation_skips_the_transformation_01() {
         final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
         final var query = select(TgVehicle.class)
                 .groupBy().prop("key")
                 .yield().prop("key").as("k")
                 .yield().model(countFuelUsage).as("count")
                 .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+
+        final var actual = qry(query);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(query);
+        assertQueryEquals(expected, actual);
+    }
+
+    /// The yielded subquery contains an aggregation that binds to the top-level source, illustrating a complex case of
+    /// cross-level aggregate binding.
+    /// The transformation is skipped because one of the yielded expressions is a subquery.
+    ///
+    @Test
+    public void yielded_subquery_alongside_an_aggregation_skips_the_transformation_02() {
+        final var query = select(TgVehicle.class).as("v") // (1)
+                .groupBy().prop("model")
+                .yield().prop("model").as("model")
+                .yield().sumOf().prop("sumOfPrices").as("total") // Triggers the transformation
+                // Count all Fuel Usage records dated after the earliest Fuel Usage within a group.
+                .yield().model(select(TgFuelUsage.class) // (2)
+                                       .where()
+                                       // Although this minOf aggregation is syntactically within (2), it semantically binds to (1).
+                                       .prop("date").gt().expr(expr().minOf().model(select(TgFuelUsage.class).where()
+                                                                                            .prop("vehicle").eq().prop("v.id")
+                                                                                            // This minOf is simple -- binds to the enclosing source.
+                                                                                            .yield().minOf().prop("date")
+                                                                                            .modelAsPrimitive())
+                                                                       .model())
+                                       .yield().countAll()
+                                       .modelAsPrimitive())
+                .as("n")
+                .modelAsAggregate();
+
+        final var actual = qry(query);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(query);
+        assertQueryEquals(expected, actual);
+    }
+
+    /// The yielded subquery contains an aggregation that binds to the top-level source, illustrating a complex case of
+    /// cross-level aggregate binding.
+    /// The transformation is not applicable because the implementation does not analyse subqueries, hence cannot see the aggregation.
+    ///
+    @Test
+    public void aggregation_within_a_yielded_subquery_does_not_trigger_the_transformation() {
+        final var query = select(TgVehicle.class).as("v") // (1)
+                .groupBy().prop("model")
+                .yield().prop("model").as("model")
+                // Count all Fuel Usage records dated after the earliest Fuel Usage within a group.
+                .yield().model(select(TgFuelUsage.class) // (2)
+                                       .where()
+                                       // Although this minOf aggregation is syntactically within (2), it semantically binds to (1).
+                                       .prop("date").gt().expr(expr().minOf().model(select(TgFuelUsage.class).where()
+                                                                                            .prop("vehicle").eq().prop("v.id")
+                                                                                            // This minOf is simple -- binds to the enclosing source.
+                                                                                            .yield().minOf().prop("date")
+                                                                                            .modelAsPrimitive())
+                                                                       .model())
+                                       .yield().countAll()
+                                       .modelAsPrimitive())
+                .as("n")
                 .modelAsAggregate();
 
         final var actual = qry(query);
@@ -1147,6 +1208,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var expected = qry(query);
         assertQueryEquals(expected, actual);
     }
+
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Calculated properties

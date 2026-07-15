@@ -126,7 +126,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///
 /// ### 1. Subqueries outside aggregate arguments
 ///
-/// The replacement operation does not descend into subqueries.
+/// The transformation does not descend into subqueries -- neither for aggregation scanning nor during the replacement operation.
 /// Therefore, a subquery that occurs in a yield or an order-by outside of an aggregate function's argument cannot be
 /// rewritten to account for the new query structure: any reference to the original source within it would become
 /// dangling after the transformation, as the original source moves into the source query.
@@ -136,9 +136,9 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 /// function's argument or a group-by operand contains a subquery), in which case SQL Server rejects it natively --
 /// the same outcome as in the absence of this transformation.
 ///
-/// The notable instance of this limitation is a subquery that is both grouped by and yielded:
+/// A notable instance of this limitation is a subquery that is both grouped by and yielded:
 ///
-/// ```
+/// ```java
 /// countFuelUsage = select(FuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
 /// select(Vehicle.class)
 ///     .groupBy().model(countFuelUsage)
@@ -146,11 +146,40 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///     .modelAsAggregate();
 /// ```
 ///
-/// The group-by subquery would be materialised, but the yielded subquery could not reuse that column: the two
-/// subqueries are not seen as equal, hence cannot be materialised under one column.
-/// The current implementation compares queries by [AbstractQuery3#equals], which considers generated identifiers
-/// (they differ between the two instances, so the queries are never equal).
+/// If the transformation applied, the group-by subquery would be materialised, but the yielded subquery would not
+/// reuse the materialised column: the two subqueries are not seen as equal, hence cannot be materialised under one
+/// column.
+/// The current implementation compares queries by [AbstractQuery3#equals], which considers generated identifiers (
+/// they differ between the two instances, so the queries are never equal).
 /// Such queries are therefore skipped and fail on SQL Server, which does not support subqueries in `GROUP BY`.
+/// This is addressed by #2788.
+///
+/// At its core, this limitation stems from the sheer complexity of identifying aggregations within subqueries.
+/// An aggregation can be syntactically located somewhere deep within a subquery's `where`, but semantically bound to
+/// another query above it.
+/// Implementing this identification of semantic bindings is a complex task.
+///
+/// Here is an example:
+///
+/// ```java
+/// select(Vehicle.class).as("v") // (1)
+/// .groupBy().prop("model")
+/// .yield().prop("model").as("model")
+/// // Count all Fuel Usage records dated after the earliest Fuel Usage within a group.
+/// .yield().model(select(FuelUsage.class) // (2)
+///                .where()
+///                // Although this minOf aggregation is syntactically within (2), it semantically binds to (1).
+///                .prop("date").gt().expr(expr().minOf().model(select(FuelUsage.class) // (3)
+///                                                             .where().prop("vehicle").eq().prop("v.id")
+///                                                             // This minOf is simple -- binds to (3).
+///                                                             .yield().minOf().prop("date")
+///                                                             .modelAsPrimitive())
+///                                        .model())
+///                .yield().countAll()
+///                .modelAsPrimitive())
+///     .as("n")
+/// .modelAsAggregate();
+/// ```
 ///
 public final class AggregateOperandMaterialiser {
 
