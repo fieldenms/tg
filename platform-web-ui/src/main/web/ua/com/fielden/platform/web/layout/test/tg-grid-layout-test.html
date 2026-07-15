@@ -1,0 +1,175 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>tg-grid-layout tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script>
+        // Breakpoint widths for the stamped tg-app-config; these tests drive `_setLayout` directly and never fire the media queries.
+        window.TG_APP = { minDesktopWidth: 980, minTabletWidth: 768 };
+    </script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
+</head>
+
+<body>
+    <!--
+      Client-side tests for `tg-grid-layout`, the counterpart of the server-side `GridLayoutTest`.
+      GridLayoutTest verifies the wire format a layout serialises to; here we feed those very wire objects to the
+      element via `_setLayout(...)` and assert how it places the slotted editors — grid-column/row, spans, skips,
+      subheaders and the indentation gutter, hidden exclusion, and row-based filtering.
+
+      `_setLayout` performs its DOM work synchronously, so assertions run immediately after the call.
+      The editors are plain <div>s carrying `property-name` (matched by `select`/`withProp`/`hidden`) and `filterable`.
+    -->
+    <test-fixture id="GridFixture">
+        <template>
+            <tg-grid-layout>
+                <div property-name="p1" filterable>p1</div>
+                <div property-name="p2" filterable>p2</div>
+                <div property-name="p3" filterable>p3</div>
+                <div property-name="p4" filterable>p4</div>
+                <div property-name="p5" filterable>p5</div>
+                <div property-name="p6" filterable>p6</div>
+            </tg-grid-layout>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+        import '/resources/layout/tg-grid-layout.js';
+
+        // Two 1fr columns and three 1fr columns — reused by several tests.
+        const cols2 = [{ size: '1fr' }, { size: '1fr' }];
+        const cols3 = [{ size: '1fr' }, { size: '1fr' }, { size: '1fr' }];
+
+        suite('tg-grid-layout', function () {
+            let grid;
+            // Looks a slotted editor up by its `property-name`.
+            const ed = name => grid.querySelector(`[property-name="${name}"]`);
+
+            setup(function () {
+                grid = fixture('GridFixture');
+            });
+
+            test('editors auto-flow row-major across the fixed columns', function () {
+                grid._setLayout({ columns: cols2 });
+                assert.equal(ed('p1').style.gridColumn, '1', 'p1 → column 1');
+                assert.equal(ed('p1').style.gridRow, '1', 'p1 → row 1');
+                assert.equal(ed('p2').style.gridColumn, '2', 'p2 → column 2');
+                assert.equal(ed('p2').style.gridRow, '1', 'p2 → row 1');
+                assert.equal(ed('p3').style.gridColumn, '1', 'p3 wraps to column 1');
+                assert.equal(ed('p3').style.gridRow, '2', 'p3 wraps to row 2');
+                assert.equal(ed('p6').style.gridRow, '3', 'p6 → row 3');
+            });
+
+            test('spanAllCols spans the whole row and pushes the next editor down', function () {
+                grid._setLayout({ columns: cols2, cells: [{ row: 1, col: 1, colSpan: 'all' }] });
+                assert.equal(ed('p1').style.gridColumn, '1 / -1', 'p1 spans all columns');
+                assert.equal(ed('p2').style.gridRow, '2', 'p2 flows to row 2 (row 1 is fully spanned)');
+            });
+
+            test('spanCols spans the given number of columns', function () {
+                grid._setLayout({ columns: cols3, cells: [{ row: 1, col: 1, colSpan: 2 }] });
+                assert.equal(ed('p1').style.gridColumn, '1 / span 2', 'p1 spans columns 1–2');
+                assert.equal(ed('p2').style.gridColumn, '3', 'p2 flows into the free column 3');
+                assert.equal(ed('p2').style.gridRow, '1', 'p2 stays on row 1');
+            });
+
+            test('a skip leaves an empty cell that no editor fills', function () {
+                grid._setLayout({ columns: cols2, cells: [{ row: 1, col: 1, widget: 'skip' }] });
+                assert.equal(ed('p1').style.gridColumn, '2', 'p1 flows past the skipped (1,1)');
+                assert.equal(ed('p1').style.gridRow, '1', 'p1 stays on row 1');
+            });
+
+            test('a subheader spans all columns; the indentation gutter shifts other content right', function () {
+                grid._setLayout({
+                    subheaderIndentation: '32px',
+                    columns: cols2,
+                    cells: [{ row: 1, col: 1, colSpan: 'all', widget: 'subheader:Group' }]
+                });
+                // A leading fixed gutter track is prepended to the column template.
+                assert.equal(grid.style.gridTemplateColumns, '32px 1fr 1fr', 'gutter prepended to the template');
+                // The subheader spans the whole width, gutter included.
+                const subheader = grid.shadowRoot.querySelector('tg-subheader');
+                assert.ok(subheader, 'a tg-subheader is created');
+                assert.equal(subheader.style.gridColumn, '1 / -1', 'subheader spans the gutter too');
+                // Ordinary content is indented into grid columns 2..N+1 (developer column c → grid column c+1).
+                assert.equal(ed('p1').style.gridColumn, '2', 'p1 indented past the gutter');
+                assert.equal(ed('p1').style.gridRow, '2', 'p1 flows below the subheader');
+            });
+
+            test('a hidden editor stays in the light DOM but is not placed', function () {
+                grid._setLayout({ columns: [{ size: '1fr' }], hidden: ['property-name=p2'] });
+                assert.notOk(ed('p2').style.gridColumn, 'p2 is never placed, so it carries no grid-column');
+                assert.equal(ed('p2').parentElement, grid, 'p2 remains a light-DOM child of the layout');
+                // The remaining editors auto-flow as if p2 were not there.
+                assert.equal(ed('p1').style.gridRow, '1', 'p1 → row 1');
+                assert.equal(ed('p3').style.gridRow, '2', 'p3 takes the next row, skipping the hidden p2');
+            });
+
+            test('row filtering hides a row only when all its filterable editors are filtered out', function () {
+                grid._setLayout({ columns: cols2 }); // p1,p2 → row 1; p3,p4 → row 2; p5,p6 → row 3
+                // A filter returns true for elements that should stay visible; here p1 and p2 are filtered out.
+                grid._filterLayout(el => el.getAttribute('property-name') !== 'p1' && el.getAttribute('property-name') !== 'p2');
+                assert.isTrue(ed('p1').classList.contains('hidden-with-filter'), 'p1 hidden — its row is fully filtered');
+                assert.isTrue(ed('p2').classList.contains('hidden-with-filter'), 'p2 hidden — same row');
+                assert.isFalse(ed('p3').classList.contains('hidden-with-filter'), 'p3 visible — its row has survivors');
+                assert.isFalse(ed('p4').classList.contains('hidden-with-filter'), 'p4 visible — same row');
+            });
+
+            test('a partially-filtered row stays fully visible (all-or-nothing per row)', function () {
+                grid._setLayout({ columns: cols2 });
+                // Only p1 is filtered out; p2 shares its row, so the whole row 1 stays visible.
+                grid._filterLayout(el => el.getAttribute('property-name') !== 'p1');
+                assert.isFalse(ed('p1').classList.contains('hidden-with-filter'), 'p1 stays visible — a sibling in its row survived');
+                assert.isFalse(ed('p2').classList.contains('hidden-with-filter'), 'p2 stays visible');
+            });
+
+            test('an auto-fill column auto-flows every editor', function () {
+                grid._setLayout({ columns: [{ size: 'minmax(200px, 1fr)', repeat: 'auto-fill' }] });
+                // In auto-flow mode each editor is projected via its own <slot>; the browser distributes them across the generated tracks.
+                assert.equal(grid.shadowRoot.querySelectorAll('slot').length, 6, 'one slot per editor');
+                assert.notOk(ed('p1').style.gridColumn, 'auto-flow assigns no explicit grid-column');
+            });
+
+            test('a hidden editor listed in an auto-fill layout is excluded from the flow', function () {
+                grid._setLayout({ columns: [{ size: 'minmax(200px, 1fr)', repeat: 'auto-fill' }], hidden: ['property-name=p3'] });
+                assert.equal(grid.shadowRoot.querySelectorAll('slot').length, 5, 'the hidden editor gets no slot');
+                assert.equal(ed('p3').parentElement, grid, 'the hidden editor stays a light-DOM child');
+            });
+
+            test('cells outside the layout are omitted — explicit (row or column) and auto-flowed alike', function () {
+                // Fixed at 3 columns × 1 row (3 in-bounds cells), with more editors than cells and two explicit cells pinned out
+                // of bounds — p5 one row below the grid, p6 one column past it. The server's validateCells rejects such
+                // out-of-bounds cells, so those two exercise the client's backstop; the auto-flow overflow (p4) is the genuinely
+                // reachable case, since the server cannot know the editor count up front.
+                grid._setLayout({
+                    columns: cols3,
+                    rows: [{ size: 'auto' }],
+                    cells: [
+                        { row: 2, col: 1, select: 'property-name=p5' }, // row outside the single declared row
+                        { row: 1, col: 4, select: 'property-name=p6' }  // column outside the three declared columns
+                    ]
+                });
+                // The three in-bounds cells are filled by auto-flow (p5 and p6 were pinned out of the pool by their select cells).
+                assert.equal(ed('p1').style.gridColumn, '1', 'p1 → column 1');
+                assert.equal(ed('p3').style.gridColumn, '3', 'p3 fills the last in-bounds cell (1,3)');
+                assert.equal(ed('p3').style.gridRow, '1', 'p3 → row 1');
+                // Auto-flow overflow: p4 has no cell left within the single row → omitted, yet still a light-DOM child.
+                assert.notOk(ed('p4').style.gridColumn, 'p4 overflows the single fixed row and is not placed');
+                assert.equal(ed('p4').parentElement, grid, 'p4 remains in the light DOM');
+                // Explicit row out of bounds: the (2,1) cell is never reached, so the pinned p5 is omitted.
+                assert.notOk(ed('p5').style.gridColumn, 'the explicit (2,1) cell is beyond the single row → p5 is omitted');
+                assert.equal(ed('p5').parentElement, grid, 'p5 remains in the light DOM');
+                // Explicit column out of bounds: the (1,4) cell is never reached, so the pinned p6 is omitted.
+                assert.notOk(ed('p6').style.gridColumn, 'the explicit (1,4) cell is beyond the 3 columns → p6 is omitted');
+                assert.equal(ed('p6').parentElement, grid, 'p6 remains in the light DOM');
+            });
+        });
+    </script>
+</body>
+
+</html>
