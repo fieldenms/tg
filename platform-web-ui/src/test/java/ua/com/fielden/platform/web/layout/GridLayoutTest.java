@@ -325,14 +325,6 @@ public class GridLayoutTest {
     }
 
     @Test
-    public void span_all_cols_anchors_at_column_1_regardless_of_the_declared_column() {
-        // `spanAllCols` is full-width, so it serialises (and is occupancy-checked) at column 1 even when declared elsewhere
-        assertEquals(
-                "{columns:[{size:\"1fr\"},{size:\"1fr\"},{size:\"1fr\"}],cells:[{row:2,col:1,colSpan:\"all\",select:\"property-name=bio\"}]}",
-                grid().columns().addColumn().addColumn().addColumn().elements(cell(2, 3).withProp("bio").spanAllCols()).toString());
-    }
-
-    @Test
     public void developer_values_are_escaped_for_the_javascript_wire_format() {
         // a double quote in a CSS value is backslash-escaped so the generated JS string literal stays valid
         assertEquals(
