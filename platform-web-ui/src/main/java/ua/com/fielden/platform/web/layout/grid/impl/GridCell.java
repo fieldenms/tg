@@ -245,14 +245,14 @@ public class GridCell implements IGridCell, ISubheader {
         return sb.append("}").toString();
     }
 
-    /// The widget descriptor for this cell, or `null` for an ordinary editor cell.
+    /// The widget descriptor for this cell, or `null` for an ordinary editor cell (or a hidden element, which carries no widget).
     ///
     private String widget() {
         return switch (kind) {
             case SKIP -> "skip";
             case SUBHEADER -> subheaderKeyword() + ":" + title;
             case HTML -> "html:" + html;
-            case CELL -> null;
+            case CELL, HIDDEN -> null;
         };
     }
 
