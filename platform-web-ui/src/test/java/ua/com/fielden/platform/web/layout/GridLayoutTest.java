@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.layout;
 
+import ua.com.fielden.platform.web.layout.grid.IGridElement;
 import ua.com.fielden.platform.web.layout.grid.exceptions.GridLayoutConfigurationException;
 
 import static org.junit.Assert.assertEquals;
@@ -19,8 +20,10 @@ import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_ROW_OUT_OF_BOUNDS;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_COLUMN_SPAN_OUT_OF_BOUNDS;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_ROW_SPAN_OUT_OF_BOUNDS;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.ERR_UNSUPPORTED_ELEMENT;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridCell.ERR_INVALID_COLUMN_SPAN;
 import static ua.com.fielden.platform.web.layout.grid.impl.GridCell.ERR_INVALID_ROW_SPAN;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridCell.ERR_SPAN_ALL_COLUMN;
 
 import org.junit.Test;
 
@@ -356,6 +359,25 @@ public class GridLayoutTest {
         // span(columns, rows) validates the row span too
         assertEquals(ERR_INVALID_ROW_SPAN.formatted(0),
                 assertThrows(GridLayoutConfigurationException.class, () -> cell(1, 1).span(2, 0)).getMessage());
+    }
+
+    @Test
+    public void a_span_all_cell_declared_off_column_1_is_rejected() {
+        // spanAllCols() always anchors at column 1, so declaring it at another column is a mistake, not a silent no-op
+        assertEquals(ERR_SPAN_ALL_COLUMN.formatted(2),
+                assertThrows(GridLayoutConfigurationException.class, () -> cell(1, 2).spanAllCols()).getMessage());
+        // column 1 is accepted
+        cell(1, 1).spanAllCols();
+    }
+
+    @Test
+    public void a_foreign_grid_element_is_rejected() {
+        // elements(...) accepts IGridElement, but the only concrete kind is GridCell (from the factories);
+        // a foreign implementation is rejected with a clear message rather than a raw ClassCastException.
+        final IGridElement foreign = new IGridElement() { };
+        assertEquals(ERR_UNSUPPORTED_ELEMENT.formatted(foreign.getClass().getName()),
+                assertThrows(GridLayoutConfigurationException.class,
+                        () -> grid().columns().addColumn().elements(foreign)).getMessage());
     }
 
     @Test

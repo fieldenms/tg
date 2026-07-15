@@ -1,21 +1,22 @@
 package ua.com.fielden.platform.web.layout.grid.impl;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import ua.com.fielden.platform.web.layout.grid.IGridCell;
 import ua.com.fielden.platform.web.layout.grid.ISubheader;
 import ua.com.fielden.platform.web.layout.grid.exceptions.GridLayoutConfigurationException;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static ua.com.fielden.platform.web.layout.grid.impl.GridStyles.escape;
 
 /// Implementation of a single non-conforming cell of a grid layout, placed at an explicit `(row, column)`.
 ///
-/// A cell is one of four kinds:
+/// A cell is one of five kinds:
 /// an ordinary cell (configures the editor that auto-flows to its position, or an explicitly bound editor),
 /// a skip (an empty placeholder cell),
 /// a subheader (an inserted, optionally collapsible section title that always spans all columns),
-/// or an inline `html` snippet (stamped with the layout's `context`).
+/// an inline `html` snippet (stamped with the layout's `context`),
+/// or a hidden element (kept in the light DOM but not placed into the grid).
 ///
 public class GridCell implements IGridCell, ISubheader {
 
@@ -29,7 +30,8 @@ public class GridCell implements IGridCell, ISubheader {
 
     public static final String
         ERR_INVALID_COLUMN_SPAN = "Column span must be at least 1, but was %s.",
-        ERR_INVALID_ROW_SPAN = "Row span must be at least 1, but was %s.";
+        ERR_INVALID_ROW_SPAN = "Row span must be at least 1, but was %s.",
+        ERR_SPAN_ALL_COLUMN = "A span-all cell must be anchored at column 1, but was declared at column %s.";
 
     /// The HTML attribute that property-editor elements expose to carry the name of the property they are bound to.
     /// Editors set it through `AbstractWidget`, and a few hand-written insertion-point masters set it directly; the `tg-grid-layout` client matches on it to place an editor into a cell.
@@ -159,6 +161,9 @@ public class GridCell implements IGridCell, ISubheader {
 
     @Override
     public GridCell spanAllCols() {
+        if (col != 1) {
+            throw new GridLayoutConfigurationException(ERR_SPAN_ALL_COLUMN.formatted(col));
+        }
         colSpan = SPAN_ALL;
         return this;
     }

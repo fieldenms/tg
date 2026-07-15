@@ -277,6 +277,9 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
             }
             row += 1;
         }
+        if (remaining.size > 0) {
+            console.warn(`tg-grid-layout: ${remaining.size} explicit cell(s) could not be placed (overlapped or out of range) and were omitted: ${[...remaining].join('; ')} — the server should have rejected this layout.`);
+        }
     }
 
     // Builds the DOM for a cell, returning `{ placed, target, subheader }`: `placed` is appended to the shadow root; `target` is the grid item that receives placement and styles.

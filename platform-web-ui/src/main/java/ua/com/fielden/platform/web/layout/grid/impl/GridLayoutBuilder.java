@@ -29,7 +29,8 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
         ERR_ROW_OUT_OF_BOUNDS = "Grid cell at row %s, column %s is outside the layout's %s declared row(s).",
         ERR_ROW_SPAN_OUT_OF_BOUNDS = "Grid cell at row %s, column %s spans to row %s, past the layout's %s declared row(s).",
         ERR_OVERLAPPING_CELLS = "Grid cell at row %s, column %s overlaps the cell at row %s, column %s.",
-        ERR_INVALID_REPEAT = "Track repeat count must be at least 1, but was %s.";
+        ERR_INVALID_REPEAT = "Track repeat count must be at least 1, but was %s.",
+        ERR_UNSUPPORTED_ELEMENT = "Unsupported grid element: %s.";
 
     private GridContent content;
     private final List<GridTrack> columnTracks = new ArrayList<>();
@@ -188,7 +189,17 @@ public class GridLayoutBuilder implements IContentStep, IColumns, IColumn, IAuto
 
     @Override
     public GridLayoutConfiguration elements(final IGridElement... cells) {
-        return build(Stream.of(cells).map(GridCell.class::cast).collect(Collectors.toList()));
+        return build(Stream.of(cells).map(GridLayoutBuilder::asGridCell).collect(Collectors.toList()));
+    }
+
+    /// Narrows an [IGridElement] to its [GridCell] implementation — the single concrete type backing every element factory.
+    /// A foreign implementation is rejected with a clear message rather than a raw `ClassCastException`.
+    ///
+    private static GridCell asGridCell(final IGridElement element) {
+        if (element instanceof GridCell cell) {
+            return cell;
+        }
+        throw new GridLayoutConfigurationException(ERR_UNSUPPORTED_ELEMENT.formatted(element == null ? "null" : element.getClass().getName()));
     }
 
     @Override
