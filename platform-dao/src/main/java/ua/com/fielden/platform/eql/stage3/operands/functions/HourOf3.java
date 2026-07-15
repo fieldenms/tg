@@ -14,6 +14,11 @@ public class HourOf3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public HourOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new HourOf3(operand, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return switch (dbVersion) {
             case H2 -> format("HOUR(%s)", operand.sql(metadata, dbVersion));

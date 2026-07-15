@@ -4,6 +4,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
 import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
@@ -25,7 +27,6 @@ import java.util.Optional;
 
 import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
-import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 
 public abstract class EqlTestCase {
     protected static final Class<TeWorkOrder> WORK_ORDER = TeWorkOrder.class;
@@ -68,9 +69,10 @@ public abstract class EqlTestCase {
     private static final QuerySourceInfoProvider QUERY_SOURCE_INFO_PROVIDER;
     private static final EqlTables EQL_TABLES;
     private static final EqlQueryTransformer EQL_QUERY_TRANSFORMER;
+    private static final MutableDbVersion dbVersionProvider;
 
     static {
-        final var dbVersionProvider = constantDbVersion(H2);
+        dbVersionProvider = new MutableDbVersion(H2);
         DOMAIN_METADATA = new DomainMetadataBuilder(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
                                                     PlatformTestDomainTypes.entityTypes,
                                                     dbVersionProvider)
@@ -92,6 +94,14 @@ public abstract class EqlTestCase {
     protected static final QueryModelToStage1Transformer qb(final IFilter filter, final Optional<String> username, final IDates dates, final Map<String, Object> paramValues) {
         return new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), paramValues);
     }
+
+    protected static void setDbVersion(final DbVersion dbVersion) {
+        dbVersionProvider.setDbVersion(dbVersion);
+    }
+
+    protected static DbVersion dbVersion() {
+        return dbVersionProvider.dbVersion();
+    }
     
     protected static final IDomainMetadata metadata() {
         return DOMAIN_METADATA;
@@ -107,6 +117,25 @@ public abstract class EqlTestCase {
 
     protected static EqlQueryTransformer eqlQueryTransformer() {
         return EQL_QUERY_TRANSFORMER;
+    }
+
+    static class MutableDbVersion implements IDbVersionProvider {
+
+        private DbVersion dbVersion;
+
+        MutableDbVersion(final DbVersion dbVersion) {
+            this.dbVersion = dbVersion;
+        }
+
+        public void setDbVersion(final DbVersion dbVersion) {
+            this.dbVersion = dbVersion;
+        }
+
+        @Override
+        public DbVersion dbVersion() {
+            return dbVersion;
+        }
+
     }
 
 }

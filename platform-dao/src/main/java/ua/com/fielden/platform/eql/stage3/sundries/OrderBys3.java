@@ -39,6 +39,12 @@ public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implemen
         return list.isEmpty();
     }
 
+    /// Returns a new instance with the order-by list replaced by `newList`, preserving `limit` and `offset`.
+    ///
+    public OrderBys3 updateOrderBys(final List<OrderBy3> newList) {
+        return newList == this.list ? this : new OrderBys3(newList, limit, offset);
+    }
+
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final AbstractQuery3 enclosingQuery) {
         // Deduplicate the order-by list to ensure compatibility with SQL Server.
         // We do this by comparing the SQL for each item.

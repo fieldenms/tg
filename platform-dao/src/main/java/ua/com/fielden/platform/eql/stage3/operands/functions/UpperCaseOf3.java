@@ -15,6 +15,11 @@ public class UpperCaseOf3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public UpperCaseOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new UpperCaseOf3(operand, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return format("UPPER(%s)", operandToSqlAsString(metadata, dbVersion, operand));
     }

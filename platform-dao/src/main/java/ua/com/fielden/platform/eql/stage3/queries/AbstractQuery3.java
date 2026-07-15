@@ -48,8 +48,8 @@ public abstract class AbstractQuery3 implements ToString.IFormattable {
         sb.append(maybeJoinRoot.map(joinRoot -> "\nFROM\n" + joinRoot.sql(metadata, dbVersion))
                           .orElseGet(() -> dbVersion == ORACLE ? " FROM DUAL " : ""));
         sb.append(whereConditions != null ? "\nWHERE " + whereConditions.sql(metadata, dbVersion) : "");
-        sb.append(groups != null ? "\nGROUP BY " + groups.sql(metadata, dbVersion) : "");
-        sb.append(orderings != null ? "\nORDER BY " + orderings.sql(metadata, dbVersion, this) : "");
+        sb.append(groups != null && !groups.isEmpty() ? "\nGROUP BY " + groups.sql(metadata, dbVersion) : "");
+        sb.append(orderings != null && !orderings.isEmpty() ? "\nORDER BY " + orderings.sql(metadata, dbVersion, this) : "");
         return sb.toString();
     }
 

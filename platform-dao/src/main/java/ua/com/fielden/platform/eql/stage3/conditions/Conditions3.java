@@ -22,6 +22,15 @@ public record Conditions3 (boolean negated, List<List<? extends ICondition3>> al
         return allConditionsAsDnf().isEmpty();
     }
 
+    public Conditions3 update(final boolean negated, final List<List<? extends ICondition3>> allConditionsAsDnf) {
+        if (negated == this.negated && allConditionsAsDnf == this.allConditionsAsDnf) {
+            return this;
+        }
+        else {
+            return new Conditions3(negated, allConditionsAsDnf);
+        }
+    }
+
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         final String sqlBody = allConditionsAsDnf.stream()

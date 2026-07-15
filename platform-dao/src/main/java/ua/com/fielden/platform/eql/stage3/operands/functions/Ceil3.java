@@ -12,6 +12,11 @@ public class Ceil3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public Ceil3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new Ceil3(operand, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return switch (dbVersion) {
             case MSSQL -> "CEILING(%s)".formatted(operand.sql(metadata, dbVersion));

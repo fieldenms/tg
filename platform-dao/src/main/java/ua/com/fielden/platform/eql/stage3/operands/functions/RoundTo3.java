@@ -14,6 +14,11 @@ public class RoundTo3 extends TwoOperandsFunction3 {
     }
 
     @Override
+    public RoundTo3 setOperands(final ISingleOperand3 operand1, final ISingleOperand3 operand2) {
+        return operand1 == this.operand1 && operand2 == this.operand2 ? this : new RoundTo3(operand1, operand2, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return format("ROUND(%s, %s)", operand1.sql(metadata, dbVersion), operand2.sql(metadata, dbVersion));
     }

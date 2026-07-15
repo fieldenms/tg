@@ -1,42 +1,21 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.CREATED_BY;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.CREATED_DATE;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.CREATED_TRANSACTION_GUID;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_DATE;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import org.junit.Test;
+import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
-
-import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.sample.domain.TgFuelType;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
-import ua.com.fielden.platform.types.Money;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 /**
  * A test case for testing essential {@link MetaProperty} functionality from perspective of a persisted entity.
@@ -96,33 +75,12 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
         final List<MetaProperty<?>> retrievableProps = veh.getProperties().values().stream()
                 .filter(p -> p.isRetrievable()).collect(Collectors.toList());
 
-        assertEquals(24, retrievableProps.size());
-
-        final Set<String> names = retrievableProps.stream().map(p -> p.getName()).collect(Collectors.toSet());
-        assertTrue(names.contains(KEY));
-        assertTrue(names.contains(DESC));
-        assertTrue(names.contains("active")); // TgVehicle has property active, but is not an activatable entity
-        assertTrue(names.contains("initDate"));
-        assertTrue(names.contains("replacedBy"));
-        assertTrue(names.contains("station"));
-        assertTrue(names.contains("model"));
-        assertTrue(names.contains("price"));
-        assertTrue(names.contains("purchasePrice"));
-        assertTrue(names.contains("leased"));
-        assertTrue(names.contains("lastMeterReading"));
-        assertTrue(names.contains("lastFuelUsage"));
-        assertTrue(names.contains("constValueProp"));
-        assertTrue(names.contains("calc0"));
-        assertTrue(names.contains("lastFuelUsageQty"));
-        assertTrue(names.contains("sumOfPrices"));
-        assertTrue(names.contains("calc2"));
-        assertTrue(names.contains("calc3"));
-        assertTrue(names.contains("calc4"));
-        assertTrue(names.contains("calc5"));
-        assertTrue(names.contains("calc6"));
-        assertTrue(names.contains("calcModel"));
-        assertTrue(names.contains("finDetails"));
-        assertTrue(names.contains("maxReading"));
+        final var names = retrievableProps.stream().map(MetaProperty::getName).collect(Collectors.toSet());
+        assertEquals(Set.of(KEY, DESC, "active", "initDate", "replacedBy", "station", "model", "price", "purchasePrice",
+                            "leased", "lastMeterReading", "lastFuelUsage", "constValueProp", "calc0", "lastFuelUsageQty",
+                            "halfLastFuelUsageQty", "sumOfPrices", "calc2", "calc3", "calc4", "calc5", "calc6", "calcModel",
+                            "finDetails", "maxReading"),
+                     names);
     }
 
     @Override

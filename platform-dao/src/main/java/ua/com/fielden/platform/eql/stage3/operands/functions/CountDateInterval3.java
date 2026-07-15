@@ -22,6 +22,13 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
     }
 
     @Override
+    public CountDateInterval3 setOperands(final ISingleOperand3 periodEndDate, final ISingleOperand3 periodStartDate) {
+        return periodEndDate == this.operand1 && periodStartDate == this.operand2
+                ? this
+                : new CountDateInterval3(intervalUnit, periodEndDate, periodStartDate, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         final String op1Sql = operand1.sql(metadata, dbVersion);
         final String op2Sql = operand2.sql(metadata, dbVersion);

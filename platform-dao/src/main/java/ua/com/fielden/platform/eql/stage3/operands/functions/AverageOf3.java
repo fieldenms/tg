@@ -17,6 +17,11 @@ public class AverageOf3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public AverageOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new AverageOf3(operand, distinct, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         final String distinctClause = distinct ? "DISTINCT " : "";
         switch (dbVersion) {

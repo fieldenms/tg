@@ -303,6 +303,7 @@ public final class CanonicalEqlGrammar {
         derive(YieldOperandConcatOfOrderByOperand_Expr).
             to(Expr, Order).
 
+        // In the context of concatOf, it is an error if the OrderingModel references a yield.
         derive(YieldOperandConcatOfOrderByOperand_OrderingModel).
             to(order.with(OrderingModel.class)).
 

@@ -6,7 +6,7 @@ import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
-abstract class SingleOperandFunction3 extends AbstractFunction3 {
+public abstract class SingleOperandFunction3 extends AbstractFunction3 {
 
     public final ISingleOperand3 operand;
 
@@ -14,6 +14,11 @@ abstract class SingleOperandFunction3 extends AbstractFunction3 {
         super(type);
         this.operand = operand;
     }
+
+    /// Returns a copy of this function with `operand` replaced.
+    /// Implementations must preserve all other state and the concrete function type.
+    ///
+    public abstract SingleOperandFunction3 setOperand(final ISingleOperand3 operand);
     
     @Override
     public int hashCode() {

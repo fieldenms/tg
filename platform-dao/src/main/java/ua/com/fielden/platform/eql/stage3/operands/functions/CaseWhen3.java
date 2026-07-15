@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
+import com.google.common.collect.ImmutableList;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
@@ -10,26 +12,47 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ToString;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.eql.stage3.utils.TypeCastToSql.typeCastToSql;
 
 public class CaseWhen3 extends AbstractFunction3 {
 
-    private List<T2<ICondition3, ISingleOperand3>> whenThenPairs = new ArrayList<>();
-    private final ISingleOperand3 elseOperand;
-    private final ITypeCast typeCast;
+    private final List<T2<ICondition3, ISingleOperand3>> whenThenPairs;
+    private final @Nullable ISingleOperand3 elseOperand;
+    private final @Nullable ITypeCast typeCast;
 
     public CaseWhen3(final List<T2<ICondition3, ISingleOperand3>> whenThenPairs, final ISingleOperand3 elseOperand, final ITypeCast typeCast, final PropType type) {
         super(type);
-        this.whenThenPairs.addAll(whenThenPairs);
+        this.whenThenPairs = ImmutableList.copyOf(whenThenPairs);
         this.elseOperand = elseOperand;
         this.typeCast = typeCast;
         validateSelf();
+    }
+
+    public List<T2<ICondition3, ISingleOperand3>> whenThenPairs() {
+        return whenThenPairs;
+    }
+
+    public @Nullable ISingleOperand3 elseOperand() {
+        return elseOperand;
+    }
+
+    public @Nullable ITypeCast typeCast() {
+        return typeCast;
+    }
+
+    public CaseWhen3 update(
+            final List<T2<ICondition3, ISingleOperand3>> whenThenPairs,
+            final ISingleOperand3 elseOperand,
+            final ITypeCast typeCast)
+    {
+        if (whenThenPairs == this.whenThenPairs && elseOperand == this.elseOperand && typeCast == this.typeCast) {
+            return this;
+        }
+        return new CaseWhen3(whenThenPairs, elseOperand, typeCast, type);
     }
 
     @Override

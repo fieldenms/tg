@@ -7,6 +7,10 @@ import ua.com.fielden.platform.utils.ToString;
 
 public record CompoundSingleOperand3 (ISingleOperand3 operand, ArithmeticalOperator operator) implements ToString.IFormattable {
 
+    public CompoundSingleOperand3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new CompoundSingleOperand3(operand, operator);
+    }
+
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return operator.value + operand.sql(metadata, dbVersion);
     }

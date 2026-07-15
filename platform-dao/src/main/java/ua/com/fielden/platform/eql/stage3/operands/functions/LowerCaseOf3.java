@@ -15,6 +15,11 @@ public class LowerCaseOf3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public LowerCaseOf3 setOperand(final ISingleOperand3 operand) {
+        return operand == this.operand ? this : new LowerCaseOf3(operand, type);
+    }
+
+    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return format("LOWER(%s)", operandToSqlAsString(metadata, dbVersion, operand));
     }
