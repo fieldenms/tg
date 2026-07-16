@@ -94,6 +94,10 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             }
             .label-title {
                 margin-right: 4px;
+                min-width: 0; /* allow the title to shrink below its content width so that it can truncate instead of pushing the actions out */
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
             #decorator[focused]:not([disabled]) .label-title {
                 font-weight: 700;
@@ -106,6 +110,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 height: 18px;
                 padding: 0 4px;
                 cursor: pointer;
+                flex-shrink: 0; /* keep title actions at their intended size; the title truncates instead when the editor becomes narrow */
             }
             .input-layer {
                 font-size: 16px;

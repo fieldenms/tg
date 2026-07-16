@@ -1,11 +1,10 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
-import '/resources/polymer/@polymer/iron-media-query/iron-media-query.js'
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/components/tg-subheader.js';
 
-import '/app/tg-app-config.js'
+import { TgLayoutBehavior, layoutMediaQueryTemplate, stampLayoutTemplate } from '/resources/layout/tg-layout-behavior.js';
 
 import { beforeNextRender } from "/resources/polymer/@polymer/polymer/lib/utils/render-status.js";
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -21,30 +20,11 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <tg-app-config id="appConfig"></tg-app-config>
-    <iron-media-query query="[[_calcMobileQuery()]]" on-query-matches-changed="_mobileChanged"></iron-media-query>
-    <iron-media-query query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
-    <iron-media-query query="[[_calcDesktopQuery()]]" on-query-matches-changed="_desktopChanged"></iron-media-query>`;
+    ${layoutMediaQueryTemplate}`;
 
 template.setAttribute('strip-whitespace', '');
 
 (function () {
-    const countDots = function (path) {
-        return (path.match(/\./g) || []).length;
-    };
-    const stampTemplate = function (template, model) {
-        if (template && model) {
-            Object.keys(model).forEach(prop => {
-                template[prop] = model[prop];
-            });
-        }
-    };
-    const forEachPropValue = function (obj, callback) {
-        for (let propName in obj) {
-            const elements = obj[propName] || [];
-            elements.forEach(element => callback(element));
-        }
-    };
     const wrapWithDiv = function (element) {
         const div = document.createElement("div");
         div.appendChild(element);
@@ -81,7 +61,7 @@ template.setAttribute('strip-whitespace', '');
                     templateElem.innerHTML = layoutElem.split(':').slice(1).join(':').trim();
                     elemToReturn = document.createElement('dom-bind');
                     elemToReturn.appendChild(templateElem);
-                    stampTemplate(elemToReturn, this.context);
+                    stampLayoutTemplate(elemToReturn, this.context);
                     if (elements) {
                         elements.push(elemToReturn);
                     } else {
@@ -331,161 +311,19 @@ template.setAttribute('strip-whitespace', '');
         }
         return false;
     };
+    
     Polymer({
         _template: template,
 
         is: "tg-flex-layout",
 
-        properties: {
-            whenDesktop: Array,
-            whenTablet: Array,
-            whenMobile: Array,
-            debug: {
-                type: Boolean,
-                value: false,
-                reflectToAttribute: true,
-                observer: "_debugChanged"
-            },
-            desktopScreen: {
-                type: Boolean,
-                readOnly: true
-            },
-            tabletScreen: {
-                type: Boolean,
-                readOnly: true
-            },
-            mobileScreen: {
-                type: Boolean,
-                readOnly: true
-            },
-            currentLayout: {
-                type: Boolean,
-                readOnly: true
-            },
-            contentLoaded: {
-                type: Boolean,
-                readOnly: true,
-                observer: "_handleContentLoading",
-                value: false
-            },
-            context: {
-                type: Object
-            },
-            // Checks whether an element with `filterable` attribute should be visible.
-            // Returns true if the element should be visible; otherwise false.
-            filter: {
-                type: Function,
-                value: null,
-                observer: "_filterChanged"
-            },
-            _subheaders: {
-                type: Array
-            },
-            _htmlElements: {
-                type: Object
-            }
-        },
-        observers: [
-            "_handleDesktopScreen(whenDesktop, whenTablet, whenMobile, desktopScreen, contentLoaded)",
-            "_handleTabletScreen(whenTablet, whenMobile, whenDesktop, tabletScreen, contentLoaded)",
-            "_handleMobileScreen(whenMobile, whenTablet, whenDesktop, mobileScreen, contentLoaded)",
-            "_contextChanged(context.*)"],
+        behaviors: [ TgLayoutBehavior ],
 
-        ready: function () {
-            this._subheaders = [];
-            
-            this._editorErrorHandler = this._editorErrorHandler.bind(this);
-            this.addEventListener('editor-error-appeared', this._editorErrorHandler);
-        },
-
-        attached: function () {
-            beforeNextRender(this, () => {
-                this._setContentLoaded(true);
-            });
-        },
-        
-        _editorErrorHandler: function (e) {
-            const subheader = e.detail.$$relativeSubheader$$;
-            if (this._subheaders.indexOf(subheader) >= 0) {
-                const subheaderHierarchy = this._findSubheaderHierarchy(subheader);
-                if (subheaderHierarchy.length > 0 && subheaderHierarchy[subheaderHierarchy.length - 1].offsetParent) {
-                    subheaderHierarchy.forEach(function (subheader) {
-                        subheader.open();
-                    });
-                }
-            }
-        },
-        _findSubheaderHierarchy: function (subheader) {
-            const subheaderHierarchy = [];
-            while (subheader) {
-                subheaderHierarchy.push(subheader);
-                subheader = subheader.parentElement && subheader.parentElement.$$relativeSubheader$$;
-            }
-            return subheaderHierarchy;
-        },
         _setLayout: function (layout) {
-            beforeNextRender(this, () => {
-                setLayout.bind(this)(layout);
-            });
+            setLayout.bind(this)(layout);
         },
-        _handleMobileScreen: function (whenMobile, whenTablet, whenDesktop, mobileScreen, contentLoaded) {
-            const layout = whenMobile || whenTablet || whenDesktop;
-            if (contentLoaded && mobileScreen && layout) {
-                this._setLayout(layout);
-            }
-        },
-        _handleTabletScreen: function (whenTablet, whenMobile, whenDesktop, tabletScreen, contentLoaded) {
-            const layout = whenTablet || whenMobile || whenDesktop;
-            if (contentLoaded && tabletScreen && layout ) {
-                this._setLayout(layout);
-            }
-        },
-        _handleDesktopScreen: function (whenDesktop, whenTablet, whenMobile, desktopScreen, contentLoaded) {
-            const layout = whenDesktop || whenTablet || whenMobile;
-            if (contentLoaded && desktopScreen && layout) {
-                this._setLayout(layout);
-            }
-        },
-        _handleContentLoading: function (contentLoaded) {
-            if (contentLoaded && !this.whenDesktop && !this.whenTablet && !this.whenMobile) {
-                this.fire('layout-finished', this);
-            }
-        },
-        _mobileChanged: function (e, detail) {
-            this._setMobileScreen(detail.value);
-        },
-        _tabletChanged: function (e, detail) {
-            this._setTabletScreen(detail.value);
-        },
-        _desktopChanged: function (e, detail) {
-            this._setDesktopScreen(detail.value);
-        },
-        _debugChanged: function (newValue, oldValue) {
-            this.toggleClass("debug", newValue);
-        },
-        _calcMobileQuery: function () {
-            return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
-        },
-        _calcTabletQuery: function () {
-            return "(min-width: " + this.$.appConfig.minTabletWidth + "px) and (max-width: " + (this.$.appConfig.minDesktopWidth - 1) + "px)";
-        },
-        _calcDesktopQuery: function () {
-            return "min-width: " + this.$.appConfig.minDesktopWidth + "px";
-        },
-        _contextChanged: function (changeRecord) {
-            this._htmlElements = this._htmlElements || {};
-            const dotCount = countDots(changeRecord.path);
-            if (changeRecord.path === "context") {
-                forEachPropValue(this._htmlElements, element => stampTemplate(element, changeRecord.value));
-            } else if (dotCount === 1) {
-                const propName = changeRecord.path.substr(changeRecord.path.lastIndexOf(".") + 1);
-                forEachPropValue(this._htmlElements, element => element[propName] = changeRecord.value);
-            } else {
-                const propPath = changeRecord.path.substr(changeRecord.path.indexOf(".") + 1);
-                forEachPropValue(this._htmlElements, element => element.notifyPath(propPath, changeRecord.value));
-            }
-        },
-        _filterChanged: function (newFilter, oldFilter) {
+
+        _filterLayout: function (filter) {
             filterLayout.bind(this)();
         }
     });

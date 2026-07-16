@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Grid layout — image spanning rows</title>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script>
+        window.TG_APP = {
+            minDesktopWidth: 980,
+            minTabletWidth: 768
+        }
+    </script>
+    <script type="module">
+        import '/resources/polymer/@polymer/paper-input/paper-input.js';
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
+        import './tg-grid-layout.js';
+    </script>
+    <custom-style>
+        <style>
+            html { font-size: 10pt; }
+            body { font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10pt; }
+            .caption { padding: 12px 20px; color: rgba(0, 0, 0, 0.6); }
+            tg-grid-layout { border-top: 1px solid rgba(0, 0, 0, 0.12); }
+        </style>
+    </custom-style>
+</head>
+
+<body unresolved class="fullbleed">
+    <dom-bind>
+        <template is="dom-bind">
+            <div class="caption">
+                Two flexible (1fr) columns · 11 editors auto-flow, row-major · an image is pinned to column 2, spanning rows 2–6.
+            </div>
+            <!--
+                Row 1 fills normally (editors 1–2). The image then takes column 2 for rows 2–6,
+                so editors 3–7 stack in column 1 beside it, and editors 8–11 resume across both columns from row 7.
+                The same layout is used for every breakpoint, so the arrangement is stable at any window width.
+            -->
+            <tg-grid-layout when-desktop="[[_layout()]]" when-tablet="[[_layout()]]" when-mobile="[[_layout()]]">
+                <paper-input label="Editor 1" always-float-label></paper-input>
+                <paper-input label="Editor 2" always-float-label></paper-input>
+                <paper-input label="Editor 3" always-float-label></paper-input>
+                <paper-input label="Editor 4" always-float-label></paper-input>
+                <paper-input label="Editor 5" always-float-label></paper-input>
+                <paper-input label="Editor 6" always-float-label></paper-input>
+                <paper-input label="Editor 7" always-float-label></paper-input>
+                <paper-input label="Editor 8" always-float-label></paper-input>
+                <paper-input label="Editor 9" always-float-label></paper-input>
+                <paper-input label="Editor 10" always-float-label></paper-input>
+                <paper-input label="Editor 11" always-float-label></paper-input>
+            </tg-grid-layout>
+        </template>
+    </dom-bind>
+</body>
+
+<script>
+    var app = document.querySelector('dom-bind');
+
+    // The image, pinned to column 2 and spanning five rows (2–6) — an inline html cell that renders its markup directly and consumes no editor.
+    // A self-contained SVG data URI is used so the page needs no external asset.
+    const photo = 'html:<img alt="Photo" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22240%22%20height=%22320%22%3E%3Crect%20width=%22240%22%20height=%22320%22%20fill=%22%235b8def%22/%3E%3Ctext%20x=%22120%22%20y=%22168%22%20fill=%22%23ffffff%22%20font-size=%2228%22%20font-family=%22sans-serif%22%20text-anchor=%22middle%22%3EPhoto%3C/text%3E%3C/svg%3E">';
+
+    // Two 1fr columns, implicit rows. The single explicit cell is the image at (row 2, column 2) spanning five rows.
+    // The 11 paper-inputs auto-flow into every remaining cell, growing the grid downward as needed.
+    app._layout = function () {
+        return {
+            container: {
+                "row-gap": "12px",
+                "column-gap": "20px",
+                "padding": "20px",
+                "align-items": "start"
+            },
+            columns: [
+                { size: "1fr" },
+                { size: "1fr" }
+            ],
+            // The image cell stretches to the full height of the five spanned rows (align-self: stretch), while its content is
+            // absolutely positioned and clipped, so the image contributes nothing to track sizing — the rows stay as tall as the
+            // column-1 editors dictate, and the image simply fills whatever height that gives it (object-fit: cover, no distortion).
+            cells: [
+                { row: 2, col: 2, rowSpan: 5, widget: photo, style: { "align-self": "stretch", "position": "relative", "min-height": "0", "overflow": "hidden", "border-radius": "8px" } }
+            ]
+        };
+    };
+</script>
+
+</html>

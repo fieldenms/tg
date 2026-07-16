@@ -2,32 +2,23 @@ package ua.com.fielden.platform.web.layout;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.interfaces.IExecutable;
-import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
-/**
- * The layout that is sensitive to device size. And provides ability to specify layout for each device and device orientation.
- *
- * @author TG Team
- *
- */
-public class FlexLayout extends AbstractLayout<AbstractLayoutSetter<FlexLayout>> implements IImportable, IExecutable {
+/// The layout that is sensitive to device size, providing the ability to specify the layout for each device and orientation.
+///
+public class FlexLayout extends AbstractLayout<AbstractLayoutSetter<FlexLayout>> {
     private final String flexLayoutPath = "layout/tg-flex-layout";
     private final String name;
-    
-    /**
-     * Constructs {@link FlexLayout} instance with <code>name</code> providing uniqueness inside the same source file where it is generated into.
-     * 
-     * @param name
-     */
+
+    /// Constructs a [FlexLayout] with a `name` that provides uniqueness within the source file it is generated into.
+    ///
     public FlexLayout(final String name) {
         this.name = name;
     }
 
     @Override
     public DomElement render() {
-        final DomElement flexElement = new DomElement("tg-flex-layout");
+        final DomElement flexElement = new DomElement("tg-flex-layout").clazz("tg-layout");
         for (final Pair<Device, Orientation> layout : layouts.keySet()) {
             if (layout.getValue() == null) {
                 flexElement.attr("when-" + layout.getKey().toString(), "[[_" + layout.getKey().toString() + "Layout_" + name + "]]");

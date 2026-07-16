@@ -16,7 +16,10 @@ import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.layout.AbstractLayout;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.layout.GridLayout;
+import ua.com.fielden.platform.web.layout.grid.IGridLayoutConfiguration;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
@@ -49,15 +52,22 @@ import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
-public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T> {
+public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IGridLayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T>, IGridActionBarLayoutConfig1<T> {
 
     private static final String ERR_WIDGET_IS_ALREADY_PRESENT = "A widget with property [%s] is already present in the entity master for [%s].";
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<Object> entityActions = new ArrayList<>();
 
-    private final FlexLayout layout = new FlexLayout("editors");
-    private final FlexLayout actionBarLayout = new FlexLayout("actions");
+    /// The editors layout manager.
+    /// Defaults to a [FlexLayout]; the first grid `setLayoutFor` replaces it with a [GridLayout]. The editors kind is fixed at compile time, so no breakpoint can change it.
+    ///
+    private AbstractLayout<?> layout = new FlexLayout("editors");
+
+    /// The action bar layout manager.
+    /// Defaults to a [FlexLayout]; the first grid `setActionBarLayoutFor` replaces it with a [GridLayout]. The action bar kind is fixed at compile time, so no breakpoint can change it.
+    ///
+    private AbstractLayout<?> actionBarLayout = new FlexLayout("actions");
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
@@ -205,7 +215,21 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         if (device == null || orientation == null) {
             throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
         }
+        // The editors layout is flex; the default manager is already a FlexLayout.
         layout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
+        return this;
+    }
+
+    @Override
+    public IGridLayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final IGridLayoutConfiguration grid) {
+        if (device == null || orientation == null) {
+            throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
+        }
+        // The editors layout is grid; replace the default flex manager with a GridLayout on the first breakpoint. The kind is compile-time fixed, so all breakpoints share it.
+        if (!(layout instanceof GridLayout)) {
+            layout = new GridLayout("editors");
+        }
+        layout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(grid.layout());
         return this;
     }
 
@@ -246,6 +270,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
         // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions
         final DomElement actionContainer = actionBarLayout.render().attr("slot", "action-bar");
+        importPaths.add(actionBarLayout.importPath());
         final StringBuilder entityActionsStr = new StringBuilder();
         for (final Object action: entityActions) {
             if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {
@@ -446,7 +471,21 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         if (device == null || orientation == null) {
             throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
         }
+        // The action bar layout is flex; the default manager is already a FlexLayout.
         actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
+        return this;
+    }
+
+    @Override
+    public IGridActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final IGridLayoutConfiguration grid) {
+        if (device == null || orientation == null) {
+            throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
+        }
+        // The action bar layout is grid; replace the default flex manager with a GridLayout on the first breakpoint. The kind is compile-time fixed, so all breakpoints share it.
+        if (!(actionBarLayout instanceof GridLayout)) {
+            actionBarLayout = new GridLayout("actions");
+        }
+        actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(grid.layout());
         return this;
     }
 

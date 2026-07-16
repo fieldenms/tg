@@ -33,6 +33,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException;
+import ua.com.fielden.platform.web.layout.AbstractLayout;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
@@ -176,8 +177,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria = new HashMap<>();
 
     /// Represents the layout settings for selection criteria.
+    /// May be of any layout kind (flex, grid, …), depending on what was configured via `setLayoutFor`.
     ///
-    private final FlexLayout selectionCriteriaLayout;
+    private final AbstractLayout<?> selectionCriteriaLayout;
 
     /// Represents the layout settings for card-based resultset representation.
     ///
@@ -490,7 +492,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Integer refreshCountdown,
             final Integer minAutoRefreshInterval,
 
-            final FlexLayout selectionCriteriaLayout,
+            final AbstractLayout<?> selectionCriteriaLayout,
             final FlexLayout resultsetCollapsedCardLayout,
             final FlexLayout resultsetExpansionCardLayout,
             final FlexLayout resultsetSummaryCardLayout,
@@ -595,7 +597,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     /// Provides access to the layout settings of selection criteria.
     ///
-    public FlexLayout getSelectionCriteriaLayout() {
+    public AbstractLayout<?> getSelectionCriteriaLayout() {
         return selectionCriteriaLayout;
     }
 

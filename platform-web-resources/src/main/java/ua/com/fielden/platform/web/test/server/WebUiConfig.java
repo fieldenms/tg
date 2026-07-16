@@ -60,6 +60,8 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
+import ua.com.fielden.platform.web.layout.grid.IGridLayoutConfiguration;
+import ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.*;
@@ -108,6 +110,8 @@ import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
+import static ua.com.fielden.platform.web.layout.grid.AutoRepeat.AUTO_FIT;
+import static ua.com.fielden.platform.web.layout.grid.impl.GridLayoutBuilder.*;
 import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
@@ -410,6 +414,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String fmr = "'flex', 'margin-right: 20px'";
         final String actionMr = format("'margin-top: 20px', 'margin-left: 20px', 'width: %s'", MASTER_ACTION_DEFAULT_WIDTH + "px");
 
+        final IGridLayoutConfiguration desktopGridConfig = grid()
+            .content(content().withGaps("0px", "20px").alignContent("start").withSubheaderIndentation("32px").style("padding", "20px").style("min-height", "fit-content").style("box-sizing", "border-box").style("height", "100%"))
+            .columns()
+                .addColumn().repeat(4)
+            .elements(
+                    subheaderOpen(2, "Other components 1"),
+                    GridLayoutBuilder.cell(3, 1).spanAllCols(),
+                    GridLayoutBuilder.cell(4, 1).spanCols(2).withProp("moneyProp"),
+                    GridLayoutBuilder.cell(4, 3).spanCols(2),
+                    subheaderOpen(6, "Other components 2"),
+                    html(10, 1, "<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>").style("padding-top", "20px").spanAllCols(),
+                    html(11, 1, "<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>").style("padding-top", "20px").spanAllCols());
         final FlexLayoutConfig layoutConfig = layout().withStyle("height", "100%").withStyle("box-sizing", "border-box")
                 .withStyle("min-height", "fit-content").withStyle("padding", MARGIN_PIX).end();
         final String desktopLayout = cell(
@@ -425,6 +441,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
+        final IGridLayoutConfiguration tabletGridConfig = grid()
+                .content(content().withGaps("0px", "20px").alignContent("start").style("padding", "20px").style("min-height", "fit-content").style("box-sizing", "border-box").style("height", "100%"))
+                .columns().addColumn().repeat(3)
+                .elements(
+                        GridLayoutBuilder.cell(3, 1).withProp("stringProp").spanAllCols(),
+                        html(9, 1, "<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>").style("padding-top", "20px").spanAllCols(),
+                        html(10, 1, "<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>").style("padding-top", "20px").spanAllCols());
         final String tabletLayout = cell(
                 cell(cell(CELL_LAYOUT).repeat(3).withGapBetweenCells(MARGIN))
                 .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
@@ -435,6 +458,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
+        final IGridLayoutConfiguration mobileGridConfig = grid()
+                .content(content().withGaps("0px", "20px").alignContent("start").style("padding", "20px").style("min-height", "fit-content").style("box-sizing", "border-box").style("height", "100%"))
+                .columns().addColumn().repeat(2)
+                .elements(
+                        GridLayoutBuilder.cell(3, 1).spanAllCols(),
+                        html(12, 1, "<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>").style("padding-top", "20px").spanAllCols(),
+                        html(13, 1, "<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>").style("padding-top", "20px").spanAllCols());
+
         final String mobileLayout = cell(
                 cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
                 .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
@@ -445,6 +476,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
+
+        final IGridLayoutConfiguration actionGridConfig = grid()
+                .content(content().justifyContent("center").withGaps("20px", "20px").style("padding", "20px"))
+                .columns().addAutoColumn("80px", AUTO_FIT);
 
         // Add entity masters.
         final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<>();
@@ -659,11 +694,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build()
                 )
 
-                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                        format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopLayout)
-                .setLayoutFor(Device.TABLET, Optional.empty(), tabletLayout)
-                .setLayoutFor(Device.MOBILE, Optional.empty(), mobileLayout)
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), actionGridConfig)
+                        //format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopGridConfig)
+                .setLayoutFor(Device.TABLET, Optional.empty(), tabletGridConfig)
+                .setLayoutFor(Device.MOBILE, Optional.empty(), mobileGridConfig)
                 .withDimensions(PrefDim.mkDim("'50%'", "'400px'"))
                 .done();
 
