@@ -128,6 +128,14 @@
                 assert.isFalse(ed('p2').classList.contains('hidden-with-filter'), 'p2 stays visible');
             });
 
+            test('a hidden editor is exempt from filtering in fixed-track mode', function () {
+                grid._setLayout({ columns: [{ size: '1fr' }], hidden: ['property-name=p2'] });
+                // Filter out p1 and p2. p2 is hidden (never placed), so it is not part of any row the filter walks.
+                grid._filterLayout(el => el.getAttribute('property-name') !== 'p1' && el.getAttribute('property-name') !== 'p2');
+                assert.isTrue(ed('p1').classList.contains('hidden-with-filter'), 'p1 is filtered out — its single-editor row is fully filtered');
+                assert.isFalse(ed('p2').classList.contains('hidden-with-filter'), 'the hidden editor is never placed, so the row filter never touches it');
+            });
+
             test('an auto-fill column auto-flows every editor', function () {
                 grid._setLayout({ columns: [{ size: 'minmax(200px, 1fr)', repeat: 'auto-fill' }] });
                 // In auto-flow mode each editor is projected via its own <slot>; the browser distributes them across the generated tracks.
@@ -139,6 +147,16 @@
                 grid._setLayout({ columns: [{ size: 'minmax(200px, 1fr)', repeat: 'auto-fill' }], hidden: ['property-name=p3'] });
                 assert.equal(grid.shadowRoot.querySelectorAll('slot').length, 5, 'the hidden editor gets no slot');
                 assert.equal(ed('p3').parentElement, grid, 'the hidden editor stays a light-DOM child');
+            });
+
+            test('auto-flow filtering hides filtered editors individually but never a hidden one', function () {
+                grid._setLayout({ columns: [{ size: 'minmax(200px, 1fr)', repeat: 'auto-fill' }], hidden: ['property-name=p3'] });
+                // Filter out p1 and p3 (the filter returns false ⇒ filtered out). p3 is a hidden editor, out of the flow.
+                grid._filterLayout(el => el.getAttribute('property-name') !== 'p1' && el.getAttribute('property-name') !== 'p3');
+                assert.isTrue(ed('p1').classList.contains('hidden-with-filter'), 'p1 is filtered out and hidden on its own (auto-flow filters per element)');
+                assert.isFalse(ed('p2').classList.contains('hidden-with-filter'), 'p2 passes the filter and stays visible');
+                // p3 is hidden — out of the layout — so the filter must not touch it, even though it would be filtered out.
+                assert.isFalse(ed('p3').classList.contains('hidden-with-filter'), 'the hidden editor is exempt from filtering');
             });
 
             test('cells outside the layout are omitted — explicit (row or column) and auto-flowed alike', function () {

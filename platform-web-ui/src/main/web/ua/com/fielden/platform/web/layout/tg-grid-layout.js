@@ -130,6 +130,7 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
         this._resetSubheaders();
         this._resetStyles();
         this._rowElements = {};
+        this._autoFlowSlots = [];
     }
 
     _clearAppendedElements () {
@@ -197,7 +198,9 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
             throw new Error("An auto-tracking column (repeat(auto-fit|auto-fill, …)) must be the only column; it cannot be mixed with other columns.");
         }
         const cellStyle = columns[0].style || {};
-        this._autoFlowPool(hidden).forEach(slotName => {
+        // Record the editors actually in the flow (a `hidden` descriptor pins some out), so filtering later touches only these — the auto-flow analogue of `_rowElements`.
+        this._autoFlowSlots = this._autoFlowPool(hidden);
+        this._autoFlowSlots.forEach(slotName => {
             this._applyStyles(this.slottedElements[slotName], cellStyle);
             this._append(this._createCellElement(slotName));
         });
@@ -454,8 +457,9 @@ class TgGridLayout extends mixinBehaviors([TgLayoutBehavior], PolymerElement) {
     }
 
     // Per-element filtering for auto-flow mode: the shadow root holds a flat list of slotted editors — no rows or subheaders — so each filterable editor is simply hidden on its own (and reflows out, leaving no gaps).
+    // Only the editors actually in the flow are considered; a `hidden` editor is out of the layout, so — as in `_filterByRow` — the filter never touches it.
     _filterAutoFlow (filter) {
-        this.componentsToLayout.forEach(slotName => {
+        (this._autoFlowSlots || []).forEach(slotName => {
             const editor = this.slottedElements[slotName];
             if (editor.hasAttribute('filterable')) {
                 this.toggleClass('hidden-with-filter', filter && !filter(editor), editor);
