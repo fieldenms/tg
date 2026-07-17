@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.function.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
@@ -92,6 +93,10 @@ public class T2<T_1, T_2> {
 
     public static <A, B, M extends Map<A, B>> Collector<T2<A, B>, ?, M> toMap(BinaryOperator<B> mergeFunction, Supplier<M> mapFactory) {
         return Collectors.toMap(T2::_1, T2::_2, mergeFunction, mapFactory);
+    }
+
+    public static <S, A extends S, B extends S> Stream<S> stream(final T2<A, B> t2) {
+        return Stream.of(t2._1, t2._2);
     }
 
     //::::::::::::::::::::::::::::::::::
