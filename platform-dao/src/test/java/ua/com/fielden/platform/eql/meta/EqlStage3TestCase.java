@@ -61,6 +61,10 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return eqlQueryTransformer().transform(qem, empty()).item;
     }
 
+    private static <E extends AbstractEntity<?>> ResultQuery3 transform(final QueryProcessingModel<E, ?> qem, final int initSourceId) {
+        return eqlQueryTransformer().transform(qem, empty(), initSourceId).item;
+    }
+
     public static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         return qry(unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate());
     }
@@ -92,6 +96,10 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
 
     public static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry) {
         return transform(new QueryProcessingModel<T, EntityResultQueryModel<T>>(qry, null, null, emptyMap(), true));
+    }
+
+    public static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry, final int initSourceId) {
+        return transform(new QueryProcessingModel<T, EntityResultQueryModel<T>>(qry, null, null, emptyMap(), true), initSourceId);
     }
 
     public static <T extends AbstractEntity<?>> ResultQuery3 qryFiltered(final EntityResultQueryModel<T> qry) {

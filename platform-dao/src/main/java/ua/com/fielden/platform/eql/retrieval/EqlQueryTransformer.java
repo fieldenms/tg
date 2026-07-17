@@ -88,14 +88,22 @@ public final class EqlQueryTransformer {
             final QueryProcessingModel<E, ?> qpm,
             final Optional<String> username)
     {
-        final var result = transform_(qpm, username);
+        return transform(qpm, username, 0);
+    }
+
+    public <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform(
+            final QueryProcessingModel<E, ?> qpm,
+            final Optional<String> username,
+            final int initSourceId)
+    {
+        final var result = transform_(qpm, username, initSourceId);
 
         if (isForeignIdOnlyQuery(result.item)) {
             final var idOnlyQuery = select((Class<E>) result.item.resultType)
                     .where().prop(ID).in().model((SingleResultQueryModel<?>) qpm.queryModel)
                     .model();
             final var idOnlyQpm = new QueryProcessingModel<>(idOnlyQuery, qpm.orderModel, qpm.fetchModel, qpm.getParamValues(), qpm.lightweight);
-            return transform_(idOnlyQpm, username);
+            return transform_(idOnlyQpm, username, initSourceId);
         }
         else {
             return result;
@@ -104,9 +112,10 @@ public final class EqlQueryTransformer {
 
     private <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform_(
             final QueryProcessingModel<E, ?> qem,
-            final Optional<String> username)
+            final Optional<String> username,
+            final int initSourceId)
     {
-        final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
+        final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues(), initSourceId);
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 
         final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider, domainMetadata);
