@@ -9,7 +9,7 @@ import ua.com.fielden.platform.utils.ToString;
 import static java.lang.String.format;
 
 public class CountOf3 extends SingleOperandFunction3 {
-    private final boolean distinct;
+    public final boolean distinct;
     
     public CountOf3(final ISingleOperand3 operand, final boolean distinct, final PropType type) {
         super(operand, type);

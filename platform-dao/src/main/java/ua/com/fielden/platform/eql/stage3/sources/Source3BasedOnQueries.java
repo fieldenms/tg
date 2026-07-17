@@ -33,7 +33,7 @@ public class Source3BasedOnQueries extends AbstractSource3 {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final List<SourceQuery3> models;
+    public final List<SourceQuery3> models;
     
     public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
         // It is sufficient to use just the first model's yields because all models in a list must share the same yield aliases.

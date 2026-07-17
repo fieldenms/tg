@@ -14,7 +14,7 @@ import static java.lang.String.format;
 
 public class CountDateInterval3 extends TwoOperandsFunction3 {
 
-    private DateIntervalUnit intervalUnit;
+    public DateIntervalUnit intervalUnit;
 
     public CountDateInterval3(final DateIntervalUnit intervalUnit, final ISingleOperand3 periodEndDate, final ISingleOperand3 periodStartDate, final PropType type) {
         super(periodEndDate, periodStartDate, type);

@@ -12,7 +12,7 @@ import java.util.Objects;
 import static java.lang.String.format;
 
 public class AddDateInterval3 extends TwoOperandsFunction3 {
-    private final DateIntervalUnit intervalUnit;
+    public final DateIntervalUnit intervalUnit;
     
     public AddDateInterval3(final ISingleOperand3 operand1, final DateIntervalUnit intervalUnit, final ISingleOperand3 operand2, final PropType type) {
         super(operand1, operand2, type);

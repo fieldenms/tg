@@ -13,7 +13,7 @@ import static java.util.stream.Collectors.joining;
 public class Expression3 extends AbstractSingleOperand3 {
 
     public final ISingleOperand3 firstOperand;
-    private final List<CompoundSingleOperand3> otherOperands;
+    public final List<CompoundSingleOperand3> otherOperands;
 
     public Expression3(final ISingleOperand3 first, final List<CompoundSingleOperand3> items, final PropType type) {
         super(type);

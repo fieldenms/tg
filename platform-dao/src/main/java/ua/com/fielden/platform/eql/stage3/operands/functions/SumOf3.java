@@ -9,7 +9,7 @@ import ua.com.fielden.platform.utils.ToString;
 import static java.lang.String.format;
 
 public class SumOf3 extends SingleOperandFunction3 {
-    private final boolean distinct;
+    public final boolean distinct;
     
     public SumOf3(final ISingleOperand3 operand, final boolean distinct, final PropType type) {
         super(operand, type);
