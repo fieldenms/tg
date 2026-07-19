@@ -62,6 +62,12 @@
             <version>${jmh.version}</version>
             <scope>provided</scope>
         </dependency>
+        <!-- JMH transitively pulls the ancient commons-math3 3.2; pin it to 3.6.1 to match the rest of the reactor. -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.6.1</version>
+        </dependency>
 
         <dependency>
           <groupId>org.postgresql</groupId>
