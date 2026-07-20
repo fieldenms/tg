@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.execution;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.exceptions.EntityFetcherException;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
@@ -19,9 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
@@ -112,7 +111,7 @@ public class AggregateOperandMaterialiserExecTest extends AbstractEqlExecutionTe
     }
 
     @Test
-    public void groupBy_a_subquery_that_is_also_yielded_is_not_supported() {
+    public void groupBy_a_subquery_that_is_also_yielded() {
         final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
         final var qry = select(TgVehicle.class)
                 .groupBy().model(countFuelUsage)
@@ -120,7 +119,18 @@ public class AggregateOperandMaterialiserExecTest extends AbstractEqlExecutionTe
                 .yield().sumOf().prop("sumOfPrices").as("total")
                 .modelAsAggregate();
 
-        assertThatThrownBy(() -> retrieveAll(qry)).isInstanceOf(EntityFetcherException.class);
+        // Fuel usage counts per vehicle: V1 -> 2, V2 -> 1, V3 -> 0 -- three distinct groups, each with a single vehicle.
+        // V1 (sumOfPrices=11)
+        // V2 (sumOfPrices=22)
+        // V3 (sumOfPrices=33)
+        final var aggs = retrieveAndSort(qry, "total");
+        assertEquals(3, aggs.size());
+        assertNumericEquals("11", aggs.get(0).get("total"));
+        assertNumericEquals("2", aggs.get(0).get("count"));
+        assertNumericEquals("22", aggs.get(1).get("total"));
+        assertNumericEquals("1", aggs.get(1).get("count"));
+        assertNumericEquals("33", aggs.get(2).get("total"));
+        assertNumericEquals("0", aggs.get(2).get("count"));
     }
 
     @Test
@@ -139,14 +149,24 @@ public class AggregateOperandMaterialiserExecTest extends AbstractEqlExecutionTe
     }
 
     @Test
-    public void groupBy_a_calculated_property_that_contains_a_subquery_that_is_also_yielded_is_not_supported() {
+    public void groupBy_a_calculated_property_that_contains_a_subquery_that_is_also_yielded() {
         final var qry = select(TgVehicle.class)
                 .groupBy().prop("lastFuelUsageQty")
                 .yield().prop("lastFuelUsageQty").as("qty")
                 .yield().sumOf().prop("sumOfPrices").as("total")
                 .modelAsAggregate();
 
-        assertThatThrownBy(() -> retrieveAll(qry)).isInstanceOf(EntityFetcherException.class);
+        // lastFuelUsageQty == 70: V1 (sumOfPrices=11)
+        // lastFuelUsageQty == 100: V2 (sumOfPrices=22)
+        // lastFuelUsageQty == null: V3 (sumOfPrices=33)
+        final var aggs = retrieveAndSort(qry, "total");
+        assertThat(aggs).hasSize(3);
+        assertNumericEquals("70", aggs.get(0).get("qty"));
+        assertNumericEquals("100", aggs.get(1).get("qty"));
+        assertNull(aggs.get(2).get("qty"));
+        assertNumericEquals("11", aggs.get(0).get("total"));
+        assertNumericEquals("22", aggs.get(1).get("total"));
+        assertNumericEquals("33", aggs.get(2).get("total"));
     }
 
     /// A yielded correlated subquery (outside any aggregate argument) causes the transformation to be skipped:
@@ -635,6 +655,10 @@ public class AggregateOperandMaterialiserExecTest extends AbstractEqlExecutionTe
 
     private List<EntityAggregates> retrieveAll(final AggregatedResultQueryModel qry) {
         return aggregateDao.getAllEntities(from(qry).model());
+    }
+
+    private List<EntityAggregates> retrieveAndSort(final AggregatedResultQueryModel qry, final CharSequence sortKey) {
+        return aggregateDao.getAllEntities(from(qry).model()).stream().sorted(comparing(agg -> agg.get(sortKey.toString()))).toList();
     }
 
     private List<EntityAggregates> retrieveAll(final AggregatedResultQueryModel qry, final OrderingModel ordering) {

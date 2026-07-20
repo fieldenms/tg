@@ -33,6 +33,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.*;
@@ -1083,26 +1084,37 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
     // (subqueries are compared with their generated identifiers included), so it could not reuse that column.
 
     @Test
-    public void groupBy_a_subquery_that_is_also_yielded_skips_the_transformation() {
+    public void same_subquery_used_in_groupBy_and_yield_is_materialised_under_one_column() {
         final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
         final var query = select(TgVehicle.class)
                 .groupBy().model(countFuelUsage)
                 .yield().model(countFuelUsage).as("count")
                 .yield().sumOf().prop("sumOfPrices").as("total")
                 .modelAsAggregate();
+        final var expectedEql = select(
+                    select(TgVehicle.class)
+                            .yield().model(countFuelUsage).as("c2")
+                            .yield().prop("sumOfPrices").as("c1")
+                            .modelAsAggregate()
+                )
+                .groupBy().prop("c2")
+                .yield().prop("c2").as("count")
+                .yield().sumOf().prop("c1").as("total")
+                .modelAsAggregate();
 
         final var actual = qry(query);
         AggregateOperandMaterialiser.enabled = false;
-        final var expected = qry(query);
-        assertQueryEquals(expected, actual);
+        final var expected = qry(expectedEql);
+        assertAlphaEq(expected, actual);
     }
 
-    /// A yielded correlated subquery, even when it is not grouped by, prevents the transformation:
-    /// it would keep correlating to the original source, which the outer query would no longer access.
+    /// A yielded correlated subquery prevents the transformation: it would keep correlating to the original source,
+    /// which the outer query would no longer access.
     ///
     @Test
     public void yielded_subquery_alongside_an_aggregation_skips_the_transformation_01() {
-        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
+        // This subquery can be viewed as a function of the group-by expression `prop("key")`.
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle.key").eq().extProp(KEY).yield().countAll().modelAsPrimitive();
         final var query = select(TgVehicle.class)
                 .groupBy().prop("key")
                 .yield().prop("key").as("k")
@@ -1182,34 +1194,53 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
     /// The same query without the order-by is transformed (see `groupBy_a_subquery_that_is_not_yielded_materialises_it_as_a_column`).
     ///
     @Test
-    public void order_by_a_subquery_alongside_an_aggregation_skips_the_transformation() {
+    public void same_subquery_used_in_groupBy_and_orderBy_is_materialised_under_one_column() {
         final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
-        final var order = orderBy().model(countFuelUsage).desc().model();
-        final var query = select(TgVehicle.class)
+        final var actualEql = select(TgVehicle.class)
                 .groupBy().model(countFuelUsage)
+                .orderBy().model(countFuelUsage).desc()
                 .yield().sumOf().prop("sumOfPrices").as("total")
                 .modelAsAggregate();
+        final var expectedEql = select(
+                select(TgVehicle.class)
+                        .yield().model(countFuelUsage).as("c2")
+                        .yield().prop("sumOfPrices").as("c1")
+                        .modelAsAggregate()
+                )
+                .groupBy().prop("c2")
+                .orderBy().prop("c2").desc()
+                .yield().sumOf().prop("c1").as("total")
+                .modelAsAggregate();
 
-        final var actual = qry(query, order);
+        final var actual = qry(actualEql);
         AggregateOperandMaterialiser.enabled = false;
-        final var expected = qry(query, order);
-        assertQueryEquals(expected, actual);
+        final var expected = qry(expectedEql);
+        assertAlphaEq(expected, actual);
     }
 
     @Test
-    public void groupBy_a_calculated_property_containing_a_subquery_that_is_also_yielded_skips_the_transformation() {
-        final var query = select(TgVehicle.class)
+    public void same_subquery_used_in_groupBy_and_yield_via_calculated_property_is_materialised_under_one_column() {
+        final var actualEql = select(TgVehicle.class)
                 .groupBy().prop("lastFuelUsageQty")
                 .yield().prop("lastFuelUsageQty").as("qty")
                 .yield().sumOf().prop("sumOfPrices").as("total")
                 .modelAsAggregate();
+        final var expectedEql = select(
+                select(TgVehicle.class)
+                        .yield().prop("lastFuelUsageQty").as("c2")
+                        .yield().prop("sumOfPrices").as("c1")
+                        .modelAsAggregate()
+                )
+                .groupBy().prop("c2")
+                .yield().prop("c2").as("qty")
+                .yield().sumOf().prop("c1").as("total")
+                .modelAsAggregate();
 
-        final var actual = qry(query);
+        final var actual = qry(actualEql);
         AggregateOperandMaterialiser.enabled = false;
-        final var expected = qry(query);
-        assertQueryEquals(expected, actual);
+        final var expected = qry(expectedEql);
+        assertAlphaEq(expected, actual);
     }
-
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Calculated properties

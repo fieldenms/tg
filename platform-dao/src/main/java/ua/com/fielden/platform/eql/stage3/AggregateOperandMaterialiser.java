@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3;
 
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
@@ -7,7 +8,6 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.conditions.*;
 import ua.com.fielden.platform.eql.stage3.operands.*;
 import ua.com.fielden.platform.eql.stage3.operands.functions.*;
-import ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
@@ -17,14 +17,13 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3.skipTransformation;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T2.toMap;
@@ -124,37 +123,50 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///
 /// ## Limitations
 ///
-/// ### 1. Subqueries outside aggregate arguments
+/// ### 1. Subqueries are not analysed
 ///
 /// The transformation does not descend into subqueries -- neither for aggregation scanning nor during the replacement operation.
-/// Therefore, a subquery that occurs in a yield or an order-by outside of an aggregate function's argument cannot be
-/// rewritten to account for the new query structure: any reference to the original source within it would become
-/// dangling after the transformation, as the original source moves into the source query.
-/// When such a subquery is detected and it is not materialised itself, the transformation is skipped, and the query remains as is.
+/// Therefore, the transformation will be skipped if materialisation requires analysing components of a subquery.
+/// Conditions that make such analysis necessary are described in sub-sections below.
+///
+/// We decide to skip the transformation in such cases because the subqueries cannot be rewritten to account for the
+/// new query structure: any reference to the original source within it would become dangling after the
+/// transformation, as the original source moves into the source query.
 ///
 /// SQL Server can evaluate such an untransformed query unless it genuinely requires materialisation (an aggregate
 /// function's argument or a group-by operand contains a subquery), in which case SQL Server rejects it natively --
 /// the same outcome as in the absence of this transformation.
 ///
-/// A notable instance of this limitation is a subquery that is both grouped by and yielded:
+/// A subquery need not be analysed when it satisfies one of the following:
+/// * it is the group-by expression;
+/// * it is used within an argument to an aggregation function.
+///   E.g., `sumOf().model(Q)`, `sumOf().beginExpr().model(Q).add().val(1).endExpr()`
 ///
-/// ```java
-/// countFuelUsage = select(FuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
-/// select(Vehicle.class)
-///     .groupBy().model(countFuelUsage)
-///     .yield().model(countFuelUsage).as("count") // Remove this yield and the transformation applies.
-///     .modelAsAggregate();
+/// #### 1.1. A subquery as a function of the group-by expression
+///
+/// When a subquery acts as a scalar function of the group-by expression, it must be analysed so that the materialised
+/// group-by expression can be replaced.
+///
+/// ```
+/// .groupBy().prop("key")
+/// // Subquery as a function: prop("key") -> countAll
+/// .yield().model(select(S).where().prop(X).eq().extProp("key").yield().countAll().model()).as("count")
 /// ```
 ///
-/// If the transformation applied, the group-by subquery would be materialised, but the yielded subquery would not
-/// reuse the materialised column: the two subqueries are not seen as equal, hence cannot be materialised under one
-/// column.
-/// The current implementation compares queries by [AbstractQuery3#equals], which considers generated identifiers (
-/// they differ between the two instances, so the queries are never equal).
-/// Such queries are therefore skipped and fail on SQL Server, which does not support subqueries in `GROUP BY`.
-/// This is addressed by #2788.
+/// If the transformation applied, it would have to produce the following:
 ///
-/// At its core, this limitation stems from the sheer complexity of identifying aggregations within subqueries.
+/// ```
+/// // Option 1: Replace references to the materialised prop("key")
+/// .groupBy().prop("c1") // "key" materialised as "c1"
+/// .yield().model(select(S).where().prop(X).eq().extProp("c1").yield().countAll().model()).as("count")
+///
+/// // Option 2: Materialise the whole subquery
+/// .groupBy().prop("c1")
+/// .yield().prop("c2")
+/// ```
+///
+/// #### 1.2. A subquery contains an aggregation that binds to the enclosing query being transformed
+///
 /// An aggregation can be syntactically located somewhere deep within a subquery's `where`, but semantically bound to
 /// another query above it.
 /// Implementing this identification of semantic bindings is a complex task.
@@ -230,22 +242,31 @@ public final class AggregateOperandMaterialiser {
             return skipTransformation(context);
         }
 
-        final Set<ISingleOperand3> operandsToMaterialise = StreamUtils.concat(
+        final var operations = context.operations();
+
+        // Collect operands to materialise, deduplicating by alpha-equivalence.
+        final List<ISingleOperand3> operandsToMaterialise = dedupByAlphaEq(
+                StreamUtils.concat(
                         yieldAndOrderingOperands.stream().flatMap(this::extractAggregatedExpressions),
-                        origGroups.groups().stream().map(GroupBy3::operand))
-                .collect(toCollection(LinkedHashSet::new));
+                        origGroups.groups().stream().map(GroupBy3::operand)),
+                operations);
         if (operandsToMaterialise.isEmpty() || operandsToMaterialise.stream().allMatch(AggregateOperandMaterialiser::isPersistentProperty)) {
             return skipTransformation(context);
         }
+
+        // A node is materialised when it is alpha-equivalent to one of the operands to materialise.
+        final Predicate<ISingleOperand3> isMaterialised =
+                node -> operandsToMaterialise.stream().anyMatch(rand -> operations.alphaEq(rand, node));
         // A subquery in a yield or an order-by that is not materialised would keep referencing the original source,
         // which the outer query no longer accesses (the replacement operation does not descend into subqueries).
         // Skip the transformation to preserve such references (see Limitations in the class documentation).
-        if (yieldAndOrderingOperands.stream().anyMatch(rand -> hasUnmaterialisedSubQuery(rand, operandsToMaterialise))) {
+        if (yieldAndOrderingOperands.stream().anyMatch(rand -> hasUnmaterialisedSubQuery(rand, isMaterialised))) {
             return skipTransformation(context);
         }
 
         final List<? extends T2<? extends ISingleOperand3, String>> operandsAndAliases = zip(operandsToMaterialise.stream(), aliasGenerator.get(), T2::t2).toList();
 
+        // New source query components.
         final var sJoin = origJoin;
         final var sWhere = origWhere;
         final GroupBys3 sGroups = GroupBys3.empty();
@@ -255,13 +276,20 @@ public final class AggregateOperandMaterialiser {
         final var context2 = createYieldsResult.updatedContext;
         final var sQuery = new SourceQuery3(new QueryComponents3(Optional.of(sJoin), sWhere, sYields, sGroups, sOrderings), EntityAggregates.class);
 
+        // Transformed input query components (called "top" although it is not necessarily a top-level query).
         final var context3 = context2.cloneWithNextSqlId();
         final var topSource = new Source3BasedOnQueries(List.of(sQuery), context3.gen().nextSourceId(), context3.sqlId);
 
-        // Each replacement property has to be a new instance to ensure uniqueness of AST nodes.
-        final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements = operandsAndAliases.stream()
-                .collect(Collectors.toMap(T2::_1,
-                                          t2 -> t2.map((rand, alias) -> () -> new Prop3(alias, topSource, rand.type()))));
+        final Replacements replacements = node -> {
+            for (final var it : operandsAndAliases) {
+                if (operations.alphaEq(it._1, node)) {
+                    final var alias = it._2;
+                    final var type = it._1.type();
+                    return () -> new Prop3(alias, topSource, type);
+                }
+            }
+            return null;
+        };
 
         final Conditions3 topConditions = Conditions3.empty();
         final var topYields = new Yields3(
@@ -348,12 +376,12 @@ public final class AggregateOperandMaterialiser {
     /// After the transformation, such references would become dangling, as the original source moves into the source query.
     ///
     /// Arguments of aggregate functions are always materialised in full (including any subqueries they contain),
-    /// and so is every operand contained in `materialised`.
+    /// and so is every node for which `isMaterialised` holds.
     ///
-    /// @param materialised  operands that will be materialised as columns of the source query
+    /// @param isMaterialised  tests whether a node will be materialised as a column of the source query
     ///
-    private boolean hasUnmaterialisedSubQuery(final ISingleOperand3 node, final Set<ISingleOperand3> materialised) {
-        if (materialised.contains(node)) {
+    private boolean hasUnmaterialisedSubQuery(final ISingleOperand3 node, final Predicate<ISingleOperand3> isMaterialised) {
+        if (isMaterialised.test(node)) {
             return false;
         }
         return switch (node) {
@@ -363,37 +391,37 @@ public final class AggregateOperandMaterialiser {
             case AverageOf3 _, MinOf3 _, MaxOf3 _, SumOf3 _, CountOf3 _, CountAll3 _, ConcatOf3 _ -> false;
             // For case-when, also consider conditions, which may contain subqueries within predicates.
             case CaseWhen3 it -> it.whenThenPairs().stream()
-                                         .anyMatch(pair -> pair.map((when, then) -> hasUnmaterialisedSubQuery(when, materialised)
-                                                                                    || hasUnmaterialisedSubQuery(then, materialised)))
-                                 || it.elseOperand().isPresent() && hasUnmaterialisedSubQuery(it.elseOperand().get(), materialised);
-            default -> streamChildren(node).anyMatch(child -> hasUnmaterialisedSubQuery(child, materialised));
+                                         .anyMatch(pair -> pair.map((when, then) -> hasUnmaterialisedSubQuery(when, isMaterialised)
+                                                                                    || hasUnmaterialisedSubQuery(then, isMaterialised)))
+                                 || it.elseOperand().isPresent() && hasUnmaterialisedSubQuery(it.elseOperand().get(), isMaterialised);
+            default -> streamChildren(node).anyMatch(child -> hasUnmaterialisedSubQuery(child, isMaterialised));
         };
     }
 
-    private boolean hasUnmaterialisedSubQuery(final ICondition3 condition, final Set<ISingleOperand3> materialised) {
+    private boolean hasUnmaterialisedSubQuery(final ICondition3 condition, final Predicate<ISingleOperand3> isMaterialised) {
         return switch (condition) {
             case ExistencePredicate3 _ -> true;
             // The right operand of a quantified predicate is always a subquery.
             case QuantifiedPredicate3 _ -> true;
             case SetPredicate3 it -> it.rightOperand() instanceof QueryBasedSet3
-                                     || streamChildren(it).anyMatch(rand -> hasUnmaterialisedSubQuery(rand, materialised));
+                                     || streamChildren(it).anyMatch(rand -> hasUnmaterialisedSubQuery(rand, isMaterialised));
             case Conditions3 it -> it.allConditionsAsDnf().stream()
                     .flatMap(List::stream)
-                    .anyMatch(c -> hasUnmaterialisedSubQuery(c, materialised));
-            default -> streamChildren(condition).anyMatch(rand -> hasUnmaterialisedSubQuery(rand, materialised));
+                    .anyMatch(c -> hasUnmaterialisedSubQuery(c, isMaterialised));
+            default -> streamChildren(condition).anyMatch(rand -> hasUnmaterialisedSubQuery(rand, isMaterialised));
         };
     }
 
-    private Yield3 replaceAll(final Yield3 yield, final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements) {
+    private Yield3 replaceAll(final Yield3 yield, final Replacements replacements) {
         return yield.setOperand(replace(yield.operand(), replacements));
     }
 
-    private GroupBy3 replaceAll(final GroupBy3 groupBy, final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements) {
+    private GroupBy3 replaceAll(final GroupBy3 groupBy, final Replacements replacements) {
         final var newOperand = replace(groupBy.operand(), replacements);
         return groupBy.setOperand(newOperand);
     }
 
-    private IOrderBy3 replaceAll(final IOrderBy3 orderBy, final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements) {
+    private IOrderBy3 replaceAll(final IOrderBy3 orderBy, final Replacements replacements) {
         return switch (orderBy) {
             case IOrderBy3.Operand operand -> operand.setOperand(replace(operand.operand(), replacements));
             case IOrderBy3.Yield yield -> yield;
@@ -405,21 +433,31 @@ public final class AggregateOperandMaterialiser {
 
     The code below implements the replacement operation on a subset of EQL AST nodes -- operands, represented by [ISingleOperand2].
     The replacement operation can be viewed as a function `replace(node, replacements)`, where `node` is an input node and
-    `replacements` is a map with entries `(oldNode, newNode)`.
-    This operation produces a node equal to the input `node` but with all occurrences of `oldNode` replaced by `newNode`,
-    for each `(oldNode, newNode)` entry in the `replacements` map.
+    `replacements` resolves an old node to the new node that should take its place.
+    This operation produces a node equal to the input `node` but with every reachable node that `replacements` resolves
+    replaced by its resolution.
+    A node is resolved when it is alpha-equivalent to a materialised operand, so that occurrences
+    that differ only in generated source identifiers are replaced by the same materialised column.
 
     In general, this operation could process the whole tree rooted at the input node.
     But for the purposes of this specific transformation, it does not descend into subquery nodes.
     */
 
-    /// Reconstructs the tree rooted at `node` by replacing all reachable nodes that are contained in `replacements`.
+    /// Resolves the materialised replacement for a node, or null if the node is not being materialised.
+    /// Each call of the resulting [Supplier] produces a fresh replacement node to preserve the AST node-uniqueness invariant.
     ///
-    /// @param replacements  a mapping between old nodes to be replaced and new nodes to take their place
+    @FunctionalInterface
+    private interface Replacements {
+        @Nullable Supplier<? extends ISingleOperand3> get(ISingleOperand3 node);
+    }
+
+    /// Reconstructs the tree rooted at `node` by replacing all reachable nodes that `replacements` resolves.
+    ///
+    /// @param replacements  resolves an old node to the new node that should take its place
     ///
     private ISingleOperand3 replace(
             final ISingleOperand3 node,
-            final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements)
+            final Replacements replacements)
     {
         final var mkNewNode = replacements.get(node);
         if (mkNewNode != null) {
@@ -560,6 +598,18 @@ public final class AggregateOperandMaterialiser {
             case Conditions3 it -> it.allConditionsAsDnf().stream().flatMap(List::stream).flatMap(this::streamChildren);
             default -> Stream.of();
         };
+    }
+
+    /// Collects operands into a list, discarding any operand that is alpha-equivalent to one already collected.
+    ///
+    private static List<ISingleOperand3> dedupByAlphaEq(final Stream<? extends ISingleOperand3> operands, final Operations operations) {
+        final List<ISingleOperand3> result = new ArrayList<>();
+        operands.forEach(rand -> {
+            if (result.stream().noneMatch(existing -> operations.alphaEq(existing, rand))) {
+                result.add(rand);
+            }
+        });
+        return unmodifiableList(result);
     }
 
     private static boolean isPersistentProperty(final ISingleOperand3 rand) {
