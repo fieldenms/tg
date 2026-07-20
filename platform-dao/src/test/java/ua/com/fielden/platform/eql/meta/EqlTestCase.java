@@ -86,7 +86,7 @@ public abstract class EqlTestCase {
         QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA, domainMetadataUtils, new SyntheticModelProvider(null, null));
         EQL_TABLES = new EqlTables(DOMAIN_METADATA, domainMetadataUtils);
         OPERATIONS = new Operations(new StructuralEquivalenceVisitor(), new AlphaEquivalenceVisitor(), new NodeCollector());
-        EQL_QUERY_TRANSFORMER = new EqlQueryTransformer(filter, dates, EQL_TABLES, QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, dbVersionProvider);
+        EQL_QUERY_TRANSFORMER = new EqlQueryTransformer(filter, dates, EQL_TABLES, QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, OPERATIONS, dbVersionProvider);
     }
     
     protected static final QueryModelToStage1Transformer qb() {

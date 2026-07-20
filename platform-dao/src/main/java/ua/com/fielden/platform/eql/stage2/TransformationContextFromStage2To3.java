@@ -9,6 +9,7 @@ import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.DataForProp3;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.TreeResultBySources;
+import ua.com.fielden.platform.eql.stage3.Operations;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -27,6 +28,7 @@ public class TransformationContextFromStage2To3 {
     private final EqlTables eqlTables;
     private final DbVersion dbVersion;
     private final IDomainMetadata domainMetadata;
+    private final Operations operations;
     private final Map<Integer, ISource3> sourcesByIds = new HashMap<>();
     private final Map<String, Object> sqlParamValuesByNames = new HashMap<>();
     private final Map<Object, String> sqlParamNamesByValues = new HashMap<>();
@@ -38,9 +40,10 @@ public class TransformationContextFromStage2To3 {
             final QueryModelToStage1Transformer gen,
             final EqlTables eqlTables,
             final DbVersion dbVersion,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final Operations operations)
     {
-        this(treeResultBySources, gen, eqlTables, dbVersion, domainMetadata, emptyMap(), emptyMap(), emptyMap(), 0, 1);
+        this(treeResultBySources, gen, eqlTables, dbVersion, domainMetadata, operations, emptyMap(), emptyMap(), emptyMap(), 0, 1);
     }
 
     private TransformationContextFromStage2To3(
@@ -49,6 +52,7 @@ public class TransformationContextFromStage2To3 {
             final EqlTables eqlTables,
             final DbVersion dbVersion,
             final IDomainMetadata domainMetadata,
+            final Operations operations,
             final Map<Integer, ISource3> sourcesByIds,
             final Map<String, Object> sqlParamValuesByNames,
             final Map<Object, String> sqlParamNamesByValues,
@@ -60,6 +64,7 @@ public class TransformationContextFromStage2To3 {
         this.eqlTables = eqlTables;
         this.dbVersion = dbVersion;
         this.domainMetadata = domainMetadata;
+        this.operations = operations;
         this.sourcesByIds.putAll(sourcesByIds);
         this.sqlParamValuesByNames.putAll(sqlParamValuesByNames);
         this.sqlParamNamesByValues.putAll(sqlParamNamesByValues);
@@ -73,6 +78,10 @@ public class TransformationContextFromStage2To3 {
 
     public IDomainMetadata domainMetadata() {
         return domainMetadata;
+    }
+
+    public Operations operations() {
+        return operations;
     }
 
     public QueryModelToStage1Transformer gen() {
@@ -99,6 +108,7 @@ public class TransformationContextFromStage2To3 {
                     eqlTables,
                     dbVersion,
                     domainMetadata,
+                    operations,
                     sourcesByIds,
                     sqlParamValuesByNames,
                     sqlParamNamesByValues,
@@ -124,6 +134,7 @@ public class TransformationContextFromStage2To3 {
                 eqlTables,
                 dbVersion,
                 domainMetadata,
+                operations,
                 sourcesByIds,
                 sqlParamValuesByNames,
                 sqlParamNamesByValues,
@@ -138,6 +149,7 @@ public class TransformationContextFromStage2To3 {
                 eqlTables,
                 dbVersion,
                 domainMetadata,
+                operations,
                 sourcesByIds,
                 sqlParamValuesByNames,
                 sqlParamNamesByValues,

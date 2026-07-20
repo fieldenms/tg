@@ -18,6 +18,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
+import ua.com.fielden.platform.eql.stage3.Operations;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
@@ -64,6 +65,7 @@ public final class EqlQueryTransformer {
     private final EqlTables eqlTables;
     private final QuerySourceInfoProvider querySourceInfoProvider;
     private final IDomainMetadata domainMetadata;
+    private final Operations operations;
     private final IDbVersionProvider dbVersionProvider;
 
     // TODO: Make private once dependent EQL tests are refactored and use IoC.
@@ -74,6 +76,7 @@ public final class EqlQueryTransformer {
             final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IDomainMetadata domainMetadata,
+            final Operations operations,
             final IDbVersionProvider dbVersionProvider)
     {
         this.filter = filter;
@@ -81,6 +84,7 @@ public final class EqlQueryTransformer {
         this.eqlTables = eqlTables;
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.domainMetadata = domainMetadata;
+        this.operations = operations;
         this.dbVersionProvider = dbVersionProvider;
     }
 
@@ -122,7 +126,7 @@ public final class EqlQueryTransformer {
         final ResultQuery2 query2 = query1.transform(context1);
 
         final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, domainMetadata, gen);
-        final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), gen, eqlTables, dbVersionProvider.dbVersion(), domainMetadata);
+        final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), gen, eqlTables, dbVersionProvider.dbVersion(), domainMetadata, operations);
         return query2.transform(context2);
     }
 
