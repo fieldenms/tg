@@ -19,10 +19,10 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <log4j.version>2.25.4</log4j.version>
-        <slf4j.version>2.0.17</slf4j.version>
+        <log4j.version>2.25.5</log4j.version>
+        <slf4j.version>2.0.18</slf4j.version>
         <hibernate.version>5.6.15.Final</hibernate.version>
-        <postgresql.version>42.7.9</postgresql.version>
+        <postgresql.version>42.7.13</postgresql.version>
         <mssql.version>13.2.1.jre11</mssql.version>
         <HikariCP.version>6.3.0</HikariCP.version>
         <javapoet.version>1.13.0</javapoet.version>
@@ -78,7 +78,7 @@
             <dependency>
                 <groupId>net.bytebuddy</groupId>
                 <artifactId>byte-buddy</artifactId>
-                <version>1.18.7</version>
+                <version>1.18.11</version>
             </dependency>
 
             <dependency>

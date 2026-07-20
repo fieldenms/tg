@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web_api.fields;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
@@ -208,5 +209,29 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
             ))
         )), result);
     }
-    
+
+    @Test
+    public void bigDecimal_prop_filters_by_a_whole_number_literal_bound() {
+        createBigDecimalEntities();
+        // A whole-number literal is an IntValue (not a FloatValue); it must be accepted for a BigDecimal argument.
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key bigDecimalProp(from:2)}}"));
+
+        assertTrue(errors(result).isEmpty());
+        assertEquals(result(linkedMapOf(
+            t2("tgWebApiEntity", listOf(
+                linkedMapOf(t2("key", "VEH2"), t2("bigDecimalProp", five)),
+                linkedMapOf(t2("key", "VEH3"), t2("bigDecimalProp", ten))
+            ))
+        )), result);
+    }
+
+    @Test
+    public void bigDecimal_prop_with_a_non_numeric_literal_bound_results_in_errors() {
+        createBigDecimalEntities();
+        // A string literal is not a valid BigDecimal argument and must be rejected.
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key bigDecimalProp(from:\"x\")}}"));
+
+        assertFalse(errors(result).isEmpty());
+    }
+
 }
