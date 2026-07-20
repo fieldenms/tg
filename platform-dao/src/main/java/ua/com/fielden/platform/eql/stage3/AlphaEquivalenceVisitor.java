@@ -72,12 +72,13 @@ import static ua.com.fielden.platform.utils.CollectionUtil.dropRight;
 /// Separately, yield aliases are still compared as data (inherited from structural equivalence) even though they are
 /// arguably renameable too.
 ///
-class AlphaEquivalenceVisitor extends AbstractStructuralEquivalenceVisitor<AlphaEquivalenceVisitor.State> {
+public class AlphaEquivalenceVisitor extends AbstractStructuralEquivalenceVisitor<AlphaEquivalenceVisitor.State> {
 
     // TODO Yield aliases should be renameable.
 
+    // TODO Make protected once EQL tests are refactored using IoC.
     @Inject
-    protected AlphaEquivalenceVisitor() {}
+    public AlphaEquivalenceVisitor() {}
 
     /// Entry point for a top-level comparison.
     ///

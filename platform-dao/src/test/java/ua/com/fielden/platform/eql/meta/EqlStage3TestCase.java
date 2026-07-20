@@ -430,4 +430,29 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
             throw new ComparisonFailure("Queries have different structure.", expected.toString(), actual.toString());
         }
     }
+
+    protected static void assertAlphaEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+        if (!operations().alphaEq(q1, q2)) {
+            throw new ComparisonFailure("Queries are not alpha-equivalent.", q1.toString(), q2.toString());
+        }
+    }
+
+    protected static void assertNotAlphaEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+        if (operations().alphaEq(q1, q2)) {
+            throw new ComparisonFailure("Queries are unexpectedly alpha-equivalent.", q1.toString(), q2.toString());
+        }
+    }
+
+    protected static void assertStructEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+        if (!operations().structEq(q1, q2)) {
+            throw new ComparisonFailure("Queries are not structurally equivalent.", q1.toString(), q2.toString());
+        }
+    }
+
+    protected static void assertNotStructEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+        if (operations().structEq(q1, q2)) {
+            throw new ComparisonFailure("Queries are unexpectedly structurally equivalent.", q1.toString(), q2.toString());
+        }
+    }
+
 }

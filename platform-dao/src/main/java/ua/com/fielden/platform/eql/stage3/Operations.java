@@ -7,8 +7,9 @@ public class Operations {
     private final StructuralEquivalenceVisitor structEq;
     private final AlphaEquivalenceVisitor alphaEq;
 
+    // TODO Make protected once EQL tests are refactored using IoC.
     @Inject
-    protected Operations(final StructuralEquivalenceVisitor structEq, final AlphaEquivalenceVisitor alphaEq) {
+    public Operations(final StructuralEquivalenceVisitor structEq, final AlphaEquivalenceVisitor alphaEq) {
         this.structEq = structEq;
         this.alphaEq = alphaEq;
     }

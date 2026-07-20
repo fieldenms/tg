@@ -17,10 +17,11 @@ import java.util.Objects;
 /// Two fields are deliberately excluded, matching the current `equals`: [Yield3]'s derived `column`, and a source's
 /// `columns` (derived from its table or models).
 ///
-class StructuralEquivalenceVisitor extends AbstractStructuralEquivalenceVisitor<Void> {
+public class StructuralEquivalenceVisitor extends AbstractStructuralEquivalenceVisitor<Void> {
 
+    // TODO Make protected once EQL tests are refactored using IoC.
     @Inject
-    protected StructuralEquivalenceVisitor() {}
+    public StructuralEquivalenceVisitor() {}
 
     public boolean visit(final Object x, final Object y) {
         return visit(x, y, null);
