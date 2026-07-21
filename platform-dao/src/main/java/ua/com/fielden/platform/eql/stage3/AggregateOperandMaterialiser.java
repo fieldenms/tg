@@ -204,16 +204,6 @@ public final class AggregateOperandMaterialiser {
 
     static boolean enabled = true;
 
-    private static Supplier<Stream<String>> aliasGenerator = AggregateOperandMaterialiser::generateAliases;
-
-    static void setAliasGenerator(final Supplier<Stream<String>> generator) {
-        aliasGenerator = generator;
-    }
-
-    static void resetAliasGenerator() {
-        aliasGenerator = AggregateOperandMaterialiser::generateAliases;
-    }
-
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     public TransformationResultFromStage2To3<QueryComponents3> apply(final QueryComponents3 qc, final TransformationContextFromStage2To3 context) {
@@ -264,7 +254,7 @@ public final class AggregateOperandMaterialiser {
             return skipTransformation(context);
         }
 
-        final List<? extends T2<? extends ISingleOperand3, String>> operandsAndAliases = zip(operandsToMaterialise.stream(), aliasGenerator.get(), T2::t2).toList();
+        final List<? extends T2<? extends ISingleOperand3, String>> operandsAndAliases = zip(operandsToMaterialise.stream(), generateAliases(), T2::t2).toList();
 
         // New source query components.
         final var sJoin = origJoin;
