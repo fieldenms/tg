@@ -194,7 +194,7 @@ public class AlphaEquivalenceVisitor extends AbstractStructuralEquivalenceVisito
     /// renaming.
     ///
     @Override
-    public Boolean visit(Prop3 x, Prop3 y, State state) {
+    public Boolean visit(final Prop3 x, final Prop3 y, final State state) {
         return Objects.equals(x.type, y.type)
                && x.name.equals(y.name)
                // ID-equality takes precedence over alpha-equivalence because all IDs within an AST are unique.

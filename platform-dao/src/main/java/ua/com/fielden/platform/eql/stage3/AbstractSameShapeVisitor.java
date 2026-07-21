@@ -50,7 +50,7 @@ public abstract class AbstractSameShapeVisitor<R, S> {
 
     /// TODO Replace Object by a common node interface once introduced.
     ///
-    public R visit(Object x, Object y, S state) {
+    public R visit(final Object x, final Object y, final S state) {
         return switch (x) {
             // Operands.
             case Prop3 x_       -> y instanceof Prop3 y_       ? visit(x_, y_, state) : noMatch(x, y, state);
@@ -162,22 +162,22 @@ public abstract class AbstractSameShapeVisitor<R, S> {
     /// Folds [#combine] over the results for a node's children, seeded with [#identity].
     /// A node with no children (an empty stream) therefore yields [#identity].
     ///
-    protected R combine(Stream<R> stream) {
+    protected R combine(final Stream<R> stream) {
         return foldLeft(stream, identity(), this::combine);
     }
 
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Operands
 
-    public R visit(Prop3 x, Prop3 y, S state) {
+    public R visit(final Prop3 x, final Prop3 y, final S state) {
         return defaultValue(x, y, state);
     }
 
-    public R visit(Value3 x, Value3 y, S state) {
+    public R visit(final Value3 x, final Value3 y, final S state) {
         return defaultValue(x, y, state);
     }
 
-    public R visit(Expression3 x, Expression3 y, S state) {
+    public R visit(final Expression3 x, final Expression3 y, final S state) {
         if (x.otherOperands.size() == y.otherOperands.size()) {
             return combine(zip(Stream.concat(Stream.of(x.firstOperand), x.otherOperands.stream()),
                                Stream.concat(Stream.of(y.firstOperand), y.otherOperands.stream()),
@@ -196,98 +196,98 @@ public abstract class AbstractSameShapeVisitor<R, S> {
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Single-operand functions -- recurse into the operand.
 
-    public R visit(AbsOf3 x, AbsOf3 y, S state) {
+    public R visit(final AbsOf3 x, final AbsOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(Ceil3 x, Ceil3 y, S state) {
+    public R visit(final Ceil3 x, final Ceil3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(Floor3 x, Floor3 y, S state) {
+    public R visit(final Floor3 x, final Floor3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(DateOf3 x, DateOf3 y, S state) {
+    public R visit(final DateOf3 x, final DateOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(DayOf3 x, DayOf3 y, S state) {
+    public R visit(final DayOf3 x, final DayOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(DayOfWeekOf3 x, DayOfWeekOf3 y, S state) {
+    public R visit(final DayOfWeekOf3 x, final DayOfWeekOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(MonthOf3 x, MonthOf3 y, S state) {
+    public R visit(final MonthOf3 x, final MonthOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(YearOf3 x, YearOf3 y, S state) {
+    public R visit(final YearOf3 x, final YearOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(HourOf3 x, HourOf3 y, S state) {
+    public R visit(final HourOf3 x, final HourOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(MinuteOf3 x, MinuteOf3 y, S state) {
+    public R visit(final MinuteOf3 x, final MinuteOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(SecondOf3 x, SecondOf3 y, S state) {
+    public R visit(final SecondOf3 x, final SecondOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(LowerCaseOf3 x, LowerCaseOf3 y, S state) {
+    public R visit(final LowerCaseOf3 x, final LowerCaseOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(UpperCaseOf3 x, UpperCaseOf3 y, S state) {
+    public R visit(final UpperCaseOf3 x, final UpperCaseOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(MaxOf3 x, MaxOf3 y, S state) {
+    public R visit(final MaxOf3 x, final MaxOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(MinOf3 x, MinOf3 y, S state) {
+    public R visit(final MinOf3 x, final MinOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(SumOf3 x, SumOf3 y, S state) {
+    public R visit(final SumOf3 x, final SumOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(CountOf3 x, CountOf3 y, S state) {
+    public R visit(final CountOf3 x, final CountOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
-    public R visit(AverageOf3 x, AverageOf3 y, S state) {
+    public R visit(final AverageOf3 x, final AverageOf3 y, final S state) {
         return visit(x.operand, y.operand, state);
     }
 
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Two-operand functions -- recurse into both operands and combine the results.
 
-    public R visit(IfNull3 x, IfNull3 y, S state) {
+    public R visit(final IfNull3 x, final IfNull3 y, final S state) {
         return combine(visit(x.operand1, y.operand1, state), visit(x.operand2, y.operand2, state));
     }
 
-    public R visit(RoundTo3 x, RoundTo3 y, S state) {
+    public R visit(final RoundTo3 x, final RoundTo3 y, final S state) {
         return combine(visit(x.operand1, y.operand1, state), visit(x.operand2, y.operand2, state));
     }
 
-    public R visit(AddDateInterval3 x, AddDateInterval3 y, S state) {
+    public R visit(final AddDateInterval3 x, final AddDateInterval3 y, final S state) {
         return combine(visit(x.operand1, y.operand1, state), visit(x.operand2, y.operand2, state));
     }
 
-    public R visit(CountDateInterval3 x, CountDateInterval3 y, S state) {
+    public R visit(final CountDateInterval3 x, final CountDateInterval3 y, final S state) {
         return combine(visit(x.operand1, y.operand1, state), visit(x.operand2, y.operand2, state));
     }
 
-    public R visit(ConcatOf3 x, ConcatOf3 y, S state) {
+    public R visit(final ConcatOf3 x, final ConcatOf3 y, final S state) {
         return combine(Stream.concat(Stream.of(visit(x.operand1, y.operand1, state), visit(x.operand2, y.operand2, state)),
                                      streamAll(x.orderItems, y.orderItems, state)));
     }
@@ -295,11 +295,11 @@ public abstract class AbstractSameShapeVisitor<R, S> {
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Other functions
 
-    public R visit(Concat3 x, Concat3 y, S state) {
+    public R visit(final Concat3 x, final Concat3 y, final S state) {
         return visitAll(x.operands, y.operands, state);
     }
 
-    public R visit(CaseWhen3 x, CaseWhen3 y, S state) {
+    public R visit(final CaseWhen3 x, final CaseWhen3 y, final S state) {
         if (x.whenThenPairs().size() == y.whenThenPairs().size()
             && bothEmptyOrPresent(x.elseOperand(), y.elseOperand()))
         {
@@ -314,26 +314,26 @@ public abstract class AbstractSameShapeVisitor<R, S> {
         }
     }
 
-    public R visit(CountAll3 x, CountAll3 y, S state) {
+    public R visit(final CountAll3 x, final CountAll3 y, final S state) {
         return defaultValue(x, y, state);
     }
 
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Queries
 
-    public R visit(SubQuery3 x, SubQuery3 y, S state) {
+    public R visit(final SubQuery3 x, final SubQuery3 y, final S state) {
         return visitQueryComponents(x, y, state);
     }
 
-    public R visit(SourceQuery3 x, SourceQuery3 y, S state) {
+    public R visit(final SourceQuery3 x, final SourceQuery3 y, final S state) {
         return visitQueryComponents(x, y, state);
     }
 
-    public R visit(SubQueryForExists3 x, SubQueryForExists3 y, S state) {
+    public R visit(final SubQueryForExists3 x, final SubQueryForExists3 y, final S state) {
         return visitQueryComponents(x, y, state);
     }
 
-    public R visit(ResultQuery3 x, ResultQuery3 y, S state) {
+    public R visit(final ResultQuery3 x, final ResultQuery3 y, final S state) {
         return visitQueryComponents(x, y, state);
     }
 
@@ -350,42 +350,42 @@ public abstract class AbstractSameShapeVisitor<R, S> {
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Conditions
 
-    public R visit(Conditions3 x, Conditions3 y, S state) {
+    public R visit(final Conditions3 x, final Conditions3 y, final S state) {
         return visitAllWith(x.allConditionsAsDnf(), y.allConditionsAsDnf(), state, (xConds, yConds) -> visitAll(xConds, yConds, state));
     }
 
-    public R visit(ComparisonPredicate3 x, ComparisonPredicate3 y, S state) {
+    public R visit(final ComparisonPredicate3 x, final ComparisonPredicate3 y, final S state) {
         return combine(visit(x.leftOperand(), y.leftOperand(), state), visit(x.rightOperand(), y.rightOperand(), state));
     }
 
-    public R visit(NullPredicate3 x, NullPredicate3 y, S state) {
+    public R visit(final NullPredicate3 x, final NullPredicate3 y, final S state) {
         return visit(x.operand(), y.operand(), state);
     }
 
-    public R visit(LikePredicate3 x, LikePredicate3 y, S state) {
+    public R visit(final LikePredicate3 x, final LikePredicate3 y, final S state) {
         return combine(visit(x.matchOperand(), y.matchOperand(), state), visit(x.patternOperand(), y.patternOperand(), state));
     }
 
-    public R visit(SetPredicate3 x, SetPredicate3 y, S state) {
+    public R visit(final SetPredicate3 x, final SetPredicate3 y, final S state) {
         return combine(visit(x.leftOperand(), y.leftOperand(), state), visit(x.rightOperand(), y.rightOperand(), state));
     }
 
-    public R visit(ExistencePredicate3 x, ExistencePredicate3 y, S state) {
+    public R visit(final ExistencePredicate3 x, final ExistencePredicate3 y, final S state) {
         return visit(x.subQuery(), y.subQuery(), state);
     }
 
-    public R visit(QuantifiedPredicate3 x, QuantifiedPredicate3 y, S state) {
+    public R visit(final QuantifiedPredicate3 x, final QuantifiedPredicate3 y, final S state) {
         return combine(visit(x.leftOperand(), y.leftOperand(), state), visit(x.rightOperand(), y.rightOperand(), state));
     }
 
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Join nodes
 
-    public R visit(JoinLeafNode3 x, JoinLeafNode3 y, S state) {
+    public R visit(final JoinLeafNode3 x, final JoinLeafNode3 y, final S state) {
         return visit(x.source(), y.source(), state);
     }
 
-    public R visit(JoinInnerNode3 x, JoinInnerNode3 y, S state) {
+    public R visit(final JoinInnerNode3 x, final JoinInnerNode3 y, final S state) {
         return combine(Stream.of(visit(x.leftNode(), y.leftNode(), state),
                                  visit(x.rightNode(), y.rightNode(), state),
                                  visit(x.joinConditions(), y.joinConditions(), state)));
@@ -394,22 +394,22 @@ public abstract class AbstractSameShapeVisitor<R, S> {
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Set operands
 
-    public R visit(OperandsBasedSet3 x, OperandsBasedSet3 y, S state) {
+    public R visit(final OperandsBasedSet3 x, final OperandsBasedSet3 y, final S state) {
         return visitAll(x.operands(), y.operands(), state);
     }
 
-    public R visit(QueryBasedSet3 x, QueryBasedSet3 y, S state) {
+    public R visit(final QueryBasedSet3 x, final QueryBasedSet3 y, final S state) {
         return visit(x.model(), y.model(), state);
     }
 
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Sources
 
-    public R visit(Source3BasedOnTable x, Source3BasedOnTable y, S state) {
+    public R visit(final Source3BasedOnTable x, final Source3BasedOnTable y, final S state) {
         return defaultValue(x, y, state);
     }
 
-    public R visit(Source3BasedOnQueries x, Source3BasedOnQueries y, S state) {
+    public R visit(final Source3BasedOnQueries x, final Source3BasedOnQueries y, final S state) {
         return visitAll(x.models, y.models, state);
     }
 
@@ -434,15 +434,15 @@ public abstract class AbstractSameShapeVisitor<R, S> {
         return visitAll(xs.list(), ys.list(), state);
     }
 
-    public R visit(Yield3 x, Yield3 y, S state) {
+    public R visit(final Yield3 x, final Yield3 y, final S state) {
         return visit(x.operand(), y.operand(), state);
     }
 
-    public R visit(GroupBy3 x, GroupBy3 y, S state) {
+    public R visit(final GroupBy3 x, final GroupBy3 y, final S state) {
         return visit(x.operand(), y.operand(), state);
     }
 
-    public R visit(OrderBy3 x, OrderBy3 y, S state) {
+    public R visit(final OrderBy3 x, final OrderBy3 y, final S state) {
         if (x.operand() != null && y.operand() != null) {
             return visit(x.operand(), y.operand(), state);
         }
