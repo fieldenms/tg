@@ -29,6 +29,12 @@ public class AlphaEquivalenceTest extends EqlStage3TestCase {
     ///
     private static final int SOURCE_ID_OFFSET = 10000;
 
+    @Test
+    public void a_node_is_alpha_equivalent_to_itself() {
+        final var qry = qry(select(TgVehicle.class).model());
+        assertAlphaEq(qry, qry);
+    }
+
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Positive -- alpha-equivalence is invariant under source-ID renaming, across binding structures.
 

@@ -83,7 +83,7 @@ public class AlphaEquivalenceVisitor extends AbstractStructuralEquivalenceVisito
     /// Entry point for a top-level comparison.
     ///
     public Boolean visit(final Object x, final Object y) {
-        return visit(x, y, emptyState());
+        return x == y || visit(x, y, emptyState());
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
