@@ -184,7 +184,6 @@ public abstract class AbstractSameShapeVisitor<R, S> {
                                (x_, y_) -> visit(x_, y_, state)));
         }
         else {
-            // TODO Reason: different structure.
             return noMatch(x, y, state);
         }
     }
@@ -309,7 +308,6 @@ public abstract class AbstractSameShapeVisitor<R, S> {
                                              (x_, y_) -> visit(x_, y_, state))));
         }
         else {
-            // TODO Reason: different structure.
             return noMatch(x, y, state);
         }
     }
@@ -420,7 +418,6 @@ public abstract class AbstractSameShapeVisitor<R, S> {
         final SortedMap<String, Yield3> xsMap = xs.yieldsMap();
         final SortedMap<String, Yield3> ysMap = ys.yieldsMap();
         if (xsMap.size() != ysMap.size()) {
-            // TODO Reason: different structure.
             return noMatch(xs, ys, state);
         }
         return combine(zip(xsMap.values(), ysMap.values(), (xYield, yYield) -> visit(xYield, yYield, state)));
@@ -450,7 +447,6 @@ public abstract class AbstractSameShapeVisitor<R, S> {
             return visit(x.yield(), y.yield(), state);
         }
         else {
-            // TODO Reason: Different types.
             return noMatch(x, y, state);
         }
     }
@@ -464,7 +460,6 @@ public abstract class AbstractSameShapeVisitor<R, S> {
 
     protected <X> Stream<R> streamAllWith(final Collection<? extends X> xs, final Collection<? extends X> ys, final S state, final BiFunction<X, X, R> fn) {
         if (xs.size() != ys.size()) {
-            // TODO Reason: Different structure.
             return Stream.of(noMatch(xs, ys, state));
         }
         return zip(xs, ys, fn);
