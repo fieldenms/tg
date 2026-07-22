@@ -8,7 +8,6 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
-import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.operandToSqlAsString;
@@ -40,21 +39,6 @@ public class Concat3 extends AbstractFunction3 {
         }
     }
     
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + operands.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof Concat3 that
-                  && Objects.equals(this.operands, that.operands);
-    }
-
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString).add("operands", operands);

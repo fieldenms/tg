@@ -8,7 +8,6 @@ import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.List;
-import java.util.Objects;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
@@ -57,22 +56,4 @@ public class ConcatOf3 extends TwoOperandsFunction3 {
             default -> operandToSqlAsString(metadata, dbVersion, operand);
         };
     }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ConcatOf3.class.getName().hashCode();
-        result = prime * result + orderItems.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof ConcatOf3 that
-                  && super.equals(that)
-                  && Objects.equals(orderItems, that.orderItems);
-    }
-
 }

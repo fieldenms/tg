@@ -6,7 +6,6 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
-import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
 
@@ -33,24 +32,6 @@ public class Expression3 extends AbstractSingleOperand3 {
                   + firstOperand.sql(metadata, dbVersion)
                   + otherOperands.stream().map(co -> co.sql(metadata, dbVersion)).collect(joining())
                   + ")";
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + firstOperand.hashCode();
-        result = prime * result + otherOperands.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof Expression3 that
-                  && Objects.equals(firstOperand, that.firstOperand)
-                  && Objects.equals(otherOperands, that.otherOperands)
-                  && super.equals(that);
     }
 
     @Override

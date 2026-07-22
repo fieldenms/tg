@@ -53,23 +53,6 @@ public abstract class AbstractQuery3 implements ToString.IFormattable {
         return sb.toString();
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(yields, orderings, groups, whereConditions, maybeJoinRoot, resultType);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof AbstractQuery3 that
-                  && Objects.equals(maybeJoinRoot, that.maybeJoinRoot)
-                  && Objects.equals(yields, that.yields)
-                  && Objects.equals(whereConditions, that.whereConditions)
-                  && Objects.equals(groups, that.groups)
-                  && Objects.equals(orderings, that.orderings)
-                  && Objects.equals(resultType, that.resultType);
-    }
-
     public static boolean isTopLevelQuery(final AbstractQuery3 query) {
         return query instanceof ResultQuery3;
     }

@@ -7,8 +7,6 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.utils.ToString;
 
-import java.util.Objects;
-
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.sqlCastTypeName;
@@ -61,20 +59,6 @@ public record Yield3 (ISingleOperand3 operand, String alias, String column, Prop
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return sql(metadata, dbVersion, NULL_TYPE);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(alias, operand, type);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof Yield3 that
-                  && Objects.equals(operand, that.operand)
-                  && Objects.equals(alias, that.alias)
-                  && Objects.equals(type, that.type);
     }
 
     @Override

@@ -6,8 +6,6 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
-import java.util.Objects;
-
 public class Prop3 extends AbstractSingleOperand3 {
 
     /**
@@ -31,24 +29,6 @@ public class Prop3 extends AbstractSingleOperand3 {
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return source.column(name);
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + name.hashCode();
-        result = prime * result + (source == null ? 0 : source.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof Prop3 that
-                  && Objects.equals(name, that.name)
-                  && Objects.equals(source, that.source)
-                  && super.equals(that);
     }
 
     @Override

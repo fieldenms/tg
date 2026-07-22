@@ -21,13 +21,6 @@ import java.util.stream.Stream;
 /// their corresponding fields are equivalent -- child nodes recursively, everything else by value.
 /// Generated identifiers are compared as-is (this is *not* alpha-equivalence).
 ///
-/// Each facade reproduces the `equals` of the corresponding node, but every reference to a child node is compared
-/// through [AbstractSameShapeVisitor#visit(Object, Object, Object)] rather than through `Object.equals`; only
-/// genuine leaves (types, names, flags, parameters, enums, `Class`) are compared by value with [Objects#equals].
-///
-/// Two fields are deliberately excluded, matching the current `equals`: [Yield3]'s derived `column`, and a source's
-/// `columns` (derived from its table or models).
-///
 abstract class AbstractStructuralEquivalenceVisitor<S> extends AbstractSameShapeVisitor<Boolean, S> {
 
     @Override

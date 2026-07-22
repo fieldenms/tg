@@ -23,21 +23,6 @@ public class SumOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        final int result = super.hashCode();
-        return prime * result + (distinct ? 1231 : 1237);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof SumOf3 that
-                  && distinct == that.distinct
-                  && super.equals(obj);
-    }
-
-    @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString).add("distinct", distinct);
     }

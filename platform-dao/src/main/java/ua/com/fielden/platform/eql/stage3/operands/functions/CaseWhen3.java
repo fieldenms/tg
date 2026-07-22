@@ -13,7 +13,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -92,26 +91,6 @@ public class CaseWhen3 extends AbstractFunction3 {
         return elseOperand == null ? thens : Stream.concat(thens, Stream.of(elseOperand));
     }
     
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((elseOperand == null) ? 0 : elseOperand.hashCode());
-        result = prime * result + ((typeCast == null) ? 0 : typeCast.hashCode());
-        result = prime * result + whenThenPairs.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof CaseWhen3 that
-                  && Objects.equals(whenThenPairs, that.whenThenPairs)
-                  && Objects.equals(elseOperand, that.elseOperand)
-                  && Objects.equals(typeCast, that.typeCast)
-                  && super.equals(that);
-    }
-
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString)
