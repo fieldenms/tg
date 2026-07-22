@@ -424,11 +424,8 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new Conditions3(false, asList(conditions));
     }
 
-    // TODO use in existing tests
     public static void assertQueryEquals(final AbstractQuery3 expected, final AbstractQuery3 actual) {
-        if (!expected.equals(actual)) {
-            throw new ComparisonFailure("Queries have different structure.", expected.toString(), actual.toString());
-        }
+        assertAlphaEq(expected, actual);
     }
 
     protected static void assertAlphaEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
