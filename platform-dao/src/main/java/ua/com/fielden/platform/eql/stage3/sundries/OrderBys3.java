@@ -36,6 +36,10 @@ public record OrderBys3 (List<IOrderBy3> list, Limit limit, long offset) impleme
         this.offset = offset;
     }
 
+    public static OrderBys3 empty() {
+        return new OrderBys3(ImmutableList.of());
+    }
+
     public boolean isEmpty() {
         return list.isEmpty();
     }

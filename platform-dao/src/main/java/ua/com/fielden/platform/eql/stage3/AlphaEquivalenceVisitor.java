@@ -225,10 +225,10 @@ public class AlphaEquivalenceVisitor extends AbstractStructuralEquivalenceVisito
         final State newState;
         return Objects.equals(x.resultType, y.resultType)
                && visitOptional(x.maybeJoinRoot, y.maybeJoinRoot, state)
-               && visitNullable(x.whereConditions, y.whereConditions, (newState = addSources(state, streamSources(x), streamSources(y))))
+               && visit(x.whereConditions, y.whereConditions, (newState = addSources(state, streamSources(x), streamSources(y))))
                && visit(x.yields, y.yields, newState)
-               && visitNullable(x.groups, y.groups, newState)
-               && visitNullable(x.orderings, y.orderings, newState);
+               && visit(x.groups, y.groups, newState)
+               && visit(x.orderings, y.orderings, newState);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

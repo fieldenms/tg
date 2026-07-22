@@ -386,10 +386,10 @@ public abstract class AbstractSameShapeVisitor<R, S> {
     ///
     protected R visitQueryComponents(final AbstractQuery3 x, final AbstractQuery3 y, final S state) {
         return combine(Stream.of(visitOptional(x.maybeJoinRoot, y.maybeJoinRoot, state),
-                                 visitNullable(x.whereConditions, y.whereConditions, state),
+                                 visit(x.whereConditions, y.whereConditions, state),
                                  visit(x.yields, y.yields, state),
-                                 visitNullable(x.groups, y.groups, state),
-                                 visitNullable(x.orderings, y.orderings, state)));
+                                 visit(x.groups, y.groups, state),
+                                 visit(x.orderings, y.orderings, state)));
     }
 
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

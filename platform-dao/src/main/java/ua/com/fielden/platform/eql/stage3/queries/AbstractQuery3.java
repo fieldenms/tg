@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.Predicates.or;
 import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
 import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 
@@ -48,9 +47,9 @@ public abstract class AbstractQuery3 implements ToString.IFormattable, INode3 {
         sb.append(yields.sql(metadata, dbVersion, expectedYieldTypes));
         sb.append(maybeJoinRoot.map(joinRoot -> "\nFROM\n" + joinRoot.sql(metadata, dbVersion))
                           .orElseGet(() -> dbVersion == ORACLE ? " FROM DUAL " : ""));
-        sb.append(whereConditions != null ? "\nWHERE " + whereConditions.sql(metadata, dbVersion) : "");
-        sb.append(groups != null ? "\nGROUP BY " + groups.sql(metadata, dbVersion) : "");
-        sb.append(orderings != null ? "\nORDER BY " + orderings.sql(metadata, dbVersion, this) : "");
+        sb.append(!whereConditions.isEmpty() ? "\nWHERE " + whereConditions.sql(metadata, dbVersion) : "");
+        sb.append(!groups.isEmpty() ? "\nGROUP BY " + groups.sql(metadata, dbVersion) : "");
+        sb.append(!orderings.isEmpty() ? "\nORDER BY " + orderings.sql(metadata, dbVersion, this) : "");
         return sb.toString();
     }
 
@@ -72,10 +71,10 @@ public abstract class AbstractQuery3 implements ToString.IFormattable, INode3 {
         return format.toString(this)
                 .add("resultType", resultType)
                 .addIfPresent("join", maybeJoinRoot)
-                .addIfNot("where", whereConditions, or(Objects::isNull, Conditions3::isEmpty))
-                .addIfNot("yields", yields, or(Objects::isNull, Yields3::isEmpty))
-                .addIfNot("groups", groups, or(Objects::isNull, GroupBys3::isEmpty))
-                .addIfNot("orderings", orderings, or(Objects::isNull, OrderBys3::isEmpty))
+                .addIfNot("where", whereConditions, Conditions3::isEmpty)
+                .addIfNot("yields", yields, Yields3::isEmpty)
+                .addIfNot("groups", groups, GroupBys3::isEmpty)
+                .addIfNot("orderings", orderings, OrderBys3::isEmpty)
                 .pipe(this::addToString)
                 .$();
     }

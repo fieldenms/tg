@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage3;
 
-import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
@@ -18,10 +17,10 @@ import java.util.Optional;
 ///
 public record QueryComponents3(
         Optional<IJoinNode3> maybeJoinRoot,
-        @Nullable Conditions3 whereConditions,
+        Conditions3 whereConditions,
         Yields3 yields,
-        @Nullable GroupBys3 groups,
-        @Nullable OrderBys3 orderings)
+        GroupBys3 groups,
+        OrderBys3 orderings)
     implements ToString.IFormattable
 {
 

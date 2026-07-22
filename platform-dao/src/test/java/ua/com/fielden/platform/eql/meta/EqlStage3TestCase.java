@@ -279,23 +279,36 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     //    }
 
     public static SubQuery3 subqry(final IJoinNode3 sources, final Yields3 yields, final PropType resultType) {
-        return new SubQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, null), resultType);
+        return new SubQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
     }
 
     public static SubQuery3 subqry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final PropType resultType) {
-        return new SubQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, null, null), resultType);
+        return new SubQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, null), resultType);
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
+    }
+
+    private static ResultQuery3 resultQry(final IJoinNode3 sources, final OrderBys3 orderBys3, final Class<?> resultType) {
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), Yields3.empty(), GroupBys3.empty(), orderBys3), resultType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, null, null), resultType);
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final Yields3 yields, final OrderBys3 ordering, final Class<?> resultType) {
-        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, ordering), resultType);
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, GroupBys3.empty(), ordering), resultType);
+    }
+
+    private static ResultQuery3 resultQry(
+            final IJoinNode3 sources,
+            final Yields3 yields,
+            final GroupBys3 groupBys,
+            final Class<EntityAggregates> resultType)
+    {
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, groupBys, OrderBys3.empty()), resultType);
     }
 
     //    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
@@ -303,11 +316,11 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     //    }
 
     private static SourceQuery3 sourceQry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new SourceQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, null, null), resultType);
+        return new SourceQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
     }
 
     private static SourceQuery3 sourceQry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
-        return new SourceQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, null), resultType);
+        return new SourceQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
     }
 
     //    protected static EntQuery3 qry(final IQrySources3 sources, final Class<?> resultType) {
@@ -323,7 +336,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     public static ResultQuery3 qryCountAll(final IJoinNode3 sources) {
-        return resultQry(sources, null, yields(yieldCountAll("KOUNT")), EntityAggregates.class);
+        return resultQry(sources, Conditions3.empty(), yields(yieldCountAll("KOUNT")), EntityAggregates.class);
     }
 
     public static ResultQuery3 qry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
@@ -336,6 +349,35 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
 
     public static ResultQuery3 qry(final IJoinNode3 sources, final Yields3 yields) {
         return qry(sources, yields, EntityAggregates.class);
+    }
+
+    public static ResultQuery3 qry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields) {
+        return resultQry(sources, conditions, yields, EntityAggregates.class);
+    }
+
+    public static ResultQuery3 qry(final IJoinNode3 sources, final Yields3 yields, final GroupBys3 groupBys3) {
+        return qry(sources, yields, groupBys3, EntityAggregates.class);
+    }
+
+    private static ResultQuery3 qry(
+            final IJoinNode3 sources,
+            final Yields3 yields,
+            final GroupBys3 groupBys3,
+            final Class<EntityAggregates> resultType)
+    {
+        return resultQry(sources, yields, groupBys3, resultType);
+    }
+
+    public static ResultQuery3 qry(final IJoinNode3 sources, final OrderBys3 orderBys3) {
+        return qry(sources, orderBys3, EntityAggregates.class);
+    }
+
+    public static ResultQuery3 qry(final IJoinNode3 sources, final OrderBys3 orderBys3, final Class<?> resultType) {
+        return resultQry(sources, orderBys3, resultType);
+    }
+
+    public static ResultQuery3 qry(final IJoinNode3 sources, final Yields3 yields, final GroupBys3 groupBys3, final OrderBys3 orderBys3) {
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, groupBys3, orderBys3), EntityAggregates.class);
     }
 
     //    protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
