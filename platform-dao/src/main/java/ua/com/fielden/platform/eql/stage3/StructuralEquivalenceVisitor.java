@@ -9,7 +9,7 @@ import java.util.Objects;
 /// their corresponding fields are equivalent -- child nodes recursively, everything else by value.
 /// Generated identifiers are compared as-is (this is *not* alpha-equivalence).
 ///
-/// Each `visit` reproduces the `equals` of the corresponding node, but every reference to a child node is compared
+/// Each facade reproduces the `equals` of the corresponding node, but every reference to a child node is compared
 /// through [AbstractSameShapeVisitor#visit(Object, Object, Object)] rather than through `Object.equals`; only
 /// genuine leaves
 /// (types, names, flags, parameters, enums, `Class`) are compared by value with [Objects#equals].

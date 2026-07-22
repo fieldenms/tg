@@ -228,8 +228,8 @@ public class AlphaEquivalenceTest extends EqlStage3TestCase {
     private List<SubQueryForExists3> collectSubQueryForExists(final Object root) {
         final var collector = new AbstractCollectingVisitor<SubQueryForExists3>() {
             @Override
-            public List<SubQueryForExists3> visit(final SubQueryForExists3 x, final SubQueryForExists3 y, final Void state) {
-                return combine(ImmutableList.of(x), super.visit(x, y, state));
+            public List<SubQueryForExists3> subQueryForExists(final SubQueryForExists3 x, final SubQueryForExists3 y, final Void state) {
+                return combine(ImmutableList.of(x), super.subQueryForExists(x, y, state));
             }
         };
         return collector.collect(root);

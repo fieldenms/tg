@@ -32,10 +32,10 @@ import static ua.com.fielden.platform.utils.CollectionUtil.dropRight;
 /// equivalence.
 ///
 /// Three kinds of node are overridden:
-/// - the *reference*: the [Prop3] overload compares the referenced source under the renaming rather than by ID directly;
-/// - the *binding occurrences*: the [Source3BasedOnTable] and [Source3BasedOnQueries] overloads ignore the source's
+/// - the *reference*: [#prop] compares the referenced source under the renaming rather than by ID directly;
+/// - the *binding occurrences*: [#sourceBasedOnTable] and [#sourceBasedOnQueries] ignore the source's
 ///   own ID (and the SQL alias, which is derived from it);
-/// - the *binders*: [#visitQueryComponents] and the [JoinInnerNode3] overload record the sources they introduce into
+/// - the *binders*: [#visitQueryComponents] and [#joinInnerNode] record the sources they introduce into
 ///   the traversal [State] before descending into the components that may reference them (a query's `where`, yields,
 ///   groups and orderings; a join's `on` conditions).
 ///
@@ -194,7 +194,7 @@ public class AlphaEquivalenceVisitor extends AbstractStructuralEquivalenceVisito
     /// renaming.
     ///
     @Override
-    public Boolean visit(final Prop3 x, final Prop3 y, final State state) {
+    public Boolean prop(final Prop3 x, final Prop3 y, final State state) {
         return Objects.equals(x.type, y.type)
                && x.name.equals(y.name)
                // ID-equality takes precedence over alpha-equivalence because all IDs within an AST are unique.
@@ -205,7 +205,7 @@ public class AlphaEquivalenceVisitor extends AbstractStructuralEquivalenceVisito
     /// The left and right nodes and the join type are compared in the enclosing scope.
     ///
     @Override
-    public Boolean visit(final JoinInnerNode3 x, final JoinInnerNode3 y, final State state) {
+    public Boolean joinInnerNode(final JoinInnerNode3 x, final JoinInnerNode3 y, final State state) {
         return visit(x.leftNode(), y.leftNode(), state)
                && visit(x.rightNode(), y.rightNode(), state)
                && Objects.equals(x.joinType(), y.joinType())
@@ -216,7 +216,7 @@ public class AlphaEquivalenceVisitor extends AbstractStructuralEquivalenceVisito
     /// not compared; only the table matters.
     ///
     @Override
-    public Boolean visit(final Source3BasedOnTable x, final Source3BasedOnTable y, final State state) {
+    public Boolean sourceBasedOnTable(final Source3BasedOnTable x, final Source3BasedOnTable y, final State state) {
         return Objects.equals(x.tableName, y.tableName);
     }
 
@@ -224,7 +224,7 @@ public class AlphaEquivalenceVisitor extends AbstractStructuralEquivalenceVisito
     /// the underlying models matter.
     ///
     @Override
-    public Boolean visit(final Source3BasedOnQueries x, final Source3BasedOnQueries y, final State state) {
+    public Boolean sourceBasedOnQueries(final Source3BasedOnQueries x, final Source3BasedOnQueries y, final State state) {
         return visitAll(x.models, y.models, state);
     }
 

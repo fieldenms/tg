@@ -8,12 +8,12 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 
 /// Collects every node of type `T` within a tree.
 ///
-/// Concrete visitors must override the [#visit] method corresponding to the node type `T` using the following pattern:
+/// Concrete visitors must override the facade method corresponding to the node type `T` using the following pattern:
 ///
 /// ```
 /// @Override
-/// public List<Prop3> visit(final Prop3 x, final Prop3 y, final Void state) {
-///     return combine(List.of(x), super.visit(x, y, state));
+/// public List<Prop3> prop(final Prop3 x, final Prop3 y, final Void state) {
+///     return combine(List.of(x), super.prop(x, y, state));
 /// }
 /// ```
 ///
