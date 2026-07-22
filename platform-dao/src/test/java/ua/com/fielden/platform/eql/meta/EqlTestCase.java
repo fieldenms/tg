@@ -10,6 +10,7 @@ import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage3.AlphaEquivalenceVisitor;
+import ua.com.fielden.platform.eql.stage3.NodeCollector;
 import ua.com.fielden.platform.eql.stage3.Operations;
 import ua.com.fielden.platform.eql.stage3.StructuralEquivalenceVisitor;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
@@ -82,7 +83,7 @@ public abstract class EqlTestCase {
         final var domainMetadataUtils = new DomainMetadataUtils(new PlatformTestDomainTypes(), DOMAIN_METADATA);
         QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA, domainMetadataUtils, new SyntheticModelProvider(null, null));
         EQL_TABLES = new EqlTables(DOMAIN_METADATA, domainMetadataUtils);
-        OPERATIONS = new Operations(new StructuralEquivalenceVisitor(), new AlphaEquivalenceVisitor());
+        OPERATIONS = new Operations(new StructuralEquivalenceVisitor(), new AlphaEquivalenceVisitor(), new NodeCollector());
         EQL_QUERY_TRANSFORMER = new EqlQueryTransformer(filter, dates, EQL_TABLES, QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, dbVersionProvider);
     }
     

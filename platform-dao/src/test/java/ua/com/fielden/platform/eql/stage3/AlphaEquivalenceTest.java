@@ -1,12 +1,9 @@
 package ua.com.fielden.platform.eql.stage3;
 
-import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
 import ua.com.fielden.platform.eql.stage3.queries.SubQueryForExists3;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
-
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
@@ -119,7 +116,7 @@ public class AlphaEquivalenceTest extends EqlStage3TestCase {
                 .and()
                 .exists(select(ORG2).where().prop("parent").isNotNull().model())
                 .model();
-        final var subqueries = collectSubQueryForExists(qry(query));
+        final var subqueries = operations().collectNodesOfType(qry(query), SubQueryForExists3.class);
         assertEquals(2, subqueries.size());
         assertNotSame(subqueries.get(0), subqueries.get(1));
         assertNotStructEq(subqueries.get(0), subqueries.get(1));
@@ -136,7 +133,7 @@ public class AlphaEquivalenceTest extends EqlStage3TestCase {
                 .exists(select(ORG2).where().prop("parent").eq().extProp("id").model())
                 .and().exists(select(ORG2).where().prop("parent").eq().extProp("id").model())
                 .model();
-        final var subqueries = collectSubQueryForExists(qry(query));
+        final var subqueries = operations().collectNodesOfType(qry(query), SubQueryForExists3.class);
         assertEquals(2, subqueries.size());
         assertNotSame(subqueries.get(0), subqueries.get(1));
         assertNotStructEq(subqueries.get(0), subqueries.get(1));
@@ -165,7 +162,7 @@ public class AlphaEquivalenceTest extends EqlStage3TestCase {
                                 .join(TgVehicle.class).as("q").on().prop("p.replacedBy").eq().prop("q.id")
                                 .model())
                 .model();
-        final var subqueries = collectSubQueryForExists(qry(query));
+        final var subqueries = operations().collectNodesOfType(qry(query), SubQueryForExists3.class);
         assertEquals(2, subqueries.size());
         assertNotStructEq(subqueries.get(0), subqueries.get(1));
         assertAlphaEq(subqueries.get(0), subqueries.get(1));
@@ -188,7 +185,7 @@ public class AlphaEquivalenceTest extends EqlStage3TestCase {
                                 .join(TgVehicle.class).as("q").on().prop("q.replacedBy").eq().prop("p.id")
                                 .model())
                 .model();
-        final var subqueries = collectSubQueryForExists(qry(query));
+        final var subqueries = operations().collectNodesOfType(qry(query), SubQueryForExists3.class);
         assertEquals(2, subqueries.size());
         assertNotAlphaEq(subqueries.get(0), subqueries.get(1));
     }
@@ -218,21 +215,6 @@ public class AlphaEquivalenceTest extends EqlStage3TestCase {
                 .exists(select(ORG2).where().prop("parent").eq().prop("id").model())
                 .model();
         assertNotAlphaEq(qry(outerRef), qry(innerRef));
-    }
-
-    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    // : Helpers
-
-    /// Collects every [SubQueryForExists3] node within `root` (included).
-    ///
-    private List<SubQueryForExists3> collectSubQueryForExists(final Object root) {
-        final var collector = new AbstractCollectingVisitor<SubQueryForExists3>() {
-            @Override
-            public List<SubQueryForExists3> subQueryForExists(final SubQueryForExists3 x, final SubQueryForExists3 y, final Void state) {
-                return combine(ImmutableList.of(x), super.subQueryForExists(x, y, state));
-            }
-        };
-        return collector.collect(root);
     }
 
 }
