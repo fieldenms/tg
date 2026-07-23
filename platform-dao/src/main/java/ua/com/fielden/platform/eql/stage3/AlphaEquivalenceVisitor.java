@@ -185,7 +185,7 @@ public class AlphaEquivalenceVisitor extends AbstractStructuralEquivalenceVisito
         return Objects.equals(x.type, y.type)
                && x.name.equals(y.name)
                // ID-equality takes precedence over alpha-equivalence because all IDs within an AST are unique.
-               && (x.source.id().equals(y.source.id()) || alphaEquivalent(x.source.id(), y.source.id(), state));
+               && (x.sourceId.equals(y.sourceId) || alphaEquivalent(x.sourceId, y.sourceId, state));
     }
 
     /// Binds the joined sources before comparing the `ON` conditions, which may reference them.

@@ -61,7 +61,7 @@ abstract class AbstractStructuralEquivalenceVisitor<S> extends AbstractSameShape
     public Boolean prop(final Prop3 x, final Prop3 y, final S state) {
         return Objects.equals(x.type, y.type)
                && x.name.equals(y.name)
-               && x.source.id().equals(y.source.id());
+               && x.sourceId.equals(y.sourceId);
     }
 
     @Override
