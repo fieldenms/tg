@@ -51,7 +51,7 @@ abstract class AbstractStructuralEquivalenceVisitor<S> extends AbstractSameShape
     ///
     @Override
     protected Boolean defaultValue(final INode3 x, final INode3 y, final S state) {
-        throw new InvalidStateException("No default");
+        throw new InvalidStateException("Unexpectedly reached defaultValue for node [%s]: %s".formatted(x.getClass().getName(), x));
     }
 
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
