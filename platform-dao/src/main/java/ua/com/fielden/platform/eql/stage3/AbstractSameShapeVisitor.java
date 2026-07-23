@@ -70,6 +70,27 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 /// It may be reused by visitors that have nothing to do with data -- for example, collecting every [Prop3] node, or counting nodes.
 /// Interpreting a node's data is the concern of a concrete visitor, expressed by overriding the relevant facade method.
 ///
+/// ## Visitors represent operations
+///
+/// A visitor represents an *operation* -- a traversal of the EQL AST -- rather than data.
+/// Each subclass should respect this contract by being injectable and keeping no state in its fields.
+/// Anything the operation needs -- both internal state and external parameters -- belongs in the traversal state `S`,
+/// which is threaded through every visit method as the `state` parameter.
+///
+/// Staying stateless keeps a visitor safe to share (e.g., as a singleton) and reentrant: one instance can perform many
+/// independent traversals, even concurrently, because nothing about a traversal lives on the instance.
+///
+/// For example, a visitor that collects all nodes satisfying a predicate (an external parameter) while tracking the
+/// current tree depth (internal state) models both as `S`:
+///
+/// ```
+/// record State (Predicate<?> pred, int depth) {
+///     State incDepth() { return new State(pred, depth + 1); }
+/// }
+/// ```
+///
+/// Each visit method then reads and advances this state through its `state` parameter rather than through a field.
+///
 /// @param <R>  type of the result produced by a visitor
 /// @param <S>  type of state maintained by a visitor
 ///
