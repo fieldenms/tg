@@ -25,9 +25,9 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 /// Specifically, at each pair of nodes -- one from tree A and another from tree B -- a visit is performed iff
 /// both nodes have the same type, otherwise [#noMatch] is called.
 ///
-/// Dispatch happens in [#visit(Object x, Object y, S state)], which switches on the runtime type of both nodes.
+/// Dispatch happens in [#visit(INode3 x, INode3 y, S state)], which switches on the runtime type of both nodes.
 /// Every AST node type has a typed facade named after the node (e.g., `maxOf(MaxOf3, MaxOf3, S)`) that dispatch delegates to.
-/// A facade recurses into a child node via [#visit(Object x, Object y, S state)], so all node visits go through that method,
+/// A facade recurses into a child node via [#visit(INode3 x, INode3 y, S state)], so all node visits go through that method,
 /// which enables simple interception of all visits by overriding that method.
 /// This design imposes the following requirements on each subclass:
 /// 1. An overridden facade method `m(x, y, state)` must not call `super.visit(x, y, state)` to invoke the parent class method,
@@ -84,7 +84,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 /// current tree depth (internal state) models both as `S`:
 ///
 /// ```
-/// record State (Predicate<?> pred, int depth) {
+/// record State (Predicate<? super INode3> pred, int depth) {
 ///     State incDepth() { return new State(pred, depth + 1); }
 /// }
 /// ```
@@ -96,9 +96,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///
 public abstract class AbstractSameShapeVisitor<R, S> {
 
-    /// TODO Replace Object by a common node interface once introduced.
-    ///
-    public R visit(final Object x, final Object y, final S state) {
+    public R visit(final INode3 x, final INode3 y, final S state) {
         return switch (x) {
             // Operands.
             case Prop3 x_       -> y instanceof Prop3 y_       ? prop(x_, y_, state) : noMatch(x, y, state);
@@ -188,7 +186,7 @@ public abstract class AbstractSameShapeVisitor<R, S> {
     /// It is useful when the same logic is applicable to many leaf node types.
     /// Instead of overriding each individual facade method, it will suffice to override just this method.
     ///
-    protected abstract R defaultValue(Object x, Object y, S state);
+    protected abstract R defaultValue(INode3 x, INode3 y, S state);
 
     /// The identity element for [#combine]: `combine(x, identity()) = combine(identity(), x) = x`.
     ///
@@ -502,26 +500,36 @@ public abstract class AbstractSameShapeVisitor<R, S> {
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Utilities
 
-    protected <X> Stream<R> streamAll(final Collection<? extends X> xs, final Collection<? extends X> ys, final S state) {
+    protected <X extends INode3> Stream<R> streamAll(final Collection<? extends X> xs, final Collection<? extends X> ys, final S state) {
         return streamAllWith(xs, ys, state, (x, y) -> visit(x, y, state));
     }
 
-    protected <X> Stream<R> streamAllWith(final Collection<? extends X> xs, final Collection<? extends X> ys, final S state, final BiFunction<X, X, R> fn) {
+    protected <X> Stream<R> streamAllWith(
+            final Collection<? extends X> xs,
+            final Collection<? extends X> ys,
+            final S state,
+            final BiFunction<? super X, ? super X, R> fn)
+    {
         if (xs.size() != ys.size()) {
             return Stream.of(noMatch(xs, ys, state));
         }
         return zip(xs, ys, fn);
     }
 
-    protected <X> R visitAll(final Collection<? extends X> xs, final Collection<? extends X> ys, final S state) {
+    protected <X extends INode3> R visitAll(final Collection<? extends X> xs, final Collection<? extends X> ys, final S state) {
         return combine(streamAll(xs, ys, state));
     }
 
-    protected <X> R visitAllWith(final Collection<? extends X> xs, final Collection<? extends X> ys, final S state, final BiFunction<X, X, R> fn) {
+    protected <X> R visitAllWith(
+            final Collection<? extends X> xs,
+            final Collection<? extends X> ys,
+            final S state,
+            final BiFunction<? super X, ? super X, R> fn)
+    {
         return combine(streamAllWith(xs, ys, state, fn));
     }
 
-    protected <X> R visitNullable(final @Nullable X x, final @Nullable X y, final S state) {
+    protected <X extends INode3> R visitNullable(final @Nullable X x, final @Nullable X y, final S state) {
         if (x != null && y != null) {
             return visit(x, y, state);
         }
@@ -533,7 +541,7 @@ public abstract class AbstractSameShapeVisitor<R, S> {
         }
     }
 
-    protected <X> R visitOptional(final Optional<X> maybeX, final Optional<X> maybeY, final S state) {
+    protected <X extends INode3> R visitOptional(final Optional<X> maybeX, final Optional<X> maybeY, final S state) {
         return visitNullable(maybeX.orElse(null), maybeY.orElse(null), state);
     }
 

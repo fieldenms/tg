@@ -21,6 +21,8 @@ import java.util.stream.Stream;
 /// their corresponding fields are equivalent -- child nodes recursively, everything else by value.
 /// Generated identifiers are compared as-is (this is *not* alpha-equivalence).
 ///
+/// This visitor is abstract in the state parameter, enabling operations built on top of it to manage their own state.
+///
 abstract class AbstractStructuralEquivalenceVisitor<S> extends AbstractSameShapeVisitor<Boolean, S> {
 
     @Override
@@ -48,7 +50,7 @@ abstract class AbstractStructuralEquivalenceVisitor<S> extends AbstractSameShape
     /// This visitor covers all nodes, so there is no default.
     ///
     @Override
-    protected Boolean defaultValue(final Object x, final Object y, final S state) {
+    protected Boolean defaultValue(final INode3 x, final INode3 y, final S state) {
         throw new InvalidStateException("No default");
     }
 

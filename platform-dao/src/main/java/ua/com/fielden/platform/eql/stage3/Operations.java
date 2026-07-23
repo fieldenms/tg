@@ -23,20 +23,20 @@ public class Operations {
         this.nodeCollector = nodeCollector;
     }
 
-    public boolean structEq(final Object x, final Object y) {
+    public boolean structEq(final INode3 x, final INode3 y) {
         return structEq.visit(x, y);
     }
 
-    public boolean alphaEq(final Object x, final Object y) {
+    public boolean alphaEq(final INode3 x, final INode3 y) {
         return alphaEq.visit(x, y);
     }
 
-    public List<Object> collectNodes(final Object root, final Predicate<?> pred) {
+    public List<INode3> collectNodes(final INode3 root, final Predicate<? super INode3> pred) {
         return nodeCollector.collect(root, pred);
     }
 
     @SuppressWarnings("unchecked")
-    public <T> List<T> collectNodesOfType(final Object root, final Class<T> nodeType) {
+    public <T extends INode3> List<T> collectNodesOfType(final INode3 root, final Class<T> nodeType) {
         return (List<T>) collectNodes(root, nodeType::isInstance);
     }
 
