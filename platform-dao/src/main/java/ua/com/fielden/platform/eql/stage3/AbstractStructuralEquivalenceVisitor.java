@@ -355,6 +355,7 @@ abstract class AbstractStructuralEquivalenceVisitor<S> extends AbstractSameShape
         return x.isDesc() == y.isDesc() && super.orderBy(x, y, state);
     }
 
+    @Override
     protected Boolean yields(final Yields3 xs, final Yields3 ys, final S state) {
         final var xsMap = xs.yieldsMap();
         final var ysMap = ys.yieldsMap();
@@ -364,6 +365,7 @@ abstract class AbstractStructuralEquivalenceVisitor<S> extends AbstractSameShape
         return super.yields(xs, ys, state);
     }
 
+    @Override
     protected Boolean orderBys(final OrderBys3 xs, final OrderBys3 ys, final S state) {
         return Objects.equals(xs.limit(), ys.limit())
                && xs.offset() == ys.offset()
