@@ -431,29 +431,25 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new Conditions3(false, asList(conditions));
     }
 
-    public static void assertQueryEquals(final AbstractQuery3 expected, final AbstractQuery3 actual) {
-        assertAlphaEq(expected, actual);
-    }
-
-    protected static void assertAlphaEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+    public static void assertAlphaEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
         if (!operations().alphaEq(q1, q2)) {
             throw new ComparisonFailure("Queries are not alpha-equivalent.", q1.toString(), q2.toString());
         }
     }
 
-    protected static void assertNotAlphaEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+    public static void assertNotAlphaEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
         if (operations().alphaEq(q1, q2)) {
             throw new ComparisonFailure("Queries are unexpectedly alpha-equivalent.", q1.toString(), q2.toString());
         }
     }
 
-    protected static void assertStructEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+    public static void assertStructEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
         if (!operations().structEq(q1, q2)) {
             throw new ComparisonFailure("Queries are not structurally equivalent.", q1.toString(), q2.toString());
         }
     }
 
-    protected static void assertNotStructEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+    public static void assertNotStructEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
         if (operations().structEq(q1, q2)) {
             throw new ComparisonFailure("Queries are unexpectedly structurally equivalent.", q1.toString(), q2.toString());
         }

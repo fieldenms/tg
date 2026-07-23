@@ -19,7 +19,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.eql.meta.EqlStage3TestCase.assertQueryEquals;
+import static ua.com.fielden.platform.eql.meta.EqlStage3TestCase.assertAlphaEq;
 
 /// Tests for the [UnionOrderById] transformation.
 ///
@@ -69,7 +69,7 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
         UnionOrderById.enabled = false;
         final var expectedQuery = transform(expectedEql);
 
-        assertQueryEquals(expectedQuery, actualQuery);
+        assertAlphaEq(expectedQuery, actualQuery);
     }
 
     @Test
@@ -88,7 +88,7 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
         UnionOrderById.enabled = false;
         final var expectedQuery = transform(eql);
 
-        assertQueryEquals(expectedQuery, actualQuery);
+        assertAlphaEq(expectedQuery, actualQuery);
     }
 
     @Test
@@ -105,7 +105,7 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
         UnionOrderById.enabled = false;
         final var expectedQuery = transform(eql);
 
-        assertQueryEquals(expectedQuery, actualQuery);
+        assertAlphaEq(expectedQuery, actualQuery);
     }
 
     @Test
@@ -122,7 +122,7 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
         UnionOrderById.enabled = false;
         final var expectedQuery = transform(eql);
 
-        assertQueryEquals(expectedQuery, actualQuery);
+        assertAlphaEq(expectedQuery, actualQuery);
     }
 
     @Test
@@ -140,7 +140,7 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
         UnionOrderById.enabled = false;
         final var expectedQuery = transform(eql);
 
-        assertQueryEquals(expectedQuery, actualQuery);
+        assertAlphaEq(expectedQuery, actualQuery);
     }
 
     @Test
@@ -158,7 +158,7 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
         UnionOrderById.enabled = false;
         final var expectedQuery = transform(queryModel);
 
-        assertQueryEquals(expectedQuery, actualQuery);
+        assertAlphaEq(expectedQuery, actualQuery);
     }
 
     @Override
