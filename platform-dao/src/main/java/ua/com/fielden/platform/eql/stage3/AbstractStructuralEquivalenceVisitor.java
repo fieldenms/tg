@@ -9,7 +9,7 @@ import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinInnerNode3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
-import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
+import ua.com.fielden.platform.eql.stage3.sundries.IOrderBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
@@ -353,8 +353,13 @@ abstract class AbstractStructuralEquivalenceVisitor<S> extends AbstractSameShape
     }
 
     @Override
-    public Boolean orderBy(final OrderBy3 x, final OrderBy3 y, final S state) {
-        return x.isDesc() == y.isDesc() && super.orderBy(x, y, state);
+    public Boolean orderByOperand(final IOrderBy3.Operand x, final IOrderBy3.Operand y, final S state) {
+        return x.isDesc() == y.isDesc() && super.orderByOperand(x, y, state);
+    }
+
+    @Override
+    public Boolean orderByYield(final IOrderBy3.Yield x, final IOrderBy3.Yield y, final S state) {
+        return x.isDesc() == y.isDesc() && Objects.equals(x.name(), y.name());
     }
 
     @Override

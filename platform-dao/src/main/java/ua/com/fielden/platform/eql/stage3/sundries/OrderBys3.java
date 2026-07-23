@@ -13,12 +13,12 @@ import java.util.List;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.NO_OFFSET;
 import static ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3.isSubQuery;
-import static ua.com.fielden.platform.eql.stage3.sundries.OrderBy3.ASC;
-import static ua.com.fielden.platform.eql.stage3.sundries.OrderBy3.DESC;
+import static ua.com.fielden.platform.eql.stage3.sundries.IOrderBy3.ASC;
+import static ua.com.fielden.platform.eql.stage3.sundries.IOrderBy3.DESC;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
-public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implements ToString.IFormattable, INode3 {
+public record OrderBys3 (List<IOrderBy3> list, Limit limit, long offset) implements ToString.IFormattable, INode3 {
 
     private static final String LIMIT = " LIMIT ";
     private static final String OFFSET = " OFFSET ";
@@ -26,11 +26,11 @@ public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implemen
     private static final String FETCH_FIRST = " FETCH FIRST ";
     private static final String ROWS_ONLY = " ROWS ONLY ";
 
-    public OrderBys3(final List<OrderBy3> list) {
+    public OrderBys3(final List<IOrderBy3> list) {
         this(list, Limit.all(), NO_OFFSET);
     }
 
-    public OrderBys3(final List<OrderBy3> list, final Limit limit, final long offset) {
+    public OrderBys3(final List<IOrderBy3> list, final Limit limit, final long offset) {
         this.list = ImmutableList.copyOf(list);
         this.limit = limit;
         this.offset = offset;
@@ -59,8 +59,10 @@ public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implemen
         //
         // See Issue #2429.
         final var listSql = distinct(list.stream()
-                                         .map(m -> t2(m.mapExpression(operand -> operand.sql(metadata, dbVersion), Yield3::column),
-                                                      m.isDesc())),
+                                             .map(m -> switch(m) {
+                                                 case IOrderBy3.Operand it -> t2(it.operand().sql(metadata, dbVersion), it.isDesc());
+                                                 case IOrderBy3.Yield it -> t2(it.column(), it.isDesc());
+                                             }),
                                      t2 -> t2._1)
                 .map(t2 -> t2.map((sql, desc) -> sql + (desc ? DESC : ASC)))
                 .collect(joining(", "));

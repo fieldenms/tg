@@ -8,10 +8,8 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sundries.OrderBy2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
-
-import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
 import ua.com.fielden.platform.eql.stage3.operands.functions.ConcatOf3;
-import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
+import ua.com.fielden.platform.eql.stage3.sundries.IOrderBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 
 import java.util.Collection;
@@ -21,6 +19,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
 
 public class ConcatOf2 extends TwoOperandsFunction2<ConcatOf3> {
 
@@ -62,7 +61,7 @@ public class ConcatOf2 extends TwoOperandsFunction2<ConcatOf3> {
         final var secondTr = operand2.transform(firstTr.updatedContext);
 
         var ctx = secondTr.updatedContext;
-        final var orderItems3 = ImmutableList.<OrderBy3>builderWithExpectedSize(orderItems.size());
+        final var orderItems3 = ImmutableList.<IOrderBy3>builderWithExpectedSize(orderItems.size());
         for (final var item : orderItems) {
             final var itemTr = item.transform(ctx, Yields3.empty());
             orderItems3.add(itemTr.item);

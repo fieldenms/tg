@@ -410,7 +410,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new GroupBys3(asList(groups));
     }
 
-    public static OrderBys3 orders(final OrderBy3... orders) {
+    public static OrderBys3 orders(final IOrderBy3... orders) {
         return new OrderBys3(asList(orders));
     }
 

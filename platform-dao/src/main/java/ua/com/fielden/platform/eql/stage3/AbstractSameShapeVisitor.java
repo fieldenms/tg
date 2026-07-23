@@ -160,7 +160,8 @@ public abstract class AbstractSameShapeVisitor<R, S> {
             case GroupBys3 x_ -> y instanceof GroupBys3 y_ ? groupBys(x_, y_, state) : noMatch(x, y, state);
             case GroupBy3 x_ -> y instanceof GroupBy3 y_ ? groupBy(x_, y_, state) : noMatch(x, y, state);
             case OrderBys3 x_ -> y instanceof OrderBys3 y_ ? orderBys(x_, y_, state) : noMatch(x, y, state);
-            case OrderBy3 x_ -> y instanceof OrderBy3 y_ ? orderBy(x_, y_, state) : noMatch(x, y, state);
+            case IOrderBy3.Operand x_ -> y instanceof IOrderBy3.Operand y_ ? orderByOperand(x_, y_, state) : noMatch(x, y, state);
+            case IOrderBy3.Yield x_ -> y instanceof IOrderBy3.Yield y_ ? orderByYield(x_, y_, state) : noMatch(x, y, state);
             // TODO Remove once the node type hierarchy is sealed.
             default -> throw new IllegalStateException("Unexpected value: " + x);
         };
@@ -485,16 +486,12 @@ public abstract class AbstractSameShapeVisitor<R, S> {
         return visit(x.operand(), y.operand(), state);
     }
 
-    public R orderBy(final OrderBy3 x, final OrderBy3 y, final S state) {
-        if (x.operand() != null && y.operand() != null) {
-            return visit(x.operand(), y.operand(), state);
-        }
-        else if (x.yield() != null && y.yield() != null) {
-            return visit(x.yield(), y.yield(), state);
-        }
-        else {
-            return noMatch(x, y, state);
-        }
+    public R orderByOperand(final IOrderBy3.Operand x, final IOrderBy3.Operand y, final S state) {
+        return visit(x.operand(), y.operand(), state);
+    }
+
+    public R orderByYield(final IOrderBy3.Yield x, final IOrderBy3.Yield y, final S state) {
+        return defaultValue(x, y, state);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
