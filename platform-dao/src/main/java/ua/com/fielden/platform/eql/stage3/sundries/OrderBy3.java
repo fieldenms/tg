@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.sundries;
 
 import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.stage3.INode3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
@@ -10,7 +11,7 @@ import java.util.function.Function;
 
 /// [#operand] and [#yield] are mutually exclusive: exactly one of them will be not null.
 ///
-public record OrderBy3 (@Nullable ISingleOperand3 operand, @Nullable Yield3 yield, boolean isDesc) implements ToString.IFormattable {
+public record OrderBy3 (@Nullable ISingleOperand3 operand, @Nullable Yield3 yield, boolean isDesc) implements ToString.IFormattable, INode3 {
 
     public static final String DESC = " DESC";
     public static final String ASC = " ASC";

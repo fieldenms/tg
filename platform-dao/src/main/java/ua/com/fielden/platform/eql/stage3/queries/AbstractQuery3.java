@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.queries;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage3.INode3;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
@@ -20,7 +21,7 @@ import static com.google.common.base.Predicates.or;
 import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
 import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 
-public abstract class AbstractQuery3 implements ToString.IFormattable {
+public abstract class AbstractQuery3 implements ToString.IFormattable, INode3 {
 
     public final Optional<IJoinNode3> maybeJoinRoot;
     public final Conditions3 whereConditions;

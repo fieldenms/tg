@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage3.sundries;
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
+import ua.com.fielden.platform.eql.stage3.INode3;
 import ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
@@ -17,7 +18,7 @@ import static ua.com.fielden.platform.eql.stage3.sundries.OrderBy3.DESC;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
-public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implements ToString.IFormattable {
+public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implements ToString.IFormattable, INode3 {
 
     private static final String LIMIT = " LIMIT ";
     private static final String OFFSET = " OFFSET ";

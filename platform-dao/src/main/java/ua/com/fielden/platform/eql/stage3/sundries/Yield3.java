@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.sundries;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage3.INode3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
@@ -28,7 +29,7 @@ import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
  *   <li>For other operands -- equal to the type of {@link #operand}.
  * </ul>
  */
-public record Yield3 (ISingleOperand3 operand, String alias, String column, PropType type) implements ToString.IFormattable {
+public record Yield3 (ISingleOperand3 operand, String alias, String column, PropType type) implements ToString.IFormattable, INode3 {
 
     public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final PropType type) {
         this(operand, alias, isEmpty(alias) ? null : "C_" + columnId, type);

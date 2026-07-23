@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage3.INode3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
@@ -19,7 +20,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
 
-public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.IFormattable {
+public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.IFormattable, INode3 {
 
     public static final Yields3 EMPTY = new Yields3(List.of());
 
