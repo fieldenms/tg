@@ -367,7 +367,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     public static Yield3 yieldCountAll(final String alias) {
-        return new Yield3(CountAll3.INSTANCE, alias, nextSqlId(), INTEGER_PROP_TYPE);
+        return new Yield3(new CountAll3(), alias, nextSqlId(), INTEGER_PROP_TYPE);
     }
 
     public static Yield3 yieldEntity(final String propName, final ISource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {

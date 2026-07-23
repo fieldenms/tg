@@ -64,7 +64,7 @@ public class ConcatOf2 extends TwoOperandsFunction2<ConcatOf3> {
         var ctx = secondTr.updatedContext;
         final var orderItems3 = ImmutableList.<OrderBy3>builderWithExpectedSize(orderItems.size());
         for (final var item : orderItems) {
-            final var itemTr = item.transform(ctx, Yields3.EMPTY);
+            final var itemTr = item.transform(ctx, Yields3.empty());
             orderItems3.add(itemTr.item);
             ctx = itemTr.updatedContext;
         }

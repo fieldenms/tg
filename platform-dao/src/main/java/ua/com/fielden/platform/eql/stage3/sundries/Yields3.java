@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.query.DbVersion;
@@ -22,14 +23,16 @@ import static ua.com.fielden.platform.utils.ToString.separateLines;
 
 public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.IFormattable, INode3 {
 
-    public static final Yields3 EMPTY = new Yields3(List.of());
-
     public static final String ERR_YIELDS_MISMATCH = "Mismatch between the number of yields and their expected types: %s yield(s), but %s type(s).";
 
     private static final Logger LOGGER = getLogger();
 
     public Yields3(final List<Yield3> yields) {
         this(makeYieldsMap(yields));
+    }
+
+    public static Yields3 empty() {
+        return new Yields3(ImmutableList.of());
     }
 
     private static SortedMap<String, Yield3> makeYieldsMap(final List<Yield3> yields) {
