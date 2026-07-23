@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
@@ -34,6 +35,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.IRetrievalModel.createRetrievalModel;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
@@ -96,6 +98,11 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
 
     public static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry) {
         return transform(new QueryProcessingModel<T, EntityResultQueryModel<T>>(qry, null, null, emptyMap(), true));
+    }
+
+    public static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry, final fetch<T> fetch) {
+        final var retrievalModel = createRetrievalModel(fetch, metadata(), querySourceInfoProvider());
+        return transform(new QueryProcessingModel<>(qry, null, retrievalModel, emptyMap(), true));
     }
 
     public static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry, final int initSourceId) {
