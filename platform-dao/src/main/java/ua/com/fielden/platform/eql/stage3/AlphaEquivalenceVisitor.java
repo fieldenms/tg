@@ -177,19 +177,6 @@ public class AlphaEquivalenceVisitor extends AbstractStructuralEquivalenceVisito
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Visitor methods
 
-    @Override
-    protected Boolean noMatch(final Object x, final Object y, final State state) {
-        return false;
-    }
-
-    /// Never expected to be reached: this visitor overrides [Prop3] and the source nodes, and structural equivalence
-    /// handles every other leaf, so a fall-through to the default signals an unhandled node type.
-    ///
-    @Override
-    protected Boolean defaultValue(final Object x, final Object y, final State state) {
-        throw new IllegalStateException("No default");
-    }
-
     /// A property reference is equivalent when it has the same type and name and its source corresponds under the
     /// renaming.
     ///
