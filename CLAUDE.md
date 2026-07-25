@@ -120,6 +120,15 @@ Example: `MeterReading.TOTAL_READING_TITLE` is declared on the entity because it
 Reads as the format string operating on its arguments (`"foo [%s]".formatted(x)`) and avoids the `java.lang.String.format` import.
 Legacy `String.format` calls are still common; touch them opportunistically but don't churn unrelated code.
 
+**`Result` factories in validators:** compose formatted results with `Result.failuref(TEMPLATE, args)` / `Result.warningf(TEMPLATE, args)` declared against `ERR_`/`WARN_` template constants — not `failure/warning(value, TEMPLATE.formatted(args))`.
+The instance argument is unnecessary for property-validation results, and the `String.format` semantics keep message-equality assertions in tests working unchanged.
+When a validator statically imports three or more `Result` members, collapse to `import static ua.com.fielden.platform.error.Result.*;`.
+
+**Companion fetch models are the contract for validators and definers.**
+When a validator or definer traverses properties of a related entity (e.g. `WorkOrder.projectLine.expenditureType.woType`), include those paths in the companion-level `FETCH_PROVIDER` — masters, producers and helpers all fetch through it — and have the handler read the getter chain directly.
+Do not guard with `Reflector.isPropertyProxied` and skip the check (warnings would be silently missed), and do not fall back to refetching inside the handler (several requests instead of one fetch) — a `StrictProxyException` in some flow marks a fetch-model gap to be fixed at that flow's source.
+Null checks are equally out of place: `@Required` properties of fetched persisted entities are invariants; null-check only genuinely optional properties and incoming mutation values.
+
 **Lazy logging:** when a log call requires string formatting, pass a `Supplier` lambda so the formatting cost is paid only when the level is enabled:
 ```java
 LOGGER.info(() -> "…".formatted(args));

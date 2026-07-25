@@ -120,6 +120,15 @@ Pessimistic locking with `UPGRADE` lock mode for activatable entities.
 Deliberately catches only `PersistenceException` for referential integrity violations.
 `case null, default -> null` in switch expressions is conventional TG shorthand.
 
+**`@Dependent` revalidation: single-source cross-property validation; declare the dependency in the read direction.**
+When two properties must stay consistent, implement the cross-property check once — whether it produces a failure or a warning (e.g. a warning that `waType` differs from the WO type implied by `projectLine.expenditureType`) — in the validator of the property whose validator reads the sibling, and declare that property in the sibling's `@Dependent` list.
+Changing the sibling then revalidates the owning property with the new sibling value already applied, refreshing or clearing the single result; duplicating the check in both validators double-displays it.
+For failures there is also the recovery direction: while the owning property is invalid, a change of the sibling re-attempts the last attempted value (`setValue(lastAttemptedValue, true)`), so the error clears automatically once the sibling change cures it.
+This works for restored/persisted entities too: retrieval completes with `setOriginalValue` per property, which marks them `assigned`, so `MetaProperty.revalidate` genuinely re-runs the validators; web validation cycles apply touched properties via the enforced `setValue(value, true)`, running the full interceptor chain including dependent revalidation, and validation results serialise for all properties, not only touched ones.
+The dependency direction must mirror the read direction: `B`'s validator reads `A` ⟹ `A` declares `@Dependent(B)`.
+Do not add the reverse declaration for symmetry — revalidating the sibling re-fires its entry-oriented failure checks (e.g. a restricted-creation check) upon unrelated changes.
+Mutual `@Dependent` (the `@LeProperty`/`@GeProperty` date-pair pattern) is for genuinely mutual constraints where each side carries its own validator.
+
 **`@DateOnly` and `@TimeOnly` are semantic markers, not data transformations.**
 Both apply to `java.util.Date` properties and signal the UI to render only the relevant portion.
 The other portion of the underlying `Date` is **not** truncated or zeroed automatically — it is up to domain logic to handle it as appropriate.
